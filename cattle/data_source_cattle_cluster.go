@@ -71,7 +71,7 @@ func dataSourceCattleClusterRead(d *schema.ResourceData, meta interface{}) error
 
 func findCluster(client *managementClient.Client, clustername string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		clusters, err := client.Cluster.List(NewListOpts())
+		clusters, err := client.Cluster.List(NewListOpts(nil))
 		if err != nil {
 			return nil, "", err
 		}

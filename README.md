@@ -5,14 +5,14 @@ Terraform provider for Rancher v2
 
 Implemented resources
 
-- catalogs
-- projects
+- Catalogs
+- Projects
+- Project Role Template Bindings
 - namespaces
 
 TODO
 
 - Auth provider
-- Project members
 - Clusters
 
 Terraform Provider

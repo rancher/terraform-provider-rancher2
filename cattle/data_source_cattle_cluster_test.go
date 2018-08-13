@@ -14,7 +14,7 @@ func TestAccCattleClusterDataSource_accessLog(t *testing.T) {
 			{
 				Config: testAccCheckCattleClusterDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.cattle_cluster.foo", "name", "default"),
+					resource.TestCheckResourceAttr("data.cattle_cluster.foo", "name", "local"),
 				),
 			},
 		},
@@ -23,7 +23,7 @@ func TestAccCattleClusterDataSource_accessLog(t *testing.T) {
 
 // Testing owner parameter
 const testAccCheckCattleClusterDataSourceConfig = `
-data "cattle_cluster" "default" {
-	name = "default"
+data "cattle_cluster" "foo" {
+	name = "local"
 }
 `

@@ -2,7 +2,7 @@ package cattle
 
 import (
 	"fmt"
-	"log"
+	//"log"
 	"strings"
 
 	"github.com/rancher/norman/clientbase"
@@ -14,6 +14,13 @@ import (
 
 const clusterProjectIDSeparator = ":"
 
+// Client are the client kind for a Rancher API
+type Client struct {
+	Management *managementClient.Client
+	Cluster    *clusterClient.Client
+	Project    *projectClient.Client
+}
+
 // Config is the configuration parameters for a Rancher API
 type Config struct {
 	AccessKey string `json:"accessKey"`
@@ -21,10 +28,17 @@ type Config struct {
 	TokenKey  string `json:"tokenKey"`
 	URL       string `json:"url"`
 	CACerts   string `json:"cacert"`
+	ClusterId string `json:"clusterId"`
+	ProjectId string `json:"projectId"`
+	Client    Client
 }
 
 // ManagementClient creates a Rancher client scoped to the global API
 func (c *Config) ManagementClient() (*managementClient.Client, error) {
+	if c.Client.Management != nil {
+		return c.Client.Management, nil
+	}
+
 	options := c.CreateClientOpts()
 
 	// Setup the management client
@@ -32,16 +46,19 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.Client.Management = mClient
 
-	log.Printf("[INFO] Rancher Management Client configured for url: %s", c.URL)
-
-	return mClient, nil
+	return c.Client.Management, nil
 }
 
 // ClusterClient creates a Rancher client scoped to an Cluster's API
 func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Cluster Client: cluster ID is nil")
+	}
+
+	if c.Client.Cluster != nil && id == c.ClusterId {
+		return c.Client.Cluster, nil
 	}
 
 	options := c.CreateClientOpts()
@@ -52,16 +69,20 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.Client.Cluster = cClient
+	c.ClusterId = id
 
-	log.Printf("[INFO] Rancher Cluster Client configured for url: %s", options.URL)
-
-	return cClient, nil
+	return c.Client.Cluster, nil
 }
 
 // ProjectClient creates a Rancher client scoped to an Project's API
 func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Project Client: project ID is nil")
+	}
+
+	if c.Client.Project != nil && id == c.ProjectId {
+		return c.Client.Project, nil
 	}
 
 	options := c.CreateClientOpts()
@@ -73,9 +94,10 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 		return nil, err
 	}
 
-	log.Printf("[INFO] Rancher Project Client configured for url: %s", options.URL)
+	c.Client.Project = pClient
+	c.ProjectId = id
 
-	return pClient, nil
+	return c.Client.Project, nil
 }
 
 func (c *Config) NormalizeUrl() {
@@ -100,6 +122,27 @@ func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
 	return options
 }
 
+func (c *Config) GetProjectRoleTemplateBindingsByProjectID(projectID string) ([]managementClient.ProjectRoleTemplateBinding, error) {
+	if projectID == "" {
+		return nil, fmt.Errorf("[ERROR] Project ID is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	filters := map[string]interface{}{"ProjectID": projectID}
+	listOpts := NewListOpts(filters)
+
+	projectsRoles, err := client.ProjectRoleTemplateBinding.List(listOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	return projectsRoles.Data, nil
+}
+
 func (c *Config) GetProjectByName(name, clusterID string) (*managementClient.Project, error) {
 	if name == "" {
 		return nil, fmt.Errorf("[ERROR] Project name is nil")
@@ -111,8 +154,7 @@ func (c *Config) GetProjectByName(name, clusterID string) (*managementClient.Pro
 	}
 
 	filters := map[string]interface{}{"ClusterId": clusterID}
-	listOpts := NewListOpts()
-	listOpts.Filters = filters
+	listOpts := NewListOpts(filters)
 
 	projects, err := client.Project.List(listOpts)
 	if err != nil {
@@ -157,8 +199,13 @@ func (c *Config) GetProjectNameByID(id string) (string, error) {
 	return project.Name, nil
 }
 
-func NewListOpts() *types.ListOpts {
-	return clientbase.NewListOpts()
+func NewListOpts(filters map[string]interface{}) *types.ListOpts {
+	listOpts := clientbase.NewListOpts()
+	if filters != nil {
+		listOpts.Filters = filters
+	}
+
+	return listOpts
 }
 
 func IsNotFound(err error) bool {
