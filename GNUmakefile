@@ -1,8 +1,8 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 WEBSITE_REPO=github.com/hashicorp/terraform-website
-PKG_NAME=cattle
-PROVIDER_NAME=terraform-provider-cattle
+PKG_NAME=rancher2
+PROVIDER_NAME=terraform-provider-rancher2
 
 default: build
 

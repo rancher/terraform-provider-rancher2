@@ -1,20 +1,20 @@
 ---
-layout: "cattle"
-page_title: "Cattle: cattle_catalog"
-sidebar_current: "docs-cattle-resource-catalog"
+layout: "rancher2"
+page_title: "Rancher2: rancher2_catalog"
+sidebar_current: "docs-rancher2-resource-catalog"
 description: |-
-  Provides a Cattle Catalog resource. This can be used to create catalogs for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Catalog resource. This can be used to create catalogs for rancher v2 environments and retrieve their information.
 ---
 
-# cattle\_certificate
+# rancher2\_catalog
 
-Provides a Cattle Catalog resource. This can be used to create catalogs for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Catalog resource. This can be used to create catalogs for rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
 ```hcl
-# Create a new Cattle Catalog
-resource "cattle_catalog" "foo" {
+# Create a new rancher2 Catalog
+resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "https://<CATALOG_URL>"
 }
@@ -41,6 +41,6 @@ The following attributes are exported:
 Catalogs can be imported using the rancher Catalog ID.
 
 ```
-$ terraform import cattle_catalog.foo <catalog_id>
+$ terraform import rancher2_catalog.foo <catalog_id>
 ```
 

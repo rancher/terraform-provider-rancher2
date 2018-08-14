@@ -1,20 +1,20 @@
 ---
-layout: "cattle"
-page_title: "Cattle: cattle_project_role_template_binding"
-sidebar_current: "docs-cattle-resource-project_role_template_binding"
+layout: "rancher2"
+page_title: "Rancher2: rancher2_project_role_template_binding"
+sidebar_current: "docs-rancher2-resource-project_role_template_binding"
 description: |-
-  Provides a Cattle Project Role Template Binding resource. This can be used to create Project Role Template Bindings for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Project Role Template Binding resource. This can be used to create Project Role Template Bindings for rancher v2 environments and retrieve their information.
 ---
 
-# cattle\_project_role_template_binding
+# rancher2\_project_role_template_binding
 
-Provides a Cattle Project Role Template Binding resource. This can be used to create Project Role Template Bindings for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Project Role Template Binding resource. This can be used to create Project Role Template Bindings for rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
 ```hcl
-# Create a new Cattle Project Role Template Binding
-resource "cattle_project_role_template_binding" "foo" {
+# Create a new rancher2 Project Role Template Binding
+resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
   project_id = "<project_id>"
   role_template_id = "<role_template_id>"
@@ -46,6 +46,6 @@ The following attributes are exported:
 Project Role Template Bindings can be imported using the rancher Project Role Template Binding ID
 
 ```
-$ terraform import cattle_project_role_template_binding.foo <project_role_template_binding_id>
+$ terraform import rancher2_project_role_template_binding.foo <project_role_template_binding_id>
 ```
 

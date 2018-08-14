@@ -31,6 +31,7 @@ type Client struct {
 	Principal                               PrincipalOperations
 	User                                    UserOperations
 	AuthConfig                              AuthConfigOperations
+	LdapConfig                              LdapConfigOperations
 	Token                                   TokenOperations
 	DynamicSchema                           DynamicSchemaOperations
 	Preference                              PreferenceOperations
@@ -49,6 +50,7 @@ type Client struct {
 	PipelineExecutionLog                    PipelineExecutionLogOperations
 	SourceCodeRepository                    SourceCodeRepositoryOperations
 	ComposeConfig                           ComposeConfigOperations
+	ResourceQuotaTemplate                   ResourceQuotaTemplateOperations
 }
 
 func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
@@ -85,6 +87,7 @@ func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
 	client.Principal = newPrincipalClient(client)
 	client.User = newUserClient(client)
 	client.AuthConfig = newAuthConfigClient(client)
+	client.LdapConfig = newLdapConfigClient(client)
 	client.Token = newTokenClient(client)
 	client.DynamicSchema = newDynamicSchemaClient(client)
 	client.Preference = newPreferenceClient(client)
@@ -103,6 +106,7 @@ func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
 	client.PipelineExecutionLog = newPipelineExecutionLogClient(client)
 	client.SourceCodeRepository = newSourceCodeRepositoryClient(client)
 	client.ComposeConfig = newComposeConfigClient(client)
+	client.ResourceQuotaTemplate = newResourceQuotaTemplateClient(client)
 
 	return client, nil
 }

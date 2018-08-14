@@ -1,19 +1,19 @@
 ---
-layout: "cattle"
-page_title: "Cattle: cattle_setting"
-sidebar_current: "docs-cattle-datasource-setting"
+layout: "rancher2"
+page_title: "Rancher2: rancher2_setting"
+sidebar_current: "docs-rancher2-datasource-setting"
 description: |-
   Get information on a Rancher v2 setting.
 ---
 
-# cattle\_setting
+# rancher2\_setting
 
 Use this data source to retrieve information about a Rancher v2 setting.
 
 ## Example Usage
 
 ```
-data "cattle_setting" "server-image" {
+data "rancher2_setting" "server-image" {
     name = "server-image"
 }
 ```

@@ -2,7 +2,7 @@ package client
 
 const (
 	ClusterLoggingSpecType                     = "clusterLoggingSpec"
-	ClusterLoggingSpecFieldClusterId           = "clusterId"
+	ClusterLoggingSpecFieldClusterID           = "clusterId"
 	ClusterLoggingSpecFieldDisplayName         = "displayName"
 	ClusterLoggingSpecFieldElasticsearchConfig = "elasticsearchConfig"
 	ClusterLoggingSpecFieldEmbeddedConfig      = "embeddedConfig"
@@ -14,7 +14,7 @@ const (
 )
 
 type ClusterLoggingSpec struct {
-	ClusterId           string               `json:"clusterId,omitempty" yaml:"clusterId,omitempty"`
+	ClusterID           string               `json:"clusterId,omitempty" yaml:"clusterId,omitempty"`
 	DisplayName         string               `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	ElasticsearchConfig *ElasticsearchConfig `json:"elasticsearchConfig,omitempty" yaml:"elasticsearchConfig,omitempty"`
 	EmbeddedConfig      *EmbeddedConfig      `json:"embeddedConfig,omitempty" yaml:"embeddedConfig,omitempty"`

@@ -1,20 +1,20 @@
 ---
-layout: "cattle"
-page_title: "Cattle: cattle_project"
-sidebar_current: "docs-cattle-resource-project"
+layout: "rancher2"
+page_title: "Rancher2: rancher2_project"
+sidebar_current: "docs-rancher2-resource-project"
 description: |-
-  Provides a Cattle Project resource. This can be used to create projects for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Project resource. This can be used to create projects for rancher v2 environments and retrieve their information.
 ---
 
-# cattle\_project
+# rancher2\_project
 
-Provides a Cattle Project resource. This can be used to create projects for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Project resource. This can be used to create projects for rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
 ```hcl
-# Create a new Cattle Project
-resource "cattle_project" "foo" {
+# Create a new rancher2 Project
+resource "rancher2_project" "foo" {
   name = "foo"
   cluster_id = "<CLUSTER_ID>"
 }
@@ -39,6 +39,6 @@ The following attributes are exported:
 Projects can be imported using the rancher Project ID
 
 ```
-$ terraform import cattle_project.foo <project_id>
+$ terraform import rancher2_project.foo <project_id>
 ```
 

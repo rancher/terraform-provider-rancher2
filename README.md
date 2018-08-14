@@ -33,17 +33,17 @@ Requirements
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/rancher/terraform-provider-cattle`
+Clone repository to: `$GOPATH/src/github.com/rancher/terraform-provider-rancher2`
 
 ```sh
 $ mkdir -p $GOPATH/src/github.com/rancher; cd $GOPATH/src/github.com/rancher
-$ git clone git@github.com:rancher/terraform-provider-cattle
+$ git clone git@github.com:rancher/terraform-provider-rancher2
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/rancher/terraform-provider-cattle
+$ cd $GOPATH/src/github.com/rancher/terraform-provider-rancher2
 $ make build
 ```
 
@@ -61,7 +61,7 @@ To compile the provider, run `make build`. This will build the provider and put 
 ```sh
 $ make bin
 ...
-$ $GOPATH/bin/terraform-provider-cattle
+$ $GOPATH/bin/terraform-provider-rancher2
 ...
 ```
 

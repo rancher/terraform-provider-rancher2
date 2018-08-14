@@ -1,0 +1,44 @@
+<% wrap_layout :inner do %>
+  <% content_for :sidebar do %>
+    <div class="docs-sidebar hidden-print affix-top" role="complementary">
+      <ul class="nav docs-sidenav">
+        <li<%= sidebar_current("docs-home") %>>
+          <a href="/docs/providers/index.html">All Providers</a>
+        </li>
+
+        <li<%= sidebar_current("docs-rancher2-index") %>>
+          <a href="/docs/providers/rancher2/index.html">Rancher2 Provider</a>
+        </li>
+
+        <li<%= sidebar_current("docs-rancher2-datasource") %>>
+          <a href="#">Data Sources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-rancher2-datasource-setting") %>>
+              <a href="/docs/providers/rancher2/d/setting.html">rancher2_setting</a>
+            </li>
+          </ul>
+        </li>
+
+        <li<%= sidebar_current("docs-rancher2-resource") %>>
+          <a href="#">Resources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-rancher2-resource-catalog") %>>
+              <a href="/docs/providers/rancher2/r/catalog.html">rancher2_catalog</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-project") %>>
+              <a href="/docs/providers/rancher2/r/project.html">rancher2_project</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-project_role_template_binding") %>>
+              <a href="/docs/providers/rancher2/r/projectRole.html">rancher2_project</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-namespace") %>>
+              <a href="/docs/providers/rancher2/r/namespace.html">rancher2_namespace</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= yield %>
+<% end %>
