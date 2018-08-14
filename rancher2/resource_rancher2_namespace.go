@@ -28,14 +28,14 @@ func init() {
 	}
 }
 
-func resourceCattleNamespace() *schema.Resource {
+func resourceRancher2Namespace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCattleNamespaceCreate,
-		Read:   resourceCattleNamespaceRead,
-		Update: resourceCattleNamespaceUpdate,
-		Delete: resourceCattleNamespaceDelete,
+		Create: resourceRancher2NamespaceCreate,
+		Read:   resourceRancher2NamespaceRead,
+		Update: resourceRancher2NamespaceUpdate,
+		Delete: resourceRancher2NamespaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceCattleNamespaceImport,
+			State: resourceRancher2NamespaceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -88,7 +88,7 @@ func resourceCattleNamespace() *schema.Resource {
 	}
 }
 
-func resourceCattleNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	clusterID := d.Get("cluster_id").(string)
 	projectName := d.Get("project_name").(string)
@@ -138,10 +138,10 @@ func resourceCattleNamespaceCreate(d *schema.ResourceData, meta interface{}) err
 	d.SetId(newNs.ID)
 	d.Set("project_id", projectID)
 
-	return resourceCattleNamespaceRead(d, meta)
+	return resourceRancher2NamespaceRead(d, meta)
 }
 
-func resourceCattleNamespaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 	log.Printf("[INFO] Refreshing Namespace ID %s", d.Id())
 
@@ -176,7 +176,7 @@ func resourceCattleNamespaceRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceCattleNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 	projectName := d.Get("project_name").(string)
 	projectID, err := meta.(*Config).GetProjectIDByName(projectName, clusterID)
@@ -225,10 +225,10 @@ func resourceCattleNamespaceUpdate(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("project_id", projectID)
 
-	return resourceCattleNamespaceRead(d, meta)
+	return resourceRancher2NamespaceRead(d, meta)
 }
 
-func resourceCattleNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NamespaceDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting Namespace ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ClusterClient(d.Get("cluster_id").(string))
@@ -272,7 +272,7 @@ func resourceCattleNamespaceDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceCattleNamespaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRancher2NamespaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	clusterID, resourceID := splitID(d.Id())
 
 	client, err := meta.(*Config).ClusterClient(clusterID)

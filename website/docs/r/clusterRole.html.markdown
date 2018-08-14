@@ -1,0 +1,51 @@
+---
+layout: "rancher2"
+page_title: "Rancher2: rancher2_cluster_role_template_binding"
+sidebar_current: "docs-rancher2-resource-cluster_role_template_binding"
+description: |-
+  Provides a Rancher v2 Cluster Role Template Binding resource. This can be used to create Cluster Role Template Bindings for rancher v2 environments and retrieve their information.
+---
+
+# rancher2\_cluster_role_template_binding
+
+Provides a Rancher v2 Cluster Role Template Binding resource. This can be used to create Cluster Role Template Bindings for rancher v2 environments and retrieve their information.
+
+## Example Usage
+
+```hcl
+# Create a new rancher2 Cluster Role Template Binding
+resource "rancher2_cluster_role_template_binding" "foo" {
+  name = "foo"
+  cluster_id = "<cluster_id>"
+  role_template_id = "<role_template_id>"
+  user_id = "<user_id>"
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `cluster_id` - (Required) The cluster id where bind cluster role template.
+* `role_template_id` - (Required) The role template id from create cluster role template binding.
+* `name` - (Required) The name of the cluster role template binding.
+* `group_id` - (Optional) The group ID to assign cluster role template binding.
+* `group_principal_id` - (Optional) The group_principal ID to assign cluster role template binding
+* `user_id` - (Optional) The user ID to assign cluster role template binding
+* `user_principal_id` - (Optional) The user_principal ID to assign cluster role template binding
+                
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - (Computed) The ID of the resource.
+
+## Import
+
+Cluster Role Template Bindings can be imported using the rancher cluster Role Template Binding ID
+
+```
+$ terraform import rancher2_cluster_role_template_binding.foo <cluster_role_template_binding_id>
+```
+

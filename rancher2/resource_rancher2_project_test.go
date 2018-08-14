@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	testAccCattleProjectType   = "rancher2_project"
-	testAccCattleProjectConfig = `
+	testAccRancher2ProjectType   = "rancher2_project"
+	testAccRancher2ProjectConfig = `
 resource "rancher2_project" "foo" {
   name = "foo"
   cluster_id = "local"
@@ -20,7 +20,7 @@ resource "rancher2_project" "foo" {
 }
 `
 
-	testAccCattleProjectUpdateConfig = `
+	testAccRancher2ProjectUpdateConfig = `
 resource "rancher2_project" "foo" {
   name = "foo-updated"
   cluster_id = "local"
@@ -28,7 +28,7 @@ resource "rancher2_project" "foo" {
 }
  `
 
-	testAccCattleProjectRecreateConfig = `
+	testAccRancher2ProjectRecreateConfig = `
 resource "rancher2_project" "foo" {
   name = "foo"
   cluster_id = "local"
@@ -37,58 +37,58 @@ resource "rancher2_project" "foo" {
  `
 )
 
-func TestAccCattleProject_basic(t *testing.T) {
+func TestAccRancher2Project_basic(t *testing.T) {
 	var project *managementClient.Project
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCattleProjectDestroy,
+		CheckDestroy: testAccCheckRancher2ProjectDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCattleProjectConfig,
+				Config: testAccRancher2ProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleProjectExists(testAccCattleProjectType+".foo", project),
-					resource.TestCheckResourceAttr(testAccCattleProjectType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleProjectType+".foo", "description", "Foo project test"),
-					resource.TestCheckResourceAttr(testAccCattleProjectType+".foo", "cluster_id", "local"),
+					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Foo project test"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", "local"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCattleProjectUpdateConfig,
+				Config: testAccRancher2ProjectUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleProjectExists(testAccCattleProjectType+".foo", project),
-					resource.TestCheckResourceAttr(testAccCattleProjectType+".foo", "name", "foo-updated"),
-					resource.TestCheckResourceAttr(testAccCattleProjectType+".foo", "description", "Foo project test - updated"),
-					resource.TestCheckResourceAttr(testAccCattleProjectType+".foo", "cluster_id", "local"),
+					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo-updated"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Foo project test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", "local"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCattleProjectRecreateConfig,
+				Config: testAccRancher2ProjectRecreateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleProjectExists(testAccCattleProjectType+".foo", project),
-					resource.TestCheckResourceAttr(testAccCattleProjectType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleProjectType+".foo", "description", "Foo project test"),
-					resource.TestCheckResourceAttr(testAccCattleProjectType+".foo", "cluster_id", "local"),
+					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Foo project test"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", "local"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCattleProject_disappears(t *testing.T) {
+func TestAccRancher2Project_disappears(t *testing.T) {
 	var project *managementClient.Project
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCattleProjectDestroy,
+		CheckDestroy: testAccCheckRancher2ProjectDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCattleProjectConfig,
+				Config: testAccRancher2ProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleProjectExists(testAccCattleProjectType+".foo", project),
-					testAccCattleProjectDisappears(project),
+					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
+					testAccRancher2ProjectDisappears(project),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,10 +96,10 @@ func TestAccCattleProject_disappears(t *testing.T) {
 	})
 }
 
-func testAccCattleProjectDisappears(pro *managementClient.Project) resource.TestCheckFunc {
+func testAccRancher2ProjectDisappears(pro *managementClient.Project) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != testAccCattleProjectType {
+			if rs.Type != testAccRancher2ProjectType {
 				continue
 			}
 			client, err := testAccProvider.Meta().(*Config).ManagementClient()
@@ -140,7 +140,7 @@ func testAccCattleProjectDisappears(pro *managementClient.Project) resource.Test
 	}
 }
 
-func testAccCheckCattleProjectExists(n string, pro *managementClient.Project) resource.TestCheckFunc {
+func testAccCheckRancher2ProjectExists(n string, pro *managementClient.Project) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -171,9 +171,9 @@ func testAccCheckCattleProjectExists(n string, pro *managementClient.Project) re
 	}
 }
 
-func testAccCheckCattleProjectDestroy(s *terraform.State) error {
+func testAccCheckRancher2ProjectDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != testAccCattleProjectType {
+		if rs.Type != testAccRancher2ProjectType {
 			continue
 		}
 		client, err := testAccProvider.Meta().(*Config).ManagementClient()

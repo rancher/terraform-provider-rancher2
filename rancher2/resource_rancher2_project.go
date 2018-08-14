@@ -10,14 +10,14 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
-func resourceCattleProject() *schema.Resource {
+func resourceRancher2Project() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCattleProjectCreate,
-		Read:   resourceCattleProjectRead,
-		Update: resourceCattleProjectUpdate,
-		Delete: resourceCattleProjectDelete,
+		Create: resourceRancher2ProjectCreate,
+		Read:   resourceRancher2ProjectRead,
+		Update: resourceRancher2ProjectUpdate,
+		Delete: resourceRancher2ProjectDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceCattleProjectImport,
+			State: resourceRancher2ProjectImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -50,7 +50,7 @@ func resourceCattleProject() *schema.Resource {
 	}
 }
 
-func resourceCattleProjectCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	//annotations := d.Get("annotations").(map[string]string)
 	//labels := d.Get("labels").(map[string]string)
@@ -91,10 +91,10 @@ func resourceCattleProjectCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(newProject.ID)
 
-	return resourceCattleProjectRead(d, meta)
+	return resourceRancher2ProjectRead(d, meta)
 }
 
-func resourceCattleProjectRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Refreshing Project ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -120,7 +120,7 @@ func resourceCattleProjectRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceCattleProjectUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Updating Project ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -158,10 +158,10 @@ func resourceCattleProjectUpdate(d *schema.ResourceData, meta interface{}) error
 			"[ERROR] waiting for project (%s) to be updated: %s", newProject.ID, waitErr)
 	}
 
-	return resourceCattleProjectRead(d, meta)
+	return resourceRancher2ProjectRead(d, meta)
 }
 
-func resourceCattleProjectDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting Project ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
@@ -205,7 +205,7 @@ func resourceCattleProjectDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceCattleProjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRancher2ProjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return []*schema.ResourceData{}, err

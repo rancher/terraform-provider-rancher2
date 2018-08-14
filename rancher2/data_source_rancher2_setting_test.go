@@ -6,13 +6,13 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccCattleSettingDataSource_accessLog(t *testing.T) {
+func TestAccRancher2SettingDataSource_accessLog(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckCattleSettingDataSourceConfig,
+				Config: testAccCheckRancher2SettingDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.rancher2_setting.server-image", "value", "rancher/rancher"),
 				),
@@ -22,7 +22,7 @@ func TestAccCattleSettingDataSource_accessLog(t *testing.T) {
 }
 
 // Testing owner parameter
-const testAccCheckCattleSettingDataSourceConfig = `
+const testAccCheckRancher2SettingDataSourceConfig = `
 data "rancher2_setting" "server-image" {
 	name = "server-image"
 }

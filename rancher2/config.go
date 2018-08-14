@@ -186,17 +186,56 @@ func (c *Config) GetProjectNameByID(id string) (string, error) {
 		return "", nil
 	}
 
-	client, err := c.ManagementClient()
-	if err != nil {
-		return "", err
-	}
-
-	project, err := client.Project.ByID(id)
+	project, err := c.GetProjectByID(id)
 	if err != nil {
 		return "", err
 	}
 
 	return project.Name, nil
+}
+
+func (c *Config) GetProjectByID(id string) (*managementClient.Project, error) {
+	if id == "" {
+		return nil, fmt.Errorf("Project id is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Project.ByID(id)
+}
+
+func (c *Config) ProjectExist(id string) error {
+	_, err := c.GetProjectByID(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Config) GetRoleTemplateByID(id string) (*managementClient.RoleTemplate, error) {
+	if id == "" {
+		return nil, fmt.Errorf("Role template id is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.RoleTemplate.ByID(id)
+}
+
+func (c *Config) RoleTemplateExist(id string) error {
+	_, err := c.GetRoleTemplateByID(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Config) GetClusterByID(id string) (*managementClient.Cluster, error) {
@@ -212,16 +251,13 @@ func (c *Config) GetClusterByID(id string) (*managementClient.Cluster, error) {
 	return client.Cluster.ByID(id)
 }
 
-func (c *Config) ClusterExist(id string) (bool, error) {
+func (c *Config) ClusterExist(id string) error {
 	_, err := c.GetClusterByID(id)
 	if err != nil {
-		if IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
+		return err
 	}
 
-	return true, nil
+	return nil
 }
 
 func NewListOpts(filters map[string]interface{}) *types.ListOpts {

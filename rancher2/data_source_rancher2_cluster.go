@@ -10,9 +10,9 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
-func dataSourceCattleCluster() *schema.Resource {
+func dataSourceRancher2Cluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCattleClusterRead,
+		Read: dataSourceRancher2ClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -35,7 +35,7 @@ func dataSourceCattleCluster() *schema.Resource {
 	}
 }
 
-func dataSourceCattleClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing Rancher Environment: %s", name)
 

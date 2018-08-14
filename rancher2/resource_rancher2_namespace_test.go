@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	testAccCattleNamespaceType   = "rancher2_namespace"
-	testAccCattleNamespaceConfig = `
+	testAccRancher2NamespaceType   = "rancher2_namespace"
+	testAccRancher2NamespaceConfig = `
 resource "rancher2_namespace" "foo" {
   name = "foo"
   description = "Foo namespace test"
@@ -21,7 +21,7 @@ resource "rancher2_namespace" "foo" {
 }
 `
 
-	testAccCattleNamespaceUpdateConfig = `
+	testAccRancher2NamespaceUpdateConfig = `
 resource "rancher2_namespace" "foo" {
   name = "foo"
   description = "Foo namespace test - updated"
@@ -29,7 +29,7 @@ resource "rancher2_namespace" "foo" {
 }
  `
 
-	testAccCattleNamespaceRecreateConfig = `
+	testAccRancher2NamespaceRecreateConfig = `
 resource "rancher2_namespace" "foo" {
   name = "foo"
   description = "Foo namespace test"
@@ -39,61 +39,61 @@ resource "rancher2_namespace" "foo" {
  `
 )
 
-func TestAccCattleNamespace_basic(t *testing.T) {
+func TestAccRancher2Namespace_basic(t *testing.T) {
 	var ns *clusterClient.Namespace
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCattleNamespaceDestroy,
+		CheckDestroy: testAccCheckRancher2NamespaceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCattleNamespaceConfig,
+				Config: testAccRancher2NamespaceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleNamespaceExists(testAccCattleNamespaceType+".foo", ns),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "description", "Foo namespace test"),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "cluster_id", "local"),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "project_name", "Default"),
+					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Foo namespace test"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "cluster_id", "local"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_name", "Default"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCattleNamespaceUpdateConfig,
+				Config: testAccRancher2NamespaceUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleNamespaceExists(testAccCattleNamespaceType+".foo", ns),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "description", "Foo namespace test - updated"),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "cluster_id", "local"),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "project_name", ""),
+					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Foo namespace test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "cluster_id", "local"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_name", ""),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCattleNamespaceRecreateConfig,
+				Config: testAccRancher2NamespaceRecreateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleNamespaceExists(testAccCattleNamespaceType+".foo", ns),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "description", "Foo namespace test"),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "cluster_id", "local"),
-					resource.TestCheckResourceAttr(testAccCattleNamespaceType+".foo", "project_name", "Default"),
+					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Foo namespace test"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "cluster_id", "local"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_name", "Default"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCattleNamespace_disappears(t *testing.T) {
+func TestAccRancher2Namespace_disappears(t *testing.T) {
 	var ns *clusterClient.Namespace
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCattleNamespaceDestroy,
+		CheckDestroy: testAccCheckRancher2NamespaceDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCattleNamespaceConfig,
+				Config: testAccRancher2NamespaceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleNamespaceExists(testAccCattleNamespaceType+".foo", ns),
-					testAccCattleNamespaceDisappears(ns),
+					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
+					testAccRancher2NamespaceDisappears(ns),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,10 +101,10 @@ func TestAccCattleNamespace_disappears(t *testing.T) {
 	})
 }
 
-func testAccCattleNamespaceDisappears(ns *clusterClient.Namespace) resource.TestCheckFunc {
+func testAccRancher2NamespaceDisappears(ns *clusterClient.Namespace) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != testAccCattleNamespaceType {
+			if rs.Type != testAccRancher2NamespaceType {
 				continue
 			}
 			client, err := testAccProvider.Meta().(*Config).ClusterClient(rs.Primary.Attributes["cluster_id"])
@@ -145,7 +145,7 @@ func testAccCattleNamespaceDisappears(ns *clusterClient.Namespace) resource.Test
 	}
 }
 
-func testAccCheckCattleNamespaceExists(n string, ns *clusterClient.Namespace) resource.TestCheckFunc {
+func testAccCheckRancher2NamespaceExists(n string, ns *clusterClient.Namespace) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -176,9 +176,9 @@ func testAccCheckCattleNamespaceExists(n string, ns *clusterClient.Namespace) re
 	}
 }
 
-func testAccCheckCattleNamespaceDestroy(s *terraform.State) error {
+func testAccCheckRancher2NamespaceDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != testAccCattleNamespaceType {
+		if rs.Type != testAccRancher2NamespaceType {
 			continue
 		}
 		client, err := testAccProvider.Meta().(*Config).ClusterClient(rs.Primary.Attributes["cluster_id"])

@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	testAccCattleCatalogType   = "rancher2_catalog"
-	testAccCattleCatalogConfig = `
+	testAccRancher2CatalogType   = "rancher2_catalog"
+	testAccRancher2CatalogConfig = `
 resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "http://foo.com:8080"
@@ -20,7 +20,7 @@ resource "rancher2_catalog" "foo" {
 }
 `
 
-	testAccCattleCatalogUpdateConfig = `
+	testAccRancher2CatalogUpdateConfig = `
 resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "http://foo.updated.com:8080"
@@ -28,7 +28,7 @@ resource "rancher2_catalog" "foo" {
 }
  `
 
-	testAccCattleCatalogRecreateConfig = `
+	testAccRancher2CatalogRecreateConfig = `
 resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "http://foo.com:8080"
@@ -37,58 +37,58 @@ resource "rancher2_catalog" "foo" {
  `
 )
 
-func TestAccCattleCatalog_basic(t *testing.T) {
+func TestAccRancher2Catalog_basic(t *testing.T) {
 	var catalog *managementClient.Catalog
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCattleCatalogDestroy,
+		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCattleCatalogConfig,
+				Config: testAccRancher2CatalogConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleCatalogExists(testAccCattleCatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccCattleCatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleCatalogType+".foo", "description", "Foo catalog test"),
-					resource.TestCheckResourceAttr(testAccCattleCatalogType+".foo", "url", "http://foo.com:8080"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Foo catalog test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCattleCatalogUpdateConfig,
+				Config: testAccRancher2CatalogUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleCatalogExists(testAccCattleCatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccCattleCatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleCatalogType+".foo", "description", "Foo catalog test - updated"),
-					resource.TestCheckResourceAttr(testAccCattleCatalogType+".foo", "url", "http://foo.updated.com:8080"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Foo catalog test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.updated.com:8080"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCattleCatalogRecreateConfig,
+				Config: testAccRancher2CatalogRecreateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleCatalogExists(testAccCattleCatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccCattleCatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleCatalogType+".foo", "description", "Foo catalog test"),
-					resource.TestCheckResourceAttr(testAccCattleCatalogType+".foo", "url", "http://foo.com:8080"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Foo catalog test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCattleCatalog_disappears(t *testing.T) {
+func TestAccRancher2Catalog_disappears(t *testing.T) {
 	var catalog *managementClient.Catalog
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCattleCatalogDestroy,
+		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCattleCatalogConfig,
+				Config: testAccRancher2CatalogConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleCatalogExists(testAccCattleCatalogType+".foo", catalog),
-					testAccCattleCatalogDisappears(catalog),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
+					testAccRancher2CatalogDisappears(catalog),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,10 +96,10 @@ func TestAccCattleCatalog_disappears(t *testing.T) {
 	})
 }
 
-func testAccCattleCatalogDisappears(cat *managementClient.Catalog) resource.TestCheckFunc {
+func testAccRancher2CatalogDisappears(cat *managementClient.Catalog) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != testAccCattleCatalogType {
+			if rs.Type != testAccRancher2CatalogType {
 				continue
 			}
 			client, err := testAccProvider.Meta().(*Config).ManagementClient()
@@ -140,7 +140,7 @@ func testAccCattleCatalogDisappears(cat *managementClient.Catalog) resource.Test
 	}
 }
 
-func testAccCheckCattleCatalogExists(n string, cat *managementClient.Catalog) resource.TestCheckFunc {
+func testAccCheckRancher2CatalogExists(n string, cat *managementClient.Catalog) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -171,9 +171,9 @@ func testAccCheckCattleCatalogExists(n string, cat *managementClient.Catalog) re
 	}
 }
 
-func testAccCheckCattleCatalogDestroy(s *terraform.State) error {
+func testAccCheckRancher2CatalogDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != testAccCattleCatalogType {
+		if rs.Type != testAccRancher2CatalogType {
 			continue
 		}
 		client, err := testAccProvider.Meta().(*Config).ManagementClient()

@@ -8,6 +8,7 @@ Implemented resources
 - Catalogs
 - Projects
 - Project Role Template Bindings
+- Cluster Role Template Bindings
 - namespaces
 
 TODO

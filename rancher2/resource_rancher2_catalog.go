@@ -11,14 +11,14 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
-func resourceCattleCatalog() *schema.Resource {
+func resourceRancher2Catalog() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCattleCatalogCreate,
-		Read:   resourceCattleCatalogRead,
-		Update: resourceCattleCatalogUpdate,
-		Delete: resourceCattleCatalogDelete,
+		Create: resourceRancher2CatalogCreate,
+		Read:   resourceRancher2CatalogRead,
+		Update: resourceRancher2CatalogUpdate,
+		Delete: resourceRancher2CatalogDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceCattleCatalogImport,
+			State: resourceRancher2CatalogImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -54,7 +54,7 @@ func resourceCattleCatalog() *schema.Resource {
 	}
 }
 
-func resourceCattleCatalogCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CatalogCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	log.Printf("[INFO] Creating Catalog %s", name)
@@ -93,10 +93,10 @@ func resourceCattleCatalogCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(newCatalog.ID)
 
-	return resourceCattleCatalogRead(d, meta)
+	return resourceRancher2CatalogRead(d, meta)
 }
 
-func resourceCattleCatalogRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CatalogRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Refreshing Catalog ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -122,7 +122,7 @@ func resourceCattleCatalogRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceCattleCatalogUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CatalogUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Updating Catalog ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -160,10 +160,10 @@ func resourceCattleCatalogUpdate(d *schema.ResourceData, meta interface{}) error
 			"[ERROR] waiting for catalog (%s) to be updated: %s", newCatalog.ID, waitErr)
 	}
 
-	return resourceCattleCatalogRead(d, meta)
+	return resourceRancher2CatalogRead(d, meta)
 }
 
-func resourceCattleCatalogDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CatalogDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting catalog ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
@@ -207,7 +207,7 @@ func resourceCattleCatalogDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceCattleCatalogImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRancher2CatalogImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return []*schema.ResourceData{}, err

@@ -9,25 +9,14 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	managementClient "github.com/rancher/types/client/management/v3"
-	rancherClient "github.com/rancher/go-rancher/v2"
 )
 
-var (
-	defaultProjectTemplates = map[string]string{
-		"mesos":      "",
-		"kubernetes": "",
-		"windows":    "",
-		"swarm":      "",
-		"cattle":     "",
-	}
-)
-
-func resourceCattleCluster() *schema.Resource {
+func resourceRancher2Cluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCattleClusterCreate,
-		Read:   resourceCattleClusterRead,
-		Update: resourceCattleClusterUpdate,
-		Delete: resourceCattleClusterDelete,
+		Create: resourceRancher2ClusterCreate,
+		Read:   resourceRancher2ClusterRead,
+		Update: resourceRancher2ClusterUpdate,
+		Delete: resourceRancher2ClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -78,7 +67,7 @@ func resourceCattleCluster() *schema.Resource {
 	}
 }
 
-func resourceCattleClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Creating Cluster: %s", d.Id())
 	//populateProjectTemplateIDs(meta.(*Config))
 

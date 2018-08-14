@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	testAccCattleProjectRoleTemplateBindingType   = "rancher2_project_role_template_binding"
-	testAccCattleProjectRoleTemplateBindingConfig = `
+	testAccRancher2ProjectRoleTemplateBindingType   = "rancher2_project_role_template_binding"
+	testAccRancher2ProjectRoleTemplateBindingConfig = `
 resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
   project_id = "local:p-2lk7g"
@@ -20,7 +20,7 @@ resource "rancher2_project_role_template_binding" "foo" {
 }
 `
 
-	testAccCattleProjectRoleTemplateBindingUpdateConfig = `
+	testAccRancher2ProjectRoleTemplateBindingUpdateConfig = `
 resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
   project_id = "local:p-2lk7g"
@@ -29,7 +29,7 @@ resource "rancher2_project_role_template_binding" "foo" {
 }
  `
 
-	testAccCattleProjectRoleTemplateBindingRecreateConfig = `
+	testAccRancher2ProjectRoleTemplateBindingRecreateConfig = `
 resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
   project_id = "local:p-2lk7g"
@@ -38,59 +38,59 @@ resource "rancher2_project_role_template_binding" "foo" {
  `
 )
 
-func TestAccCattleProjectRoleTemplateBinding_basic(t *testing.T) {
+func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 	var projectRole *managementClient.ProjectRoleTemplateBinding
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCattleProjectRoleTemplateBindingDestroy,
+		CheckDestroy: testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCattleProjectRoleTemplateBindingConfig,
+				Config: testAccRancher2ProjectRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleProjectRoleTemplateBindingExists(testAccCattleProjectRoleTemplateBindingType+".foo", projectRole),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "project_id", "local:p-2lk7g"),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
+					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "project_id", "local:p-2lk7g"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCattleProjectRoleTemplateBindingUpdateConfig,
+				Config: testAccRancher2ProjectRoleTemplateBindingUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleProjectRoleTemplateBindingExists(testAccCattleProjectRoleTemplateBindingType+".foo", projectRole),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "project_id", "local:p-2lk7g"),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "user_id", "u-q2wg7"),
+					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "project_id", "local:p-2lk7g"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "user_id", "u-q2wg7"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccCattleProjectRoleTemplateBindingRecreateConfig,
+				Config: testAccRancher2ProjectRoleTemplateBindingRecreateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleProjectRoleTemplateBindingExists(testAccCattleProjectRoleTemplateBindingType+".foo", projectRole),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "project_id", "Foo project test"),
-					resource.TestCheckResourceAttr(testAccCattleProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
+					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "project_id", "local:p-2lk7g"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCattleProjectRoleTemplateBinding_disappears(t *testing.T) {
+func TestAccRancher2ProjectRoleTemplateBinding_disappears(t *testing.T) {
 	var projectRole *managementClient.ProjectRoleTemplateBinding
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCattleProjectRoleTemplateBindingDestroy,
+		CheckDestroy: testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccCattleProjectRoleTemplateBindingConfig,
+				Config: testAccRancher2ProjectRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCattleProjectRoleTemplateBindingExists(testAccCattleProjectRoleTemplateBindingType+".foo", projectRole),
-					testAccCattleProjectRoleTemplateBindingDisappears(projectRole),
+					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
+					testAccRancher2ProjectRoleTemplateBindingDisappears(projectRole),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,10 +98,10 @@ func TestAccCattleProjectRoleTemplateBinding_disappears(t *testing.T) {
 	})
 }
 
-func testAccCattleProjectRoleTemplateBindingDisappears(pro *managementClient.ProjectRoleTemplateBinding) resource.TestCheckFunc {
+func testAccRancher2ProjectRoleTemplateBindingDisappears(pro *managementClient.ProjectRoleTemplateBinding) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != testAccCattleProjectRoleTemplateBindingType {
+			if rs.Type != testAccRancher2ProjectRoleTemplateBindingType {
 				continue
 			}
 			client, err := testAccProvider.Meta().(*Config).ManagementClient()
@@ -142,7 +142,7 @@ func testAccCattleProjectRoleTemplateBindingDisappears(pro *managementClient.Pro
 	}
 }
 
-func testAccCheckCattleProjectRoleTemplateBindingExists(n string, pro *managementClient.ProjectRoleTemplateBinding) resource.TestCheckFunc {
+func testAccCheckRancher2ProjectRoleTemplateBindingExists(n string, pro *managementClient.ProjectRoleTemplateBinding) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -173,9 +173,9 @@ func testAccCheckCattleProjectRoleTemplateBindingExists(n string, pro *managemen
 	}
 }
 
-func testAccCheckCattleProjectRoleTemplateBindingDestroy(s *terraform.State) error {
+func testAccCheckRancher2ProjectRoleTemplateBindingDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != testAccCattleProjectRoleTemplateBindingType {
+		if rs.Type != testAccRancher2ProjectRoleTemplateBindingType {
 			continue
 		}
 		client, err := testAccProvider.Meta().(*Config).ManagementClient()

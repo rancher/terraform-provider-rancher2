@@ -6,9 +6,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func dataSourceCattleSetting() *schema.Resource {
+func dataSourceRancher2Setting() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCattleSettingRead,
+		Read: dataSourceRancher2SettingRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -23,7 +23,7 @@ func dataSourceCattleSetting() *schema.Resource {
 	}
 }
 
-func dataSourceCattleSettingRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2SettingRead(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing Rancher2 Setting: %s", name)
 

@@ -6,13 +6,13 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccCattleClusterDataSource_accessLog(t *testing.T) {
+func TestAccRancher2ClusterDataSource_accessLog(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckCattleClusterDataSourceConfig,
+				Config: testAccCheckRancher2ClusterDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.rancher2_cluster.foo", "name", "local"),
 				),
@@ -22,7 +22,7 @@ func TestAccCattleClusterDataSource_accessLog(t *testing.T) {
 }
 
 // Testing owner parameter
-const testAccCheckCattleClusterDataSourceConfig = `
+const testAccCheckRancher2ClusterDataSourceConfig = `
 data "rancher2_cluster" "foo" {
 	name = "local"
 }

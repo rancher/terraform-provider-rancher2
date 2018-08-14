@@ -10,14 +10,14 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
-func resourceCattleProjectRoleTemplateBinding() *schema.Resource {
+func resourceRancher2ProjectRoleTemplateBinding() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCattleProjectRoleTemplateBindingCreate,
-		Read:   resourceCattleProjectRoleTemplateBindingRead,
-		Update: resourceCattleProjectRoleTemplateBindingUpdate,
-		Delete: resourceCattleProjectRoleTemplateBindingDelete,
+		Create: resourceRancher2ProjectRoleTemplateBindingCreate,
+		Read:   resourceRancher2ProjectRoleTemplateBindingRead,
+		Update: resourceRancher2ProjectRoleTemplateBindingUpdate,
+		Delete: resourceRancher2ProjectRoleTemplateBindingDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceCattleProjectRoleTemplateBindingImport,
+			State: resourceRancher2ProjectRoleTemplateBindingImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -57,26 +57,36 @@ func resourceCattleProjectRoleTemplateBinding() *schema.Resource {
 	}
 }
 
-func resourceCattleProjectRoleTemplateBindingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectRoleTemplateBindingCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
-	//annotations := d.Get("annotations").(map[string]string)
-	//labels := d.Get("labels").(map[string]string)
+	projectID := d.Get("project_id").(string)
+	roleTemplateID := d.Get("role_template_id").(string)
 
 	log.Printf("[INFO] Creating Project Role Template Binding %s", name)
 
-	client, err := meta.(*Config).ManagementClient()
+	err := meta.(*Config).ProjectExist(projectID)
+	if err != nil {
+		return err
+	}
+
+	err = meta.(*Config).RoleTemplateExist(roleTemplateID)
 	if err != nil {
 		return err
 	}
 
 	projectRole := &managementClient.ProjectRoleTemplateBinding{
-		ProjectID:        d.Get("project_id").(string),
-		RoleTemplateID:   d.Get("role_template_id").(string),
+		ProjectID:        projectID,
+		RoleTemplateID:   roleTemplateID,
 		Name:             d.Get("name").(string),
 		GroupID:          d.Get("group_id").(string),
 		GroupPrincipalID: d.Get("group_principal_id").(string),
 		UserID:           d.Get("user_id").(string),
 		UserPrincipalID:  d.Get("user_principal_id").(string),
+	}
+
+	client, err := meta.(*Config).ManagementClient()
+	if err != nil {
+		return err
 	}
 
 	newProjectRole, err := client.ProjectRoleTemplateBinding.Create(projectRole)
@@ -100,10 +110,10 @@ func resourceCattleProjectRoleTemplateBindingCreate(d *schema.ResourceData, meta
 
 	d.SetId(newProjectRole.ID)
 
-	return resourceCattleProjectRoleTemplateBindingRead(d, meta)
+	return resourceRancher2ProjectRoleTemplateBindingRead(d, meta)
 }
 
-func resourceCattleProjectRoleTemplateBindingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectRoleTemplateBindingRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Refreshing Project Role Template Binding ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -127,13 +137,11 @@ func resourceCattleProjectRoleTemplateBindingRead(d *schema.ResourceData, meta i
 	d.Set("group_principal_id", projectRole.GroupPrincipalID)
 	d.Set("user_id", projectRole.UserID)
 	d.Set("user_principal_id", projectRole.UserPrincipalID)
-	//d.Set("annotations", projectRole.Annotations)
-	//d.Set("labels", projectRole.Labels)
 
 	return nil
 }
 
-func resourceCattleProjectRoleTemplateBindingUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectRoleTemplateBindingUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Updating Project Role Template Binding ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -145,15 +153,27 @@ func resourceCattleProjectRoleTemplateBindingUpdate(d *schema.ResourceData, meta
 		return err
 	}
 
-	update := map[string]string{
+	update := map[string]interface{}{
 		"projectId":        d.Get("project_id").(string),
 		"roleTemplateId":   d.Get("role_template_id").(string),
 		"groupId":          d.Get("group_id").(string),
 		"groupPrincipalId": d.Get("group_principal_id").(string),
 		"userId":           d.Get("user_id").(string),
 		"userPrincipalId":  d.Get("user_principal_id").(string),
-		//"annotations": d.Get("annotations").(map[string]string),
-		//"labels":      d.Get("labels").(map[string]string),
+	}
+
+	if projectRole.ProjectID != update["projectId"].(string) {
+		err = meta.(*Config).ProjectExist(update["projectId"].(string))
+		if err != nil {
+			return err
+		}
+	}
+
+	if projectRole.RoleTemplateID != update["roleTemplateId"].(string) {
+		err = meta.(*Config).RoleTemplateExist(update["roleTemplateId"].(string))
+		if err != nil {
+			return err
+		}
 	}
 
 	newProjectRole, err := client.ProjectRoleTemplateBinding.Update(projectRole, update)
@@ -175,10 +195,10 @@ func resourceCattleProjectRoleTemplateBindingUpdate(d *schema.ResourceData, meta
 			"[ERROR] waiting for project role template binding (%s) to be updated: %s", newProjectRole.ID, waitErr)
 	}
 
-	return resourceCattleProjectRoleTemplateBindingRead(d, meta)
+	return resourceRancher2ProjectRoleTemplateBindingRead(d, meta)
 }
 
-func resourceCattleProjectRoleTemplateBindingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectRoleTemplateBindingDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting Project Role Template Binding ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
@@ -222,7 +242,7 @@ func resourceCattleProjectRoleTemplateBindingDelete(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceCattleProjectRoleTemplateBindingImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRancher2ProjectRoleTemplateBindingImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return []*schema.ResourceData{}, err
@@ -240,8 +260,6 @@ func resourceCattleProjectRoleTemplateBindingImport(d *schema.ResourceData, meta
 	d.Set("group_principal_id", projectRole.GroupPrincipalID)
 	d.Set("user_id", projectRole.UserID)
 	d.Set("user_principal_id", projectRole.UserPrincipalID)
-	//d.Set("annotations", project.Annotations)
-	//d.Set("labels", project.Labels)
 
 	return []*schema.ResourceData{d}, nil
 }
