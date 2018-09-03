@@ -10,6 +10,148 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
+// Shemas
+
+func clusterRoleTemplateBindingFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"id": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"cluster_id": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"role_template_id": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"group_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"group_principal_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"user_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"user_principal_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"annotations": &schema.Schema{
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+		"labels": &schema.Schema{
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+	}
+
+	return s
+}
+
+// Flatteners
+
+func flattenClusterRoleTemplateBinding(d *schema.ResourceData, in *managementClient.ClusterRoleTemplateBinding) error {
+	if in == nil {
+		return nil
+	}
+
+	d.SetId(in.ID)
+
+	err := d.Set("cluster_id", in.ClusterID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("role_template_id", in.RoleTemplateID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("name", in.Name)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("group_id", in.GroupID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("group_principal_id", in.GroupPrincipalID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("user_id", in.UserID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("user_principal_id", in.UserPrincipalID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("annotations", toMapInterface(in.Annotations))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("labels", toMapInterface(in.Labels))
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// Expanders
+
+func expandClusterRoleTemplateBinding(in *schema.ResourceData) *managementClient.ClusterRoleTemplateBinding {
+	obj := &managementClient.ClusterRoleTemplateBinding{}
+	if in == nil {
+		return nil
+	}
+
+	if v := in.Id(); len(v) > 0 {
+		obj.ID = v
+	}
+
+	obj.ClusterID = in.Get("cluster_id").(string)
+	obj.RoleTemplateID = in.Get("role_template_id").(string)
+	obj.Name = in.Get("name").(string)
+	obj.GroupID = in.Get("group_id").(string)
+	obj.GroupPrincipalID = in.Get("group_principal_id").(string)
+	obj.UserID = in.Get("user_id").(string)
+	obj.UserPrincipalID = in.Get("user_principal_id").(string)
+
+	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Annotations = toMapString(v)
+	}
+
+	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Labels = toMapString(v)
+	}
+
+	return obj
+}
+
 func resourceRancher2ClusterRoleTemplateBinding() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRancher2ClusterRoleTemplateBindingCreate,
@@ -20,74 +162,29 @@ func resourceRancher2ClusterRoleTemplateBinding() *schema.Resource {
 			State: resourceRancher2ClusterRoleTemplateBindingImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"role_template_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"group_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"group_principal_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"user_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"user_principal_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-		},
+		Schema: clusterRoleTemplateBindingFields(),
 	}
 }
 
 func resourceRancher2ClusterRoleTemplateBindingCreate(d *schema.ResourceData, meta interface{}) error {
-	name := d.Get("name").(string)
-	clusterID := d.Get("cluster_id").(string)
-	roleTemplateID := d.Get("role_template_id").(string)
+	clusterRole := expandClusterRoleTemplateBinding(d)
 
-	log.Printf("[INFO] Creating Cluster Role Template Binding %s", name)
-
-	err := meta.(*Config).ClusterExist(clusterID)
+	err := meta.(*Config).ClusterExist(clusterRole.ClusterID)
 	if err != nil {
 		return err
 	}
 
-	err = meta.(*Config).RoleTemplateExist(roleTemplateID)
+	err = meta.(*Config).RoleTemplateExist(clusterRole.RoleTemplateID)
 	if err != nil {
 		return err
-	}
-
-	clusterRole := &managementClient.ClusterRoleTemplateBinding{
-		ClusterID:        clusterID,
-		RoleTemplateID:   roleTemplateID,
-		Name:             d.Get("name").(string),
-		GroupID:          d.Get("group_id").(string),
-		GroupPrincipalID: d.Get("group_principal_id").(string),
-		UserID:           d.Get("user_id").(string),
-		UserPrincipalID:  d.Get("user_principal_id").(string),
 	}
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
+
+	log.Printf("[INFO] Creating Cluster Role Template Binding %s", clusterRole.Name)
 
 	newClusterRole, err := client.ClusterRoleTemplateBinding.Create(clusterRole)
 	if err != nil {
@@ -108,7 +205,10 @@ func resourceRancher2ClusterRoleTemplateBindingCreate(d *schema.ResourceData, me
 			"[ERROR] waiting for cluster role template binding (%s) to be created: %s", newClusterRole.ID, waitErr)
 	}
 
-	d.SetId(newClusterRole.ID)
+	err = flattenClusterRoleTemplateBinding(d, clusterRole)
+	if err != nil {
+		return err
+	}
 
 	return resourceRancher2ClusterRoleTemplateBindingRead(d, meta)
 }
@@ -130,13 +230,10 @@ func resourceRancher2ClusterRoleTemplateBindingRead(d *schema.ResourceData, meta
 		return err
 	}
 
-	d.Set("cluster_id", clusterRole.ClusterID)
-	d.Set("role_template_id", clusterRole.RoleTemplateID)
-	d.Set("name", clusterRole.Name)
-	d.Set("group_id", clusterRole.GroupID)
-	d.Set("group_principal_id", clusterRole.GroupPrincipalID)
-	d.Set("user_id", clusterRole.UserID)
-	d.Set("user_principal_id", clusterRole.UserPrincipalID)
+	err = flattenClusterRoleTemplateBinding(d, clusterRole)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -154,26 +251,12 @@ func resourceRancher2ClusterRoleTemplateBindingUpdate(d *schema.ResourceData, me
 	}
 
 	update := map[string]interface{}{
-		"clusterId":        d.Get("cluster_id").(string),
-		"roleTemplateId":   d.Get("role_template_id").(string),
 		"groupId":          d.Get("group_id").(string),
 		"groupPrincipalId": d.Get("group_principal_id").(string),
 		"userId":           d.Get("user_id").(string),
 		"userPrincipalId":  d.Get("user_principal_id").(string),
-	}
-
-	if clusterRole.ClusterID != update["clusterId"].(string) {
-		err = meta.(*Config).ClusterExist(update["clusterId"].(string))
-		if err != nil {
-			return err
-		}
-	}
-
-	if clusterRole.RoleTemplateID != update["roleTemplateId"].(string) {
-		err = meta.(*Config).RoleTemplateExist(update["roleTemplateId"].(string))
-		if err != nil {
-			return err
-		}
+		"annotations":      toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":           toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newClusterRole, err := client.ClusterRoleTemplateBinding.Update(clusterRole, update)
@@ -252,14 +335,10 @@ func resourceRancher2ClusterRoleTemplateBindingImport(d *schema.ResourceData, me
 		return []*schema.ResourceData{}, err
 	}
 
-	d.SetId(clusterRole.ID)
-	d.Set("cluster_id", clusterRole.ClusterID)
-	d.Set("role_template_id", clusterRole.RoleTemplateID)
-	d.Set("name", clusterRole.Name)
-	d.Set("group_id", clusterRole.GroupID)
-	d.Set("group_principal_id", clusterRole.GroupPrincipalID)
-	d.Set("user_id", clusterRole.UserID)
-	d.Set("user_principal_id", clusterRole.UserPrincipalID)
+	err = flattenClusterRoleTemplateBinding(d, clusterRole)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
 
 	return []*schema.ResourceData{d}, nil
 }

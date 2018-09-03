@@ -11,6 +11,130 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
+// Shemas
+
+func catalogFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"id": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"url": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"kind": &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "helm",
+			ValidateFunc: validation.StringInSlice([]string{"helm"}, true),
+		},
+		"branch": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "master",
+		},
+		"annotations": &schema.Schema{
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+		"labels": &schema.Schema{
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+	}
+
+	return s
+}
+
+// Flatteners
+
+func flattenCatalog(d *schema.ResourceData, in *managementClient.Catalog) error {
+	if in == nil {
+		return nil
+	}
+
+	d.SetId(in.ID)
+
+	err := d.Set("name", in.Name)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("url", in.URL)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("description", in.Description)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("kind", in.Kind)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("branch", in.Branch)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("annotations", toMapInterface(in.Annotations))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("labels", toMapInterface(in.Labels))
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// Expanders
+
+func expandCatalog(in *schema.ResourceData) *managementClient.Catalog {
+	obj := &managementClient.Catalog{}
+	if in == nil {
+		return nil
+	}
+
+	if v := in.Id(); len(v) > 0 {
+		obj.ID = v
+	}
+
+	obj.Name = in.Get("name").(string)
+	obj.URL = in.Get("url").(string)
+	obj.Description = in.Get("description").(string)
+	obj.Kind = in.Get("kind").(string)
+	obj.Branch = in.Get("branch").(string)
+
+	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Annotations = toMapString(v)
+	}
+
+	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Labels = toMapString(v)
+	}
+
+	return obj
+}
+
 func resourceRancher2Catalog() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRancher2CatalogCreate,
@@ -21,56 +145,19 @@ func resourceRancher2Catalog() *schema.Resource {
 			State: resourceRancher2CatalogImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"url": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"kind": &schema.Schema{
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "helm",
-				ValidateFunc: validation.StringInSlice([]string{"helm"}, true),
-			},
-			"branch": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "master",
-			},
-		},
+		Schema: catalogFields(),
 	}
 }
 
 func resourceRancher2CatalogCreate(d *schema.ResourceData, meta interface{}) error {
-	name := d.Get("name").(string)
-
-	log.Printf("[INFO] Creating Catalog %s", name)
+	catalog := expandCatalog(d)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	catalog := &managementClient.Catalog{
-		Name:        name,
-		URL:         d.Get("url").(string),
-		Description: d.Get("description").(string),
-		Kind:        d.Get("kind").(string),
-		Branch:      d.Get("branch").(string),
-	}
+	log.Printf("[INFO] Creating Catalog %s", catalog.Name)
 
 	newCatalog, err := client.Catalog.Create(catalog)
 	if err != nil {
@@ -91,7 +178,10 @@ func resourceRancher2CatalogCreate(d *schema.ResourceData, meta interface{}) err
 			"[ERROR] waiting for catalog (%s) to be created: %s", newCatalog.ID, waitErr)
 	}
 
-	d.SetId(newCatalog.ID)
+	err = flattenCatalog(d, newCatalog)
+	if err != nil {
+		return err
+	}
 
 	return resourceRancher2CatalogRead(d, meta)
 }
@@ -113,11 +203,10 @@ func resourceRancher2CatalogRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	d.Set("name", catalog.Name)
-	d.Set("url", catalog.URL)
-	d.Set("description", catalog.Description)
-	d.Set("kind", catalog.Kind)
-	d.Set("branch", catalog.Branch)
+	err = flattenCatalog(d, catalog)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -134,11 +223,13 @@ func resourceRancher2CatalogUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	update := map[string]string{
+	update := map[string]interface{}{
 		"url":         d.Get("url").(string),
 		"description": d.Get("description").(string),
 		"kind":        d.Get("kind").(string),
 		"branch":      d.Get("branch").(string),
+		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newCatalog, err := client.Catalog.Update(catalog, update)
@@ -217,12 +308,10 @@ func resourceRancher2CatalogImport(d *schema.ResourceData, meta interface{}) ([]
 		return []*schema.ResourceData{}, err
 	}
 
-	d.SetId(catalog.ID)
-	d.Set("name", catalog.Name)
-	d.Set("url", catalog.URL)
-	d.Set("description", catalog.Description)
-	d.Set("kind", catalog.Kind)
-	d.Set("branch", catalog.Branch)
+	err = flattenCatalog(d, catalog)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
 
 	return []*schema.ResourceData{d}, nil
 }

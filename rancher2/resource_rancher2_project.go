@@ -10,6 +10,109 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
+//Schemas
+
+func projectFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"id": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"cluster_id": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"annotations": &schema.Schema{
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Computed:    true,
+			Description: descriptions["annotations"],
+		},
+		"labels": &schema.Schema{
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Computed:    true,
+			Description: descriptions["labels"],
+		},
+	}
+
+	return s
+}
+
+// Flatteners
+
+func flattenProject(d *schema.ResourceData, in *managementClient.Project) error {
+	if in == nil {
+		return nil
+	}
+
+	d.SetId(in.ID)
+
+	err := d.Set("cluster_id", in.ClusterID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("name", in.Name)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("description", in.Description)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("annotations", toMapInterface(in.Annotations))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("labels", toMapInterface(in.Labels))
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// Expanders
+
+func expandProject(in *schema.ResourceData) *managementClient.Project {
+	obj := &managementClient.Project{}
+	if in == nil {
+		return nil
+	}
+
+	if v := in.Id(); len(v) > 0 {
+		obj.ID = v
+	}
+
+	obj.ClusterID = in.Get("cluster_id").(string)
+	obj.Name = in.Get("name").(string)
+	obj.Description = in.Get("description").(string)
+
+	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Annotations = toMapString(v)
+	}
+
+	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Labels = toMapString(v)
+	}
+
+	return obj
+}
+
 func resourceRancher2Project() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRancher2ProjectCreate,
@@ -20,55 +123,19 @@ func resourceRancher2Project() *schema.Resource {
 			State: resourceRancher2ProjectImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"cluster_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"annotations": &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
-			},
-			"labels": &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
-			},
-		},
+		Schema: projectFields(),
 	}
 }
 
 func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	name := d.Get("name").(string)
-	//annotations := d.Get("annotations").(map[string]string)
-	//labels := d.Get("labels").(map[string]string)
-
-	log.Printf("[INFO] Creating Project %s", name)
-
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	project := &managementClient.Project{
-		Name:        name,
-		ClusterID:   d.Get("cluster_id").(string),
-		Description: d.Get("description").(string),
-		//	Annotations: annotations,
-		//	Labels:      labels,
-	}
+	project := expandProject(d)
+
+	log.Printf("[INFO] Creating Project %s", project.Name)
 
 	newProject, err := client.Project.Create(project)
 	if err != nil {
@@ -89,7 +156,10 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 			"[ERROR] waiting for project (%s) to be created: %s", newProject.ID, waitErr)
 	}
 
-	d.SetId(newProject.ID)
+	err = flattenProject(d, newProject)
+	if err != nil {
+		return err
+	}
 
 	return resourceRancher2ProjectRead(d, meta)
 }
@@ -111,11 +181,10 @@ func resourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	d.Set("name", project.Name)
-	d.Set("cluster_id", project.ClusterID)
-	d.Set("description", project.Description)
-	//d.Set("annotations", project.Annotations)
-	//d.Set("labels", project.Labels)
+	err = flattenProject(d, project)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -132,11 +201,11 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	update := map[string]string{
+	update := map[string]interface{}{
 		"name":        d.Get("name").(string),
 		"description": d.Get("description").(string),
-		//"annotations": d.Get("annotations").(map[string]string),
-		//"labels":      d.Get("labels").(map[string]string),
+		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newProject, err := client.Project.Update(project, update)
@@ -215,12 +284,10 @@ func resourceRancher2ProjectImport(d *schema.ResourceData, meta interface{}) ([]
 		return []*schema.ResourceData{}, err
 	}
 
-	d.SetId(project.ID)
-	d.Set("name", project.Name)
-	d.Set("cluster_id", project.ClusterID)
-	d.Set("description", project.Description)
-	//d.Set("annotations", project.Annotations)
-	//d.Set("labels", project.Labels)
+	err = flattenProject(d, project)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
 
 	return []*schema.ResourceData{d}, nil
 }
