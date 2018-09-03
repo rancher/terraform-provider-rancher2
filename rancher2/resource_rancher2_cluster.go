@@ -252,10 +252,11 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	expectedState := "active"
+
 	kind := d.Get("kind").(string)
 
 	if kind == "imported" {
-		expectedState := "pending"
+		expectedState = "pending"
 	}
 
 	if kind == "rke" {

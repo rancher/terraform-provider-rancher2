@@ -16,8 +16,7 @@ const (
 resource "rancher2_namespace" "foo" {
   name = "foo"
   description = "Foo namespace test"
-  cluster_id = "local"
-  project_name = "Default"
+  project_id = "local:p-3124s"
 }
 `
 
@@ -25,7 +24,7 @@ resource "rancher2_namespace" "foo" {
 resource "rancher2_namespace" "foo" {
   name = "foo"
   description = "Foo namespace test - updated"
-  cluster_id = "local"
+  project_id = "local:p-3124s"
 }
  `
 
@@ -33,8 +32,7 @@ resource "rancher2_namespace" "foo" {
 resource "rancher2_namespace" "foo" {
   name = "foo"
   description = "Foo namespace test"
-  cluster_id = "local"
-  project_name = "Default"
+  project_id = "local:p-3124s"
 }
  `
 )
@@ -53,8 +51,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Foo namespace test"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "cluster_id", "local"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_name", "Default"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_id", "local:p-3124s"),
 				),
 			},
 			resource.TestStep{
@@ -63,8 +60,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Foo namespace test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "cluster_id", "local"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_name", ""),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_id", "local:p-3124s"),
 				),
 			},
 			resource.TestStep{
@@ -73,8 +69,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Foo namespace test"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "cluster_id", "local"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_name", "Default"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_id", "local:p-3124s"),
 				),
 			},
 		},

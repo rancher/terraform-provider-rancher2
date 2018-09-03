@@ -302,6 +302,19 @@ func (c *Config) UpdateClusterByID(cluster *managementClient.Cluster, update map
 	return client.Cluster.Update(cluster, update)
 }
 
+func (c *Config) isClusterActive(id string) (bool, error) {
+	clus, err := c.GetClusterByID(id)
+	if err != nil {
+		return false, err
+	}
+
+	if clus.State == "active" {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 func (c *Config) ClusterExist(id string) error {
 	_, err := c.GetClusterByID(id)
 	if err != nil {
@@ -352,6 +365,14 @@ func splitID(id string) (clusterID, resourceID string) {
 		return id[0:strings.Index(id, separator)], id[strings.Index(id, separator)+1:]
 	}
 	return "", id
+}
+
+func clusterIDFromProjectID(projectID string) (string, error) {
+	if projectID == "" || !strings.Contains(projectID, clusterProjectIDSeparator) {
+		return "", fmt.Errorf("[ERROR] Getting clusted ID from project ID: Bad project id format %s", projectID)
+	}
+
+	return projectID[0:strings.Index(projectID, clusterProjectIDSeparator)], nil
 }
 
 func splitProjectID(id string) (clusterID, projectID string) {

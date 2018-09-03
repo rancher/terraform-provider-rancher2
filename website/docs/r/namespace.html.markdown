@@ -16,8 +16,8 @@ Provides a Rancher v2 Namespace resource. This can be used to create namespaces 
 # Create a new rancher2 Namespace
 resource "rancher2_namespace" "foo" {
   name = "foo"
-  cluster_id = "<CLUSTER_ID>"
-  project_name = "foo"
+  project_id = "<PROJECT_ID>"
+  description = "foo namespace"
 }
 ```
 
@@ -26,10 +26,10 @@ resource "rancher2_namespace" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the namespace.
-* `cluster_id` - (Required) The cluster id where create namespace.
+* `project_id` - (Required) The project id where create namespace.
 * `description` - (Optional) A namespace description.
-* `project_name` - (Optional) Rancher Project name where assign namespace.
-* `resource_quota_template_id` - (Optional) Rancher v2 resource quota template id to apply to namespace.
+* `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
+* `labels` - (Optional/Computed) Labels for Node Pool object (map)
 
 ## Attributes Reference
 

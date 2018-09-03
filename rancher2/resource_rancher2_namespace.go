@@ -14,7 +14,7 @@ func init() {
 	descriptions = map[string]string{
 		"name": "Name of the k8s namespace managed by rancher v2",
 
-		"cluster_id": "Cluster ID where k8s namespace belongs",
+		"project_id": "Project ID where k8s namespace belongs",
 
 		"project_name": "Project name where k8s namespace belongs",
 
@@ -28,6 +28,113 @@ func init() {
 	}
 }
 
+//Schemas
+
+func namespaceFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"id": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"project_id": &schema.Schema{
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true,
+			Description: descriptions["project_id"],
+		},
+		"name": &schema.Schema{
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true,
+			Description: descriptions["name"],
+		},
+		"description": &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: descriptions["description"],
+		},
+		"annotations": &schema.Schema{
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Computed:    true,
+			Description: descriptions["annotations"],
+		},
+		"labels": &schema.Schema{
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Computed:    true,
+			Description: descriptions["labels"],
+		},
+	}
+
+	return s
+}
+
+// Flatteners
+
+func flattenNamespace(d *schema.ResourceData, in *clusterClient.Namespace) error {
+	if in == nil {
+		return nil
+	}
+
+	d.SetId(in.ID)
+
+	err := d.Set("project_id", in.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("name", in.Name)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("description", in.Description)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("annotations", toMapInterface(in.Annotations))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("labels", toMapInterface(in.Labels))
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// Expanders
+
+func expandNamespace(in *schema.ResourceData) *clusterClient.Namespace {
+	obj := &clusterClient.Namespace{}
+	if in == nil {
+		return nil
+	}
+
+	if v := in.Id(); len(v) > 0 {
+		obj.ID = v
+	}
+
+	obj.ProjectID = in.Get("project_id").(string)
+	obj.Name = in.Get("name").(string)
+	obj.Description = in.Get("description").(string)
+
+	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Annotations = toMapString(v)
+	}
+
+	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Labels = toMapString(v)
+	}
+
+	return obj
+}
+
 func resourceRancher2Namespace() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRancher2NamespaceCreate,
@@ -38,88 +145,32 @@ func resourceRancher2Namespace() *schema.Resource {
 			State: resourceRancher2NamespaceImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"project_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: descriptions["cluster_id"],
-			},
-			"name": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: descriptions["name"],
-			},
-			"project_name": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: descriptions["project_name"],
-			},
-			"description": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: descriptions["description"],
-			},
-			"resource_quota_template_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: descriptions["resource_quota_template_id"],
-			},
-			"annotations": &schema.Schema{
-				Type:        schema.TypeMap,
-				Optional:    true,
-				Description: descriptions["annotations"],
-			},
-			"labels": &schema.Schema{
-				Type:        schema.TypeMap,
-				Optional:    true,
-				Description: descriptions["labels"],
-			},
-		},
+		Schema: namespaceFields(),
 	}
 }
 
 func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) error {
-	name := d.Get("name").(string)
-	clusterID := d.Get("cluster_id").(string)
-	projectName := d.Get("project_name").(string)
-	projectID, err := meta.(*Config).GetProjectIDByName(projectName, clusterID)
+	clusterID, err := clusterIDFromProjectID(d.Get("project_id").(string))
 	if err != nil {
 		return err
 	}
 
-	err = meta.(*Config).ClusterExist(clusterID)
+	active, err := meta.(*Config).isClusterActive(clusterID)
 	if err != nil {
 		return err
 	}
-
-	//annotations := d.Get("annotations").(map[string]string)
-	//labels := d.Get("labels").(map[string]string)
-
-	log.Printf("[INFO] Creating Namespace %s", name)
+	if !active {
+		return fmt.Errorf("[ERROR] Creating namespace: Cluster ID %s is not active", clusterID)
+	}
 
 	client, err := meta.(*Config).ClusterClient(clusterID)
 	if err != nil {
 		return err
 	}
 
-	ns := &clusterClient.Namespace{
-		Name:        name,
-		ProjectID:   projectID,
-		Description: d.Get("description").(string),
-		//ResourceQuotaTemplateID: d.Get("resource_quota_template_id").(string),
-		//	Annotations: annotations,
-		//	Labels:      labels,
-	}
+	ns := expandNamespace(d)
+
+	log.Printf("[INFO] Creating Namespace %s on Cluster ID %s", ns.Name, clusterID)
 
 	newNs, err := client.Namespace.Create(ns)
 	if err != nil {
@@ -140,14 +191,20 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 			"[ERROR] waiting for namespace (%s) to be created: %s", newNs.ID, waitErr)
 	}
 
-	d.SetId(newNs.ID)
-	d.Set("project_id", projectID)
+	err = flattenNamespace(d, newNs)
+	if err != nil {
+		return err
+	}
 
 	return resourceRancher2NamespaceRead(d, meta)
 }
 
 func resourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) error {
-	clusterID := d.Get("cluster_id").(string)
+	clusterID, err := clusterIDFromProjectID(d.Get("project_id").(string))
+	if err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] Refreshing Namespace ID %s", d.Id())
 
 	client, err := meta.(*Config).ClusterClient(clusterID)
@@ -165,26 +222,16 @@ func resourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	projectName, err := meta.(*Config).GetProjectNameByID(ns.ProjectID)
+	err = flattenNamespace(d, ns)
 	if err != nil {
 		return err
 	}
-
-	d.Set("name", ns.Name)
-	d.Set("project_id", ns.ProjectID)
-	d.Set("project_name", projectName)
-	d.Set("description", ns.Description)
-	//d.Set("resource_quota_template_id", ns.ResourceQuotaTemplateID)
-	//d.Set("annotations", ns.Annotations)
-	//d.Set("labels", ns.Labels)
 
 	return nil
 }
 
 func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	clusterID := d.Get("cluster_id").(string)
-	projectName := d.Get("project_name").(string)
-	projectID, err := meta.(*Config).GetProjectIDByName(projectName, clusterID)
+	clusterID, err := clusterIDFromProjectID(d.Get("project_id").(string))
 	if err != nil {
 		return err
 	}
@@ -201,12 +248,11 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	update := map[string]string{
-		"projectId":               projectID,
-		"description":             d.Get("description").(string),
-		"resourceQuotaTemplateId": d.Get("resource_quota_template_id").(string),
-		//"annotations": d.Get("annotations").(map[string]string),
-		//"labels":      d.Get("labels").(map[string]string),
+	update := map[string]interface{}{
+		"projectId":   d.Get("project_id").(string),
+		"description": d.Get("description").(string),
+		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newNs, err := client.Namespace.Update(ns, update)
@@ -228,15 +274,23 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 			"[ERROR] waiting for namespace (%s) to be updated: %s", newNs.ID, waitErr)
 	}
 
-	d.Set("project_id", projectID)
+	err = flattenNamespace(d, newNs)
+	if err != nil {
+		return err
+	}
 
 	return resourceRancher2NamespaceRead(d, meta)
 }
 
 func resourceRancher2NamespaceDelete(d *schema.ResourceData, meta interface{}) error {
+	clusterID, err := clusterIDFromProjectID(d.Get("project_id").(string))
+	if err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] Deleting Namespace ID %s", d.Id())
 	id := d.Id()
-	client, err := meta.(*Config).ClusterClient(d.Get("cluster_id").(string))
+	client, err := meta.(*Config).ClusterClient(clusterID)
 	if err != nil {
 		return err
 	}
@@ -284,25 +338,15 @@ func resourceRancher2NamespaceImport(d *schema.ResourceData, meta interface{}) (
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}
-	ns, err := client.Namespace.ByID(d.Id())
+	ns, err := client.Namespace.ByID(resourceID)
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}
 
-	projectName, err := meta.(*Config).GetProjectNameByID(ns.ProjectID)
+	err = flattenNamespace(d, ns)
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}
-
-	d.SetId(resourceID)
-	d.Set("name", ns.Name)
-	d.Set("cluster_id", clusterID)
-	d.Set("project_id", ns.ProjectID)
-	d.Set("project_name", projectName)
-	d.Set("description", ns.Description)
-	//d.Set("resource_quota_template_id", ns.ResourceQuotaTemplateID)
-	//d.Set("annotations", ns.Annotations)
-	//d.Set("labels", ns.Labels)
 
 	return []*schema.ResourceData{d}, nil
 }
