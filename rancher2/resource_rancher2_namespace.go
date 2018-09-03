@@ -97,6 +97,11 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	err = meta.(*Config).ClusterExist(clusterID)
+	if err != nil {
+		return err
+	}
+
 	//annotations := d.Get("annotations").(map[string]string)
 	//labels := d.Get("labels").(map[string]string)
 
@@ -108,10 +113,10 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	ns := &clusterClient.Namespace{
-		Name:                    name,
-		ProjectID:               projectID,
-		Description:             d.Get("description").(string),
-		ResourceQuotaTemplateID: d.Get("resource_quota_template_id").(string),
+		Name:        name,
+		ProjectID:   projectID,
+		Description: d.Get("description").(string),
+		//ResourceQuotaTemplateID: d.Get("resource_quota_template_id").(string),
 		//	Annotations: annotations,
 		//	Labels:      labels,
 	}
@@ -169,7 +174,7 @@ func resourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("project_id", ns.ProjectID)
 	d.Set("project_name", projectName)
 	d.Set("description", ns.Description)
-	d.Set("resource_quota_template_id", ns.ResourceQuotaTemplateID)
+	//d.Set("resource_quota_template_id", ns.ResourceQuotaTemplateID)
 	//d.Set("annotations", ns.Annotations)
 	//d.Set("labels", ns.Labels)
 
@@ -295,7 +300,7 @@ func resourceRancher2NamespaceImport(d *schema.ResourceData, meta interface{}) (
 	d.Set("project_id", ns.ProjectID)
 	d.Set("project_name", projectName)
 	d.Set("description", ns.Description)
-	d.Set("resource_quota_template_id", ns.ResourceQuotaTemplateID)
+	//d.Set("resource_quota_template_id", ns.ResourceQuotaTemplateID)
 	//d.Set("annotations", ns.Annotations)
 	//d.Set("labels", ns.Labels)
 

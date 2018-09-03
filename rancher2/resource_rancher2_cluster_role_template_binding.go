@@ -275,6 +275,10 @@ func clusterRoleTemplateBindingStateRefreshFunc(client *managementClient.Client,
 			return nil, "", err
 		}
 
+		if clu.Removed != "" {
+			return clu, "removed", nil
+		}
+
 		return clu, "active", nil
 	}
 }

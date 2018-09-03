@@ -153,7 +153,7 @@ func (c *Config) GetProjectByName(name, clusterID string) (*managementClient.Pro
 		return nil, err
 	}
 
-	filters := map[string]interface{}{"ClusterId": clusterID}
+	filters := map[string]interface{}{"clusterId": clusterID, "name": name}
 	listOpts := NewListOpts(filters)
 
 	projects, err := client.Project.List(listOpts)
@@ -238,6 +238,44 @@ func (c *Config) RoleTemplateExist(id string) error {
 	return nil
 }
 
+func (c *Config) GetClusterByName(name string) (*managementClient.Cluster, error) {
+	if name == "" {
+		return nil, fmt.Errorf("[ERROR] Cluster name is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	filters := map[string]interface{}{"name": name}
+	listOpts := NewListOpts(filters)
+
+	clusters, err := client.Cluster.List(listOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cluster := range clusters.Data {
+		if cluster.Name == name {
+			return &cluster, nil
+		}
+	}
+	return nil, fmt.Errorf("[ERROR] Cluster %s not found", name)
+}
+
+func (c *Config) GetClusterIDByName(name string) (string, error) {
+	if name == "" {
+		return "", nil
+	}
+
+	cluster, err := c.GetClusterByName(name)
+	if err != nil {
+		return "", err
+	}
+	return cluster.ID, nil
+}
+
 func (c *Config) GetClusterByID(id string) (*managementClient.Cluster, error) {
 	if id == "" {
 		return nil, fmt.Errorf("Cluster id is nil")
@@ -251,8 +289,43 @@ func (c *Config) GetClusterByID(id string) (*managementClient.Cluster, error) {
 	return client.Cluster.ByID(id)
 }
 
+func (c *Config) UpdateClusterByID(cluster *managementClient.Cluster, update map[string]interface{}) (*managementClient.Cluster, error) {
+	if cluster == nil {
+		return nil, fmt.Errorf("[ERROR] Updating cluster: Cluster is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Cluster.Update(cluster, update)
+}
+
 func (c *Config) ClusterExist(id string) error {
 	_, err := c.GetClusterByID(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Config) GetClusterRegistrationTokenByID(id string) (*managementClient.ClusterRegistrationToken, error) {
+	if id == "" {
+		return nil, fmt.Errorf("Cluster Regitration Token id is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.ClusterRegistrationToken.ByID(id)
+}
+
+func (c *Config) ClusterRegistrationTokenExist(id string) error {
+	_, err := c.GetClusterRegistrationTokenByID(id)
 	if err != nil {
 		return err
 	}
@@ -289,6 +362,38 @@ func splitProjectID(id string) (clusterID, projectID string) {
 	}
 
 	return id, ""
+}
+
+func toArrayString(in []interface{}) []string {
+	out := make([]string, len(in))
+	for i, v := range in {
+		out[i] = v.(string)
+	}
+	return out
+}
+
+func toArrayInterface(in []string) []interface{} {
+	out := make([]interface{}, len(in))
+	for i, v := range in {
+		out[i] = v
+	}
+	return out
+}
+
+func toMapString(in map[string]interface{}) map[string]string {
+	out := make(map[string]string)
+	for i, v := range in {
+		out[i] = v.(string)
+	}
+	return out
+}
+
+func toMapInterface(in map[string]string) map[string]interface{} {
+	out := make(map[string]interface{})
+	for i, v := range in {
+		out[i] = v
+	}
+	return out
 }
 
 /*

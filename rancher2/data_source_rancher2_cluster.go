@@ -15,6 +15,10 @@ func dataSourceRancher2Cluster() *schema.Resource {
 		Read: dataSourceRancher2ClusterRead,
 
 		Schema: map[string]*schema.Schema{
+			"id": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
@@ -39,26 +43,30 @@ func dataSourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) err
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing Rancher Environment: %s", name)
 
+	cluster, err := meta.(*Config).GetClusterByName(name)
+	if err != nil {
+		return err
+	}
+
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"active", "removed", "removing", "not found"},
+		Pending:    []string{"active", "removed", "removing"},
 		Target:     []string{"active"},
-		Refresh:    findCluster(client, name),
+		Refresh:    findCluster(client, cluster.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	clus, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf(
 			"Error waiting for cluster (%s) to be found: %s", name, waitErr)
 	}
 
-	cluster := clus.(managementClient.Cluster)
 	d.SetId(cluster.ID)
 
 	d.Set("description", cluster.Description)
@@ -69,19 +77,16 @@ func dataSourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func findCluster(client *managementClient.Client, clustername string) resource.StateRefreshFunc {
+func findCluster(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		clusters, err := client.Cluster.List(NewListOpts(nil))
+		clus, err := client.Cluster.ByID(clusterID)
 		if err != nil {
+			if IsNotFound(err) {
+				return clus, "removed", nil
+			}
 			return nil, "", err
 		}
 
-		for _, clus := range clusters.Data {
-			if clus.Name == clustername {
-				return clus, clus.State, nil
-			}
-		}
-
-		return nil, "not found", nil
+		return clus, clus.State, nil
 	}
 }

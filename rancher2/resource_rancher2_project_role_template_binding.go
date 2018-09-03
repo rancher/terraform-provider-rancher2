@@ -28,6 +28,7 @@ func resourceRancher2ProjectRoleTemplateBinding() *schema.Resource {
 			"project_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"role_template_id": {
 				Type:     schema.TypeString,
@@ -154,7 +155,6 @@ func resourceRancher2ProjectRoleTemplateBindingUpdate(d *schema.ResourceData, me
 	}
 
 	update := map[string]interface{}{
-		"projectId":        d.Get("project_id").(string),
 		"roleTemplateId":   d.Get("role_template_id").(string),
 		"groupId":          d.Get("group_id").(string),
 		"groupPrincipalId": d.Get("group_principal_id").(string),
@@ -273,6 +273,10 @@ func projectRoleTemplateBindingStateRefreshFunc(client *managementClient.Client,
 				return pro, "removed", nil
 			}
 			return nil, "", err
+		}
+
+		if pro.Removed != "" {
+			return pro, "removed", nil
 		}
 
 		return pro, "active", nil

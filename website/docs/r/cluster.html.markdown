@@ -1,0 +1,359 @@
+---
+layout: "rancher2"
+page_title: "Rancher2: rancher2_cluster"
+sidebar_current: "docs-rancher2-cluster"
+description: |-
+  Provides a Rancher v2 Cluster resource. This can be used to create Clusters for rancher v2 environments and retrieve their information.
+---
+
+# rancher2\_cluster
+
+Provides a Rancher v2 Cluster resource. This can be used to create Clusters for rancher v2 environments and retrieve their information.
+
+## Example Usage
+
+```hcl
+# Create a new rancher2 imported Cluster 
+resource "rancher2_cluster" "foo-imported" {
+  name = "foo-imported"
+  description = "Foo rancher2 imported cluster"
+  kind = "imported"
+}
+
+# Create a new rancher2 rke Cluster 
+resource "rancher2_cluster" "foo-custom" {
+  name = "foo-custom"
+  description = "Foo rancher2 custom cluster"
+  kind = "rke"
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+  }
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `name` - (Required) The name of the Cluster (string)
+* `kind` - (Required) The kind of the Cluster. `imported`, `eks`, `aks`, `gke` and `rke` are supported
+* `rke_config` - (Optional) The rke configuration for `rke` kind Clusters
+* `eks_config` - (Optional) The Amazon eks configuration for `eks` kind Clusters
+* `aks_config` - (Optional) The Azure aks configuration for `aks` kind Clusters
+* `gke_config` - (Optional) The Google gke configuration for `gke` kind Clusters
+* `description` - (Optional) The description for Cluster (string)
+* `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
+* `labels` - (Optional/Computed) Labels for Node Pool object (map)
+
+### Rancher `rke_config`
+
+The following arguments are supported:
+
+* `addon_job_timeout` - (Optional/Computed) Duration in seconds of addon job (int)
+* `authentication` - (Optional/Computed) Kubernetes cluster authentication
+* `cloud_provider` - (Optional/Computed) Kubernetes cluster authentication [rke-cloud-providers](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/)
+* `ignore_docker_version` - (Optional/Computed) Ignore docker version (bool)
+* `ingress` - (Optional/Computed) Kubernetes ingress configuration
+* `kubernetes_version` - (Optional/Computed) Kubernetes version to deploy (string)
+* `monitoring` - (Optional/Computed) Kubernetes cluster monitoring
+* `network` - (Optional/Computed) Kubernetes cluster networking
+* `services` - (Optional/Computed) Kubernetes cluster services
+* `ssh_agent_auth` - Optional use ssh agent auth (bool)
+
+The following arguments are supported for `authentication`:
+
+* `options` - (Optional/Computed) RKE options for Authentication (map)
+* `sans` - (Optional/Computed) RKE sans for Authentication ([]string)
+* `strategy` - (Optional/Computed) RKE strategy for Authentication (string)
+
+The following arguments are supported for `cloud_provider`:
+
+* `azure_cloud_provider` - (Optional/Computed) RKE Azure Cloud Provider config for Cloud Provider [rke-azure-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/azure)
+* `custom_cloud_provider` - (Optional/Computed) RKE Custom Cloud Provider config for Cloud Provider (string)
+* `name` - (Optional/Computed) RKE sans for Cloud Provider. `aws`, `azure`, `custom`, `openstack`, `vsphere` are supported.
+* `openstack_cloud_provider` - (Optional/Computed) RKE Openstack Cloud Provider config for Cloud Provider [rke-openstack-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/openstack) Extra argument `name` is required on `virtual_center` configuration.
+* `vsphere_cloud_provider` - (Optional/Computed) RKE Vsphere Cloud Provider config for Cloud Provider [rke-vsphere-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/vsphere)
+
+The following arguments are supported for `azure_cloud_provider`:
+
+* `aad_client_id` - (Required) (string)
+* `aad_client_secret` - (Required) (string)
+* `subscription_id` - (Required) (string)
+* `tenant_id` - (Required) (string)
+* `aad_client_cert_password` - (Optional/Computed) (string)
+* `aad_client_cert_path` - (Optional/Computed) (string)
+* `cloud` - (Optional/Computed) (string)
+* `cloud_provider_backoff` - (Optional/Computed) (bool)
+* `cloud_provider_backoff_duration` - (Optional/Computed) (int)
+* `cloud_provider_backoff_exponent` - (Optional/Computed) (int)
+* `cloud_provider_backoff_jitter` - (Optional/Computed) (int)
+* `cloud_provider_backoff_retries` - (Optional/Computed) (int)
+* `cloud_provider_rate_limit` - (Optional/Computed) (bool)
+* `cloud_provider_rate_limit_bucket` - (Optional/Computed) (int)
+* `cloud_provider_rate_limit_qps` - (Optional/Computed) (int)
+* `location` - (Optional/Computed) (string)
+* `maximum_load_balancer_rule_count` - (Optional/Computed) (int)
+* `primary_availability_set_name"` - (Optional/Computed) (string)
+* `primary_scale_set_name` - (Optional/Computed) (string)
+* `resource_group` - (Optional/Computed) (string)
+* `route_table_name` - (Optional/Computed) (string)
+* `security_group_name` - (Optional/Computed) (string)
+* `subnet_name` - (Optional/Computed) (string)
+* `use_instance_metadata` - (Optional/Computed) (bool)
+* `use_managed_identity_extension` - (Optional/Computed) (bool)
+* `vm_type` - (Optional/Computed) (string)
+* `vnet_name` - (Optional/Computed) (string)
+* `vnet_resource_group` - (Optional/Computed) (string)
+
+The following arguments are supported for `openstack_cloud_provider`:
+
+* `global` - (Required)
+* `block_storage` - (Optional)
+* `load_balancer` - (Optional)
+* `metadata` - (Optional)
+* `route` - (Optional)
+
+The following arguments are supported for `global`:
+
+* `auth_url` - (Required) (string)
+* `password` - (Required) (string)
+* `tenant_id` - (Required) (string)
+* `user_id` - (Required) (string)
+* `username` - (Required) (string)
+* `ca_file` - (Optional/Computed) (string)
+* `domain_id` - (Optional/Computed) (string)
+* `domain_name` - (Optional/Computed) (string)
+* `region` - (Optional/Computed) (string)
+* `tenant_name` - (Optional/Computed) (string)
+* `trust_id` - (Optional/Computed) (string)
+
+The following arguments are supported for `block_storage`:
+
+* `bs_version` - (Optional/Computed) (string)
+* `ignore_volume_az` - (Optional/Computed) (string)
+* `trust_device_path` - (Optional/Computed) (string)
+
+The following arguments are supported for `load_balancer`:
+
+* `create_monitor` - (Optional/Computed) (bool)
+* `floating_network_id` - (Optional/Computed) (string)
+* `lb_method` - (Optional/Computed) (string)
+* `lb_provider` - (Optional/Computed) (string)
+* `lb_version` - (Optional/Computed) (string)
+* `manage_security_groups` - (Optional/Computed) (bool)
+* `monitor_delay` - (Optional/Computed) Default 60 (int)
+* `monitor_max_retries` - (Optional/Computed) Default 5 (int)
+* `monitor_timeout` - (Optional/Computed) Default 30 (int)
+* `subnet_id` - (Optional/Computed) (string)
+* `use_octavia` - (Optional/Computed) (bool)
+
+The following arguments are supported for `metadata`:
+
+* `request_timeout` - (Optional/Computed) (int)
+* `search_order` - (Optional/Computed) (string)
+
+The following arguments are supported for `route`:
+
+* `router_id` - (Optional/Computed) (string)
+
+The following arguments are supported for `vsphere_cloud_provider`:
+
+* `virtual_center` - (Required) (List)
+* `workspace` - (Required)
+* `disk` - (Optional)
+* `global` - (Optional)
+* `network` - (Optional)
+
+The following arguments are supported for `virtual_center`:
+
+* `datacenters` - (Required) (string)
+* `name` - (Required) Name of virtualcenter config for Vsphere Cloud Provider config (string)
+* `password` - (Required) (string)
+* `user` - (Required) (string)
+* `port` - (Optional/Computed) (string)
+* `soap_roundtrip_count` - (Optional/Computed) (int)
+
+The following arguments are supported for `workspace`:
+
+* `datacenter` - (Required) (string)
+* `folder` - (Required) (string)
+* `server` - (Required) (string)
+* `default_datastore` - (Optional/Computed) (string)
+* `resourcepool_path` - (Optional/Computed) (string)
+
+The following arguments are supported for `disk`:
+
+* `scsi_controller_type` - (Optional/Computed) (string)
+
+The following arguments are supported for `global`:
+
+* `datacenters` - (Optional/Computed) (string)
+* `insecure_flag` - (Optional/Computed) (bool)
+* `password` - (Optional/Computed) (string)
+* `user` - (Optional/Computed) (string)
+* `port` - (Optional/Computed) (string)
+* `soap_roundtrip_count` - (Optional/Computed) (int)
+
+The following arguments are supported for `network`:
+
+* `public_network` - (Optional/Computed) (string)
+
+The following arguments are supported for `ingress`:
+
+* `extra_args` - (Optional/Computed) Extra arguments for RKE Ingress (map)
+* `node_selector` - (Optional/Computed) Node selector for RKE Ingress (map)
+* `options` - (Optional/Computed) RKE options for Ingress (map)
+* `provider` - (Optional/Computed) Provider for RKE Ingress (string)
+
+The following arguments are supported for `monitoring`:
+
+* `options` - (Optional/Computed) RKE options for monitoring (map)
+* `provider` - (Optional/Computed) Provider for RKE monitoring (string)
+
+The following arguments are supported for `network`:
+
+* `calico_network_provider` - (Optional/Computed) Calico provider config for RKE network
+* `canal_network_provider` - (Optional/Computed) Canal provider config for RKE network
+* `flannel_network_provider` - (Optional/Computed) Flannel provider config for RKE network
+* `options` - (Optional/Computed) RKE options for network (map)
+* `plugin` - (Optional/Computed) Plugin for RKE network. `canal` (default), `flannel` and `calico` are supported.
+
+The following arguments are supported for `calico_network_provider`:
+
+* `cloud_provider` - (Optional/Computed) RKE options for Calico network provider (string)
+
+The following arguments are supported for `canal_network_provider`:
+
+* `iface` - (Optional/Computed) Iface config Canal network provider (string)
+
+The following arguments are supported for `flannel_network_provider`:
+
+* `iface` - (Optional/Computed) Iface config Flannel network provider (string)
+
+The following arguments are supported for `services`:
+
+* `etcd` - (Optional/Computed) Etcd options for RKE services
+* `kube_api` - (Optional/Computed) Kube API options for RKE services
+* `kube_controller` - (Optional/Computed) Kube Controller options for RKE services
+* `kubelet` - (Optional/Computed) Kubelet options for RKE services
+* `kubeproxy` - (Optional/Computed) Kubeproxy options for RKE services
+
+The following arguments are supported for `etcd`:
+
+* `extra_args` - (Optional/Computed) Extra arguments for etcd service (map)
+* `retention` - (Optional/Computed) Retention option for etcd service (string)
+* `snapshot` - (Optional/Computed) Snapshot option for etcd service (bool)
+
+The following arguments are supported for `kube_api`:
+
+* `extra_args` - (Optional/Computed) Extra arguments for kube API service (map)
+* `pod_security_policy` - (Optional/Computed) Pod Security Policy option for kube API service (bool)
+* `service_cluster_ip_range` - (Optional/Computed) Service Cluster IP Range option for kube API service (string)
+* `service_node_port_range` - (Optional/Computed) Service Node Port Range option for kube API service (string)
+
+The following arguments are supported for `kube_controller`:
+
+* `cluster_cidr` - (Optional/Computed) Cluster CIDR option for kube controller service (string)
+* `extra_args` - (Optional/Computed) Extra arguments for kube controller service (map)
+* `service_cluster_ip_range` - (Optional/Computed) Service Cluster ip Range option for kube controller service (string)
+
+The following arguments are supported for `kubelet`:
+
+* `cluster_dns_server` - (Optional/Computed) Cluster DNS Server option for kubelet service (string)
+* `cluster_domain` - (Optional/Computed) Cluster Domain option for kubelet service (string)
+* `extra_args` - (Optional/Computed) Extra arguments for kubelet service (map)
+
+The following arguments are supported for `kubeproxy`:
+
+* `extra_args` - (Optional/Computed) Extra arguments for kubeproxy service (map)
+
+### Amazon `eks_config`
+
+The following arguments are supported:
+
+* `access_key` - (Required) Access key for EKS (string)
+* `secret_key` - (Required) Secret key for EKS (string)
+* `instance_type` - (Required) Intance type for EKS cluster (string)
+* `maximum_nodes` - (Required) Maximum instaces for EKS cluster (int)
+* `minimum_nodes` - (Required) Minimum instaces for EKS cluster (int)
+* `region` - (Required) Region for EKS cluster (string)
+* `security_groups` - (Required) Security groups for EKS cluster ([]string)
+* `service_role` - (Required) Service role for EKS cluster (string)
+* `subnets` - (Required) Subnets for EKS cluster ([]string)
+* `virtual_network` - (Required) Virtual network for EKS cluster (string)
+
+### Azure `aks_config`
+
+The following arguments are supported:
+
+* `admin_username` - (Required) Admin username for AKS (string)
+* `agent_dns_prefix` - (Required) Agent dns prefix for AKS (string)
+* `agent_pool_name` - (Required) Agent pool name for AKS cluster (string)
+* `agent_vm_size` - (Required) Agent vm size for AKS cluster (string)
+* `base_url` - (Required) Base URL for AKS cluster (int)
+* `client_id` - (Required) Client ID for AKS (string)
+* `client_secret` - (Required) Client secret for AKS (string)
+* `count` - (Required) Number of agents for AKS cluster (int)
+* `location` - (Required) Location for AKS cluster (string)
+* `dns_service_ip` - (Required) DNS service ip for AKS cluster (string)
+* `docker_bridge_cidr` - (Required) Docker birdge CIDR for AKS cluster (string)
+* `kubernetes_version` - (Required) Kubernetes version for AKS cluster (string)
+* `master_dns_prefix` - (Required) Master dns prefix for AKS cluster (string)
+* `os_disk_size_gb` - (Required) OS disk size for agents for AKS cluster (int)
+* `resource_group` - (Required) Resource group for AKS (string)
+* `ssh_public_key_contents` - (Required) SSH public key for AKS cluster (string)
+* `service_cidr` - (Required) Services CIDR for AKS cluster (string)
+* `subnet` - (Required) Subnet for AKS (string)
+* `subscription_id` - (Required) Subscription ID for AKS (string)
+* `tag` - (Required) Tags for AKS cluster (map)
+* `tenant_id` - (Required) Tenant ID for AKS (string)
+* `virtual_network` - (Required) Virtual Network for AKS (string)
+* `virtual_network_resource_group` - (Required) Virtual Network resource group for AKS (string)
+
+
+### Google `gke_config`
+
+The following arguments are supported:
+
+* `cluster_ipv4_cidr` - (Required) Cluster ipv4 CIDR for GKE (string)
+* `credential` - (Required) Credential for GKE (string)
+* `description` - (Optional) Description for GKE cluster (string)
+* `disk_size_gb` - (Required) Disk size for agents for GKE cluster (int)
+* `enable_alpha_feature` - (Required) Enable alpha features on GKE cluster (bool)
+* `enable_http_load_balancing` - (Required) Enable HTTP load balancing on GKE cluster (bool)
+* `enable_horizontal_pod_autoscaling` - (Required) Enable Horitzontal Pod Autoscaling on GKE cluster (bool)
+* `enable_kubernetes_dashboard` - (Required) Enable kubernetes dashboard on GKE cluster (bool)
+* `enable_legacy_abac` - (Required) Enable legacy abac on GKE cluster (bool)
+* `enable_network_policy_config` - (Required) Enable network policy config on GKE cluster (bool)
+* `enable_stackdriver_logging` - (Required) Enable stackdriver logging on GKE cluster (bool)
+* `enable_stackdriver_monitoring` - (Required) Enable stackdriver monitoring on GKE cluster (bool)
+* `image_type` - (Required) Image type for GKE cluster (string)
+* `labels` - (Optional/Computed) Labels for GKE cluster (map)
+* `locations` - (Required) Locations for GKE cluster ([]string)
+* `machine_type` - (Required) Machine type for GKE cluster (string)
+* `maintenance_window` - (Required) Maintenance window for GKE cluster (string)
+* `master_version` - (Required) Master version for GKE cluster (string)
+* `network` - (Required) Network for GKE cluster (string)
+* `node_count` - (Required) Node count for GKE cluster (int)
+* `node_version` - (Required) Node version for GKE cluster (string)
+* `project_id` - (Required) Project ID for GKE cluster (string)
+* `sub_network` - (Required) Subnetwork for GKE cluster (string)
+* `zone` - (Required) Zone GKE cluster (string)
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - (Computed) The ID of the resource.
+* `cluster_registration_token` - (Computed) The Cluster Registration Token generated for Clusters.
+
+## Import
+
+Clusters can be imported using the rancher Cluster ID
+
+```
+$ terraform import rancher2_cluster.foo <cluster>
+```
+

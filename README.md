@@ -9,12 +9,20 @@ Implemented resources
 - Projects
 - Project Role Template Bindings
 - Cluster Role Template Bindings
-- namespaces
+- Namespaces
+- Node Pools
+- Clusters
+  - Imported
+  - RKE
+    - Custom
+    - Cloud providers adding node pools
+  - Amazon EKS
+  - Azure AKS
+  - Google GKE
 
 TODO
 
 - Auth provider
-- Clusters
 
 Terraform Provider
 ==================
