@@ -29,6 +29,7 @@ func rkeConfigFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: cloudProviderFields(),
 			},
@@ -171,12 +172,15 @@ func flattenRkeConfig(in *managementClient.RancherKubernetesEngineConfig) ([]int
 
 func expandRkeConfig(p []interface{}) (*managementClient.RancherKubernetesEngineConfig, error) {
 	obj := &managementClient.RancherKubernetesEngineConfig{}
+
+	// Set default network
+	network, err := expandNetwork([]interface{}{})
+	if err != nil {
+		return obj, err
+	}
+	obj.Network = network
+
 	if len(p) == 0 || p[0] == nil {
-		network, err := expandNetwork([]interface{}{})
-		if err != nil {
-			return obj, err
-		}
-		obj.Network = network
 		return obj, nil
 	}
 	in := p[0].(map[string]interface{})

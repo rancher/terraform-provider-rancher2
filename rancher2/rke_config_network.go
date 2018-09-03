@@ -82,7 +82,6 @@ func networkFields() map[string]*schema.Schema {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			Default:      networkPluginDefault,
 			ValidateFunc: validation.StringInSlice(networkPluginList, true),
 		},
 	}
@@ -218,6 +217,7 @@ func expandFlannelNetworkProvider(p []interface{}) (*managementClient.FlannelNet
 func expandNetwork(p []interface{}) (*managementClient.NetworkConfig, error) {
 	obj := &managementClient.NetworkConfig{}
 	if len(p) == 0 || p[0] == nil {
+		obj.Plugin = networkPluginDefault
 		return obj, nil
 	}
 	in := p[0].(map[string]interface{})

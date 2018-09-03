@@ -126,19 +126,16 @@ func openstackLoadBalancerCloudProviderFields() map[string]*schema.Schema {
 		"monitor_delay": {
 			Type:     schema.TypeInt,
 			Optional: true,
-			Computed: true,
 			Default:  openstackLBMonitorDelay,
 		},
 		"monitor_max_retries": {
 			Type:     schema.TypeInt,
 			Optional: true,
-			Computed: true,
 			Default:  openstackLBMonitorMaxRetries,
 		},
 		"monitor_timeout": {
 			Type:     schema.TypeInt,
 			Optional: true,
-			Computed: true,
 			Default:  openstackLBMonitorTimeout,
 		},
 		"subnet_id": {
