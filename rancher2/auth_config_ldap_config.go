@@ -4,32 +4,14 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 	managementClient "github.com/rancher/types/client/management/v3"
-)
-
-const authDefaultAccessMode = "restricted"
-
-var (
-	authAccessModes = []string{"required", "restricted", "unrestricted"}
 )
 
 //Schemas
 
 func authConfigLdapFields() map[string]*schema.Schema {
+	r := authConfigFields()
 	s := map[string]*schema.Schema{
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"name": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"type": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
 		"servers": {
 			Type:     schema.TypeList,
 			Required: true,
@@ -57,20 +39,6 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"access_mode": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringInSlice(authAccessModes, true),
-			Default:      authDefaultAccessMode,
-		},
-		"allowed_principal_ids": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
 		"certificate": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -79,11 +47,6 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Default:  5000,
-		},
-		"enabled": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  true,
 		},
 		"group_dn_attribute": {
 			Type:     schema.TypeString,
@@ -170,24 +133,39 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
-		"annotations": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
 	}
+
+	for k, v := range r {
+		s[k] = v
+	}
+
 	return s
 }
 
 // Flatteners
 
 func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConfig) error {
-	err := d.Set("servers", toArrayInterface(in.Servers))
+	err := d.Set("access_mode", in.AccessMode)
+	if err != nil {
+		return err
+	}
+	err = d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
+	if err != nil {
+		return err
+	}
+	err = d.Set("enabled", in.Enabled)
+	if err != nil {
+		return err
+	}
+	err = d.Set("annotations", toMapInterface(in.Annotations))
+	if err != nil {
+		return err
+	}
+	err = d.Set("labels", toMapInterface(in.Labels))
+	if err != nil {
+		return err
+	}
+	err = d.Set("servers", toArrayInterface(in.Servers))
 	if err != nil {
 		return err
 	}
@@ -199,19 +177,7 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	if err != nil {
 		return err
 	}
-	err = d.Set("access_mode", in.AccessMode)
-	if err != nil {
-		return err
-	}
-	err = d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
-	if err != nil {
-		return err
-	}
 	err = d.Set("connection_timeout", int(in.ConnectionTimeout))
-	if err != nil {
-		return err
-	}
-	err = d.Set("enabled", in.Enabled)
 	if err != nil {
 		return err
 	}
@@ -283,14 +249,6 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	if err != nil {
 		return err
 	}
-	err = d.Set("annotations", toMapInterface(in.Annotations))
-	if err != nil {
-		return err
-	}
-	err = d.Set("labels", toMapInterface(in.Labels))
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -305,6 +263,22 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
 		obj.AccessMode = v
+	}
+
+	if v, ok := in.Get("allowed_principal_ids").([]interface{}); ok && len(v) > 0 {
+		obj.AllowedPrincipalIDs = toArrayString(v)
+	}
+
+	if v, ok := in.Get("enabled").(bool); ok {
+		obj.Enabled = v
+	}
+
+	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Annotations = toMapString(v)
+	}
+
+	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Labels = toMapString(v)
 	}
 
 	if v, ok := in.Get("servers").([]interface{}); ok && len(v) > 0 {
@@ -323,16 +297,8 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 		obj.UserSearchBase = v
 	}
 
-	if v, ok := in.Get("allowed_principal_ids").([]interface{}); ok && len(v) > 0 {
-		obj.AllowedPrincipalIDs = toArrayString(v)
-	}
-
 	if v, ok := in.Get("connection_timeout").(int); ok && v > 0 {
 		obj.ConnectionTimeout = int64(v)
-	}
-
-	if v, ok := in.Get("enabled").(bool); ok {
-		obj.Enabled = v
 	}
 
 	if v, ok := in.Get("group_dn_attribute").(string); ok && len(v) > 0 {
@@ -401,14 +367,6 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 
 	if v, ok := in.Get("user_search_attribute").(string); ok && len(v) > 0 {
 		obj.UserSearchAttribute = v
-	}
-
-	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
-		obj.Annotations = toMapString(v)
-	}
-
-	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
-		obj.Labels = toMapString(v)
 	}
 
 	return obj, nil

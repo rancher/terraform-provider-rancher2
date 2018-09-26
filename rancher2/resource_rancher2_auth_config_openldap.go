@@ -19,18 +19,18 @@ func authConfigOpenLdapFields() map[string]*schema.Schema {
 // Flatteners
 
 func flattenAuthConfigOpenLdap(d *schema.ResourceData, in *managementClient.LdapConfig) error {
-	err := flattenAuthConfigLdap(d, in)
-	if err != nil {
-		return err
-	}
-
 	d.SetId(OpenLdapConfigName)
 
-	err = d.Set("name", OpenLdapConfigName)
+	err := d.Set("name", OpenLdapConfigName)
 	if err != nil {
 		return err
 	}
 	err = d.Set("type", managementClient.OpenLdapConfigType)
+	if err != nil {
+		return err
+	}
+
+	err = flattenAuthConfigLdap(d, in)
 	if err != nil {
 		return err
 	}

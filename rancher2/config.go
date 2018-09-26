@@ -343,19 +343,6 @@ func (c *Config) ClusterRegistrationTokenExist(id string) error {
 	return nil
 }
 
-func getAuthConfigObject(kind string) (interface{}, error) {
-	switch kind {
-	case managementClient.GithubConfigType:
-		return &managementClient.GithubConfig{}, nil
-	case managementClient.LocalConfigType:
-		return &managementClient.LocalConfig{}, nil
-	case managementClient.OpenLdapConfigType:
-		return &managementClient.LdapConfig{}, nil
-	default:
-		return nil, fmt.Errorf("[ERROR] Auth config type %s not supported", kind)
-	}
-}
-
 func (c *Config) GetAuthConfig(in *managementClient.AuthConfig) (interface{}, error) {
 	resp, err := getAuthConfigObject(in.Type)
 	if err != nil {
