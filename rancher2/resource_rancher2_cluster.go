@@ -271,7 +271,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{expectedState},
-		Refresh:    ClusterStateRefreshFunc(client, newCluster.ID),
+		Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -298,7 +298,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf = &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
-		Refresh:    ClusterRegistrationTokenStateRefreshFunc(client, newClusterRegistrationToken.ID),
+		Refresh:    clusterRegistrationTokenStateRefreshFunc(client, newClusterRegistrationToken.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -386,7 +386,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"active", "provisioning", "pending"},
 		Target:     []string{"active", "provisioning", "pending"},
-		Refresh:    ClusterStateRefreshFunc(client, newCluster.ID),
+		Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -427,7 +427,7 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
-		Refresh:    ClusterStateRefreshFunc(client, id),
+		Refresh:    clusterStateRefreshFunc(client, id),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -467,31 +467,39 @@ func resourceRancher2ClusterImport(d *schema.ResourceData, meta interface{}) ([]
 }
 
 // ClusterStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Cluster.
-func ClusterStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
+func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		clus, err := client.Cluster.ByID(clusterID)
+		obj, err := client.Cluster.ByID(clusterID)
 		if err != nil {
 			if IsNotFound(err) {
-				return clus, "removed", nil
+				return obj, "removed", nil
 			}
 			return nil, "", err
 		}
 
-		return clus, clus.State, nil
+		if obj.Removed != "" {
+			return obj, "removed", nil
+		}
+
+		return obj, obj.State, nil
 	}
 }
 
 // ClusterRegistrationTokenStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher ClusterRegistrationToken.
-func ClusterRegistrationTokenStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
+func clusterRegistrationTokenStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		clusReg, err := client.ClusterRegistrationToken.ByID(clusterID)
+		obj, err := client.ClusterRegistrationToken.ByID(clusterID)
 		if err != nil {
 			if IsNotFound(err) {
-				return clusReg, "removed", nil
+				return obj, "removed", nil
 			}
 			return nil, "", err
 		}
 
-		return clusReg, clusReg.State, nil
+		if obj.Removed != "" {
+			return obj, "removed", nil
+		}
+
+		return obj, obj.State, nil
 	}
 }

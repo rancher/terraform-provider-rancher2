@@ -19,10 +19,17 @@ Implemented resources
   - Amazon EKS
   - Azure AKS
   - Google GKE
+- Auth Config providers
+  - FreeIpa
+  - OpenLdap
 
 TODO
 
-- Auth provider
+- Auth Config providers
+  - ActiveDirectory
+  - ADFS
+  - KeyCloak
+  - Ping
 
 Terraform Provider
 ==================

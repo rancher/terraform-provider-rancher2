@@ -145,7 +145,7 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
-		Refresh:    ProjectStateRefreshFunc(client, newProject.ID),
+		Refresh:    projectStateRefreshFunc(client, newProject.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -216,7 +216,7 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
-		Refresh:    ProjectStateRefreshFunc(client, newProject.ID),
+		Refresh:    projectStateRefreshFunc(client, newProject.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -258,7 +258,7 @@ func resourceRancher2ProjectDelete(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
-		Refresh:    ProjectStateRefreshFunc(client, id),
+		Refresh:    projectStateRefreshFunc(client, id),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -292,17 +292,21 @@ func resourceRancher2ProjectImport(d *schema.ResourceData, meta interface{}) ([]
 	return []*schema.ResourceData{d}, nil
 }
 
-// ProjectStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project.
-func ProjectStateRefreshFunc(client *managementClient.Client, projectID string) resource.StateRefreshFunc {
+// projectStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project.
+func projectStateRefreshFunc(client *managementClient.Client, projectID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		pro, err := client.Project.ByID(projectID)
+		obj, err := client.Project.ByID(projectID)
 		if err != nil {
 			if IsNotFound(err) {
-				return pro, "removed", nil
+				return obj, "removed", nil
 			}
 			return nil, "", err
 		}
 
-		return pro, pro.State, nil
+		if obj.Removed != "" {
+			return obj, "removed", nil
+		}
+
+		return obj, obj.State, nil
 	}
 }

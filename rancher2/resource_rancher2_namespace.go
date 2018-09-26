@@ -180,7 +180,7 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"activating"},
 		Target:     []string{"active"},
-		Refresh:    NamespaceStateRefreshFunc(client, newNs.ID),
+		Refresh:    namespaceStateRefreshFunc(client, newNs.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -263,7 +263,7 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
-		Refresh:    NamespaceStateRefreshFunc(client, newNs.ID),
+		Refresh:    namespaceStateRefreshFunc(client, newNs.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -315,7 +315,7 @@ func resourceRancher2NamespaceDelete(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
-		Refresh:    NamespaceStateRefreshFunc(client, id),
+		Refresh:    namespaceStateRefreshFunc(client, id),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -351,17 +351,21 @@ func resourceRancher2NamespaceImport(d *schema.ResourceData, meta interface{}) (
 	return []*schema.ResourceData{d}, nil
 }
 
-// NamespaceStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Namespace.
-func NamespaceStateRefreshFunc(client *clusterClient.Client, nsID string) resource.StateRefreshFunc {
+// namespaceStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Namespace.
+func namespaceStateRefreshFunc(client *clusterClient.Client, nsID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		ns, err := client.Namespace.ByID(nsID)
+		obj, err := client.Namespace.ByID(nsID)
 		if err != nil {
 			if IsNotFound(err) {
-				return ns, "removed", nil
+				return obj, "removed", nil
 			}
 			return nil, "", err
 		}
 
-		return ns, ns.State, nil
+		if obj.Removed != "" {
+			return obj, "removed", nil
+		}
+
+		return obj, obj.State, nil
 	}
 }

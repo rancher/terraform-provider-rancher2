@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/rancher/norman/clientbase"
+	"github.com/rancher/norman/types"
 	clusterClient "github.com/rancher/types/client/cluster/v3"
 	managementClient "github.com/rancher/types/client/management/v3"
 	projectClient "github.com/rancher/types/client/project/v3"
@@ -340,4 +341,36 @@ func (c *Config) ClusterRegistrationTokenExist(id string) error {
 	}
 
 	return nil
+}
+
+func getAuthConfigObject(kind string) (interface{}, error) {
+	switch kind {
+	case managementClient.GithubConfigType:
+		return &managementClient.GithubConfig{}, nil
+	case managementClient.LocalConfigType:
+		return &managementClient.LocalConfig{}, nil
+	case managementClient.OpenLdapConfigType:
+		return &managementClient.LdapConfig{}, nil
+	default:
+		return nil, fmt.Errorf("[ERROR] Auth config type %s not supported", kind)
+	}
+}
+
+func (c *Config) GetAuthConfig(in *managementClient.AuthConfig) (interface{}, error) {
+	resp, err := getAuthConfigObject(in.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	link := "self"
+
+	resource := types.Resource{}
+	resource.Links = in.Links
+
+	err = c.Client.Management.GetLink(resource, link, resp)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting Auth Config [%s] %s", resource.Links[link], err)
+	}
+
+	return resp, nil
 }

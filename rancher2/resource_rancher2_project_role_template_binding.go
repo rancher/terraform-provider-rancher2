@@ -39,6 +39,7 @@ func projectRoleTemplateBindingFields() map[string]*schema.Schema {
 		"group_principal_id": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true,
 		},
 		"user_id": {
 			Type:     schema.TypeString,
@@ -47,6 +48,7 @@ func projectRoleTemplateBindingFields() map[string]*schema.Schema {
 		"user_principal_id": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true,
 		},
 		"annotations": &schema.Schema{
 			Type:     schema.TypeMap,
@@ -253,6 +255,7 @@ func resourceRancher2ProjectRoleTemplateBindingUpdate(d *schema.ResourceData, me
 	update := map[string]interface{}{
 		"groupId":          d.Get("group_id").(string),
 		"groupPrincipalId": d.Get("group_principal_id").(string),
+		"roleTemplateId":   d.Get("role_template_id").(string),
 		"userId":           d.Get("user_id").(string),
 		"userPrincipalId":  d.Get("user_principal_id").(string),
 		"annotations":      toMapString(d.Get("annotations").(map[string]interface{})),
@@ -343,21 +346,21 @@ func resourceRancher2ProjectRoleTemplateBindingImport(d *schema.ResourceData, me
 	return []*schema.ResourceData{d}, nil
 }
 
-// ProjectRoleTemplateBindingStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project Role Template Binding.
+// PpojectRoleTemplateBindingStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project Role Template Binding.
 func projectRoleTemplateBindingStateRefreshFunc(client *managementClient.Client, projectRoleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		pro, err := client.ProjectRoleTemplateBinding.ByID(projectRoleID)
+		obj, err := client.ProjectRoleTemplateBinding.ByID(projectRoleID)
 		if err != nil {
 			if IsNotFound(err) {
-				return pro, "removed", nil
+				return obj, "removed", nil
 			}
 			return nil, "", err
 		}
 
-		if pro.Removed != "" {
-			return pro, "removed", nil
+		if obj.Removed != "" {
+			return obj, "removed", nil
 		}
 
-		return pro, "active", nil
+		return obj, "active", nil
 	}
 }

@@ -6,7 +6,7 @@ description: |-
   Provides a Rancher v2 Cluster Role Template Binding resource. This can be used to create Cluster Role Template Bindings for rancher v2 environments and retrieve their information.
 ---
 
-# rancher2\_cluster_role_template_binding
+# rancher2\_cluster\_role\_template\_binding
 
 Provides a Rancher v2 Cluster Role Template Binding resource. This can be used to create Cluster Role Template Bindings for rancher v2 environments and retrieve their information.
 

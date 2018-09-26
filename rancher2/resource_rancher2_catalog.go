@@ -167,7 +167,7 @@ func resourceRancher2CatalogCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"refreshed"},
 		Target:     []string{"active"},
-		Refresh:    CatalogStateRefreshFunc(client, newCatalog.ID),
+		Refresh:    catalogStateRefreshFunc(client, newCatalog.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -240,7 +240,7 @@ func resourceRancher2CatalogUpdate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"refreshed"},
 		Target:     []string{"active"},
-		Refresh:    CatalogStateRefreshFunc(client, newCatalog.ID),
+		Refresh:    catalogStateRefreshFunc(client, newCatalog.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -282,7 +282,7 @@ func resourceRancher2CatalogDelete(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"removed"},
-		Refresh:    CatalogStateRefreshFunc(client, id),
+		Refresh:    catalogStateRefreshFunc(client, id),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -316,17 +316,21 @@ func resourceRancher2CatalogImport(d *schema.ResourceData, meta interface{}) ([]
 	return []*schema.ResourceData{d}, nil
 }
 
-// CatalogStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Catalog.
-func CatalogStateRefreshFunc(client *managementClient.Client, catalogID string) resource.StateRefreshFunc {
+// catalogStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Catalog.
+func catalogStateRefreshFunc(client *managementClient.Client, catalogID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		cat, err := client.Catalog.ByID(catalogID)
+		obj, err := client.Catalog.ByID(catalogID)
 		if err != nil {
 			if IsNotFound(err) {
-				return cat, "removed", nil
+				return obj, "removed", nil
 			}
 			return nil, "", err
 		}
 
-		return cat, cat.State, nil
+		if obj.Removed != "" {
+			return obj, "removed", nil
+		}
+
+		return obj, obj.State, nil
 	}
 }

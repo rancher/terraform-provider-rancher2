@@ -65,10 +65,13 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"rancher2_auth_config_freeipa":           resourceRancher2AuthConfigFreeIpa(),
+			"rancher2_auth_config_openldap":          resourceRancher2AuthConfigOpenLdap(),
 			"rancher2_catalog":                       resourceRancher2Catalog(),
 			"rancher2_cluster":                       resourceRancher2Cluster(),
 			"rancher2_cluster_role_template_binding": resourceRancher2ClusterRoleTemplateBinding(),
 			"rancher2_node_pool":                     resourceRancher2NodePool(),
+			"rancher2_node_template":                 resourceRancher2NodeTemplate(),
 			"rancher2_project":                       resourceRancher2Project(),
 			"rancher2_project_role_template_binding": resourceRancher2ProjectRoleTemplateBinding(),
 			"rancher2_namespace":                     resourceRancher2Namespace(),

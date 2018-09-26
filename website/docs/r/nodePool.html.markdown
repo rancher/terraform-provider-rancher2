@@ -6,7 +6,7 @@ description: |-
   Provides a Rancher v2 Node Pool resource. This can be used to create Node pool for rancher v2 rke clusters and retrieve their information.
 ---
 
-# rancher2\_node_pool
+# rancher2\_node\_pool
 
 Provides a Rancher v2 Node Pool resource. This can be used to create Node Pool for rancher v2 rke clusters and retrieve their information.
 

@@ -67,22 +67,63 @@ func nodePoolFields() map[string]*schema.Schema {
 
 // Flatteners
 
-func flattenNodePool(d *schema.ResourceData, in *managementClient.NodePool) {
+func flattenNodePool(d *schema.ResourceData, in *managementClient.NodePool) error {
 	if in == nil {
-		return
+		return nil
 	}
 
 	d.SetId(in.ID)
-	d.Set("cluster_id", in.ClusterID)
-	d.Set("name", in.Name)
-	d.Set("hostname_prefix", in.HostnamePrefix)
-	d.Set("node_template_id", in.NodeTemplateID)
-	d.Set("quantity", int(in.Quantity))
-	d.Set("control_plane", in.ControlPlane)
-	d.Set("etcd", in.Etcd)
-	d.Set("worker", in.Worker)
-	d.Set("annotations", toMapInterface(in.Annotations))
-	d.Set("labels", toMapInterface(in.Labels))
+
+	err := d.Set("cluster_id", in.ClusterID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("name", in.Name)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("hostname_prefix", in.HostnamePrefix)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("node_template_id", in.NodeTemplateID)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("quantity", int(in.Quantity))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("control_plane", in.ControlPlane)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("etcd", in.Etcd)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("worker", in.Worker)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("annotations", toMapInterface(in.Annotations))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("labels", toMapInterface(in.Labels))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Expanders
@@ -154,7 +195,7 @@ func resourceRancher2NodePoolCreate(d *schema.ResourceData, meta interface{}) er
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
-		Refresh:    NodePoolStateRefreshFunc(client, newNodePool.ID),
+		Refresh:    nodePoolStateRefreshFunc(client, newNodePool.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -186,7 +227,10 @@ func resourceRancher2NodePoolRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	flattenNodePool(d, nodePool)
+	err = flattenNodePool(d, nodePool)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -223,7 +267,7 @@ func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) er
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
-		Refresh:    NodePoolStateRefreshFunc(client, newNodePool.ID),
+		Refresh:    nodePoolStateRefreshFunc(client, newNodePool.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -265,7 +309,7 @@ func resourceRancher2NodePoolDelete(d *schema.ResourceData, meta interface{}) er
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
-		Refresh:    NodePoolStateRefreshFunc(client, id),
+		Refresh:    nodePoolStateRefreshFunc(client, id),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -291,22 +335,29 @@ func resourceRancher2NodePoolImport(d *schema.ResourceData, meta interface{}) ([
 		return []*schema.ResourceData{}, err
 	}
 
-	flattenNodePool(d, nodePool)
+	err = flattenNodePool(d, nodePool)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
-// NodePoolStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher NodePool.
-func NodePoolStateRefreshFunc(client *managementClient.Client, nodePoolID string) resource.StateRefreshFunc {
+// nodePoolStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher NodePool.
+func nodePoolStateRefreshFunc(client *managementClient.Client, nodePoolID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		nodePool, err := client.NodePool.ByID(nodePoolID)
+		obj, err := client.NodePool.ByID(nodePoolID)
 		if err != nil {
 			if IsNotFound(err) {
-				return nodePool, "removed", nil
+				return obj, "removed", nil
 			}
 			return nil, "", err
 		}
 
-		return nodePool, nodePool.State, nil
+		if obj.Removed != "" {
+			return obj, "removed", nil
+		}
+
+		return obj, obj.State, nil
 	}
 }
