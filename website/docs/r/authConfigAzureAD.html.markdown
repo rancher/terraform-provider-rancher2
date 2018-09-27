@@ -33,7 +33,7 @@ The following arguments are supported:
 * `application_id` - (Required) AzureAD auth application ID (string).
 * `application_secret` - (Required) AzureAD auth application secret (string).
 * `auth_endpoint` - (Required) AzureAD auth endpoint (string).
-* `code` - (Required) AzureAD auth code. Generated from `https://github.com/login/oauth/authorize?client_id=<CLIENT_ID>` (string).
+* `code` - (Required) AzureAD auth code. Generated from `https://login.microsoftonline.com/<TENANT_ID>/oauth2/authorize?client_id=<APPLICATION_ID>&response_type=code` (string).
 * `graph_endpoint` - (Required) AzureAD graph endpoint (string).
 * `rancher_url` - (Required) Rancher URL (string).
 * `tenant_id` - (Required) AzureAD tenant ID (string).
