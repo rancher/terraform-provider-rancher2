@@ -67,9 +67,11 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 	switch kind {
 	case managementClient.ActiveDirectoryConfigType:
 		return &managementClient.ActiveDirectoryConfig{}, nil
-	case managementClient.OpenLdapConfigType:
-		return &managementClient.LdapConfig{}, nil
 	case managementClient.FreeIpaConfigType:
+		return &managementClient.LdapConfig{}, nil
+	case managementClient.GithubConfigType:
+		return &managementClient.GithubConfig{}, nil
+	case managementClient.OpenLdapConfigType:
 		return &managementClient.LdapConfig{}, nil
 	default:
 		return nil, fmt.Errorf("[ERROR] Auth config type %s not supported", kind)

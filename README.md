@@ -28,6 +28,7 @@ Implemented resources
   - Google GKE
 - Auth Config providers
   - ActiveDirectory
+  - Github
   - FreeIpa
   - OpenLdap
 
@@ -35,7 +36,6 @@ TODO
 
 - Auth Config providers
   - ADFS
-  - KeyCloak
   - Ping
 
 
