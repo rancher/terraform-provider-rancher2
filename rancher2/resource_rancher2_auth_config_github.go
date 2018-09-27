@@ -35,7 +35,7 @@ func authConfigGithubFields() map[string]*schema.Schema {
 		"tls": {
 			Type:     schema.TypeBool,
 			Optional: true,
-			Computed: true,
+			Default:  true,
 		},
 	}
 
@@ -186,7 +186,7 @@ func resourceRancher2AuthConfigGithubCreate(d *schema.ResourceData, meta interfa
 	authGithubTestAndApply := managementClient.GithubConfigApplyInput{
 		GithubConfig: authGithub,
 		Enabled:      authGithub.Enabled,
-		Code:         d.Get("username").(string),
+		Code:         d.Get("code").(string),
 	}
 
 	err = client.Post(auth.Actions["testAndApply"], authGithubTestAndApply, nil)

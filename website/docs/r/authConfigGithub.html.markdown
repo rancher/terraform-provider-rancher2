@@ -15,13 +15,9 @@ Provides a Rancher v2 Auth Config Github resource. This can be used to configure
 ```hcl
 # Create a new rancher2 Auth Config Github
 resource "rancher2_auth_config_github" "github" {
-  servers = ["<ACTIVEDIRECTORY_SERVER>"]
-  service_account_username = "<SERVICE_DN>"
-  service_account_password = "<SERVICE_PASSWORD>"
-  user_search_base = "<SEARCH_BASE>"
-  username = "<TEST_USER>"
-  password = "<TEST_USER_PASSWORD>"
-  port = <ACTIVEDIRECTORY_PORT>
+  client_id = "<GITHUB_CLIENT_ID>"
+  client_secret = "<GITHUB_CLIENT_SECRET>"
+  code = "<GITHUB_AUTH_CODE>"
 }
 ```
 
@@ -36,7 +32,7 @@ The following arguments are supported:
 * `access_mode` - (Optional) Access mode for ActiveDirectory auth. `required`, `restricted`, `unrestricted` are supported. Default `restricted`
 * `allowed_principal_ids` - (Optional/Computed) Allowed principal ids for auth (string).
 * `enabled` - (Optional) Enable auth config for ActiveDirectory backend. Default `true`.
-* `tls` - (Optional/Computed) Enable TLS connection (bool).
+* `tls` - (Optional) Enable TLS connection. Default `true`.
 * `annotations` - (Optional/Computed) Annotations of the resource (map).
 * `labels` - (Optional/Computed) Labels of the resource (map).
                 
