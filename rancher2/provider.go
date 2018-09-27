@@ -65,6 +65,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"rancher2_auth_config_activedirectory":   resourceRancher2AuthConfigActiveDirectory(),
 			"rancher2_auth_config_freeipa":           resourceRancher2AuthConfigFreeIpa(),
 			"rancher2_auth_config_openldap":          resourceRancher2AuthConfigOpenLdap(),
 			"rancher2_catalog":                       resourceRancher2Catalog(),

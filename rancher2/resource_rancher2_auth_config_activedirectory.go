@@ -2,14 +2,15 @@ package rancher2
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
-//Schemas
+const ActiveDirectoryConfigName = "activedirectory"
 
-func authConfigLdapFields() map[string]*schema.Schema {
+func authConfigActiveDirectoryFields() map[string]*schema.Schema {
 	r := authConfigFields()
 	s := map[string]*schema.Schema{
 		"servers": {
@@ -19,7 +20,7 @@ func authConfigLdapFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"service_account_distinguished_name": {
+		"service_account_username": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
@@ -47,6 +48,10 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Default:  5000,
+		},
+		"default_login_domain": {
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"group_dn_attribute": {
 			Type:     schema.TypeString,
@@ -83,6 +88,11 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+		"group_search_filter": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
 		"nested_group_membership_enabled": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -96,7 +106,7 @@ func authConfigLdapFields() map[string]*schema.Schema {
 		"user_disabled_bit_mask": {
 			Type:     schema.TypeInt,
 			Optional: true,
-			Computed: true,
+			Default:  2,
 		},
 		"user_enabled_attribute": {
 			Type:     schema.TypeString,
@@ -104,11 +114,6 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"user_login_attribute": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"user_member_attribute": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
@@ -124,6 +129,11 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"user_search_attribute": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"user_search_filter": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
@@ -144,8 +154,19 @@ func authConfigLdapFields() map[string]*schema.Schema {
 
 // Flatteners
 
-func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConfig) error {
-	err := d.Set("access_mode", in.AccessMode)
+func flattenAuthConfigActiveDirectory(d *schema.ResourceData, in *managementClient.ActiveDirectoryConfig) error {
+	d.SetId(ActiveDirectoryConfigName)
+
+	err := d.Set("name", ActiveDirectoryConfigName)
+	if err != nil {
+		return err
+	}
+	err = d.Set("type", managementClient.ActiveDirectoryConfigType)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("access_mode", in.AccessMode)
 	if err != nil {
 		return err
 	}
@@ -169,7 +190,7 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	if err != nil {
 		return err
 	}
-	err = d.Set("service_account_distinguished_name", in.ServiceAccountDistinguishedName)
+	err = d.Set("service_account_username", in.ServiceAccountUsername)
 	if err != nil {
 		return err
 	}
@@ -182,6 +203,10 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 		return err
 	}
 	err = d.Set("connection_timeout", int(in.ConnectionTimeout))
+	if err != nil {
+		return err
+	}
+	err = d.Set("default_login_domain", in.DefaultLoginDomain)
 	if err != nil {
 		return err
 	}
@@ -213,7 +238,11 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	if err != nil {
 		return err
 	}
-	err = d.Set("nested_group_membership_enabled", in.NestedGroupMembershipEnabled)
+	err = d.Set("group_search_filter", in.GroupSearchFilter)
+	if err != nil {
+		return err
+	}
+	err = d.Set("nested_group_membership_enabled", *in.NestedGroupMembershipEnabled)
 	if err != nil {
 		return err
 	}
@@ -237,10 +266,6 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	if err != nil {
 		return err
 	}
-	err = d.Set("user_member_attribute", in.UserMemberAttribute)
-	if err != nil {
-		return err
-	}
 	err = d.Set("user_name_attribute", in.UserNameAttribute)
 	if err != nil {
 		return err
@@ -253,17 +278,24 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	if err != nil {
 		return err
 	}
+	err = d.Set("user_search_filter", in.UserSearchFilter)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // Expanders
 
-func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig, error) {
-	obj := &managementClient.LdapConfig{}
+func expandAuthConfigActiveDirectory(in *schema.ResourceData) (*managementClient.ActiveDirectoryConfig, error) {
+	obj := &managementClient.ActiveDirectoryConfig{}
 	if in == nil {
-		return nil, fmt.Errorf("[ERROR] expanding Openldap Auth Config: Input ResourceData is nil")
+		return nil, fmt.Errorf("[ERROR] expanding ActiveDirectory Auth Config: Input ResourceData is nil")
 	}
+
+	obj.Name = ActiveDirectoryConfigName
+	obj.Type = managementClient.ActiveDirectoryConfigType
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
 		obj.AccessMode = v
@@ -289,8 +321,8 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 		obj.Servers = toArrayString(v)
 	}
 
-	if v, ok := in.Get("service_account_distinguished_name").(string); ok && len(v) > 0 {
-		obj.ServiceAccountDistinguishedName = v
+	if v, ok := in.Get("service_account_username").(string); ok && len(v) > 0 {
+		obj.ServiceAccountUsername = v
 	}
 
 	if v, ok := in.Get("service_account_password").(string); ok && len(v) > 0 {
@@ -307,6 +339,10 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 
 	if v, ok := in.Get("connection_timeout").(int); ok && v > 0 {
 		obj.ConnectionTimeout = int64(v)
+	}
+
+	if v, ok := in.Get("default_login_domain").(string); ok && len(v) > 0 {
+		obj.DefaultLoginDomain = v
 	}
 
 	if v, ok := in.Get("group_dn_attribute").(string); ok && len(v) > 0 {
@@ -337,8 +373,12 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 		obj.GroupSearchBase = v
 	}
 
+	if v, ok := in.Get("group_search_filter").(string); ok && len(v) > 0 {
+		obj.GroupSearchFilter = v
+	}
+
 	if v, ok := in.Get("nested_group_membership_enabled").(bool); ok {
-		obj.NestedGroupMembershipEnabled = v
+		obj.NestedGroupMembershipEnabled = &v
 	}
 
 	if v, ok := in.Get("port").(int); ok && v > 0 {
@@ -361,10 +401,6 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 		obj.UserLoginAttribute = v
 	}
 
-	if v, ok := in.Get("user_member_attribute").(string); ok && len(v) > 0 {
-		obj.UserMemberAttribute = v
-	}
-
 	if v, ok := in.Get("user_name_attribute").(string); ok && len(v) > 0 {
 		obj.UserNameAttribute = v
 	}
@@ -377,5 +413,144 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 		obj.UserSearchAttribute = v
 	}
 
+	if v, ok := in.Get("user_search_filter").(string); ok && len(v) > 0 {
+		obj.UserSearchFilter = v
+	}
+
 	return obj, nil
 }
+
+func resourceRancher2AuthConfigActiveDirectory() *schema.Resource {
+	return &schema.Resource{
+		Create: resourceRancher2AuthConfigActiveDirectoryCreate,
+		Read:   resourceRancher2AuthConfigActiveDirectoryRead,
+		Update: resourceRancher2AuthConfigActiveDirectoryUpdate,
+		Delete: resourceRancher2AuthConfigActiveDirectoryDelete,
+		//Importer: &schema.ResourceImporter{
+		//	State: resourceRancher2AuthConfigActiveDirectoryImport,
+		//},
+
+		Schema: authConfigActiveDirectoryFields(),
+	}
+}
+
+func resourceRancher2AuthConfigActiveDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
+	client, err := meta.(*Config).ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	auth, err := client.AuthConfig.ByID(ActiveDirectoryConfigName)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed to get Auth Config ActiveDirectory ID %s err=%s", ActiveDirectoryConfigName, err)
+	}
+
+	log.Printf("[INFO] Creating Auth Config ActiveDirectory %s", auth.Name)
+
+	authActiveDirectory, err := expandAuthConfigActiveDirectory(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config ActiveDirectory ID %s err=%s", ActiveDirectoryConfigName, err)
+	}
+
+	authActiveDirectoryTestAndApply := managementClient.ActiveDirectoryTestAndApplyInput{
+		ActiveDirectoryConfig: authActiveDirectory,
+		Enabled:               authActiveDirectory.Enabled,
+		Username:              d.Get("username").(string),
+		Password:              d.Get("password").(string),
+	}
+
+	err = client.Post(auth.Actions["testAndApply"], authActiveDirectoryTestAndApply, nil)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Posting Auth Config ActiveDirectory testAndApply [%s] %s", auth.Actions["testAndApply"], err)
+	}
+
+	return resourceRancher2AuthConfigActiveDirectoryRead(d, meta)
+}
+
+func resourceRancher2AuthConfigActiveDirectoryRead(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[INFO] Refreshing Auth Config ActiveDirectory ID %s", d.Id())
+	client, err := meta.(*Config).ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	auth, err := client.AuthConfig.ByID(ActiveDirectoryConfigName)
+	if err != nil {
+		if IsNotFound(err) {
+			log.Printf("[INFO] Auth Config ActiveDirectory ID %s not found.", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
+	authActiveDirectory, err := meta.(*Config).GetAuthConfig(auth)
+	if err != nil {
+		return err
+	}
+
+	err = flattenAuthConfigActiveDirectory(d, authActiveDirectory.(*managementClient.ActiveDirectoryConfig))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func resourceRancher2AuthConfigActiveDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[INFO] Updating Auth Config ActiveDirectory ID %s", d.Id())
+
+	return resourceRancher2AuthConfigActiveDirectoryCreate(d, meta)
+}
+
+func resourceRancher2AuthConfigActiveDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[INFO] Disabling Auth Config ActiveDirectory ID %s", d.Id())
+
+	client, err := meta.(*Config).ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	auth, err := client.AuthConfig.ByID(ActiveDirectoryConfigName)
+	if err != nil {
+		if IsNotFound(err) {
+			log.Printf("[INFO] Auth Config ActiveDirectory ID %s not found.", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
+	err = client.Post(auth.Actions["disable"], nil, nil)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Posting Auth Config ActiveDirectory disable [%s] %s", auth.Actions["disable"], err)
+	}
+
+	d.SetId("")
+	return nil
+}
+
+/*
+func resourceRancher2AuthConfigActiveDirectoryImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client, err := meta.(*Config).ManagementClient()
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	auth, err := client.AuthConfig.ByID(ActiveDirectoryConfigName)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+
+	authActiveDirectory, err := meta.(*Config).GetAuthConfig(auth)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+
+	err = flattenAuthConfigActiveDirectory(d, authActiveDirectory.(*managementClient.ActiveDirectoryConfig))
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+*/

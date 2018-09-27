@@ -161,6 +161,7 @@ func resourceRancher2AuthConfigOpenLdapDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
+/*
 func resourceRancher2AuthConfigOpenLdapImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -183,3 +184,4 @@ func resourceRancher2AuthConfigOpenLdapImport(d *schema.ResourceData, meta inter
 
 	return []*schema.ResourceData{d}, nil
 }
+*/

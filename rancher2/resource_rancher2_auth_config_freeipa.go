@@ -161,6 +161,7 @@ func resourceRancher2AuthConfigFreeIpaDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
+/*
 func resourceRancher2AuthConfigFreeIpaImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -183,3 +184,4 @@ func resourceRancher2AuthConfigFreeIpaImport(d *schema.ResourceData, meta interf
 
 	return []*schema.ResourceData{d}, nil
 }
+*/

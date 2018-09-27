@@ -628,21 +628,15 @@
 		},
 		{
 			"checksumSHA1": "u5s2PZ7fzCOqQX7bVPf9IJ+qNLQ=",
-			"path": "github.com/rancher/go-rancher",
-			"revision": "ec24b7f12fca9f78fbfcd62a0ea8bce14ade8792",
+			"path": "github.com/rancher/norman",
+			"revision": "316a8acc048b673b7af044e45296a1698f73c84d",
 			"revisionTime": "2017-04-07T04:09:43Z"
 		},
 		{
 			"checksumSHA1": "zFX23H7shZIjpSPGpJv0srbLFVY=",
-			"path": "github.com/rancher/go-rancher/catalog",
-			"revision": "cc9af4572762fc6ae01f5f9bebbc359506c2f6dd",
+			"path": "github.com/rancher/types",
+			"revision": "1ba55f6d2de0da8163ef8c10c12f24ee5fc8ce29",
 			"revisionTime": "2017-05-18T16:57:05Z"
-		},
-		{
-			"checksumSHA1": "PDlJwzfadZAKtXoAp/BEZCmj6Dg=",
-			"path": "github.com/rancher/go-rancher/v2",
-			"revision": "ec24b7f12fca9f78fbfcd62a0ea8bce14ade8792",
-			"revisionTime": "2017-04-07T04:09:43Z"
 		},
 		{
 			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",

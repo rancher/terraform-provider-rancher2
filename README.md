@@ -20,13 +20,13 @@ Implemented resources
   - Azure AKS
   - Google GKE
 - Auth Config providers
+  - ActiveDirectory
   - FreeIpa
   - OpenLdap
 
 TODO
 
 - Auth Config providers
-  - ActiveDirectory
   - ADFS
   - KeyCloak
   - Ping
