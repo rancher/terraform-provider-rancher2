@@ -28,6 +28,7 @@ Implemented resources
   - Google GKE
 - Auth Config providers
   - ActiveDirectory
+  - AzureAD
   - Github
   - FreeIpa
   - OpenLdap

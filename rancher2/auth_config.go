@@ -67,6 +67,8 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 	switch kind {
 	case managementClient.ActiveDirectoryConfigType:
 		return &managementClient.ActiveDirectoryConfig{}, nil
+	case managementClient.AzureADConfigType:
+		return &managementClient.AzureADConfig{}, nil
 	case managementClient.FreeIpaConfigType:
 		return &managementClient.LdapConfig{}, nil
 	case managementClient.GithubConfigType:
