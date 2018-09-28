@@ -153,9 +153,6 @@ func resourceRancher2AuthConfigGithub() *schema.Resource {
 		Read:   resourceRancher2AuthConfigGithubRead,
 		Update: resourceRancher2AuthConfigGithubUpdate,
 		Delete: resourceRancher2AuthConfigGithubDelete,
-		//Importer: &schema.ResourceImporter{
-		//	State: resourceRancher2AuthConfigGithubImport,
-		//},
 
 		Schema: authConfigGithubFields(),
 	}
@@ -255,28 +252,3 @@ func resourceRancher2AuthConfigGithubDelete(d *schema.ResourceData, meta interfa
 	d.SetId("")
 	return nil
 }
-
-/*
-func resourceRancher2AuthConfigGithubImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	auth, err := client.AuthConfig.ByID(GithubConfigName)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	authGithub, err := meta.(*Config).GetAuthConfig(auth)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenAuthConfigGithub(d, authGithub.(*managementClient.GithubConfig))
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-*/

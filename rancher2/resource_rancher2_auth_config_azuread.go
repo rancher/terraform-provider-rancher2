@@ -200,9 +200,6 @@ func resourceRancher2AuthConfigAzureAD() *schema.Resource {
 		Read:   resourceRancher2AuthConfigAzureADRead,
 		Update: resourceRancher2AuthConfigAzureADUpdate,
 		Delete: resourceRancher2AuthConfigAzureADDelete,
-		//Importer: &schema.ResourceImporter{
-		//	State: resourceRancher2AuthConfigAzureADImport,
-		//},
 
 		Schema: authConfigAzureADFields(),
 	}
@@ -301,28 +298,3 @@ func resourceRancher2AuthConfigAzureADDelete(d *schema.ResourceData, meta interf
 	d.SetId("")
 	return nil
 }
-
-/*
-func resourceRancher2AuthConfigAzureADImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	auth, err := client.AuthConfig.ByID(AzureADConfigName)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	authAzureAD, err := meta.(*Config).GetAuthConfig(auth)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenAuthConfigAzureAD(d, authAzureAD.(*managementClient.AzureADConfig))
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-*/

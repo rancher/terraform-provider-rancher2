@@ -361,3 +361,7 @@ func (c *Config) GetAuthConfig(in *managementClient.AuthConfig) (interface{}, er
 
 	return resp, nil
 }
+
+func (c *Config) UpdateAuthConfig(url string, createObj interface{}, respObject interface{}) error {
+	return c.Client.Management.Ops.DoModify("PUT", url, createObj, respObject)
+}

@@ -32,12 +32,12 @@ Implemented resources
   - Github
   - FreeIpa
   - OpenLdap
+  - Ping
 
 TODO
 
 - Auth Config providers
   - ADFS
-  - Ping
 
 
 Requirements

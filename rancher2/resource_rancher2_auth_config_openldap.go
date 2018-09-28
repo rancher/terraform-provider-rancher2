@@ -58,9 +58,6 @@ func resourceRancher2AuthConfigOpenLdap() *schema.Resource {
 		Read:   resourceRancher2AuthConfigOpenLdapRead,
 		Update: resourceRancher2AuthConfigOpenLdapUpdate,
 		Delete: resourceRancher2AuthConfigOpenLdapDelete,
-		//Importer: &schema.ResourceImporter{
-		//	State: resourceRancher2AuthConfigOpenLdapImport,
-		//},
 
 		Schema: authConfigOpenLdapFields(),
 	}
@@ -160,28 +157,3 @@ func resourceRancher2AuthConfigOpenLdapDelete(d *schema.ResourceData, meta inter
 	d.SetId("")
 	return nil
 }
-
-/*
-func resourceRancher2AuthConfigOpenLdapImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	auth, err := client.AuthConfig.ByID(OpenLdapConfigName)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	authOpenLdap, err := meta.(*Config).GetAuthConfig(auth)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenAuthConfigOpenLdap(d, authOpenLdap.(*managementClient.LdapConfig))
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-*/

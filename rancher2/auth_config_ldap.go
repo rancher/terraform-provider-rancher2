@@ -262,7 +262,7 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig, error) {
 	obj := &managementClient.LdapConfig{}
 	if in == nil {
-		return nil, fmt.Errorf("[ERROR] expanding Openldap Auth Config: Input ResourceData is nil")
+		return nil, fmt.Errorf("[ERROR] expanding Ldap Auth Config: Input ResourceData is nil")
 	}
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {

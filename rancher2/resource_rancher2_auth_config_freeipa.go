@@ -58,9 +58,6 @@ func resourceRancher2AuthConfigFreeIpa() *schema.Resource {
 		Read:   resourceRancher2AuthConfigFreeIpaRead,
 		Update: resourceRancher2AuthConfigFreeIpaUpdate,
 		Delete: resourceRancher2AuthConfigFreeIpaDelete,
-		//Importer: &schema.ResourceImporter{
-		//	State: resourceRancher2AuthConfigFreeIpaImport,
-		//},
 
 		Schema: authConfigFreeIpaFields(),
 	}
@@ -77,7 +74,7 @@ func resourceRancher2AuthConfigFreeIpaCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("[ERROR] Failed to get Auth Config FreeIpa ID %s err=%s", FreeIpaConfigName, err)
 	}
 
-	log.Printf("[INFO] Creating Auth Config openldap %s", auth.Name)
+	log.Printf("[INFO] Creating Auth Config FreeIpa %s", auth.Name)
 
 	authFreeIpa, err := expandAuthConfigFreeIpa(d)
 	if err != nil {
@@ -99,7 +96,7 @@ func resourceRancher2AuthConfigFreeIpaCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceRancher2AuthConfigFreeIpaRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config openldap ID %s", d.Id())
+	log.Printf("[INFO] Refreshing Auth Config FreeIpa ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
@@ -154,34 +151,9 @@ func resourceRancher2AuthConfigFreeIpaDelete(d *schema.ResourceData, meta interf
 
 	err = client.Post(auth.Actions["disable"], nil, nil)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config openldap disable [%s] %s", auth.Actions["disable"], err)
+		return fmt.Errorf("[ERROR] Posting Auth Config FreeIpa disable [%s] %s", auth.Actions["disable"], err)
 	}
 
 	d.SetId("")
 	return nil
 }
-
-/*
-func resourceRancher2AuthConfigFreeIpaImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	auth, err := client.AuthConfig.ByID(FreeIpaConfigName)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	authFreeIpa, err := meta.(*Config).GetAuthConfig(auth)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenAuthConfigFreeIpa(d, authFreeIpa.(*managementClient.LdapConfig))
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-*/

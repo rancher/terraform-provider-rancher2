@@ -75,6 +75,8 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 		return &managementClient.GithubConfig{}, nil
 	case managementClient.OpenLdapConfigType:
 		return &managementClient.LdapConfig{}, nil
+	case managementClient.PingConfigType:
+		return &managementClient.PingConfig{}, nil
 	default:
 		return nil, fmt.Errorf("[ERROR] Auth config type %s not supported", kind)
 	}

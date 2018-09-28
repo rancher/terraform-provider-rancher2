@@ -426,9 +426,6 @@ func resourceRancher2AuthConfigActiveDirectory() *schema.Resource {
 		Read:   resourceRancher2AuthConfigActiveDirectoryRead,
 		Update: resourceRancher2AuthConfigActiveDirectoryUpdate,
 		Delete: resourceRancher2AuthConfigActiveDirectoryDelete,
-		//Importer: &schema.ResourceImporter{
-		//	State: resourceRancher2AuthConfigActiveDirectoryImport,
-		//},
 
 		Schema: authConfigActiveDirectoryFields(),
 	}
@@ -529,28 +526,3 @@ func resourceRancher2AuthConfigActiveDirectoryDelete(d *schema.ResourceData, met
 	d.SetId("")
 	return nil
 }
-
-/*
-func resourceRancher2AuthConfigActiveDirectoryImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	auth, err := client.AuthConfig.ByID(ActiveDirectoryConfigName)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	authActiveDirectory, err := meta.(*Config).GetAuthConfig(auth)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenAuthConfigActiveDirectory(d, authActiveDirectory.(*managementClient.ActiveDirectoryConfig))
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-*/
