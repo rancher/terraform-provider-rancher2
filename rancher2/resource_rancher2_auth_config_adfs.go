@@ -297,9 +297,11 @@ func resourceRancher2AuthConfigADFSDelete(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	err = client.Post(auth.Actions["disable"], nil, nil)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config ADFS disable [%s] %s", auth.Actions["disable"], err)
+	if auth.Enabled == true {
+		err = client.Post(auth.Actions["disable"], nil, nil)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Posting Auth Config ADFS disable [%s] %s", auth.Actions["disable"], err)
+		}
 	}
 
 	d.SetId("")

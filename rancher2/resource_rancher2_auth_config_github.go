@@ -244,9 +244,11 @@ func resourceRancher2AuthConfigGithubDelete(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	err = client.Post(auth.Actions["disable"], nil, nil)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config Github disable [%s] %s", auth.Actions["disable"], err)
+	if auth.Enabled == true {
+		err = client.Post(auth.Actions["disable"], nil, nil)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Posting Auth Config Github disable [%s] %s", auth.Actions["disable"], err)
+		}
 	}
 
 	d.SetId("")
