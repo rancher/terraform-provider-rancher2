@@ -28,6 +28,7 @@ Implemented resources
   - Google GKE
 - Auth Config providers
   - ActiveDirectory
+  - ADFS
   - AzureAD
   - Github
   - FreeIpa
@@ -36,8 +37,7 @@ Implemented resources
 
 TODO
 
-- Auth Config providers
-  - ADFS
+- Node Template
 
 
 Requirements

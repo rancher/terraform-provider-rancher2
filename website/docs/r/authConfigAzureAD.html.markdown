@@ -39,9 +39,9 @@ The following arguments are supported:
 * `tenant_id` - (Required) AzureAD tenant ID (string).
 * `token_endpoint` - (Required) AzureAD token endpoint (string).
 * `endpoint` - (Optional) AzureAD endpoint. Default `https://login.microsoftonline.com/`.
-* `access_mode` - (Optional) Access mode for ActiveDirectory auth. `required`, `restricted`, `unrestricted` are supported. Default `restricted`
+* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `restricted`
 * `allowed_principal_ids` - (Optional/Computed) Allowed principal ids for auth (string).
-* `enabled` - (Optional) Enable auth config for ActiveDirectory backend. Default `true`.
+* `enabled` - (Optional) Enable auth config provider. Default `true`.
 * `tls` - (Optional) Enable TLS connection. Default `true`.
 * `annotations` - (Optional/Computed) Annotations of the resource (map).
 * `labels` - (Optional/Computed) Labels of the resource (map).

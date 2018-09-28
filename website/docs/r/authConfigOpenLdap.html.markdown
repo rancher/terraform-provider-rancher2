@@ -35,11 +35,11 @@ The following arguments are supported:
 * `user_search_base` - (Required) User search base DN (string).
 * `username` - (Required) User name to test openldap access (string).
 * `password` - (Required) User password to test openldap access (string).
-* `access_mode` - (Optional) Access mode for openldap auth. `required`, `restricted`, `unrestricted` are supported. Default `restricted`
+* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `restricted`
 * `allowed_principal_ids` - (Optional/Computed) Allowed principal ids for auth (string).
 * `certificate` - (Optional) CA certificate for TLS if selfsigned (string).
 * `connection_timeout` - (Optional) Openldap connection timeout. Default `5000`
-* `enabled` - (Optional) Enable auth config for openldap backend. Default `true`.
+* `enabled` - (Optional) Enable auth config provider. Default `true`.
 * `group_dn_attribute` - (Optional/Computed) Group DN attribute. Default `entryDN`.
 * `group_member_mapping_attribute` - (Optional/Computed) Group member mapping attribute. Default `member`.
 * `group_member_user_attribute` - (Optional/Computed) Group member user attribute. Default `entryDN`.

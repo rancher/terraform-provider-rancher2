@@ -1,20 +1,20 @@
 ---
 layout: "rancher2"
-page_title: "Rancher2: rancher2_auth_config_ping"
-sidebar_current: "docs-rancher2-auth-config-ping"
+page_title: "Rancher2: rancher2_auth_config_adfs"
+sidebar_current: "docs-rancher2-auth-config-adfs"
 description: |-
-  Provides a Rancher v2 Auth Config Ping resource. This can be used to configure and enable Auth Config Ping for rancher v2 rke clusters and retrieve their information.
+  Provides a Rancher v2 Auth Config ADFS resource. This can be used to configure and enable Auth Config ADFS for rancher v2 rke clusters and retrieve their information.
 ---
 
-# rancher2\_auth\_config\_ping
+# rancher2\_auth\_config\_adfs
 
-Provides a Rancher v2 Auth Config Ping resource. This can be used to configure and enable Auth Config Ping for rancher v2 rke clusters and retrieve their information.
+Provides a Rancher v2 Auth Config ADFS resource. This can be used to configure and enable Auth Config ADFS for rancher v2 rke clusters and retrieve their information.
 
 ## Example Usage
 
 ```hcl
-# Create a new rancher2 Auth Config Ping
-resource "rancher2_auth_config_ping" "ping" {
+# Create a new rancher2 Auth Config ADFS
+resource "rancher2_auth_config_adfs" "adfs" {
   display_name_field = "<DISPLAY_NAME_FIELD>"
   final_redirect_url = "<FINAL_REDIRECT_URL>"
   groups_field = "<GROUPS_FIELD>"
@@ -31,15 +31,15 @@ resource "rancher2_auth_config_ping" "ping" {
 
 The following arguments are supported:
 
-* `display_name_field` - (Required) Ping display name field (string).
-* `final_redirect_url` - (Required) Ping final redirect url (string).
-* `groups_field` - (Required) Ping group field (string).
-* `idp_metadata_content` - (Required) Ping IDP metadata content (string).
+* `display_name_field` - (Required) ADFS display name field (string).
+* `final_redirect_url` - (Required) ADFS final redirect url (string).
+* `groups_field` - (Required) ADFS group field (string).
+* `idp_metadata_content` - (Required) ADFS IDP metadata content (string).
 * `rancher_api_host` - (Required) Rancher API host (string).
-* `sp_cert` - (Required) Ping SP cert (string).
-* `sp_key` - (Required) Ping SP key (string).
-* `uid_field` - (Required) Ping UID field (string).
-* `user_name_field` - (Required) Ping user name field (string).
+* `sp_cert` - (Required) ADFS SP cert (string).
+* `sp_key` - (Required) ADFS SP key (string).
+* `uid_field` - (Required) ADFS UID field (string).
+* `user_name_field` - (Required) ADFS user name field (string).
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `restricted`
 * `allowed_principal_ids` - (Optional/Computed) Allowed principal ids for auth (string).
 * `enabled` - (Optional) Enable auth config provider. Default `true`.
