@@ -85,10 +85,6 @@ func flattenAuthConfigGithub(d *schema.ResourceData, in *managementClient.Github
 	if err != nil {
 		return err
 	}
-	err = d.Set("client_secret", in.ClientSecret)
-	if err != nil {
-		return err
-	}
 	err = d.Set("hostname", in.Hostname)
 	if err != nil {
 		return err

@@ -100,10 +100,6 @@ func flattenAuthConfigAzureAD(d *schema.ResourceData, in *managementClient.Azure
 	if err != nil {
 		return err
 	}
-	err = d.Set("application_secret", in.ApplicationSecret)
-	if err != nil {
-		return err
-	}
 	err = d.Set("auth_endpoint", in.AuthEndpoint)
 	if err != nil {
 		return err
