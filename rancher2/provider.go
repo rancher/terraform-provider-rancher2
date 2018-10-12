@@ -76,7 +76,6 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_cluster":                       resourceRancher2Cluster(),
 			"rancher2_cluster_role_template_binding": resourceRancher2ClusterRoleTemplateBinding(),
 			"rancher2_node_pool":                     resourceRancher2NodePool(),
-			"rancher2_node_template":                 resourceRancher2NodeTemplate(),
 			"rancher2_project":                       resourceRancher2Project(),
 			"rancher2_project_role_template_binding": resourceRancher2ProjectRoleTemplateBinding(),
 			"rancher2_namespace":                     resourceRancher2Namespace(),
