@@ -123,7 +123,7 @@ func testAccRancher2ProjectDisappears(pro *managementClient.Project) resource.Te
 			stateConf := &resource.StateChangeConf{
 				Pending:    []string{"active"},
 				Target:     []string{"removed"},
-				Refresh:    ProjectStateRefreshFunc(client, pro.ID),
+				Refresh:    projectStateRefreshFunc(client, pro.ID),
 				Timeout:    10 * time.Minute,
 				Delay:      1 * time.Second,
 				MinTimeout: 3 * time.Second,

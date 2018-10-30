@@ -25,8 +25,8 @@ type Config struct {
 	TokenKey  string `json:"tokenKey"`
 	URL       string `json:"url"`
 	CACerts   string `json:"cacert"`
-	ClusterId string `json:"clusterId"`
-	ProjectId string `json:"projectId"`
+	ClusterID string `json:"clusterId"`
+	ProjectID string `json:"projectId"`
 	Client    Client
 }
 
@@ -54,7 +54,7 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 		return nil, fmt.Errorf("[ERROR] Rancher Cluster Client: cluster ID is nil")
 	}
 
-	if c.Client.Cluster != nil && id == c.ClusterId {
+	if c.Client.Cluster != nil && id == c.ClusterID {
 		return c.Client.Cluster, nil
 	}
 
@@ -67,7 +67,7 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 		return nil, err
 	}
 	c.Client.Cluster = cClient
-	c.ClusterId = id
+	c.ClusterID = id
 
 	return c.Client.Cluster, nil
 }
@@ -78,7 +78,7 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 		return nil, fmt.Errorf("[ERROR] Rancher Project Client: project ID is nil")
 	}
 
-	if c.Client.Project != nil && id == c.ProjectId {
+	if c.Client.Project != nil && id == c.ProjectID {
 		return c.Client.Project, nil
 	}
 
@@ -92,12 +92,12 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 	}
 
 	c.Client.Project = pClient
-	c.ProjectId = id
+	c.ProjectID = id
 
 	return c.Client.Project, nil
 }
 
-func (c *Config) NormalizeUrl() {
+func (c *Config) NormalizeURL() {
 	c.URL = strings.TrimSuffix(c.URL, "/")
 
 	if !strings.HasSuffix(c.URL, "/v3") {
@@ -106,7 +106,7 @@ func (c *Config) NormalizeUrl() {
 }
 
 func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
-	c.NormalizeUrl()
+	c.NormalizeURL()
 
 	options := &clientbase.ClientOpts{
 		URL:       c.URL,

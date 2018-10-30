@@ -1,0 +1,18 @@
+FROM golang:1.9.4
+RUN apt-get update && \
+    apt-get install -y xz-utils zip rsync
+RUN go get github.com/rancher/trash
+RUN go get golang.org/x/lint/golint
+RUN curl -sL https://download.docker.com/linux/static/stable/x86_64/docker-17.03.2-ce.tgz | tar -xzf - && \
+    mv docker/docker /usr/bin && rm -rf docker && \
+    chmod +x /usr/bin/docker
+ENV PATH /go/bin:$PATH
+ENV DAPPER_SOURCE /go/src/github.com/rancher/terraform-provider-rancher2
+ENV DAPPER_OUTPUT bin build/bin dist
+ENV DAPPER_DOCKER_SOCKET true
+ENV DAPPER_ENV TAG REPO GOOS CROSS DRONE_TAG
+ENV TRASH_CACHE ${DAPPER_SOURCE}/.trash-cache
+WORKDIR ${DAPPER_SOURCE}
+ENTRYPOINT ["./scripts/entry"]
+CMD ["ci"]
+

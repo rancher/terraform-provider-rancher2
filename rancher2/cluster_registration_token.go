@@ -113,8 +113,8 @@ func findFlattenClusterRegistrationToken(client *managementClient.Client, cluste
 }
 
 func findClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
-	regTokenId := clusterID + ":" + clusterRegistrationTokenName
-	regToken, err := client.ClusterRegistrationToken.ByID(regTokenId)
+	regTokenID := clusterID + ":" + clusterRegistrationTokenName
+	regToken, err := client.ClusterRegistrationToken.ByID(regTokenID)
 
 	if err != nil {
 		if IsNotFound(err) {
