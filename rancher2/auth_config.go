@@ -18,10 +18,6 @@ var (
 
 func authConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
 		"name": {
 			Type:     schema.TypeString,
 			Computed: true,

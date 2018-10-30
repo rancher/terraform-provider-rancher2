@@ -14,10 +14,6 @@ import (
 
 func projectRoleTemplateBindingFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
 		"project_id": {
 			Type:     schema.TypeString,
 			Required: true,

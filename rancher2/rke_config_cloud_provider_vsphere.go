@@ -236,7 +236,7 @@ func flattenVsphereVirtualCenterCloudProvider(in map[string]managementClient.Vir
 
 	out := make([]interface{}, len(in))
 	i := 0
-	for key, _ := range in {
+	for key := range in {
 		obj := make(map[string]interface{})
 		obj["name"] = key
 		if len(in[key].Datacenters) > 0 {
@@ -414,7 +414,7 @@ func expandVsphereVirtualCenterCloudProvider(p []interface{}) (map[string]manage
 
 	obj := make(map[string]managementClient.VirtualCenterConfig)
 
-	for i, _ := range p {
+	for i := range p {
 		in := p[i].(map[string]interface{})
 		aux := managementClient.VirtualCenterConfig{}
 		key := in["name"].(string)

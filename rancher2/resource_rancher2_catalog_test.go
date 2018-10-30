@@ -123,7 +123,7 @@ func testAccRancher2CatalogDisappears(cat *managementClient.Catalog) resource.Te
 			stateConf := &resource.StateChangeConf{
 				Pending:    []string{"active"},
 				Target:     []string{"removed"},
-				Refresh:    CatalogStateRefreshFunc(client, cat.ID),
+				Refresh:    catalogStateRefreshFunc(client, cat.ID),
 				Timeout:    10 * time.Minute,
 				Delay:      1 * time.Second,
 				MinTimeout: 3 * time.Second,

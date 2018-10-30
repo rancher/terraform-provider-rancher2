@@ -28,7 +28,7 @@ func etcdFields() map[string]*schema.Schema {
 	return s
 }
 
-func kubeApiFields() map[string]*schema.Schema {
+func kubeAPIFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"extra_args": {
 			Type:     schema.TypeMap,
@@ -124,7 +124,7 @@ func servicesFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: kubeApiFields(),
+				Schema: kubeAPIFields(),
 			},
 		},
 		"kube_controller": {
@@ -179,7 +179,7 @@ func flattenEtcd(in *managementClient.ETCDService) ([]interface{}, error) {
 	return []interface{}{obj}, nil
 }
 
-func flattenKubeApi(in *managementClient.KubeAPIService) ([]interface{}, error) {
+func flattenKubeAPI(in *managementClient.KubeAPIService) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
 		return []interface{}{}, nil
@@ -272,11 +272,11 @@ func flattenServices(in *managementClient.RKEConfigServices) ([]interface{}, err
 	}
 
 	if in.KubeAPI != nil {
-		kubeApi, err := flattenKubeApi(in.KubeAPI)
+		kubeAPI, err := flattenKubeAPI(in.KubeAPI)
 		if err != nil {
 			return []interface{}{obj}, err
 		}
-		obj["kube_api"] = kubeApi
+		obj["kube_api"] = kubeAPI
 	}
 
 	if in.KubeController != nil {
@@ -330,7 +330,7 @@ func expandEtcd(p []interface{}) (*managementClient.ETCDService, error) {
 	return obj, nil
 }
 
-func expandKubeApi(p []interface{}) (*managementClient.KubeAPIService, error) {
+func expandKubeAPI(p []interface{}) (*managementClient.KubeAPIService, error) {
 	obj := &managementClient.KubeAPIService{}
 	if len(p) == 0 || p[0] == nil {
 		return obj, nil
@@ -430,11 +430,11 @@ func expandServices(p []interface{}) (*managementClient.RKEConfigServices, error
 	}
 
 	if v, ok := in["kube_api"].([]interface{}); ok && len(v) > 0 {
-		kubeApi, err := expandKubeApi(v)
+		kubeAPI, err := expandKubeAPI(v)
 		if err != nil {
 			return obj, err
 		}
-		obj.KubeAPI = kubeApi
+		obj.KubeAPI = kubeAPI
 	}
 
 	if v, ok := in["kube_controller"].([]interface{}); ok && len(v) > 0 {

@@ -15,10 +15,6 @@ import (
 
 func catalogFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"id": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
