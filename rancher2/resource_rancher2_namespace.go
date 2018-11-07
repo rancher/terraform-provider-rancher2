@@ -358,10 +358,6 @@ func namespaceStateRefreshFunc(client *clusterClient.Client, nsID string) resour
 			return nil, "", err
 		}
 
-		if obj.Removed != "" {
-			return obj, "removed", nil
-		}
-
 		return obj, obj.State, nil
 	}
 }

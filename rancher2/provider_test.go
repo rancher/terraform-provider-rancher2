@@ -29,7 +29,16 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("RANCHER_URL"); v == "" {
+	url := os.Getenv("RANCHER_URL")
+	token := os.Getenv("RANCHER_TOKEN_KEY")
+	accessKey := os.Getenv("RANCHER_ACCESS_KEY")
+	secretKey := os.Getenv("RANCHER_SECRET_KEY")
+
+	if url == "" {
 		t.Fatal("RANCHER_URL must be set for acceptance tests")
+	}
+
+	if token == "" && (accessKey == "" || secretKey == "") {
+		t.Fatal("RANCHER_TOKEN_KEY or RANCHER_ACCESS_KEY and RANCHER_SECRET_KEY must be set for acceptance tests")
 	}
 }

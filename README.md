@@ -109,3 +109,16 @@ To update vendor dependencies, edit `vendor.conf` file and execute trash
 $ trash
 ```
 
+Acceptance tests 
+----------------
+
+For execute acceptance tests, a running rancher HA system and a rancher API key are needed. 
+
+To run acceptance tests, export `RANCHER_URL` with rancher url and `RANCHER_TOKEN_KEY` with bearer token or `RANCHER_ACCESS_KEY` with rancher acces key and `RANCHER_SECRET_KEY` with rancher secret key and execute
+
+```sh
+$ export RANCHER_URL=<URL>
+$ export RANCHER_TOKEN_KEY=<TOKEN>
+$ scripts/testacc
+```
+

@@ -11,28 +11,36 @@ import (
 )
 
 const (
-	testAccRancher2ProjectRoleTemplateBindingType   = "rancher2_project_role_template_binding"
-	testAccRancher2ProjectRoleTemplateBindingConfig = `
+	testAccRancher2ProjectRoleTemplateBindingType = "rancher2_project_role_template_binding"
+
+	testAccRancher2ProjectRoleTemplateBindingProject = `
+resource "rancher2_project" "foo" {
+  name = "foo"
+  cluster_id = "local"
+  description = "Terraform project role template binding acceptance test"
+}
+`
+	testAccRancher2ProjectRoleTemplateBindingConfig = testAccRancher2ProjectRoleTemplateBindingProject + `
 resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
-  project_id = "local:p-2lk7g"
+  project_id = "${rancher2_project.foo.id}"
   role_template_id = "project-member"
 }
 `
 
-	testAccRancher2ProjectRoleTemplateBindingUpdateConfig = `
+	testAccRancher2ProjectRoleTemplateBindingUpdateConfig = testAccRancher2ProjectRoleTemplateBindingProject + `
 resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
-  project_id = "local:p-2lk7g"
-  role_template_id = "project-member"
+  project_id = "${rancher2_project.foo.id}"
+  role_template_id = "project-owner"
   user_id = "u-q2wg7"
 }
  `
 
-	testAccRancher2ProjectRoleTemplateBindingRecreateConfig = `
+	testAccRancher2ProjectRoleTemplateBindingRecreateConfig = testAccRancher2ProjectRoleTemplateBindingProject + `
 resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
-  project_id = "local:p-2lk7g"
+  project_id = "${rancher2_project.foo.id}"
   role_template_id = "project-member"
 }
  `
@@ -51,7 +59,6 @@ func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "project_id", "local:p-2lk7g"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
 				),
 			},
@@ -60,8 +67,7 @@ func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "project_id", "local:p-2lk7g"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "role_template_id", "project-owner"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "user_id", "u-q2wg7"),
 				),
 			},
@@ -70,7 +76,6 @@ func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "project_id", "local:p-2lk7g"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
 				),
 			},

@@ -203,7 +203,7 @@ func resourceRancher2ClusterRoleTemplateBindingCreate(d *schema.ResourceData, me
 			"[ERROR] waiting for cluster role template binding (%s) to be created: %s", newClusterRole.ID, waitErr)
 	}
 
-	err = flattenClusterRoleTemplateBinding(d, clusterRole)
+	err = flattenClusterRoleTemplateBinding(d, newClusterRole)
 	if err != nil {
 		return err
 	}

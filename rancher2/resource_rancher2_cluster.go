@@ -361,17 +361,38 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	rkeConfig, err := expandRkeConfig(d.Get("rke_config").([]interface{}))
-	if err != nil {
-		return err
+	update := map[string]interface{}{
+		"name":        d.Get("name").(string),
+		"description": d.Get("description").(string),
+		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
-	update := map[string]interface{}{
-		"name":                          d.Get("name").(string),
-		"description":                   d.Get("description").(string),
-		"rancherKubernetesEngineConfig": rkeConfig,
-		"annotations":                   toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":                        toMapString(d.Get("labels").(map[string]interface{})),
+	switch kind := d.Get("kind").(string); kind {
+	case "rke":
+		rkeConfig, err := expandRkeConfig(d.Get("rke_config").([]interface{}))
+		if err != nil {
+			return err
+		}
+		update["rancherKubernetesEngineConfig"] = rkeConfig
+	case "eks":
+		eksConfig, err := expandEksConfig(d.Get("eks_config").([]interface{}))
+		if err != nil {
+			return err
+		}
+		update["amazonElasticContainerServiceConfig"] = eksConfig
+	case "aks":
+		aksConfig, err := expandAksConfig(d.Get("aks_config").([]interface{}))
+		if err != nil {
+			return err
+		}
+		update["azureKubernetesServiceConfig"] = aksConfig
+	case "gke":
+		gkeConfig, err := expandGkeConfig(d.Get("gke_config").([]interface{}))
+		if err != nil {
+			return err
+		}
+		update["googleKubernetesEngineConfig"] = gkeConfig
 	}
 
 	newCluster, err := meta.(*Config).UpdateClusterByID(cluster, update)

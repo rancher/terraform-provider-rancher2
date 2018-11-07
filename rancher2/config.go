@@ -365,3 +365,41 @@ func (c *Config) GetAuthConfig(in *managementClient.AuthConfig) (interface{}, er
 func (c *Config) UpdateAuthConfig(url string, createObj interface{}, respObject interface{}) error {
 	return c.Client.Management.Ops.DoModify("PUT", url, createObj, respObject)
 }
+
+func (c *Config) GetUserByName(name string) (*managementClient.User, error) {
+	if name == "" {
+		return nil, fmt.Errorf("[ERROR] Username is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	filters := map[string]interface{}{"username": name}
+	listOpts := NewListOpts(filters)
+
+	users, err := client.User.List(listOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users.Data {
+		if user.Username == name {
+			return &user, nil
+		}
+	}
+	return nil, fmt.Errorf("[ERROR] Username %s not found", name)
+}
+
+func (c *Config) GetUserIDByName(name string) (string, error) {
+	if name == "" {
+		return "", nil
+	}
+
+	user, err := c.GetUserByName(name)
+	if err != nil {
+		return "", err
+	}
+	return user.ID, nil
+}
