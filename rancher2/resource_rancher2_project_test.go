@@ -16,7 +16,7 @@ const (
 resource "rancher2_project" "foo" {
   name = "foo"
   cluster_id = "local"
-  description = "Foo project test"
+  description = "Terraform project acceptance test"
 }
 `
 
@@ -24,7 +24,7 @@ resource "rancher2_project" "foo" {
 resource "rancher2_project" "foo" {
   name = "foo-updated"
   cluster_id = "local"
-  description = "Foo project test - updated"
+  description = "Terraform project acceptance test - updated"
 }
  `
 
@@ -32,7 +32,7 @@ resource "rancher2_project" "foo" {
 resource "rancher2_project" "foo" {
   name = "foo"
   cluster_id = "local"
-  description = "Foo project test"
+  description = "Terraform project acceptance test"
 }
  `
 )
@@ -50,7 +50,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Foo project test"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", "local"),
 				),
 			},
@@ -59,7 +59,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo-updated"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Foo project test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", "local"),
 				),
 			},
@@ -68,7 +68,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Foo project test"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", "local"),
 				),
 			},

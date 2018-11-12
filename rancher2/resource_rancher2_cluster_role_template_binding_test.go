@@ -24,8 +24,7 @@ resource "rancher2_cluster_role_template_binding" "foo" {
 resource "rancher2_cluster_role_template_binding" "foo" {
   name = "foo"
   cluster_id = "local"
-  role_template_id = "project-member"
-  user_id = "u-q2wg7"
+  role_template_id = "project-owner"
 }
  `
 
@@ -61,8 +60,7 @@ func TestAccRancher2ClusterRoleTemplateBinding_basic(t *testing.T) {
 					testAccCheckRancher2ClusterRoleTemplateBindingExists(testAccRancher2ClusterRoleTemplateBindingType+".foo", clusterRole),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "cluster_id", "local"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "user_id", "u-q2wg7"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "project-owner"),
 				),
 			},
 			resource.TestStep{

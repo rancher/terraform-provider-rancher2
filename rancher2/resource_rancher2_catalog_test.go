@@ -16,7 +16,7 @@ const (
 resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "http://foo.com:8080"
-  description= "Foo catalog test"
+  description= "Terraform catalog acceptance test"
 }
 `
 
@@ -24,7 +24,7 @@ resource "rancher2_catalog" "foo" {
 resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "http://foo.updated.com:8080"
-  description= "Foo catalog test - updated"
+  description= "Terraform catalog acceptance test - updated"
 }
  `
 
@@ -32,7 +32,7 @@ resource "rancher2_catalog" "foo" {
 resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "http://foo.com:8080"
-  description= "Foo catalog test"
+  description= "Terraform catalog acceptance test"
 }
  `
 )
@@ -50,7 +50,7 @@ func TestAccRancher2Catalog_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Foo catalog test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 				),
 			},
@@ -59,7 +59,7 @@ func TestAccRancher2Catalog_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Foo catalog test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.updated.com:8080"),
 				),
 			},
@@ -68,7 +68,7 @@ func TestAccRancher2Catalog_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Foo catalog test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 				),
 			},

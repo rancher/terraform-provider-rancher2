@@ -11,28 +11,36 @@ import (
 )
 
 const (
-	testAccRancher2NamespaceType   = "rancher2_namespace"
-	testAccRancher2NamespaceConfig = `
-resource "rancher2_namespace" "foo" {
+	testAccRancher2NamespaceType    = "rancher2_namespace"
+	testAccRancher2NamespaceProject = `
+resource "rancher2_project" "foo" {
   name = "foo"
-  description = "Foo namespace test"
-  project_id = "local:p-3124s"
+  cluster_id = "local"
+  description = "Terraform namespace acceptance test"
 }
 `
 
-	testAccRancher2NamespaceUpdateConfig = `
+	testAccRancher2NamespaceConfig = testAccRancher2NamespaceProject + `
 resource "rancher2_namespace" "foo" {
   name = "foo"
-  description = "Foo namespace test - updated"
-  project_id = "local:p-3124s"
+  description = "Terraform namespace acceptance test"
+  project_id = "${rancher2_project.foo.id}"
+}
+`
+
+	testAccRancher2NamespaceUpdateConfig = testAccRancher2NamespaceProject + `
+resource "rancher2_namespace" "foo" {
+  name = "foo"
+  description = "Terraform namespace acceptance test - updated"
+  project_id = "${rancher2_project.foo.id}"
 }
  `
 
-	testAccRancher2NamespaceRecreateConfig = `
+	testAccRancher2NamespaceRecreateConfig = testAccRancher2NamespaceProject + `
 resource "rancher2_namespace" "foo" {
   name = "foo"
-  description = "Foo namespace test"
-  project_id = "local:p-3124s"
+  description = "Terraform namespace acceptance test"
+  project_id = "${rancher2_project.foo.id}"
 }
  `
 )
@@ -50,8 +58,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Foo namespace test"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_id", "local:p-3124s"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Terraform namespace acceptance test"),
 				),
 			},
 			resource.TestStep{
@@ -59,8 +66,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Foo namespace test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_id", "local:p-3124s"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Terraform namespace acceptance test - updated"),
 				),
 			},
 			resource.TestStep{
@@ -68,8 +74,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Foo namespace test"),
-					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "project_id", "local:p-3124s"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Terraform namespace acceptance test"),
 				),
 			},
 		},
@@ -102,7 +107,11 @@ func testAccRancher2NamespaceDisappears(ns *clusterClient.Namespace) resource.Te
 			if rs.Type != testAccRancher2NamespaceType {
 				continue
 			}
-			client, err := testAccProvider.Meta().(*Config).ClusterClient(rs.Primary.Attributes["cluster_id"])
+			clusterID, err := clusterIDFromProjectID(rs.Primary.Attributes["project_id"])
+			if err != nil {
+				return err
+			}
+			client, err := testAccProvider.Meta().(*Config).ClusterClient(clusterID)
 			if err != nil {
 				return err
 			}
@@ -152,7 +161,12 @@ func testAccCheckRancher2NamespaceExists(n string, ns *clusterClient.Namespace) 
 			return fmt.Errorf("No namespace ID is set")
 		}
 
-		client, err := testAccProvider.Meta().(*Config).ClusterClient(rs.Primary.Attributes["cluster_id"])
+		clusterID, err := clusterIDFromProjectID(rs.Primary.Attributes["project_id"])
+		if err != nil {
+			return err
+		}
+
+		client, err := testAccProvider.Meta().(*Config).ClusterClient(clusterID)
 		if err != nil {
 			return err
 		}
@@ -176,7 +190,12 @@ func testAccCheckRancher2NamespaceDestroy(s *terraform.State) error {
 		if rs.Type != testAccRancher2NamespaceType {
 			continue
 		}
-		client, err := testAccProvider.Meta().(*Config).ClusterClient(rs.Primary.Attributes["cluster_id"])
+
+		clusterID, err := clusterIDFromProjectID(rs.Primary.Attributes["project_id"])
+		if err != nil {
+			return err
+		}
+		client, err := testAccProvider.Meta().(*Config).ClusterClient(clusterID)
 		if err != nil {
 			return err
 		}
