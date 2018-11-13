@@ -27,6 +27,14 @@ func projectFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"resource_quota": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: projectResourceQuotaFields(),
+			},
+		},
 		"annotations": &schema.Schema{
 			Type:        schema.TypeMap,
 			Optional:    true,
@@ -68,6 +76,17 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 		return err
 	}
 
+	if in.ResourceQuota != nil && in.NamespaceDefaultResourceQuota != nil {
+		resourceQuota, err := flattenProjectResourceQuota(in.ResourceQuota, in.NamespaceDefaultResourceQuota)
+		if err != nil {
+			return err
+		}
+		err = d.Set("resource_quota", resourceQuota)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -84,10 +103,10 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 
 // Expanders
 
-func expandProject(in *schema.ResourceData) *managementClient.Project {
+func expandProject(in *schema.ResourceData) (*managementClient.Project, error) {
 	obj := &managementClient.Project{}
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	if v := in.Id(); len(v) > 0 {
@@ -98,6 +117,15 @@ func expandProject(in *schema.ResourceData) *managementClient.Project {
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
 
+	if v, ok := in.Get("resource_quota").([]interface{}); ok && len(v) > 0 {
+		resourceQuota, nsResourceQuota, err := expandProjectResourceQuota(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.ResourceQuota = resourceQuota
+		obj.NamespaceDefaultResourceQuota = nsResourceQuota
+	}
+
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
 	}
@@ -106,7 +134,7 @@ func expandProject(in *schema.ResourceData) *managementClient.Project {
 		obj.Labels = toMapString(v)
 	}
 
-	return obj
+	return obj, nil
 }
 
 func resourceRancher2Project() *schema.Resource {
@@ -129,7 +157,10 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	project := expandProject(d)
+	project, err := expandProject(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[INFO] Creating Project %s", project.Name)
 
@@ -197,11 +228,18 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	resourceQuota, nsResourceQuota, err := expandProjectResourceQuota(d.Get("resource_quota").([]interface{}))
+	if err != nil {
+		return err
+	}
+
 	update := map[string]interface{}{
-		"name":        d.Get("name").(string),
-		"description": d.Get("description").(string),
-		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
+		"name":                          d.Get("name").(string),
+		"description":                   d.Get("description").(string),
+		"namespaceDefaultResourceQuota": nsResourceQuota,
+		"resourceQuota":                 resourceQuota,
+		"annotations":                   toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":                        toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newProject, err := client.Project.Update(project, update)

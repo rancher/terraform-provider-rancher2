@@ -6,8 +6,13 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
+const (
+	cloudProviderAwsName    = "aws"
+	cloudProviderCustomName = "custom"
+)
+
 var (
-	cloudProviderList = []string{"aws", "azure", "custom", "openstack", "vsphere"}
+	cloudProviderList = []string{cloudProviderAwsName, cloudProviderAzureName, cloudProviderCustomName, cloudProviderOpenstackName, cloudProviderVsphereName}
 )
 
 //Schemas

@@ -5,6 +5,10 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
+const (
+	cloudProviderVsphereName = "vsphere"
+)
+
 //Schemas
 
 func vsphereDiskCloudProviderFields() map[string]*schema.Schema {

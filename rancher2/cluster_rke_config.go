@@ -5,6 +5,10 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
+const (
+	clusterRkeKind = "rke"
+)
+
 //Schemas
 
 func rkeConfigFields() map[string]*schema.Schema {

@@ -39,10 +39,10 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
 * `kind` - (Required) The kind of the Cluster. `imported`, `eks`, `aks`, `gke` and `rke` are supported
-* `rke_config` - (Optional) The rke configuration for `rke` kind Clusters
+* `rke_config` - (Optional) The rke configuration for `rke` kind Clusters. Conflicts with `aks_config`, `eks_config` and `gke_config`
 * `eks_config` - (Optional) The Amazon eks configuration for `eks` kind Clusters
-* `aks_config` - (Optional) The Azure aks configuration for `aks` kind Clusters
-* `gke_config` - (Optional) The Google gke configuration for `gke` kind Clusters
+* `aks_config` - (Optional) The Azure aks configuration for `aks` kind Clusters. Conflicts with `eks_config`, `gke_config` and `rke_config`
+* `gke_config` - (Optional) The Google gke configuration for `gke` kind Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config`
 * `description` - (Optional) The description for Cluster (string)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)

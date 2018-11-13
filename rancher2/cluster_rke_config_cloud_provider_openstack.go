@@ -9,6 +9,7 @@ const (
 	openstackLBMonitorDelay      = 60
 	openstackLBMonitorMaxRetries = 5
 	openstackLBMonitorTimeout    = 30
+	cloudProviderOpenstackName   = "openstack"
 )
 
 //Schemas

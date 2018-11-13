@@ -49,6 +49,14 @@ func namespaceFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: descriptions["description"],
 		},
+		"resource_quota": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterNamespaceResourceQuotaFields(),
+			},
+		},
 		"annotations": &schema.Schema{
 			Type:        schema.TypeMap,
 			Optional:    true,
@@ -90,6 +98,17 @@ func flattenNamespace(d *schema.ResourceData, in *clusterClient.Namespace) error
 		return err
 	}
 
+	if in.ResourceQuota != nil {
+		resourceQuota, err := flattenClusterNamespaceResourceQuota(in.ResourceQuota)
+		if err != nil {
+			return err
+		}
+		err = d.Set("resource_quota", resourceQuota)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -106,10 +125,10 @@ func flattenNamespace(d *schema.ResourceData, in *clusterClient.Namespace) error
 
 // Expanders
 
-func expandNamespace(in *schema.ResourceData) *clusterClient.Namespace {
+func expandNamespace(in *schema.ResourceData) (*clusterClient.Namespace, error) {
 	obj := &clusterClient.Namespace{}
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	if v := in.Id(); len(v) > 0 {
@@ -120,6 +139,14 @@ func expandNamespace(in *schema.ResourceData) *clusterClient.Namespace {
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
 
+	if v, ok := in.Get("resource_quota").([]interface{}); ok && len(v) > 0 {
+		resourceQuota, err := expandClusterNamespaceResourceQuota(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.ResourceQuota = resourceQuota
+	}
+
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
 	}
@@ -128,7 +155,7 @@ func expandNamespace(in *schema.ResourceData) *clusterClient.Namespace {
 		obj.Labels = toMapString(v)
 	}
 
-	return obj
+	return obj, nil
 }
 
 func resourceRancher2Namespace() *schema.Resource {
@@ -164,7 +191,10 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	ns := expandNamespace(d)
+	ns, err := expandNamespace(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[INFO] Creating Namespace %s on Cluster ID %s", ns.Name, clusterID)
 
@@ -244,11 +274,17 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	resourceQuota, err := expandClusterNamespaceResourceQuota(d.Get("resource_quota").([]interface{}))
+	if err != nil {
+		return err
+	}
+
 	update := map[string]interface{}{
-		"projectId":   d.Get("project_id").(string),
-		"description": d.Get("description").(string),
-		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
+		"projectId":     d.Get("project_id").(string),
+		"description":   d.Get("description").(string),
+		"resourceQuota": resourceQuota,
+		"annotations":   toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":        toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newNs, err := client.Namespace.Update(ns, update)

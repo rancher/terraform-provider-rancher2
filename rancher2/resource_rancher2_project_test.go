@@ -17,6 +17,18 @@ resource "rancher2_project" "foo" {
   name = "foo"
   cluster_id = "local"
   description = "Terraform project acceptance test"
+  resource_quota {
+    project_limit {
+      limits_cpu = "2000m"
+      limits_memory = "2000Mi"
+      requests_storage = "2Gi"
+    }
+    namespace_default_limit {
+      limits_cpu = "500m"
+      limits_memory = "500Mi"
+      requests_storage = "1Gi"
+    }
+  }
 }
 `
 
@@ -25,6 +37,18 @@ resource "rancher2_project" "foo" {
   name = "foo-updated"
   cluster_id = "local"
   description = "Terraform project acceptance test - updated"
+  resource_quota {
+    project_limit {
+      limits_cpu = "1000m"
+      limits_memory = "2000Mi"
+      requests_storage = "2Gi"
+    }
+    namespace_default_limit {
+      limits_cpu = "700m"
+      limits_memory = "500Mi"
+      requests_storage = "1Gi"
+    }
+  }
 }
  `
 
@@ -33,6 +57,18 @@ resource "rancher2_project" "foo" {
   name = "foo"
   cluster_id = "local"
   description = "Terraform project acceptance test"
+  resource_quota {
+    project_limit {
+      limits_cpu = "2000m"
+      limits_memory = "2000Mi"
+      requests_storage = "2Gi"
+    }
+    namespace_default_limit {
+      limits_cpu = "500m"
+      limits_memory = "500Mi"
+      requests_storage = "1Gi"
+    }
+  }
 }
  `
 )
