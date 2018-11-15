@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -x 
+server=$(docker run -d -p 8443:443 rancher/rancher:latest)
+server_ip=$(docker inspect ${server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+RANCHER_URL=https://${server_ip}
+
+cat<<EOF>>/tmp/rke_cluster.yml
+ingress:
+  node_selector:
+    app: ingress
+network:
+  plugin: calico
+nodes:
+  - address: node-0
+    role: [etcd,controlplane,worker]
+    user: ubuntu
+EOF
+
+rke up --config /tmp/rke_cluster.yml --dind
+
+password=$(docker exec -it ${server} reset-password | grep -v '^New'|tr -d '\r')
+
+USERTOKEN=$(curl -X POST -k "${RANCHER_URL}/v3-public/localProviders/local?action=login" \
+    -H 'Accept: application/json' \
+    -H 'Content-Type: application/json' \
+    --data-binary "{\"password\":\"${password}\",\"username\":\"admin\"}"|jq -r .token)
+
+echo "USERTOKEN: ${USERTOKEN}"

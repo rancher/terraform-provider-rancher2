@@ -1,0 +1,6 @@
+.idea
+.dapper
+bin/
+build/
+dist/
+*/*.swp
