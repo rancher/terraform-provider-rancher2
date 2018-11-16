@@ -12,8 +12,12 @@ import (
 	//"gopkg.in/yaml.v2"
 )
 
+const (
+	clusterImportedKind = "imported"
+)
+
 var (
-	clusterKinds = []string{"imported", "eks", "aks", "gke", "rke"}
+	clusterKinds = []string{clusterImportedKind, clusterEksKind, clusterAksKind, clusterGkeKind, clusterRkeKind}
 )
 
 // Schema
@@ -27,37 +31,41 @@ func clusterFields() map[string]*schema.Schema {
 		"kind": &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
-			Default:      "rke",
+			Default:      clusterRkeKind,
 			ValidateFunc: validation.StringInSlice(clusterKinds, true),
 		},
 		"rke_config": &schema.Schema{
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Optional: true,
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"aks_config", "eks_config", "gke_config"},
 			Elem: &schema.Resource{
 				Schema: rkeConfigFields(),
 			},
 		},
 		"eks_config": &schema.Schema{
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Optional: true,
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"aks_config", "gke_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: eksConfigFields(),
 			},
 		},
 		"aks_config": &schema.Schema{
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Optional: true,
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"eks_config", "gke_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: aksConfigFields(),
 			},
 		},
 		"gke_config": &schema.Schema{
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Optional: true,
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"aks_config", "eks_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: gkeConfigFields(),
 			},
@@ -126,26 +134,32 @@ func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, cluste
 		return err
 	}
 
-	switch kind := d.Get("kind").(string); kind {
-	case "rke":
-		rkeConfig, err := flattenRkeConfig(in.RancherKubernetesEngineConfig)
+	kind := d.Get("kind").(string)
+	if kind == "" {
+		if in.AzureKubernetesServiceConfig != nil {
+			kind = clusterAksKind
+		}
+		if in.AmazonElasticContainerServiceConfig != nil {
+			kind = clusterEksKind
+		}
+		if in.GoogleKubernetesEngineConfig != nil {
+			kind = clusterGkeKind
+		}
+		if in.RancherKubernetesEngineConfig != nil {
+			kind = clusterRkeKind
+		}
+		if kind == "" {
+			kind = clusterImportedKind
+		}
+
+		err = d.Set("kind", kind)
 		if err != nil {
 			return err
 		}
-		err = d.Set("rke_config", rkeConfig)
-		if err != nil {
-			return err
-		}
-	case "eks":
-		eksConfig, err := flattenEksConfig(in.AmazonElasticContainerServiceConfig)
-		if err != nil {
-			return err
-		}
-		d.Set("eks_config", eksConfig)
-		if err != nil {
-			return err
-		}
-	case "aks":
+	}
+
+	switch kind {
+	case clusterAksKind:
 		aksConfig, err := flattenAksConfig(in.AzureKubernetesServiceConfig)
 		if err != nil {
 			return err
@@ -154,12 +168,30 @@ func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, cluste
 		if err != nil {
 			return err
 		}
-	case "gke":
+	case clusterEksKind:
+		eksConfig, err := flattenEksConfig(in.AmazonElasticContainerServiceConfig)
+		if err != nil {
+			return err
+		}
+		d.Set("eks_config", eksConfig)
+		if err != nil {
+			return err
+		}
+	case clusterGkeKind:
 		gkeConfig, err := flattenGkeConfig(in.GoogleKubernetesEngineConfig)
 		if err != nil {
 			return err
 		}
 		d.Set("gke_config", gkeConfig)
+		if err != nil {
+			return err
+		}
+	case clusterRkeKind:
+		rkeConfig, err := flattenRkeConfig(in.RancherKubernetesEngineConfig)
+		if err != nil {
+			return err
+		}
+		err = d.Set("rke_config", rkeConfig)
 		if err != nil {
 			return err
 		}
@@ -192,25 +224,25 @@ func expandCluster(in *schema.ResourceData) (*managementClient.Cluster, error) {
 	}
 
 	switch kind := in.Get("kind").(string); kind {
-	case "rke":
+	case clusterRkeKind:
 		rkeConfig, err := expandRkeConfig(in.Get("rke_config").([]interface{}))
 		if err != nil {
 			return nil, err
 		}
 		obj.RancherKubernetesEngineConfig = rkeConfig
-	case "eks":
+	case clusterEksKind:
 		eksConfig, err := expandEksConfig(in.Get("eks_config").([]interface{}))
 		if err != nil {
 			return nil, err
 		}
 		obj.AmazonElasticContainerServiceConfig = eksConfig
-	case "aks":
+	case clusterAksKind:
 		aksConfig, err := expandAksConfig(in.Get("aks_config").([]interface{}))
 		if err != nil {
 			return nil, err
 		}
 		obj.AzureKubernetesServiceConfig = aksConfig
-	case "gke":
+	case clusterGkeKind:
 		gkeConfig, err := expandGkeConfig(in.Get("gke_config").([]interface{}))
 		if err != nil {
 			return nil, err
@@ -251,11 +283,11 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	kind := d.Get("kind").(string)
 
-	if kind == "imported" {
+	if kind == clusterImportedKind {
 		expectedState = "pending"
 	}
 
-	if kind == "rke" {
+	if kind == clusterRkeKind {
 		expectedState = "provisioning"
 	}
 
@@ -369,25 +401,25 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	switch kind := d.Get("kind").(string); kind {
-	case "rke":
+	case clusterRkeKind:
 		rkeConfig, err := expandRkeConfig(d.Get("rke_config").([]interface{}))
 		if err != nil {
 			return err
 		}
 		update["rancherKubernetesEngineConfig"] = rkeConfig
-	case "eks":
+	case clusterEksKind:
 		eksConfig, err := expandEksConfig(d.Get("eks_config").([]interface{}))
 		if err != nil {
 			return err
 		}
 		update["amazonElasticContainerServiceConfig"] = eksConfig
-	case "aks":
+	case clusterAksKind:
 		aksConfig, err := expandAksConfig(d.Get("aks_config").([]interface{}))
 		if err != nil {
 			return err
 		}
 		update["azureKubernetesServiceConfig"] = aksConfig
-	case "gke":
+	case clusterGkeKind:
 		gkeConfig, err := expandGkeConfig(d.Get("gke_config").([]interface{}))
 		if err != nil {
 			return err

@@ -6,46 +6,12 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
-const networkPluginDefault = "canal"
-
 var (
-	networkPluginList = []string{"canal", "flannel", "calico"}
+	networkPluginDefault = networkPluginCanalName
+	networkPluginList    = []string{networkPluginCanalName, networkPluginFlannelName, networkPluginCalicoName}
 )
 
 //Schemas
-
-func calicoNetworkProviderFields() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"cloud_provider": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-	}
-	return s
-}
-
-func canalNetworkProviderFields() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"iface": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-	}
-	return s
-}
-
-func flannelNetworkProviderFields() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"iface": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-	}
-	return s
-}
 
 func networkFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
@@ -90,45 +56,6 @@ func networkFields() map[string]*schema.Schema {
 
 // Flatteners
 
-func flattenCalicoNetworkProvider(in *managementClient.CalicoNetworkProvider) ([]interface{}, error) {
-	obj := make(map[string]interface{})
-	if in == nil {
-		return []interface{}{}, nil
-	}
-
-	if len(in.CloudProvider) > 0 {
-		obj["cloud_provider"] = in.CloudProvider
-	}
-
-	return []interface{}{obj}, nil
-}
-
-func flattenCanalNetworkProvider(in *managementClient.CanalNetworkProvider) ([]interface{}, error) {
-	obj := make(map[string]interface{})
-	if in == nil {
-		return []interface{}{}, nil
-	}
-
-	if len(in.Iface) > 0 {
-		obj["iface"] = in.Iface
-	}
-
-	return []interface{}{obj}, nil
-}
-
-func flattenFlannelNetworkProvider(in *managementClient.FlannelNetworkProvider) ([]interface{}, error) {
-	obj := make(map[string]interface{})
-	if in == nil {
-		return []interface{}{}, nil
-	}
-
-	if len(in.Iface) > 0 {
-		obj["iface"] = in.Iface
-	}
-
-	return []interface{}{obj}, nil
-}
-
 func flattenNetwork(in *managementClient.NetworkConfig) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
@@ -171,48 +98,6 @@ func flattenNetwork(in *managementClient.NetworkConfig) ([]interface{}, error) {
 }
 
 // Expanders
-
-func expandCalicoNetworkProvider(p []interface{}) (*managementClient.CalicoNetworkProvider, error) {
-	obj := &managementClient.CalicoNetworkProvider{}
-	if len(p) == 0 || p[0] == nil {
-		return obj, nil
-	}
-	in := p[0].(map[string]interface{})
-
-	if v, ok := in["cloud_provider"].(string); ok && len(v) > 0 {
-		obj.CloudProvider = v
-	}
-
-	return obj, nil
-}
-
-func expandCanalNetworkProvider(p []interface{}) (*managementClient.CanalNetworkProvider, error) {
-	obj := &managementClient.CanalNetworkProvider{}
-	if len(p) == 0 || p[0] == nil {
-		return obj, nil
-	}
-	in := p[0].(map[string]interface{})
-
-	if v, ok := in["iface"].(string); ok && len(v) > 0 {
-		obj.Iface = v
-	}
-
-	return obj, nil
-}
-
-func expandFlannelNetworkProvider(p []interface{}) (*managementClient.FlannelNetworkProvider, error) {
-	obj := &managementClient.FlannelNetworkProvider{}
-	if len(p) == 0 || p[0] == nil {
-		return obj, nil
-	}
-	in := p[0].(map[string]interface{})
-
-	if v, ok := in["iface"].(string); ok && len(v) > 0 {
-		obj.Iface = v
-	}
-
-	return obj, nil
-}
 
 func expandNetwork(p []interface{}) (*managementClient.NetworkConfig, error) {
 	obj := &managementClient.NetworkConfig{}

@@ -5,6 +5,10 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
+const (
+	cloudProviderAzureName = "azure"
+)
+
 //Schemas
 
 func azureCloudProviderFields() map[string]*schema.Schema {

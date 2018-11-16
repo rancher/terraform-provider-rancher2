@@ -1,0 +1,59 @@
+---
+pipeline:
+  build:
+    privileged: true
+    image: rancher/dapper:1.11.2
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+    - dapper ci
+
+  build-all-binaries:
+    privileged: true
+    image: rancher/dapper:1.11.2
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+    - CROSS=1
+    commands:
+    - dapper build
+    when:
+      branch: [ master, release/* ]
+      event: tag
+
+  stage-binaries:
+    image: rancher/dapper:1.11.2
+    commands:
+    - cp -r ./bin/* ./package/
+    when:
+      branch: [ master, release/* ]
+      event: tag
+
+  github_binary_prerelease:
+    image: plugins/github-release
+    prerelease: true
+    files:
+     - build/bin/terraform-provider-rancher2_*
+     - dist/artifacts/${DRONE_TAG}/*
+    checksum:
+     - sha256
+    secrets: [github_token]
+    when:
+      branch: [ master, release/* ]
+      event: tag
+      ref:
+        include: [ refs/tags/*rc* ]
+
+  github_binary_release:
+    image: plugins/github-release
+    files:
+     - build/bin/terraform-provider-rancher2_*
+     - dist/artifacts/${DRONE_TAG}/*
+    checksum:
+     - sha256
+    secrets: [github_token]
+    when:
+      branch: [ master, release/* ]
+      event: tag
+      ref:
+        exclude: [ refs/tags/*rc* ]

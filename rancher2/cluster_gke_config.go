@@ -5,6 +5,10 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
+const (
+	clusterGkeKind = "gke"
+)
+
 //Schemas
 
 func gkeConfigFields() map[string]*schema.Schema {

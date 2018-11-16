@@ -12,20 +12,6 @@ Features WIP
 
 [Implemented resources](https://github.com/rancher/terraform-provider-rancher2/blob/master/website/docs/r)
 
-- Catalogs
-- Projects
-- Project Role Template Bindings
-- Cluster Role Template Bindings
-- Namespaces
-- Node Pools
-- Clusters
-  - Imported
-  - RKE
-    - Custom
-    - Cloud providers adding node pools
-  - Amazon EKS
-  - Azure AKS
-  - Google GKE
 - Auth Config providers
   - ActiveDirectory
   - ADFS
@@ -34,6 +20,27 @@ Features WIP
   - FreeIpa
   - OpenLdap
   - Ping
+- Catalogs
+- Clusters
+  - Amazon EKS
+  - Azure AKS
+  - Google GKE
+  - Imported
+  - RKE
+    - Cloud providers adding node pools
+    - Custom
+- Clusters & Projects logging
+  - Elasticsearch
+  - Fluentd
+  - Kafka
+  - Splunk
+  - Syslog
+- Clusters & Projects Role Template Bindings
+- Namespaces
+  - Resource quota limits (Rancher v2.1.x or higher )
+- Node Pools
+- Projects
+  - Resource quota limits (Rancher v2.1.x or higher )
 
 TODO
 
