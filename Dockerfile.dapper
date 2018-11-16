@@ -1,6 +1,6 @@
 FROM golang:1.9.4
 RUN apt-get update && \
-    apt-get install -y xz-utils zip rsync
+    apt-get install -y xz-utils zip rsync jq
 RUN go get github.com/rancher/trash
 RUN go get golang.org/x/lint/golint
 RUN curl -sL https://download.docker.com/linux/static/stable/x86_64/docker-17.03.2-ce.tgz | tar -xzf - && \
