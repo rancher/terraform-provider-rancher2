@@ -1,0 +1,4 @@
+#!/bin/bash
+
+set -x
+rke rm --dind --config /tmp/rke_cluster.yml

@@ -2,10 +2,8 @@
 
 set -x
 server=$(docker run -d -p 8443:443 rancher/rancher:latest)
-#server=elated_benz
 server_ip=$(docker inspect ${server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
-#server_ip=10.20.0.4
-export RANCHER_URL=https://${server_ip}:8443
+export RANCHER_URL=https://${server_ip}
 
 cat<<EOF>>/tmp/rke_cluster.yml
 ingress:
@@ -18,9 +16,9 @@ nodes:
     role: [etcd,controlplane,worker]
     user: ubuntu
 EOF
-
+docker ps
 rke up --config /tmp/rke_cluster.yml --dind
-export KUBE_CONFIG="$(dirname $0)/kube_config_rke_cluster.yml"
+export KUBECONFIG="/tmp/kube_config_rke_cluster.yml"
 
 password=$(docker exec -it ${server} reset-password | grep -v '^New'|tr -d '\r')
 
@@ -35,7 +33,7 @@ curl -X PUT -k "${RANCHER_URL}/v3/settings/server-url" \
     -H 'Content-Type: application/json' \
     --data-binary "{\"name\": \"server-url\", \"value\":\"${RANCHER_URL}\"}"
 
-read -r -d '' cluster_json << EOM
+read -r cluster_json << EOM
 {
   "type": "cluster",
   "dockerRootDir": "/var/lib/docker",
@@ -43,8 +41,9 @@ read -r -d '' cluster_json << EOM
   "name": "bootstrap-imported-rke-cluster"
 }
 EOM
+echo READ EXIT: $?
 
-cluster_obj=$(curl -k -X POST -H "Authorization: Bearer ${USERTOKEN}" \
+cluster_obj=$(curl -sk -X POST -H "Authorization: Bearer ${USERTOKEN}" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     ${RANCHER_URL}/v3/clusters \
@@ -53,16 +52,27 @@ cluster_obj=$(curl -k -X POST -H "Authorization: Bearer ${USERTOKEN}" \
 cluster_id=$(echo $cluster_obj|jq -r '.id')
 registration_link=$(echo $cluster_obj|jq -r '.links.clusterRegistrationTokens')
 
-curl -k -X POST -H "Authorization: Bearer ${USERTOKEN}" \
+curl -sk -X POST -H "Authorization: Bearer ${USERTOKEN}" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     ${RANCHER_URL}/v3/clusterregistrationtoken \
     -d "{\"clusterId\": \"${cluster_id}\", \"type\":\"clusterRegistrationToken\"}"
 sleep 1
 
-reg_command=$(curl -k -X GET -H "Authorization: Bearer ${USERTOKEN}" \
+manifest_url=$(curl -sk -X GET -H "Authorization: Bearer ${USERTOKEN}" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
-    ${registration_link}| jq -r '.data[0].insecureCommand')
+    ${registration_link}| jq -r '.data[0].manifestUrl')
 
-${reg_command}
+# Register
+curl -sfLk ${manifest_url} | kubectl apply -f -
+
+api_keys=$(curl -sSk \
+  "${RANCHER_URL}/v3/token" \
+  -H 'content-type: application/json' \
+  -H "Authorization: Bearer ${USERTOKEN}" \
+  --data-binary '{"type":"token","description":"automation","name":""}')
+
+export RANCHER_ACCESS_KEY=$(echo ${api_keys} | jq -r '.token' | cut -d":" -f1)
+export RANCHER_SECRET_KEY=$(echo ${api_keys} | jq -r '.token' | cut -d":" -f2)
+export RANCHER_TOKEN_KEY=$(echo ${api_keys} | jq -r '.token')
