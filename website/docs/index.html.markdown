@@ -32,5 +32,5 @@ The following arguments are supported:
 * `access_key` - (Optional) Rancher API access key. It can also be sourced from the `RANCHER_ACCESS_KEY` environment variable.
 * `secret_key` - (Optional) Rancher API secret key. It can also be sourced from the `RANCHER_SECRET_KEY` environment variable.
 * `token_key` - (Optional) Rancher API toke key. It can also be sourced from the `RANCHER_TOKEN_KEY` environment variable. Could be used instead `access_key` and `secret_key`.
-* `cacerts` - CA certificates used to sign rancher server tls certificates. Mandatory if self signed.
+* `ca_certs` - CA certificates used to sign rancher server tls certificates. Mandatory if self signed.
 * `config` - Path to the Rancher client cli.json config file.
