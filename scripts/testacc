@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+cleanup()
+{
+    $(dirname $0)/cleanup_rancher
+}
+trap cleanup EXIT TERM ERR
+
+$(dirname $0)/start_rancher
+
 RANCHER_URL=${RANCHER_URL:-""}
 RANCHER_TOKEN_KEY=${RANCHER_TOKEN_KEY:-""}
 RANCHER_ACCESS_KEY=${RANCHER_ACCESS_KEY:-""}
