@@ -12,11 +12,20 @@ import (
 
 const (
 	testAccRancher2ProjectRoleTemplateBindingType = "rancher2_project_role_template_binding"
+)
 
+var (
+	testAccRancher2ProjectRoleTemplateBindingProject        string
+	testAccRancher2ProjectRoleTemplateBindingConfig         string
+	testAccRancher2ProjectRoleTemplateBindingUpdateConfig   string
+	testAccRancher2ProjectRoleTemplateBindingRecreateConfig string
+)
+
+func init() {
 	testAccRancher2ProjectRoleTemplateBindingProject = `
 resource "rancher2_project" "foo" {
   name = "foo"
-  cluster_id = "local"
+  cluster_id = "` + testAccRancher2ClusterID + `"
   description = "Terraform project role template binding acceptance test"
 }
 `
@@ -44,13 +53,12 @@ resource "rancher2_project_role_template_binding" "foo" {
   role_template_id = "project-member"
 }
  `
-)
+}
 
 func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 	var projectRole *managementClient.ProjectRoleTemplateBinding
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +95,6 @@ func TestAccRancher2ProjectRoleTemplateBinding_disappears(t *testing.T) {
 	var projectRole *managementClient.ProjectRoleTemplateBinding
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{

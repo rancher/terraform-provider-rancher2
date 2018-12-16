@@ -1,9 +1,13 @@
 #!/bin/bash
 
 set -x
-server=$(docker run -d -p 8443:443 rancher/rancher:latest)
+server_port=44443
+server=$(docker run -d -p ${server_port}:443 rancher/rancher:latest)
 server_ip=$(docker inspect ${server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+echo ${server} >>/tmp/testacc_docker_id
 export RANCHER_URL=https://${server_ip}
+export RANCHER_ACC_CLUSTER_NAME=bootstrap-imported-rke-cluster
+export RANCHER_INSECURE=true
 
 cat<<EOF>>/tmp/rke_cluster.yml
 ingress:
@@ -20,7 +24,7 @@ docker ps
 rke up --config /tmp/rke_cluster.yml --dind
 export KUBECONFIG="/tmp/kube_config_rke_cluster.yml"
 
-password=$(docker exec -it ${server} reset-password | grep -v '^New'|tr -d '\r')
+password=$(docker exec -i ${server} reset-password | grep -v '^New'|tr -d '\r')
 
 USERTOKEN=$(curl -X POST -k "${RANCHER_URL}/v3-public/localProviders/local?action=login" \
     -H 'Accept: application/json' \
@@ -33,15 +37,15 @@ curl -X PUT -k "${RANCHER_URL}/v3/settings/server-url" \
     -H 'Content-Type: application/json' \
     --data-binary "{\"name\": \"server-url\", \"value\":\"${RANCHER_URL}\"}"
 
-read -r cluster_json << EOM
+cluster_json=$(cat <<-EOM
 {
   "type": "cluster",
   "dockerRootDir": "/var/lib/docker",
   "enableNetworkPolicy": "false",
-  "name": "bootstrap-imported-rke-cluster"
+  "name": "${RANCHER_ACC_CLUSTER_NAME}"
 }
 EOM
-echo READ EXIT: $?
+)
 
 cluster_obj=$(curl -sk -X POST -H "Authorization: Bearer ${USERTOKEN}" \
     -H 'Accept: application/json' \
@@ -73,6 +77,4 @@ api_keys=$(curl -sSk \
   -H "Authorization: Bearer ${USERTOKEN}" \
   --data-binary '{"type":"token","description":"automation","name":""}')
 
-export RANCHER_ACCESS_KEY=$(echo ${api_keys} | jq -r '.token' | cut -d":" -f1)
-export RANCHER_SECRET_KEY=$(echo ${api_keys} | jq -r '.token' | cut -d":" -f2)
 export RANCHER_TOKEN_KEY=$(echo ${api_keys} | jq -r '.token')
