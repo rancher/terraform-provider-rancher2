@@ -3,6 +3,7 @@ package rancher2
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -193,6 +194,21 @@ func testAccRancher2NodeDriverDisappears(nodeDriver *managementClient.NodeDriver
 			err = client.NodeDriver.Delete(nodeDriver)
 			if err != nil {
 				return fmt.Errorf("Error removing Node Driver: %s", err)
+			}
+
+			stateConf := &resource.StateChangeConf{
+				Pending:    []string{"removing"},
+				Target:     []string{"removed"},
+				Refresh:    nodeDriverStateRefreshFunc(client, nodeDriver.ID),
+				Timeout:    10 * time.Minute,
+				Delay:      1 * time.Second,
+				MinTimeout: 3 * time.Second,
+			}
+
+			_, waitErr := stateConf.WaitForState()
+			if waitErr != nil {
+				return fmt.Errorf(
+					"[ERROR] waiting for node driver (%s) to be removed: %s", nodeDriver.ID, waitErr)
 			}
 		}
 		return nil

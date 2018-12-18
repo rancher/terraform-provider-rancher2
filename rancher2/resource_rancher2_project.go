@@ -175,7 +175,7 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"active"},
+		Pending:    []string{"initializing", "configuring", "active"},
 		Target:     []string{"active"},
 		Refresh:    projectStateRefreshFunc(client, newProject.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),

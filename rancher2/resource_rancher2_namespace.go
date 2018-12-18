@@ -16,8 +16,6 @@ func init() {
 
 		"project_id": "Project ID where k8s namespace belongs",
 
-		"project_name": "Project name where k8s namespace belongs",
-
 		"description": "Description of the k8s namespace managed by rancher v2",
 
 		"resource_quota_template_id": "Resource quota template id to apply on k8s namespace",
@@ -35,8 +33,19 @@ func namespaceFields() map[string]*schema.Schema {
 		"project_id": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
-			ForceNew:    true,
 			Description: descriptions["project_id"],
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "" || new == "" {
+					return false
+				}
+				oldClusterID, oldProjectID := splitProjectID(old)
+				newClusterID, newProjectID := splitProjectID(new)
+				// Just update project_id inside same cluster ID
+				if oldClusterID == newClusterID && oldProjectID != newProjectID {
+					return false
+				}
+				return true
+			},
 		},
 		"name": &schema.Schema{
 			Type:        schema.TypeString,
@@ -83,12 +92,14 @@ func flattenNamespace(d *schema.ResourceData, in *clusterClient.Namespace) error
 
 	d.SetId(in.ID)
 
-	err := d.Set("project_id", in.ProjectID)
-	if err != nil {
-		return err
+	if len(in.ProjectID) > 0 {
+		err := d.Set("project_id", in.ProjectID)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = d.Set("name", in.Name)
+	err := d.Set("name", in.Name)
 	if err != nil {
 		return err
 	}
@@ -135,7 +146,8 @@ func expandNamespace(in *schema.ResourceData) (*clusterClient.Namespace, error) 
 		obj.ID = v
 	}
 
-	obj.ProjectID = in.Get("project_id").(string)
+	_, projectID := splitProjectID(in.Get("project_id").(string))
+	obj.ProjectID = projectID
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
 
@@ -231,10 +243,7 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) error {
-	clusterID, err := clusterIDFromProjectID(d.Get("project_id").(string))
-	if err != nil {
-		return err
-	}
+	clusterID, _ := splitProjectID(d.Get("project_id").(string))
 
 	log.Printf("[INFO] Refreshing Namespace ID %s", d.Id())
 
@@ -262,10 +271,7 @@ func resourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	clusterID, err := clusterIDFromProjectID(d.Get("project_id").(string))
-	if err != nil {
-		return err
-	}
+	clusterID, projectID := splitProjectID(d.Get("project_id").(string))
 
 	log.Printf("[INFO] Updating Namespace ID %s", d.Id())
 
@@ -279,13 +285,25 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	readClusterID, readProjectID := splitProjectID(ns.ProjectID)
+
+	if projectID != readProjectID && clusterID == readClusterID {
+		nsMove := &clusterClient.NamespaceMove{
+			ProjectID: projectID,
+		}
+
+		err = client.Namespace.ActionMove(ns, nsMove)
+		if err != nil {
+			return err
+		}
+	}
+
 	resourceQuota, err := expandClusterNamespaceResourceQuota(d.Get("resource_quota").([]interface{}))
 	if err != nil {
 		return err
 	}
 
 	update := map[string]interface{}{
-		"projectId":     d.Get("project_id").(string),
 		"description":   d.Get("description").(string),
 		"resourceQuota": resourceQuota,
 		"annotations":   toMapString(d.Get("annotations").(map[string]interface{})),
@@ -320,10 +338,7 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceRancher2NamespaceDelete(d *schema.ResourceData, meta interface{}) error {
-	clusterID, err := clusterIDFromProjectID(d.Get("project_id").(string))
-	if err != nil {
-		return err
-	}
+	clusterID, _ := splitProjectID(d.Get("project_id").(string))
 
 	log.Printf("[INFO] Deleting Namespace ID %s", d.Id())
 	id := d.Id()
@@ -372,6 +387,10 @@ func resourceRancher2NamespaceImport(d *schema.ResourceData, meta interface{}) (
 	clusterID, resourceID := splitID(d.Id())
 
 	client, err := meta.(*Config).ClusterClient(clusterID)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	err = d.Set("project_id", clusterID)
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}
