@@ -2,7 +2,6 @@ package rancher2
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
@@ -25,6 +24,7 @@ type Config struct {
 	TokenKey  string `json:"tokenKey"`
 	URL       string `json:"url"`
 	CACerts   string `json:"cacert"`
+	Insecure  bool   `json:"insecure"`
 	ClusterID string `json:"clusterId"`
 	ProjectID string `json:"projectId"`
 	Client    Client
@@ -98,11 +98,7 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 }
 
 func (c *Config) NormalizeURL() {
-	c.URL = strings.TrimSuffix(c.URL, "/")
-
-	if !strings.HasSuffix(c.URL, "/v3") {
-		c.URL = c.URL + "/v3"
-	}
+	c.URL = NormalizeURL(c.URL)
 }
 
 func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
@@ -114,6 +110,7 @@ func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
 		SecretKey: c.SecretKey,
 		TokenKey:  c.TokenKey,
 		CACerts:   c.CACerts,
+		Insecure:  c.Insecure,
 	}
 
 	return options
@@ -132,12 +129,21 @@ func (c *Config) GetProjectRoleTemplateBindingsByProjectID(projectID string) ([]
 	filters := map[string]interface{}{"ProjectID": projectID}
 	listOpts := NewListOpts(filters)
 
-	projectsRoles, err := client.ProjectRoleTemplateBinding.List(listOpts)
+	collection, err := client.ProjectRoleTemplateBinding.List(listOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	return projectsRoles.Data, nil
+	data := collection.Data
+
+	// Paginating data if needed
+	if collection.Pagination.Partial {
+		for collection, err = collection.Next(); err != nil && collection != nil; collection, err = collection.Next() {
+			data = append(data, collection.Data...)
+		}
+	}
+
+	return data, err
 }
 
 func (c *Config) GetProjectByName(name, clusterID string) (*managementClient.Project, error) {
@@ -153,15 +159,14 @@ func (c *Config) GetProjectByName(name, clusterID string) (*managementClient.Pro
 	filters := map[string]interface{}{"clusterId": clusterID, "name": name}
 	listOpts := NewListOpts(filters)
 
-	projects, err := client.Project.List(listOpts)
+	collection, err := client.Project.List(listOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, project := range projects.Data {
-		if project.Name == name {
-			return &project, nil
-		}
+	// Returning first project name matching
+	if len(collection.Data) > 0 {
+		return &collection.Data[0], nil
 	}
 	return nil, fmt.Errorf("[ERROR] Project %s on cluster %s not found", name, clusterID)
 }
@@ -248,16 +253,16 @@ func (c *Config) GetClusterByName(name string) (*managementClient.Cluster, error
 	filters := map[string]interface{}{"name": name}
 	listOpts := NewListOpts(filters)
 
-	clusters, err := client.Cluster.List(listOpts)
+	collection, err := client.Cluster.List(listOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, cluster := range clusters.Data {
-		if cluster.Name == name {
-			return &cluster, nil
-		}
+	// Cluster names are globally unique
+	if len(collection.Data) > 0 {
+		return &collection.Data[0], nil
 	}
+
 	return nil, fmt.Errorf("[ERROR] Cluster %s not found", name)
 }
 
@@ -379,15 +384,14 @@ func (c *Config) GetUserByName(name string) (*managementClient.User, error) {
 	filters := map[string]interface{}{"username": name}
 	listOpts := NewListOpts(filters)
 
-	users, err := client.User.List(listOpts)
+	collection, err := client.User.List(listOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, user := range users.Data {
-		if user.Username == name {
-			return &user, nil
-		}
+	// Usernames are globally unique
+	if len(collection.Data) > 0 {
+		return &collection.Data[0], nil
 	}
 	return nil, fmt.Errorf("[ERROR] Username %s not found", name)
 }

@@ -1,14 +1,37 @@
 package rancher2
 
 import (
+	"bytes"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"math/rand"
+	"net/http"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 )
 
-const clusterProjectIDSeparator = ":"
+const (
+	clusterProjectIDSeparator = ":"
+	passDigits                = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*()_+`-={}|[]\\:\"<>?,./"
+	passDefaultLen            = 16
+)
+
+func GetRandomPass(n int) string {
+	rand.Seed(time.Now().Unix())
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = passDigits[rand.Int63()%int64(len(passDigits))]
+	}
+	return string(b)
+}
 
 func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 	listOpts := clientbase.NewListOpts()
@@ -19,8 +42,107 @@ func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 	return listOpts
 }
 
+func DoUserLogin(url, user, pass, ttl, cacert string, insecure bool) (string, error) {
+	loginURL := url + "-public/localProviders/local?action=login"
+	loginData := `{"username": "` + user + `", "password": "` + pass + `", "ttl": ` + ttl + `}`
+	loginHead := map[string]string{
+		"Accept":       "application/json",
+		"Content-Type": "application/json",
+	}
+
+	// Try to login with default admin user and password
+	loginResp, err := DoPost(loginURL, loginData, cacert, insecure, loginHead)
+	if err != nil {
+		return "", err
+	}
+
+	if loginResp["type"].(string) != "token" || loginResp["token"] == nil {
+		return "", nil
+	}
+
+	return loginResp["token"].(string), nil
+}
+
+func DoPost(url, data, cacert string, insecure bool, headers map[string]string) (map[string]interface{}, error) {
+	response := make(map[string]interface{})
+
+	if url == "" {
+		return response, fmt.Errorf("[ERROR] Doing post: URL is nil")
+	}
+
+	jsonBytes := []byte(data)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		return response, err
+	}
+
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	client := &http.Client{}
+
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+	}
+
+	if cacert != "" {
+		// Get the SystemCertPool, continue with an empty pool on error
+		rootCAs, _ := x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+
+		// Append our cert to the system pool
+		if ok := rootCAs.AppendCertsFromPEM([]byte(cacert)); !ok {
+			log.Println("No certs appended, using system certs only")
+		}
+		transport.TLSClientConfig.RootCAs = rootCAs
+	}
+
+	client.Transport = transport
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return response, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
+}
+
+func NormalizeURL(url string) string {
+	if url == "" {
+		return ""
+	}
+
+	url = strings.TrimSuffix(url, "/")
+
+	if !strings.HasSuffix(url, "/v3") {
+		url = url + "/v3"
+	}
+
+	return url
+}
+
 func IsNotFound(err error) bool {
 	return clientbase.IsNotFound(err)
+}
+
+func splitTokenID(token string) string {
+	separator := ":"
+
+	if strings.Contains(token, separator) {
+		return token[0:strings.Index(token, separator)]
+	}
+
+	return token
 }
 
 func splitID(id string) (clusterID, resourceID string) {
@@ -79,4 +201,19 @@ func toMapInterface(in map[string]string) map[string]interface{} {
 		out[i] = v
 	}
 	return out
+}
+
+func FileExist(path string) (bool, error) {
+	if path == "" {
+		return false, nil
+	}
+	_, err := os.Stat(path)
+
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }

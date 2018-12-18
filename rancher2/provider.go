@@ -1,11 +1,7 @@
 package rancher2
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/url"
-	"os"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -13,10 +9,12 @@ import (
 
 // CLIConfig used to store data from file.
 type CLIConfig struct {
+	AdminPass string `json:"adminpass"`
 	AccessKey string `json:"accessKey"`
 	SecretKey string `json:"secretKey"`
 	TokenKey  string `json:"tokenKey"`
 	CACerts   string `json:"caCerts"`
+	Insecure  bool   `json:"insecure,omitempty"`
 	URL       string `json:"url"`
 	Project   string `json:"project"`
 	Path      string `json:"path,omitempty"`
@@ -56,11 +54,11 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_CA_CERTS", ""),
 				Description: descriptions["ca_certs"],
 			},
-			"config": &schema.Schema{
-				Type:        schema.TypeString,
+			"insecure": &schema.Schema{
+				Type:        schema.TypeBool,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("RANCHER_CLIENT_CONFIG", ""),
-				Description: descriptions["config"],
+				DefaultFunc: schema.EnvDefaultFunc("RANCHER_INSECURE", false),
+				Description: descriptions["insecure"],
 			},
 		},
 
@@ -82,6 +80,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_project_logging":               resourceRancher2ProjectLogging(),
 			"rancher2_project_role_template_binding": resourceRancher2ProjectRoleTemplateBinding(),
 			"rancher2_namespace":                     resourceRancher2Namespace(),
+			"rancher2_setting":                       resourceRancher2Setting(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -102,11 +101,11 @@ func init() {
 
 		"token_key": "API token used to authenticate with the rancher server",
 
-		"ca_certs": "CA certificates used to sign rancher server tls certificates. Mandatory if self signed.",
+		"ca_certs": "CA certificates used to sign rancher server tls certificates. Mandatory if self signed tls and insecure option false",
+
+		"insecure": "Allow insecure connections to Rancher. Mandatory if self signed tls and not ca_certs provided",
 
 		"api_url": "The URL to the rancher API",
-
-		"config": "Path to the Rancher client cli.json config file",
 	}
 }
 
@@ -116,40 +115,10 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	secretKey := d.Get("secret_key").(string)
 	tokenKey := d.Get("token_key").(string)
 	caCerts := d.Get("ca_certs").(string)
-
-	if configFile := d.Get("config").(string); configFile != "" {
-		config, err := loadConfig(configFile)
-		if err != nil {
-			return config, err
-		}
-
-		if apiURL == "" && config.URL != "" {
-			u, err := url.Parse(config.URL)
-			if err != nil {
-				return config, err
-			}
-			apiURL = u.Scheme + "://" + u.Host
-		}
-
-		if accessKey == "" {
-			accessKey = config.AccessKey
-		}
-
-		if secretKey == "" {
-			secretKey = config.SecretKey
-		}
-
-		if tokenKey == "" {
-			tokenKey = config.TokenKey
-		}
-
-		if caCerts == "" {
-			caCerts = config.CACerts
-		}
-	}
+	insecure := d.Get("insecure").(bool)
 
 	if apiURL == "" {
-		return &Config{}, fmt.Errorf("No api_url provided")
+		return &Config{}, fmt.Errorf("[ERROR] No api_url provided")
 	}
 
 	config := &Config{
@@ -158,6 +127,12 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		SecretKey: secretKey,
 		TokenKey:  tokenKey,
 		CACerts:   caCerts,
+		Insecure:  insecure,
+	}
+
+	// If token nor access key and secret key are not provided
+	if config.TokenKey == "" && (config.AccessKey == "" || config.SecretKey == "") {
+		return &Config{}, fmt.Errorf("[ERROR] No token_key nor access_key and secret_key nor admin_pass provided")
 	}
 
 	_, err := config.ManagementClient()
@@ -166,22 +141,4 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	return config, nil
-}
-
-func loadConfig(path string) (CLIConfig, error) {
-	config := CLIConfig{
-		Path: path,
-	}
-
-	content, err := ioutil.ReadFile(path)
-	if os.IsNotExist(err) {
-		return config, nil
-	} else if err != nil {
-		return config, err
-	}
-
-	err = json.Unmarshal(content, &config)
-	config.Path = path
-
-	return config, err
 }
