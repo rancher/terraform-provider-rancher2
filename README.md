@@ -20,6 +20,7 @@ Features WIP
   - FreeIpa
   - OpenLdap
   - Ping
+- Bootstrap Rancher system
 - Catalogs
 - Clusters
   - Amazon EKS
@@ -42,6 +43,7 @@ Features WIP
 - Node Driver
 - Projects
   - Resource quota limits (Rancher v2.1.x or higher )
+- Settings
 
 TODO
 
