@@ -142,6 +142,10 @@ func expandEksConfig(p []interface{}) (*managementClient.AmazonElasticContainerS
 		obj.SecretKey = v
 	}
 
+	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
+		obj.InstanceType = v
+	}
+
 	if v, ok := in["maximum_nodes"].(int); ok && v > 0 {
 		obj.MaximumNodes = int64(v)
 	}
