@@ -161,6 +161,11 @@ func resourceRancher2ClusterRoleTemplateBinding() *schema.Resource {
 		},
 
 		Schema: clusterRoleTemplateBindingFields(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -193,7 +198,7 @@ func resourceRancher2ClusterRoleTemplateBindingCreate(d *schema.ResourceData, me
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    clusterRoleTemplateBindingStateRefreshFunc(client, newClusterRole.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -267,7 +272,7 @@ func resourceRancher2ClusterRoleTemplateBindingUpdate(d *schema.ResourceData, me
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    clusterRoleTemplateBindingStateRefreshFunc(client, newClusterRole.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -309,7 +314,7 @@ func resourceRancher2ClusterRoleTemplateBindingDelete(d *schema.ResourceData, me
 		Pending:    []string{"active"},
 		Target:     []string{"removed"},
 		Refresh:    clusterRoleTemplateBindingStateRefreshFunc(client, id),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

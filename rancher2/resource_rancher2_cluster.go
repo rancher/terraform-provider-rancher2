@@ -263,6 +263,12 @@ func resourceRancher2Cluster() *schema.Resource {
 			State: resourceRancher2ClusterImport,
 		},
 		Schema: clusterFields(),
+		// Setting default timeouts to be liberal in order to accommodate managed Kubernetes providers like EKS, GKE, and AKS
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
@@ -300,7 +306,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{},
 		Target:     []string{expectedState},
 		Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -327,7 +333,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    clusterRegistrationTokenStateRefreshFunc(client, newClusterRegistrationToken.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -436,7 +442,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{"active", "provisioning", "pending"},
 		Target:     []string{"active", "provisioning", "pending"},
 		Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -477,7 +483,7 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
 		Refresh:    clusterStateRefreshFunc(client, id),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

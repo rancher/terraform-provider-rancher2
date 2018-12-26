@@ -34,6 +34,14 @@ The following arguments are supported:
 * `user_id` - (Optional) The user ID to assign project role template binding
 * `user_principal_id` - (Optional) The user_principal ID to assign project role template binding
                 
+### Timeouts
+
+`rancher2_project_role_template_binding` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating project role template bindings.
+- `update` - (Default `10 minutes`) Used for project role template binding modifications.
+- `delete` - (Default `10 minutes`) Used for deleting project role template bindings.
 
 ## Attributes Reference
 

@@ -40,7 +40,15 @@ The following arguments are supported:
 * `worker` - (Optional) RKE role role for created nodes.
 * `annotations` - (Optional/Computed) Annotations for Node Pool object.
 * `labels` - (Optional/Computed) Labels for Node Pool object.
-                
+
+### Timeouts
+
+`rancher2_node_pool` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating node pools.
+- `update` - (Default `10 minutes`) Used for node pool modifications.
+- `delete` - (Default `10 minutes`) Used for deleting node pools.
 
 ## Attributes Reference
 

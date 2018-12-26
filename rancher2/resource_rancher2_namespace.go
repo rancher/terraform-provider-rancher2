@@ -169,6 +169,11 @@ func resourceRancher2Namespace() *schema.Resource {
 		},
 
 		Schema: namespaceFields(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -207,7 +212,7 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 		Pending:    []string{"activating"},
 		Target:     []string{"active"},
 		Refresh:    namespaceStateRefreshFunc(client, newNs.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -296,7 +301,7 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    namespaceStateRefreshFunc(client, newNs.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -348,7 +353,7 @@ func resourceRancher2NamespaceDelete(d *schema.ResourceData, meta interface{}) e
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
 		Refresh:    namespaceStateRefreshFunc(client, id),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
