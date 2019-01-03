@@ -342,6 +342,15 @@ The following arguments are supported:
 * `sub_network` - (Required) Subnetwork for GKE cluster (string)
 * `zone` - (Required) Zone GKE cluster (string)
 
+### Timeouts
+
+`rancher2_cluster` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `30 minutes`) Used for creating clusters.
+- `update` - (Default `30 minutes`) Used for cluster modifications.
+- `delete` - (Default `30 minutes`) Used for deleting clusters.
+
 ## Attributes Reference
 
 The following attributes are exported:

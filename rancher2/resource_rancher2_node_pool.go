@@ -165,6 +165,11 @@ func resourceRancher2NodePool() *schema.Resource {
 		},
 
 		Schema: nodePoolFields(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -192,7 +197,7 @@ func resourceRancher2NodePoolCreate(d *schema.ResourceData, meta interface{}) er
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    nodePoolStateRefreshFunc(client, newNodePool.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -264,7 +269,7 @@ func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) er
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    nodePoolStateRefreshFunc(client, newNodePool.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -306,7 +311,7 @@ func resourceRancher2NodePoolDelete(d *schema.ResourceData, meta interface{}) er
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
 		Refresh:    nodePoolStateRefreshFunc(client, id),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

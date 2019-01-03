@@ -34,6 +34,14 @@ The following arguments are supported:
 * `user_id` - (Optional) The user ID to assign cluster role template binding
 * `user_principal_id` - (Optional) The user_principal ID to assign cluster role template binding
                 
+### Timeouts
+
+`rancher2_cluster_role_template_binding` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating cluster role template bindings.
+- `update` - (Default `10 minutes`) Used for cluster role template binding modifications.
+- `delete` - (Default `10 minutes`) Used for deleting cluster role template bindings.
 
 ## Attributes Reference
 

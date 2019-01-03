@@ -62,6 +62,15 @@ The following arguments are supported for `limit`:
 
 More info at [resource-quotas](https://rancher.com/docs/rancher/v2.x/en/k8s-in-rancher/projects-and-namespaces/resource-quotas/)
 
+### Timeouts
+
+`rancher2_namespace` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating namespaces.
+- `update` - (Default `10 minutes`) Used for namespace modifications.
+- `delete` - (Default `10 minutes`) Used for deleting namespaces.
+
 ## Attributes Reference
 
 The following attributes are exported:

@@ -312,6 +312,11 @@ func resourceRancher2ClusterLogging() *schema.Resource {
 		},
 
 		Schema: clusterLoggingFields(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -342,7 +347,7 @@ func resourceRancher2ClusterLoggingCreate(d *schema.ResourceData, meta interface
 		Pending:    []string{"provisioning"},
 		Target:     []string{"active"},
 		Refresh:    clusterLoggingStateRefreshFunc(client, newClusterLogging.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -448,7 +453,7 @@ func resourceRancher2ClusterLoggingUpdate(d *schema.ResourceData, meta interface
 		Pending:    []string{"updating"},
 		Target:     []string{"active"},
 		Refresh:    clusterLoggingStateRefreshFunc(client, newClusterLogging.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -490,7 +495,7 @@ func resourceRancher2ClusterLoggingDelete(d *schema.ResourceData, meta interface
 		Pending:    []string{"active"},
 		Target:     []string{"removed"},
 		Refresh:    clusterLoggingStateRefreshFunc(client, id),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

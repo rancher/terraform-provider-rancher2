@@ -30,6 +30,15 @@ The following arguments are supported:
 * `kind` - (Optional) The kind of the catalog. Just helm by the moment.
 * `branch` - (Optional) The branch of the catalog repo to use.
 
+### Timeouts
+
+`rancher2_catalog` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating catalogs.
+- `update` - (Default `10 minutes`) Used for catalog modifications.
+- `delete` - (Default `10 minutes`) Used for deleting catalogs.
+
 ## Attributes Reference
 
 The following attributes are exported:

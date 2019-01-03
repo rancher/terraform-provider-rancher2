@@ -119,6 +119,15 @@ The following arguments are supported:
 * `ssl_verify` - (Optional) SSL verify for the syslog service (bool)
 * `token` - (Optional) Token for the syslog service (string)
 
+### Timeouts
+
+`rancher2_project_logging` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating project logging configurations.
+- `update` - (Default `10 minutes`) Used for project logging configuration modifications.
+- `delete` - (Default `10 minutes`) Used for deleting project logging configurations.
+
 ## Attributes Reference
 
 The following attributes are exported:

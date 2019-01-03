@@ -142,6 +142,11 @@ func resourceRancher2Catalog() *schema.Resource {
 		},
 
 		Schema: catalogFields(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -164,7 +169,7 @@ func resourceRancher2CatalogCreate(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{"refreshed"},
 		Target:     []string{"active"},
 		Refresh:    catalogStateRefreshFunc(client, newCatalog.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -237,7 +242,7 @@ func resourceRancher2CatalogUpdate(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{"refreshed"},
 		Target:     []string{"active"},
 		Refresh:    catalogStateRefreshFunc(client, newCatalog.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -279,7 +284,7 @@ func resourceRancher2CatalogDelete(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{"active"},
 		Target:     []string{"removed"},
 		Refresh:    catalogStateRefreshFunc(client, id),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

@@ -148,6 +148,11 @@ func resourceRancher2Project() *schema.Resource {
 		},
 
 		Schema: projectFields(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -173,7 +178,7 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    projectStateRefreshFunc(client, newProject.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -251,7 +256,7 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    projectStateRefreshFunc(client, newProject.ID),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -293,7 +298,7 @@ func resourceRancher2ProjectDelete(d *schema.ResourceData, meta interface{}) err
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
 		Refresh:    projectStateRefreshFunc(client, id),
-		Timeout:    10 * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
