@@ -40,6 +40,8 @@ The following arguments are supported:
 * `ui_url` - (Optional) The URL to load for customized Add Nodes screen for this driver.
 * `url` - (Required) The URL to download the machine driver binary for 64-bit Linux.
 * `whitelist_domains` - (Optional) Domains to whitelist for the ui.
+* `annotations` - (Optional/Computed) Annotations of the resource (map).
+* `labels` - (Optional/Computed) Labels of the resource (map).
 
 ## Attributes Reference
 

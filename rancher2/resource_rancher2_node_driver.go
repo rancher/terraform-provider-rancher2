@@ -16,6 +16,7 @@ func nodeDriverFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Required: true,
 		},
+
 		"builtin": &schema.Schema{
 			Type:     schema.TypeBool,
 			Required: true,
@@ -50,6 +51,16 @@ func nodeDriverFields() map[string]*schema.Schema {
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
+		},
+		"annotations": &schema.Schema{
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+		"labels": &schema.Schema{
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
 		},
 	}
 
@@ -110,6 +121,16 @@ func flattenNodeDriver(d *schema.ResourceData, in *managementClient.NodeDriver) 
 		return err
 	}
 
+	err = d.Set("annotations", toMapInterface(in.Annotations))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("labels", toMapInterface(in.Labels))
+	if err != nil {
+		return err
+	}
+
 	return nil
 
 }
@@ -138,6 +159,15 @@ func expandNodeDriver(in *schema.ResourceData) *managementClient.NodeDriver {
 	if v, ok := in.Get("whitelist_domains").([]interface{}); ok && len(v) > 0 {
 		obj.WhitelistDomains = toArrayString(v)
 	}
+
+	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Annotations = toMapString(v)
+	}
+
+	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Labels = toMapString(v)
+	}
+
 	return obj
 }
 
@@ -215,6 +245,8 @@ func resourceRancher2NodeDriverUpdate(d *schema.ResourceData, meta interface{}) 
 		"uiUrl":            d.Get("ui_url").(string),
 		"url":              d.Get("url").(string),
 		"whitelistDomains": toArrayString(d.Get("whitelist_domains").([]interface{})),
+		"annotations":      toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":           toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	_, err = client.NodeDriver.Update(nodeDriver, update)
