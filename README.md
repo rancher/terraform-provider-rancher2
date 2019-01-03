@@ -39,6 +39,7 @@ Features WIP
 - Namespaces
   - Resource quota limits (Rancher v2.1.x or higher )
 - Node Pools
+- Node Driver
 - Projects
   - Resource quota limits (Rancher v2.1.x or higher )
 
@@ -50,7 +51,7 @@ TODO
 Requirements
 ------------
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.11.x 
+-	[Terraform](https://www.terraform.io/downloads.html) 0.11.x
 -	[Docker](https://docs.docker.com/install/) to build the provider plugin
 - [Trash](https://github.com/rancher/trash/releases) 0.2.6 (to manage vendor dependencies)
 
@@ -105,10 +106,10 @@ $ terraform plan
 $ terraform apply
 ```
 
-Managing vendor dependencies 
+Managing vendor dependencies
 -----------------------------
 
-Go vendor dependencies are managed with [Trash](https://github.com/rancher/trash) and vendor.conf file. 
+Go vendor dependencies are managed with [Trash](https://github.com/rancher/trash) and vendor.conf file.
 
 To update vendor dependencies, edit `vendor.conf` file and execute trash
 
@@ -116,10 +117,10 @@ To update vendor dependencies, edit `vendor.conf` file and execute trash
 $ trash
 ```
 
-Acceptance tests 
+Acceptance tests
 ----------------
 
-For execute acceptance tests, a running rancher HA system and a rancher API key are needed. 
+For execute acceptance tests, a running rancher HA system and a rancher API key are needed.
 
 To run acceptance tests, export `RANCHER_URL` with rancher url and `RANCHER_TOKEN_KEY` with bearer token or `RANCHER_ACCESS_KEY` with rancher acces key and `RANCHER_SECRET_KEY` with rancher secret key and execute
 
@@ -128,4 +129,3 @@ $ export RANCHER_URL=<URL>
 $ export RANCHER_TOKEN_KEY=<TOKEN>
 $ scripts/testacc
 ```
-
