@@ -43,6 +43,15 @@ The following arguments are supported:
 * `annotations` - (Optional/Computed) Annotations of the resource (map).
 * `labels` - (Optional/Computed) Labels of the resource (map).
 
+### Timeouts
+
+`rancher2_node_driver` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating node drivers.
+- `update` - (Default `10 minutes`) Used for node driver modifications.
+- `delete` - (Default `10 minutes`) Used for deleting node drivers.
+
 ## Attributes Reference
 
 The following attributes are exported:

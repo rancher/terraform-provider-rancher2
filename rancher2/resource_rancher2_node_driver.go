@@ -3,7 +3,9 @@ package rancher2
 import (
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
@@ -181,6 +183,11 @@ func resourceRancher2NodeDriver() *schema.Resource {
 			State: resourceRancher2NodeDriverImport,
 		},
 		Schema: nodeDriverFields(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 	}
 }
 
@@ -197,6 +204,19 @@ func resourceRancher2NodeDriverCreate(d *schema.ResourceData, meta interface{}) 
 	newNodeDriver, err := client.NodeDriver.Create(nodeDriver)
 	if err != nil {
 		return err
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"downloading", "activating"},
+		Target:     []string{"active", "inactive"},
+		Refresh:    nodeDriverStateRefreshFunc(client, newNodeDriver.ID),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for node pool (%s) to be created: %s", newNodeDriver.ID, waitErr)
 	}
 
 	d.SetId(newNodeDriver.ID)
@@ -249,9 +269,23 @@ func resourceRancher2NodeDriverUpdate(d *schema.ResourceData, meta interface{}) 
 		"labels":           toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
-	_, err = client.NodeDriver.Update(nodeDriver, update)
+	newNodeDriver, err := client.NodeDriver.Update(nodeDriver, update)
 	if err != nil {
 		return err
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"active", "inactive", "downloading", "activating", "deactivating"},
+		Target:     []string{"active", "inactive"},
+		Refresh:    nodeDriverStateRefreshFunc(client, newNodeDriver.ID),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf(
+			"[ERROR] waiting for node pool (%s) to be updated: %s", newNodeDriver.ID, waitErr)
 	}
 
 	return resourceRancher2NodeDriverRead(d, meta)
@@ -259,15 +293,16 @@ func resourceRancher2NodeDriverUpdate(d *schema.ResourceData, meta interface{}) 
 
 func resourceRancher2NodeDriverDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting Node Driver ID %s", d.Id())
+	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	nodeDriver, err := client.NodeDriver.ByID(d.Id())
+	nodeDriver, err := client.NodeDriver.ByID(id)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Node Driver ID %s not found.", d.Id())
+			log.Printf("[INFO] Node Driver ID %s not found.", id)
 			d.SetId("")
 			return nil
 		}
@@ -277,6 +312,23 @@ func resourceRancher2NodeDriverDelete(d *schema.ResourceData, meta interface{}) 
 	err = client.NodeDriver.Delete(nodeDriver)
 	if err != nil {
 		return fmt.Errorf("Error removing Node Driver: %s", err)
+	}
+
+	log.Printf("[DEBUG] Waiting for node driver (%s) to be removed", id)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"removing"},
+		Target:     []string{"removed"},
+		Refresh:    nodeDriverStateRefreshFunc(client, id),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf(
+			"[ERROR] waiting for node pool (%s) to be removed: %s", id, waitErr)
 	}
 
 	d.SetId("")
@@ -299,4 +351,23 @@ func resourceRancher2NodeDriverImport(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+// nodeDriverStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher NodeDriver.
+func nodeDriverStateRefreshFunc(client *managementClient.Client, nodeDriverID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := client.NodeDriver.ByID(nodeDriverID)
+		if err != nil {
+			if IsNotFound(err) {
+				return obj, "removed", nil
+			}
+			return nil, "", err
+		}
+
+		if obj.Removed != "" {
+			return obj, "removed", nil
+		}
+
+		return obj, obj.State, nil
+	}
 }

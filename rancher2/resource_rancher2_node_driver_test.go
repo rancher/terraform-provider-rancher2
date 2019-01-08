@@ -32,7 +32,7 @@ resource "rancher2_node_driver" "foo" {
 `
 	testAccRancher2NodeDriverUpdateConfig = `
 resource "rancher2_node_driver" "foo" {
-    active = true,
+    active = false,
     builtin = false
     checksum = "0x1"
     description= "Foo description - updated"
@@ -51,6 +51,25 @@ resource "rancher2_node_driver" "foo" {
 	}
 }
  `
+	testAccRancher2NodeDriverRecreateConfig = `
+resource "rancher2_node_driver" "foo" {
+    active = false
+    builtin = false
+    checksum = "0x0"
+    description = "Foo description"
+    external_id = "foo_external"
+    name = "foo"
+    ui_url = "local://ui"
+    url = "local://"
+	whitelist_domains = ["*.foo.com"]
+	annotations = {
+		foo = "bar"
+	}
+	labels = {
+		foo = "baz"
+	}
+}
+`
 )
 
 func TestAccRancher2NodeDriver_basic(t *testing.T) {
@@ -89,7 +108,7 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeDriverExists(name, nodeDriver),
-					resource.TestCheckResourceAttr(name, "active", "true"),
+					resource.TestCheckResourceAttr(name, "active", "false"),
 					resource.TestCheckResourceAttr(name, "builtin", "false"),
 					resource.TestCheckResourceAttr(name, "checksum", "0x1"),
 					resource.TestCheckResourceAttr(name, "description", "Foo description - updated"),
@@ -104,6 +123,27 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "annotations.lifecycle.cattle.io/create.node-driver-controller", "true"),
 					resource.TestCheckResourceAttr(name, "labels.foo", "updated"),
 					resource.TestCheckResourceAttr(name, "labels.bar", "added"),
+					resource.TestCheckResourceAttr(name, "labels.cattle.io/creator", "norman"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeDriverRecreateConfig,
+				// Some annotation and labels are computed, as such the
+				// subsequent plan would not be empty
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeDriverExists(name, nodeDriver),
+					resource.TestCheckResourceAttr(name, "active", "false"),
+					resource.TestCheckResourceAttr(name, "builtin", "false"),
+					resource.TestCheckResourceAttr(name, "checksum", "0x0"),
+					resource.TestCheckResourceAttr(name, "description", "Foo description"),
+					resource.TestCheckResourceAttr(name, "external_id", "foo_external"),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "ui_url", "local://ui"),
+					resource.TestCheckResourceAttr(name, "url", "local://"),
+					resource.TestCheckResourceAttr(name, "whitelist_domains.0", "*.foo.com"),
+					resource.TestCheckResourceAttr(name, "annotations.foo", "bar"),
+					resource.TestCheckResourceAttr(name, "labels.foo", "baz"),
 					resource.TestCheckResourceAttr(name, "labels.cattle.io/creator", "norman"),
 				),
 			},
