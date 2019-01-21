@@ -19,6 +19,19 @@ func rkeConfigFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Optional duration in seconds of addon job.",
 		},
+		"addons": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Optional addons descripton to deploy on rke cluster.",
+		},
+		"addons_include": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional addons yaml manisfest to deploy on rke cluster.",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 		"authentication": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster authentication",
@@ -113,6 +126,14 @@ func flattenRkeConfig(in *managementClient.RancherKubernetesEngineConfig) ([]int
 		obj["addon_job_timeout"] = int(in.AddonJobTimeout)
 	}
 
+	if len(in.Addons) > 0 {
+		obj["addons"] = in.Addons
+	}
+
+	if len(in.AddonsInclude) > 0 {
+		obj["addons_include"] = toArrayInterface(in.AddonsInclude)
+	}
+
 	if in.Authentication != nil {
 		authn, err := flattenAuthentication(in.Authentication)
 		if err != nil {
@@ -191,6 +212,14 @@ func expandRkeConfig(p []interface{}) (*managementClient.RancherKubernetesEngine
 
 	if v, ok := in["addon_job_timeout"].(int); ok && v > 0 {
 		obj.AddonJobTimeout = int64(v)
+	}
+
+	if v, ok := in["addons"].(string); ok && len(v) > 0 {
+		obj.Addons = v
+	}
+
+	if v, ok := in["addons_include"].([]interface{}); ok && len(v) > 0 {
+		obj.AddonsInclude = toArrayString(v)
 	}
 
 	if v, ok := in["authentication"].([]interface{}); ok && len(v) > 0 {
