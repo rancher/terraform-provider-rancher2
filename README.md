@@ -38,14 +38,14 @@ Features WIP
 - Clusters & Projects Role Template Bindings
 - Namespaces
   - Resource quota limits (Rancher v2.1.x or higher )
-- Node Pools
 - Node Driver
+- Node Pools
+- Node Templates
+  - Amazon EC2
+  - Azure
+  - Digitalocean
 - Projects
   - Resource quota limits (Rancher v2.1.x or higher )
-
-TODO
-
-- Node Template
 
 
 Requirements

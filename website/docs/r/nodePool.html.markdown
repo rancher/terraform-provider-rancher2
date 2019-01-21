@@ -3,22 +3,48 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_node_pool"
 sidebar_current: "docs-rancher2-resource-node_pool"
 description: |-
-  Provides a Rancher v2 Node Pool resource. This can be used to create Node pool for rancher v2 rke clusters and retrieve their information.
+  Provides a Rancher v2 Node Pool resource. This can be used to create Node pool, using Node template for rancher v2 rke clusters and retrieve their information.
 ---
 
 # rancher2\_node\_pool
 
-Provides a Rancher v2 Node Pool resource. This can be used to create Node Pool for rancher v2 rke clusters and retrieve their information.
+Provides a Rancher v2 Node Pool resource. This can be used to create Node Pool, using Node template for rancher v2 rke clusters and retrieve their information.
 
 ## Example Usage
 
 ```hcl
+# Create a new rancher2 rke Cluster 
+resource "rancher2_cluster" "foo-custom" {
+  name = "foo-custom"
+  description = "Foo rancher2 custom cluster"
+  kind = "rke"
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+  }
+}
+# Create a new rancher2 Node Template
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "foo test"
+  amazonec2_config {
+    access_key = "AWS_ACCESS_KEY"
+    secret_key = "<AWS_SECRET_KEY>"
+    ami =  "<AMI_ID>"
+    region = "<REGION>"
+    security_group = ["<AWS_SECURITY_GROUP>"]
+    subnet_id = "<SUBNET_ID>"
+    vpc_id = "<VPC_ID>"
+    zone = "<ZONE>"
+  }
+}
 # Create a new rancher2 Node Pool
 resource "rancher2_node_pool" "foo" {
-  cluster_id =  "foo_clusterID"
+  cluster_id =  "${rancher2_cluster.foo-custom.id}"
   name = "foo"
   hostname_prefix =  "foo-cluster-0"
-  node_template_id = "foo_templateID"
+  node_template_id = "${rancher2_node_template.foo.id}"
   quantity = 1
   control_plane = true
   etcd = true
