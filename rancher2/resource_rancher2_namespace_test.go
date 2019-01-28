@@ -11,11 +11,21 @@ import (
 )
 
 const (
-	testAccRancher2NamespaceType    = "rancher2_namespace"
+	testAccRancher2NamespaceType = "rancher2_namespace"
+)
+
+var (
+	testAccRancher2NamespaceProject        string
+	testAccRancher2NamespaceConfig         string
+	testAccRancher2NamespaceUpdateConfig   string
+	testAccRancher2NamespaceRecreateConfig string
+)
+
+func init() {
 	testAccRancher2NamespaceProject = `
 resource "rancher2_project" "foo" {
   name = "foo"
-  cluster_id = "local"
+  cluster_id = "` + testAccRancher2ClusterID + `"
   description = "Terraform namespace acceptance test"
   resource_quota {
     project_limit {
@@ -76,13 +86,12 @@ resource "rancher2_namespace" "foo" {
   }
 }
  `
-)
+}
 
 func TestAccRancher2Namespace_basic(t *testing.T) {
 	var ns *clusterClient.Namespace
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -118,7 +127,6 @@ func TestAccRancher2Namespace_disappears(t *testing.T) {
 	var ns *clusterClient.Namespace
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NamespaceDestroy,
 		Steps: []resource.TestStep{

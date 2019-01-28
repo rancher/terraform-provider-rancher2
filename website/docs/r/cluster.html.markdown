@@ -1,7 +1,7 @@
 ---
 layout: "rancher2"
 page_title: "Rancher2: rancher2_cluster"
-sidebar_current: "docs-rancher2-cluster"
+sidebar_current: "docs-rancher2-resource-cluster"
 description: |-
   Provides a Rancher v2 Cluster resource. This can be used to create Clusters for rancher v2 environments and retrieve their information.
 ---

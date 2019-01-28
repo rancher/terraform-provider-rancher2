@@ -11,11 +11,21 @@ import (
 )
 
 const (
-	testAccRancher2ProjectLoggingType    = "rancher2_project_logging"
+	testAccRancher2ProjectLoggingType = "rancher2_project_logging"
+)
+
+var (
+	testAccRancher2ProjectLoggingProject              string
+	testAccRancher2ProjectLoggingConfigSyslog         string
+	testAccRancher2ProjectLoggingUpdateConfigSyslog   string
+	testAccRancher2ProjectLoggingRecreateConfigSyslog string
+)
+
+func init() {
 	testAccRancher2ProjectLoggingProject = `
 resource "rancher2_project" "foo" {
   name = "foo"
-  cluster_id = "local"
+  cluster_id = "` + testAccRancher2ClusterID + `"
   description = "Terraform Project Logging acceptance test"
 }
 `
@@ -60,13 +70,12 @@ resource "rancher2_project_logging" "foo" {
   }
 }
  `
-)
+}
 
 func TestAccRancher2ProjectLogging_basic_syslog(t *testing.T) {
 	var project *managementClient.ProjectLogging
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectLoggingDestroy,
 		Steps: []resource.TestStep{
@@ -102,7 +111,6 @@ func TestAccRancher2ProjectLogging_disappears_syslog(t *testing.T) {
 	var project *managementClient.ProjectLogging
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectLoggingDestroy,
 		Steps: []resource.TestStep{

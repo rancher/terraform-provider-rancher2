@@ -11,11 +11,20 @@ import (
 )
 
 const (
-	testAccRancher2ProjectType   = "rancher2_project"
+	testAccRancher2ProjectType = "rancher2_project"
+)
+
+var (
+	testAccRancher2ProjectConfig         string
+	testAccRancher2ProjectUpdateConfig   string
+	testAccRancher2ProjectRecreateConfig string
+)
+
+func init() {
 	testAccRancher2ProjectConfig = `
 resource "rancher2_project" "foo" {
   name = "foo"
-  cluster_id = "local"
+  cluster_id = "` + testAccRancher2ClusterID + `"
   description = "Terraform project acceptance test"
   resource_quota {
     project_limit {
@@ -35,7 +44,7 @@ resource "rancher2_project" "foo" {
 	testAccRancher2ProjectUpdateConfig = `
 resource "rancher2_project" "foo" {
   name = "foo-updated"
-  cluster_id = "local"
+  cluster_id = "` + testAccRancher2ClusterID + `"
   description = "Terraform project acceptance test - updated"
   resource_quota {
     project_limit {
@@ -55,7 +64,7 @@ resource "rancher2_project" "foo" {
 	testAccRancher2ProjectRecreateConfig = `
 resource "rancher2_project" "foo" {
   name = "foo"
-  cluster_id = "local"
+  cluster_id = "` + testAccRancher2ClusterID + `"
   description = "Terraform project acceptance test"
   resource_quota {
     project_limit {
@@ -71,13 +80,12 @@ resource "rancher2_project" "foo" {
   }
 }
  `
-)
+}
 
 func TestAccRancher2Project_basic(t *testing.T) {
 	var project *managementClient.Project
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +95,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", "local"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 			resource.TestStep{
@@ -96,7 +104,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo-updated"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", "local"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 			resource.TestStep{
@@ -105,7 +113,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", "local"),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 		},
@@ -116,7 +124,6 @@ func TestAccRancher2Project_disappears(t *testing.T) {
 	var project *managementClient.Project
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectDestroy,
 		Steps: []resource.TestStep{
@@ -217,13 +224,18 @@ func testAccCheckRancher2ProjectDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = client.Project.ByID(rs.Primary.ID)
+		obj, err := client.Project.ByID(rs.Primary.ID)
 		if err != nil {
 			if IsNotFound(err) {
 				return nil
 			}
 			return err
 		}
+
+		if obj.Removed != "" {
+			return nil
+		}
+
 		return fmt.Errorf("Project still exists")
 	}
 	return nil

@@ -11,11 +11,20 @@ import (
 )
 
 const (
-	testAccRancher2ClusterLoggingType         = "rancher2_cluster_logging"
+	testAccRancher2ClusterLoggingType = "rancher2_cluster_logging"
+)
+
+var (
+	testAccRancher2ClusterLoggingConfigSyslog         string
+	testAccRancher2ClusterLoggingUpdateConfigSyslog   string
+	testAccRancher2ClusterLoggingRecreateConfigSyslog string
+)
+
+func init() {
 	testAccRancher2ClusterLoggingConfigSyslog = `
 resource "rancher2_cluster_logging" "foo" {
   name = "foo"
-  cluster_id = "local"
+  cluster_id = "` + testAccRancher2ClusterID + `"
   kind = "syslog"
   syslog_config {
     endpoint = "192.168.1.1:514"
@@ -29,7 +38,7 @@ resource "rancher2_cluster_logging" "foo" {
 	testAccRancher2ClusterLoggingUpdateConfigSyslog = `
 resource "rancher2_cluster_logging" "foo" {
   name = "foo-updated"
-  cluster_id = "local"
+  cluster_id = "` + testAccRancher2ClusterID + `"
   kind = "syslog"
   syslog_config {
     endpoint = "192.168.1.1:514"
@@ -43,7 +52,7 @@ resource "rancher2_cluster_logging" "foo" {
 	testAccRancher2ClusterLoggingRecreateConfigSyslog = `
 resource "rancher2_cluster_logging" "foo" {
   name = "foo"
-  cluster_id = "local"
+  cluster_id = "` + testAccRancher2ClusterID + `"
   kind = "syslog"
   syslog_config {
     endpoint = "192.168.1.1:514"
@@ -53,13 +62,12 @@ resource "rancher2_cluster_logging" "foo" {
   }
 }
  `
-)
+}
 
 func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 	var cluster *managementClient.ClusterLogging
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterLoggingDestroy,
 		Steps: []resource.TestStep{
@@ -68,7 +76,7 @@ func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "cluster_id", "local"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 			resource.TestStep{
@@ -76,7 +84,7 @@ func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "name", "foo-updated"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "cluster_id", "local"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 			resource.TestStep{
@@ -84,7 +92,7 @@ func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "cluster_id", "local"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 		},
@@ -95,7 +103,6 @@ func TestAccRancher2ClusterLogging_disappears_syslog(t *testing.T) {
 	var cluster *managementClient.ClusterLogging
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterLoggingDestroy,
 		Steps: []resource.TestStep{

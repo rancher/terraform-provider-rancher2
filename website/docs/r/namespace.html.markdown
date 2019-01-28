@@ -33,7 +33,7 @@ resource "rancher2_namespace" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the namespace.
-* `project_id` - (Required) The project id where assign namespace.
+* `project_id` - (Required) The project id where assign namespace. It's on the form `project_id=<cluster_id>:<id>`. Updating `<id>` part on same `<cluster_id>` namespace will be moved between projects.
 * `description` - (Optional) A namespace description.
 * `resource_quota` - (Optional) Resource quota for namespace. Rancher v2.1.x or higher 
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
@@ -85,3 +85,4 @@ Projects can be imported using the namespace ID in the format `<cluster_id>:<nam
 $ terraform import rancher2_namespace.foo <cluster_id>:<namespace_id>
 ```
 
+When you import a raw k8s namespace, `project_id=<cluster_id>`. It'll not be assigned to any project. To move it into a project, update `project_id=<cluster_id>:<id>`. Namespace move is only supported inside same `cluster_id`.

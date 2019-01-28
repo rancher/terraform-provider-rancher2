@@ -216,7 +216,7 @@ func resourceRancher2NodeDriverCreate(d *schema.ResourceData, meta interface{}) 
 	}
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for node pool (%s) to be created: %s", newNodeDriver.ID, waitErr)
+		return fmt.Errorf("[ERROR] waiting for node driver (%s) to be created: %s", newNodeDriver.ID, waitErr)
 	}
 
 	d.SetId(newNodeDriver.ID)
@@ -285,7 +285,7 @@ func resourceRancher2NodeDriverUpdate(d *schema.ResourceData, meta interface{}) 
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf(
-			"[ERROR] waiting for node pool (%s) to be updated: %s", newNodeDriver.ID, waitErr)
+			"[ERROR] waiting for node driver (%s) to be updated: %s", newNodeDriver.ID, waitErr)
 	}
 
 	return resourceRancher2NodeDriverRead(d, meta)
@@ -328,7 +328,7 @@ func resourceRancher2NodeDriverDelete(d *schema.ResourceData, meta interface{}) 
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf(
-			"[ERROR] waiting for node pool (%s) to be removed: %s", id, waitErr)
+			"[ERROR] waiting for node driver (%s) to be removed: %s", id, waitErr)
 	}
 
 	d.SetId("")

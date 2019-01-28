@@ -33,7 +33,7 @@ func dataSourceRancher2SettingRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	setting, err := client.Setting.ByID(name)
-	if err != nil {
+	if err != nil || setting == nil {
 		return err
 	}
 
