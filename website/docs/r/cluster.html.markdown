@@ -12,6 +12,7 @@ Provides a Rancher v2 Cluster resource. This can be used to create Clusters for 
 
 ## Example Usage
 
+Creating Rancher v2 imported cluster
 ```hcl
 # Create a new rancher2 imported Cluster 
 resource "rancher2_cluster" "foo-imported" {
@@ -19,7 +20,10 @@ resource "rancher2_cluster" "foo-imported" {
   description = "Foo rancher2 imported cluster"
   kind = "imported"
 }
+```
 
+Creating Rancher v2 rke cluster
+```hcl
 # Create a new rancher2 rke Cluster 
 resource "rancher2_cluster" "foo-custom" {
   name = "foo-custom"
@@ -30,6 +34,47 @@ resource "rancher2_cluster" "foo-custom" {
       plugin = "canal"
     }
   }
+}
+```
+
+Creating Rancher v2 rke cluster assingning a node pool (overlapped planes)
+```hcl
+# Create a new rancher2 rke Cluster 
+resource "rancher2_cluster" "foo-custom" {
+  name = "foo-custom"
+  description = "Foo rancher2 custom cluster"
+  kind = "rke"
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+  }
+}
+# Create a new rancher2 Node Template
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "foo test"
+  amazonec2_config {
+    access_key = "AWS_ACCESS_KEY"
+    secret_key = "<AWS_SECRET_KEY>"
+    ami =  "<AMI_ID>"
+    region = "<REGION>"
+    security_group = ["<AWS_SECURITY_GROUP>"]
+    subnet_id = "<SUBNET_ID>"
+    vpc_id = "<VPC_ID>"
+    zone = "<ZONE>"
+  }
+}
+# Create a new rancher2 Node Pool
+resource "rancher2_node_pool" "foo" {
+  cluster_id =  "${rancher2_cluster.foo-custom.id}"
+  name = "foo"
+  hostname_prefix =  "foo-cluster-0"
+  node_template_id = "${rancher2_node_template.foo.id}"
+  quantity = 3
+  control_plane = true
+  etcd = true
+  worker = true
 }
 ```
 
@@ -52,6 +97,8 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `addon_job_timeout` - (Optional/Computed) Duration in seconds of addon job (int)
+* `addons` - (Optional) Addons descripton to deploy on rke cluster.
+* `addons_include` - (Optional) Addons yaml manisfests to deploy on rke cluster (list)
 * `authentication` - (Optional/Computed) Kubernetes cluster authentication
 * `cloud_provider` - (Optional/Computed) Kubernetes cluster authentication [rke-cloud-providers](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/)
 * `ignore_docker_version` - (Optional/Computed) Ignore docker version (bool)

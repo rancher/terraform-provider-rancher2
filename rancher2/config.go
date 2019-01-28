@@ -407,3 +407,30 @@ func (c *Config) GetUserIDByName(name string) (string, error) {
 	}
 	return user.ID, nil
 }
+
+func (c *Config) activateNodeDriver(id string) error {
+	if id == "" {
+		return fmt.Errorf("[ERROR] Node Driver id is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	driver, err := client.NodeDriver.ByID(id)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Getting Node Driver %s: %v", id, err)
+	}
+
+	if driver.State == "active" {
+		return nil
+	}
+
+	_, err = client.NodeDriver.ActionActivate(driver)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Activating Node Driver %s: %v", id, err)
+	}
+
+	return nil
+}
