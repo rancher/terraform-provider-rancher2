@@ -291,6 +291,7 @@ The following arguments are supported for `etcd`:
 
 * `extra_args` - (Optional/Computed) Extra arguments for etcd service (map)
 * `retention` - (Optional/Computed) Retention option for etcd service (string)
+* `creation` - (Optional/Computed) Creation option for etcd service (string)
 * `snapshot` - (Optional/Computed) Snapshot option for etcd service (bool)
 
 The following arguments are supported for `kube_api`:

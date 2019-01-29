@@ -14,6 +14,11 @@ func etcdFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+		"creation": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
 		"retention": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -174,6 +179,10 @@ func flattenEtcd(in *managementClient.ETCDService) ([]interface{}, error) {
 		obj["retention"] = in.Retention
 	}
 
+	if len(in.Creation) > 0 {
+		obj["creation"] = in.Creation
+	}
+
 	obj["snapshot"] = in.Snapshot
 
 	return []interface{}{obj}, nil
@@ -321,6 +330,10 @@ func expandEtcd(p []interface{}) (*managementClient.ETCDService, error) {
 
 	if v, ok := in["retention"].(string); ok && len(v) > 0 {
 		obj.Retention = v
+	}
+
+	if v, ok := in["creation"].(string); ok && len(v) > 0 {
+		obj.Creation = v
 	}
 
 	if v, ok := in["snapshot"].(bool); ok {
