@@ -21,6 +21,12 @@ resource "rancher2_cluster" "foo" {
     network {
       plugin = "canal"
     }
+    services {
+      etcd {
+        creation = "6h"
+        retention = "24h"
+      }
+	}
   }
 }
 `
@@ -34,6 +40,12 @@ resource "rancher2_cluster" "foo" {
     network {
       plugin = "canal"
     }
+    services {
+      etcd {
+        creation = "6h"
+        retention = "24h"
+      }
+	}
   }
 }
  `
@@ -47,6 +59,12 @@ resource "rancher2_cluster" "foo" {
     network {
       plugin = "canal"
     }
+    services {
+      etcd {
+        creation = "6h"
+        retention = "24h"
+      }
+	}
   }
 }
  `
@@ -91,6 +109,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform custom cluster acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "kind", "rke"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
 				),
 			},
 			resource.TestStep{
@@ -100,6 +120,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform custom cluster acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "kind", "rke"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
 				),
 			},
 			resource.TestStep{
@@ -109,6 +131,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform custom cluster acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "kind", "rke"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
 				),
 			},
 		},
