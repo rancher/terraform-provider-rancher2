@@ -291,7 +291,7 @@ func flattenAuthConfigActiveDirectory(d *schema.ResourceData, in *managementClie
 func expandAuthConfigActiveDirectory(in *schema.ResourceData) (*managementClient.ActiveDirectoryConfig, error) {
 	obj := &managementClient.ActiveDirectoryConfig{}
 	if in == nil {
-		return nil, fmt.Errorf("[ERROR] expanding ActiveDirectory Auth Config: Input ResourceData is nil")
+		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", ActiveDirectoryConfigName)
 	}
 
 	obj.Name = ActiveDirectoryConfigName
@@ -303,6 +303,10 @@ func expandAuthConfigActiveDirectory(in *schema.ResourceData) (*managementClient
 
 	if v, ok := in.Get("allowed_principal_ids").([]interface{}); ok && len(v) > 0 {
 		obj.AllowedPrincipalIDs = toArrayString(v)
+	}
+
+	if (obj.AccessMode == "required" || obj.AccessMode == "restricted") && len(obj.AllowedPrincipalIDs) == 0 {
+		return nil, fmt.Errorf("expanding %s Auth Config: allowed_principal_ids is required on access_mode %s", ActiveDirectoryConfigName, obj.AccessMode)
 	}
 
 	if v, ok := in.Get("enabled").(bool); ok {
@@ -439,14 +443,14 @@ func resourceRancher2AuthConfigActiveDirectoryCreate(d *schema.ResourceData, met
 
 	auth, err := client.AuthConfig.ByID(ActiveDirectoryConfigName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config ActiveDirectory ID %s err=%s", ActiveDirectoryConfigName, err)
+		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", ActiveDirectoryConfigName, err)
 	}
 
 	log.Printf("[INFO] Creating Auth Config ActiveDirectory %s", auth.Name)
 
 	authActiveDirectory, err := expandAuthConfigActiveDirectory(d)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config ActiveDirectory ID %s err=%s", ActiveDirectoryConfigName, err)
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", ActiveDirectoryConfigName, err)
 	}
 
 	authActiveDirectoryTestAndApply := managementClient.ActiveDirectoryTestAndApplyInput{
@@ -458,14 +462,14 @@ func resourceRancher2AuthConfigActiveDirectoryCreate(d *schema.ResourceData, met
 
 	err = client.Post(auth.Actions["testAndApply"], authActiveDirectoryTestAndApply, nil)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config ActiveDirectory testAndApply [%s] %s", auth.Actions["testAndApply"], err)
+		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", ActiveDirectoryConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigActiveDirectoryRead(d, meta)
 }
 
 func resourceRancher2AuthConfigActiveDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config ActiveDirectory ID %s", d.Id())
+	log.Printf("[INFO] Refreshing Auth Config %s", ActiveDirectoryConfigName)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
@@ -474,7 +478,7 @@ func resourceRancher2AuthConfigActiveDirectoryRead(d *schema.ResourceData, meta 
 	auth, err := client.AuthConfig.ByID(ActiveDirectoryConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config ActiveDirectory ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", ActiveDirectoryConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -495,13 +499,13 @@ func resourceRancher2AuthConfigActiveDirectoryRead(d *schema.ResourceData, meta 
 }
 
 func resourceRancher2AuthConfigActiveDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config ActiveDirectory ID %s", d.Id())
+	log.Printf("[INFO] Updating Auth Config %s", ActiveDirectoryConfigName)
 
 	return resourceRancher2AuthConfigActiveDirectoryCreate(d, meta)
 }
 
 func resourceRancher2AuthConfigActiveDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config ActiveDirectory ID %s", d.Id())
+	log.Printf("[INFO] Disabling Auth Config %s", ActiveDirectoryConfigName)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -511,7 +515,7 @@ func resourceRancher2AuthConfigActiveDirectoryDelete(d *schema.ResourceData, met
 	auth, err := client.AuthConfig.ByID(ActiveDirectoryConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config ActiveDirectory ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", ActiveDirectoryConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -521,7 +525,7 @@ func resourceRancher2AuthConfigActiveDirectoryDelete(d *schema.ResourceData, met
 	if auth.Enabled == true {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Posting Auth Config ActiveDirectory disable [%s] %s", auth.Actions["disable"], err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", ActiveDirectoryConfigName, err)
 		}
 	}
 

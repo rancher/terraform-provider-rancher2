@@ -135,7 +135,7 @@ func flattenAuthConfigPing(d *schema.ResourceData, in *managementClient.PingConf
 func expandAuthConfigPing(in *schema.ResourceData) (*managementClient.PingConfig, error) {
 	obj := &managementClient.PingConfig{}
 	if in == nil {
-		return nil, fmt.Errorf("[ERROR] expanding Ping Auth Config: Input ResourceData is nil")
+		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", PingConfigName)
 	}
 
 	obj.Name = PingConfigName
@@ -147,6 +147,10 @@ func expandAuthConfigPing(in *schema.ResourceData) (*managementClient.PingConfig
 
 	if v, ok := in.Get("allowed_principal_ids").([]interface{}); ok && len(v) > 0 {
 		obj.AllowedPrincipalIDs = toArrayString(v)
+	}
+
+	if (obj.AccessMode == "required" || obj.AccessMode == "restricted") && len(obj.AllowedPrincipalIDs) == 0 {
+		return nil, fmt.Errorf("expanding %s Auth Config: allowed_principal_ids is required on access_mode %s", PingConfigName, obj.AccessMode)
 	}
 
 	if v, ok := in.Get("enabled").(bool); ok {
@@ -215,20 +219,20 @@ func resourceRancher2AuthConfigPingCreate(d *schema.ResourceData, meta interface
 
 	auth, err := client.AuthConfig.ByID(PingConfigName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config Ping ID %s err=%s", PingConfigName, err)
+		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", PingConfigName, err)
 	}
 
-	log.Printf("[INFO] Creating Auth Config Ping %s", auth.Name)
+	log.Printf("[INFO] Creating Auth Config %s", PingConfigName)
 
 	authPing, err := expandAuthConfigPing(d)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config Ping ID %s err=%s", PingConfigName, err)
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", PingConfigName, err)
 	}
 
 	newAuth := &managementClient.PingConfig{}
 	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authPing, newAuth)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config Ping ID %s err=%s", PingConfigName, err)
+		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", PingConfigName, err)
 	}
 
 	authPingTestAndEnable := managementClient.SamlConfigTestInput{
@@ -237,14 +241,14 @@ func resourceRancher2AuthConfigPingCreate(d *schema.ResourceData, meta interface
 
 	err = client.Post(auth.Actions["testAndEnable"], authPingTestAndEnable, nil)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config Ping testAndEnable [%s] %s", auth.Actions["testAndEnable"], err)
+		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", PingConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigPingRead(d, meta)
 }
 
 func resourceRancher2AuthConfigPingRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config Ping ID %s", d.Id())
+	log.Printf("[INFO] Refreshing Auth Config %s", PingConfigName)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
@@ -253,7 +257,7 @@ func resourceRancher2AuthConfigPingRead(d *schema.ResourceData, meta interface{}
 	auth, err := client.AuthConfig.ByID(PingConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config Ping ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", PingConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -274,13 +278,13 @@ func resourceRancher2AuthConfigPingRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceRancher2AuthConfigPingUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config Ping ID %s", d.Id())
+	log.Printf("[INFO] Updating Auth Config %s", PingConfigName)
 
 	return resourceRancher2AuthConfigPingCreate(d, meta)
 }
 
 func resourceRancher2AuthConfigPingDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config Ping ID %s", d.Id())
+	log.Printf("[INFO] Disabling Auth Config %s", PingConfigName)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -290,7 +294,7 @@ func resourceRancher2AuthConfigPingDelete(d *schema.ResourceData, meta interface
 	auth, err := client.AuthConfig.ByID(PingConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config Ping ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", PingConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -300,7 +304,7 @@ func resourceRancher2AuthConfigPingDelete(d *schema.ResourceData, meta interface
 	if auth.Enabled == true {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Posting Auth Config Ping disable [%s] %s", auth.Actions["disable"], err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", PingConfigName, err)
 		}
 	}
 

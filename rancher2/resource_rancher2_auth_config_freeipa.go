@@ -71,14 +71,14 @@ func resourceRancher2AuthConfigFreeIpaCreate(d *schema.ResourceData, meta interf
 
 	auth, err := client.AuthConfig.ByID(FreeIpaConfigName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config FreeIpa ID %s err=%s", FreeIpaConfigName, err)
+		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", FreeIpaConfigName, err)
 	}
 
 	log.Printf("[INFO] Creating Auth Config FreeIpa %s", auth.Name)
 
 	authFreeIpa, err := expandAuthConfigFreeIpa(d)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config FreeIpa ID %s err=%s", FreeIpaConfigName, err)
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", FreeIpaConfigName, err)
 	}
 
 	authFreeIpaTestAndApply := managementClient.FreeIpaTestAndApplyInput{
@@ -89,14 +89,14 @@ func resourceRancher2AuthConfigFreeIpaCreate(d *schema.ResourceData, meta interf
 
 	err = client.Post(auth.Actions["testAndApply"], authFreeIpaTestAndApply, nil)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config FreeIpa testAndApply [%s] %s", auth.Actions["testAndApply"], err)
+		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", FreeIpaConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigFreeIpaRead(d, meta)
 }
 
 func resourceRancher2AuthConfigFreeIpaRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config FreeIpa ID %s", d.Id())
+	log.Printf("[INFO] Refreshing Auth Config %s", FreeIpaConfigName)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
@@ -105,7 +105,7 @@ func resourceRancher2AuthConfigFreeIpaRead(d *schema.ResourceData, meta interfac
 	auth, err := client.AuthConfig.ByID(FreeIpaConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config FreeIpa ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", FreeIpaConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -126,13 +126,13 @@ func resourceRancher2AuthConfigFreeIpaRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceRancher2AuthConfigFreeIpaUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config FreeIpa ID %s", d.Id())
+	log.Printf("[INFO] Updating Auth Config %s", FreeIpaConfigName)
 
 	return resourceRancher2AuthConfigFreeIpaCreate(d, meta)
 }
 
 func resourceRancher2AuthConfigFreeIpaDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config FreeIpa ID %s", d.Id())
+	log.Printf("[INFO] Disabling Auth Config %s", FreeIpaConfigName)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -142,7 +142,7 @@ func resourceRancher2AuthConfigFreeIpaDelete(d *schema.ResourceData, meta interf
 	auth, err := client.AuthConfig.ByID(FreeIpaConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config FreeIpa ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", FreeIpaConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -152,7 +152,7 @@ func resourceRancher2AuthConfigFreeIpaDelete(d *schema.ResourceData, meta interf
 	if auth.Enabled == true {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Posting Auth Config FreeIpa disable [%s] %s", auth.Actions["disable"], err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", FreeIpaConfigName, err)
 		}
 	}
 

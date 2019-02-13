@@ -262,7 +262,7 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig, error) {
 	obj := &managementClient.LdapConfig{}
 	if in == nil {
-		return nil, fmt.Errorf("[ERROR] expanding Ldap Auth Config: Input ResourceData is nil")
+		return nil, fmt.Errorf("expanding ldap Auth Config: Input ResourceData is nil")
 	}
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
@@ -271,6 +271,10 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 
 	if v, ok := in.Get("allowed_principal_ids").([]interface{}); ok && len(v) > 0 {
 		obj.AllowedPrincipalIDs = toArrayString(v)
+	}
+
+	if (obj.AccessMode == "required" || obj.AccessMode == "restricted") && len(obj.AllowedPrincipalIDs) == 0 {
+		return nil, fmt.Errorf("expanding ldap Auth Config: allowed_principal_ids is required on access_mode %s", obj.AccessMode)
 	}
 
 	if v, ok := in.Get("enabled").(bool); ok {

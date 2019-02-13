@@ -8,7 +8,7 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
-const authDefaultAccessMode = "restricted"
+const authDefaultAccessMode = "unrestricted"
 
 var (
 	authAccessModes = []string{"required", "restricted", "unrestricted"}
@@ -35,7 +35,6 @@ func authConfigFields() map[string]*schema.Schema {
 		"allowed_principal_ids": {
 			Type:     schema.TypeList,
 			Optional: true,
-			Computed: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},

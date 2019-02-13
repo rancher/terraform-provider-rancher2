@@ -102,7 +102,7 @@ func flattenAuthConfigGithub(d *schema.ResourceData, in *managementClient.Github
 func expandAuthConfigGithub(in *schema.ResourceData) (*managementClient.GithubConfig, error) {
 	obj := &managementClient.GithubConfig{}
 	if in == nil {
-		return nil, fmt.Errorf("[ERROR] expanding Github Auth Config: Input ResourceData is nil")
+		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", GithubConfigName)
 	}
 
 	obj.Name = GithubConfigName
@@ -114,6 +114,10 @@ func expandAuthConfigGithub(in *schema.ResourceData) (*managementClient.GithubCo
 
 	if v, ok := in.Get("allowed_principal_ids").([]interface{}); ok && len(v) > 0 {
 		obj.AllowedPrincipalIDs = toArrayString(v)
+	}
+
+	if (obj.AccessMode == "required" || obj.AccessMode == "restricted") && len(obj.AllowedPrincipalIDs) == 0 {
+		return nil, fmt.Errorf("expanding %s Auth Config: allowed_principal_ids is required on access_mode %s", GithubConfigName, obj.AccessMode)
 	}
 
 	if v, ok := in.Get("enabled").(bool); ok {
@@ -166,14 +170,14 @@ func resourceRancher2AuthConfigGithubCreate(d *schema.ResourceData, meta interfa
 
 	auth, err := client.AuthConfig.ByID(GithubConfigName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config Github ID %s err=%s", GithubConfigName, err)
+		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", GithubConfigName, err)
 	}
 
 	log.Printf("[INFO] Creating Auth Config Github %s", auth.Name)
 
 	authGithub, err := expandAuthConfigGithub(d)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config Github ID %s err=%s", GithubConfigName, err)
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", GithubConfigName, err)
 	}
 
 	authGithubTestAndApply := managementClient.GithubConfigApplyInput{
@@ -184,14 +188,14 @@ func resourceRancher2AuthConfigGithubCreate(d *schema.ResourceData, meta interfa
 
 	err = client.Post(auth.Actions["testAndApply"], authGithubTestAndApply, nil)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config Github testAndApply [%s] %s", auth.Actions["testAndApply"], err)
+		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", GithubConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigGithubRead(d, meta)
 }
 
 func resourceRancher2AuthConfigGithubRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config Github ID %s", d.Id())
+	log.Printf("[INFO] Refreshing Auth Config %s", GithubConfigName)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
@@ -200,7 +204,7 @@ func resourceRancher2AuthConfigGithubRead(d *schema.ResourceData, meta interface
 	auth, err := client.AuthConfig.ByID(GithubConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config Github ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", GithubConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -221,13 +225,13 @@ func resourceRancher2AuthConfigGithubRead(d *schema.ResourceData, meta interface
 }
 
 func resourceRancher2AuthConfigGithubUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config Github ID %s", d.Id())
+	log.Printf("[INFO] Updating Auth Config %s", GithubConfigName)
 
 	return resourceRancher2AuthConfigGithubCreate(d, meta)
 }
 
 func resourceRancher2AuthConfigGithubDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config Github ID %s", d.Id())
+	log.Printf("[INFO] Disabling Auth Config %s", GithubConfigName)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -237,7 +241,7 @@ func resourceRancher2AuthConfigGithubDelete(d *schema.ResourceData, meta interfa
 	auth, err := client.AuthConfig.ByID(GithubConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config Github ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", GithubConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -247,7 +251,7 @@ func resourceRancher2AuthConfigGithubDelete(d *schema.ResourceData, meta interfa
 	if auth.Enabled == true {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Posting Auth Config Github disable [%s] %s", auth.Actions["disable"], err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", GithubConfigName, err)
 		}
 	}
 

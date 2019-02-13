@@ -133,7 +133,7 @@ func flattenAuthConfigAzureAD(d *schema.ResourceData, in *managementClient.Azure
 func expandAuthConfigAzureAD(in *schema.ResourceData) (*managementClient.AzureADConfig, error) {
 	obj := &managementClient.AzureADConfig{}
 	if in == nil {
-		return nil, fmt.Errorf("[ERROR] expanding AzureAD Auth Config: Input ResourceData is nil")
+		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AzureADConfigName)
 	}
 
 	obj.Name = AzureADConfigName
@@ -145,6 +145,10 @@ func expandAuthConfigAzureAD(in *schema.ResourceData) (*managementClient.AzureAD
 
 	if v, ok := in.Get("allowed_principal_ids").([]interface{}); ok && len(v) > 0 {
 		obj.AllowedPrincipalIDs = toArrayString(v)
+	}
+
+	if (obj.AccessMode == "required" || obj.AccessMode == "restricted") && len(obj.AllowedPrincipalIDs) == 0 {
+		return nil, fmt.Errorf("expanding %s Auth Config: allowed_principal_ids is required on access_mode %s", AzureADConfigName, obj.AccessMode)
 	}
 
 	if v, ok := in.Get("enabled").(bool); ok {
@@ -213,14 +217,14 @@ func resourceRancher2AuthConfigAzureADCreate(d *schema.ResourceData, meta interf
 
 	auth, err := client.AuthConfig.ByID(AzureADConfigName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config AzureAD ID %s err=%s", AzureADConfigName, err)
+		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AzureADConfigName, err)
 	}
 
 	log.Printf("[INFO] Creating Auth Config AzureAD %s", auth.Name)
 
 	authAzureAD, err := expandAuthConfigAzureAD(d)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config AzureAD ID %s err=%s", AzureADConfigName, err)
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AzureADConfigName, err)
 	}
 
 	authAzureADTestAndApply := managementClient.AzureADConfigApplyInput{
@@ -230,14 +234,14 @@ func resourceRancher2AuthConfigAzureADCreate(d *schema.ResourceData, meta interf
 
 	err = client.Post(auth.Actions["testAndApply"], authAzureADTestAndApply, nil)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config AzureAD testAndApply [%s] %s", auth.Actions["testAndApply"], err)
+		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", AzureADConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigAzureADRead(d, meta)
 }
 
 func resourceRancher2AuthConfigAzureADRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config AzureAD ID %s", d.Id())
+	log.Printf("[INFO] Refreshing Auth Config %s", AzureADConfigName)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
@@ -246,7 +250,7 @@ func resourceRancher2AuthConfigAzureADRead(d *schema.ResourceData, meta interfac
 	auth, err := client.AuthConfig.ByID(AzureADConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config AzureAD ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", AzureADConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -267,13 +271,13 @@ func resourceRancher2AuthConfigAzureADRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceRancher2AuthConfigAzureADUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config AzureAD ID %s", d.Id())
+	log.Printf("[INFO] Updating Auth Config %s", AzureADConfigName)
 
 	return resourceRancher2AuthConfigAzureADCreate(d, meta)
 }
 
 func resourceRancher2AuthConfigAzureADDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config AzureAD ID %s", d.Id())
+	log.Printf("[INFO] Disabling Auth Config %s", AzureADConfigName)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -283,7 +287,7 @@ func resourceRancher2AuthConfigAzureADDelete(d *schema.ResourceData, meta interf
 	auth, err := client.AuthConfig.ByID(AzureADConfigName)
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config AzureAD ID %s not found.", d.Id())
+			log.Printf("[INFO] Auth Config %s not found.", AzureADConfigName)
 			d.SetId("")
 			return nil
 		}
@@ -293,7 +297,7 @@ func resourceRancher2AuthConfigAzureADDelete(d *schema.ResourceData, meta interf
 	if auth.Enabled == true {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Posting Auth Config AzureAD disable [%s] %s", auth.Actions["disable"], err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AzureADConfigName, err)
 		}
 	}
 
