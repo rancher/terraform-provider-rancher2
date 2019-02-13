@@ -29,8 +29,8 @@ The following arguments are supported:
 * `client_secret` - (Required) Github auth Client secret (string).
 * `code` - (Required) Github auth code. Generated from `https://github.com/login/oauth/authorize?client_id=<CLIENT_ID>` (string).
 * `hostname` - (Optional) Gtihub hostname to connect. Defaulf `github.com`.
-* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `restricted`
-* `allowed_principal_ids` - (Optional/Computed) Allowed principal ids for auth (string).
+* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted`
+* `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `github_user://<USER_ID>`  `github_group://<GROUP_ID>`
 * `enabled` - (Optional) Enable auth config provider. Default `true`.
 * `tls` - (Optional) Enable TLS connection. Default `true`.
 * `annotations` - (Optional/Computed) Annotations of the resource (map).

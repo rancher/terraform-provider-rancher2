@@ -35,8 +35,8 @@ The following arguments are supported:
 * `user_search_base` - (Required) User search base DN (string).
 * `username` - (Required) User name to test FreeIpa access (string).
 * `password` - (Required) User password to test FreeIpa access (string).
-* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `restricted`
-* `allowed_principal_ids` - (Optional/Computed) Allowed principal ids for auth (string).
+* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted`
+* `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `freeipa_user://<DN>`  `freeipa_group://<DN>`
 * `certificate` - (Optional) CA certificate for TLS if selfsigned (string).
 * `connection_timeout` - (Optional) FreeIpa connection timeout. Default `5000`
 * `enabled` - (Optional) Enable auth config provider. Default `true`.
