@@ -7,127 +7,92 @@ Terraform Provider for Rancher v2
 
 <img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
 
-Features WIP
--------------
-
-[Implemented resources](https://github.com/rancher/terraform-provider-rancher2/blob/master/website/docs/r)
-
-- Auth Config providers
-  - ActiveDirectory
-  - ADFS
-  - AzureAD
-  - Github
-  - FreeIpa
-  - OpenLdap
-  - Ping
-- Bootstrap Rancher system
-- Catalogs
-- Clusters
-  - Amazon EKS
-  - Azure AKS
-  - Google GKE
-  - Imported
-  - RKE
-    - Cloud providers adding node pools
-    - Custom
-- Clusters & Projects logging
-  - Elasticsearch
-  - Fluentd
-  - Kafka
-  - Splunk
-  - Syslog
-- Clusters & Projects Role Template Bindings
-- Namespaces
-  - Resource quota limits (Rancher v2.1.x or higher )
-- Node Driver
-- Node Pools
-- Node Templates
-  - Amazon EC2
-  - Azure
-  - Digitalocean
-- Projects
-  - Resource quota limits (Rancher v2.1.x or higher )
-- Settings
-
-
 Requirements
 ------------
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.11.x
--	[Docker](https://docs.docker.com/install/) to build the provider plugin
-- [Trash](https://github.com/rancher/trash/releases) 0.2.6 (to manage vendor dependencies)
-
-Using the provider
-----------------------
-
-- Build or download rancher2 provider binary from [relases](https://github.com/rancher/terraform-provider-rancher2/releases)
-- Copy rancher2 provider binary to same folder as terraform binary.
-- Create tf file and use it.
-
-```sh
-$ terraform init
-$ terraform plan
-$ terraform apply
-```
+- [Terraform](https://www.terraform.io/downloads.html) 0.11.x
+- [Go](https://golang.org/doc/install) 1.9 to build the provider plugin
+- [Trash](https://github.com/rancher/trash/releases) 0.2.6 to manage vendor dependencies
+- [Docker](https://docs.docker.com/install/) 17.03.x to run acceptance tests
 
 Building The Provider
 ---------------------
 
-Clone this repository and run make:
+Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-rancher2`
 
 ```sh
-$ git clone git@github.com:rancher/terraform-provider-rancher2
-$ cd terraform-provider-rancher2
+$ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
+$ git clone git@github.com:terraform-providers/terraform-provider-rancher2
 ```
 
-- Building Linux binary. Released at `bin/` folder
+Enter the provider directory and build the provider
 
 ```sh
-$ make
+$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-rancher2
+$ make build
 ```
 
-- Building linux, osx and windoes binaries. Released at `build/bin/` folder
+Using the provider
+----------------------
 
-```sh
-$ CROSS=1 make
-```
+If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) After placing it into your plugins directory,  run `terraform init` to initialize it. Documentation about the provider specific configuration options can be found on the [provider's website](https://www.terraform.io/docs/providers/rancher2/index.html).
 
 Developing the Provider
 ---------------------------
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.8+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.9+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
 
-To compile the provider, run `make`. This will build the provider and put the provider binary in `bin/terraform-provider-rancher2` .
-
-To compile binary on repo path and test on terraform:
+To compile the provider, run `make build`. This will build the provider and put the provider binary in `$GOPATH/bin` .
 
 ```sh
-$ make
+$ make build
+...
+$ $GOPATH/bin/terraform-provider-rancher2
+...
+```
+
+To just compile provider binary on repo path and test on terraform:
+
+```sh
+$ make bin
 $ terraform init
 $ terraform plan
 $ terraform apply
 ```
+
+Testing the Provider
+---------------------------
+
+In order to test the provider, you can simply run `make test`.
+
+```sh
+$ make test
+```
+
+In order to run the full suite of Acceptance tests, a running rancher system, a rancher API key and a working k8s cluster imported are needed.
+
+To run acceptance tests, you can simply run `make testacc`. `scripts/gotestacc.sh` will be run, deploying all needed requirements, running acceptance tests and cleanup. 
+
+```sh
+$ make testacc
+```
+
+Due to [network limitation](https://docs.docker.com/docker-for-mac/networking/#known-limitations-use-cases-and-workarounds) on docker for osx and/or windows, try to add variable `TESTACC_EXPOSE_HOST_PORTS=true` to run acceptance test ont them.
+
+```sh
+$ TESTACC_EXPOSE_HOST_PORTS=true make testacc
+```
+
 
 Managing vendor dependencies
 -----------------------------
 
 Go vendor dependencies are managed with [Trash](https://github.com/rancher/trash) and vendor.conf file.
 
-To update vendor dependencies, edit `vendor.conf` file and execute trash
+To update vendor dependencies, edit `vendor.conf` file and run `trash`
 
 ```sh
 $ trash
 ```
 
-Acceptance tests
-----------------
 
-For execute acceptance tests, a running rancher HA system and a rancher API key are needed.
-
-To run acceptance tests, export `RANCHER_URL` with rancher url and `RANCHER_TOKEN_KEY` with bearer token or `RANCHER_ACCESS_KEY` with rancher acces key and `RANCHER_SECRET_KEY` with rancher secret key and execute
-
-```sh
-$ export RANCHER_URL=<URL>
-$ export RANCHER_TOKEN_KEY=<TOKEN>
-$ scripts/testacc
-```
