@@ -100,20 +100,40 @@ The following arguments are supported:
 * `addons` - (Optional) Addons descripton to deploy on rke cluster.
 * `addons_include` - (Optional) Addons yaml manisfests to deploy on rke cluster (list)
 * `authentication` - (Optional/Computed) Kubernetes cluster authentication
+* `authorization` - (Optional/Computed) Kubernetes cluster authorization
+* `bastion_host` - (Optional/Computed) RKE bastion host
 * `cloud_provider` - (Optional/Computed) Kubernetes cluster authentication [rke-cloud-providers](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/)
 * `ignore_docker_version` - (Optional/Computed) Ignore docker version (bool)
 * `ingress` - (Optional/Computed) Kubernetes ingress configuration
 * `kubernetes_version` - (Optional/Computed) Kubernetes version to deploy (string)
 * `monitoring` - (Optional/Computed) Kubernetes cluster monitoring
 * `network` - (Optional/Computed) Kubernetes cluster networking
+* `nodes` - (Optional) RKE cluster nodes (list)
+* `prefix_path` - (Optional/Computed) Prefix to customize kubernetes path (string)
+* `private_registries` - (Optional) private registries for docker images (list)
 * `services` - (Optional/Computed) Kubernetes cluster services
-* `ssh_agent_auth` - Optional use ssh agent auth (bool)
+* `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
+* `ssh_key_path` - (Optional/Computed) Cluster level SSH private key path (string)
 
 The following arguments are supported for `authentication`:
 
-* `options` - (Optional/Computed) RKE options for Authentication (map)
-* `sans` - (Optional/Computed) RKE sans for Authentication ([]string)
-* `strategy` - (Optional/Computed) RKE strategy for Authentication (string)
+* `options` - (Optional/Computed) RKE options for authentication (map)
+* `sans` - (Optional/Computed) RKE sans for authentication ([]string)
+* `strategy` - (Optional/Computed) RKE strategy for authentication (string)
+
+The following arguments are supported for `authorization`:
+
+* `mode` - (Optional) RKE mode for authorization. `rbac` and `none`  are available. Default `rbac`
+* `options` - (Optional/Computed) RKE options for authorization (map)
+
+The following arguments are supported for `bastion_host`:
+
+* `user` - (Required) User to connect bastion host (string)
+* `address` - (Required) Address ip for the bastion host
+* `port` - (Optional) Port for bastion host. Default `22`
+* `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
+* `ssh_key` - (Optional/Computed) Bastion host SSH private key (string)
+* `ssh_key_path` - (Optional/Computed) Bastion host SSH private key path (string)
 
 The following arguments are supported for `cloud_provider`:
 
@@ -279,6 +299,29 @@ The following arguments are supported for `flannel_network_provider`:
 
 * `iface` - (Optional/Computed) Iface config Flannel network provider (string)
 
+The following arguments are supported for `nodes`:
+
+* `address` - (Required) Address ip for node (string)
+* `role` - (Requires) Roles for the node. `controlplane`, `etcd` and `worker` are supported. (list)
+* `user` - (Required) User to connect node (string)
+* `docker_socket` - (Optional/Computed) Docker scojer for node (string)
+* `hostname_override` - (Optional) Hostname override for node (string)
+* `internal_address` - (Optional) Internal ip for node (string)
+* `labels` - (Optional) Labels for the node (map)
+* `node_id` - (Optional) Id for the node (string)
+* `port` - (Optional) Port for node. Default `22`
+* `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
+* `ssh_key` - (Optional/Computed) Node SSH private key (string)
+* `ssh_key_path` - (Optional/Computed) Node SSH private key path (string)
+
+The following arguments are supported for `private_registries`:
+
+* `is_default` - (Optional) Set as default registry. Default `false`
+* `password` - (Optional) Registry password (string)
+* `url` - (Required) Registry URL (string)
+* `user` - (Optional) Registry user (string)
+
+
 The following arguments are supported for `services`:
 
 * `etcd` - (Optional/Computed) Etcd options for RKE services
@@ -289,14 +332,25 @@ The following arguments are supported for `services`:
 
 The following arguments are supported for `etcd`:
 
-* `extra_args` - (Optional/Computed) Extra arguments for etcd service (map)
-* `retention` - (Optional/Computed) Retention option for etcd service (string)
+* `ca_cert` - (Optional/Computed) Tls CA certificate for etcd service (string)
+* `cert` - (Optional/Computed) Tls certificate for etcd service (string)
 * `creation` - (Optional/Computed) Creation option for etcd service (string)
+* `external_urls` - (Optional) External urls for etcd service (list)
+* `extra_args` - (Optional/Computed) Extra arguments for etcd service (map)
+* `extra_binds` - (Optional) Extra binds for etcd service (list)
+* `extra_env` - (Optional) Extra environment for etcd service (list)
+* `image` - (Optional/Computed) Docker image for etcd service (string)
+* `key` - (Optional/Computed) Tls key for etcd service (string)
+* `path` - (Optional/Computed) Path for etcd service (string)
+* `retention` - (Optional/Computed) Retention option for etcd service (string)
 * `snapshot` - (Optional/Computed) Snapshot option for etcd service (bool)
 
 The following arguments are supported for `kube_api`:
 
 * `extra_args` - (Optional/Computed) Extra arguments for kube API service (map)
+* `extra_binds` - (Optional) Extra binds for kube API service (list)
+* `extra_env` - (Optional) Extra environment for kube API service (list)
+* `image` - (Optional/Computed) Docker image for kube API service (string)
 * `pod_security_policy` - (Optional/Computed) Pod Security Policy option for kube API service (bool)
 * `service_cluster_ip_range` - (Optional/Computed) Service Cluster IP Range option for kube API service (string)
 * `service_node_port_range` - (Optional/Computed) Service Node Port Range option for kube API service (string)
@@ -305,6 +359,9 @@ The following arguments are supported for `kube_controller`:
 
 * `cluster_cidr` - (Optional/Computed) Cluster CIDR option for kube controller service (string)
 * `extra_args` - (Optional/Computed) Extra arguments for kube controller service (map)
+* `extra_binds` - (Optional) Extra binds for kube controller service (list)
+* `extra_env` - (Optional) Extra environment for kube controller service (list)
+* `image` - (Optional/Computed) Docker image for kube controller service (string)
 * `service_cluster_ip_range` - (Optional/Computed) Service Cluster ip Range option for kube controller service (string)
 
 The following arguments are supported for `kubelet`:
@@ -312,10 +369,18 @@ The following arguments are supported for `kubelet`:
 * `cluster_dns_server` - (Optional/Computed) Cluster DNS Server option for kubelet service (string)
 * `cluster_domain` - (Optional/Computed) Cluster Domain option for kubelet service (string)
 * `extra_args` - (Optional/Computed) Extra arguments for kubelet service (map)
+* `extra_binds` - (Optional) Extra binds for kubelet service (list)
+* `extra_env` - (Optional) Extra environment for kubelet service (list)
+* `fail_swap_on` - (Optional/Computed) Enable or disable failing when swap on is not supported (bool)
+* `image` - (Optional/Computed) Docker image for kubelet service (string)
+* `infra_container_image` - (Optional/Computed) Infre container image for kubelet service (string)
 
 The following arguments are supported for `kubeproxy`:
 
 * `extra_args` - (Optional/Computed) Extra arguments for kubeproxy service (map)
+* `extra_binds` - (Optional) Extra binds for kubeproxy service (list)
+* `extra_env` - (Optional) Extra environment for kubeproxy service (list)
+* `image` - (Optional/Computed) Docker image for kubeproxy service (string)
 
 ### Amazon `eks_config`
 
