@@ -42,6 +42,26 @@ func rkeConfigFields() map[string]*schema.Schema {
 				Schema: authenticationFields(),
 			},
 		},
+		"authorization": {
+			Type:        schema.TypeList,
+			Description: "Kubernetes cluster authorization",
+			MaxItems:    1,
+			Optional:    true,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: authorizationFields(),
+			},
+		},
+		"bastion_host": {
+			Type:        schema.TypeList,
+			Description: "RKE bastion host",
+			MaxItems:    1,
+			Optional:    true,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: bastionHostFields(),
+			},
+		},
 		"cloud_provider": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -93,6 +113,28 @@ func rkeConfigFields() map[string]*schema.Schema {
 				Schema: networkFields(),
 			},
 		},
+		"nodes": {
+			Type:        schema.TypeList,
+			Description: "Optional RKE cluster nodes",
+			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: RKEConfigNodesFields(),
+			},
+		},
+		"prefix_path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Optional prefix to customize kubernetes path",
+		},
+		"private_registries": {
+			Type:        schema.TypeList,
+			Description: "Optional private registries for docker images",
+			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: privateRegistriesFields(),
+			},
+		},
 		"services": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster services",
@@ -106,8 +148,14 @@ func rkeConfigFields() map[string]*schema.Schema {
 		"ssh_agent_auth": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Computed:    true,
+			Default:     false,
 			Description: "Optional use ssh agent auth",
+		},
+		"ssh_key_path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Optional cluster level SSH private key path",
 		},
 	}
 
@@ -140,6 +188,22 @@ func flattenRkeConfig(in *managementClient.RancherKubernetesEngineConfig) ([]int
 			return []interface{}{obj}, err
 		}
 		obj["authentication"] = authn
+	}
+
+	if in.Authorization != nil {
+		authz, err := flattenAuthorization(in.Authorization)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["authorization"] = authz
+	}
+
+	if in.BastionHost != nil {
+		bastion, err := flattenBastionHost(in.BastionHost)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["bastion_host"] = bastion
 	}
 
 	if in.CloudProvider != nil {
@@ -180,6 +244,26 @@ func flattenRkeConfig(in *managementClient.RancherKubernetesEngineConfig) ([]int
 		obj["network"] = network
 	}
 
+	if in.Nodes != nil {
+		nodes, err := flattenRKEConfigNodes(in.Nodes)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["nodes"] = nodes
+	}
+
+	if len(in.PrefixPath) > 0 {
+		obj["prefix_path"] = in.PrefixPath
+	}
+
+	if in.PrivateRegistries != nil {
+		privReg, err := flattenPrivateRegistries(in.PrivateRegistries)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["private_registries"] = privReg
+	}
+
 	if in.Services != nil {
 		services, err := flattenServices(in.Services)
 		if err != nil {
@@ -189,6 +273,10 @@ func flattenRkeConfig(in *managementClient.RancherKubernetesEngineConfig) ([]int
 	}
 
 	obj["ssh_agent_auth"] = in.SSHAgentAuth
+
+	if len(in.SSHKeyPath) > 0 {
+		obj["ssh_key_path"] = in.SSHKeyPath
+	}
 
 	return []interface{}{obj}, nil
 }
@@ -228,6 +316,22 @@ func expandRkeConfig(p []interface{}) (*managementClient.RancherKubernetesEngine
 			return obj, err
 		}
 		obj.Authentication = authn
+	}
+
+	if v, ok := in["authorization"].([]interface{}); ok && len(v) > 0 {
+		authz, err := expandAuthorization(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.Authorization = authz
+	}
+
+	if v, ok := in["bastion_host"].([]interface{}); ok && len(v) > 0 {
+		bastion, err := expandBastionHost(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.BastionHost = bastion
 	}
 
 	if v, ok := in["cloud_provider"].([]interface{}); ok && len(v) > 0 {
@@ -270,6 +374,26 @@ func expandRkeConfig(p []interface{}) (*managementClient.RancherKubernetesEngine
 		obj.Network = network
 	}
 
+	if v, ok := in["nodes"].([]interface{}); ok && len(v) > 0 {
+		nodes, err := expandRKEConfigNodes(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.Nodes = nodes
+	}
+
+	if v, ok := in["prefix_path"].(string); ok && len(v) > 0 {
+		obj.PrefixPath = v
+	}
+
+	if v, ok := in["private_registries"].([]interface{}); ok && len(v) > 0 {
+		privReg, err := expandPrivateRegistries(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.PrivateRegistries = privReg
+	}
+
 	if v, ok := in["services"].([]interface{}); ok && len(v) > 0 {
 		services, err := expandServices(v)
 		if err != nil {
@@ -280,6 +404,10 @@ func expandRkeConfig(p []interface{}) (*managementClient.RancherKubernetesEngine
 
 	if v, ok := in["ssh_agent_auth"].(bool); ok {
 		obj.SSHAgentAuth = v
+	}
+
+	if v, ok := in["ssh_key_path"].(string); ok && len(v) > 0 {
+		obj.SSHKeyPath = v
 	}
 
 	return obj, nil
