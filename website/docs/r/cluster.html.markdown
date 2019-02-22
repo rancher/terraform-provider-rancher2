@@ -406,6 +406,18 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource.
 * `cluster_registration_token` - (Computed) The Cluster Registration Token generated for Clusters.
 
+The following attributes are exported for `cluster_registration_token`:
+
+* `cluster_id` - (Computed) Cluster ID
+* `name` - (Computed) Name of cluster registration token
+* `command` - (Computed) Command to execute in a imported k8s cluster
+* `insecure_command` - (Computed) Insecure command to execute in a imported k8s cluster
+* `manifest_url` - (Computed) K8s mnifest url to execute kubectl in a imported k8s cluster
+* `node_command` - (Computed) Node command to execute in linux nodes for custom k8s cluster
+* `windows_node_command` - (Computed) Node command to execute in windows nodes for custom k8s cluster
+* `annotations` - (Computed) Annotations for cluster registration token object
+* `labels` - (Computed) Labels for cluster registration token object
+
 ## Import
 
 Clusters can be imported using the rancher Cluster ID

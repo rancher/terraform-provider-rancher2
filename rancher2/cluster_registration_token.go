@@ -33,7 +33,15 @@ func clusterRegistationTokenFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"manifest_url": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"node_command": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"windows_node_command": &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -65,7 +73,9 @@ func flattenClusterRegistationToken(in *managementClient.ClusterRegistrationToke
 	obj["name"] = clusterRegistrationTokenName
 	obj["command"] = in.Command
 	obj["insecure_command"] = in.InsecureCommand
+	obj["manifest_url"] = in.ManifestURL
 	obj["node_command"] = in.NodeCommand
+	obj["windows_node_command"] = in.WindowsNodeCommand
 	obj["annotations"] = toMapInterface(in.Annotations)
 	obj["labels"] = toMapInterface(in.Labels)
 
