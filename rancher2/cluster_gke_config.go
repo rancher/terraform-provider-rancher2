@@ -256,7 +256,7 @@ func expandGkeConfig(p []interface{}) (*managementClient.GoogleKubernetesEngineC
 		obj.ClusterIpv4Cidr = v
 	}
 
-	if v, ok := in["cre"].(string); ok && len(v) > 0 {
+	if v, ok := in["credential"].(string); ok && len(v) > 0 {
 		obj.Credential = v
 	}
 
