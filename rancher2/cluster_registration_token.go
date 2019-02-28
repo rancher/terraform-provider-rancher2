@@ -2,7 +2,9 @@ package rancher2
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
@@ -128,18 +130,55 @@ func findClusterRegistrationToken(client *managementClient.Client, clusterID str
 
 	if err != nil {
 		if IsNotFound(err) {
-			regToken, err = expandClusterRegistationToken([]interface{}{}, clusterID)
-			if err != nil {
-				return nil, err
-			}
-			newRegToken, err := client.ClusterRegistrationToken.Create(regToken)
-			if err != nil {
-				return nil, err
-			}
-			return newRegToken, nil
+			return createClusterRegistrationToken(client, clusterID)
 		}
 		return nil, err
 	}
 
 	return regToken, nil
+}
+
+func createClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
+	regToken, err := expandClusterRegistationToken([]interface{}{}, clusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	newRegToken, err := client.ClusterRegistrationToken.Create(regToken)
+	if err != nil {
+		return nil, err
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"active"},
+		Refresh:    clusterRegistrationTokenStateRefreshFunc(client, newRegToken.ID),
+		Timeout:    5 * time.Minute,
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return nil, fmt.Errorf("[ERROR] waiting for cluster registration token (%s) to be created: %s", newRegToken.ID, waitErr)
+	}
+	return newRegToken, nil
+}
+
+// ClusterRegistrationTokenStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher ClusterRegistrationToken.
+func clusterRegistrationTokenStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := client.ClusterRegistrationToken.ByID(clusterID)
+		if err != nil {
+			if IsNotFound(err) {
+				return obj, "removed", nil
+			}
+			return nil, "", err
+		}
+
+		if obj.Removed != "" {
+			return obj, "removed", nil
+		}
+
+		return obj, obj.State, nil
+	}
 }

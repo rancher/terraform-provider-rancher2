@@ -315,40 +315,14 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be created: %s", newCluster.ID, waitErr)
 	}
 
-	clusterReg, err := expandClusterRegistationToken(d.Get("cluster_registration_token").([]interface{}), newCluster.ID)
+	clusterRegistrationToken, err := findClusterRegistrationToken(client, newCluster.ID)
 	if err != nil {
-		// If error undo create cluster
-		client.Cluster.Delete(cluster)
 		return err
-	}
-
-	newClusterRegistrationToken, err := client.ClusterRegistrationToken.Create(clusterReg)
-	if err != nil {
-		// If error undo create cluster
-		client.Cluster.Delete(cluster)
-		return err
-	}
-
-	stateConf = &resource.StateChangeConf{
-		Pending:    []string{},
-		Target:     []string{"active"},
-		Refresh:    clusterRegistrationTokenStateRefreshFunc(client, newClusterRegistrationToken.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      1 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, waitErr = stateConf.WaitForState()
-	if waitErr != nil {
-		// If error undo create cluster
-		client.Cluster.Delete(cluster)
-		return fmt.Errorf("[ERROR] waiting for cluster registration token (%s) to be created: %s", newClusterRegistrationToken.ID, waitErr)
 	}
 
 	d.SetId(newCluster.ID)
-	err = flattenCluster(d, newCluster, newClusterRegistrationToken)
+	err = flattenCluster(d, newCluster, clusterRegistrationToken)
 	if err != nil {
-		// If error undo create cluster
-		client.Cluster.Delete(cluster)
 		return err
 	}
 
@@ -525,25 +499,6 @@ func resourceRancher2ClusterImport(d *schema.ResourceData, meta interface{}) ([]
 func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.Cluster.ByID(clusterID)
-		if err != nil {
-			if IsNotFound(err) {
-				return obj, "removed", nil
-			}
-			return nil, "", err
-		}
-
-		if obj.Removed != "" {
-			return obj, "removed", nil
-		}
-
-		return obj, obj.State, nil
-	}
-}
-
-// ClusterRegistrationTokenStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher ClusterRegistrationToken.
-func clusterRegistrationTokenStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		obj, err := client.ClusterRegistrationToken.ByID(clusterID)
 		if err != nil {
 			if IsNotFound(err) {
 				return obj, "removed", nil
