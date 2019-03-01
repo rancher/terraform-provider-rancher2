@@ -16,12 +16,23 @@ func eksConfigFields() map[string]*schema.Schema {
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Required Access key for EKS.",
+			Description: "Required Access key for EKS",
 		},
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "Required Secret key for EKS.",
+			Description: "Required Secret key for EKS",
+		},
+		"ami": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "AMI image for EKS worker nodes",
+		},
+		"associate_worker_node_public_ip": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Associate public ip EKS worker nodes",
 		},
 		"instance_type": {
 			Type:        schema.TypeString,
@@ -90,6 +101,12 @@ func flattenEksConfig(in *managementClient.AmazonElasticContainerServiceConfig) 
 		obj["secret_key"] = in.SecretKey
 	}
 
+	if len(in.AMI) > 0 {
+		obj["ami"] = in.AMI
+	}
+
+	obj["associate_worker_node_public_ip"] = *in.AssociateWorkerNodePublicIP
+
 	if len(in.InstanceType) > 0 {
 		obj["instance_type"] = in.InstanceType
 	}
@@ -140,6 +157,14 @@ func expandEksConfig(p []interface{}) (*managementClient.AmazonElasticContainerS
 
 	if v, ok := in["secret_key"].(string); ok && len(v) > 0 {
 		obj.SecretKey = v
+	}
+
+	if v, ok := in["ami"].(string); ok && len(v) > 0 {
+		obj.AMI = v
+	}
+
+	if v, ok := in["associate_worker_node_public_ip"].(bool); ok {
+		obj.AssociateWorkerNodePublicIP = &v
 	}
 
 	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {

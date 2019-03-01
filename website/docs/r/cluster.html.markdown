@@ -388,6 +388,8 @@ The following arguments are supported:
 
 * `access_key` - (Required) Access key for EKS (string)
 * `secret_key` - (Required) Secret key for EKS (string)
+* `ami` - (Optional) AMI image for EKS worker nodes (string)
+* `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes (bool). Default `true`
 * `instance_type` - (Required) Intance type for EKS cluster (string)
 * `maximum_nodes` - (Required) Maximum instaces for EKS cluster (int)
 * `minimum_nodes` - (Required) Minimum instaces for EKS cluster (int)
