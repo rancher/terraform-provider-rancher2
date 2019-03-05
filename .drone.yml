@@ -41,7 +41,8 @@ steps:
     - dist/artifacts/${DRONE_TAG}/*
     checksum:
     - sha256
-  secrets: [github_token]
+    api_key: 
+      from_secret: github_token
   when:
     event: tag
     ref:
@@ -55,7 +56,8 @@ steps:
     - dist/artifacts/${DRONE_TAG}/*
     checksum:
     - sha256
-  secrets: [github_token]
+    api_key: 
+      from_secret: github_token
   when:
     event: tag
     ref:
