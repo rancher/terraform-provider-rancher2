@@ -23,7 +23,6 @@ steps:
   commands:
   - dapper build
   when:
-    branch: [ master, release/* ]
     event: tag
 
 - name:  stage-binaries
@@ -31,7 +30,6 @@ steps:
   commands:
   - cp -r ./bin/* ./package/
   when:
-    branch: [ master, release/* ]
     event: tag
 
 - name: github_binary_prerelease
@@ -45,7 +43,6 @@ steps:
     - sha256
   secrets: [github_token]
   when:
-    branch: [ master, release/* ]
     event: tag
     ref:
       include: [ refs/tags/*rc* ]
@@ -60,7 +57,6 @@ steps:
     - sha256
   secrets: [github_token]
   when:
-    branch: [ master, release/* ]
     event: tag
     ref:
       exclude: [ refs/tags/*rc* ]
