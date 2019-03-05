@@ -34,8 +34,8 @@ steps:
 
 - name: github_binary_prerelease
   image: plugins/github-release
-  prerelease: true
   settings:
+    prerelease: true
     files:
     - build/bin/terraform-provider-rancher2_*
     - dist/artifacts/${DRONE_TAG}/*
