@@ -471,7 +471,8 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource.
-* `cluster_registration_token` - (Computed) The Cluster Registration Token generated for Clusters.
+* `cluster_registration_token` - (Computed) Cluster Registration Token generated for the cluster.
+* `kube_config` - (Computed) Kube Config generated for the cluster.
 
 The following attributes are exported for `cluster_registration_token`:
 

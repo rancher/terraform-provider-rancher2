@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	managementClient "github.com/rancher/types/client/management/v3"
-	//"gopkg.in/yaml.v2"
 )
 
 const (
@@ -33,6 +32,10 @@ func clusterFields() map[string]*schema.Schema {
 			Optional:     true,
 			Default:      clusterRkeKind,
 			ValidateFunc: validation.StringInSlice(clusterKinds, true),
+		},
+		"kube_config": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
 		},
 		"rke_config": &schema.Schema{
 			Type:          schema.TypeList,
@@ -99,7 +102,7 @@ func clusterFields() map[string]*schema.Schema {
 
 // Flatteners
 
-func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, clusterRegToken *managementClient.ClusterRegistrationToken) error {
+func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput) error {
 	if in == nil {
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster is nil")
 	}
@@ -108,7 +111,14 @@ func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, cluste
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster registration token is nil")
 	}
 
-	d.SetId(in.ID)
+	if kubeConfig == nil {
+		return fmt.Errorf("[ERROR] flattening cluster: Input cluster kube config is nil")
+	}
+
+	if in.ID != "" {
+		d.SetId(in.ID)
+	}
+
 	err := d.Set("name", in.Name)
 	if err != nil {
 		return err
@@ -130,6 +140,11 @@ func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, cluste
 		return err
 	}
 	err = d.Set("cluster_registration_token", regToken)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("kube_config", kubeConfig.Config)
 	if err != nil {
 		return err
 	}
@@ -315,16 +330,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be created: %s", newCluster.ID, waitErr)
 	}
 
-	clusterRegistrationToken, err := findClusterRegistrationToken(client, newCluster.ID)
-	if err != nil {
-		return err
-	}
-
 	d.SetId(newCluster.ID)
-	err = flattenCluster(d, newCluster, clusterRegistrationToken)
-	if err != nil {
-		return err
-	}
 
 	return resourceRancher2ClusterRead(d, meta)
 }
@@ -340,19 +346,24 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 	cluster, err := client.Cluster.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Cluster ID %s not found.", d.Id())
+			log.Printf("[INFO] Cluster ID %s not found.", cluster.ID)
 			d.SetId("")
 			return nil
 		}
 		return err
 	}
 
-	clusterRegistrationToken, err := findClusterRegistrationToken(client, d.Id())
+	clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
 	if err != nil {
 		return err
 	}
 
-	err = flattenCluster(d, cluster, clusterRegistrationToken)
+	kubeConfig, err := client.Cluster.ActionGenerateKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+
+	err = flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig)
 	if err != nil {
 		return err
 	}
@@ -425,6 +436,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr)
 	}
 
+	d.SetId(newCluster.ID)
+
 	return resourceRancher2ClusterRead(d, meta)
 }
 
@@ -473,21 +486,7 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceRancher2ClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	cluster, err := client.Cluster.ByID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	clusterRegistrationToken, err := findClusterRegistrationToken(client, d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenCluster(d, cluster, clusterRegistrationToken)
+	err := resourceRancher2ClusterRead(d, meta)
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}
