@@ -135,6 +135,7 @@ func vsphereCloudProviderFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: vsphereDiskCloudProviderFields(),
 			},
@@ -143,6 +144,7 @@ func vsphereCloudProviderFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: vsphereGlobalCloudProviderFields(),
 			},
@@ -151,6 +153,7 @@ func vsphereCloudProviderFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: vsphereNetworkCloudProviderFields(),
 			},

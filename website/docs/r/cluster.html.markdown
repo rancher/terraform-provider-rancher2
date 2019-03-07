@@ -229,9 +229,9 @@ The following arguments are supported for `vsphere_cloud_provider`:
 
 * `virtual_center` - (Required) (List)
 * `workspace` - (Required)
-* `disk` - (Optional)
-* `global` - (Optional)
-* `network` - (Optional)
+* `disk` - (Optional/Computed)
+* `global` - (Optional/Computed)
+* `network` - (Optional/Computed)
 
 The following arguments are supported for `virtual_center`:
 
