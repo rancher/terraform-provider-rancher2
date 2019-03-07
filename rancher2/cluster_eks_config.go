@@ -16,11 +16,13 @@ func eksConfigFields() map[string]*schema.Schema {
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Required Access key for EKS",
 		},
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Required Secret key for EKS",
 		},
 		"ami": {

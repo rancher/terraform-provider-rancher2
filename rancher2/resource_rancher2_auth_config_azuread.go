@@ -16,20 +16,23 @@ func authConfigAzureADFields() map[string]*schema.Schema {
 	r := authConfigFields()
 	s := map[string]*schema.Schema{
 		"application_id": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"application_secret": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"auth_endpoint": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
 		"code": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"endpoint": {
 			Type:     schema.TypeString,

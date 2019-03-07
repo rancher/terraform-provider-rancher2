@@ -24,9 +24,10 @@ func bastionHostFields() map[string]*schema.Schema {
 			Default:  false,
 		},
 		"ssh_key": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"ssh_key_path": {
 			Type:     schema.TypeString,

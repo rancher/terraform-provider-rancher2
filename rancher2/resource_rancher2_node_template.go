@@ -34,12 +34,14 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			},
 		},
 		"auth_certificate_authority": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"auth_key": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"azure_config": &schema.Schema{
 			Type:          schema.TypeList,

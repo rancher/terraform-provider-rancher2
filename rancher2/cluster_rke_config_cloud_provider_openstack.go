@@ -43,20 +43,24 @@ func openstackGlobalCloudProviderFields() map[string]*schema.Schema {
 			Required: true,
 		},
 		"password": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"tenant_id": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"user_id": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"username": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"ca_file": {
 			Type:     schema.TypeString,
@@ -64,9 +68,10 @@ func openstackGlobalCloudProviderFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"domain_id": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"domain_name": {
 			Type:     schema.TypeString,
@@ -84,9 +89,10 @@ func openstackGlobalCloudProviderFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"trust_id": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
 		},
 	}
 	return s

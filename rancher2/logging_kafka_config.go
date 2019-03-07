@@ -25,16 +25,19 @@ func kafkaConfigFields() map[string]*schema.Schema {
 			},
 		},
 		"certificate": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"client_cert": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"client_key": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"zookeeper_endpoint": {
 			Type:     schema.TypeString,

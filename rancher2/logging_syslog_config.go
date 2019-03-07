@@ -24,16 +24,19 @@ func syslogConfigFields() map[string]*schema.Schema {
 			Required: true,
 		},
 		"certificate": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"client_cert": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"client_key": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"program": {
 			Type:     schema.TypeString,
@@ -57,8 +60,9 @@ func syslogConfigFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"token": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 	}
 

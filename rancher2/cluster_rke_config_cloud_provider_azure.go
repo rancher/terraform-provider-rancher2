@@ -14,25 +14,30 @@ const (
 func azureCloudProviderFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"aad_client_id": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"aad_client_secret": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"subscription_id": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"tenant_id": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"aad_client_cert_password": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"aad_client_cert_path": {
 			Type:     schema.TypeString,

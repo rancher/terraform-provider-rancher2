@@ -32,6 +32,7 @@ func digitaloceanConfigFields() map[string]*schema.Schema {
 		"access_token": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Digital Ocean access token",
 		},
 		"backups": {
@@ -79,6 +80,7 @@ func digitaloceanConfigFields() map[string]*schema.Schema {
 		"ssh_key_fingerprint": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Sensitive:   true,
 			Description: "SSH key fingerprint",
 		},
 		"ssh_key_path": {

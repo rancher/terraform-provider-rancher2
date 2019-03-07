@@ -16,16 +16,19 @@ func authConfigGithubFields() map[string]*schema.Schema {
 	r := authConfigFields()
 	s := map[string]*schema.Schema{
 		"client_id": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"client_secret": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"code": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"hostname": {
 			Type:     schema.TypeString,

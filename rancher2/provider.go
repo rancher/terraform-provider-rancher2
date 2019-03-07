@@ -33,18 +33,21 @@ func Provider() terraform.ResourceProvider {
 			"access_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_ACCESS_KEY", ""),
 				Description: descriptions["access_key"],
 			},
 			"secret_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_SECRET_KEY", ""),
 				Description: descriptions["secret_key"],
 			},
 			"token_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_TOKEN_KEY", ""),
 				Description: descriptions["token_key"],
 			},

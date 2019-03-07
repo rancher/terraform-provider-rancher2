@@ -46,11 +46,13 @@ func azureConfigFields() map[string]*schema.Schema {
 		"client_id": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Azure Service Principal Account ID (optional, browser auth is used if not specified)",
 		},
 		"client_secret": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Azure Service Principal Account password (optional, browser auth is used if not specified)",
 		},
 		"custom_data": {

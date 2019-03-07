@@ -21,6 +21,7 @@ func gkeConfigFields() map[string]*schema.Schema {
 		"credential": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Required Credential for GKE",
 		},
 		"description": {

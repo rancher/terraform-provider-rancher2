@@ -35,14 +35,16 @@ func vsphereGlobalCloudProviderFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"password": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"user": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"port": {
 			Type:     schema.TypeString,
@@ -80,12 +82,14 @@ func vsphereVirtualCenterCloudProviderFields() map[string]*schema.Schema {
 			Required: true,
 		},
 		"password": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"user": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"port": {
 			Type:     schema.TypeString,

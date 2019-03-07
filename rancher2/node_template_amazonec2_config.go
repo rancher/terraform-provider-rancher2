@@ -49,6 +49,7 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 		"access_key": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "AWS Access Key",
 		},
 		"ami": {
@@ -141,6 +142,7 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "AWS Secret Key",
 		},
 		"security_group": {
@@ -160,6 +162,7 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 		"session_token": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Sensitive:   true,
 			Description: "AWS Session Token",
 		},
 		"spot_price": {

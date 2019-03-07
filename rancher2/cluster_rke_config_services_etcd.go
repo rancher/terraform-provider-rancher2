@@ -15,9 +15,10 @@ func etcdFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"cert": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"creation": {
 			Type:     schema.TypeString,
@@ -56,9 +57,10 @@ func etcdFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"key": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"path": {
 			Type:     schema.TypeString,

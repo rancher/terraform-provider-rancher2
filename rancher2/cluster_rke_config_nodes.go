@@ -58,9 +58,10 @@ func RKEConfigNodesFields() map[string]*schema.Schema {
 			Default:  false,
 		},
 		"ssh_key": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"ssh_key_path": {
 			Type:     schema.TypeString,
@@ -68,8 +69,9 @@ func RKEConfigNodesFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"user": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 	}
 	return s

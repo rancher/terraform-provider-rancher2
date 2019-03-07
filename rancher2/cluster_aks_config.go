@@ -16,6 +16,7 @@ func aksConfigFields() map[string]*schema.Schema {
 		"admin_username": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Required Admin username for AKS",
 		},
 		"agent_dns_prefix": {
@@ -41,11 +42,13 @@ func aksConfigFields() map[string]*schema.Schema {
 		"client_id": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Required Client ID for AKS",
 		},
 		"client_secret": {
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Required Client secret for AKS",
 		},
 		"count": {

@@ -18,20 +18,23 @@ func fluentServerFields() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"password": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"shared_key": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"standby": {
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
 		"username": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"weight": {
 			Type:     schema.TypeInt,

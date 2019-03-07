@@ -15,16 +15,18 @@ func privateRegistriesFields() map[string]*schema.Schema {
 			Default:  false,
 		},
 		"password": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"url": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
 		"user": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 	}
 	return s
