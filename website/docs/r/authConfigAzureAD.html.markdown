@@ -30,10 +30,10 @@ resource "rancher2_auth_config_azuread" "azuread" {
 
 The following arguments are supported:
 
-* `application_id` - (Required) AzureAD auth application ID (string).
-* `application_secret` - (Required) AzureAD auth application secret (string).
+* `application_id` - (Required/Sensitive) AzureAD auth application ID (string).
+* `application_secret` - (Required/Sensitive) AzureAD auth application secret (string).
 * `auth_endpoint` - (Required) AzureAD auth endpoint (string).
-* `code` - (Required) AzureAD auth code. Generated from `https://login.microsoftonline.com/<TENANT_ID>/oauth2/authorize?client_id=<APPLICATION_ID>&response_type=code` (string).
+* `code` - (Required/Sensitive) AzureAD auth code. Generated from `https://login.microsoftonline.com/<TENANT_ID>/oauth2/authorize?client_id=<APPLICATION_ID>&response_type=code` (string).
 * `graph_endpoint` - (Required) AzureAD graph endpoint (string).
 * `rancher_url` - (Required) Rancher URL (string).
 * `tenant_id` - (Required) AzureAD tenant ID (string).

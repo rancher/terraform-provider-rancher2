@@ -30,14 +30,14 @@ resource "rancher2_auth_config_openldap" "openldap" {
 The following arguments are supported:
 
 * `servers` - (Required) Openldap servers list ([]string).
-* `service_account_distinguished_name` - (Required) Service account DN for access openldap service (string).
-* `service_account_password` - (Required) Service account password for access openldap service (string).
+* `service_account_distinguished_name` - (Required/Sensitive) Service account DN for access openldap service (string).
+* `service_account_password` - (Required/Sensitive) Service account password for access openldap service (string).
 * `user_search_base` - (Required) User search base DN (string).
-* `username` - (Required) User name to test openldap access (string).
-* `password` - (Required) User password to test openldap access (string).
+* `username` - (Required/Sensitive) User name to test openldap access (string).
+* `password` - (Required/Sensitive) User password to test openldap access (string).
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted`
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `openldap_user://<DN>`  `openldap_group://<DN>`
-* `certificate` - (Optional) CA certificate for TLS if selfsigned (string).
+* `certificate` - (Optional/Sensitive) CA certificate for TLS if selfsigned (string).
 * `connection_timeout` - (Optional) Openldap connection timeout. Default `5000`
 * `enabled` - (Optional) Enable auth config provider. Default `true`.
 * `group_dn_attribute` - (Optional/Computed) Group DN attribute. Default `entryDN`.

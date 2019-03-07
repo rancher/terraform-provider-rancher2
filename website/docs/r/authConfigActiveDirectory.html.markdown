@@ -30,14 +30,14 @@ resource "rancher2_auth_config_activedirectory" "activedirectory" {
 The following arguments are supported:
 
 * `servers` - (Required) ActiveDirectory servers list ([]string).
-* `service_account_username` - (Required) Service account DN for access ActiveDirectory service (string).
-* `service_account_password` - (Required) Service account password for access ActiveDirectory service (string).
+* `service_account_username` - (Required/Sensitive) Service account DN for access ActiveDirectory service (string).
+* `service_account_password` - (Required/Sensitive) Service account password for access ActiveDirectory service (string).
 * `user_search_base` - (Required) User search base DN (string).
-* `username` - (Required) User name to test ActiveDirectory access (string).
-* `password` - (Required) User password to test ActiveDirectory access (string).
+* `username` - (Required/Sensitive) User name to test ActiveDirectory access (string).
+* `password` - (Required/Sensitive) User password to test ActiveDirectory access (string).
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted`
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `activedirectory_user://<DN>`  `activedirectory_group://<DN>`
-* `certificate` - (Optional) CA certificate for TLS if selfsigned (string).
+* `certificate` - (Optional/Sensitive) CA certificate for TLS if selfsigned (string).
 * `connection_timeout` - (Optional) ActiveDirectory connection timeout. Default `5000`
 * `default_login_domain` - (Optional) ActiveDirectory defult lgoin domain (string).
 * `enabled` - (Optional) Enable auth config provider. Default `true`.

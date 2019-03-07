@@ -38,7 +38,8 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the Node Template.
 * `amazonec2_config` - (Optional) AWS config for the Node Template.
-* `auth_certificate_authority` - (Optional) Auth certificate authority for the Node Template.
+* `auth_certificate_authority` - (Optional/Sensitive) Auth certificate authority for the Node Template.
+* `auth_key` - (Optional/Sensitive) Auth key for the Node Template.
 * `azure_config` - (Optional) Azure config for the Node Template.
 * `description` - (Optional) Description for the Node Template.
 * `digitalocean_config` - (Optional) Digitalocean config for the Node Template.
@@ -59,8 +60,8 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `access_key` - (Required) AWS access key (string)
-* `secret_key` - (Required) AWS secret key (string)
+* `access_key` - (Required/Sensitive) AWS access key (string)
+* `secret_key` - (Required/Sensitive) AWS secret key (string)
 * `ami` - (Required) AWS machine image (string)
 * `region` - (Required) AWS region. (string)
 * `security_group` - (Required) AWS VPC security group. (list)
@@ -81,7 +82,7 @@ The following arguments are supported:
 * `retries` - (Optional) Set retry count for recoverable failures (use -1 to disable). Default `5`
 * `root_size` - (Optional) AWS root disk size (in GB). Default `16`
 * `security_group_readonly` - (Optional) Skip adding default rules to security groups (bool)
-* `session_token` - (Optional) AWS Session Token (string)
+* `session_token` - (Optional/Sensitive) AWS Session Token (string)
 * `spot_price` - (Optional) AWS spot instance bid price (in dollar). Default `0.50`
 * `ssh_keypath` - (Optional) SSH Key for Instance (string)
 * `ssh_user` - (Optional) Set the name of the ssh user (string)
@@ -96,8 +97,8 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `client_id` - (Required) Azure Service Principal Account ID
-* `client_secret` - (Required) Azure Service Principal Account password
+* `client_id` - (Required/Sensitive) Azure Service Principal Account ID
+* `client_secret` - (Required/Sensitive) Azure Service Principal Account password
 * `subscription_id` - (Required) Azure Subscription ID (string)
 * `availability_set` - (Optional) Azure Availability Set to place the virtual machine into. Default `docker-machine`
 * `custom_data` - (Optional) Path to file with custom-data (string)
@@ -124,7 +125,7 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `access_token` - (Required) Digital Ocean access token
+* `access_token` - (Required/Sensitive) Digital Ocean access token
 * `backups` - (Optional) Enable backups for droplet. Default `false`
 * `image` - (Optional) Digital Ocean Image. Default `ubuntu-16-04-x64`
 * `ipv6` - (Optional) Enable ipv6 for droplet. Default `false`
@@ -132,7 +133,7 @@ The following arguments are supported:
 * `private_networking` - (Optional) Enable private networking for droplet. Default `false`
 * `region` - (Optional) Digital Ocean region. Default `nyc3`
 * `size` - (Optional) Digital Ocean size. Default `s-1vcpu-1gb`
-* `ssh_key_fingerprint` - (Optional) SSH key fingerprint
+* `ssh_key_fingerprint` - (Optional/Sensitive) SSH key fingerprint
 * `ssh_key_path` - (Optional) SSH private key path
 * `ssh_port` - (Optional) SSH port. Default `22`
 * `ssh_user` - (Optional) SSH username. Default `root`

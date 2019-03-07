@@ -132,7 +132,7 @@ The following arguments are supported for `bastion_host`:
 * `address` - (Required) Address ip for the bastion host
 * `port` - (Optional) Port for bastion host. Default `22`
 * `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
-* `ssh_key` - (Optional/Computed) Bastion host SSH private key (string)
+* `ssh_key` - (Optional/Computed/Sensitive) Bastion host SSH private key (string)
 * `ssh_key_path` - (Optional/Computed) Bastion host SSH private key path (string)
 
 The following arguments are supported for `cloud_provider`:
@@ -145,11 +145,11 @@ The following arguments are supported for `cloud_provider`:
 
 The following arguments are supported for `azure_cloud_provider`:
 
-* `aad_client_id` - (Required) (string)
-* `aad_client_secret` - (Required) (string)
-* `subscription_id` - (Required) (string)
-* `tenant_id` - (Required) (string)
-* `aad_client_cert_password` - (Optional/Computed) (string)
+* `aad_client_id` - (Required/Sensitive) (string)
+* `aad_client_secret` - (Required/Sensitive) (string)
+* `subscription_id` - (Required/Sensitive) (string)
+* `tenant_id` - (Required/Sensitive) (string)
+* `aad_client_cert_password` - (Optional/Computed/Sensitive) (string)
 * `aad_client_cert_path` - (Optional/Computed) (string)
 * `cloud` - (Optional/Computed) (string)
 * `cloud_provider_backoff` - (Optional/Computed) (bool)
@@ -185,16 +185,16 @@ The following arguments are supported for `openstack_cloud_provider`:
 The following arguments are supported for `global`:
 
 * `auth_url` - (Required) (string)
-* `password` - (Required) (string)
-* `tenant_id` - (Required) (string)
-* `user_id` - (Required) (string)
-* `username` - (Required) (string)
+* `password` - (Required/Sensitive) (string)
+* `tenant_id` - (Required/Sensitive) (string)
+* `user_id` - (Required/Sensitive) (string)
+* `username` - (Required/Sensitive) (string)
 * `ca_file` - (Optional/Computed) (string)
-* `domain_id` - (Optional/Computed) (string)
+* `domain_id` - (Optional/Computed/Sensitive) (string)
 * `domain_name` - (Optional/Computed) (string)
 * `region` - (Optional/Computed) (string)
 * `tenant_name` - (Optional/Computed) (string)
-* `trust_id` - (Optional/Computed) (string)
+* `trust_id` - (Optional/Computed/Sensitive) (string)
 
 The following arguments are supported for `block_storage`:
 
@@ -237,8 +237,8 @@ The following arguments are supported for `virtual_center`:
 
 * `datacenters` - (Required) (string)
 * `name` - (Required) Name of virtualcenter config for Vsphere Cloud Provider config (string)
-* `password` - (Required) (string)
-* `user` - (Required) (string)
+* `password` - (Required/Sensitive) (string)
+* `user` - (Required/Sensitive) (string)
 * `port` - (Optional/Computed) (string)
 * `soap_roundtrip_count` - (Optional/Computed) (int)
 
@@ -303,7 +303,7 @@ The following arguments are supported for `nodes`:
 
 * `address` - (Required) Address ip for node (string)
 * `role` - (Requires) Roles for the node. `controlplane`, `etcd` and `worker` are supported. (list)
-* `user` - (Required) User to connect node (string)
+* `user` - (Required/Sensitive) User to connect node (string)
 * `docker_socket` - (Optional/Computed) Docker scojer for node (string)
 * `hostname_override` - (Optional) Hostname override for node (string)
 * `internal_address` - (Optional) Internal ip for node (string)
@@ -311,15 +311,15 @@ The following arguments are supported for `nodes`:
 * `node_id` - (Optional) Id for the node (string)
 * `port` - (Optional) Port for node. Default `22`
 * `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
-* `ssh_key` - (Optional/Computed) Node SSH private key (string)
+* `ssh_key` - (Optional/Computed/Sensitive) Node SSH private key (string)
 * `ssh_key_path` - (Optional/Computed) Node SSH private key path (string)
 
 The following arguments are supported for `private_registries`:
 
 * `is_default` - (Optional) Set as default registry. Default `false`
-* `password` - (Optional) Registry password (string)
+* `password` - (Optional/Sensitive) Registry password (string)
 * `url` - (Required) Registry URL (string)
-* `user` - (Optional) Registry user (string)
+* `user` - (Optional/Sensitive) Registry user (string)
 
 
 The following arguments are supported for `services`:
@@ -333,14 +333,14 @@ The following arguments are supported for `services`:
 The following arguments are supported for `etcd`:
 
 * `ca_cert` - (Optional/Computed) Tls CA certificate for etcd service (string)
-* `cert` - (Optional/Computed) Tls certificate for etcd service (string)
+* `cert` - (Optional/Computed/Sensitive) Tls certificate for etcd service (string)
 * `creation` - (Optional/Computed) Creation option for etcd service (string)
 * `external_urls` - (Optional) External urls for etcd service (list)
 * `extra_args` - (Optional/Computed) Extra arguments for etcd service (map)
 * `extra_binds` - (Optional) Extra binds for etcd service (list)
 * `extra_env` - (Optional) Extra environment for etcd service (list)
 * `image` - (Optional/Computed) Docker image for etcd service (string)
-* `key` - (Optional/Computed) Tls key for etcd service (string)
+* `key` - (Optional/Computed/Sensitive) Tls key for etcd service (string)
 * `path` - (Optional/Computed) Path for etcd service (string)
 * `retention` - (Optional/Computed) Retention option for etcd service (string)
 * `snapshot` - (Optional/Computed) Snapshot option for etcd service (bool)
@@ -386,8 +386,8 @@ The following arguments are supported for `kubeproxy`:
 
 The following arguments are supported:
 
-* `access_key` - (Required) Access key for EKS (string)
-* `secret_key` - (Required) Secret key for EKS (string)
+* `access_key` - (Required/Sensitive) Access key for EKS (string)
+* `secret_key` - (Required/Sensitive) Secret key for EKS (string)
 * `ami` - (Optional) AMI image for EKS worker nodes (string)
 * `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes (bool). Default `true`
 * `instance_type` - (Required) Intance type for EKS cluster (string)
@@ -403,13 +403,13 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `admin_username` - (Required) Admin username for AKS (string)
+* `admin_username` - (Required/Sensitive) Admin username for AKS (string)
 * `agent_dns_prefix` - (Required) Agent dns prefix for AKS (string)
 * `agent_pool_name` - (Required) Agent pool name for AKS cluster (string)
 * `agent_vm_size` - (Required) Agent vm size for AKS cluster (string)
 * `base_url` - (Required) Base URL for AKS cluster (int)
-* `client_id` - (Required) Client ID for AKS (string)
-* `client_secret` - (Required) Client secret for AKS (string)
+* `client_id` - (Required/Sensitive) Client ID for AKS (string)
+* `client_secret` - (Required/Sensitive) Client secret for AKS (string)
 * `count` - (Required) Number of agents for AKS cluster (int)
 * `location` - (Required) Location for AKS cluster (string)
 * `dns_service_ip` - (Required) DNS service ip for AKS cluster (string)
@@ -433,7 +433,7 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `cluster_ipv4_cidr` - (Required) Cluster ipv4 CIDR for GKE (string)
-* `credential` - (Required) Credential for GKE (string)
+* `credential` - (Required/Sensitive) Credential for GKE (string)
 * `description` - (Optional) Description for GKE cluster (string)
 * `disk_size_gb` - (Required) Disk size for agents for GKE cluster (int)
 * `enable_alpha_feature` - (Required) Enable alpha features on GKE cluster (bool)

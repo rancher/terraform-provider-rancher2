@@ -50,12 +50,12 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `endpoint` - (Required) Endpoint of the elascticsearch service. Must include protocol, `http://` or `https://` (string)
-* `auth_password` - (Optional) User password for the elascticsearch service (string)
-* `auth_username` - (Optional) Username for the elascticsearch service (string)
-* `certificate` - (Optional) SSL certificate for the elascticsearch service (string)
-* `client_cert` - (Optional) SSL client certificate for the elascticsearch service (string)
-* `client_key` - (Optional) SSL client key for the elascticsearch service (string)
-* `client_key_pass` - (Optional) SSL client key password for the elascticsearch service (string)
+* `auth_password` - (Optional/Sensitive) User password for the elascticsearch service (string)
+* `auth_username` - (Optional/Sensitive) Username for the elascticsearch service (string)
+* `certificate` - (Optional/Sensitive) SSL certificate for the elascticsearch service (string)
+* `client_cert` - (Optional/Sensitive) SSL client certificate for the elascticsearch service (string)
+* `client_key` - (Optional/Sensitive) SSL client key for the elascticsearch service (string)
+* `client_key_pass` - (Optional/Sensitive) SSL client key password for the elascticsearch service (string)
 * `date_format` - (Optional) Date format for the elascticsearch logs. Default: `YYYY-MM-DD`
 * `index_prefix` - (Optional) Index prefix for the elascticsearch logs. Default: `local`
 * `ssl_verify` - (Optional) SSL verify for the elascticsearch service (bool)
@@ -66,7 +66,7 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `fluent_servers` - (Reqeuired) Servers for the fluentd service (list)
-* `certificate` - (Optional) SSL certificate for the fluentd service (string)
+* `certificate` - (Optional/Sensitive) SSL certificate for the fluentd service (string)
 * `compress` - (Optional) Compress data for the fluentd service (bool)
 * `enable_tls` - (Optional) Enable TLS for the fluentd service (bool)
 
@@ -74,10 +74,10 @@ The following arguments are supported for `fluent_servers`:
 
 * `endpoint` - (Required) Endpoint of the fluentd service (string)
 * `hostname` - (Optional) Hostname of the fluentd service (string)
-* `password` - (Optional) User password of the fluentd service (string)
-* `shared_key` - (Optional) Shared key of the fluentd service (string)
+* `password` - (Optional/Sensitive) User password of the fluentd service (string)
+* `shared_key` - (Optional/Sensitive) Shared key of the fluentd service (string)
 * `standby` - (Optional) Standby server of the fluentd service (bool)
-* `username` - (Optional) Username of the fluentd service (string)
+* `username` - (Optional/Sensitive) Username of the fluentd service (string)
 * `weight` - (Optional) Weight of the fluentd server (int)
 
 ### Kafka `kafka_config`
@@ -86,9 +86,9 @@ The following arguments are supported:
 
 * `topic` - (Required) Topic to publish on the kafka service (string)
 * `broker_endpoints` - (Optional) Kafka endpoints for kafka service. Conflicts with `zookeeper_endpoint` (list)
-* `certificate` - (Optional) SSL certificate for the kafka service (string)
-* `client_cert` - (Optional) SSL client certificate for the kafka service (string)
-* `client_key` - (Optional) SSL client key for the kafka service (string)
+* `certificate` - (Optional/Sensitive) SSL certificate for the kafka service (string)
+* `client_cert` - (Optional/Sensitive) SSL client certificate for the kafka service (string)
+* `client_key` - (Optional/Sensitive) SSL client key for the kafka service (string)
 * `zookeeper_endpoint` - (Optional) Zookeeper endpoint for kafka service. Conflicts with `broker_endpoints` (string)
 
 ### Splunk `splunk_config`
@@ -96,11 +96,11 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `endpoint` - (Required) Endpoint of the splunk service. Must include protocol, `http://` or `https://` (string)
-* `token` - (Required) Token for the splunk service (string)
-* `certificate` - (Optional) SSL certificate for the splunk service (string)
-* `client_cert` - (Optional) SSL client certificate for the splunk service (string)
-* `client_key` - (Optional) SSL client key for the splunk service (string)
-* `client_key_pass` - (Optional) SSL client key password for the splunk service (string)
+* `token` - (Required/Sensitive) Token for the splunk service (string)
+* `certificate` - (Optional/Sensitive) SSL certificate for the splunk service (string)
+* `client_cert` - (Optional/Sensitive) SSL client certificate for the splunk service (string)
+* `client_key` - (Optional/Sensitive) SSL client key for the splunk service (string)
+* `client_key_pass` - (Optional/Sensitive) SSL client key password for the splunk service (string)
 * `index` - (Optional) Index prefix for the splunk logs (string)
 * `source` - (Optional) Date format for the splunk logs (string)
 * `ssl_verify` - (Optional) SSL verify for the splunk service (bool)
@@ -110,14 +110,14 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `endpoint` - (Required) Endpoint of the syslog service (string)
-* `certificate` - (Optional) SSL certificate for the syslog service (string)
-* `client_cert` - (Optional) SSL client certificate for the syslog service (string)
-* `client_key` - (Optional) SSL client key for the syslog service (string)
+* `certificate` - (Optional/Sensitive) SSL certificate for the syslog service (string)
+* `client_cert` - (Optional/Sensitive) SSL client certificate for the syslog service (string)
+* `client_key` - (Optional/Sensitive) SSL client key for the syslog service (string)
 * `program` - (Optional) Program for the syslog service (string)
 * `protocol` - (Optional) Protocol for the syslog service. `tcp` and `udp` are supported. Default: `udp`
 * `severity` - (Optional) Date format for the syslog logs. `emergency`, `alert`, `critical`, `error`, `warning`, `notice`, `info` and `debug` are supported. Default: `notice`
 * `ssl_verify` - (Optional) SSL verify for the syslog service (bool)
-* `token` - (Optional) Token for the syslog service (string)
+* `token` - (Optional/Sensitive) Token for the syslog service (string)
 
 ### Timeouts
 

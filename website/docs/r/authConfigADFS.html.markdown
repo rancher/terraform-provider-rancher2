@@ -36,8 +36,8 @@ The following arguments are supported:
 * `groups_field` - (Required) ADFS group field (string).
 * `idp_metadata_content` - (Required) ADFS IDP metadata content (string).
 * `rancher_api_host` - (Required) Rancher API host (string).
-* `sp_cert` - (Required) ADFS SP cert (string).
-* `sp_key` - (Required) ADFS SP key (string).
+* `sp_cert` - (Required/Sensitive) ADFS SP cert (string).
+* `sp_key` - (Required/Sensitive) ADFS SP key (string).
 * `uid_field` - (Required) ADFS UID field (string).
 * `user_name_field` - (Required) ADFS user name field (string).
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted`

@@ -25,9 +25,9 @@ resource "rancher2_auth_config_github" "github" {
 
 The following arguments are supported:
 
-* `client_id` - (Required) Github auth Client ID (string).
-* `client_secret` - (Required) Github auth Client secret (string).
-* `code` - (Required) Github auth code. Generated from `https://github.com/login/oauth/authorize?client_id=<CLIENT_ID>` (string).
+* `client_id` - (Required/Sensitive) Github auth Client ID (string).
+* `client_secret` - (Required/Sensitive) Github auth Client secret (string).
+* `code` - (Required/Sensitive) Github auth code. Generated from `https://github.com/login/oauth/authorize?client_id=<CLIENT_ID>` (string).
 * `hostname` - (Optional) Gtihub hostname to connect. Defaulf `github.com`.
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted`
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `github_user://<USER_ID>`  `github_group://<GROUP_ID>`

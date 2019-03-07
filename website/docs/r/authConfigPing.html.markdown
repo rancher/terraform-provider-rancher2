@@ -36,8 +36,8 @@ The following arguments are supported:
 * `groups_field` - (Required) Ping group field (string).
 * `idp_metadata_content` - (Required) Ping IDP metadata content (string).
 * `rancher_api_host` - (Required) Rancher API host (string).
-* `sp_cert` - (Required) Ping SP cert (string).
-* `sp_key` - (Required) Ping SP key (string).
+* `sp_cert` - (Required/Sensitive) Ping SP cert (string).
+* `sp_key` - (Required/Sensitive) Ping SP key (string).
 * `uid_field` - (Required) Ping UID field (string).
 * `user_name_field` - (Required) Ping user name field (string).
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted`
