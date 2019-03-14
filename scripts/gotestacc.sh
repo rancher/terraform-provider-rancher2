@@ -2,6 +2,8 @@
 
 set -e
 
+echo "==> Running acceptance testing..."
+
 cleanup()
 {
     $(dirname $0)/cleanup_testacc.sh

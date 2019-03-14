@@ -34,9 +34,9 @@ JQ_URL="https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64"
 JQ_BIN=$(which ${JQ_NAME} || echo none)
 if [ "${JQ_BIN}" == "none" ] ; then
   echo Downloading ${JQ_NAME}
-  curl -sL ${JQ_URL} -o ${TESTACC_TEMP_DIR}/${JQ_NAME}
-  chmod 755 ${TESTACC_TEMP_DIR}/${JQ_NAME}
   JQ_BIN=${TESTACC_TEMP_DIR}/${JQ_NAME}
+  curl -sL ${JQ_URL} -o ${JQ_BIN}
+  chmod 755 ${JQ_BIN}
 fi
 ## kubectl
 KUBECTL_NAME=kubectl
@@ -44,9 +44,19 @@ KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/$(curl -s
 KUBECTL_BIN=$(which ${KUBECTL_NAME} || echo none)
 if [ "${KUBECTL_BIN}" == "none" ] ; then
   echo Downloading ${KUBECTL_NAME}
-  curl -sL ${KUBECTL_URL} -o ${TESTACC_TEMP_DIR}/${KUBECTL_NAME}
-  chmod 755 ${TESTACC_TEMP_DIR}/${KUBECTL_NAME}
   KUBECTL_BIN=${TESTACC_TEMP_DIR}/${KUBECTL_NAME}
+  curl -sL ${KUBECTL_URL} -o ${KUBECTL_BIN}
+  chmod 755 ${KUBECTL_BIN}
+fi
+## docker
+DOCKER_NAME=docker
+DOCKER_URL="https://download.docker.com/linux/static/stable/x86_64/docker-17.03.2-ce.tgz"
+DOCKER_BIN=$(which ${DOCKER_NAME} || echo none)
+if [ "${DOCKER_BIN}" == "none" ] ; then
+  export DOCKER_BIN=${TESTACC_TEMP_DIR}/${DOCKER_NAME}
+  curl -sL ${DOCKER_URL} | tar -xzf - 
+  mv docker/docker ${DOCKER_BIN} && rm -rf docker
+  chmod 755 ${DOCKER_BIN}
 fi
 
 # Setting exposed ports
@@ -56,26 +66,25 @@ if [ "${TESTACC_EXPOSE_HOST_PORTS}" == "true" ]; then
 fi
 
 # Starting rancher server
-rancher_server=$(docker run -d \
+rancher_server=$(${DOCKER_BIN} run -d \
   ${rancher_exposed_port} \
   rancher/rancher:latest --https-listen-port=${TESTACC_RANCHER_PORT})
-rancher_server_ip=$(docker inspect ${rancher_server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+rancher_server_ip=$(${DOCKER_BIN} inspect ${rancher_server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 echo ${rancher_server} >> ${TESTACC_DOCKER_LIST}
 
 export RANCHER_URL=https://${rancher_server_ip}:${TESTACC_RANCHER_PORT}
 export RANCHER_INSECURE=true
 
 # Starting k3s cluster
-k3s_server=$(docker run -d \
+k3s_server=$(${DOCKER_BIN} run -d \
   ${k3s_exposed_port} \
   -e K3S_CLUSTER_SECRET=${TESTACC_K3S_SECRET} \
-  -e K3S_KUBECONFIG_OUTPUT=/output/${TESTACC_K3S_KUBECONFIG_NAME} \
+  -e K3S_KUBECONFIG_OUTPUT=/tmp/${TESTACC_K3S_KUBECONFIG_NAME} \
   -e K3S_KUBECONFIG_MODE=666 \
-  -v ${TESTACC_TEMP_DIR}:/output \
   rancher/k3s:v0.2.0 server --disable-agent --https-listen-port ${TESTACC_K3S_PORT})
 echo ${k3s_server} >> ${TESTACC_DOCKER_LIST}
-k3s_server_ip=$(docker inspect ${k3s_server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
-k3s_node=$(docker run -d \
+k3s_server_ip=$(${DOCKER_BIN} inspect ${k3s_server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+k3s_node=$(${DOCKER_BIN} run -d \
   --privileged \
   --tmpfs /run \
   --tmpfs /var/run \
@@ -87,26 +96,26 @@ echo ${k3s_node} >> ${TESTACC_DOCKER_LIST}
 export RANCHER_ACC_CLUSTER_NAME=bootstrap-imported-k3s-cluster
 
 # Show running dockers
-docker ps
+${DOCKER_BIN} ps
 
 # Rancher bootstrap
 ## Waiting for rancher server start
 while [ "${rancher_ready}" != "pong" ]; do
   sleep 5
-  rancher_ready=$(docker exec -i ${rancher_server} curl -sk ${RANCHER_URL}/ping || echo starting)
+  rancher_ready=$(${DOCKER_BIN} exec -i ${rancher_server} curl -sk ${RANCHER_URL}/ping || echo starting)
 done
 
 ## Resetting rancher admin password
-rancher_password=$(docker exec -i ${rancher_server} reset-password | grep -v '^New'|tr -d '\r')
+rancher_password=$(${DOCKER_BIN} exec -i ${rancher_server} reset-password | grep -v '^New'|tr -d '\r')
 
 ## Admin login in rancher server
-login_token=$(docker exec -i ${rancher_server} curl -X POST -sk "${RANCHER_URL}/v3-public/localProviders/local?action=login" \
+login_token=$(${DOCKER_BIN} exec -i ${rancher_server} curl -X POST -sk "${RANCHER_URL}/v3-public/localProviders/local?action=login" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     --data-binary "{\"password\":\"${rancher_password}\",\"username\":\"admin\"}" | ${JQ_BIN} -r .token)
 
 ## Getting admin token 
-rancher_token=$(docker exec -i ${rancher_server} curl -sSk \
+rancher_token=$(${DOCKER_BIN} exec -i ${rancher_server} curl -sSk \
   "${RANCHER_URL}/v3/token" \
   -H 'content-type: application/json' \
   -H "Authorization: Bearer ${login_token}" \
@@ -115,7 +124,7 @@ rancher_token=$(docker exec -i ${rancher_server} curl -sSk \
 export RANCHER_TOKEN_KEY=${rancher_token}
 
 ## Setting rancher server-url
-docker exec -i ${rancher_server} curl -X PUT -sk "${RANCHER_URL}/v3/settings/server-url" \
+${DOCKER_BIN} exec -i ${rancher_server} curl -X PUT -sk "${RANCHER_URL}/v3/settings/server-url" \
     -H 'Accept: application/json' \
     -H "Authorization: Bearer ${rancher_token}" \
     -H 'Content-Type: application/json' \
@@ -132,7 +141,7 @@ cluster_json=$(cat <<-EOM
 EOM
 )
 
-cluster_obj=$(docker exec -i ${rancher_server} curl -sk -X POST -H "Authorization: Bearer ${rancher_token}" \
+cluster_obj=$(${DOCKER_BIN} exec -i ${rancher_server} curl -sk -X POST -H "Authorization: Bearer ${rancher_token}" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     ${RANCHER_URL}/v3/clusters \
@@ -142,12 +151,15 @@ cluster_id=$(echo $cluster_obj | ${JQ_BIN} -r '.id')
 registration_link=$(echo $cluster_obj | ${JQ_BIN} -r '.links.clusterRegistrationTokens')
 
 # Creating cluster registration token
-docker exec -i ${rancher_server} curl -sk -X POST -H "Authorization: Bearer ${rancher_token}" \
+${DOCKER_BIN} exec -i ${rancher_server} curl -sk -X POST -H "Authorization: Bearer ${rancher_token}" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     ${RANCHER_URL}/v3/clusterregistrationtoken \
     -d "{\"clusterId\": \"${cluster_id}\", \"type\":\"clusterRegistrationToken\"}"
 sleep 1
+
+# Copying kubeconfig
+${DOCKER_BIN} cp ${k3s_server}:/tmp/${TESTACC_K3S_KUBECONFIG_NAME} ${TESTACC_K3S_KUBECONFIG}
 
 # Setting kubeconfig and rancher_url if exposed host ports
 if [ "${TESTACC_EXPOSE_HOST_PORTS}" == "true" ]; then
@@ -158,12 +170,12 @@ fi
 
 # Registering k3s cluster
 ## Getting manifest
-manifest_url=$(docker exec -i ${rancher_server} curl -sk -X GET -H "Authorization: Bearer ${rancher_token}" \
+manifest_url=$(${DOCKER_BIN} exec -i ${rancher_server} curl -sk -X GET -H "Authorization: Bearer ${rancher_token}" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     ${registration_link} | ${JQ_BIN} -r '.data[0].manifestUrl')
 
 ## Applying manifest on k3s cluster
-docker exec -i ${rancher_server} curl -sfLk ${manifest_url} | KUBECONFIG=${TESTACC_K3S_KUBECONFIG} ${KUBECTL_BIN} apply -f -
+${DOCKER_BIN} exec -i ${rancher_server} curl -sfLk ${manifest_url} | KUBECONFIG=${TESTACC_K3S_KUBECONFIG} ${KUBECTL_BIN} apply -f -
 
 
