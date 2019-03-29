@@ -16,12 +16,13 @@ import (
 
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
 	clusterProjectIDSeparator = ":"
-	passDigits                = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*()_+`-={}|[]\\:\"<>?,./"
-	passDefaultLen            = 16
+	passDigits                = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
+	passDefaultLen            = 20
 )
 
 func GetRandomPass(n int) string {
@@ -33,6 +34,14 @@ func GetRandomPass(n int) string {
 	return string(b)
 }
 
+func HashPasswordString(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("[ERROR] problem encrypting password: %v", err)
+	}
+	return string(hash), nil
+}
+
 func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 	listOpts := clientbase.NewListOpts()
 	if filters != nil {
@@ -42,25 +51,25 @@ func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 	return listOpts
 }
 
-func DoUserLogin(url, user, pass, ttl, cacert string, insecure bool) (string, error) {
+func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
 	loginURL := url + "-public/localProviders/local?action=login"
-	loginData := `{"username": "` + user + `", "password": "` + pass + `", "ttl": ` + ttl + `}`
+	loginData := `{"username": "` + user + `", "password": "` + pass + `", "ttl": ` + ttl + `, "description": "` + desc + `"}`
 	loginHead := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	}
 
-	// Try to login with default admin user and password
+	// Login with user and pass
 	loginResp, err := DoPost(loginURL, loginData, cacert, insecure, loginHead)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if loginResp["type"].(string) != "token" || loginResp["token"] == nil {
-		return "", nil
+		return "", "", fmt.Errorf("Doing  user logging: %s %s", loginResp["type"].(string), loginResp["code"].(string))
 	}
 
-	return loginResp["token"].(string), nil
+	return loginResp["id"].(string), loginResp["token"].(string), nil
 }
 
 func DoPost(url, data, cacert string, insecure bool, headers map[string]string) (map[string]interface{}, error) {

@@ -8,6 +8,7 @@ import (
 	clusterClient "github.com/rancher/types/client/cluster/v3"
 	managementClient "github.com/rancher/types/client/management/v3"
 	projectClient "github.com/rancher/types/client/project/v3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Client are the client kind for a Rancher v3 API
@@ -25,9 +26,45 @@ type Config struct {
 	URL       string `json:"url"`
 	CACerts   string `json:"cacert"`
 	Insecure  bool   `json:"insecure"`
+	Bootstrap bool   `json:"bootstrap"`
 	ClusterID string `json:"clusterId"`
 	ProjectID string `json:"projectId"`
 	Client    Client
+}
+
+// UpdateToken update tokenkey and restart client connections
+func (c *Config) UpdateToken(token string) error {
+	if len(token) == 0 {
+		return fmt.Errorf("token is nil")
+	}
+
+	c.TokenKey = token
+
+	if c.Client.Management != nil {
+		c.Client.Management = nil
+	}
+	_, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	if c.Client.Cluster != nil {
+		c.Client.Cluster = nil
+		_, err := c.ClusterClient(c.ClusterID)
+		if err != nil {
+			return err
+		}
+
+	}
+	if c.Client.Project != nil {
+		c.Client.Project = nil
+		_, err := c.ProjectClient(c.ProjectID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // ManagementClient creates a Rancher client scoped to the management API
@@ -461,4 +498,169 @@ func (c *Config) activateNodeDriver(id string) error {
 	}
 
 	return nil
+}
+
+func (c *Config) UserPasswordChanged(user *managementClient.User, pass string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pass))
+	// Password has changed
+	if err != nil {
+		return true
+	}
+
+	return false
+}
+
+func (c *Config) SetUserPasswordByName(username, pass string) (bool, string, *managementClient.User, error) {
+	if len(username) == 0 {
+		return false, "", nil, fmt.Errorf("[ERROR] Setting user password: Username is nil")
+	}
+
+	// Generating rancdom password if nil
+	if len(pass) == 0 {
+		pass = GetRandomPass(passDefaultLen)
+	}
+
+	user, err := c.GetUserByName(username)
+	if err != nil {
+		return false, "", nil, err
+	}
+
+	changed, newUser, err := c.SetUserPassword(user, pass)
+
+	return changed, pass, newUser, err
+}
+
+func (c *Config) SetUserPassword(user *managementClient.User, pass string) (bool, *managementClient.User, error) {
+	changed := c.UserPasswordChanged(user, pass)
+	if !changed {
+		return changed, user, nil
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return false, nil, err
+	}
+
+	password := &managementClient.SetPasswordInput{NewPassword: pass}
+	newUser, err := client.User.ActionSetpassword(user, password)
+	if err != nil {
+		return false, nil, fmt.Errorf("[ERROR] Setting %s password: %s", user.Username, err)
+	}
+
+	return changed, newUser, nil
+}
+
+// GenerateUserToken generates token with ttl measured in seconds
+func (c *Config) GenerateUserToken(username, desc string, ttl int) (string, string, error) {
+	user, err := c.GetUserByName(username)
+	if err != nil {
+		return "", "", err
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return "", "", err
+	}
+
+	tokenTTL := int64(ttl)
+	if tokenTTL > 0 {
+		tokenTTL = tokenTTL * 1000
+	}
+
+	token := &managementClient.Token{
+		UserID:      user.ID,
+		Description: desc,
+		TTLMillis:   tokenTTL,
+	}
+
+	newToken, err := client.Token.Create(token)
+	if err != nil {
+		return "", "", fmt.Errorf("[ERROR] Creating Admin token: %s", err)
+	}
+
+	return newToken.ID, newToken.Token, nil
+}
+
+func (c *Config) IsTokenExpired(id string) (bool, error) {
+	if len(id) == 0 {
+		return true, nil
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return false, err
+	}
+
+	token, err := client.Token.ByID(id)
+	if err != nil {
+		if IsNotFound(err) {
+			return true, nil
+		}
+		return false, err
+	}
+
+	return token.Expired, nil
+}
+
+func (c *Config) DeleteToken(id string) error {
+	if len(id) == 0 {
+		return nil
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	token, err := client.Token.ByID(id)
+	if err != nil {
+		if IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	return client.Token.Delete(token)
+}
+
+func (c *Config) GetSetting(name string) (*managementClient.Setting, error) {
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Setting.ByID(name)
+
+}
+
+func (c *Config) SetSetting(name, value string) error {
+	client, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	setting, err := c.GetSetting(name)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Getting setting %s: %s", name, err)
+	}
+
+	update := map[string]interface{}{
+		"value": value,
+	}
+
+	_, err = client.Setting.Update(setting, update)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Updating setting %s: %s", name, err)
+	}
+
+	return nil
+}
+
+func (c *Config) GetSettingValue(name string) (string, error) {
+	setting, err := c.GetSetting(name)
+	if err != nil {
+		return "", fmt.Errorf("[ERROR] Getting setting %s: %s", name, err)
+	}
+
+	return setting.Value, nil
 }
