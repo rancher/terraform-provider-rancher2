@@ -61,6 +61,12 @@ func testAccCheck() error {
 			insecure = true
 		}
 
+		bootstrap := false
+
+		if os.Getenv("RANCHER_BOOTSTRAP") == "true" {
+			bootstrap = true
+		}
+
 		if apiURL == "" {
 			return fmt.Errorf("RANCHER_URL must be set for acceptance tests")
 		}
@@ -76,6 +82,7 @@ func testAccCheck() error {
 			TokenKey:  tokenKey,
 			CACerts:   caCerts,
 			Insecure:  insecure,
+			Bootstrap: bootstrap,
 		}
 
 		err := testAccClusterDefaultName(config)

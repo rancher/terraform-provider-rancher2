@@ -107,6 +107,7 @@ done
 
 ## Resetting rancher admin password
 rancher_password=$(${DOCKER_BIN} exec -i ${rancher_server} reset-password | grep -v '^New'|tr -d '\r')
+export RANCHER_ADMIN_PASS=${rancher_password}
 
 ## Admin login in rancher server
 login_token=$(${DOCKER_BIN} exec -i ${rancher_server} curl -X POST -sk "${RANCHER_URL}/v3-public/localProviders/local?action=login" \
@@ -178,4 +179,12 @@ manifest_url=$(${DOCKER_BIN} exec -i ${rancher_server} curl -sk -X GET -H "Autho
 ## Applying manifest on k3s cluster
 ${DOCKER_BIN} exec -i ${rancher_server} curl -sfLk ${manifest_url} | KUBECONFIG=${TESTACC_K3S_KUBECONFIG} ${KUBECTL_BIN} apply -f -
 
+## Waiting for k3s cluster becomes active
+while [ "${cluster_ready}" != "active" ]; do
+  sleep 10
+  cluster_ready=$(${DOCKER_BIN} exec -i ${rancher_server} curl -sk -H "Authorization: Bearer ${rancher_token}" \
+    -H 'Accept: application/json' \
+    -H 'Content-Type: application/json' \
+    ${RANCHER_URL}/v3/clusters/${cluster_id} | ${JQ_BIN} -r '.state')
+done
 
