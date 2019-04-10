@@ -28,17 +28,20 @@ func resourceRancher2CloudCredential() *schema.Resource {
 }
 
 func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interface{}) error {
-	cloudCredential := expandCloudCredential(d)
-
-	log.Printf("[INFO] Creating Cloud Credential %s", cloudCredential.Name)
-
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	nodeDriver := d.Get("driver").(string)
-	err = meta.(*Config).activateNodeDriver(nodeDriver)
+	cloudCredential, err := expandCloudCredential(d, client.NodeDriver)
+
+	log.Printf("[INFO] Creating Cloud Credential %s", cloudCredential.Name)
+
+	driverID := d.Get("driver").(string)
+	if cloudCredential.genericCredentialConfig != nil {
+		driverID = cloudCredential.genericCredentialConfig.driverID
+	}
+	err = meta.(*Config).activateNodeDriver(driverID)
 	if err != nil {
 		return err
 	}
@@ -46,14 +49,14 @@ func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interfac
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
-		Refresh:    nodeDriverStateRefreshFunc(client, nodeDriver),
+		Refresh:    nodeDriverStateRefreshFunc(client, driverID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cloud credential (%s) to be activated: %s", nodeDriver, waitErr)
+		return fmt.Errorf("[ERROR] waiting for cloud credential (%s) to be activated: %s", driverID, waitErr)
 	}
 
 	newCloudCredential := &CloudCredential{}
@@ -138,7 +141,11 @@ func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interfac
 	case vmwarevsphereConfigDriver:
 		update["vmwarevspherecredentialConfig"] = expandCloudCredentialVsphere(d.Get("vsphere_credential_config").([]interface{}))
 	default:
-		return fmt.Errorf("[ERROR] updating cloud credential: Unsupported driver \"%s\"", driver)
+		v, err := expandCloudCredentialGeneric(d.Get("generic_credential_config").([]interface{}), client.NodeDriver)
+		if err != nil {
+			return err
+		}
+		update[v.driverName+credentialConfigKeySuffix] = v
 	}
 
 	newCloudCredential := &CloudCredential{}

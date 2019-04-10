@@ -31,16 +31,22 @@ func resourceRancher2NodeTemplate() *schema.Resource {
 }
 
 func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	nodeTemplate := expandNodeTemplate(d)
-
-	log.Printf("[INFO] Creating Node Template %s", nodeTemplate.Name)
-
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
+	nodeTemplate, err := expandNodeTemplate(d, client.NodeDriver)
+	if err != nil {
+		return err
+	}
 
-	err = meta.(*Config).activateNodeDriver(nodeTemplate.Driver)
+	log.Printf("[INFO] Creating Node Template %s", nodeTemplate.Name)
+
+	driverID := nodeTemplate.Driver
+	if nodeTemplate.genericConfig != nil {
+		driverID = nodeTemplate.genericConfig.driverID
+	}
+	err = meta.(*Config).activateNodeDriver(driverID)
 	if err != nil {
 		return err
 	}
@@ -48,14 +54,14 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
-		Refresh:    nodeDriverStateRefreshFunc(client, nodeTemplate.Driver),
+		Refresh:    nodeDriverStateRefreshFunc(client, driverID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for node driver (%s) to be activated: %s", nodeTemplate.Driver, waitErr)
+		return fmt.Errorf("[ERROR] waiting for node driver (%s) to be activated: %s", driverID, waitErr)
 	}
 
 	newNodeTemplate := &NodeTemplate{}
@@ -151,6 +157,13 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 		update["openstackConfig"] = expandOpenstackConfig(d.Get("openstack_config").([]interface{}))
 	case vmwarevsphereConfigDriver:
 		update["vmwarevsphereConfig"] = expandVsphereConfig(d.Get("vsphere_config").([]interface{}))
+	default:
+		configKey := fmt.Sprintf("%sConfig", driver)
+		genericConfig, err := expandGenericNodeTemplateConfig(d.Get("generic_config").([]interface{}), client.NodeDriver)
+		if err != nil {
+			return err
+		}
+		update[configKey] = genericConfig.config
 	}
 
 	newNodeTemplate := &NodeTemplate{}

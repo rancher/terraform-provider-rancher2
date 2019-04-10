@@ -1,6 +1,9 @@
 package rancher2
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
@@ -14,6 +17,72 @@ type NodeTemplate struct {
 	DigitaloceanConfig  *digitaloceanConfig  `json:"digitaloceanConfig,omitempty" yaml:"digitaloceanConfig,omitempty"`
 	OpenstackConfig     *openstackConfig     `json:"openstackConfig,omitempty" yaml:"openstackConfig,omitempty"`
 	VmwarevsphereConfig *vmwarevsphereConfig `json:"vmwarevsphereConfig,omitempty" yaml:"vmwarevsphereConfig,omitempty"`
+	genericConfig       *genericNodeTemplateConfig
+}
+
+func isTypedNodeDriver(driverName string) bool {
+	return driverName == amazonec2ConfigDriver ||
+		driverName == azureConfigDriver ||
+		driverName == digitaloceanConfigDriver ||
+		driverName == openstackConfigDriver ||
+		driverName == vmwarevsphereConfigDriver
+}
+
+func (n *NodeTemplate) UnmarshalJSON(data []byte) error {
+	type Alias NodeTemplate
+	var dest Alias
+	if err := json.Unmarshal(data, &dest); err != nil {
+		return err
+	}
+
+	var rawValues map[string]interface{}
+	if err := json.Unmarshal(data, &rawValues); err != nil {
+		return err
+	}
+
+	var driverName string
+	if rawDriver, ok := rawValues["driver"]; ok {
+		driverName = rawDriver.(string)
+	}
+
+	if driverName != "" && !isTypedNodeDriver(driverName) {
+		driverConfigName := fmt.Sprintf("%sConfig", driverName)
+		if v, ok := rawValues[driverConfigName]; ok {
+			if cv, ok := v.(map[string]interface{}); ok {
+				dest.genericConfig = &genericNodeTemplateConfig{
+					driverName: driverName,
+					config:     cv,
+				}
+			}
+		}
+	}
+
+	*n = NodeTemplate(dest)
+	return nil
+}
+
+func (n *NodeTemplate) MarshalJSON() ([]byte, error) {
+	type Alias NodeTemplate
+	data, err := json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(n),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var results map[string]interface{}
+	if err := json.Unmarshal(data, &results); err != nil {
+		return nil, err
+	}
+
+	if n.genericConfig != nil {
+		driverConfigName := fmt.Sprintf("%sConfig", n.Driver)
+		results[driverConfigName] = n.genericConfig.config
+	}
+
+	return json.Marshal(results)
 }
 
 //Schemas
@@ -28,7 +97,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"azure_config", "digitalocean_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: []string{"azure_config", "digitalocean_config", "generic_config", "openstack_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: amazonec2ConfigFields(),
 			},
@@ -47,7 +116,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "digitalocean_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: []string{"amazonec2_config", "digitalocean_config", "generic_config", "openstack_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: azureConfigFields(),
 			},
@@ -64,7 +133,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "generic_config", "openstack_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: digitaloceanConfigFields(),
 			},
@@ -111,11 +180,20 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"generic_config": &schema.Schema{
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "vsphere_config", "openstack_config"},
+			Elem: &schema.Resource{
+				Schema: genericNodeConfigFields(),
+			},
+		},
 		"openstack_config": &schema.Schema{
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "vsphere_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "generic_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: openstackConfigFields(),
 			},
@@ -129,7 +207,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "openstack_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "generic_config", "openstack_config"},
 			Elem: &schema.Resource{
 				Schema: vsphereConfigFields(),
 			},

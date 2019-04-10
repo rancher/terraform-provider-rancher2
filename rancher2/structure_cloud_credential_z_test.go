@@ -14,6 +14,8 @@ var (
 	testCloudCredentialInterfaceAzure        map[string]interface{}
 	testCloudCredentialConfDigitalocean      *CloudCredential
 	testCloudCredentialInterfaceDigitalocean map[string]interface{}
+	testCloudCredentialConfGeneric           *CloudCredential
+	testCloudCredentialInterfaceGeneric      map[string]interface{}
 	testCloudCredentialConfOpenstack         *CloudCredential
 	testCloudCredentialInterfaceOpenstack    map[string]interface{}
 	testCloudCredentialConfVsphere           *CloudCredential
@@ -53,6 +55,17 @@ func init() {
 		"description":                    "description",
 		"digitalocean_credential_config": testCloudCredentialDigitaloceanInterface,
 		"driver":                         digitaloceanConfigDriver,
+	}
+	testCloudCredentialConfGeneric = &CloudCredential{
+		genericCredentialConfig: testCloudCredentialGenericConf,
+	}
+	testCloudCredentialConfGeneric.Name = "cloudCredential-test"
+	testCloudCredentialConfGeneric.Description = "description"
+	testCloudCredentialInterfaceGeneric = map[string]interface{}{
+		"name":                      "cloudCredential-test",
+		"description":               "description",
+		"generic_credential_config": testCloudCredentialGenericInterface,
+		"driver":                    "rackspace",
 	}
 	testCloudCredentialConfOpenstack = &CloudCredential{
 		OpenstackCredentialConfig: testCloudCredentialOpenstackConf,
@@ -95,6 +108,10 @@ func TestFlattenCloudCredential(t *testing.T) {
 		{
 			testCloudCredentialConfDigitalocean,
 			testCloudCredentialInterfaceDigitalocean,
+		},
+		{
+			testCloudCredentialConfGeneric,
+			testCloudCredentialInterfaceGeneric,
 		},
 		{
 			testCloudCredentialConfOpenstack,
@@ -142,6 +159,10 @@ func TestExpandCloudCredential(t *testing.T) {
 			testCloudCredentialConfDigitalocean,
 		},
 		{
+			testCloudCredentialInterfaceGeneric,
+			testCloudCredentialConfGeneric,
+		},
+		{
 			testCloudCredentialInterfaceOpenstack,
 			testCloudCredentialConfOpenstack,
 		},
@@ -153,7 +174,17 @@ func TestExpandCloudCredential(t *testing.T) {
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, cloudCredentialFields(), tc.Input)
-		output := expandCloudCredential(inputResourceData)
+		var dummyClient nodeDriverFinder
+		if tc.ExpectedOutput.genericCredentialConfig != nil {
+			dummyClient = &dummyNodeDriverFinder{
+				driverID:   tc.ExpectedOutput.genericCredentialConfig.driverID,
+				driverName: tc.ExpectedOutput.genericCredentialConfig.driverName,
+			}
+		}
+		output, err := expandCloudCredential(inputResourceData, dummyClient)
+		if err != nil {
+			t.Fatalf("Unexpected error: %s", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

@@ -39,7 +39,9 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 			return fmt.Errorf("[ERROR] Node template driver %s requires vsphere_config", in.Driver)
 		}
 	default:
-		return fmt.Errorf("[ERROR] Unsupported driver on node template: %s", in.Driver)
+		if in.genericConfig == nil {
+			return fmt.Errorf("[ERROR] Node template driver %s requires generic_config", in.Driver)
+		}
 	}
 
 	if len(in.AuthCertificateAuthority) > 0 {
@@ -126,10 +128,10 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 
 // Expanders
 
-func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
+func expandNodeTemplate(in *schema.ResourceData, finder nodeDriverFinder) (*NodeTemplate, error) {
 	obj := &NodeTemplate{}
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	if v := in.Id(); len(v) > 0 {
@@ -196,6 +198,19 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 		obj.EngineStorageDriver = v
 	}
 
+	if v, ok := in.Get("generic_config").([]interface{}); ok && len(v) > 0 {
+		gc, err := expandGenericNodeTemplateConfig(v, finder)
+		if err != nil {
+			return nil, err
+		}
+		switch gc.driverID {
+		case amazonec2ConfigDriver, azureConfigDriver, digitaloceanConfigDriver, openstackConfigDriver, vmwarevsphereConfigDriver:
+			return nil, fmt.Errorf("[ERROR] Node template driver %s can not be used with generic_config", gc.driverID)
+		}
+		obj.genericConfig = gc
+		obj.Driver = obj.genericConfig.driverName
+	}
+
 	if v, ok := in.Get("openstack_config").([]interface{}); ok && len(v) > 0 {
 		obj.OpenstackConfig = expandOpenstackConfig(v)
 		obj.Driver = openstackConfigDriver
@@ -218,5 +233,5 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 		obj.Labels = toMapString(v)
 	}
 
-	return obj
+	return obj, nil
 }

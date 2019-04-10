@@ -67,7 +67,11 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 			return err
 		}
 	default:
-		return fmt.Errorf("[ERROR] Unsupported driver on cloud credential: %s", driver)
+		v, ok := d.Get("generic_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		d.Set("generic_credential_config", flattenCloudCredentialGeneric(in.genericCredentialConfig, v))
 	}
 
 	if len(in.Annotations) > 0 {
@@ -89,10 +93,10 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 
 // Expanders
 
-func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
+func expandCloudCredential(in *schema.ResourceData, finder nodeDriverFinder) (*CloudCredential, error) {
 	obj := &CloudCredential{}
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	if v := in.Id(); len(v) > 0 {
@@ -119,6 +123,19 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 		in.Set("driver", digitaloceanConfigDriver)
 	}
 
+	if v, ok := in.Get("generic_credential_config").([]interface{}); ok && len(v) > 0 {
+		gc, err := expandCloudCredentialGeneric(v, finder)
+		if err != nil {
+			return nil, err
+		}
+		switch gc.driverID {
+		case amazonec2ConfigDriver, azureConfigDriver, digitaloceanConfigDriver, openstackConfigDriver, vmwarevsphereConfigDriver:
+			return nil, fmt.Errorf("[ERROR] Driver %s can not be used with generic_credential_config", gc.driverID)
+		}
+		obj.genericCredentialConfig = gc
+		in.Set("driver", obj.genericCredentialConfig.driverName)
+	}
+
 	if v, ok := in.Get("openstack_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.OpenstackCredentialConfig = expandCloudCredentialOpenstack(v)
 		in.Set("driver", openstackConfigDriver)
@@ -137,5 +154,5 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 		obj.Labels = toMapString(v)
 	}
 
-	return obj
+	return obj, nil
 }

@@ -109,6 +109,47 @@ resource "rancher2_cloud_credential" "foo" {
   }
 }
  `
+	testAccRancher2CloudCredentialConfigGeneric = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  generic_credential_config {
+    driver = "rackspace"
+	config {
+      username = "XXXXXXXXXXXXXXXXXXXX"
+      apiKey   = "XXXXXXXXXXXXXXXXXXXX"
+    }
+  }
+}
+`
+
+	testAccRancher2CloudCredentialUpdateConfigGeneric = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test - updated"
+  generic_credential_config {
+    driver = "rackspace"
+	config {
+      username = "YYYYYYYYYYYYYYYYYYYY"
+      apiKey   = "YYYYYYYYYYYYYYYYYYYY"
+    }
+  }
+}
+ `
+
+	testAccRancher2CloudCredentialRecreateConfigGeneric = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  generic_credential_config {
+    driver = "rackspace"
+	config {
+      username = "XXXXXXXXXXXXXXXXXXXX"
+      apiKey   = "XXXXXXXXXXXXXXXXXXXX"
+    }
+  }
+}
+ `
 	testAccRancher2CloudCredentialConfigOpenstack = `
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
@@ -351,6 +392,71 @@ func TestAccRancher2CloudCredential_disappears_Digitalocean(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRancher2CloudCredentialConfigDigitalocean,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					testAccRancher2CloudCredentialDisappears(cloudCredential),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_basic_Generic(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialConfigGeneric,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", "rackspace"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "generic_credential_config.0.config.username", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "generic_credential_config.0.config.apiKey", "XXXXXXXXXXXXXXXXXXXX"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialUpdateConfigGeneric,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", "rackspace"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "generic_credential_config.0.config.username", "YYYYYYYYYYYYYYYYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "generic_credential_config.0.config.apiKey", "YYYYYYYYYYYYYYYYYYYY"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialRecreateConfigGeneric,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", "rackspace"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "generic_credential_config.0.config.username", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "generic_credential_config.0.config.apiKey", "XXXXXXXXXXXXXXXXXXXX"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_disappears_Generic(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialConfigGeneric,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
 					testAccRancher2CloudCredentialDisappears(cloudCredential),

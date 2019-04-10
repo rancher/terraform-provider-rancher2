@@ -124,6 +124,49 @@ resource "rancher2_node_template" "foo" {
   }
 }
 `
+	testAccRancher2NodeTemplateConfigGeneric = testAccRancher2CloudCredentialConfigGeneric + `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver generic acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  generic_config {
+    driver = "rackspace"
+    config {
+      flavorId    = "flavor-XXXXXXXX"
+      region      = "region-XXXXXXXX"
+    }
+  }
+}
+`
+
+	testAccRancher2NodeTemplateUpdateConfigGeneric = testAccRancher2CloudCredentialConfigGeneric + `
+resource "rancher2_node_template" "foo" {
+  name = "foo2"
+  description = "Terraform node driver generic acceptance test - updated"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  generic_config {
+    driver = "rackspace"
+    config {
+      flavorId    = "flavor-YYYYYYYY"
+      region      = "region-YYYYYYYY"
+    }
+  }
+}
+`
+	testAccRancher2NodeTemplateRecreateConfigGeneric = testAccRancher2CloudCredentialConfigGeneric + `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver generic acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  generic_config {
+    driver = "rackspace"
+    config {
+      flavorId    = "flavor-XXXXXXXX"
+      region      = "region-XXXXXXXX"
+    }
+  }
+}
+`
 	testAccRancher2NodeTemplateConfigOpenstack = testAccRancher2CloudCredentialConfigOpenstack + `
 resource "rancher2_node_template" "foo" {
   name = "foo"
@@ -395,6 +438,72 @@ func TestAccRancher2NodeTemplate_disappears_Digitalocean(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRancher2NodeTemplateConfigDigitalocean,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo", nodeTemplate),
+					testAccRancher2NodeTemplateDisappears(nodeTemplate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_basic_Generic(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	name := testAccRancher2NodeTemplateType + ".foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigGeneric,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver generic acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", "rackspace"),
+					resource.TestCheckResourceAttr(name, "generic_config.0.config.flavorId", "flavor-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "generic_config.0.config.region", "region-XXXXXXXX"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateUpdateConfigGeneric,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo2"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver generic acceptance test - updated"),
+					resource.TestCheckResourceAttr(name, "driver", "rackspace"),
+					resource.TestCheckResourceAttr(name, "generic_config.0.config.flavorId", "flavor-YYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "generic_config.0.config.region", "region-YYYYYYYY"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateRecreateConfigGeneric,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver generic acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", "rackspace"),
+					resource.TestCheckResourceAttr(name, "generic_config.0.config.flavorId", "flavor-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "generic_config.0.config.region", "region-XXXXXXXX"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_disappears_Generic(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigGeneric,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo", nodeTemplate),
 					testAccRancher2NodeTemplateDisappears(nodeTemplate),
