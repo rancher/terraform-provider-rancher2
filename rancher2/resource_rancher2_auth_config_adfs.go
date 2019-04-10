@@ -19,17 +19,14 @@ func authConfigADFSFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"final_redirect_url": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
 		"groups_field": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
 		"idp_metadata_content": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"rancher_api_host": {
 			Type:     schema.TypeString,
@@ -113,10 +110,6 @@ func flattenAuthConfigADFS(d *schema.ResourceData, in *managementClient.ADFSConf
 		return err
 	}
 	err = d.Set("sp_cert", in.SpCert)
-	if err != nil {
-		return err
-	}
-	err = d.Set("sp_key", in.SpKey)
 	if err != nil {
 		return err
 	}
@@ -224,26 +217,26 @@ func resourceRancher2AuthConfigADFSCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", ADFSConfigName, err)
 	}
 
-	log.Printf("[INFO] Creating Auth Config ADFS %s", auth.Name)
+	log.Printf("[INFO] Creating Auth Config %s %s", ADFSConfigName, auth.Name)
 
 	authADFS, err := expandAuthConfigADFS(d)
 	if err != nil {
 		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", ADFSConfigName, err)
 	}
 
+	// Checking if other auth config is enabled
+	if authADFS.Enabled {
+		err = meta.(*Config).CheckAuthConfigEnabled(ADFSConfigName)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", ADFSConfigName, err)
+		}
+	}
+
+	// Updated auth config
 	newAuth := &managementClient.ADFSConfig{}
 	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authADFS, newAuth)
 	if err != nil {
 		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", ADFSConfigName, err)
-	}
-
-	authADFSTestAndEnable := managementClient.SamlConfigTestInput{
-		FinalRedirectURL: d.Get("final_redirect_url").(string),
-	}
-
-	err = client.Post(auth.Actions["testAndEnable"], authADFSTestAndEnable, nil)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", ADFSConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigADFSRead(d, meta)

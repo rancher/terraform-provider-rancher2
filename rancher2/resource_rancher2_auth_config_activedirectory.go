@@ -34,16 +34,6 @@ func authConfigActiveDirectoryFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"username": {
-			Type:      schema.TypeString,
-			Required:  true,
-			Sensitive: true,
-		},
-		"password": {
-			Type:      schema.TypeString,
-			Required:  true,
-			Sensitive: true,
-		},
 		"certificate": {
 			Type:      schema.TypeString,
 			Optional:  true,
@@ -451,23 +441,28 @@ func resourceRancher2AuthConfigActiveDirectoryCreate(d *schema.ResourceData, met
 		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", ActiveDirectoryConfigName, err)
 	}
 
-	log.Printf("[INFO] Creating Auth Config ActiveDirectory %s", auth.Name)
+	log.Printf("[INFO] Creating Auth Config %s %s", ActiveDirectoryConfigName, auth.Name)
 
 	authActiveDirectory, err := expandAuthConfigActiveDirectory(d)
 	if err != nil {
 		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", ActiveDirectoryConfigName, err)
 	}
 
-	authActiveDirectoryTestAndApply := managementClient.ActiveDirectoryTestAndApplyInput{
-		ActiveDirectoryConfig: authActiveDirectory,
-		Enabled:               authActiveDirectory.Enabled,
-		Username:              d.Get("username").(string),
-		Password:              d.Get("password").(string),
+	log.Printf("[INFO] +++ %v", authActiveDirectory)
+
+	// Checking if other auth config is enabled
+	if authActiveDirectory.Enabled {
+		err = meta.(*Config).CheckAuthConfigEnabled(ActiveDirectoryConfigName)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", ActiveDirectoryConfigName, err)
+		}
 	}
 
-	err = client.Post(auth.Actions["testAndApply"], authActiveDirectoryTestAndApply, nil)
+	// Updated auth config
+	newAuth := &managementClient.ActiveDirectoryConfig{}
+	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authActiveDirectory, newAuth)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", ActiveDirectoryConfigName, err)
+		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", ActiveDirectoryConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigActiveDirectoryRead(d, meta)

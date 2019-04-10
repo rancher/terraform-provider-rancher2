@@ -19,21 +19,19 @@ func authConfigPingFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"final_redirect_url": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
 		"groups_field": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
 		"idp_metadata_content": {
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"rancher_api_host": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
+			Computed: true,
 		},
 		"sp_cert": {
 			Type:      schema.TypeString,
@@ -113,10 +111,6 @@ func flattenAuthConfigPing(d *schema.ResourceData, in *managementClient.PingConf
 		return err
 	}
 	err = d.Set("sp_cert", in.SpCert)
-	if err != nil {
-		return err
-	}
-	err = d.Set("sp_key", in.SpKey)
 	if err != nil {
 		return err
 	}
@@ -231,19 +225,19 @@ func resourceRancher2AuthConfigPingCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", PingConfigName, err)
 	}
 
+	// Checking if other auth config is enabled
+	if authPing.Enabled {
+		err = meta.(*Config).CheckAuthConfigEnabled(PingConfigName)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", PingConfigName, err)
+		}
+	}
+
+	// Updated auth config
 	newAuth := &managementClient.PingConfig{}
 	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authPing, newAuth)
 	if err != nil {
 		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", PingConfigName, err)
-	}
-
-	authPingTestAndEnable := managementClient.SamlConfigTestInput{
-		FinalRedirectURL: d.Get("final_redirect_url").(string),
-	}
-
-	err = client.Post(auth.Actions["testAndEnable"], authPingTestAndEnable, nil)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", PingConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigPingRead(d, meta)

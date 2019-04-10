@@ -33,16 +33,6 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"username": {
-			Type:      schema.TypeString,
-			Required:  true,
-			Sensitive: true,
-		},
-		"password": {
-			Type:      schema.TypeString,
-			Required:  true,
-			Sensitive: true,
-		},
 		"certificate": {
 			Type:      schema.TypeString,
 			Optional:  true,

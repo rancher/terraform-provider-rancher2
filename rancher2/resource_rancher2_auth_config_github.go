@@ -25,11 +25,6 @@ func authConfigGithubFields() map[string]*schema.Schema {
 			Required:  true,
 			Sensitive: true,
 		},
-		"code": {
-			Type:      schema.TypeString,
-			Required:  true,
-			Sensitive: true,
-		},
 		"hostname": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -176,22 +171,26 @@ func resourceRancher2AuthConfigGithubCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", GithubConfigName, err)
 	}
 
-	log.Printf("[INFO] Creating Auth Config Github %s", auth.Name)
+	log.Printf("[INFO] Creating Auth Config %s %s", GithubConfigName, auth.Name)
 
 	authGithub, err := expandAuthConfigGithub(d)
 	if err != nil {
 		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", GithubConfigName, err)
 	}
 
-	authGithubTestAndApply := managementClient.GithubConfigApplyInput{
-		GithubConfig: authGithub,
-		Enabled:      authGithub.Enabled,
-		Code:         d.Get("code").(string),
+	// Checking if other auth config is enabled
+	if authGithub.Enabled {
+		err = meta.(*Config).CheckAuthConfigEnabled(GithubConfigName)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", GithubConfigName, err)
+		}
 	}
 
-	err = client.Post(auth.Actions["testAndApply"], authGithubTestAndApply, nil)
+	// Updated auth config
+	newAuth := &managementClient.GithubConfig{}
+	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authGithub, newAuth)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", GithubConfigName, err)
+		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", GithubConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigGithubRead(d, meta)

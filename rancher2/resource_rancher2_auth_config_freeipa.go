@@ -74,22 +74,26 @@ func resourceRancher2AuthConfigFreeIpaCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", FreeIpaConfigName, err)
 	}
 
-	log.Printf("[INFO] Creating Auth Config FreeIpa %s", auth.Name)
+	log.Printf("[INFO] Creating Auth Config %s %s", FreeIpaConfigName, auth.Name)
 
 	authFreeIpa, err := expandAuthConfigFreeIpa(d)
 	if err != nil {
 		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", FreeIpaConfigName, err)
 	}
 
-	authFreeIpaTestAndApply := managementClient.FreeIpaTestAndApplyInput{
-		LdapConfig: authFreeIpa,
-		Username:   d.Get("username").(string),
-		Password:   d.Get("password").(string),
+	// Checking if other auth config is enabled
+	if authFreeIpa.Enabled {
+		err = meta.(*Config).CheckAuthConfigEnabled(FreeIpaConfigName)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", FreeIpaConfigName, err)
+		}
 	}
 
-	err = client.Post(auth.Actions["testAndApply"], authFreeIpaTestAndApply, nil)
+	// Updated auth config
+	newAuth := &managementClient.FreeIpaConfig{}
+	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authFreeIpa, newAuth)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", FreeIpaConfigName, err)
+		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", FreeIpaConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigFreeIpaRead(d, meta)

@@ -81,15 +81,19 @@ func resourceRancher2AuthConfigOpenLdapCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", OpenLdapConfigName, err)
 	}
 
-	authOpenLdapTestAndApply := managementClient.OpenLdapTestAndApplyInput{
-		LdapConfig: authOpenLdap,
-		Username:   d.Get("username").(string),
-		Password:   d.Get("password").(string),
+	// Checking if other auth config is enabled
+	if authOpenLdap.Enabled {
+		err = meta.(*Config).CheckAuthConfigEnabled(OpenLdapConfigName)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", OpenLdapConfigName, err)
+		}
 	}
 
-	err = client.Post(auth.Actions["testAndApply"], authOpenLdapTestAndApply, nil)
+	// Updated auth config
+	newAuth := &managementClient.OpenLdapConfig{}
+	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOpenLdap, newAuth)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", OpenLdapConfigName, err)
+		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", OpenLdapConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigOpenLdapRead(d, meta)

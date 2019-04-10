@@ -348,6 +348,34 @@ func (c *Config) ClusterRegistrationTokenExist(id string) error {
 	return nil
 }
 
+func (c *Config) CheckAuthConfigEnabled(id string) error {
+	if id == "" {
+		return fmt.Errorf("Auth config id is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	listOpts := NewListOpts(nil)
+	auths, err := client.AuthConfig.List(listOpts)
+	if err != nil {
+		return err
+	}
+
+	for _, auth := range auths.Data {
+		if auth.Enabled {
+			if auth.ID != id && auth.ID != "local" {
+				return fmt.Errorf("%s provider is already enabled", auth.ID)
+			}
+		}
+	}
+
+	return nil
+
+}
+
 func (c *Config) GetAuthConfig(in *managementClient.AuthConfig) (interface{}, error) {
 	resp, err := getAuthConfigObject(in.Type)
 	if err != nil {

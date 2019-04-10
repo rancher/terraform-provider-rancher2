@@ -29,11 +29,6 @@ func authConfigAzureADFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"code": {
-			Type:      schema.TypeString,
-			Required:  true,
-			Sensitive: true,
-		},
 		"endpoint": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -230,14 +225,19 @@ func resourceRancher2AuthConfigAzureADCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AzureADConfigName, err)
 	}
 
-	authAzureADTestAndApply := managementClient.AzureADConfigApplyInput{
-		Config: authAzureAD,
-		Code:   d.Get("code").(string),
+	// Checking if other auth config is enabled
+	if authAzureAD.Enabled {
+		err = meta.(*Config).CheckAuthConfigEnabled(AzureADConfigName)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AzureADConfigName, err)
+		}
 	}
 
-	err = client.Post(auth.Actions["testAndApply"], authAzureADTestAndApply, nil)
+	// Updated auth config
+	newAuth := &managementClient.AzureADConfig{}
+	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authAzureAD, newAuth)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Posting Auth Config %s: %s", AzureADConfigName, err)
+		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AzureADConfigName, err)
 	}
 
 	return resourceRancher2AuthConfigAzureADRead(d, meta)
