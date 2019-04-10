@@ -444,7 +444,7 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	update := map[string]interface{}{
-		"name": d.Get("name").(string),
+		"name":                     d.Get("name").(string),
 		"authCertificateAuthority": d.Get("auth_certificate_authority").(string),
 		"authKey":                  d.Get("auth_key").(string),
 		"description":              d.Get("description").(string),
