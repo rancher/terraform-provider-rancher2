@@ -10,7 +10,15 @@ description: |-
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for rancher v2.2.x and retrieve their information. 
 
-amazonec2, azure, digitalocean, openstack and vsphere credentials config are supported for Cloud Credential.
+The following credentials config support typed parameters.
+
+- amazonec2
+- azure
+- digitalocean
+- openstack
+- vsphere
+
+Other credentials config can specify parameter as key/value pair using `generic_credential_config`.
 
 ## Example Usage
 
@@ -84,6 +92,58 @@ The following attributes are exported:
 * `username` - (Required) vSphere username (string)
 * `vcenter` - (Required) vSphere IP/hostname for vCenter (string)
 * `vcenter_port` - (Optional) vSphere Port for vCenter. Default `443` (string)
+
+### `generic_credential_config`
+
+#### Arguments
+
+* `driver` - (Required) The ID of the node driver 
+* `config` - (Required) The parameters used by node driver (map)
+
+#### Example Usage of `generic_credential_config`
+
+```hcl
+# with builtin driver
+resource "rancher2_cloud_credential" "example" {
+  name        = "example"
+  description = "cloud credential with builtin driver"
+
+  generic_config {
+    driver = "rackspace"
+    config {
+      username = "XXXXXXXXXXXXXXXXXXXX"
+      apiKey   = "XXXXXXXXXXXXXXXXXXXX"
+    }
+  }  
+}
+```
+
+```hcl
+# with custom driver
+resource "rancher2_node_driver" "example" {
+  active            = true
+  builtin           = false
+  checksum          = "xxx"
+  name              = "example"
+  ui_url            = "https://www.example.com/ui-driver-example/component.js"
+  url               = "https://www.example.com/ui-driver-example/docker-machine-driver-example_linux-amd64.zip"
+  whitelist_domains = ["www.example.com"]
+}
+
+resource "rancher2_cloud_credential" "example" {
+  name        = "example-credential"
+  description = "cloud credential with custom driver"
+
+  generic_config {
+    driver = "${rancher2_node_driver.example.id}"
+    config {
+      username = "XXXXXXXXXXXXXXXXXXXX"
+      apiKey   = "XXXXXXXXXXXXXXXXXXXX"
+    }
+  }  
+}
+
+```
 
 ## Timeouts
 

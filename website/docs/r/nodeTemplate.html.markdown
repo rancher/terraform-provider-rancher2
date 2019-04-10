@@ -10,7 +10,15 @@ description: |-
 
 Provides a Rancher v2 Node Template resource. This can be used to create Node Template for rancher v2 and retrieve their information. 
 
-amazonec2, azure, digitalocean, openstack and vsphere drivers are supported for node templates.
+The following drivers support typed parameters.
+
+- amazonec2
+- azure
+- digitalocean
+- openstack
+- vsphere
+
+Other drivers can specify parameter as key/value pair using `generic_config`.
 
 ## Example Usage
 
@@ -69,6 +77,7 @@ The following arguments are supported:
 * `cloud_credential_id` - (Optional) Cloud credential ID for the Node Template. Required from rancher v2.2.x (string)
 * `description` - (Optional) Description for the Node Template (string)
 * `digitalocean_config` - (Optional) Digitalocean config for the Node Template (list maxitems:1)
+* `generic_config` - (Optional) Generic config for the Node Template (list maxitems:1)
 * `docker_version` - (Optional) Docker version for the node template (string)
 * `engine_env` - (Optional) Engine environment for the node template (string)
 * `engine_insecure_registry` - (Optional) Insecure registry for the node template (list)
@@ -234,6 +243,87 @@ The following attributes are exported:
 * `vapp_transport` - (Optional) vSphere OVF environment transports to use for properties. Supported values are: `iso` and `com.vmware.guestInfo` (string)
 * `vcenter` - (Optional/Sensitive) vSphere IP/hostname for vCenter. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
 * `vcenter_port` - (Optional/Sensitive) vSphere Port for vCenter. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x. Default `443` (string)
+
+### `generic_config`
+
+#### Arguments
+
+* `driver` - (Required) The ID of the node driver 
+* `config` - (Required) The parameters used by node driver (map)
+
+#### Example Usage of `generic_config`
+
+```hcl
+# with builtin driver
+resource "rancher2_cloud_credential" "example" {
+  name        = "example"
+  description = "cloud credential with builtin driver"
+
+  generic_config {
+    driver = "rackspace"
+    config {
+      username = "XXXXXXXXXXXXXXXXXXXX"
+      apiKey   = "XXXXXXXXXXXXXXXXXXXX"
+    }
+  }  
+}
+
+resource "rancher2_node_template" "example" {
+  name                = "example"
+  description         = "Terraform node template with rackspace driver"
+  cloud_credential_id = "${rancher2_cloud_credential.example.id}"
+  
+  generic_config {
+    driver = "rackspace"
+    config {
+      flavorId = "general1-2"
+      region   = "DFW"
+    }
+  }  
+}
+```
+
+```hcl
+# with custom driver
+resource "rancher2_node_driver" "example" {
+  active            = true
+  builtin           = false
+  checksum          = "xxx"
+  name              = "example"
+  ui_url            = "https://www.example.com/ui-driver-example/component.js"
+  url               = "https://www.example.com/ui-driver-example/docker-machine-driver-example_linux-amd64.zip"
+  whitelist_domains = ["www.example.com"]
+}
+
+resource "rancher2_cloud_credential" "example" {
+  name        = "example-credential"
+  description = "cloud credential with custom driver"
+
+  generic_config {
+    driver = "${rancher2_node_driver.example.id}"
+    config {
+      username = "XXXXXXXXXXXXXXXXXXXX"
+      apiKey   = "XXXXXXXXXXXXXXXXXXXX"
+    }
+  }  
+}
+
+resource "rancher2_node_template" "example" {
+  name                = "example-template"
+  description         = "Terraform node template with generic driver"
+  cloud_credential_id = "${rancher2_cloud_credential.example.id}"
+  
+  generic_config {
+    driver = "${rancher2_node_driver.example.id}"
+
+    config {
+      param1 = "XXXXXXXXXXXXXXXXXXXX"
+      param2 = "XXXXXXXXXXXXXXXXXXXX"
+    }
+  }
+}
+
+```
 
 ## Timeouts
 
