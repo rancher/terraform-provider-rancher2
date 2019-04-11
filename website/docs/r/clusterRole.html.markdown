@@ -26,28 +26,31 @@ resource "rancher2_cluster_role_template_binding" "foo" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required) The cluster id where bind cluster role template.
-* `role_template_id` - (Required) The role template id from create cluster role template binding.
-* `name` - (Required) The name of the cluster role template binding.
-* `group_id` - (Optional) The group ID to assign cluster role template binding.
-* `group_principal_id` - (Optional) The group_principal ID to assign cluster role template binding
-* `user_id` - (Optional) The user ID to assign cluster role template binding
-* `user_principal_id` - (Optional) The user_principal ID to assign cluster role template binding
-                
-### Timeouts
+* `cluster_id` - (Required) The cluster id where bind cluster role template binding (string)
+* `role_template_id` - (Required) The role template id from create cluster role template binding (string)
+* `name` - (Required) The name of the cluster role template binding (string)
+* `group_id` - (Optional) The group ID to assign cluster role template binding (string)
+* `group_principal_id` - (Optional) The group_principal ID to assign cluster role template binding (string)
+* `user_id` - (Optional) The user ID to assign cluster role template binding (string)
+* `user_principal_id` - (Optional) The user_principal ID to assign cluster role template binding (string)
+* `annotations` - (Optional/Computed) Annotations for cluster role template binding (map)
+* `labels` - (Optional/Computed) Labels for cluster role template binding (map)
 
-`rancher2_cluster_role_template_binding` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-- `create` - (Default `10 minutes`) Used for creating cluster role template bindings.
-- `update` - (Default `10 minutes`) Used for cluster role template binding modifications.
-- `delete` - (Default `10 minutes`) Used for deleting cluster role template bindings.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource.
+* `id` - (Computed) The ID of the resource (string)
+
+## Timeouts
+
+`rancher2_cluster_role_template_binding` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating cluster role template bindings.
+- `update` - (Default `10 minutes`) Used for cluster role template binding modifications.
+- `delete` - (Default `10 minutes`) Used for deleting cluster role template bindings.
 
 ## Import
 

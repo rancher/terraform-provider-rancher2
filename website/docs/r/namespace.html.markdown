@@ -32,20 +32,30 @@ resource "rancher2_namespace" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the namespace.
-* `project_id` - (Required) The project id where assign namespace. It's on the form `project_id=<cluster_id>:<id>`. Updating `<id>` part on same `<cluster_id>` namespace will be moved between projects.
-* `description` - (Optional) A namespace description.
-* `resource_quota` - (Optional) Resource quota for namespace. Rancher v2.1.x or higher 
+* `name` - (Required) The name of the namespace (string)
+* `project_id` - (Required) The project id where assign namespace. It's on the form `project_id=<cluster_id>:<id>`. Updating `<id>` part on same `<cluster_id>` namespace will be moved between projects (string)
+* `description` - (Optional) A namespace description (string)
+* `resource_quota` - (Optional) Resource quota for namespace. Rancher v2.1.x or higher (list maxitems:1)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
 
-### Namespace resource quota `resource_quota`
+## Attributes Reference
 
-The following arguments are supported:
+The following attributes are exported:
 
-* `limit` - (Required) Resource quota limit for namespace.
+* `id` - (Computed) The ID of the resource (string)
 
-The following arguments are supported for `limit`:
+## Nested blocks
+
+### `resource_quota`
+
+#### Arguments
+
+* `limit` - (Required) Resource quota limit for namespace (list maxitems:1)
+
+#### `limit`
+
+##### Arguments
 
 * `config_maps` - (Optional) Limit for config maps in namespace (string)
 * `limits_cpu` - (Optional) Limit for limits cpu in namespace (string)
@@ -62,20 +72,14 @@ The following arguments are supported for `limit`:
 
 More info at [resource-quotas](https://rancher.com/docs/rancher/v2.x/en/k8s-in-rancher/projects-and-namespaces/resource-quotas/)
 
-### Timeouts
+## Timeouts
 
 `rancher2_namespace` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating namespaces.
 - `update` - (Default `10 minutes`) Used for namespace modifications.
 - `delete` - (Default `10 minutes`) Used for deleting namespaces.
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `id` - (Computed) The ID of the resource.
 
 ## Import
 

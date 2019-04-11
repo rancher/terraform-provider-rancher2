@@ -36,21 +36,31 @@ resource "rancher2_project" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the project.
-* `cluster_id` - (Required) The cluster id where create project.
-* `description` - (Optional) A project description.
-* `resource_quota` - (Optional) Resource quota for project. Rancher v2.1.x or higher 
+* `name` - (Required) The name of the project (string)
+* `cluster_id` - (Required) The cluster id where create project (string)
+* `description` - (Optional) A project description (string)
+* `resource_quota` - (Optional) Resource quota for project. Rancher v2.1.x or higher (list maxitems:1)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
 
-### Project resource quota `resource_quota`
+## Attributes Reference
 
-The following arguments are supported:
+The following attributes are exported:
 
-* `project_limit` - (Required) Resource quota limit for project.
-* `namespace_default_limit` - (Required) Default resource quota limit for  namespaces in project
+* `id` - (Computed) The ID of the resource (string)
 
-### Resource quota limit `project_limit` and `namespace_default_limit`
+## Nested blocks
+
+### `resource_quota`
+
+#### Arguments
+
+* `project_limit` - (Required) Resource quota limit for project (list maxitems:1)
+* `namespace_default_limit` - (Required) Default resource quota limit for  namespaces in project (list maxitems:1)
+
+#### `project_limit` and `namespace_default_limit`
+
+##### Arguments
 
 The following arguments are supported:
 
@@ -69,20 +79,14 @@ The following arguments are supported:
 
 More info at [resource-quotas](https://rancher.com/docs/rancher/v2.x/en/k8s-in-rancher/projects-and-namespaces/resource-quotas/)
 
-### Timeouts
+## Timeouts
 
 `rancher2_project` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating projects.
 - `update` - (Default `10 minutes`) Used for project modifications.
 - `delete` - (Default `10 minutes`) Used for deleting projects.
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `id` - (Computed) The ID of the resource.
 
 ## Import
 

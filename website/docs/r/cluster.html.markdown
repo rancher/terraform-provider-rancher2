@@ -37,7 +37,7 @@ resource "rancher2_cluster" "foo-custom" {
 }
 ```
 
-Creating Rancher v2 rke cluster assingning a node pool (overlapped planes)
+Creating Rancher v2 rke cluster assigning a node pool (overlapped planes)
 ```hcl
 # Create a new rancher2 rke Cluster 
 resource "rancher2_cluster" "foo-custom" {
@@ -83,67 +83,87 @@ resource "rancher2_node_pool" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
-* `kind` - (Required) The kind of the Cluster. `imported`, `eks`, `aks`, `gke` and `rke` are supported
-* `rke_config` - (Optional) The rke configuration for `rke` kind Clusters. Conflicts with `aks_config`, `eks_config` and `gke_config`
-* `eks_config` - (Optional) The Amazon eks configuration for `eks` kind Clusters
-* `aks_config` - (Optional) The Azure aks configuration for `aks` kind Clusters. Conflicts with `eks_config`, `gke_config` and `rke_config`
-* `gke_config` - (Optional) The Google gke configuration for `gke` kind Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config`
+* `kind` - (Required) The kind of the Cluster. `imported`, `eks`, `aks`, `gke` and `rke` are supported (string)
+* `rke_config` - (Optional) The rke configuration for `rke` kind Clusters. Conflicts with `aks_config`, `eks_config` and `gke_config` (list maxitems:1)
+* `eks_config` - (Optional) The Amazon eks configuration for `eks` kind Clusters. Conflicts with `aks_config`, `gke_config` and `rke_config` (list maxitems:1)
+* `aks_config` - (Optional) The Azure aks configuration for `aks` kind Clusters. Conflicts with `eks_config`, `gke_config` and `rke_config` (list maxitems:1)
+* `gke_config` - (Optional) The Google gke configuration for `gke` kind Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
 
-### Rancher `rke_config`
+## Attributes Reference
 
-The following arguments are supported:
+The following attributes are exported:
+
+* `id` - (Computed) The ID of the resource (string)
+* `cluster_registration_token` - (Computed) Cluster Registration Token generated for the cluster (list maxitems:1)
+* `kube_config` - (Computed) Kube Config generated for the cluster (string)
+
+## Nested blocks
+
+### `rke_config`
+
+#### Arguments
 
 * `addon_job_timeout` - (Optional/Computed) Duration in seconds of addon job (int)
 * `addons` - (Optional) Addons descripton to deploy on rke cluster.
 * `addons_include` - (Optional) Addons yaml manisfests to deploy on rke cluster (list)
-* `authentication` - (Optional/Computed) Kubernetes cluster authentication
-* `authorization` - (Optional/Computed) Kubernetes cluster authorization
-* `bastion_host` - (Optional/Computed) RKE bastion host
-* `cloud_provider` - (Optional/Computed) Kubernetes cluster authentication [rke-cloud-providers](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/)
+* `authentication` - (Optional/Computed) Kubernetes cluster authentication (list maxitems:1)
+* `authorization` - (Optional/Computed) Kubernetes cluster authorization (list maxitems:1)
+* `bastion_host` - (Optional/Computed) RKE bastion host (list maxitems:1)
+* `cloud_provider` - (Optional/Computed) Kubernetes cluster authentication [rke-cloud-providers](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/) (list maxitems:1)
 * `ignore_docker_version` - (Optional/Computed) Ignore docker version (bool)
-* `ingress` - (Optional/Computed) Kubernetes ingress configuration
+* `ingress` - (Optional/Computed) Kubernetes ingress configuration (list maxitems:1)
 * `kubernetes_version` - (Optional/Computed) Kubernetes version to deploy (string)
-* `monitoring` - (Optional/Computed) Kubernetes cluster monitoring
-* `network` - (Optional/Computed) Kubernetes cluster networking
+* `monitoring` - (Optional/Computed) Kubernetes cluster monitoring (list maxitems:1)
+* `network` - (Optional/Computed) Kubernetes cluster networking (list maxitems:1)
 * `nodes` - (Optional) RKE cluster nodes (list)
 * `prefix_path` - (Optional/Computed) Prefix to customize kubernetes path (string)
 * `private_registries` - (Optional) private registries for docker images (list)
-* `services` - (Optional/Computed) Kubernetes cluster services
+* `services` - (Optional/Computed) Kubernetes cluster services (list maxitems:1)
 * `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
 * `ssh_key_path` - (Optional/Computed) Cluster level SSH private key path (string)
 
-The following arguments are supported for `authentication`:
+#### `authentication`
+
+##### Arguments
 
 * `options` - (Optional/Computed) RKE options for authentication (map)
 * `sans` - (Optional/Computed) RKE sans for authentication ([]string)
 * `strategy` - (Optional/Computed) RKE strategy for authentication (string)
 
-The following arguments are supported for `authorization`:
+#### `authorization`
 
-* `mode` - (Optional) RKE mode for authorization. `rbac` and `none`  are available. Default `rbac`
+##### Arguments
+
+* `mode` - (Optional) RKE mode for authorization. `rbac` and `none` modes are available. Default `rbac` (string)
 * `options` - (Optional/Computed) RKE options for authorization (map)
 
-The following arguments are supported for `bastion_host`:
+#### `bastion_host`
+
+##### Arguments
 
 * `user` - (Required) User to connect bastion host (string)
-* `address` - (Required) Address ip for the bastion host
-* `port` - (Optional) Port for bastion host. Default `22`
-* `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
+* `address` - (Required) Address ip for the bastion host (string)
+* `port` - (Optional) Port for bastion host. Default `22` (string)
+* `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false` (bool)
 * `ssh_key` - (Optional/Computed/Sensitive) Bastion host SSH private key (string)
 * `ssh_key_path` - (Optional/Computed) Bastion host SSH private key path (string)
 
-The following arguments are supported for `cloud_provider`:
+#### `cloud_provider`
 
-* `azure_cloud_provider` - (Optional/Computed) RKE Azure Cloud Provider config for Cloud Provider [rke-azure-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/azure)
-* `custom_cloud_provider` - (Optional/Computed) RKE Custom Cloud Provider config for Cloud Provider (string)
-* `name` - (Optional/Computed) RKE sans for Cloud Provider. `aws`, `azure`, `custom`, `openstack`, `vsphere` are supported.
-* `openstack_cloud_provider` - (Optional/Computed) RKE Openstack Cloud Provider config for Cloud Provider [rke-openstack-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/openstack) Extra argument `name` is required on `virtual_center` configuration.
-* `vsphere_cloud_provider` - (Optional/Computed) RKE Vsphere Cloud Provider config for Cloud Provider [rke-vsphere-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/vsphere)
+##### Arguments
 
-The following arguments are supported for `azure_cloud_provider`:
+* `azure_cloud_provider` - (Optional/Computed) RKE Azure Cloud Provider config for Cloud Provider [rke-azure-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/azure) (list maxitems:1)
+* `custom_cloud_provider` - (Optional/Computed) RKE Custom Cloud Provider config for Cloud Provider (string) (string)
+* `name` - (Optional/Computed) RKE sans for Cloud Provider. `aws`, `azure`, `custom`, `openstack`, `vsphere` are supported. (string)
+* `openstack_cloud_provider` - (Optional/Computed) RKE Openstack Cloud Provider config for Cloud Provider [rke-openstack-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/openstack) Extra argument `name` is required on `virtual_center` configuration. (list maxitems:1)
+* `vsphere_cloud_provider` - (Optional/Computed) RKE Vsphere Cloud Provider config for Cloud Provider [rke-vsphere-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/vsphere) (list maxitems:1)
+
+##### `azure_cloud_provider`
+
+###### Arguments
 
 * `aad_client_id` - (Required/Sensitive) (string)
 * `aad_client_secret` - (Required/Sensitive) (string)
@@ -174,15 +194,19 @@ The following arguments are supported for `azure_cloud_provider`:
 * `vnet_name` - (Optional/Computed) (string)
 * `vnet_resource_group` - (Optional/Computed) (string)
 
-The following arguments are supported for `openstack_cloud_provider`:
+##### `openstack_cloud_provider`
 
-* `global` - (Required)
-* `block_storage` - (Optional)
-* `load_balancer` - (Optional)
-* `metadata` - (Optional)
-* `route` - (Optional)
+###### Arguments
 
-The following arguments are supported for `global`:
+* `global` - (Required) (list maxitems:1)
+* `block_storage` - (Optional) (list maxitems:1)
+* `load_balancer` - (Optional) (list maxitems:1)
+* `metadata` - (Optional) (list maxitems:1)
+* `route` - (Optional) (list maxitems:1)
+
+###### `global`
+
+###### Arguments
 
 * `auth_url` - (Required) (string)
 * `password` - (Required/Sensitive) (string)
@@ -196,13 +220,17 @@ The following arguments are supported for `global`:
 * `tenant_name` - (Optional/Computed) (string)
 * `trust_id` - (Optional/Computed/Sensitive) (string)
 
-The following arguments are supported for `block_storage`:
+###### `block_storage`
+
+###### Arguments
 
 * `bs_version` - (Optional/Computed) (string)
 * `ignore_volume_az` - (Optional/Computed) (string)
 * `trust_device_path` - (Optional/Computed) (string)
 
-The following arguments are supported for `load_balancer`:
+###### `load_balancer`
+
+###### Arguments
 
 * `create_monitor` - (Optional/Computed) (bool)
 * `floating_network_id` - (Optional/Computed) (string)
@@ -216,24 +244,32 @@ The following arguments are supported for `load_balancer`:
 * `subnet_id` - (Optional/Computed) (string)
 * `use_octavia` - (Optional/Computed) (bool)
 
-The following arguments are supported for `metadata`:
+###### `metadata`
+
+###### Arguments
 
 * `request_timeout` - (Optional/Computed) (int)
 * `search_order` - (Optional/Computed) (string)
 
-The following arguments are supported for `route`:
+###### `route`
+
+###### Arguments
 
 * `router_id` - (Optional/Computed) (string)
 
-The following arguments are supported for `vsphere_cloud_provider`:
+##### `vsphere_cloud_provider`
+
+###### Arguments
 
 * `virtual_center` - (Required) (List)
-* `workspace` - (Required)
-* `disk` - (Optional/Computed)
-* `global` - (Optional/Computed)
-* `network` - (Optional/Computed)
+* `workspace` - (Required) (list maxitems:1)
+* `disk` - (Optional/Computed) (list maxitems:1)
+* `global` - (Optional/Computed) (list maxitems:1)
+* `network` - (Optional/Computed) (list maxitems:1)
 
-The following arguments are supported for `virtual_center`:
+###### `virtual_center`
+
+###### Arguments
 
 * `datacenters` - (Required) (string)
 * `name` - (Required) Name of virtualcenter config for Vsphere Cloud Provider config (string)
@@ -242,7 +278,9 @@ The following arguments are supported for `virtual_center`:
 * `port` - (Optional/Computed) (string)
 * `soap_roundtrip_count` - (Optional/Computed) (int)
 
-The following arguments are supported for `workspace`:
+###### `workspace`
+
+###### Arguments
 
 * `datacenter` - (Required) (string)
 * `folder` - (Required) (string)
@@ -250,11 +288,15 @@ The following arguments are supported for `workspace`:
 * `default_datastore` - (Optional/Computed) (string)
 * `resourcepool_path` - (Optional/Computed) (string)
 
-The following arguments are supported for `disk`:
+###### `disk`
+
+###### Arguments
 
 * `scsi_controller_type` - (Optional/Computed) (string)
 
-The following arguments are supported for `global`:
+###### `global`
+
+###### Arguments
 
 * `datacenters` - (Optional/Computed) (string)
 * `insecure_flag` - (Optional/Computed) (bool)
@@ -263,43 +305,59 @@ The following arguments are supported for `global`:
 * `port` - (Optional/Computed) (string)
 * `soap_roundtrip_count` - (Optional/Computed) (int)
 
-The following arguments are supported for `network`:
+###### `network`
+
+###### Arguments
 
 * `public_network` - (Optional/Computed) (string)
 
-The following arguments are supported for `ingress`:
+#### `ingress`
+
+##### Arguments
 
 * `extra_args` - (Optional/Computed) Extra arguments for RKE Ingress (map)
 * `node_selector` - (Optional/Computed) Node selector for RKE Ingress (map)
 * `options` - (Optional/Computed) RKE options for Ingress (map)
 * `provider` - (Optional/Computed) Provider for RKE Ingress (string)
 
-The following arguments are supported for `monitoring`:
+#### `monitoring`
+
+##### Arguments
 
 * `options` - (Optional/Computed) RKE options for monitoring (map)
 * `provider` - (Optional/Computed) Provider for RKE monitoring (string)
 
-The following arguments are supported for `network`:
+#### `network`
 
-* `calico_network_provider` - (Optional/Computed) Calico provider config for RKE network
-* `canal_network_provider` - (Optional/Computed) Canal provider config for RKE network
-* `flannel_network_provider` - (Optional/Computed) Flannel provider config for RKE network
+##### Arguments
+
+* `calico_network_provider` - (Optional/Computed) Calico provider config for RKE network (list maxitems:1)
+* `canal_network_provider` - (Optional/Computed) Canal provider config for RKE network (list maxitems:1)
+* `flannel_network_provider` - (Optional/Computed) Flannel provider config for RKE network (list maxitems:1)
 * `options` - (Optional/Computed) RKE options for network (map)
-* `plugin` - (Optional/Computed) Plugin for RKE network. `canal` (default), `flannel` and `calico` are supported.
+* `plugin` - (Optional/Computed) Plugin for RKE network. `canal` (default), `flannel` and `calico` are supported. (string)
 
-The following arguments are supported for `calico_network_provider`:
+##### `calico_network_provider`
+
+###### Arguments
 
 * `cloud_provider` - (Optional/Computed) RKE options for Calico network provider (string)
 
-The following arguments are supported for `canal_network_provider`:
+##### `canal_network_provider`
+
+###### Arguments
 
 * `iface` - (Optional/Computed) Iface config Canal network provider (string)
 
-The following arguments are supported for `flannel_network_provider`:
+##### `flannel_network_provider`
+
+###### Arguments
 
 * `iface` - (Optional/Computed) Iface config Flannel network provider (string)
 
-The following arguments are supported for `nodes`:
+#### `nodes`
+
+##### Arguments
 
 * `address` - (Required) Address ip for node (string)
 * `role` - (Requires) Roles for the node. `controlplane`, `etcd` and `worker` are supported. (list)
@@ -309,28 +367,34 @@ The following arguments are supported for `nodes`:
 * `internal_address` - (Optional) Internal ip for node (string)
 * `labels` - (Optional) Labels for the node (map)
 * `node_id` - (Optional) Id for the node (string)
-* `port` - (Optional) Port for node. Default `22`
-* `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
+* `port` - (Optional) Port for node. Default `22` (string)
+* `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false` (bool)
 * `ssh_key` - (Optional/Computed/Sensitive) Node SSH private key (string)
 * `ssh_key_path` - (Optional/Computed) Node SSH private key path (string)
 
-The following arguments are supported for `private_registries`:
+#### `private_registries`
 
-* `is_default` - (Optional) Set as default registry. Default `false`
+##### Arguments
+
+* `is_default` - (Optional) Set as default registry. Default `false` (bool)
 * `password` - (Optional/Sensitive) Registry password (string)
 * `url` - (Required) Registry URL (string)
 * `user` - (Optional/Sensitive) Registry user (string)
 
 
-The following arguments are supported for `services`:
+#### `services`
 
-* `etcd` - (Optional/Computed) Etcd options for RKE services
-* `kube_api` - (Optional/Computed) Kube API options for RKE services
-* `kube_controller` - (Optional/Computed) Kube Controller options for RKE services
-* `kubelet` - (Optional/Computed) Kubelet options for RKE services
-* `kubeproxy` - (Optional/Computed) Kubeproxy options for RKE services
+##### Arguments
 
-The following arguments are supported for `etcd`:
+* `etcd` - (Optional/Computed) Etcd options for RKE services (list maxitems:1)
+* `kube_api` - (Optional/Computed) Kube API options for RKE services (list maxitems:1)
+* `kube_controller` - (Optional/Computed) Kube Controller options for RKE services (list maxitems:1)
+* `kubelet` - (Optional/Computed) Kubelet options for RKE services (list maxitems:1)
+* `kubeproxy` - (Optional/Computed) Kubeproxy options for RKE services (list maxitems:1)
+
+##### `etcd`
+
+###### Arguments
 
 * `ca_cert` - (Optional/Computed) Tls CA certificate for etcd service (string)
 * `cert` - (Optional/Computed/Sensitive) Tls certificate for etcd service (string)
@@ -345,7 +409,9 @@ The following arguments are supported for `etcd`:
 * `retention` - (Optional/Computed) Retention option for etcd service (string)
 * `snapshot` - (Optional/Computed) Snapshot option for etcd service (bool)
 
-The following arguments are supported for `kube_api`:
+##### `kube_api`
+
+###### Arguments
 
 * `extra_args` - (Optional/Computed) Extra arguments for kube API service (map)
 * `extra_binds` - (Optional) Extra binds for kube API service (list)
@@ -355,7 +421,9 @@ The following arguments are supported for `kube_api`:
 * `service_cluster_ip_range` - (Optional/Computed) Service Cluster IP Range option for kube API service (string)
 * `service_node_port_range` - (Optional/Computed) Service Node Port Range option for kube API service (string)
 
-The following arguments are supported for `kube_controller`:
+##### `kube_controller`
+
+###### Arguments
 
 * `cluster_cidr` - (Optional/Computed) Cluster CIDR option for kube controller service (string)
 * `extra_args` - (Optional/Computed) Extra arguments for kube controller service (map)
@@ -364,7 +432,9 @@ The following arguments are supported for `kube_controller`:
 * `image` - (Optional/Computed) Docker image for kube controller service (string)
 * `service_cluster_ip_range` - (Optional/Computed) Service Cluster ip Range option for kube controller service (string)
 
-The following arguments are supported for `kubelet`:
+##### `kubelet`
+
+###### Arguments
 
 * `cluster_dns_server` - (Optional/Computed) Cluster DNS Server option for kubelet service (string)
 * `cluster_domain` - (Optional/Computed) Cluster Domain option for kubelet service (string)
@@ -375,31 +445,37 @@ The following arguments are supported for `kubelet`:
 * `image` - (Optional/Computed) Docker image for kubelet service (string)
 * `infra_container_image` - (Optional/Computed) Infre container image for kubelet service (string)
 
-The following arguments are supported for `kubeproxy`:
+##### `kubeproxy`
+
+###### Arguments
 
 * `extra_args` - (Optional/Computed) Extra arguments for kubeproxy service (map)
 * `extra_binds` - (Optional) Extra binds for kubeproxy service (list)
 * `extra_env` - (Optional) Extra environment for kubeproxy service (list)
 * `image` - (Optional/Computed) Docker image for kubeproxy service (string)
 
-### Amazon `eks_config`
+### `eks_config`
+
+#### Arguments
 
 The following arguments are supported:
 
 * `access_key` - (Required/Sensitive) Access key for EKS (string)
 * `secret_key` - (Required/Sensitive) Secret key for EKS (string)
 * `ami` - (Optional) AMI image for EKS worker nodes (string)
-* `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes (bool). Default `true`
+* `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes. Default `true` (bool)
 * `instance_type` - (Required) Intance type for EKS cluster (string)
 * `maximum_nodes` - (Required) Maximum instaces for EKS cluster (int)
 * `minimum_nodes` - (Required) Minimum instaces for EKS cluster (int)
 * `region` - (Required) Region for EKS cluster (string)
-* `security_groups` - (Required) Security groups for EKS cluster ([]string)
+* `security_groups` - (Required) Security groups for EKS cluster (list)
 * `service_role` - (Required) Service role for EKS cluster (string)
 * `subnets` - (Required) Subnets for EKS cluster ([]string)
 * `virtual_network` - (Required) Virtual network for EKS cluster (string)
 
-### Azure `aks_config`
+### `aks_config`
+
+#### Arguments
 
 The following arguments are supported:
 
@@ -427,8 +503,9 @@ The following arguments are supported:
 * `virtual_network` - (Required) Virtual Network for AKS (string)
 * `virtual_network_resource_group` - (Required) Virtual Network resource group for AKS (string)
 
+### `gke_config`
 
-### Google `gke_config`
+#### Arguments
 
 The following arguments are supported:
 
@@ -457,34 +534,28 @@ The following arguments are supported:
 * `sub_network` - (Required) Subnetwork for GKE cluster (string)
 * `zone` - (Required) Zone GKE cluster (string)
 
-### Timeouts
+### `cluster_registration_token`
+
+#### Attributes
+
+* `cluster_id` - (Computed) Cluster ID (string)
+* `name` - (Computed) Name of cluster registration token (string)
+* `command` - (Computed) Command to execute in a imported k8s cluster (string)
+* `insecure_command` - (Computed) Insecure command to execute in a imported k8s cluster (string)
+* `manifest_url` - (Computed) K8s mnifest url to execute kubectl in a imported k8s cluster (string)
+* `node_command` - (Computed) Node command to execute in linux nodes for custom k8s cluster (string)
+* `windows_node_command` - (Computed) Node command to execute in windows nodes for custom k8s cluster (string)
+* `annotations` - (Computed) Annotations for cluster registration token object (map)
+* `labels` - (Computed) Labels for cluster registration token object (map)
+
+## Timeouts
 
 `rancher2_cluster` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`) Used for creating clusters.
 - `update` - (Default `30 minutes`) Used for cluster modifications.
 - `delete` - (Default `30 minutes`) Used for deleting clusters.
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `id` - (Computed) The ID of the resource.
-* `cluster_registration_token` - (Computed) Cluster Registration Token generated for the cluster.
-* `kube_config` - (Computed) Kube Config generated for the cluster.
-
-The following attributes are exported for `cluster_registration_token`:
-
-* `cluster_id` - (Computed) Cluster ID
-* `name` - (Computed) Name of cluster registration token
-* `command` - (Computed) Command to execute in a imported k8s cluster
-* `insecure_command` - (Computed) Insecure command to execute in a imported k8s cluster
-* `manifest_url` - (Computed) K8s mnifest url to execute kubectl in a imported k8s cluster
-* `node_command` - (Computed) Node command to execute in linux nodes for custom k8s cluster
-* `windows_node_command` - (Computed) Node command to execute in windows nodes for custom k8s cluster
-* `annotations` - (Computed) Annotations for cluster registration token object
-* `labels` - (Computed) Labels for cluster registration token object
 
 ## Import
 

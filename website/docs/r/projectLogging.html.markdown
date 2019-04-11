@@ -31,23 +31,31 @@ resource "rancher2_project_logging" "foo" {
 
 The following arguments are supported:
 
-* `project_id` - (Required) The project id to configure logging.
-* `name` - (Required) The name of the Project Logging config.
-* `kind` - (Required) The kind of the Project Logging. `elasticsearch`, `fluentd`, `kafka`, `splunk` and `kafka` are supported
-* `elasticsearch_config` - (Optional) The elasticsearch config for Project Logging. For `kind = elasticsearch`. Conflicts with `fluentd_config`, `kafka_config`, `splunk_config` and `syslog_config`
-* `fluentd_config` - (Optional) The fluentd config for Project Logging. For `kind = fluentd`. Conflicts with `elasticsearch_config`, `kafka_config`, `splunk_config` and `syslog_config`
-* `kafka_config` - (Optional) The kafka config for Project Logging. For `kind = kafka`. Conflicts with `elasticsearch_config`, `fluentd_config`, `splunk_config` and `syslog_config`
-* `namespace_id` - (Optional) The namespace id from Project logging.
-* `output_flush_interval` - (Optional) How often buffered logs would be flushed. Default: `3` seconds
-* `output_tags` - (Optional/computed) The output tags for Project Logging
-* `splunk_config` - (Optional) The splunk config for Project Logging. For `kind = splunk`. Conflicts with `elasticsearch_config`, `fluentd_config`, `kafka_config`, and `syslog_config`
-* `syslog_config` - (Optional) The syslog config for Project Logging. For `kind = syslog`. Conflicts with `elasticsearch_config`, `fluentd_config`, `kafka_config`, and `splunk_config`
+* `project_id` - (Required) The project id to configure logging (string)
+* `name` - (Required) The name of the Project Logging config (string)
+* `kind` - (Required) The kind of the Project Logging. `elasticsearch`, `fluentd`, `kafka`, `splunk` and `kafka` are supported (string)
+* `elasticsearch_config` - (Optional) The elasticsearch config for Project Logging. For `kind = elasticsearch`. Conflicts with `fluentd_config`, `kafka_config`, `splunk_config` and `syslog_config` (list maxitems:1)
+* `fluentd_config` - (Optional) The fluentd config for Project Logging. For `kind = fluentd`. Conflicts with `elasticsearch_config`, `kafka_config`, `splunk_config` and `syslog_config` (list maxitems:1)
+* `kafka_config` - (Optional) The kafka config for Project Logging. For `kind = kafka`. Conflicts with `elasticsearch_config`, `fluentd_config`, `splunk_config` and `syslog_config` (list maxitems:1)
+* `namespace_id` - (Optional) The namespace id from Project logging (string)
+* `output_flush_interval` - (Optional) How often buffered logs would be flushed. Default: `3` seconds (int)
+* `output_tags` - (Optional/computed) The output tags for Project Logging (map)
+* `splunk_config` - (Optional) The splunk config for Project Logging. For `kind = splunk`. Conflicts with `elasticsearch_config`, `fluentd_config`, `kafka_config`, and `syslog_config` (list maxitems:1)
+* `syslog_config` - (Optional) The syslog config for Project Logging. For `kind = syslog`. Conflicts with `elasticsearch_config`, `fluentd_config`, `kafka_config`, and `splunk_config` (list maxitems:1)
 * `annotations` - (Optional/Computed) Annotations for Project Logging object (map)
 * `labels` - (Optional/Computed) Labels for Project Logging object (map)
-                
-### Elasticsearch `elasticsearch_config`
 
-The following arguments are supported:
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - (Computed) The ID of the resource (string)
+
+## Nested blocks
+
+### `elasticsearch_config`
+
+#### Arguments
 
 * `endpoint` - (Required) Endpoint of the elascticsearch service. Must include protocol, `http://` or `https://` (string)
 * `auth_password` - (Optional/Sensitive) User password for the elascticsearch service (string)
@@ -56,21 +64,23 @@ The following arguments are supported:
 * `client_cert` - (Optional/Sensitive) SSL client certificate for the elascticsearch service (string)
 * `client_key` - (Optional/Sensitive) SSL client key for the elascticsearch service (string)
 * `client_key_pass` - (Optional/Sensitive) SSL client key password for the elascticsearch service (string)
-* `date_format` - (Optional) Date format for the elascticsearch logs. Default: `YYYY-MM-DD`
-* `index_prefix` - (Optional) Index prefix for the elascticsearch logs. Default: `local`
+* `date_format` - (Optional) Date format for the elascticsearch logs. Default: `YYYY-MM-DD` (string)
+* `index_prefix` - (Optional) Index prefix for the elascticsearch logs. Default: `local` (string)
 * `ssl_verify` - (Optional) SSL verify for the elascticsearch service (bool)
 * `ssl_version` - (Optional) SSL version for the elascticsearch service (string)
 
-### Fluentd `fluentd_config`
+### `fluentd_config`
 
-The following arguments are supported:
+#### Arguments
 
 * `fluent_servers` - (Reqeuired) Servers for the fluentd service (list)
 * `certificate` - (Optional/Sensitive) SSL certificate for the fluentd service (string)
 * `compress` - (Optional) Compress data for the fluentd service (bool)
 * `enable_tls` - (Optional) Enable TLS for the fluentd service (bool)
 
-The following arguments are supported for `fluent_servers`:
+#### `fluent_servers`
+
+##### Arguments
 
 * `endpoint` - (Required) Endpoint of the fluentd service (string)
 * `hostname` - (Optional) Hostname of the fluentd service (string)
@@ -80,9 +90,9 @@ The following arguments are supported for `fluent_servers`:
 * `username` - (Optional/Sensitive) Username of the fluentd service (string)
 * `weight` - (Optional) Weight of the fluentd server (int)
 
-### Kafka `kafka_config`
+### `kafka_config`
 
-The following arguments are supported:
+#### Arguments
 
 * `topic` - (Required) Topic to publish on the kafka service (string)
 * `broker_endpoints` - (Optional) Kafka endpoints for kafka service. Conflicts with `zookeeper_endpoint` (list)
@@ -91,9 +101,9 @@ The following arguments are supported:
 * `client_key` - (Optional/Sensitive) SSL client key for the kafka service (string)
 * `zookeeper_endpoint` - (Optional) Zookeeper endpoint for kafka service. Conflicts with `broker_endpoints` (string)
 
-### Splunk `splunk_config`
+### `splunk_config`
 
-The following arguments are supported:
+#### Arguments
 
 * `endpoint` - (Required) Endpoint of the splunk service. Must include protocol, `http://` or `https://` (string)
 * `token` - (Required/Sensitive) Token for the splunk service (string)
@@ -105,34 +115,28 @@ The following arguments are supported:
 * `source` - (Optional) Date format for the splunk logs (string)
 * `ssl_verify` - (Optional) SSL verify for the splunk service (bool)
 
-### Syslog `syslog_config`
+### `syslog_config`
 
-The following arguments are supported:
+#### Arguments
 
 * `endpoint` - (Required) Endpoint of the syslog service (string)
 * `certificate` - (Optional/Sensitive) SSL certificate for the syslog service (string)
 * `client_cert` - (Optional/Sensitive) SSL client certificate for the syslog service (string)
 * `client_key` - (Optional/Sensitive) SSL client key for the syslog service (string)
 * `program` - (Optional) Program for the syslog service (string)
-* `protocol` - (Optional) Protocol for the syslog service. `tcp` and `udp` are supported. Default: `udp`
-* `severity` - (Optional) Date format for the syslog logs. `emergency`, `alert`, `critical`, `error`, `warning`, `notice`, `info` and `debug` are supported. Default: `notice`
+* `protocol` - (Optional) Protocol for the syslog service. `tcp` and `udp` are supported. Default: `udp` (string)
+* `severity` - (Optional) Date format for the syslog logs. `emergency`, `alert`, `critical`, `error`, `warning`, `notice`, `info` and `debug` are supported. Default: `notice` (string)
 * `ssl_verify` - (Optional) SSL verify for the syslog service (bool)
 * `token` - (Optional/Sensitive) Token for the syslog service (string)
 
-### Timeouts
+## Timeouts
 
 `rancher2_project_logging` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating project logging configurations.
 - `update` - (Default `10 minutes`) Used for project logging configuration modifications.
 - `delete` - (Default `10 minutes`) Used for deleting project logging configurations.
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `id` - (Computed) The ID of the resource.
 
 ## Import
 

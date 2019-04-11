@@ -31,32 +31,32 @@ resource "rancher2_node_driver" "foo" {
 
 The following arguments are supported:
 
-* `active` - (Required) Specify if the node driver state.
-* `builtin` - (Required) Specify wheter the node driver is an internal node driver or not.
-* `checksum` - (Optional) Verify that the downloaded driver matches the expected checksum.
-* `description` - (Optional) Description of the node driver.
-* `external_id` - (Optional) External ID
-* `name` - (Required) Name of the node driver.
-* `ui_url` - (Optional) The URL to load for customized Add Nodes screen for this driver.
-* `url` - (Required) The URL to download the machine driver binary for 64-bit Linux.
-* `whitelist_domains` - (Optional) Domains to whitelist for the ui.
-* `annotations` - (Optional/Computed) Annotations of the resource (map).
-* `labels` - (Optional/Computed) Labels of the resource (map).
-
-### Timeouts
-
-`rancher2_node_driver` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-- `create` - (Default `10 minutes`) Used for creating node drivers.
-- `update` - (Default `10 minutes`) Used for node driver modifications.
-- `delete` - (Default `10 minutes`) Used for deleting node drivers.
+* `active` - (Required) Specify if the node driver state (bool)
+* `builtin` - (Required) Specify wheter the node driver is an internal node driver or not (bool)
+* `checksum` - (Optional) Verify that the downloaded driver matches the expected checksum (string)
+* `description` - (Optional) Description of the node driver (string)
+* `external_id` - (Optional) External ID (string)
+* `name` - (Required) Name of the node driver (string)
+* `ui_url` - (Optional) The URL to load for customized Add Nodes screen for this driver (string)
+* `url` - (Required) The URL to download the machine driver binary for 64-bit Linux (string)
+* `whitelist_domains` - (Optional) Domains to whitelist for the ui (list)
+* `annotations` - (Optional/Computed) Annotations of the resource (map)
+* `labels` - (Optional/Computed) Labels of the resource (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource.
+* `id` - (Computed) The ID of the resource (string)
+
+## Timeouts
+
+`rancher2_node_driver` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating node drivers.
+- `update` - (Default `10 minutes`) Used for node driver modifications.
+- `delete` - (Default `10 minutes`) Used for deleting node drivers.
 
 ## Import
 

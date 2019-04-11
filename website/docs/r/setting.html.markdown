@@ -37,7 +37,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource.
+* `id` - (Computed) The ID of the resource (string)
 
 ## Import
 

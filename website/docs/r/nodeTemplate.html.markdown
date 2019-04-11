@@ -36,29 +36,37 @@ resource "rancher2_node_template" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Node Template.
-* `amazonec2_config` - (Optional) AWS config for the Node Template.
-* `auth_certificate_authority` - (Optional/Sensitive) Auth certificate authority for the Node Template.
-* `auth_key` - (Optional/Sensitive) Auth key for the Node Template.
-* `azure_config` - (Optional) Azure config for the Node Template.
-* `description` - (Optional) Description for the Node Template.
-* `digitalocean_config` - (Optional) Digitalocean config for the Node Template.
-* `docker_version` - (Optional) Docker version for the node template.
-* `engine_env` - (Optional) Engine environment for the node template.
-* `engine_insecure_registry` - (Optional) Insecure registry for the node template.
-* `engine_install_url` - (Optional) Engine install URL for the node template.
-* `engine_label` - (Optional) Engine label for the node template.
-* `engine_opt` - (Optional) Engine options for the node template.
-* `engine_registry_mirror` - (Optional) Engine registry mirror for the node template.
-* `engine_storage_driver` - (Optional) Engine storage driver for the node template.
+* `name` - (Required) The name of the Node Template (string)
+* `amazonec2_config` - (Optional) AWS config for the Node Template (list maxitems:1)
+* `auth_certificate_authority` - (Optional/Sensitive) Auth certificate authority for the Node Template (string)
+* `auth_key` - (Optional/Sensitive) Auth key for the Node Template (string)
+* `azure_config` - (Optional) Azure config for the Node Template (list maxitems:1)
+* `description` - (Optional) Description for the Node Template (string)
+* `digitalocean_config` - (Optional) Digitalocean config for the Node Template (list maxitems:1)
+* `docker_version` - (Optional) Docker version for the node template (string)
+* `engine_env` - (Optional) Engine environment for the node template (string)
+* `engine_insecure_registry` - (Optional) Insecure registry for the node template (list)
+* `engine_install_url` - (Optional) Engine install URL for the node template (string)
+* `engine_label` - (Optional) Engine label for the node template (string)
+* `engine_opt` - (Optional) Engine options for the node template (map)
+* `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
+* `engine_storage_driver` - (Optional) Engine storage driver for the node template (string)
 * `use_internal_ip_address` - (Optional) Engine storage driver for the node template (bool)
-* `annotations` - (Optional) Annotations for Node Template object.
-* `labels` - (Optional/Computed) Labels for Node Template object.
+* `annotations` - (Optional) Annotations for Node Template object (map)
+* `labels` - (Optional/Computed) Labels for Node Template object (map)
 
+## Attributes Reference
 
-### Rancher `amazonec2_config`
+The following attributes are exported:
 
-The following arguments are supported:
+* `id` - (Computed) The ID of the resource (string)
+* `driver` - (Computed) The driver of the node template (string)
+
+## Nested blocks
+
+### `amazonec2_config`
+
+#### Arguments
 
 * `access_key` - (Required/Sensitive) AWS access key (string)
 * `secret_key` - (Required/Sensitive) AWS secret key (string)
@@ -68,93 +76,84 @@ The following arguments are supported:
 * `subnet_id` - (Required) AWS VPC subnet id (string)
 * `vpc_id` - (Required) AWS VPC id. (string)
 * `zone` - (Required) AWS zone for instance (i.e. a,b,c,d,e) (string)
-* `block_duration_minutes` - (Optional) AWS spot instance duration in minutes (60, 120, 180, 240, 300, or 360). Default `0`
-* `device_name` - (Optional) AWS root device name. Default `/dev/sda1`
+* `block_duration_minutes` - (Optional) AWS spot instance duration in minutes (60, 120, 180, 240, 300, or 360). Default `0` (string)
+* `device_name` - (Optional) AWS root device name. Default `/dev/sda1` (string)
 * `endpoint` - (Optional) Optional endpoint URL (hostname only or fully qualified URI) (string)
 * `iam_instance_profile` - (Optional) AWS IAM Instance Profile (string)
 * `insecure_transport` - (Optional) Disable SSL when sending requests (bool)
-* `instance_type` - (Optional) AWS instance type. Default `t2.micro`
+* `instance_type` - (Optional) AWS instance type. Default `t2.micro` (string)
 * `keypair_name` - (Optional) AWS keypair to use; requires --amazonec2-ssh-keypath (string)
-* `monitoring` - (Optional) Set this flag to enable CloudWatch monitoring. Deafult `false`
+* `monitoring` - (Optional) Set this flag to enable CloudWatch monitoring. Deafult `false` (bool)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
-* `private_address_only` - (Optional) Only use a private IP address. Default `false`
-* `request_spot_instance` - (Optional) Set this flag to request spot instance. Default `false`
-* `retries` - (Optional) Set retry count for recoverable failures (use -1 to disable). Default `5`
-* `root_size` - (Optional) AWS root disk size (in GB). Default `16`
+* `private_address_only` - (Optional) Only use a private IP address. Default `false` (bool)
+* `request_spot_instance` - (Optional) Set this flag to request spot instance. Default `false` (bool)
+* `retries` - (Optional) Set retry count for recoverable failures (use -1 to disable). Default `5` (string)
+* `root_size` - (Optional) AWS root disk size (in GB). Default `16` (string)
 * `security_group_readonly` - (Optional) Skip adding default rules to security groups (bool)
 * `session_token` - (Optional/Sensitive) AWS Session Token (string)
-* `spot_price` - (Optional) AWS spot instance bid price (in dollar). Default `0.50`
+* `spot_price` - (Optional) AWS spot instance bid price (in dollar). Default `0.50` (string)
 * `ssh_keypath` - (Optional) SSH Key for Instance (string)
 * `ssh_user` - (Optional) Set the name of the ssh user (string)
 * `tags` - (Optional) AWS Tags (e.g. key1,value1,key2,value2) (string)
-* `use_ebs_optimized_instance` - (Optional) Create an EBS optimized instance. Default `false`
-* `use_private_address` - (Optional) Force the usage of private IP address. Default `false`
+* `use_ebs_optimized_instance` - (Optional) Create an EBS optimized instance. Default `false` (bool)
+* `use_private_address` - (Optional) Force the usage of private IP address. Default `false` (bool)
 * `userdata` - (Optional) Path to file with cloud-init user data (string)
-* `volume_type` - (Optional) Amazon EBS volume type. Default `gp2`
+* `volume_type` - (Optional) Amazon EBS volume type. Default `gp2` (string)
 
+### `azure_config`
 
-### Rancher `azure_config`
+#### Arguments
 
-The following arguments are supported:
-
-* `client_id` - (Required/Sensitive) Azure Service Principal Account ID
-* `client_secret` - (Required/Sensitive) Azure Service Principal Account password
+* `client_id` - (Required/Sensitive) Azure Service Principal Account ID (string)
+* `client_secret` - (Required/Sensitive) Azure Service Principal Account password (string)
 * `subscription_id` - (Required) Azure Subscription ID (string)
-* `availability_set` - (Optional) Azure Availability Set to place the virtual machine into. Default `docker-machine`
+* `availability_set` - (Optional) Azure Availability Set to place the virtual machine into. Default `docker-machine` (string)
 * `custom_data` - (Optional) Path to file with custom-data (string)
 * `dns` - (Optional) A unique DNS label for the public IP adddress (string)
-* `docker_port` - (Optional) Port number for Docker engine. Default `2376`
-* `environment` - (Optional) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud). Default `AzurePublicCloud`
-* `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:16.04.0-LTS:latest`
-* `location` - (Optional) Azure region to create the virtual machine. Default `westus`
-* `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false`
+* `docker_port` - (Optional) Port number for Docker engine. Default `2376` (string)
+* `environment` - (Optional) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud). Default `AzurePublicCloud` (string)
+* `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:16.04.0-LTS:latest` (string)
+* `location` - (Optional) Azure region to create the virtual machine. Default `westus` (string)
+* `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false` (bool)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
 * `private_ip_address` - (Optional) Specify a static private IP address for the machine. (string)
-* `resource_group` - (Optional) Azure Resource Group name (will be created if missing). Default `docker-machine`
-* `size` - (Optional) Size for Azure Virtual Machine. Default `Standard_A2`
+* `resource_group` - (Optional) Azure Resource Group name (will be created if missing). Default `docker-machine` (string)
+* `size` - (Optional) Size for Azure Virtual Machine. Default `Standard_A2` (string)
 * `ssh_user` - (Optional) Username for SSH login (string)
-* `static_public_ip` - (Optional) Assign a static public IP address to the machine. Default `false`
-* `storage_type` - (Optional) Type of Storage Account to host the OS Disk for the machine. Default `Standard_LRS`
-* `subnet` - (Optional) Azure Subnet Name to be used within the Virtual Network. Default `docker-machine`
-* `subnet_prefix` - (Optional) Private CIDR block to be used for the new subnet, should comply RFC 1918. Default `192.168.0.0/16`
-* `use_private_ip` - (Optional) Use private IP address of the machine to connect. Default `false`
-* `vnet` - (Optional) Azure Virtual Network name to connect the virtual machine (in [resourcegroup:]name format). Default `docker-machine-vnet`
+* `static_public_ip` - (Optional) Assign a static public IP address to the machine. Default `false` (bool)
+* `storage_type` - (Optional) Type of Storage Account to host the OS Disk for the machine. Default `Standard_LRS` (string)
+* `subnet` - (Optional) Azure Subnet Name to be used within the Virtual Network. Default `docker-machine` (string)
+* `subnet_prefix` - (Optional) Private CIDR block to be used for the new subnet, should comply RFC 1918. Default `192.168.0.0/16` (string)
+* `use_private_ip` - (Optional) Use private IP address of the machine to connect. Default `false` (string)
+* `vnet` - (Optional) Azure Virtual Network name to connect the virtual machine (in [resourcegroup:]name format). Default `docker-machine-vnet` (string)
 
+### `digitalocean_config`
 
-### Rancher `digitalocean_config`
+#### Arguments
 
-The following arguments are supported:
+* `access_token` - (Required/Sensitive) Digital Ocean access token (string)
+* `backups` - (Optional) Enable backups for droplet. Default `false` (bool)
+* `image` - (Optional) Digital Ocean Image. Default `ubuntu-16-04-x64` (string)
+* `ipv6` - (Optional) Enable ipv6 for droplet. Default `false` (bool)
+* `monitoring` - (Optional) Enable monitoring for droplet. Default `false` (bool)
+* `private_networking` - (Optional) Enable private networking for droplet. Default `false` (bool)
+* `region` - (Optional) Digital Ocean region. Default `nyc3` (string)
+* `size` - (Optional) Digital Ocean size. Default `s-1vcpu-1gb` (string)
+* `ssh_key_fingerprint` - (Optional/Sensitive) SSH key fingerprint (string)
+* `ssh_key_path` - (Optional) SSH private key path (string)
+* `ssh_port` - (Optional) SSH port. Default `22` (string)
+* `ssh_user` - (Optional) SSH username. Default `root` (string)
+* `tags` - (Optional) Comma-separated list of tags to apply to the Droplet (string)
+* `userdata` - (Optional) Path to file with cloud-init user-data (string)
 
-* `access_token` - (Required/Sensitive) Digital Ocean access token
-* `backups` - (Optional) Enable backups for droplet. Default `false`
-* `image` - (Optional) Digital Ocean Image. Default `ubuntu-16-04-x64`
-* `ipv6` - (Optional) Enable ipv6 for droplet. Default `false`
-* `monitoring` - (Optional) Enable monitoring for droplet. Default `false`
-* `private_networking` - (Optional) Enable private networking for droplet. Default `false`
-* `region` - (Optional) Digital Ocean region. Default `nyc3`
-* `size` - (Optional) Digital Ocean size. Default `s-1vcpu-1gb`
-* `ssh_key_fingerprint` - (Optional/Sensitive) SSH key fingerprint
-* `ssh_key_path` - (Optional) SSH private key path
-* `ssh_port` - (Optional) SSH port. Default `22`
-* `ssh_user` - (Optional) SSH username. Default `root`
-* `tags` - (Optional) Comma-separated list of tags to apply to the Droplet
-* `userdata` - (Optional) Path to file with cloud-init user-data
-
-### Timeouts
+## Timeouts
 
 `rancher2_node_template` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating node templates.
 - `update` - (Default `10 minutes`) Used for node template modifications.
 - `delete` - (Default `10 minutes`) Used for deleting node templates.
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `id` - (Computed) The ID of the resource.
-* `driver` - (Computed) The driver of the node template.
 
 ## Import
 

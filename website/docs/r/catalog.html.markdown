@@ -24,26 +24,28 @@ resource "rancher2_catalog" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the catalog.
-* `url` - (Required) The url of the catalog repo.
-* `description` - (Optional) A catalog description.
-* `kind` - (Optional) The kind of the catalog. Just helm by the moment.
-* `branch` - (Optional) The branch of the catalog repo to use.
-
-### Timeouts
-
-`rancher2_catalog` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-- `create` - (Default `10 minutes`) Used for creating catalogs.
-- `update` - (Default `10 minutes`) Used for catalog modifications.
-- `delete` - (Default `10 minutes`) Used for deleting catalogs.
+* `name` - (Required) The name of the catalog (string)
+* `url` - (Required) The url of the catalog repo (string)
+* `description` - (Optional) A catalog description (string)
+* `kind` - (Optional) The kind of the catalog. Just helm by the moment (string)
+* `branch` - (Optional) The branch of the catalog repo to use (string)
+* `annotations` - (Optional/Computed) Annotations for the catalog (map)
+* `labels` - (Optional/Computed) Labels for the catalog (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource.
+* `id` - (Computed) The ID of the resource (string)
+
+## Timeouts
+
+`rancher2_catalog` provides the following
+[Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating catalogs.
+- `update` - (Default `10 minutes`) Used for catalog modifications.
+- `delete` - (Default `10 minutes`) Used for deleting catalogs.
 
 ## Import
 
