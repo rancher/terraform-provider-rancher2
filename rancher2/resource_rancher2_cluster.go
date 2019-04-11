@@ -485,15 +485,6 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceRancher2ClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	err := resourceRancher2ClusterRead(d, meta)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
 // ClusterStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Cluster.
 func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

@@ -313,24 +313,6 @@ func resourceRancher2ProjectDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceRancher2ProjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	project, err := client.Project.ByID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenProject(d, project)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
 // projectStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project.
 func projectStateRefreshFunc(client *managementClient.Client, projectID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

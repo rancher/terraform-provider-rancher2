@@ -329,24 +329,6 @@ func resourceRancher2ProjectRoleTemplateBindingDelete(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceRancher2ProjectRoleTemplateBindingImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	projectRole, err := client.ProjectRoleTemplateBinding.ByID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenProjectRoleTemplateBinding(d, projectRole)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
 // PpojectRoleTemplateBindingStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project Role Template Binding.
 func projectRoleTemplateBindingStateRefreshFunc(client *managementClient.Client, projectRoleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

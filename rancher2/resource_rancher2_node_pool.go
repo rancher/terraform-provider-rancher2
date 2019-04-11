@@ -326,24 +326,6 @@ func resourceRancher2NodePoolDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceRancher2NodePoolImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	nodePool, err := client.NodePool.ByID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenNodePool(d, nodePool)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
 // nodePoolStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher NodePool.
 func nodePoolStateRefreshFunc(client *managementClient.Client, nodePoolID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

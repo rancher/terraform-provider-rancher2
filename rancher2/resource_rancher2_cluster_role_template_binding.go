@@ -329,24 +329,6 @@ func resourceRancher2ClusterRoleTemplateBindingDelete(d *schema.ResourceData, me
 	return nil
 }
 
-func resourceRancher2ClusterRoleTemplateBindingImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	clusterRole, err := client.ClusterRoleTemplateBinding.ByID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenClusterRoleTemplateBinding(d, clusterRole)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
 // clusterRoleTemplateBindingStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Cluster Role Template Binding.
 func clusterRoleTemplateBindingStateRefreshFunc(client *managementClient.Client, clusterRoleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

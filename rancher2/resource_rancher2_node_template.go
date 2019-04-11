@@ -536,25 +536,6 @@ func resourceRancher2NodeTemplateDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceRancher2NodeTemplateImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	nodeTemplate := &NodeTemplate{}
-	err = client.APIBaseClient.ByID(managementClient.NodeTemplateType, d.Id(), nodeTemplate)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenNodeTemplate(d, nodeTemplate)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
 // nodeTemplateStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher NodeTemplate.
 func nodeTemplateStateRefreshFunc(client *managementClient.Client, nodePoolID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

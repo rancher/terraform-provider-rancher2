@@ -299,24 +299,6 @@ func resourceRancher2CatalogDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourceRancher2CatalogImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	catalog, err := client.Catalog.ByID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenCatalog(d, catalog)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
 // catalogStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Catalog.
 func catalogStateRefreshFunc(client *managementClient.Client, catalogID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

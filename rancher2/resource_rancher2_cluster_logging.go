@@ -510,24 +510,6 @@ func resourceRancher2ClusterLoggingDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceRancher2ClusterLoggingImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	clusterLogging, err := client.ClusterLogging.ByID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	err = flattenClusterLogging(d, clusterLogging)
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
 // clusterLoggingStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Cluster Role Template Binding.
 func clusterLoggingStateRefreshFunc(client *managementClient.Client, clusterLoggingID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
