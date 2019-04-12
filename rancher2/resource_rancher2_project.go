@@ -10,133 +10,6 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
-//Schemas
-
-func projectFields() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"cluster_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"resource_quota": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: projectResourceQuotaFields(),
-			},
-		},
-		"annotations": &schema.Schema{
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: descriptions["annotations"],
-		},
-		"labels": &schema.Schema{
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: descriptions["labels"],
-		},
-	}
-
-	return s
-}
-
-// Flatteners
-
-func flattenProject(d *schema.ResourceData, in *managementClient.Project) error {
-	if in == nil {
-		return nil
-	}
-
-	d.SetId(in.ID)
-
-	err := d.Set("cluster_id", in.ClusterID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("description", in.Description)
-	if err != nil {
-		return err
-	}
-
-	if in.ResourceQuota != nil && in.NamespaceDefaultResourceQuota != nil {
-		resourceQuota, err := flattenProjectResourceQuota(in.ResourceQuota, in.NamespaceDefaultResourceQuota)
-		if err != nil {
-			return err
-		}
-		err = d.Set("resource_quota", resourceQuota)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = d.Set("annotations", toMapInterface(in.Annotations))
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("labels", toMapInterface(in.Labels))
-	if err != nil {
-		return err
-	}
-
-	return nil
-
-}
-
-// Expanders
-
-func expandProject(in *schema.ResourceData) (*managementClient.Project, error) {
-	obj := &managementClient.Project{}
-	if in == nil {
-		return nil, nil
-	}
-
-	if v := in.Id(); len(v) > 0 {
-		obj.ID = v
-	}
-
-	obj.ClusterID = in.Get("cluster_id").(string)
-	obj.Name = in.Get("name").(string)
-	obj.Description = in.Get("description").(string)
-
-	if v, ok := in.Get("resource_quota").([]interface{}); ok && len(v) > 0 {
-		resourceQuota, nsResourceQuota, err := expandProjectResourceQuota(v)
-		if err != nil {
-			return obj, err
-		}
-		obj.ResourceQuota = resourceQuota
-		obj.NamespaceDefaultResourceQuota = nsResourceQuota
-	}
-
-	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
-		obj.Annotations = toMapString(v)
-	}
-
-	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
-		obj.Labels = toMapString(v)
-	}
-
-	return obj, nil
-}
-
 func resourceRancher2Project() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRancher2ProjectCreate,
@@ -162,12 +35,17 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	project, err := expandProject(d)
+	project := expandProject(d)
+
+	active, err := meta.(*Config).isClusterActive(project.ClusterID)
 	if err != nil {
 		return err
 	}
+	if !active {
+		return fmt.Errorf("[ERROR] Creating Project: Cluster ID %s is not active", project.ClusterID)
+	}
 
-	log.Printf("[INFO] Creating Project %s", project.Name)
+	log.Printf("[INFO] Creating Project %s on Cluster ID %s", project.Name, project.ClusterID)
 
 	newProject, err := client.Project.Create(project)
 	if err != nil {
@@ -233,10 +111,7 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	resourceQuota, nsResourceQuota, err := expandProjectResourceQuota(d.Get("resource_quota").([]interface{}))
-	if err != nil {
-		return err
-	}
+	resourceQuota, nsResourceQuota := expandProjectResourceQuota(d.Get("resource_quota").([]interface{}))
 
 	update := map[string]interface{}{
 		"name":                          d.Get("name").(string),

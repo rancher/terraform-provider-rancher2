@@ -24,8 +24,10 @@ export TESTACC_K3S_KUBECONFIG_NAME=${TESTACC_K3S_KUBECONFIG_NAME:-"testacc_kubec
 TESTACC_K3S_KUBECONFIG=${TESTACC_TEMP_DIR}"/"${TESTACC_K3S_KUBECONFIG_NAME}
 TESTACC_K3S_PORT=${TESTACC_K3S_PORT:-6443}
 TESTACC_K3S_SECRET=${TESTACC_K3S_SECRET:-"somethingtotallyrandom"}
+TESTACC_K3S_VERSION=${TESTACC_K3S_VERSION:-"v0.2.0"}
 
 TESTACC_RANCHER_PORT=${TESTACC_RANCHER_PORT:-44443}
+TESTACC_RANCHER_VERSION=${TESTACC_RANCHER_VERSION:-"stable"}
 
 # Download required software if not available
 ## jq
@@ -68,7 +70,7 @@ fi
 # Starting rancher server
 rancher_server=$(${DOCKER_BIN} run -d \
   ${rancher_exposed_port} \
-  rancher/rancher:latest --https-listen-port=${TESTACC_RANCHER_PORT})
+  rancher/rancher:${TESTACC_RANCHER_VERSION} --https-listen-port=${TESTACC_RANCHER_PORT})
 rancher_server_ip=$(${DOCKER_BIN} inspect ${rancher_server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 echo ${rancher_server} >> ${TESTACC_DOCKER_LIST}
 
@@ -81,7 +83,7 @@ k3s_server=$(${DOCKER_BIN} run -d \
   -e K3S_CLUSTER_SECRET=${TESTACC_K3S_SECRET} \
   -e K3S_KUBECONFIG_OUTPUT=/tmp/${TESTACC_K3S_KUBECONFIG_NAME} \
   -e K3S_KUBECONFIG_MODE=666 \
-  rancher/k3s:v0.2.0 server --disable-agent --https-listen-port ${TESTACC_K3S_PORT})
+  rancher/k3s:${TESTACC_K3S_VERSION} server --disable-agent --https-listen-port ${TESTACC_K3S_PORT})
 echo ${k3s_server} >> ${TESTACC_DOCKER_LIST}
 k3s_server_ip=$(${DOCKER_BIN} inspect ${k3s_server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 k3s_node=$(${DOCKER_BIN} run -d \
@@ -90,7 +92,7 @@ k3s_node=$(${DOCKER_BIN} run -d \
   --tmpfs /var/run \
   -e K3S_URL=https://${k3s_server_ip}:${TESTACC_K3S_PORT} \
   -e K3S_CLUSTER_SECRET=${TESTACC_K3S_SECRET} \
-  rancher/k3s:v0.2.0)
+  rancher/k3s:${TESTACC_K3S_VERSION})
 echo ${k3s_node} >> ${TESTACC_DOCKER_LIST}
 
 export RANCHER_ACC_CLUSTER_NAME=bootstrap-imported-k3s-cluster

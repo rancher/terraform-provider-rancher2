@@ -44,28 +44,28 @@ func TestAccRancher2AuthConfigGithub_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2AuthConfigGithubConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, authConfig),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, "name", GithubConfigName),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, "client_id", "XXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, "client_secret", "XXXXXXXX"),
+					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, authConfig),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "name", AuthConfigGithubName),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "client_id", "XXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "client_secret", "XXXXXXXX"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2AuthConfigGithubUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, authConfig),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, "name", GithubConfigName),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, "client_id", "YYYYYY"),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, "client_secret", "YYYYYYYY"),
+					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, authConfig),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "name", AuthConfigGithubName),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "client_id", "YYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "client_secret", "YYYYYYYY"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2AuthConfigGithubRecreateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, authConfig),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, "name", GithubConfigName),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, "client_id", "XXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, "client_secret", "XXXXXXXX"),
+					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, authConfig),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "name", AuthConfigGithubName),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "client_id", "XXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "client_secret", "XXXXXXXX"),
 				),
 			},
 		},
@@ -83,7 +83,7 @@ func TestAccRancher2AuthConfigGithub_disappears(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2AuthConfigGithubConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+GithubConfigName, authConfig),
+					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, authConfig),
 					testAccRancher2AuthConfigDisappears(authConfig, testAccRancher2AuthConfigGithubType),
 				),
 				ExpectNonEmptyPlan: true,

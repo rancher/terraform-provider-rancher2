@@ -226,3 +226,13 @@ func FileExist(path string) (bool, error) {
 	}
 	return true, nil
 }
+
+func newTrue() *bool {
+	b := true
+	return &b
+}
+
+func newFalse() *bool {
+	b := false
+	return &b
+}

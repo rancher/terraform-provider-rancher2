@@ -1,0 +1,256 @@
+package rancher2
+
+import (
+	managementClient "github.com/rancher/types/client/management/v3"
+)
+
+// Flatteners
+
+func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig) ([]interface{}, error) {
+	obj := make(map[string]interface{})
+	if in == nil {
+		return []interface{}{}, nil
+	}
+
+	if in.AddonJobTimeout > 0 {
+		obj["addon_job_timeout"] = int(in.AddonJobTimeout)
+	}
+
+	if len(in.Addons) > 0 {
+		obj["addons"] = in.Addons
+	}
+
+	if len(in.AddonsInclude) > 0 {
+		obj["addons_include"] = toArrayInterface(in.AddonsInclude)
+	}
+
+	if in.Authentication != nil {
+		authn, err := flattenClusterRKEConfigAuthentication(in.Authentication)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["authentication"] = authn
+	}
+
+	if in.Authorization != nil {
+		authz, err := flattenClusterRKEConfigAuthorization(in.Authorization)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["authorization"] = authz
+	}
+
+	if in.BastionHost != nil {
+		bastion, err := flattenClusterRKEConfigBastionHost(in.BastionHost)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["bastion_host"] = bastion
+	}
+
+	if in.CloudProvider != nil {
+		cloudProvider, err := flattenClusterRKEConfigCloudProvider(in.CloudProvider)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["cloud_provider"] = cloudProvider
+	}
+
+	obj["ignore_docker_version"] = in.IgnoreDockerVersion
+
+	if in.Ingress != nil {
+		ingress, err := flattenClusterRKEConfigIngress(in.Ingress)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["ingress"] = ingress
+	}
+
+	if len(in.Version) > 0 {
+		obj["kubernetes_version"] = in.Version
+	}
+
+	if in.Monitoring != nil {
+		monitoring, err := flattenClusterRKEConfigMonitoring(in.Monitoring)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["monitoring"] = monitoring
+	}
+
+	if in.Network != nil {
+		network, err := flattenClusterRKEConfigNetwork(in.Network)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["network"] = network
+	}
+
+	if in.Nodes != nil {
+		nodes, err := flattenClusterRKEConfigNodes(in.Nodes)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["nodes"] = nodes
+	}
+
+	if len(in.PrefixPath) > 0 {
+		obj["prefix_path"] = in.PrefixPath
+	}
+
+	if in.PrivateRegistries != nil {
+		privReg, err := flattenClusterRKEConfigPrivateRegistries(in.PrivateRegistries)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["private_registries"] = privReg
+	}
+
+	if in.Services != nil {
+		services, err := flattenClusterRKEConfigServices(in.Services)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["services"] = services
+	}
+
+	obj["ssh_agent_auth"] = in.SSHAgentAuth
+
+	if len(in.SSHKeyPath) > 0 {
+		obj["ssh_key_path"] = in.SSHKeyPath
+	}
+
+	return []interface{}{obj}, nil
+}
+
+// Expanders
+
+func expandClusterRKEConfig(p []interface{}) (*managementClient.RancherKubernetesEngineConfig, error) {
+	obj := &managementClient.RancherKubernetesEngineConfig{}
+
+	// Set default network
+	network, err := expandClusterRKEConfigNetwork([]interface{}{})
+	if err != nil {
+		return obj, err
+	}
+	obj.Network = network
+
+	if len(p) == 0 || p[0] == nil {
+		return obj, nil
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["addon_job_timeout"].(int); ok && v > 0 {
+		obj.AddonJobTimeout = int64(v)
+	}
+
+	if v, ok := in["addons"].(string); ok && len(v) > 0 {
+		obj.Addons = v
+	}
+
+	if v, ok := in["addons_include"].([]interface{}); ok && len(v) > 0 {
+		obj.AddonsInclude = toArrayString(v)
+	}
+
+	if v, ok := in["authentication"].([]interface{}); ok && len(v) > 0 {
+		authn, err := expandClusterRKEConfigAuthentication(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.Authentication = authn
+	}
+
+	if v, ok := in["authorization"].([]interface{}); ok && len(v) > 0 {
+		authz, err := expandClusterRKEConfigAuthorization(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.Authorization = authz
+	}
+
+	if v, ok := in["bastion_host"].([]interface{}); ok && len(v) > 0 {
+		bastion, err := expandClusterRKEConfigBastionHost(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.BastionHost = bastion
+	}
+
+	if v, ok := in["cloud_provider"].([]interface{}); ok && len(v) > 0 {
+		cloudProvider, err := expandClusterRKEConfigCloudProvider(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.CloudProvider = cloudProvider
+	}
+
+	if v, ok := in["ignore_docker_version"].(bool); ok {
+		obj.IgnoreDockerVersion = v
+	}
+
+	if v, ok := in["ingress"].([]interface{}); ok && len(v) > 0 {
+		ingress, err := expandClusterRKEConfigIngress(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.Ingress = ingress
+	}
+
+	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
+		obj.Version = v
+	}
+
+	if v, ok := in["monitoring"].([]interface{}); ok && len(v) > 0 {
+		monitoring, err := expandClusterRKEConfigMonitoring(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.Monitoring = monitoring
+	}
+
+	if v, ok := in["network"].([]interface{}); ok && len(v) > 0 {
+		network, err := expandClusterRKEConfigNetwork(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.Network = network
+	}
+
+	if v, ok := in["nodes"].([]interface{}); ok && len(v) > 0 {
+		nodes, err := expandClusterRKEConfigNodes(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.Nodes = nodes
+	}
+
+	if v, ok := in["prefix_path"].(string); ok && len(v) > 0 {
+		obj.PrefixPath = v
+	}
+
+	if v, ok := in["private_registries"].([]interface{}); ok && len(v) > 0 {
+		privReg, err := expandClusterRKEConfigPrivateRegistries(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.PrivateRegistries = privReg
+	}
+
+	if v, ok := in["services"].([]interface{}); ok && len(v) > 0 {
+		services, err := expandClusterRKEConfigServices(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.Services = services
+	}
+
+	if v, ok := in["ssh_agent_auth"].(bool); ok {
+		obj.SSHAgentAuth = v
+	}
+
+	if v, ok := in["ssh_key_path"].(string); ok && len(v) > 0 {
+		obj.SSHKeyPath = v
+	}
+
+	return obj, nil
+}

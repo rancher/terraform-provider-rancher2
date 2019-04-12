@@ -56,28 +56,28 @@ func TestAccRancher2AuthConfigActiveDirectory_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2AuthConfigActiveDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, authConfig),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, "name", ActiveDirectoryConfigName),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, "user_search_base", "dc=test,dc=local"),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, "default_login_domain", "test"),
+					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "name", AuthConfigActiveDirectoryName),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "user_search_base", "dc=test,dc=local"),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "default_login_domain", "test"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2AuthConfigActiveDirectoryUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, authConfig),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, "name", ActiveDirectoryConfigName),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, "user_search_base", "dc=users,dc=test,dc=local"),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, "default_login_domain", "test-updated"),
+					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "name", AuthConfigActiveDirectoryName),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "user_search_base", "dc=users,dc=test,dc=local"),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "default_login_domain", "test-updated"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2AuthConfigActiveDirectoryRecreateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, authConfig),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, "name", ActiveDirectoryConfigName),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, "user_search_base", "dc=test,dc=local"),
-					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, "default_login_domain", "test"),
+					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "name", AuthConfigActiveDirectoryName),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "user_search_base", "dc=test,dc=local"),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "default_login_domain", "test"),
 				),
 			},
 		},
@@ -95,7 +95,7 @@ func TestAccRancher2AuthConfigActiveDirectory_disappears(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2AuthConfigActiveDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+ActiveDirectoryConfigName, authConfig),
+					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),
 					testAccRancher2AuthConfigDisappears(authConfig, testAccRancher2AuthConfigActiveDirectoryType),
 				),
 				ExpectNonEmptyPlan: true,
@@ -156,7 +156,7 @@ func testAccCheckRancher2AuthConfigExists(n string, auth *managementClient.AuthC
 		foundReg, err := client.AuthConfig.ByID(rs.Primary.ID)
 		if err != nil {
 			if IsNotFound(err) {
-				return fmt.Errorf("Auth Config %s not found", ActiveDirectoryConfigName)
+				return fmt.Errorf("Auth Config %s not found", AuthConfigActiveDirectoryName)
 			}
 			return err
 		}
