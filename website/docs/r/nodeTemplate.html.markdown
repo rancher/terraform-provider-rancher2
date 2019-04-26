@@ -41,6 +41,7 @@ The following arguments are supported:
 * `auth_certificate_authority` - (Optional/Sensitive) Auth certificate authority for the Node Template (string)
 * `auth_key` - (Optional/Sensitive) Auth key for the Node Template (string)
 * `azure_config` - (Optional) Azure config for the Node Template (list maxitems:1)
+* `cloud_credential_id` - (Optional) Cloud credential ID for the Node Template. Mandatory on rancher v2.2.x (string)
 * `description` - (Optional) Description for the Node Template (string)
 * `digitalocean_config` - (Optional) Digitalocean config for the Node Template (list maxitems:1)
 * `docker_version` - (Optional) Docker version for the node template (string)
@@ -68,8 +69,8 @@ The following attributes are exported:
 
 #### Arguments
 
-* `access_key` - (Required/Sensitive) AWS access key (string)
-* `secret_key` - (Required/Sensitive) AWS secret key (string)
+* `access_key` - (Optional/Sensitive) AWS access key. Mandatory on rancher v2.0.x and v2.1.x (string)
+* `secret_key` - (Optional/Sensitive) AWS secret key. Mandatory on rancher v2.0.x and v2.1.x (string)
 * `ami` - (Required) AWS machine image (string)
 * `region` - (Required) AWS region. (string)
 * `security_group` - (Required) AWS VPC security group. (list)
@@ -104,9 +105,9 @@ The following attributes are exported:
 
 #### Arguments
 
-* `client_id` - (Required/Sensitive) Azure Service Principal Account ID (string)
-* `client_secret` - (Required/Sensitive) Azure Service Principal Account password (string)
-* `subscription_id` - (Required) Azure Subscription ID (string)
+* `client_id` - (Optional/Sensitive) Azure Service Principal Account ID. Mandatory on rancher v2.0.x and v2.1.x (string)
+* `client_secret` - (Optional/Sensitive) Azure Service Principal Account password. Mandatory on rancher v2.0.x and v2.1.x (string)
+* `subscription_id` - (Optional/Sensitive) Azure Subscription ID. Mandatory on rancher v2.0.x and v2.1.x (string)
 * `availability_set` - (Optional) Azure Availability Set to place the virtual machine into. Default `docker-machine` (string)
 * `custom_data` - (Optional) Path to file with custom-data (string)
 * `dns` - (Optional) A unique DNS label for the public IP adddress (string)
@@ -131,7 +132,7 @@ The following attributes are exported:
 
 #### Arguments
 
-* `access_token` - (Required/Sensitive) Digital Ocean access token (string)
+* `access_token` - (Optional/Sensitive) Digital Ocean access token. Mandatory on rancher v2.0.x and v2.1.x (string)
 * `backups` - (Optional) Enable backups for droplet. Default `false` (bool)
 * `image` - (Optional) Digital Ocean Image. Default `ubuntu-16-04-x64` (string)
 * `ipv6` - (Optional) Enable ipv6 for droplet. Default `false` (bool)
@@ -157,7 +158,7 @@ The following attributes are exported:
 
 ## Import
 
-Node Pool can be imported using the rancher Node Template ID
+Node Template can be imported using the rancher Node Template ID
 
 ```
 $ terraform import rancher2_node_template.foo <node_template_id>
