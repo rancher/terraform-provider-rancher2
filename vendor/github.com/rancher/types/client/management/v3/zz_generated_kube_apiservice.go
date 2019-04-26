@@ -2,6 +2,7 @@ package client
 
 const (
 	KubeAPIServiceType                       = "kubeAPIService"
+	KubeAPIServiceFieldAlwaysPullImages      = "alwaysPullImages"
 	KubeAPIServiceFieldExtraArgs             = "extraArgs"
 	KubeAPIServiceFieldExtraBinds            = "extraBinds"
 	KubeAPIServiceFieldExtraEnv              = "extraEnv"
@@ -12,6 +13,7 @@ const (
 )
 
 type KubeAPIService struct {
+	AlwaysPullImages      bool              `json:"alwaysPullImages,omitempty" yaml:"alwaysPullImages,omitempty"`
 	ExtraArgs             map[string]string `json:"extraArgs,omitempty" yaml:"extraArgs,omitempty"`
 	ExtraBinds            []string          `json:"extraBinds,omitempty" yaml:"extraBinds,omitempty"`
 	ExtraEnv              []string          `json:"extraEnv,omitempty" yaml:"extraEnv,omitempty"`

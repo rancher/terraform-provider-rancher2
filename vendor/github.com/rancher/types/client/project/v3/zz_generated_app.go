@@ -18,6 +18,7 @@ const (
 	AppFieldFiles                = "files"
 	AppFieldLabels               = "labels"
 	AppFieldLastAppliedTemplates = "lastAppliedTemplate"
+	AppFieldMultiClusterAppID    = "multiClusterAppId"
 	AppFieldName                 = "name"
 	AppFieldNamespaceId          = "namespaceId"
 	AppFieldNotes                = "notes"
@@ -30,6 +31,7 @@ const (
 	AppFieldTransitioning        = "transitioning"
 	AppFieldTransitioningMessage = "transitioningMessage"
 	AppFieldUUID                 = "uuid"
+	AppFieldValuesYaml           = "valuesYaml"
 )
 
 type App struct {
@@ -46,6 +48,7 @@ type App struct {
 	Files                map[string]string `json:"files,omitempty" yaml:"files,omitempty"`
 	Labels               map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 	LastAppliedTemplates string            `json:"lastAppliedTemplate,omitempty" yaml:"lastAppliedTemplate,omitempty"`
+	MultiClusterAppID    string            `json:"multiClusterAppId,omitempty" yaml:"multiClusterAppId,omitempty"`
 	Name                 string            `json:"name,omitempty" yaml:"name,omitempty"`
 	NamespaceId          string            `json:"namespaceId,omitempty" yaml:"namespaceId,omitempty"`
 	Notes                string            `json:"notes,omitempty" yaml:"notes,omitempty"`
@@ -58,6 +61,7 @@ type App struct {
 	Transitioning        string            `json:"transitioning,omitempty" yaml:"transitioning,omitempty"`
 	TransitioningMessage string            `json:"transitioningMessage,omitempty" yaml:"transitioningMessage,omitempty"`
 	UUID                 string            `json:"uuid,omitempty" yaml:"uuid,omitempty"`
+	ValuesYaml           string            `json:"valuesYaml,omitempty" yaml:"valuesYaml,omitempty"`
 }
 
 type AppCollection struct {

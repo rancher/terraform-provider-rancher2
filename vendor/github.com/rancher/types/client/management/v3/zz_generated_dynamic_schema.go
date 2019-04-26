@@ -13,6 +13,7 @@ const (
 	DynamicSchemaFieldCollectionMethods    = "collectionMethods"
 	DynamicSchemaFieldCreated              = "created"
 	DynamicSchemaFieldCreatorID            = "creatorId"
+	DynamicSchemaFieldDynamicSchemaVersion = "dynamicSchemaVersion"
 	DynamicSchemaFieldEmbed                = "embed"
 	DynamicSchemaFieldEmbedType            = "embedType"
 	DynamicSchemaFieldIncludeableLinks     = "includeableLinks"
@@ -24,6 +25,7 @@ const (
 	DynamicSchemaFieldResourceActions      = "resourceActions"
 	DynamicSchemaFieldResourceFields       = "resourceFields"
 	DynamicSchemaFieldResourceMethods      = "resourceMethods"
+	DynamicSchemaFieldSchemaName           = "schemaName"
 	DynamicSchemaFieldState                = "state"
 	DynamicSchemaFieldStatus               = "status"
 	DynamicSchemaFieldTransitioning        = "transitioning"
@@ -40,6 +42,7 @@ type DynamicSchema struct {
 	CollectionMethods    []string             `json:"collectionMethods,omitempty" yaml:"collectionMethods,omitempty"`
 	Created              string               `json:"created,omitempty" yaml:"created,omitempty"`
 	CreatorID            string               `json:"creatorId,omitempty" yaml:"creatorId,omitempty"`
+	DynamicSchemaVersion string               `json:"dynamicSchemaVersion,omitempty" yaml:"dynamicSchemaVersion,omitempty"`
 	Embed                bool                 `json:"embed,omitempty" yaml:"embed,omitempty"`
 	EmbedType            string               `json:"embedType,omitempty" yaml:"embedType,omitempty"`
 	IncludeableLinks     []string             `json:"includeableLinks,omitempty" yaml:"includeableLinks,omitempty"`
@@ -51,6 +54,7 @@ type DynamicSchema struct {
 	ResourceActions      map[string]Action    `json:"resourceActions,omitempty" yaml:"resourceActions,omitempty"`
 	ResourceFields       map[string]Field     `json:"resourceFields,omitempty" yaml:"resourceFields,omitempty"`
 	ResourceMethods      []string             `json:"resourceMethods,omitempty" yaml:"resourceMethods,omitempty"`
+	SchemaName           string               `json:"schemaName,omitempty" yaml:"schemaName,omitempty"`
 	State                string               `json:"state,omitempty" yaml:"state,omitempty"`
 	Status               *DynamicSchemaStatus `json:"status,omitempty" yaml:"status,omitempty"`
 	Transitioning        string               `json:"transitioning,omitempty" yaml:"transitioning,omitempty"`

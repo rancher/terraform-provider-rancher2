@@ -20,10 +20,11 @@ type Client struct {
 	ClusterRoleTemplateBinding              ClusterRoleTemplateBindingOperations
 	ProjectRoleTemplateBinding              ProjectRoleTemplateBindingOperations
 	Cluster                                 ClusterOperations
-	ClusterEvent                            ClusterEventOperations
 	ClusterRegistrationToken                ClusterRegistrationTokenOperations
 	Catalog                                 CatalogOperations
 	Template                                TemplateOperations
+	CatalogTemplate                         CatalogTemplateOperations
+	CatalogTemplateVersion                  CatalogTemplateVersionOperations
 	TemplateVersion                         TemplateVersionOperations
 	TemplateContent                         TemplateContentOperations
 	Group                                   GroupOperations
@@ -40,12 +41,27 @@ type Client struct {
 	ProjectLogging                          ProjectLoggingOperations
 	ListenConfig                            ListenConfigOperations
 	Setting                                 SettingOperations
-	Notifier                                NotifierOperations
 	ClusterAlert                            ClusterAlertOperations
 	ProjectAlert                            ProjectAlertOperations
+	Notifier                                NotifierOperations
+	ClusterAlertGroup                       ClusterAlertGroupOperations
+	ProjectAlertGroup                       ProjectAlertGroupOperations
+	ClusterAlertRule                        ClusterAlertRuleOperations
+	ProjectAlertRule                        ProjectAlertRuleOperations
 	ComposeConfig                           ComposeConfigOperations
 	ProjectCatalog                          ProjectCatalogOperations
 	ClusterCatalog                          ClusterCatalogOperations
+	MultiClusterApp                         MultiClusterAppOperations
+	MultiClusterAppRevision                 MultiClusterAppRevisionOperations
+	GlobalDNS                               GlobalDNSOperations
+	GlobalDNSProvider                       GlobalDNSProviderOperations
+	KontainerDriver                         KontainerDriverOperations
+	EtcdBackup                              EtcdBackupOperations
+	MonitorMetric                           MonitorMetricOperations
+	ClusterMonitorGraph                     ClusterMonitorGraphOperations
+	ProjectMonitorGraph                     ProjectMonitorGraphOperations
+	CloudCredential                         CloudCredentialOperations
+	ManagementSecret                        ManagementSecretOperations
 }
 
 func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
@@ -71,10 +87,11 @@ func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
 	client.ClusterRoleTemplateBinding = newClusterRoleTemplateBindingClient(client)
 	client.ProjectRoleTemplateBinding = newProjectRoleTemplateBindingClient(client)
 	client.Cluster = newClusterClient(client)
-	client.ClusterEvent = newClusterEventClient(client)
 	client.ClusterRegistrationToken = newClusterRegistrationTokenClient(client)
 	client.Catalog = newCatalogClient(client)
 	client.Template = newTemplateClient(client)
+	client.CatalogTemplate = newCatalogTemplateClient(client)
+	client.CatalogTemplateVersion = newCatalogTemplateVersionClient(client)
 	client.TemplateVersion = newTemplateVersionClient(client)
 	client.TemplateContent = newTemplateContentClient(client)
 	client.Group = newGroupClient(client)
@@ -91,12 +108,27 @@ func NewClient(opts *clientbase.ClientOpts) (*Client, error) {
 	client.ProjectLogging = newProjectLoggingClient(client)
 	client.ListenConfig = newListenConfigClient(client)
 	client.Setting = newSettingClient(client)
-	client.Notifier = newNotifierClient(client)
 	client.ClusterAlert = newClusterAlertClient(client)
 	client.ProjectAlert = newProjectAlertClient(client)
+	client.Notifier = newNotifierClient(client)
+	client.ClusterAlertGroup = newClusterAlertGroupClient(client)
+	client.ProjectAlertGroup = newProjectAlertGroupClient(client)
+	client.ClusterAlertRule = newClusterAlertRuleClient(client)
+	client.ProjectAlertRule = newProjectAlertRuleClient(client)
 	client.ComposeConfig = newComposeConfigClient(client)
 	client.ProjectCatalog = newProjectCatalogClient(client)
 	client.ClusterCatalog = newClusterCatalogClient(client)
+	client.MultiClusterApp = newMultiClusterAppClient(client)
+	client.MultiClusterAppRevision = newMultiClusterAppRevisionClient(client)
+	client.GlobalDNS = newGlobalDNSClient(client)
+	client.GlobalDNSProvider = newGlobalDNSProviderClient(client)
+	client.KontainerDriver = newKontainerDriverClient(client)
+	client.EtcdBackup = newEtcdBackupClient(client)
+	client.MonitorMetric = newMonitorMetricClient(client)
+	client.ClusterMonitorGraph = newClusterMonitorGraphClient(client)
+	client.ProjectMonitorGraph = newProjectMonitorGraphClient(client)
+	client.CloudCredential = newCloudCredentialClient(client)
+	client.ManagementSecret = newManagementSecretClient(client)
 
 	return client, nil
 }
