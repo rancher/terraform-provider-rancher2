@@ -8,11 +8,6 @@ import (
 
 func clusterRKEConfigAuthenticationFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"options": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
 		"sans": {
 			Type:     schema.TypeList,
 			Optional: true,

@@ -16,6 +16,10 @@ var (
 	testClusterRKEConfigServicesKubeControllerInterface []interface{}
 	testClusterRKEConfigServicesKubeAPIConf             *managementClient.KubeAPIService
 	testClusterRKEConfigServicesKubeAPIInterface        []interface{}
+	testClusterRKEConfigServicesETCDBackupS3Conf        *managementClient.S3BackupConfig
+	testClusterRKEConfigServicesETCDBackupS3Interface   []interface{}
+	testClusterRKEConfigServicesETCDBackupConf          *managementClient.BackupConfig
+	testClusterRKEConfigServicesETCDBackupInterface     []interface{}
 	testClusterRKEConfigServicesETCDConf                *managementClient.ETCDService
 	testClusterRKEConfigServicesETCDInterface           []interface{}
 	testClusterRKEConfigServicesConf                    *managementClient.RKEConfigServices
@@ -121,7 +125,36 @@ func init() {
 			"service_node_port_range":  "30000-32000",
 		},
 	}
+	testClusterRKEConfigServicesETCDBackupS3Conf = &managementClient.S3BackupConfig{
+		AccessKey:  "access_key",
+		BucketName: "bucket_name",
+		Endpoint:   "endpoint",
+		Region:     "region",
+	}
+	testClusterRKEConfigServicesETCDBackupS3Interface = []interface{}{
+		map[string]interface{}{
+			"access_key":  "access_key",
+			"bucket_name": "bucket_name",
+			"endpoint":    "endpoint",
+			"region":      "region",
+		},
+	}
+	testClusterRKEConfigServicesETCDBackupConf = &managementClient.BackupConfig{
+		Enabled:        newTrue(),
+		IntervalHours:  20,
+		Retention:      10,
+		S3BackupConfig: testClusterRKEConfigServicesETCDBackupS3Conf,
+	}
+	testClusterRKEConfigServicesETCDBackupInterface = []interface{}{
+		map[string]interface{}{
+			"enabled":          true,
+			"interval_hours":   20,
+			"retention":        10,
+			"s3_backup_config": testClusterRKEConfigServicesETCDBackupS3Interface,
+		},
+	}
 	testClusterRKEConfigServicesETCDConf = &managementClient.ETCDService{
+		BackupConfig: testClusterRKEConfigServicesETCDBackupConf,
 		CACert:       "XXXXXXXX",
 		Cert:         "YYYYYYYY",
 		Creation:     "creation",
@@ -136,10 +169,11 @@ func init() {
 		Key:        "ZZZZZZZZ",
 		Path:       "/etcd",
 		Retention:  "6h",
-		Snapshot:   true,
+		Snapshot:   newTrue(),
 	}
 	testClusterRKEConfigServicesETCDInterface = []interface{}{
 		map[string]interface{}{
+			"backup_config": testClusterRKEConfigServicesETCDBackupInterface,
 			"ca_cert":       "XXXXXXXX",
 			"cert":          "YYYYYYYY",
 			"creation":      "creation",
@@ -264,6 +298,48 @@ func TestFlattenClusterRKEConfigServicesKubeAPI(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestFlattenClusterRKEConfigServicesEtcdBackupConfigS3(t *testing.T) {
+
+	cases := []struct {
+		Input          *managementClient.S3BackupConfig
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterRKEConfigServicesETCDBackupS3Conf,
+			testClusterRKEConfigServicesETCDBackupS3Interface,
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestFlattenClusterRKEConfigServicesEtcdBackupConfig(t *testing.T) {
+
+	cases := []struct {
+		Input          *managementClient.BackupConfig
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterRKEConfigServicesETCDBackupConf,
+			testClusterRKEConfigServicesETCDBackupInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenClusterRKEConfigServicesEtcdBackupConfig(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -408,6 +484,48 @@ func TestExpandClusterRKEConfigServicesKubeAPI(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestExpandClusterRKEConfigServicesEtcdBackupConfigS3(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput *managementClient.S3BackupConfig
+	}{
+		{
+			testClusterRKEConfigServicesETCDBackupS3Interface,
+			testClusterRKEConfigServicesETCDBackupS3Conf,
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestExpandClusterRKEConfigServicesEtcdBackupConfig(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput *managementClient.BackupConfig
+	}{
+		{
+			testClusterRKEConfigServicesETCDBackupInterface,
+			testClusterRKEConfigServicesETCDBackupConf,
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandClusterRKEConfigServicesEtcdBackupConfig(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

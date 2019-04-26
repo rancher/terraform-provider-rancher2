@@ -29,7 +29,7 @@ func flattenClusterRegistationToken(in *managementClient.ClusterRegistrationToke
 	return []interface{}{obj}, nil
 }
 
-func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput) error {
+func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput) error {
 	if in == nil {
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster is nil")
 	}
@@ -76,32 +76,13 @@ func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, cluste
 		return err
 	}
 
-	kind := d.Get("kind").(string)
-	if kind == "" {
-		if in.AzureKubernetesServiceConfig != nil && len(in.AzureKubernetesServiceConfig.AdminUsername) > 0 {
-			kind = clusterAKSKind
-		}
-		if in.AmazonElasticContainerServiceConfig != nil && len(in.AmazonElasticContainerServiceConfig.AccessKey) > 0 {
-			kind = clusterEKSKind
-		}
-		if in.GoogleKubernetesEngineConfig != nil && len(in.GoogleKubernetesEngineConfig.Credential) > 0 {
-			kind = clusterGKEKind
-		}
-		if in.RancherKubernetesEngineConfig != nil && kind == "" {
-			kind = clusterRKEKind
-		}
-		if kind == "" {
-			kind = clusterImportedKind
-		}
-
-		err = d.Set("kind", kind)
-		if err != nil {
-			return err
-		}
+	err = d.Set("driver", in.Driver)
+	if err != nil {
+		return err
 	}
 
-	switch kind {
-	case clusterAKSKind:
+	switch in.Driver {
+	case clusterDriverAKS:
 		aksConfig, err := flattenClusterAKSConfig(in.AzureKubernetesServiceConfig)
 		if err != nil {
 			return err
@@ -110,7 +91,7 @@ func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, cluste
 		if err != nil {
 			return err
 		}
-	case clusterEKSKind:
+	case clusterDriverEKS:
 		eksConfig, err := flattenClusterEKSConfig(in.AmazonElasticContainerServiceConfig)
 		if err != nil {
 			return err
@@ -119,7 +100,7 @@ func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, cluste
 		if err != nil {
 			return err
 		}
-	case clusterGKEKind:
+	case clusterDriverGKE:
 		gkeConfig, err := flattenClusterGKEConfig(in.GoogleKubernetesEngineConfig)
 		if err != nil {
 			return err
@@ -128,7 +109,7 @@ func flattenCluster(d *schema.ResourceData, in *managementClient.Cluster, cluste
 		if err != nil {
 			return err
 		}
-	case clusterRKEKind:
+	case clusterDriverRKE:
 		rkeConfig, err := flattenClusterRKEConfig(in.RancherKubernetesEngineConfig)
 		if err != nil {
 			return err
@@ -173,8 +154,8 @@ func expandClusterRegistationToken(p []interface{}, clusterID string) (*manageme
 	return obj, nil
 }
 
-func expandCluster(in *schema.ResourceData) (*managementClient.Cluster, error) {
-	obj := &managementClient.Cluster{}
+func expandCluster(in *schema.ResourceData) (*Cluster, error) {
+	obj := &Cluster{}
 	if in == nil {
 		return nil, fmt.Errorf("[ERROR] expanding cluster: Input ResourceData is nil")
 	}
@@ -186,39 +167,52 @@ func expandCluster(in *schema.ResourceData) (*managementClient.Cluster, error) {
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
 
+	if v, ok := in.Get("aks_config").([]interface{}); ok && len(v) > 0 {
+		aksConfig, err := expandClusterAKSConfig(v, obj.Name)
+		if err != nil {
+			return nil, err
+		}
+		obj.AzureKubernetesServiceConfig = aksConfig
+		obj.Driver = clusterDriverAKS
+	}
+
+	if v, ok := in.Get("eks_config").([]interface{}); ok && len(v) > 0 {
+		eksConfig, err := expandClusterEKSConfig(v, obj.Name)
+		if err != nil {
+			return nil, err
+		}
+		obj.AmazonElasticContainerServiceConfig = eksConfig
+		obj.Driver = clusterDriverEKS
+	}
+
+	if v, ok := in.Get("gke_config").([]interface{}); ok && len(v) > 0 {
+		gkeConfig, err := expandClusterGKEConfig(v, obj.Name)
+		if err != nil {
+			return nil, err
+		}
+		obj.GoogleKubernetesEngineConfig = gkeConfig
+		obj.Driver = clusterDriverGKE
+	}
+
+	if v, ok := in.Get("rke_config").([]interface{}); ok && len(v) > 0 {
+		rkeConfig, err := expandClusterRKEConfig(v, obj.Name)
+		if err != nil {
+			return nil, err
+		}
+		obj.RancherKubernetesEngineConfig = rkeConfig
+		obj.Driver = clusterDriverRKE
+	}
+
+	if len(obj.Driver) == 0 {
+		obj.Driver = clusterDriverImported
+	}
+
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
 	}
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
-	}
-
-	switch kind := in.Get("kind").(string); kind {
-	case clusterRKEKind:
-		rkeConfig, err := expandClusterRKEConfig(in.Get("rke_config").([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		obj.RancherKubernetesEngineConfig = rkeConfig
-	case clusterEKSKind:
-		eksConfig, err := expandClusterEKSConfig(in.Get("eks_config").([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		obj.AmazonElasticContainerServiceConfig = eksConfig
-	case clusterAKSKind:
-		aksConfig, err := expandClusterAKSConfig(in.Get("aks_config").([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		obj.AzureKubernetesServiceConfig = aksConfig
-	case clusterGKEKind:
-		gkeConfig, err := expandClusterGKEConfig(in.Get("gke_config").([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		obj.GoogleKubernetesEngineConfig = gkeConfig
 	}
 
 	return obj, nil

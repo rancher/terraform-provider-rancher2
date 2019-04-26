@@ -319,6 +319,13 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		}
 	}
 
+	if len(in.CloudCredentialID) > 0 {
+		err = d.Set("cloud_credential_id", in.CloudCredentialID)
+		if err != nil {
+			return err
+		}
+	}
+
 	if len(in.Description) > 0 {
 		err = d.Set("description", in.Description)
 		if err != nil {
@@ -730,6 +737,10 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 	if v, ok := in.Get("azure_config").([]interface{}); ok && len(v) > 0 {
 		obj.AzureConfig = expandAzureConfig(v)
 		obj.Driver = azureConfigDriver
+	}
+
+	if v, ok := in.Get("cloud_credential_id").(string); ok && len(v) > 0 {
+		obj.CloudCredentialID = v
 	}
 
 	if v, ok := in.Get("description").(string); ok && len(v) > 0 {

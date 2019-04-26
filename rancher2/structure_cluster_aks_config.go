@@ -1,15 +1,27 @@
 package rancher2
 
-import (
-	managementClient "github.com/rancher/types/client/management/v3"
-)
-
 // Flatteners
 
-func flattenClusterAKSConfig(in *managementClient.AzureKubernetesServiceConfig) ([]interface{}, error) {
+func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
 		return []interface{}{}, nil
+	}
+
+	if len(in.AADClientAppID) > 0 {
+		obj["add_client_app_id"] = in.AADClientAppID
+	}
+
+	if len(in.AADServerAppID) > 0 {
+		obj["add_server_app_id"] = in.AADServerAppID
+	}
+
+	if len(in.AADServerAppSecret) > 0 {
+		obj["aad_server_app_secret"] = in.AADServerAppSecret
+	}
+
+	if len(in.AADTenantID) > 0 {
+		obj["aad_tenant_id"] = in.AADTenantID
 	}
 
 	if len(in.AdminUsername) > 0 {
@@ -20,12 +32,24 @@ func flattenClusterAKSConfig(in *managementClient.AzureKubernetesServiceConfig) 
 		obj["agent_dns_prefix"] = in.AgentDNSPrefix
 	}
 
+	if in.AgentOsdiskSizeGB > 0 {
+		obj["agent_os_disk_size"] = int(in.AgentOsdiskSizeGB)
+	}
+
 	if len(in.AgentPoolName) > 0 {
 		obj["agent_pool_name"] = in.AgentPoolName
 	}
 
+	if len(in.AgentStorageProfile) > 0 {
+		obj["agent_storage_profile"] = in.AgentStorageProfile
+	}
+
 	if len(in.AgentVMSize) > 0 {
 		obj["agent_vm_size"] = in.AgentVMSize
+	}
+
+	if len(in.AuthBaseURL) > 0 {
+		obj["auth_base_url"] = in.AuthBaseURL
 	}
 
 	if len(in.BaseURL) > 0 {
@@ -52,6 +76,9 @@ func flattenClusterAKSConfig(in *managementClient.AzureKubernetesServiceConfig) 
 		obj["docker_bridge_cidr"] = in.DockerBridgeCIDR
 	}
 
+	obj["enable_http_application_routing"] = in.EnableHTTPApplicationRouting
+	obj["enable_monitoring"] = in.EnableMonitoring
+
 	if len(in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = in.KubernetesVersion
 	}
@@ -60,12 +87,32 @@ func flattenClusterAKSConfig(in *managementClient.AzureKubernetesServiceConfig) 
 		obj["location"] = in.Location
 	}
 
+	if len(in.LogAnalyticsWorkspace) > 0 {
+		obj["log_analytics_workspace"] = in.LogAnalyticsWorkspace
+	}
+
+	if len(in.LogAnalyticsWorkspaceResourceGroup) > 0 {
+		obj["log_analytics_workspace_resource_group"] = in.LogAnalyticsWorkspaceResourceGroup
+	}
+
 	if len(in.MasterDNSPrefix) > 0 {
 		obj["master_dns_prefix"] = in.MasterDNSPrefix
 	}
 
-	if in.OsDiskSizeGB > 0 {
-		obj["os_disk_size_gb"] = int(in.OsDiskSizeGB)
+	if in.MaxPods > 0 {
+		obj["max_pods"] = int(in.MaxPods)
+	}
+
+	if len(in.NetworkPlugin) > 0 {
+		obj["network_plugin"] = in.NetworkPlugin
+	}
+
+	if len(in.NetworkPolicy) > 0 {
+		obj["network_policy"] = in.NetworkPolicy
+	}
+
+	if len(in.PodCIDR) > 0 {
+		obj["pod_cidr"] = in.PodCIDR
 	}
 
 	if len(in.ResourceGroup) > 0 {
@@ -109,12 +156,31 @@ func flattenClusterAKSConfig(in *managementClient.AzureKubernetesServiceConfig) 
 
 // Expanders
 
-func expandClusterAKSConfig(p []interface{}) (*managementClient.AzureKubernetesServiceConfig, error) {
-	obj := &managementClient.AzureKubernetesServiceConfig{}
+func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServiceConfig, error) {
+	obj := &AzureKubernetesServiceConfig{}
 	if len(p) == 0 || p[0] == nil {
 		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
+
+	obj.Name = name
+	obj.DisplayName = name
+
+	if v, ok := in["add_client_app_id"].(string); ok && len(v) > 0 {
+		obj.AADClientAppID = v
+	}
+
+	if v, ok := in["add_server_app_id"].(string); ok && len(v) > 0 {
+		obj.AADServerAppID = v
+	}
+
+	if v, ok := in["aad_server_app_secret"].(string); ok && len(v) > 0 {
+		obj.AADServerAppSecret = v
+	}
+
+	if v, ok := in["aad_tenant_id"].(string); ok && len(v) > 0 {
+		obj.AADTenantID = v
+	}
 
 	if v, ok := in["admin_username"].(string); ok && len(v) > 0 {
 		obj.AdminUsername = v
@@ -124,12 +190,24 @@ func expandClusterAKSConfig(p []interface{}) (*managementClient.AzureKubernetesS
 		obj.AgentDNSPrefix = v
 	}
 
+	if v, ok := in["agent_os_disk_size"].(int); ok && v > 0 {
+		obj.AgentOsdiskSizeGB = int64(v)
+	}
+
 	if v, ok := in["agent_pool_name"].(string); ok && len(v) > 0 {
 		obj.AgentPoolName = v
 	}
 
+	if v, ok := in["agent_storage_profile"].(string); ok && len(v) > 0 {
+		obj.AgentStorageProfile = v
+	}
+
 	if v, ok := in["agent_vm_size"].(string); ok && len(v) > 0 {
 		obj.AgentVMSize = v
+	}
+
+	if v, ok := in["auth_base_url"].(string); ok && len(v) > 0 {
+		obj.AuthBaseURL = v
 	}
 
 	if v, ok := in["base_url"].(string); ok && len(v) > 0 {
@@ -156,6 +234,14 @@ func expandClusterAKSConfig(p []interface{}) (*managementClient.AzureKubernetesS
 		obj.DockerBridgeCIDR = v
 	}
 
+	if v, ok := in["enable_http_application_routing"].(bool); ok {
+		obj.EnableHTTPApplicationRouting = v
+	}
+
+	if v, ok := in["enable_monitoring"].(bool); ok {
+		obj.EnableMonitoring = v
+	}
+
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
 		obj.KubernetesVersion = v
 	}
@@ -164,12 +250,32 @@ func expandClusterAKSConfig(p []interface{}) (*managementClient.AzureKubernetesS
 		obj.Location = v
 	}
 
+	if v, ok := in["log_analytics_workspace"].(string); ok && len(v) > 0 {
+		obj.LogAnalyticsWorkspace = v
+	}
+
+	if v, ok := in["log_analytics_workspace_resource_group"].(string); ok && len(v) > 0 {
+		obj.LogAnalyticsWorkspaceResourceGroup = v
+	}
+
 	if v, ok := in["master_dns_prefix"].(string); ok && len(v) > 0 {
 		obj.MasterDNSPrefix = v
 	}
 
-	if v, ok := in["os_disk_size_gb"].(int); ok && v > 0 {
-		obj.OsDiskSizeGB = int64(v)
+	if v, ok := in["max_pods"].(int); ok && v > 0 {
+		obj.MaxPods = int64(v)
+	}
+
+	if v, ok := in["network_plugin"].(string); ok && len(v) > 0 {
+		obj.NetworkPlugin = v
+	}
+
+	if v, ok := in["network_policy"].(string); ok && len(v) > 0 {
+		obj.NetworkPolicy = v
+	}
+
+	if v, ok := in["pod_cidr"].(string); ok && len(v) > 0 {
+		obj.PodCIDR = v
 	}
 
 	if v, ok := in["resource_group"].(string); ok && len(v) > 0 {

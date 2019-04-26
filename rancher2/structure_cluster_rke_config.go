@@ -56,6 +56,14 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig)
 		obj["cloud_provider"] = cloudProvider
 	}
 
+	if in.DNS != nil {
+		dns, err := flattenClusterRKEConfigDNS(in.DNS)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["dns"] = dns
+	}
+
 	obj["ignore_docker_version"] = in.IgnoreDockerVersion
 
 	if in.Ingress != nil {
@@ -125,7 +133,7 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig)
 
 // Expanders
 
-func expandClusterRKEConfig(p []interface{}) (*managementClient.RancherKubernetesEngineConfig, error) {
+func expandClusterRKEConfig(p []interface{}, name string) (*managementClient.RancherKubernetesEngineConfig, error) {
 	obj := &managementClient.RancherKubernetesEngineConfig{}
 
 	// Set default network
@@ -139,6 +147,8 @@ func expandClusterRKEConfig(p []interface{}) (*managementClient.RancherKubernete
 		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
+
+	obj.ClusterName = name
 
 	if v, ok := in["addon_job_timeout"].(int); ok && v > 0 {
 		obj.AddonJobTimeout = int64(v)
@@ -182,6 +192,14 @@ func expandClusterRKEConfig(p []interface{}) (*managementClient.RancherKubernete
 			return obj, err
 		}
 		obj.CloudProvider = cloudProvider
+	}
+
+	if v, ok := in["dns"].([]interface{}); ok && len(v) > 0 {
+		dns, err := expandClusterRKEConfigDNS(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.DNS = dns
 	}
 
 	if v, ok := in["ignore_docker_version"].(bool); ok {

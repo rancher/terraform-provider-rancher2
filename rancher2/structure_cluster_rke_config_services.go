@@ -138,10 +138,55 @@ func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService)
 	return []interface{}{obj}, nil
 }
 
+func flattenClusterRKEConfigServicesEtcdBackupConfigS3(in *managementClient.S3BackupConfig) []interface{} {
+	obj := make(map[string]interface{})
+	if in == nil {
+		return []interface{}{}
+	}
+
+	obj["access_key"] = in.AccessKey
+	obj["bucket_name"] = in.BucketName
+	obj["endpoint"] = in.Endpoint
+	obj["region"] = in.Region
+
+	if len(in.SecretKey) > 0 {
+		obj["secret_key"] = in.SecretKey
+	}
+
+	return []interface{}{obj}
+}
+
+func flattenClusterRKEConfigServicesEtcdBackupConfig(in *managementClient.BackupConfig) []interface{} {
+	obj := make(map[string]interface{})
+	if in == nil {
+		return []interface{}{}
+	}
+
+	obj["enabled"] = *in.Enabled
+
+	if in.IntervalHours > 0 {
+		obj["interval_hours"] = int(in.IntervalHours)
+	}
+
+	if in.Retention > 0 {
+		obj["retention"] = int(in.Retention)
+	}
+
+	if in.S3BackupConfig != nil {
+		obj["s3_backup_config"] = flattenClusterRKEConfigServicesEtcdBackupConfigS3(in.S3BackupConfig)
+	}
+
+	return []interface{}{obj}
+}
+
 func flattenClusterRKEConfigServicesEtcd(in *managementClient.ETCDService) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
 		return []interface{}{}, nil
+	}
+
+	if in.BackupConfig != nil {
+		obj["backup_config"] = flattenClusterRKEConfigServicesEtcdBackupConfig(in.BackupConfig)
 	}
 
 	if len(in.CACert) > 0 {
@@ -188,7 +233,7 @@ func flattenClusterRKEConfigServicesEtcd(in *managementClient.ETCDService) ([]in
 		obj["retention"] = in.Retention
 	}
 
-	obj["snapshot"] = in.Snapshot
+	obj["snapshot"] = *in.Snapshot
 
 	return []interface{}{obj}, nil
 }
@@ -384,12 +429,72 @@ func expandClusterRKEConfigServicesKubeAPI(p []interface{}) (*managementClient.K
 	return obj, nil
 }
 
+func expandClusterRKEConfigServicesEtcdBackupConfigS3(p []interface{}) *managementClient.S3BackupConfig {
+	obj := &managementClient.S3BackupConfig{}
+	if len(p) == 0 || p[0] == nil {
+		return obj
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["access_key"].(string); ok && len(v) > 0 {
+		obj.AccessKey = v
+	}
+
+	if v, ok := in["bucket_name"].(string); ok && len(v) > 0 {
+		obj.BucketName = v
+	}
+
+	if v, ok := in["endpoint"].(string); ok && len(v) > 0 {
+		obj.Endpoint = v
+	}
+
+	if v, ok := in["region"].(string); ok && len(v) > 0 {
+		obj.Region = v
+	}
+
+	if v, ok := in["secret_key"].(string); ok && len(v) > 0 {
+		obj.SecretKey = v
+	}
+
+	return obj
+}
+
+func expandClusterRKEConfigServicesEtcdBackupConfig(p []interface{}) *managementClient.BackupConfig {
+	obj := &managementClient.BackupConfig{}
+	if len(p) == 0 || p[0] == nil {
+		return obj
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["enabled"].(bool); ok {
+		obj.Enabled = &v
+	}
+
+	if v, ok := in["interval_hours"].(int); ok && v > 0 {
+		obj.IntervalHours = int64(v)
+	}
+
+	if v, ok := in["retention"].(int); ok && v > 0 {
+		obj.Retention = int64(v)
+	}
+
+	if v, ok := in["s3_backup_config"].([]interface{}); ok && len(v) > 0 {
+		obj.S3BackupConfig = expandClusterRKEConfigServicesEtcdBackupConfigS3(v)
+	}
+
+	return obj
+}
+
 func expandClusterRKEConfigServicesEtcd(p []interface{}) (*managementClient.ETCDService, error) {
 	obj := &managementClient.ETCDService{}
 	if len(p) == 0 || p[0] == nil {
 		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
+
+	if v, ok := in["backup_config"].([]interface{}); ok && len(v) > 0 {
+		obj.BackupConfig = expandClusterRKEConfigServicesEtcdBackupConfig(v)
+	}
 
 	if v, ok := in["ca_cert"].(string); ok && len(v) > 0 {
 		obj.CACert = v
@@ -436,7 +541,7 @@ func expandClusterRKEConfigServicesEtcd(p []interface{}) (*managementClient.ETCD
 	}
 
 	if v, ok := in["snapshot"].(bool); ok {
-		obj.Snapshot = v
+		obj.Snapshot = &v
 	}
 
 	return obj, nil

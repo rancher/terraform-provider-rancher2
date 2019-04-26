@@ -14,20 +14,12 @@ var (
 
 func init() {
 	testClusterRKEConfigAuthenticationConf = &managementClient.AuthnConfig{
-		SANs: []string{"sans1", "sans2"},
-		Options: map[string]string{
-			"option1": "value1",
-			"option2": "value2",
-		},
+		SANs:     []string{"sans1", "sans2"},
 		Strategy: "strategy",
 	}
 	testClusterRKEConfigAuthenticationInterface = []interface{}{
 		map[string]interface{}{
-			"sans": []interface{}{"sans1", "sans2"},
-			"options": map[string]interface{}{
-				"option1": "value1",
-				"option2": "value2",
-			},
+			"sans":     []interface{}{"sans1", "sans2"},
 			"strategy": "strategy",
 		},
 	}

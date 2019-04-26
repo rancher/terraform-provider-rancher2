@@ -45,6 +45,19 @@ func flattenClusterRKEConfigNetworkFlannel(in *managementClient.FlannelNetworkPr
 	return []interface{}{obj}, nil
 }
 
+func flattenClusterRKEConfigNetworkWeave(in *managementClient.WeaveNetworkProvider) ([]interface{}, error) {
+	obj := make(map[string]interface{})
+	if in == nil {
+		return []interface{}{}, nil
+	}
+
+	if len(in.Password) > 0 {
+		obj["password"] = in.Password
+	}
+
+	return []interface{}{obj}, nil
+}
+
 func flattenClusterRKEConfigNetwork(in *managementClient.NetworkConfig) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
@@ -73,6 +86,14 @@ func flattenClusterRKEConfigNetwork(in *managementClient.NetworkConfig) ([]inter
 			return []interface{}{obj}, err
 		}
 		obj["flannel_network_provider"] = flannelNetwork
+	}
+
+	if in.WeaveNetworkProvider != nil {
+		weaveNetwork, err := flattenClusterRKEConfigNetworkWeave(in.WeaveNetworkProvider)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["weave_network_provider"] = weaveNetwork
 	}
 
 	if len(in.Options) > 0 {
@@ -130,6 +151,20 @@ func expandClusterRKEConfigNetworkFlannel(p []interface{}) (*managementClient.Fl
 	return obj, nil
 }
 
+func expandClusterRKEConfigNetworkWeave(p []interface{}) (*managementClient.WeaveNetworkProvider, error) {
+	obj := &managementClient.WeaveNetworkProvider{}
+	if len(p) == 0 || p[0] == nil {
+		return obj, nil
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["password"].(string); ok && len(v) > 0 {
+		obj.Password = v
+	}
+
+	return obj, nil
+}
+
 func expandClusterRKEConfigNetwork(p []interface{}) (*managementClient.NetworkConfig, error) {
 	obj := &managementClient.NetworkConfig{}
 	if len(p) == 0 || p[0] == nil {
@@ -160,6 +195,14 @@ func expandClusterRKEConfigNetwork(p []interface{}) (*managementClient.NetworkCo
 			return obj, err
 		}
 		obj.FlannelNetworkProvider = flannelNetwork
+	}
+
+	if v, ok := in["weave_network_provider"].([]interface{}); ok && len(v) > 0 {
+		weaveNetwork, err := expandClusterRKEConfigNetworkWeave(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.WeaveNetworkProvider = weaveNetwork
 	}
 
 	if v, ok := in["options"].(map[string]interface{}); ok && len(v) > 0 {

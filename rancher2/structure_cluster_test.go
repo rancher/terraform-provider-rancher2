@@ -1,7 +1,6 @@
 package rancher2
 
 import (
-	//"fmt"
 	"reflect"
 	"testing"
 
@@ -14,13 +13,13 @@ var (
 	testClusterRegistrationToken2Conf     *managementClient.ClusterRegistrationToken
 	testClusterRegistrationTokenInterface []interface{}
 	testClusterGenerateKubeConfigOutput   *managementClient.GenerateKubeConfigOutput
-	testClusterConfAKS                    *managementClient.Cluster
+	testClusterConfAKS                    *Cluster
 	testClusterInterfaceAKS               map[string]interface{}
-	testClusterConfEKS                    *managementClient.Cluster
+	testClusterConfEKS                    *Cluster
 	testClusterInterfaceEKS               map[string]interface{}
-	testClusterConfGKE                    *managementClient.Cluster
+	testClusterConfGKE                    *Cluster
 	testClusterInterfaceGKE               map[string]interface{}
-	testClusterConfRKE                    *managementClient.Cluster
+	testClusterConfRKE                    *Cluster
 	testClusterInterfaceRKE               map[string]interface{}
 )
 
@@ -77,60 +76,63 @@ func init() {
 	testClusterGenerateKubeConfigOutput = &managementClient.GenerateKubeConfigOutput{
 		Config: "kube_config",
 	}
-	testClusterConfAKS = &managementClient.Cluster{
-		Name:                         "test",
-		Description:                  "description",
+	testClusterConfAKS = &Cluster{
 		AzureKubernetesServiceConfig: testClusterAKSConfigConf,
 	}
+	testClusterConfAKS.Name = "test"
+	testClusterConfAKS.Description = "description"
+	testClusterConfAKS.Driver = clusterDriverAKS
 	testClusterInterfaceAKS = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
 		"description":                "description",
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"kube_config":                "kube_config",
-		"kind":                       clusterAKSKind,
+		"driver":                     clusterDriverAKS,
 		"aks_config":                 testClusterAKSConfigInterface,
 	}
-	testClusterConfEKS = &managementClient.Cluster{
-		Name:                                "test",
-		Description:                         "description",
+	testClusterConfEKS = &Cluster{
 		AmazonElasticContainerServiceConfig: testClusterEKSConfigConf,
 	}
+	testClusterConfEKS.Name = "test"
+	testClusterConfEKS.Description = "description"
+	testClusterConfEKS.Driver = clusterDriverEKS
 	testClusterInterfaceEKS = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
 		"description":                "description",
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"kube_config":                "kube_config",
-		"kind":                       clusterEKSKind,
+		"driver":                     clusterDriverEKS,
 		"eks_config":                 testClusterEKSConfigInterface,
 	}
-	testClusterConfGKE = &managementClient.Cluster{
-		Name:                         "test",
-		Description:                  "description",
+	testClusterConfGKE = &Cluster{
 		GoogleKubernetesEngineConfig: testClusterGKEConfigConf,
 	}
+	testClusterConfGKE.Name = "test"
+	testClusterConfGKE.Description = "description"
+	testClusterConfGKE.Driver = clusterDriverGKE
 	testClusterInterfaceGKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
 		"description":                "description",
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"kube_config":                "kube_config",
-		"kind":                       clusterGKEKind,
+		"driver":                     clusterDriverGKE,
 		"gke_config":                 testClusterGKEConfigInterface,
 	}
-	testClusterConfRKE = &managementClient.Cluster{
-		Name:                          "test",
-		Description:                   "description",
-		RancherKubernetesEngineConfig: testClusterRKEConfigConf,
-	}
+	testClusterConfRKE = &Cluster{}
+	testClusterConfRKE.Name = "test"
+	testClusterConfRKE.Description = "description"
+	testClusterConfRKE.RancherKubernetesEngineConfig = testClusterRKEConfigConf
+	testClusterConfRKE.Driver = clusterDriverRKE
 	testClusterInterfaceRKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
 		"description":                "description",
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"kube_config":                "kube_config",
-		"kind":                       clusterRKEKind,
+		"driver":                     clusterDriverRKE,
 		"rke_config":                 testClusterRKEConfigInterface,
 	}
 }
@@ -163,7 +165,7 @@ func TestFlattenClusterRegistationToken(t *testing.T) {
 func TestFlattenCluster(t *testing.T) {
 
 	cases := []struct {
-		Input          *managementClient.Cluster
+		Input          *Cluster
 		InputToken     *managementClient.ClusterRegistrationToken
 		InputKube      *managementClient.GenerateKubeConfigOutput
 		ExpectedOutput map[string]interface{}
@@ -195,7 +197,7 @@ func TestFlattenCluster(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{"kind": tc.ExpectedOutput["kind"]})
+		output := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{})
 		tc.InputToken.ID = "id"
 		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube)
 		if err != nil {
@@ -206,11 +208,10 @@ func TestFlattenCluster(t *testing.T) {
 			expectedOutput[k] = output.Get(k)
 
 		}
-		if tc.ExpectedOutput["kind"] == clusterRKEKind {
+		if tc.ExpectedOutput["driver"] == clusterDriverRKE {
 			expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig)
 		}
 		expectedOutput["id"] = "id"
-		//fmt.Printf("rke_config: \n%s \n%s\n", tc.ExpectedOutput["rke_config"], expectedOutput["rke_config"])
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, expectedOutput)
@@ -247,7 +248,7 @@ func TestExpandCluster(t *testing.T) {
 
 	cases := []struct {
 		Input          map[string]interface{}
-		ExpectedOutput *managementClient.Cluster
+		ExpectedOutput *Cluster
 	}{
 		{
 			testClusterInterfaceAKS,

@@ -3,16 +3,26 @@ package rancher2
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 const (
-	clusterImportedKind          = "imported"
+	clusterDriverImported        = "imported"
 	clusterRegistrationTokenName = "system"
 )
 
 var (
-	clusterKinds = []string{clusterImportedKind, clusterEKSKind, clusterAKSKind, clusterGKEKind, clusterRKEKind}
+	clusterDrivers = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverRKE}
 )
+
+//Types
+
+type Cluster struct {
+	managementClient.Cluster
+	AmazonElasticContainerServiceConfig *AmazonElasticContainerServiceConfig `json:"amazonElasticContainerServiceConfig,omitempty" yaml:"amazonElasticContainerServiceConfig,omitempty"`
+	AzureKubernetesServiceConfig        *AzureKubernetesServiceConfig        `json:"azureKubernetesServiceConfig,omitempty" yaml:"azureKubernetesServiceConfig,omitempty"`
+	GoogleKubernetesEngineConfig        *GoogleKubernetesEngineConfig        `json:"googleKubernetesEngineConfig,omitempty" yaml:"googleKubernetesEngineConfig,omitempty"`
+}
 
 // Schemas
 
@@ -71,11 +81,11 @@ func clusterFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"kind": &schema.Schema{
+		"driver": &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
-			Default:      clusterRKEKind,
-			ValidateFunc: validation.StringInSlice(clusterKinds, true),
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(clusterDrivers, true),
 		},
 		"kube_config": &schema.Schema{
 			Type:     schema.TypeString,

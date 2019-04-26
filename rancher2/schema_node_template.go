@@ -102,7 +102,7 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"access_key": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "AWS Access Key",
 		},
@@ -195,7 +195,7 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 		},
 		"secret_key": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "AWS Secret Key",
 		},
@@ -294,13 +294,13 @@ func azureConfigFields() map[string]*schema.Schema {
 		},
 		"client_id": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "Azure Service Principal Account ID (optional, browser auth is used if not specified)",
 		},
 		"client_secret": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "Azure Service Principal Account password (optional, browser auth is used if not specified)",
 		},
@@ -401,7 +401,8 @@ func azureConfigFields() map[string]*schema.Schema {
 		},
 		"subscription_id": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
+			Sensitive:   true,
 			Description: "Azure Subscription ID",
 		},
 		"use_private_ip": {
@@ -425,7 +426,7 @@ func digitaloceanConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"access_token": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "Digital Ocean access token",
 		},
@@ -543,6 +544,10 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: azureConfigFields(),
 			},
+		},
+		"cloud_credential_id": {
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"description": &schema.Schema{
 			Type:     schema.TypeString,

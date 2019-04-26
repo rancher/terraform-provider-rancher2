@@ -16,7 +16,6 @@ const (
 resource "rancher2_cluster" "foo" {
   name = "foo-custom"
   description = "Terraform node pool cluster acceptance test"
-  kind = "rke"
   rke_config {
     network {
       plugin = "canal"

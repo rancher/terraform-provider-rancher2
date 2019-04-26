@@ -3,28 +3,31 @@ package rancher2
 import (
 	"reflect"
 	"testing"
-
-	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testClusterEKSConfigConf      *managementClient.AmazonElasticContainerServiceConfig
+	testClusterEKSConfigConf      *AmazonElasticContainerServiceConfig
 	testClusterEKSConfigInterface []interface{}
 )
 
 func init() {
-	testClusterEKSConfigConf = &managementClient.AmazonElasticContainerServiceConfig{
+	testClusterEKSConfigConf = &AmazonElasticContainerServiceConfig{
 		AccessKey:                   "XXXXXXXX",
 		SecretKey:                   "YYYYYYYY",
 		AMI:                         "ami",
 		AssociateWorkerNodePublicIP: newTrue(),
+		DisplayName:                 "test",
 		InstanceType:                "instance",
+		KubernetesVersion:           "1.11",
 		MaximumNodes:                5,
 		MinimumNodes:                3,
+		NodeVolumeSize:              40,
 		Region:                      "region",
 		SecurityGroups:              []string{"sg1", "sg2"},
 		ServiceRole:                 "role",
+		SessionToken:                "session_token",
 		Subnets:                     []string{"subnet1", "subnet2"},
+		UserData:                    "user_data",
 		VirtualNetwork:              "network",
 	}
 	testClusterEKSConfigInterface = []interface{}{
@@ -34,12 +37,16 @@ func init() {
 			"ami":                             "ami",
 			"associate_worker_node_public_ip": true,
 			"instance_type":                   "instance",
+			"kubernetes_version":              "1.11",
 			"maximum_nodes":                   5,
 			"minimum_nodes":                   3,
+			"node_volume_size":                40,
 			"region":                          "region",
 			"security_groups":                 []interface{}{"sg1", "sg2"},
 			"service_role":                    "role",
+			"session_token":                   "session_token",
 			"subnets":                         []interface{}{"subnet1", "subnet2"},
+			"user_data":                       "user_data",
 			"virtual_network":                 "network",
 		},
 	}
@@ -48,7 +55,7 @@ func init() {
 func TestFlattenClusterEKSConfig(t *testing.T) {
 
 	cases := []struct {
-		Input          *managementClient.AmazonElasticContainerServiceConfig
+		Input          *AmazonElasticContainerServiceConfig
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -73,7 +80,7 @@ func TestExpandClusterEKSConfig(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput *managementClient.AmazonElasticContainerServiceConfig
+		ExpectedOutput *AmazonElasticContainerServiceConfig
 	}{
 		{
 			testClusterEKSConfigInterface,
@@ -82,7 +89,7 @@ func TestExpandClusterEKSConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := expandClusterEKSConfig(tc.Input)
+		output, err := expandClusterEKSConfig(tc.Input, "test")
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}

@@ -9,11 +9,12 @@ const (
 	networkPluginCalicoName  = "calico"
 	networkPluginCanalName   = "canal"
 	networkPluginFlannelName = "flannel"
+	networkPluginWeaveName   = "weave"
 )
 
 var (
 	networkPluginDefault = networkPluginCanalName
-	networkPluginList    = []string{networkPluginCanalName, networkPluginFlannelName, networkPluginCalicoName}
+	networkPluginList    = []string{networkPluginCalicoName, networkPluginCanalName, networkPluginFlannelName, networkPluginWeaveName}
 )
 
 //Schemas
@@ -51,6 +52,16 @@ func clusterRKEConfigNetworkFlannelFields() map[string]*schema.Schema {
 	return s
 }
 
+func clusterRKEConfigNetworkWeaveFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"password": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	}
+	return s
+}
+
 func clusterRKEConfigNetworkFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"calico_network_provider": {
@@ -75,6 +86,14 @@ func clusterRKEConfigNetworkFields() map[string]*schema.Schema {
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigNetworkFlannelFields(),
+			},
+		},
+		"weave_network_provider": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigNetworkWeaveFields(),
 			},
 		},
 		"options": {

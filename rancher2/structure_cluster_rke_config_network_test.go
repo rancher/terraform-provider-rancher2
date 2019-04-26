@@ -14,12 +14,16 @@ var (
 	testClusterRKEConfigNetworkCanalInterface   []interface{}
 	testClusterRKEConfigNetworkFlannelConf      *managementClient.FlannelNetworkProvider
 	testClusterRKEConfigNetworkFlannelInterface []interface{}
+	testClusterRKEConfigNetworkWeaveConf        *managementClient.WeaveNetworkProvider
+	testClusterRKEConfigNetworkWeaveInterface   []interface{}
 	testClusterRKEConfigNetworkConfCalico       *managementClient.NetworkConfig
 	testClusterRKEConfigNetworkInterfaceCalico  []interface{}
 	testClusterRKEConfigNetworkConfCanal        *managementClient.NetworkConfig
 	testClusterRKEConfigNetworkInterfaceCanal   []interface{}
 	testClusterRKEConfigNetworkConfFlannel      *managementClient.NetworkConfig
 	testClusterRKEConfigNetworkInterfaceFlannel []interface{}
+	testClusterRKEConfigNetworkConfWeave        *managementClient.NetworkConfig
+	testClusterRKEConfigNetworkInterfaceWeave   []interface{}
 )
 
 func init() {
@@ -45,6 +49,14 @@ func init() {
 	testClusterRKEConfigNetworkFlannelInterface = []interface{}{
 		map[string]interface{}{
 			"iface": "eth0",
+		},
+	}
+	testClusterRKEConfigNetworkWeaveConf = &managementClient.WeaveNetworkProvider{
+		Password: "password",
+	}
+	testClusterRKEConfigNetworkWeaveInterface = []interface{}{
+		map[string]interface{}{
+			"password": "password",
 		},
 	}
 	testClusterRKEConfigNetworkConfCalico = &managementClient.NetworkConfig{
@@ -99,6 +111,24 @@ func init() {
 				"option2": "value2",
 			},
 			"plugin": networkPluginFlannelName,
+		},
+	}
+	testClusterRKEConfigNetworkConfWeave = &managementClient.NetworkConfig{
+		WeaveNetworkProvider: testClusterRKEConfigNetworkWeaveConf,
+		Options: map[string]string{
+			"option1": "value1",
+			"option2": "value2",
+		},
+		Plugin: networkPluginWeaveName,
+	}
+	testClusterRKEConfigNetworkInterfaceWeave = []interface{}{
+		map[string]interface{}{
+			"weave_network_provider": testClusterRKEConfigNetworkWeaveInterface,
+			"options": map[string]interface{}{
+				"option1": "value1",
+				"option2": "value2",
+			},
+			"plugin": networkPluginWeaveName,
 		},
 	}
 }
@@ -175,6 +205,30 @@ func TestFlattenClusterRKEConfigNetworkFlannel(t *testing.T) {
 	}
 }
 
+func TestFlattenClusterRKEConfigNetworkWeave(t *testing.T) {
+
+	cases := []struct {
+		Input          *managementClient.WeaveNetworkProvider
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterRKEConfigNetworkWeaveConf,
+			testClusterRKEConfigNetworkWeaveInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output, err := flattenClusterRKEConfigNetworkWeave(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
 func TestFlattenClusterRKEConfigNetwork(t *testing.T) {
 
 	cases := []struct {
@@ -192,6 +246,10 @@ func TestFlattenClusterRKEConfigNetwork(t *testing.T) {
 		{
 			testClusterRKEConfigNetworkConfFlannel,
 			testClusterRKEConfigNetworkInterfaceFlannel,
+		},
+		{
+			testClusterRKEConfigNetworkConfWeave,
+			testClusterRKEConfigNetworkInterfaceWeave,
 		},
 	}
 
@@ -279,6 +337,30 @@ func TestExpandClusterRKEConfigNetworkFlannel(t *testing.T) {
 	}
 }
 
+func TestExpandClusterRKEConfigNetworkWeave(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput *managementClient.WeaveNetworkProvider
+	}{
+		{
+			testClusterRKEConfigNetworkWeaveInterface,
+			testClusterRKEConfigNetworkWeaveConf,
+		},
+	}
+
+	for _, tc := range cases {
+		output, err := expandClusterRKEConfigNetworkWeave(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
 func TestExpandClusterRKEConfigNetwork(t *testing.T) {
 
 	cases := []struct {
@@ -296,6 +378,10 @@ func TestExpandClusterRKEConfigNetwork(t *testing.T) {
 		{
 			testClusterRKEConfigNetworkInterfaceFlannel,
 			testClusterRKEConfigNetworkConfFlannel,
+		},
+		{
+			testClusterRKEConfigNetworkInterfaceWeave,
+			testClusterRKEConfigNetworkConfWeave,
 		},
 	}
 

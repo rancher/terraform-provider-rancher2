@@ -124,7 +124,8 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 
 	readClusterID, readProjectID := splitProjectID(ns.ProjectID)
 
-	if projectID != readProjectID && clusterID == readClusterID {
+	if projectID != readProjectID && (clusterID == readClusterID || readClusterID == "") {
+		log.Printf("[INFO] Moving Namespace ID %s to project %s", d.Id(), projectID)
 		nsMove := &clusterClient.NamespaceMove{
 			ProjectID: projectID,
 		}

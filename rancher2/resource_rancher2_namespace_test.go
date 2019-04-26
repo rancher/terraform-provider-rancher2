@@ -241,12 +241,15 @@ func testAccCheckRancher2NamespaceDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = client.Namespace.ByID(rs.Primary.ID)
+		obj, err := client.Namespace.ByID(rs.Primary.ID)
 		if err != nil {
 			if IsNotFound(err) {
 				return nil
 			}
 			return err
+		}
+		if obj.Removed != "" {
+			return nil
 		}
 		return fmt.Errorf("Namespace still exists")
 	}

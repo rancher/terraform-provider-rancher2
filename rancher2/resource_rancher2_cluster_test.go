@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -16,7 +17,6 @@ const (
 resource "rancher2_cluster" "foo" {
   name = "foo"
   description = "Terraform custom cluster acceptance test"
-  kind = "rke"
   rke_config {
     network {
       plugin = "canal"
@@ -35,15 +35,14 @@ resource "rancher2_cluster" "foo" {
 resource "rancher2_cluster" "foo" {
   name = "foo"
   description = "Terraform custom cluster acceptance test - updated"
-  kind = "rke"
   rke_config {
     network {
       plugin = "canal"
     }
     services {
       etcd {
-        creation = "6h"
-        retention = "24h"
+        creation = "12h"
+        retention = "72h"
       }
 	}
   }
@@ -54,7 +53,6 @@ resource "rancher2_cluster" "foo" {
 resource "rancher2_cluster" "foo" {
   name = "foo"
   description = "Terraform custom cluster acceptance test"
-  kind = "rke"
   rke_config {
     network {
       plugin = "canal"
@@ -73,7 +71,6 @@ resource "rancher2_cluster" "foo" {
 resource "rancher2_cluster" "foo" {
   name = "foo"
   description = "Terraform imported cluster acceptance test"
-  kind = "imported"
 }
 `
 
@@ -81,7 +78,6 @@ resource "rancher2_cluster" "foo" {
 resource "rancher2_cluster" "foo" {
   name = "foo"
   description = "Terraform imported cluster acceptance test - updated"
-  kind = "imported"
 }
  `
 
@@ -89,13 +85,12 @@ resource "rancher2_cluster" "foo" {
 resource "rancher2_cluster" "foo" {
   name = "foo"
   description = "Terraform imported cluster acceptance test"
-  kind = "imported"
 }
  `
 )
 
 func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
-	var cluster *managementClient.Cluster
+	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -108,7 +103,6 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform custom cluster acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "kind", "rke"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
 				),
@@ -119,9 +113,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform custom cluster acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "kind", "rke"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "12h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "72h"),
 				),
 			},
 			resource.TestStep{
@@ -130,7 +123,6 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform custom cluster acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "kind", "rke"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
 				),
@@ -140,7 +132,7 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 }
 
 func TestAccRancher2Cluster_disappears_RKE(t *testing.T) {
-	var cluster *managementClient.Cluster
+	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -160,7 +152,7 @@ func TestAccRancher2Cluster_disappears_RKE(t *testing.T) {
 }
 
 func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
-	var cluster *managementClient.Cluster
+	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -173,7 +165,7 @@ func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform imported cluster acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "kind", "imported"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "driver", ""),
 				),
 			},
 			resource.TestStep{
@@ -182,7 +174,7 @@ func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform imported cluster acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "kind", "imported"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "driver", ""),
 				),
 			},
 			resource.TestStep{
@@ -191,7 +183,7 @@ func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform imported cluster acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "kind", "imported"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "driver", ""),
 				),
 			},
 		},
@@ -199,7 +191,7 @@ func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
 }
 
 func TestAccRancher2Cluster_disappears_Imported(t *testing.T) {
-	var cluster *managementClient.Cluster
+	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -218,7 +210,7 @@ func TestAccRancher2Cluster_disappears_Imported(t *testing.T) {
 	})
 }
 
-func testAccRancher2ClusterDisappears(pro *managementClient.Cluster) resource.TestCheckFunc {
+func testAccRancher2ClusterDisappears(pro *Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != testAccRancher2ClusterType {
@@ -229,7 +221,8 @@ func testAccRancher2ClusterDisappears(pro *managementClient.Cluster) resource.Te
 				return err
 			}
 
-			pro, err = client.Cluster.ByID(rs.Primary.ID)
+			pro := &norman.Resource{}
+			err = client.APIBaseClient.ByID(managementClient.ClusterType, rs.Primary.ID, pro)
 			if err != nil {
 				if IsNotFound(err) {
 					return nil
@@ -237,7 +230,7 @@ func testAccRancher2ClusterDisappears(pro *managementClient.Cluster) resource.Te
 				return err
 			}
 
-			err = client.Cluster.Delete(pro)
+			err = client.APIBaseClient.Delete(pro)
 			if err != nil {
 				return fmt.Errorf("Error removing Cluster: %s", err)
 			}
@@ -245,7 +238,7 @@ func testAccRancher2ClusterDisappears(pro *managementClient.Cluster) resource.Te
 			stateConf := &resource.StateChangeConf{
 				Pending:    []string{"active", "removing"},
 				Target:     []string{"removed"},
-				Refresh:    clusterRegistrationTokenStateRefreshFunc(client, pro.ID),
+				Refresh:    clusterStateRefreshFunc(client, pro.ID),
 				Timeout:    10 * time.Minute,
 				Delay:      1 * time.Second,
 				MinTimeout: 3 * time.Second,
@@ -262,7 +255,7 @@ func testAccRancher2ClusterDisappears(pro *managementClient.Cluster) resource.Te
 	}
 }
 
-func testAccCheckRancher2ClusterExists(n string, pro *managementClient.Cluster) resource.TestCheckFunc {
+func testAccCheckRancher2ClusterExists(n string, pro *Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -279,7 +272,8 @@ func testAccCheckRancher2ClusterExists(n string, pro *managementClient.Cluster) 
 			return err
 		}
 
-		foundPro, err := client.Cluster.ByID(rs.Primary.ID)
+		foundPro := &Cluster{}
+		err = client.APIBaseClient.ByID(managementClient.ClusterType, rs.Primary.ID, foundPro)
 		if err != nil {
 			if IsNotFound(err) {
 				return fmt.Errorf("Cluster not found")
@@ -303,13 +297,15 @@ func testAccCheckRancher2ClusterDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = client.Cluster.ByID(rs.Primary.ID)
+		obj := &Cluster{}
+		err = client.APIBaseClient.ByID(managementClient.ClusterType, rs.Primary.ID, obj)
 		if err != nil {
 			if IsNotFound(err) {
 				return nil
 			}
 			return err
 		}
+
 		return fmt.Errorf("Cluster still exists")
 	}
 	return nil

@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	clusterRKEKind = "rke"
+	clusterRKEKind   = "rke"
+	clusterDriverRKE = "rancherKubernetesEngine"
 )
 
 //Schemas
@@ -68,6 +69,15 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigCloudProviderFields(),
+			},
+		},
+		"dns": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigDNSFields(),
 			},
 		},
 		"ignore_docker_version": {

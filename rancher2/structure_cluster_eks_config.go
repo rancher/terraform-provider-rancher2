@@ -1,12 +1,8 @@
 package rancher2
 
-import (
-	managementClient "github.com/rancher/types/client/management/v3"
-)
-
 // Flatteners
 
-func flattenClusterEKSConfig(in *managementClient.AmazonElasticContainerServiceConfig) ([]interface{}, error) {
+func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
 		return []interface{}{}, nil
@@ -30,12 +26,20 @@ func flattenClusterEKSConfig(in *managementClient.AmazonElasticContainerServiceC
 		obj["instance_type"] = in.InstanceType
 	}
 
+	if len(in.KubernetesVersion) > 0 {
+		obj["kubernetes_version"] = in.KubernetesVersion
+	}
+
 	if in.MaximumNodes > 0 {
 		obj["maximum_nodes"] = int(in.MaximumNodes)
 	}
 
 	if in.MinimumNodes > 0 {
 		obj["minimum_nodes"] = int(in.MinimumNodes)
+	}
+
+	if in.NodeVolumeSize > 0 {
+		obj["node_volume_size"] = int(in.NodeVolumeSize)
 	}
 
 	if len(in.Region) > 0 {
@@ -50,8 +54,16 @@ func flattenClusterEKSConfig(in *managementClient.AmazonElasticContainerServiceC
 		obj["service_role"] = in.ServiceRole
 	}
 
+	if len(in.SessionToken) > 0 {
+		obj["session_token"] = in.SessionToken
+	}
+
 	if len(in.Subnets) > 0 {
 		obj["subnets"] = toArrayInterface(in.Subnets)
+	}
+
+	if len(in.UserData) > 0 {
+		obj["user_data"] = in.UserData
 	}
 
 	if len(in.VirtualNetwork) > 0 {
@@ -63,12 +75,14 @@ func flattenClusterEKSConfig(in *managementClient.AmazonElasticContainerServiceC
 
 // Expanders
 
-func expandClusterEKSConfig(p []interface{}) (*managementClient.AmazonElasticContainerServiceConfig, error) {
-	obj := &managementClient.AmazonElasticContainerServiceConfig{}
+func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContainerServiceConfig, error) {
+	obj := &AmazonElasticContainerServiceConfig{}
 	if len(p) == 0 || p[0] == nil {
 		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
+
+	obj.DisplayName = name
 
 	if v, ok := in["access_key"].(string); ok && len(v) > 0 {
 		obj.AccessKey = v
@@ -90,12 +104,20 @@ func expandClusterEKSConfig(p []interface{}) (*managementClient.AmazonElasticCon
 		obj.InstanceType = v
 	}
 
+	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
+		obj.KubernetesVersion = v
+	}
+
 	if v, ok := in["maximum_nodes"].(int); ok && v > 0 {
 		obj.MaximumNodes = int64(v)
 	}
 
 	if v, ok := in["minimum_nodes"].(int); ok && v > 0 {
 		obj.MinimumNodes = int64(v)
+	}
+
+	if v, ok := in["node_volume_size"].(int); ok && v > 0 {
+		obj.NodeVolumeSize = int64(v)
 	}
 
 	if v, ok := in["region"].(string); ok && len(v) > 0 {
@@ -110,8 +132,16 @@ func expandClusterEKSConfig(p []interface{}) (*managementClient.AmazonElasticCon
 		obj.ServiceRole = v
 	}
 
+	if v, ok := in["session_token"].(string); ok && len(v) > 0 {
+		obj.SessionToken = v
+	}
+
 	if v, ok := in["subnets"].([]interface{}); ok && len(v) > 0 {
 		obj.Subnets = toArrayString(v)
+	}
+
+	if v, ok := in["user_data"].(string); ok && len(v) > 0 {
+		obj.UserData = v
 	}
 
 	if v, ok := in["virtual_network"].(string); ok && len(v) > 0 {

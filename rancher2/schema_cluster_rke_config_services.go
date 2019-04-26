@@ -171,8 +171,74 @@ func clusterRKEConfigServicesKubeAPIFields() map[string]*schema.Schema {
 	return s
 }
 
+func clusterRKEConfigServicesEtcdBackupConfigS3Fields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"access_key": {
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
+		},
+		"bucket_name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"endpoint": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"region": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"secret_key": {
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
+		},
+	}
+	return s
+}
+
+func clusterRKEConfigServicesEtcdBackupConfigFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"enabled": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  true,
+		},
+		"interval_hours": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  12,
+		},
+		"retention": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  6,
+		},
+		"s3_backup_config": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesEtcdBackupConfigS3Fields(),
+			},
+		},
+	}
+	return s
+}
+
 func clusterRKEConfigServicesEtcdFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"backup_config": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesEtcdBackupConfigFields(),
+			},
+		},
 		"ca_cert": {
 			Type:     schema.TypeString,
 			Optional: true,

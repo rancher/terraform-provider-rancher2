@@ -21,6 +21,7 @@ func init() {
 		Authorization:       testClusterRKEConfigAuthorizationConf,
 		BastionHost:         testClusterRKEConfigBastionHostConf,
 		CloudProvider:       testClusterRKEConfigCloudProviderConf,
+		ClusterName:         "test",
 		IgnoreDockerVersion: true,
 		Ingress:             testClusterRKEConfigIngressConf,
 		Version:             "test",
@@ -94,7 +95,7 @@ func TestExpandClusterRKEConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := expandClusterRKEConfig(tc.Input)
+		output, err := expandClusterRKEConfig(tc.Input, "test")
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}

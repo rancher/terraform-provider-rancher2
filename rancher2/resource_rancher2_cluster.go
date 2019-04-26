@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -44,17 +45,16 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	expectedState := "active"
 
-	kind := d.Get("kind").(string)
-
-	if kind == clusterImportedKind {
+	if cluster.Driver == clusterDriverImported {
 		expectedState = "pending"
 	}
 
-	if kind == clusterRKEKind {
+	if cluster.Driver == clusterDriverRKE {
 		expectedState = "provisioning"
 	}
 
-	newCluster, err := client.Cluster.Create(cluster)
+	newCluster := &Cluster{}
+	err = client.APIBaseClient.Create(managementClient.ClusterType, cluster, newCluster)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,8 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	cluster, err := client.Cluster.ByID(d.Id())
+	cluster := &Cluster{}
+	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 	if err != nil {
 		if IsNotFound(err) {
 			log.Printf("[INFO] Cluster ID %s not found.", cluster.ID)
@@ -100,7 +101,14 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	kubeConfig, err := client.Cluster.ActionGenerateKubeconfig(cluster)
+	clusterResource := &norman.Resource{
+		ID:      cluster.ID,
+		Type:    cluster.Type,
+		Links:   cluster.Links,
+		Actions: cluster.Actions,
+	}
+	kubeConfig := &managementClient.GenerateKubeConfigOutput{}
+	err = client.APIBaseClient.Action(managementClient.ClusterType, "generateKubeconfig", clusterResource, nil, kubeConfig)
 	if err != nil {
 		return err
 	}
@@ -121,7 +129,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	cluster, err := client.Cluster.ByID(d.Id())
+	cluster := &norman.Resource{}
+	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 	if err != nil {
 		return err
 	}
@@ -133,34 +142,35 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
-	switch kind := d.Get("kind").(string); kind {
-	case clusterRKEKind:
-		rkeConfig, err := expandClusterRKEConfig(d.Get("rke_config").([]interface{}))
-		if err != nil {
-			return err
-		}
-		update["rancherKubernetesEngineConfig"] = rkeConfig
-	case clusterEKSKind:
-		eksConfig, err := expandClusterEKSConfig(d.Get("eks_config").([]interface{}))
-		if err != nil {
-			return err
-		}
-		update["amazonElasticContainerServiceConfig"] = eksConfig
-	case clusterAKSKind:
-		aksConfig, err := expandClusterAKSConfig(d.Get("aks_config").([]interface{}))
+	switch driver := d.Get("driver").(string); driver {
+	case clusterDriverAKS:
+		aksConfig, err := expandClusterAKSConfig(d.Get("aks_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
 			return err
 		}
 		update["azureKubernetesServiceConfig"] = aksConfig
-	case clusterGKEKind:
-		gkeConfig, err := expandClusterGKEConfig(d.Get("gke_config").([]interface{}))
+	case clusterDriverEKS:
+		eksConfig, err := expandClusterEKSConfig(d.Get("eks_config").([]interface{}), d.Get("name").(string))
+		if err != nil {
+			return err
+		}
+		update["amazonElasticContainerServiceConfig"] = eksConfig
+	case clusterDriverGKE:
+		gkeConfig, err := expandClusterGKEConfig(d.Get("gke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
 			return err
 		}
 		update["googleKubernetesEngineConfig"] = gkeConfig
+	case clusterDriverRKE:
+		rkeConfig, err := expandClusterRKEConfig(d.Get("rke_config").([]interface{}), d.Get("name").(string))
+		if err != nil {
+			return err
+		}
+		update["rancherKubernetesEngineConfig"] = rkeConfig
 	}
 
-	newCluster, err := meta.(*Config).UpdateClusterByID(cluster, update)
+	newCluster := &CloudCredential{}
+	err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
 	if err != nil {
 		return err
 	}
@@ -191,7 +201,8 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	cluster, err := client.Cluster.ByID(id)
+	cluster := &norman.Resource{}
+	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 	if err != nil {
 		if IsNotFound(err) {
 			log.Printf("[INFO] Cluster ID %s not found.", d.Id())
@@ -201,7 +212,7 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	err = client.Cluster.Delete(cluster)
+	err = client.APIBaseClient.Delete(cluster)
 	if err != nil {
 		return fmt.Errorf("Error removing Cluster: %s", err)
 	}
@@ -227,10 +238,11 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-// ClusterStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Cluster.
+// clusterStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Cluster.
 func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		obj, err := client.Cluster.ByID(clusterID)
+		obj := &Cluster{}
+		err := client.APIBaseClient.ByID(managementClient.ClusterType, clusterID, obj)
 		if err != nil {
 			if IsNotFound(err) {
 				return obj, "removed", nil
@@ -238,15 +250,11 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 			return nil, "", err
 		}
 
-		if obj.Removed != "" {
-			return obj, "removed", nil
-		}
-
 		return obj, obj.State, nil
 	}
 }
 
-// ClusterRegistrationTokenStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher ClusterRegistrationToken.
+// clusterRegistrationTokenStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher ClusterRegistrationToken.
 func clusterRegistrationTokenStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.ClusterRegistrationToken.ByID(clusterID)

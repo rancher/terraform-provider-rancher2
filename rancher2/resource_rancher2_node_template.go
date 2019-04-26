@@ -45,6 +45,19 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"active"},
+		Refresh:    nodeDriverStateRefreshFunc(client, nodeTemplate.Driver),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for node driver (%s) to be activated: %s", nodeTemplate.Driver, waitErr)
+	}
+
 	newNodeTemplate := &NodeTemplate{}
 
 	err = client.APIBaseClient.Create(managementClient.NodeTemplateType, nodeTemplate, newNodeTemplate)
@@ -52,7 +65,7 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf = &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    nodeTemplateStateRefreshFunc(client, newNodeTemplate.ID),
@@ -60,7 +73,7 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr = stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for node template (%s) to be created: %s", newNodeTemplate.ID, waitErr)
 	}
@@ -133,7 +146,7 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 	case azureConfigDriver:
 		update["azureConfig"] = expandAzureConfig(d.Get("azure_config").([]interface{}))
 	case digitaloceanConfigDriver:
-		update["digitaloceanConfig"] = expandAzureConfig(d.Get("digitalocean_config").([]interface{}))
+		update["digitaloceanConfig"] = expandDigitaloceanConfig(d.Get("digitalocean_config").([]interface{}))
 	}
 
 	newNodeTemplate := &NodeTemplate{}
