@@ -14,11 +14,8 @@ func flattenEtcdBackup(d *schema.ResourceData, in *managementClient.EtcdBackup) 
 
 	d.SetId(in.ID)
 
-	if v, ok := d.Get("backup_config.0.s3_backup_config.0.secret_key").(string); ok && len(v) > 0 {
-		in.BackupConfig.S3BackupConfig.SecretKey = d.Get("backup_config.0.s3_backup_config.0.secret_key").(string)
-	}
-
-	err := d.Set("backup_config", flattenClusterRKEConfigServicesEtcdBackupConfig(in.BackupConfig))
+	backupConfig := d.Get("backup_config").([]interface{})
+	err := d.Set("backup_config", flattenClusterRKEConfigServicesEtcdBackupConfig(in.BackupConfig, backupConfig))
 	if err != nil {
 		return err
 	}

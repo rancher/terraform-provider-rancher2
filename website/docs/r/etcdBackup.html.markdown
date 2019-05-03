@@ -61,7 +61,7 @@ The following attributes are exported:
 * `enabled` - (Optional) Enable etcd backup (bool)
 * `interval_hours` - (Optional) Interval hours for etcd backup. Default `12` (int)
 * `retention` - (Optional) Retention for etcd backup. Default `6` (int)
-* `s3_backup_config` - (Optional) S3 config options for etcd backup (list maxitems:1)
+* `s3_backup_config` - (Optional) S3 config options for etcd backup. Valid for `imported` and `rke` clusters. (list maxitems:1)
 
 #### `s3_backup_config`
 

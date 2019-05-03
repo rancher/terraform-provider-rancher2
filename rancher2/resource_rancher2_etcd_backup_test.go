@@ -53,7 +53,7 @@ resource "rancher2_etcd_backup" "foo" {
 	  bucket_name = "bucket_name"
 	  endpoint = "endpoint"
 	  region = "region"
-	  secret_key = "secret_key"
+	  secret_key = "secret_key2"
 	}
   }
   cluster_id = "` + testAccRancher2ClusterID + `"
@@ -107,7 +107,7 @@ func TestAccRancher2EtcdBackup_basic(t *testing.T) {
 					testAccCheckRancher2EtcdBackupExists(testAccRancher2EtcdBackupType+".foo", etcdBackup),
 					resource.TestCheckResourceAttr(testAccRancher2EtcdBackupType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2EtcdBackupType+".foo", "filename", "foo-filename-updated"),
-					resource.TestCheckResourceAttr(testAccRancher2EtcdBackupType+".foo", "backup_config.0.s3_backup_config.0.secret_key", "secret_key"),
+					resource.TestCheckResourceAttr(testAccRancher2EtcdBackupType+".foo", "backup_config.0.s3_backup_config.0.secret_key", "secret_key2"),
 				),
 			},
 			resource.TestStep{
