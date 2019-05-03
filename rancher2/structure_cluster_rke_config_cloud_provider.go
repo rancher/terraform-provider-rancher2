@@ -6,14 +6,32 @@ import (
 
 // Flatteners
 
-func flattenClusterRKEConfigCloudProvider(in *managementClient.CloudProvider) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigCloudProvider(in *managementClient.CloudProvider, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
 
+	if in.AWSCloudProvider != nil {
+		awsProvider, err := flattenClusterRKEConfigCloudProviderAws(in.AWSCloudProvider)
+		if err != nil {
+			return []interface{}{obj}, err
+		}
+		obj["aws_cloud_provider"] = awsProvider
+	}
+
 	if in.AzureCloudProvider != nil {
-		azureProvider, err := flattenClusterRKEConfigCloudProviderAzure(in.AzureCloudProvider)
+		v, ok := obj["azure_cloud_provider"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		azureProvider, err := flattenClusterRKEConfigCloudProviderAzure(in.AzureCloudProvider, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}
@@ -29,7 +47,11 @@ func flattenClusterRKEConfigCloudProvider(in *managementClient.CloudProvider) ([
 	}
 
 	if in.OpenstackCloudProvider != nil {
-		openstackProvider, err := flattenClusterRKEConfigCloudProviderOpenstack(in.OpenstackCloudProvider)
+		v, ok := obj["openstack_cloud_provider"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		openstackProvider, err := flattenClusterRKEConfigCloudProviderOpenstack(in.OpenstackCloudProvider, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}
@@ -37,7 +59,11 @@ func flattenClusterRKEConfigCloudProvider(in *managementClient.CloudProvider) ([
 	}
 
 	if in.VsphereCloudProvider != nil {
-		vsphereProvider, err := flattenClusterRKEConfigCloudProviderVsphere(in.VsphereCloudProvider)
+		v, ok := obj["vsphere_cloud_provider"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		vsphereProvider, err := flattenClusterRKEConfigCloudProviderVsphere(in.VsphereCloudProvider, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}
@@ -55,6 +81,14 @@ func expandClusterRKEConfigCloudProvider(p []interface{}) (*managementClient.Clo
 		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
+
+	if v, ok := in["aws_cloud_provider"].([]interface{}); ok && len(v) > 0 {
+		awsProvider, err := expandClusterRKEConfigCloudProviderAws(v)
+		if err != nil {
+			return obj, err
+		}
+		obj.AWSCloudProvider = awsProvider
+	}
 
 	if v, ok := in["azure_cloud_provider"].([]interface{}); ok && len(v) > 0 {
 		azureProvider, err := expandClusterRKEConfigCloudProviderAzure(v)

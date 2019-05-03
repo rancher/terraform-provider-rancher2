@@ -147,7 +147,7 @@ func TestFlattenClusterRKEConfigCloudProviderVsphereGlobal(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigCloudProviderVsphereGlobal(tc.Input)
+		output, err := flattenClusterRKEConfigCloudProviderVsphereGlobal(tc.Input, testClusterRKEConfigCloudProviderVsphereGlobalInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
@@ -195,7 +195,7 @@ func TestFlattenClusterRKEConfigCloudProviderVsphereVirtualCenter(t *testing.T) 
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigCloudProviderVsphereVirtualCenter(tc.Input)
+		output, err := flattenClusterRKEConfigCloudProviderVsphereVirtualCenter(tc.Input, testClusterRKEConfigCloudProviderVsphereVirtualCenterInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
@@ -243,7 +243,7 @@ func TestFlattenClusterRKEConfigCloudProviderVsphere(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigCloudProviderVsphere(tc.Input)
+		output, err := flattenClusterRKEConfigCloudProviderVsphere(tc.Input, testClusterRKEConfigCloudProviderVsphereInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

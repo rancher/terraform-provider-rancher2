@@ -71,7 +71,7 @@ func TestFlattenClusterRKEConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfig(tc.Input)
+		output, err := flattenClusterRKEConfig(tc.Input, testClusterRKEConfigInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

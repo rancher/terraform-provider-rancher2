@@ -6,8 +6,14 @@ import (
 
 // Flatteners
 
-func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
@@ -49,7 +55,11 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig)
 	}
 
 	if in.CloudProvider != nil {
-		cloudProvider, err := flattenClusterRKEConfigCloudProvider(in.CloudProvider)
+		v, ok := obj["cloud_provider"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		cloudProvider, err := flattenClusterRKEConfigCloudProvider(in.CloudProvider, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}
@@ -115,7 +125,11 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig)
 	}
 
 	if in.Services != nil {
-		services, err := flattenClusterRKEConfigServices(in.Services)
+		v, ok := obj["services"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		services, err := flattenClusterRKEConfigServices(in.Services, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}

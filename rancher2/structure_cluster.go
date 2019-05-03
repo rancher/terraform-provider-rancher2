@@ -110,7 +110,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 			return err
 		}
 	case clusterDriverRKE:
-		rkeConfig, err := flattenClusterRKEConfig(in.RancherKubernetesEngineConfig)
+		v, ok := d.Get("rke_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		rkeConfig, err := flattenClusterRKEConfig(in.RancherKubernetesEngineConfig, v)
 		if err != nil {
 			return err
 		}

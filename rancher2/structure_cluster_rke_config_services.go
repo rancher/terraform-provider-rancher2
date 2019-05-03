@@ -138,8 +138,14 @@ func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService)
 	return []interface{}{obj}, nil
 }
 
-func flattenClusterRKEConfigServicesEtcdBackupConfigS3(in *managementClient.S3BackupConfig) []interface{} {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigServicesEtcdBackupConfigS3(in *managementClient.S3BackupConfig, p []interface{}) []interface{} {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}
 	}
@@ -156,8 +162,14 @@ func flattenClusterRKEConfigServicesEtcdBackupConfigS3(in *managementClient.S3Ba
 	return []interface{}{obj}
 }
 
-func flattenClusterRKEConfigServicesEtcdBackupConfig(in *managementClient.BackupConfig) []interface{} {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigServicesEtcdBackupConfig(in *managementClient.BackupConfig, p []interface{}) []interface{} {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}
 	}
@@ -173,20 +185,34 @@ func flattenClusterRKEConfigServicesEtcdBackupConfig(in *managementClient.Backup
 	}
 
 	if in.S3BackupConfig != nil {
-		obj["s3_backup_config"] = flattenClusterRKEConfigServicesEtcdBackupConfigS3(in.S3BackupConfig)
+		v, ok := obj["s3_backup_config"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		obj["s3_backup_config"] = flattenClusterRKEConfigServicesEtcdBackupConfigS3(in.S3BackupConfig, v)
 	}
 
 	return []interface{}{obj}
 }
 
-func flattenClusterRKEConfigServicesEtcd(in *managementClient.ETCDService) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigServicesEtcd(in *managementClient.ETCDService, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
 
 	if in.BackupConfig != nil {
-		obj["backup_config"] = flattenClusterRKEConfigServicesEtcdBackupConfig(in.BackupConfig)
+		v, ok := obj["backup_config"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		obj["backup_config"] = flattenClusterRKEConfigServicesEtcdBackupConfig(in.BackupConfig, v)
 	}
 
 	if len(in.CACert) > 0 {
@@ -238,14 +264,24 @@ func flattenClusterRKEConfigServicesEtcd(in *managementClient.ETCDService) ([]in
 	return []interface{}{obj}, nil
 }
 
-func flattenClusterRKEConfigServices(in *managementClient.RKEConfigServices) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigServices(in *managementClient.RKEConfigServices, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
 
 	if in.Etcd != nil {
-		etcd, err := flattenClusterRKEConfigServicesEtcd(in.Etcd)
+		v, ok := obj["etcd"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		etcd, err := flattenClusterRKEConfigServicesEtcd(in.Etcd, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}

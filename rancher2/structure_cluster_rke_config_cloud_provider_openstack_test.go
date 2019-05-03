@@ -164,7 +164,7 @@ func TestFlattenClusterRKEConfigCloudProviderOpenstackGlobal(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigCloudProviderOpenstackGlobal(tc.Input)
+		output, err := flattenClusterRKEConfigCloudProviderOpenstackGlobal(tc.Input, testClusterRKEConfigCloudProviderOpenstackGlobalInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
@@ -260,7 +260,7 @@ func TestFlattenClusterRKEConfigCloudProviderOpenstack(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigCloudProviderOpenstack(tc.Input)
+		output, err := flattenClusterRKEConfigCloudProviderOpenstack(tc.Input, testClusterRKEConfigCloudProviderOpenstackInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

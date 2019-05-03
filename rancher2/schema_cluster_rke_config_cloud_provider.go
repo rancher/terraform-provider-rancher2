@@ -6,7 +6,6 @@ import (
 )
 
 const (
-	cloudProviderAwsName    = "aws"
 	cloudProviderCustomName = "custom"
 )
 
@@ -18,6 +17,14 @@ var (
 
 func clusterRKEConfigCloudProviderFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"aws_cloud_provider": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigCloudProviderAwsFields(),
+			},
+		},
 		"azure_cloud_provider": {
 			Type:     schema.TypeList,
 			MaxItems: 1,

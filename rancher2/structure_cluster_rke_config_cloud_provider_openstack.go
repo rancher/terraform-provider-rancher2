@@ -22,8 +22,14 @@ func flattenClusterRKEConfigCloudProviderOpenstackBlockStorage(in *managementCli
 	return []interface{}{obj}, nil
 }
 
-func flattenClusterRKEConfigCloudProviderOpenstackGlobal(in *managementClient.GlobalOpenstackOpts) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigCloudProviderOpenstackGlobal(in *managementClient.GlobalOpenstackOpts, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
@@ -152,8 +158,14 @@ func flattenClusterRKEConfigCloudProviderOpenstackRoute(in *managementClient.Rou
 	return []interface{}{obj}, nil
 }
 
-func flattenClusterRKEConfigCloudProviderOpenstack(in *managementClient.OpenstackCloudProvider) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigCloudProviderOpenstack(in *managementClient.OpenstackCloudProvider, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
@@ -167,7 +179,11 @@ func flattenClusterRKEConfigCloudProviderOpenstack(in *managementClient.Openstac
 	}
 
 	if in.Global != nil {
-		global, err := flattenClusterRKEConfigCloudProviderOpenstackGlobal(in.Global)
+		v, ok := obj["global"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		global, err := flattenClusterRKEConfigCloudProviderOpenstackGlobal(in.Global, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}

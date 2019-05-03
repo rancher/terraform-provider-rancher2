@@ -318,7 +318,7 @@ func TestFlattenClusterRKEConfigServicesEtcdBackupConfigS3(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input)
+		output := flattenClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input, testClusterRKEConfigServicesETCDBackupS3Interface)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -339,7 +339,7 @@ func TestFlattenClusterRKEConfigServicesEtcdBackupConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenClusterRKEConfigServicesEtcdBackupConfig(tc.Input)
+		output := flattenClusterRKEConfigServicesEtcdBackupConfig(tc.Input, testClusterRKEConfigServicesETCDBackupInterface)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -360,7 +360,7 @@ func TestFlattenClusterRKEConfigServicesEtcd(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigServicesEtcd(tc.Input)
+		output, err := flattenClusterRKEConfigServicesEtcd(tc.Input, testClusterRKEConfigServicesETCDInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
@@ -384,7 +384,7 @@ func TestFlattenClusterRKEConfigServices(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigServices(tc.Input)
+		output, err := flattenClusterRKEConfigServices(tc.Input, testClusterRKEConfigServicesInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

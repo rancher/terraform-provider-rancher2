@@ -90,7 +90,7 @@ func TestFlattenClusterRKEConfigCloudProviderAzure(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigCloudProviderAzure(tc.Input)
+		output, err := flattenClusterRKEConfigCloudProviderAzure(tc.Input, testClusterRKEConfigCloudProviderAzureInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

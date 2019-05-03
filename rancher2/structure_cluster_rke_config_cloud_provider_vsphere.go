@@ -19,8 +19,14 @@ func flattenClusterRKEConfigCloudProviderVsphereDisk(in *managementClient.DiskVs
 	return []interface{}{obj}, nil
 }
 
-func flattenClusterRKEConfigCloudProviderVsphereGlobal(in *managementClient.GlobalVsphereOpts) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigCloudProviderVsphereGlobal(in *managementClient.GlobalVsphereOpts, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
@@ -63,7 +69,7 @@ func flattenClusterRKEConfigCloudProviderVsphereNetwork(in *managementClient.Net
 	return []interface{}{obj}, nil
 }
 
-func flattenClusterRKEConfigCloudProviderVsphereVirtualCenter(in map[string]managementClient.VirtualCenterConfig) ([]interface{}, error) {
+func flattenClusterRKEConfigCloudProviderVsphereVirtualCenter(in map[string]managementClient.VirtualCenterConfig, p []interface{}) ([]interface{}, error) {
 	if len(in) == 0 {
 		return []interface{}{}, nil
 	}
@@ -71,7 +77,13 @@ func flattenClusterRKEConfigCloudProviderVsphereVirtualCenter(in map[string]mana
 	out := make([]interface{}, len(in))
 	i := 0
 	for key := range in {
-		obj := make(map[string]interface{})
+		var obj map[string]interface{}
+		if p[i] == nil {
+			obj = make(map[string]interface{})
+		} else {
+			obj = p[i].(map[string]interface{})
+		}
+
 		obj["name"] = key
 		if len(in[key].Datacenters) > 0 {
 			obj["datacenters"] = in[key].Datacenters
@@ -128,8 +140,14 @@ func flattenClusterRKEConfigCloudProviderVsphereWorkspace(in *managementClient.W
 	return []interface{}{obj}, nil
 }
 
-func flattenClusterRKEConfigCloudProviderVsphere(in *managementClient.VsphereCloudProvider) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigCloudProviderVsphere(in *managementClient.VsphereCloudProvider, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
@@ -143,7 +161,11 @@ func flattenClusterRKEConfigCloudProviderVsphere(in *managementClient.VsphereClo
 	}
 
 	if in.Global != nil {
-		global, err := flattenClusterRKEConfigCloudProviderVsphereGlobal(in.Global)
+		v, ok := obj["global"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		global, err := flattenClusterRKEConfigCloudProviderVsphereGlobal(in.Global, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}
@@ -159,7 +181,11 @@ func flattenClusterRKEConfigCloudProviderVsphere(in *managementClient.VsphereClo
 	}
 
 	if in.VirtualCenter != nil {
-		vc, err := flattenClusterRKEConfigCloudProviderVsphereVirtualCenter(in.VirtualCenter)
+		v, ok := obj["virtual_center"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		vc, err := flattenClusterRKEConfigCloudProviderVsphereVirtualCenter(in.VirtualCenter, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}
