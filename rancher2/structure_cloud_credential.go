@@ -8,8 +8,14 @@ import (
 
 // Flatteners
 
-func flattenCloudCredentialAmazonec2(in *amazonec2CredentialConfig) []interface{} {
-	obj := make(map[string]interface{})
+func flattenCloudCredentialAmazonec2(in *amazonec2CredentialConfig, p []interface{}) []interface{} {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}
 	}
@@ -25,8 +31,14 @@ func flattenCloudCredentialAmazonec2(in *amazonec2CredentialConfig) []interface{
 	return []interface{}{obj}
 }
 
-func flattenCloudCredentialAzure(in *azureCredentialConfig) []interface{} {
-	obj := make(map[string]interface{})
+func flattenCloudCredentialAzure(in *azureCredentialConfig, p []interface{}) []interface{} {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}
 	}
@@ -46,8 +58,14 @@ func flattenCloudCredentialAzure(in *azureCredentialConfig) []interface{} {
 	return []interface{}{obj}
 }
 
-func flattenCloudCredentialDigitalocean(in *digitaloceanCredentialConfig) []interface{} {
-	obj := make(map[string]interface{})
+func flattenCloudCredentialDigitalocean(in *digitaloceanCredentialConfig, p []interface{}) []interface{} {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}
 	}
@@ -82,14 +100,23 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 
 	switch driver {
 	case amazonec2ConfigDriver:
-		in.Amazonec2CredentialConfig.SecretKey = d.Get("amazonec2_credential_config.0.secret_key").(string)
-		d.Set("amazonec2_credential_config", flattenCloudCredentialAmazonec2(in.Amazonec2CredentialConfig))
+		v, ok := d.Get("amazonec2_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		d.Set("amazonec2_credential_config", flattenCloudCredentialAmazonec2(in.Amazonec2CredentialConfig, v))
 	case azureConfigDriver:
-		in.AzureCredentialConfig.ClientSecret = d.Get("azure_credential_config.0.client_secret").(string)
-		d.Set("azure_credential_config", flattenCloudCredentialAzure(in.AzureCredentialConfig))
+		v, ok := d.Get("azure_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		d.Set("azure_credential_config", flattenCloudCredentialAzure(in.AzureCredentialConfig, v))
 	case digitaloceanConfigDriver:
-		in.DigitaloceanCredentialConfig.AccessToken = d.Get("digitalocean_credential_config.0.access_token").(string)
-		d.Set("digitalocean_credential_config", flattenCloudCredentialDigitalocean(in.DigitaloceanCredentialConfig))
+		v, ok := d.Get("digitalocean_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		d.Set("digitalocean_credential_config", flattenCloudCredentialDigitalocean(in.DigitaloceanCredentialConfig, v))
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on cloud credential: %s", driver)
 	}

@@ -101,7 +101,7 @@ func TestFlattenCloudCredentialAmazonec2(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenCloudCredentialAmazonec2(tc.Input)
+		output := flattenCloudCredentialAmazonec2(tc.Input, tc.ExpectedOutput)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -122,7 +122,7 @@ func TestFlattenCloudCredentialAzure(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenCloudCredentialAzure(tc.Input)
+		output := flattenCloudCredentialAzure(tc.Input, tc.ExpectedOutput)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -143,7 +143,7 @@ func TestFlattenCloudCredentialDigitalocean(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenCloudCredentialDigitalocean(tc.Input)
+		output := flattenCloudCredentialDigitalocean(tc.Input, tc.ExpectedOutput)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
