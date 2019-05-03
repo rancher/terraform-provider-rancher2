@@ -18,7 +18,6 @@ Creating Rancher v2 imported cluster
 resource "rancher2_cluster" "foo-imported" {
   name = "foo-imported"
   description = "Foo rancher2 imported cluster"
-  kind = "imported"
 }
 ```
 
@@ -28,7 +27,6 @@ Creating Rancher v2 rke cluster
 resource "rancher2_cluster" "foo-custom" {
   name = "foo-custom"
   description = "Foo rancher2 custom cluster"
-  kind = "rke"
   rke_config {
     network {
       plugin = "canal"
@@ -43,7 +41,6 @@ Creating Rancher v2 rke cluster assigning a node pool (overlapped planes)
 resource "rancher2_cluster" "foo-custom" {
   name = "foo-custom"
   description = "Foo rancher2 custom cluster"
-  kind = "rke"
   rke_config {
     network {
       plugin = "canal"
@@ -83,10 +80,10 @@ resource "rancher2_node_pool" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
-* `rke_config` - (Optional) The rke configuration for `rke` kind Clusters. Conflicts with `aks_config`, `eks_config` and `gke_config` (list maxitems:1)
-* `aks_config` - (Optional) The Azure aks configuration for `aks` kind Clusters. Conflicts with `eks_config`, `gke_config` and `rke_config` (list maxitems:1)
-* `eks_config` - (Optional) The Amazon eks configuration for `eks` kind Clusters. Conflicts with `aks_config`, `gke_config` and `rke_config` (list maxitems:1)
-* `gke_config` - (Optional) The Google gke configuration for `gke` kind Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config` (list maxitems:1)
+* `rke_config` - (Optional) The rke configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config` and `gke_config` (list maxitems:1)
+* `aks_config` - (Optional) The Azure aks configuration for `aks` Clusters. Conflicts with `eks_config`, `gke_config` and `rke_config` (list maxitems:1)
+* `eks_config` - (Optional) The Amazon eks configuration for `eks` Clusters. Conflicts with `aks_config`, `gke_config` and `rke_config` (list maxitems:1)
+* `gke_config` - (Optional) The Google gke configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
@@ -155,11 +152,45 @@ The following attributes are exported:
 
 ##### Arguments
 
-* `azure_cloud_provider` - (Optional/Computed) RKE Azure Cloud Provider config for Cloud Provider [rke-azure-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/azure) (list maxitems:1)
+* `aws_cloud_provider` - (Optional/Computed) RKE AWS Cloud Provider config for Cloud Provider [rke-aws-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/aws/) (list maxitems:1)
+* `azure_cloud_provider` - (Optional/Computed) RKE Azure Cloud Provider config for Cloud Provider [rke-azure-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/azure/) (list maxitems:1)
 * `custom_cloud_provider` - (Optional/Computed) RKE Custom Cloud Provider config for Cloud Provider (string) (string)
 * `name` - (Optional/Computed) RKE sans for Cloud Provider. `aws`, `azure`, `custom`, `openstack`, `vsphere` are supported. (string)
-* `openstack_cloud_provider` - (Optional/Computed) RKE Openstack Cloud Provider config for Cloud Provider [rke-openstack-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/openstack) Extra argument `name` is required on `virtual_center` configuration. (list maxitems:1)
-* `vsphere_cloud_provider` - (Optional/Computed) RKE Vsphere Cloud Provider config for Cloud Provider [rke-vsphere-cloud-provider](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/vsphere) (list maxitems:1)
+* `openstack_cloud_provider` - (Optional/Computed) RKE Openstack Cloud Provider config for Cloud Provider [rke-openstack-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/openstack/) (list maxitems:1)
+* `vsphere_cloud_provider` - (Optional/Computed) RKE Vsphere Cloud Provider config for Cloud Provider [rke-vsphere-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/vsphere/) Extra argument `name` is required on `virtual_center` configuration. (list maxitems:1)
+
+##### `aws_cloud_provider`
+
+###### Arguments
+
+* `global` - (Optional) (list maxitems:1)
+* `service_override` - (Optional) (list)
+
+###### `global`
+
+###### Arguments
+
+* `disable_security_group_ingress` - (Optional) Default `false` (bool)
+* `disable_strict_zone_check` - (Optional) Default `false` (bool)
+* `elb_security_group` - (Optional/Computed) (string)
+* `kubernetes_cluster_id` - (Optional/Computed) (string)
+* `kubernetes_cluster_tag` - (Optional/Computed) (string)
+* `role_arn` - (Optional/Computed) (string)
+* `route_table_id` - (Optional/Computed/Sensitive) (string)
+* `subnet_id` - (Optional/Computed) (string)
+* `vpc` - (Optional/Computed) (string)
+* `zone` - (Optional/Computed) (string)
+
+###### `service_override`
+
+###### Arguments
+
+* `region` - (Optional/Computed) (string)
+* `service` - (Required) (string)
+* `signing_method` - (Optional/Computed) (string)
+* `signing_name` - (Optional/Computed) (string)
+* `signing_region` - (Optional/Computed) (string)
+* `url` - (Optional/Computed) (string)
 
 ##### `azure_cloud_provider`
 
