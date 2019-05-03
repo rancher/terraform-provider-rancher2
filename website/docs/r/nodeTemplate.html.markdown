@@ -10,7 +10,7 @@ description: |-
 
 Provides a Rancher v2 Node Template resource. This can be used to create Node Template for rancher v2 and retrieve their information. 
 
-Only amazonec2, azure and digitalocean drivers are supported for node templates.
+Only amazonec2, azure, digitalocean and openstack drivers are supported for node templates.
 
 ## Example Usage
 
@@ -52,6 +52,7 @@ The following arguments are supported:
 * `engine_opt` - (Optional) Engine options for the node template (map)
 * `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
 * `engine_storage_driver` - (Optional) Engine storage driver for the node template (string)
+* `openstack_config` - (Optional) Openstack config for the Node Template (list maxitems:1)
 * `use_internal_ip_address` - (Optional) Engine storage driver for the node template (bool)
 * `annotations` - (Optional) Annotations for Node Template object (map)
 * `labels` - (Optional/Computed) Labels for Node Template object (map)
@@ -146,6 +147,42 @@ The following attributes are exported:
 * `ssh_user` - (Optional) SSH username. Default `root` (string)
 * `tags` - (Optional) Comma-separated list of tags to apply to the Droplet (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
+
+### `openstack_config`
+
+#### Arguments
+
+* `active_timeout`- (Optional) OpenStack active timeout Default `200` (string)
+* `auth_url` - (Required) OpenStack authentication URL (string)
+* `availability_zone` - (Required) OpenStack availability zone (string)
+* `cacert` - (Optional) CA certificate bundle to verify against (string)
+* `config_drive` - (Optional) Enables the OpenStack config drive for the instance. Default `false` (bool)
+* `domain_id` - (Required*) OpenStack domain ID. Identity v3 only (string)
+* `domain_name` - (Required*) OpenStack domain name. Identity v3 only (string)
+* `endpoint_type` - (Optional) OpenStack endpoint type. adminURL, internalURL or publicURL (string)
+* `flavor_id` - (Required*) OpenStack flavor id to use for the instance (string)
+* `flavor_name` - (Required*) OpenStack flavor name to use for the instance (string)
+* `floating_ip_pool` - (Optional) OpenStack floating IP pool to get an IP from to assign to the instance (string)
+* `image_id` - (Required*) OpenStack image id to use for the instance (string)
+* `image_name` - (Required*) OpenStack image name to use for the instance (string)
+* `insecure` - (Optional) Disable TLS credential checking. Default `false` (bool)
+* `ip_version` - (Optional) OpenStack version of IP address assigned for the machine Default `4` (string)
+* `keypair_name` - (Optional) OpenStack keypair to use to SSH to the instance (string)
+* `net_id` - (Required*) OpenStack network id the machine will be connected on (string)
+* `net_name` - (Required*) OpenStack network name the machine will be connected on (string)
+* `nova_network` - (Optional) Use the nova networking services instead of neutron (string)
+* `password` - (Required/Sensitive) OpenStack password (string)
+* `private_key_file` - (Optional) Private keyfile absolute path to use for SSH (string)
+* `region` - (Required) OpenStack region name (string)
+* `sec_groups` - (Optional) OpenStack comma separated security groups for the machine (string)
+* `ssh_port` - (Optional) OpenStack SSH port * Default `22` (string)
+* `ssh_user` - (Optional) OpenStack SSH user * Default: `root` (string)
+* `tenant_id` - (Required*) OpenStack tenant id (string)
+* `tenant_name` - (Required*) OpenStack tenant name (string)
+* `user_data_file` - (Optional) File containing an openstack userdata script (string)
+* `username` - (Required) OpenStack username (string)
+
+> **Note**: `Required*` denotes that either the _name or _id is required but you cannot use both.
 
 ## Timeouts
 

@@ -13,13 +13,12 @@ import (
 
 const (
 	testAccRancher2NodeTemplateType            = "rancher2_node_template"
-	testAccRancher2NodeTemplateConfigAmazonec2 = `
+	testAccRancher2NodeTemplateConfigAmazonec2 = testAccRancher2CloudCredentialConfigAmazonec2 + `
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "Terraform node driver amazonec2 acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   amazonec2_config {
-	access_key = "XXXXXXXXXXXXXXXXXXXX"
-	secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	ami =  "ami-XXXXXXXXXXXXXXX"
 	region = "XX-west-1"
 	security_group = ["XXXXXXXX"]
@@ -29,29 +28,27 @@ resource "rancher2_node_template" "foo" {
   }
 }
 `
-	testAccRancher2NodeTemplateUpdateConfigAmazonec2 = `
+	testAccRancher2NodeTemplateUpdateConfigAmazonec2 = testAccRancher2CloudCredentialConfigAmazonec2 + `
 resource "rancher2_node_template" "foo" {
   name = "foo2"
   description = "Terraform node driver amazonec2 acceptance test - updated"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   amazonec2_config {
-	access_key = "XXXXXXXXXXXXXXXXXXXX"
-	secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	ami =  "ami-YYYYYYYYYYYYYYY"
 	region = "XX-west-1"
 	security_group = ["XXXXXXXX"]
-	subnet_id = "subnet-XXXXXXXX"
+	subnet_id = "subnet-YYYYYYYY"
 	vpc_id = "vpc-XXXXXXXX"
 	zone = "a"
   }
 }
  `
-	testAccRancher2NodeTemplateRecreateConfigAmazonec2 = `
+	testAccRancher2NodeTemplateRecreateConfigAmazonec2 = testAccRancher2CloudCredentialConfigAmazonec2 + `
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "Terraform node driver amazonec2 acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   amazonec2_config {
-	access_key = "XXXXXXXXXXXXXXXXXXXX"
-	secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	ami =  "ami-XXXXXXXXXXXXXXX"
 	region = "XX-west-1"
 	security_group = ["XXXXXXXX"]
@@ -61,63 +58,150 @@ resource "rancher2_node_template" "foo" {
   }
 }
 `
-	testAccRancher2NodeTemplateConfigAzure = `
+	testAccRancher2NodeTemplateConfigAzure = testAccRancher2CloudCredentialConfigAzure + `
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "Terraform node driver azure acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   azure_config {
-	client_id = "XXXXXXXXXXXXXXXXXXXX"
-    client_secret = "XXXXXXXXXXXXXXXXXXXX"
-    subscription_id = "XXXXXXXXXXXXXXXXXXXX"
+	image =  "image-XXXXXXXX"
+	location =  "location-XXXXXXXX"
   }
 }
 `
-	testAccRancher2NodeTemplateUpdateConfigAzure = `
+	testAccRancher2NodeTemplateUpdateConfigAzure = testAccRancher2CloudCredentialConfigAzure + `
 resource "rancher2_node_template" "foo" {
   name = "foo2"
   description = "Terraform node driver azure acceptance test - updated"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   azure_config {
-	client_id =  "YYYYYYYYYYYYYYYYYYYY"
-    client_secret = "XXXXXXXXXXXXXXXXXXXX"
-    subscription_id = "XXXXXXXXXXXXXXXXXXXX"
+	image =  "image-YYYYYYYY"
+	location =  "location-YYYYYYYY"
   }
 }
  `
-	testAccRancher2NodeTemplateRecreateConfigAzure = `
+	testAccRancher2NodeTemplateRecreateConfigAzure = testAccRancher2CloudCredentialConfigAzure + `
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "Terraform node driver azure acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   azure_config {
-	client_id = "XXXXXXXXXXXXXXXXXXXX"
-    client_secret = "XXXXXXXXXXXXXXXXXXXX"
-    subscription_id = "XXXXXXXXXXXXXXXXXXXX"
+	image =  "image-XXXXXXXX"
+	location =  "location-XXXXXXXX"
   }
 }
 `
-	testAccRancher2NodeTemplateConfigDigitalocean = `
+	testAccRancher2NodeTemplateConfigDigitalocean = testAccRancher2CloudCredentialConfigDigitalocean + `
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "Terraform node driver digitalocean acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   digitalocean_config {
-	access_token = "XXXXXXXXXXXXXXXXXXXX"
+	image =  "image-XXXXXXXX"
+	region =  "region-XXXXXXXX"
   }
 }
 `
-	testAccRancher2NodeTemplateUpdateConfigDigitalocean = `
+	testAccRancher2NodeTemplateUpdateConfigDigitalocean = testAccRancher2CloudCredentialConfigDigitalocean + `
 resource "rancher2_node_template" "foo" {
   name = "foo2"
   description = "Terraform node driver digitalocean acceptance test - updated"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   digitalocean_config {
-	access_token =  "YYYYYYYYYYYYYYYYYYYY"
+	image =  "image-YYYYYYYY"
+	region =  "region-YYYYYYYY"
   }
 }
  `
-	testAccRancher2NodeTemplateRecreateConfigDigitalocean = `
+	testAccRancher2NodeTemplateRecreateConfigDigitalocean = testAccRancher2CloudCredentialConfigDigitalocean + `
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "Terraform node driver digitalocean acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   digitalocean_config {
-	access_token = "XXXXXXXXXXXXXXXXXXXX"
+	image =  "image-XXXXXXXX"
+	region =  "region-XXXXXXXX"
+  }
+}
+`
+	testAccRancher2NodeTemplateConfigOpenstack = testAccRancher2CloudCredentialConfigOpenstack + `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver openstack acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  openstack_config {
+  	username = "user"
+    image_name =  "image-XXXXXXXX"
+    region = "XX-west-1"
+    flavor_name = "flavor-XXXXXXXX"
+    auth_url = "http://XXXXXXXX"
+    availability_zone = "zone-XXXXXXXX"
+  }
+}
+`
+	testAccRancher2NodeTemplateUpdateConfigOpenstack = testAccRancher2CloudCredentialConfigOpenstack + `
+resource "rancher2_node_template" "foo" {
+  name = "foo2"
+  description = "Terraform node driver openstack acceptance test - updated"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  openstack_config {
+  	username = "user"
+	image_name =  "image-YYYYYYYY"
+	region = "XX-west-1"
+	flavor_name = "flavor-YYYYYYYY"
+	auth_url = "http://XXXXXXXX"
+	availability_zone = "zone-XXXXXXXX"
+  }
+}
+`
+	testAccRancher2NodeTemplateRecreateConfigOpenstack = testAccRancher2CloudCredentialConfigOpenstack + `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver openstack acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  openstack_config {
+  	username = "user"
+	image_name =  "image-XXXXXXXX"
+	region = "XX-west-1"
+	flavor_name = "flavor-XXXXXXXX"
+	auth_url = "http://XXXXXXXX"
+	availability_zone = "zone-XXXXXXXX"
+  }
+}
+`
+	testAccRancher2NodeTemplateConfigVsphere = testAccRancher2CloudCredentialConfigVsphere + `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver vsphere acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  vsphere_config {
+    cpu_count = "4"
+	disk_size = "10240"
+	pool =  "pool-XXXXXXXX"
+  }
+}
+`
+	testAccRancher2NodeTemplateUpdateConfigVsphere = testAccRancher2CloudCredentialConfigVsphere + `
+resource "rancher2_node_template" "foo" {
+  name = "foo2"
+  description = "Terraform node driver vsphere acceptance test - updated"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  vsphere_config {
+	cpu_count = "8"
+	disk_size = "20480"
+	pool =  "pool-YYYYYYYY"
+  }
+}
+`
+	testAccRancher2NodeTemplateRecreateConfigVsphere = testAccRancher2CloudCredentialConfigVsphere + `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver vsphere acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  vsphere_config {
+	cpu_count = "4"
+	disk_size = "10240"
+	pool =  "pool-XXXXXXXX"
   }
 }
 `
@@ -140,6 +224,7 @@ func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "description", "Terraform node driver amazonec2 acceptance test"),
 					resource.TestCheckResourceAttr(name, "driver", amazonec2ConfigDriver),
 					resource.TestCheckResourceAttr(name, "amazonec2_config.0.ami", "ami-XXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "amazonec2_config.0.subnet_id", "subnet-XXXXXXXX"),
 				),
 			},
 			resource.TestStep{
@@ -150,6 +235,7 @@ func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "description", "Terraform node driver amazonec2 acceptance test - updated"),
 					resource.TestCheckResourceAttr(name, "driver", amazonec2ConfigDriver),
 					resource.TestCheckResourceAttr(name, "amazonec2_config.0.ami", "ami-YYYYYYYYYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "amazonec2_config.0.subnet_id", "subnet-YYYYYYYY"),
 				),
 			},
 			resource.TestStep{
@@ -160,6 +246,7 @@ func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "description", "Terraform node driver amazonec2 acceptance test"),
 					resource.TestCheckResourceAttr(name, "driver", amazonec2ConfigDriver),
 					resource.TestCheckResourceAttr(name, "amazonec2_config.0.ami", "ami-XXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "amazonec2_config.0.subnet_id", "subnet-XXXXXXXX"),
 				),
 			},
 		},
@@ -202,7 +289,8 @@ func TestAccRancher2NodeTemplate_basic_Azure(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "name", "foo"),
 					resource.TestCheckResourceAttr(name, "description", "Terraform node driver azure acceptance test"),
 					resource.TestCheckResourceAttr(name, "driver", azureConfigDriver),
-					resource.TestCheckResourceAttr(name, "azure_config.0.client_id", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "azure_config.0.image", "image-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "azure_config.0.location", "location-XXXXXXXX"),
 				),
 			},
 			resource.TestStep{
@@ -212,7 +300,8 @@ func TestAccRancher2NodeTemplate_basic_Azure(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "name", "foo2"),
 					resource.TestCheckResourceAttr(name, "description", "Terraform node driver azure acceptance test - updated"),
 					resource.TestCheckResourceAttr(name, "driver", azureConfigDriver),
-					resource.TestCheckResourceAttr(name, "azure_config.0.client_id", "YYYYYYYYYYYYYYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "azure_config.0.image", "image-YYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "azure_config.0.location", "location-YYYYYYYY"),
 				),
 			},
 			resource.TestStep{
@@ -222,7 +311,8 @@ func TestAccRancher2NodeTemplate_basic_Azure(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "name", "foo"),
 					resource.TestCheckResourceAttr(name, "description", "Terraform node driver azure acceptance test"),
 					resource.TestCheckResourceAttr(name, "driver", azureConfigDriver),
-					resource.TestCheckResourceAttr(name, "azure_config.0.client_id", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "azure_config.0.image", "image-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "azure_config.0.location", "location-XXXXXXXX"),
 				),
 			},
 		},
@@ -265,7 +355,8 @@ func TestAccRancher2NodeTemplate_basic_Digitalocean(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "name", "foo"),
 					resource.TestCheckResourceAttr(name, "description", "Terraform node driver digitalocean acceptance test"),
 					resource.TestCheckResourceAttr(name, "driver", digitaloceanConfigDriver),
-					resource.TestCheckResourceAttr(name, "digitalocean_config.0.access_token", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "digitalocean_config.0.image", "image-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "digitalocean_config.0.region", "region-XXXXXXXX"),
 				),
 			},
 			resource.TestStep{
@@ -275,7 +366,8 @@ func TestAccRancher2NodeTemplate_basic_Digitalocean(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "name", "foo2"),
 					resource.TestCheckResourceAttr(name, "description", "Terraform node driver digitalocean acceptance test - updated"),
 					resource.TestCheckResourceAttr(name, "driver", digitaloceanConfigDriver),
-					resource.TestCheckResourceAttr(name, "digitalocean_config.0.access_token", "YYYYYYYYYYYYYYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "digitalocean_config.0.image", "image-YYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "digitalocean_config.0.region", "region-YYYYYYYY"),
 				),
 			},
 			resource.TestStep{
@@ -285,7 +377,8 @@ func TestAccRancher2NodeTemplate_basic_Digitalocean(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "name", "foo"),
 					resource.TestCheckResourceAttr(name, "description", "Terraform node driver digitalocean acceptance test"),
 					resource.TestCheckResourceAttr(name, "driver", digitaloceanConfigDriver),
-					resource.TestCheckResourceAttr(name, "digitalocean_config.0.access_token", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "digitalocean_config.0.image", "image-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "digitalocean_config.0.region", "region-XXXXXXXX"),
 				),
 			},
 		},
@@ -302,6 +395,141 @@ func TestAccRancher2NodeTemplate_disappears_Digitalocean(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRancher2NodeTemplateConfigDigitalocean,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo", nodeTemplate),
+					testAccRancher2NodeTemplateDisappears(nodeTemplate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_basic_Openstack(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	name := testAccRancher2NodeTemplateType + ".foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigOpenstack,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver openstack acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", openstackConfigDriver),
+					resource.TestCheckResourceAttr(name, "openstack_config.0.image_name", "image-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "openstack_config.0.flavor_name", "flavor-XXXXXXXX"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateUpdateConfigOpenstack,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo2"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver openstack acceptance test - updated"),
+					resource.TestCheckResourceAttr(name, "driver", openstackConfigDriver),
+					resource.TestCheckResourceAttr(name, "openstack_config.0.image_name", "image-YYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "openstack_config.0.flavor_name", "flavor-YYYYYYYY"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateRecreateConfigOpenstack,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver openstack acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", openstackConfigDriver),
+					resource.TestCheckResourceAttr(name, "openstack_config.0.image_name", "image-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "openstack_config.0.flavor_name", "flavor-XXXXXXXX"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_disappears_Openstack(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigOpenstack,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo", nodeTemplate),
+					testAccRancher2NodeTemplateDisappears(nodeTemplate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_basic_Vsphere(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	name := testAccRancher2NodeTemplateType + ".foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigVsphere,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver vsphere acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", vmwarevsphereConfigDriver),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.cpu_count", "4"),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.disk_size", "10240"),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.pool", "pool-XXXXXXXX"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateUpdateConfigVsphere,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo2"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver vsphere acceptance test - updated"),
+					resource.TestCheckResourceAttr(name, "driver", vmwarevsphereConfigDriver),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.cpu_count", "8"),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.disk_size", "20480"),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.pool", "pool-YYYYYYYY"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateRecreateConfigVsphere,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver vsphere acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", vmwarevsphereConfigDriver),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.cpu_count", "4"),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.disk_size", "10240"),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.pool", "pool-XXXXXXXX"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_disappears_Vsphere(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigVsphere,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo", nodeTemplate),
 					testAccRancher2NodeTemplateDisappears(nodeTemplate),
