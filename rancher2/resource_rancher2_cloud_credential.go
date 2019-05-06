@@ -133,6 +133,10 @@ func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interfac
 		update["azurecredentialConfig"] = expandCloudCredentialAzure(d.Get("azure_credential_config").([]interface{}))
 	case digitaloceanConfigDriver:
 		update["digitaloceancredentialConfig"] = expandCloudCredentialDigitalocean(d.Get("digitalocean_credential_config").([]interface{}))
+	case openstackConfigDriver:
+		update["openstackcredentialConfig"] = expandCloudCredentialOpenstack(d.Get("openstack_credential_config").([]interface{}))
+	case vmwarevsphereConfigDriver:
+		update["vmwarevspherecredentialConfig"] = expandCloudCredentialVsphere(d.Get("vsphere_credential_config").([]interface{}))
 	default:
 		return fmt.Errorf("[ERROR] updating cloud credential: Unsupported driver \"%s\"", driver)
 	}

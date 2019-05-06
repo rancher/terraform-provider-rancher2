@@ -8,75 +8,6 @@ import (
 
 // Flatteners
 
-func flattenCloudCredentialAmazonec2(in *amazonec2CredentialConfig, p []interface{}) []interface{} {
-	var obj map[string]interface{}
-	if len(p) == 0 || p[0] == nil {
-		obj = make(map[string]interface{})
-	} else {
-		obj = p[0].(map[string]interface{})
-	}
-
-	if in == nil {
-		return []interface{}{}
-	}
-
-	if len(in.AccessKey) > 0 {
-		obj["access_key"] = in.AccessKey
-	}
-
-	if len(in.SecretKey) > 0 {
-		obj["secret_key"] = in.SecretKey
-	}
-
-	return []interface{}{obj}
-}
-
-func flattenCloudCredentialAzure(in *azureCredentialConfig, p []interface{}) []interface{} {
-	var obj map[string]interface{}
-	if len(p) == 0 || p[0] == nil {
-		obj = make(map[string]interface{})
-	} else {
-		obj = p[0].(map[string]interface{})
-	}
-
-	if in == nil {
-		return []interface{}{}
-	}
-
-	if len(in.ClientID) > 0 {
-		obj["client_id"] = in.ClientID
-	}
-
-	if len(in.ClientSecret) > 0 {
-		obj["client_secret"] = in.ClientSecret
-	}
-
-	if len(in.SubscriptionID) > 0 {
-		obj["subscription_id"] = in.SubscriptionID
-	}
-
-	return []interface{}{obj}
-}
-
-func flattenCloudCredentialDigitalocean(in *digitaloceanCredentialConfig, p []interface{}) []interface{} {
-	var obj map[string]interface{}
-	if len(p) == 0 || p[0] == nil {
-		obj = make(map[string]interface{})
-	} else {
-		obj = p[0].(map[string]interface{})
-	}
-
-	if in == nil {
-		return []interface{}{}
-	}
-
-	if len(in.AccessToken) > 0 {
-		obj["access_token"] = in.AccessToken
-	}
-
-	return []interface{}{obj}
-}
-
 func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 	if in == nil {
 		return nil
@@ -117,6 +48,18 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 			v = []interface{}{}
 		}
 		d.Set("digitalocean_credential_config", flattenCloudCredentialDigitalocean(in.DigitaloceanCredentialConfig, v))
+	case openstackConfigDriver:
+		v, ok := d.Get("openstack_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		d.Set("openstack_credential_config", flattenCloudCredentialOpenstack(in.OpenstackCredentialConfig, v))
+	case vmwarevsphereConfigDriver:
+		v, ok := d.Get("vsphere_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		d.Set("vsphere_credential_config", flattenCloudCredentialVsphere(in.VmwarevsphereCredentialConfig, v))
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on cloud credential: %s", driver)
 	}
@@ -139,60 +82,6 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 }
 
 // Expanders
-
-func expandCloudCredentialAmazonec2(p []interface{}) *amazonec2CredentialConfig {
-	obj := &amazonec2CredentialConfig{}
-	if len(p) == 0 || p[0] == nil {
-		return obj
-	}
-	in := p[0].(map[string]interface{})
-
-	if v, ok := in["access_key"].(string); ok && len(v) > 0 {
-		obj.AccessKey = v
-	}
-
-	if v, ok := in["secret_key"].(string); ok && len(v) > 0 {
-		obj.SecretKey = v
-	}
-
-	return obj
-}
-
-func expandCloudCredentialAzure(p []interface{}) *azureCredentialConfig {
-	obj := &azureCredentialConfig{}
-	if len(p) == 0 || p[0] == nil {
-		return obj
-	}
-	in := p[0].(map[string]interface{})
-
-	if v, ok := in["client_id"].(string); ok && len(v) > 0 {
-		obj.ClientID = v
-	}
-
-	if v, ok := in["client_secret"].(string); ok && len(v) > 0 {
-		obj.ClientSecret = v
-	}
-
-	if v, ok := in["subscription_id"].(string); ok && len(v) > 0 {
-		obj.SubscriptionID = v
-	}
-
-	return obj
-}
-
-func expandCloudCredentialDigitalocean(p []interface{}) *digitaloceanCredentialConfig {
-	obj := &digitaloceanCredentialConfig{}
-	if len(p) == 0 || p[0] == nil {
-		return obj
-	}
-	in := p[0].(map[string]interface{})
-
-	if v, ok := in["access_token"].(string); ok && len(v) > 0 {
-		obj.AccessToken = v
-	}
-
-	return obj
-}
 
 func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	obj := &CloudCredential{}
@@ -222,6 +111,16 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	if v, ok := in.Get("digitalocean_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.DigitaloceanCredentialConfig = expandCloudCredentialDigitalocean(v)
 		in.Set("driver", digitaloceanConfigDriver)
+	}
+
+	if v, ok := in.Get("openstack_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.OpenstackCredentialConfig = expandCloudCredentialOpenstack(v)
+		in.Set("driver", openstackConfigDriver)
+	}
+
+	if v, ok := in.Get("vsphere_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.VmwarevsphereCredentialConfig = expandCloudCredentialVsphere(v)
+		in.Set("driver", vmwarevsphereConfigDriver)
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {

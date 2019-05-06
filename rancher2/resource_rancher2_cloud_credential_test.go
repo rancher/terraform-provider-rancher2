@@ -109,6 +109,70 @@ resource "rancher2_cloud_credential" "foo" {
   }
 }
  `
+	testAccRancher2CloudCredentialConfigOpenstack = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  openstack_credential_config {
+	password = "XXXXXXXXXXXXXXXXXXXX"
+  }
+}
+`
+
+	testAccRancher2CloudCredentialUpdateConfigOpenstack = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test - updated"
+  openstack_credential_config {
+	password = "YYYYYYYYYYYYYYYYYYYY"
+  }
+}
+ `
+
+	testAccRancher2CloudCredentialRecreateConfigOpenstack = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  openstack_credential_config {
+	password = "XXXXXXXXXXXXXXXXXXXX"
+  }
+}
+ `
+	testAccRancher2CloudCredentialConfigVsphere = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  vsphere_credential_config {
+	password = "XXXXXXXXXXXXXXXXXXXX"
+	username = "user"
+	vcenter = "vcenter"
+  }
+}
+`
+
+	testAccRancher2CloudCredentialUpdateConfigVsphere = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test - updated"
+  vsphere_credential_config {
+	password = "YYYYYYYYYYYYYYYYYYYY"
+	username = "user"
+	vcenter = "vcenter2"
+  }
+}
+ `
+
+	testAccRancher2CloudCredentialRecreateConfigVsphere = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  vsphere_credential_config {
+	password = "XXXXXXXXXXXXXXXXXXXX"
+	username = "user"
+	vcenter = "vcenter"
+  }
+}
+ `
 )
 
 func TestAccRancher2CloudCredential_basic_Amazonec2(t *testing.T) {
@@ -287,6 +351,133 @@ func TestAccRancher2CloudCredential_disappears_Digitalocean(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRancher2CloudCredentialConfigDigitalocean,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					testAccRancher2CloudCredentialDisappears(cloudCredential),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_basic_Openstack(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialConfigOpenstack,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", openstackConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "openstack_credential_config.0.password", "XXXXXXXXXXXXXXXXXXXX"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialUpdateConfigOpenstack,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", openstackConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "openstack_credential_config.0.password", "YYYYYYYYYYYYYYYYYYYY"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialRecreateConfigOpenstack,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", openstackConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "openstack_credential_config.0.password", "XXXXXXXXXXXXXXXXXXXX"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_disappears_Openstack(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialConfigOpenstack,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					testAccRancher2CloudCredentialDisappears(cloudCredential),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_basic_Vsphere(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialConfigVsphere,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", vmwarevsphereConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "vsphere_credential_config.0.password", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "vsphere_credential_config.0.vcenter", "vcenter"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialUpdateConfigVsphere,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", vmwarevsphereConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "vsphere_credential_config.0.password", "YYYYYYYYYYYYYYYYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "vsphere_credential_config.0.vcenter", "vcenter2"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialRecreateConfigVsphere,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", vmwarevsphereConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "vsphere_credential_config.0.password", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "vsphere_credential_config.0.vcenter", "vcenter"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_disappears_Vsphere(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialConfigVsphere,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
 					testAccRancher2CloudCredentialDisappears(cloudCredential),
