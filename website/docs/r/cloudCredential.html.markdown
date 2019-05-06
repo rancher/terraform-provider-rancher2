@@ -10,7 +10,7 @@ description: |-
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for rancher v2.2.x and retrieve their information. 
 
-Only amazonec2, azure and digitalocean credential config are supported for Cloud Credential.
+amazonec2, azure, digitalocean, openstack and vsphere credentials config are supported for Cloud Credential.
 
 ## Example Usage
 
@@ -35,6 +35,8 @@ The following arguments are supported:
 * `azure_credential_config` - (Optional) Azure config for the Cloud Credential (list maxitems:1)
 * `description` - (Optional) Description for the Cloud Credential (string)
 * `digitalocean_credential_config` - (Optional) Digitalocean config for the Cloud Credential (list maxitems:1)
+* `openstack_credential_config` - (Optional) Openstack config for the Cloud Credential (list maxitems:1)
+* `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
 * `annotations` - (Optional) Annotations for Cloud Credential object (map)
 * `labels` - (Optional/Computed) Labels for Cloud Credential object (map)
 
@@ -67,6 +69,21 @@ The following attributes are exported:
 #### Arguments
 
 * `access_token` - (Required/Sensitive) Digital Ocean access token (string)
+
+### `openstack_credential_config`
+
+#### Arguments
+
+* `password` - (Required/Sensitive) Openstack password (string)
+
+### `vsphere_credential_config`
+
+#### Arguments
+
+* `password` - (Required/Sensitive) vSphere password (string)
+* `username` - (Required) vSphere username (string)
+* `vcenter` - (Required) vSphere IP/hostname for vCenter (string)
+* `vcenter_port` - (Optional) vSphere Port for vCenter. Default `443` (string)
 
 ## Timeouts
 
