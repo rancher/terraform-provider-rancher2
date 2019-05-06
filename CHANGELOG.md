@@ -1,3 +1,51 @@
+## v0.2.0-rc5 (Unreleased)
+
+FEATURES:
+
+ENHANCEMENTS:
+
+* Updated `rancher2_cluster` `rke_config` argument to support `aws_cloud_provider` config
+* Updated k3s version to v0.4.0 to run acceptance tests
+* Added support to openstack and vsphere drivers on `rancher2_cloud_credential` resource
+* Added support to openstack and vsphere drivers on `rancher2_node_template` resource
+
+BUG FIXES:
+
+* Fix: Updated `rancher2_cluster` resource to save correctly S3 and cloud providers passwords on `rke_config`
+* Updated `rancher2_cloud_credential` resource to save correctly S3 password
+* Updated `rancher2_etcd_backup` resource to save correctly S3 password
+
+## v0.2.0-rc4 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `rancher2_bootstrap`
+* **New Resource:** `rancher2_cloud_credential`
+* **New Resource:** `rancher2_cluster_driver`
+* **New Resource:** `rancher2_etcd_backup`
+
+ENHANCEMENTS:
+
+* Added `.drone.yml` file to also support run rancher pipeline
+* Added `rancher2_node_pool` resource tests
+* Added `rancher2_auth_config_*` resource tests
+* Updated and reviewed docs format
+* Added support to rancher v2.2.x
+* Updated `rancher2_cluster` `rke_config` argument to support:
+  * etcd service `backup_config` with local and S3 storage backends
+  * `dns` config
+  * `weave` network provider
+* Splitted resources into own schema, structure and import files.
+* Added support to amazonec2, azure and digitalocean drivers on `rancher2_cloud_credential` resource
+* Added support to local and S3 storage backends on `rancher2_etcd_backup` resource
+
+BUG FIXES:
+
+* Fix: drone build image to golang:1.12.3 to fix go fmt issues
+* Fix: removed test on apply for `rancher2_auth_config_*` resources
+* Fix: updated `api_url` field as required on provider.go
+* Fix: updated `rancher2_namespace` move to a project after import it from k8s cluster
+
 ## v0.2.0-rc3 (Unreleased)
 
 FEATURES:
@@ -10,7 +58,7 @@ BUG FIXES:
 
 * Fix: set rke cluster `cloud_provider_vsphere` disk and network as optional and computed fields
 
-## v0.2.0-rc3 (Unreleased)
+## v0.2.0-rc2 (Unreleased)
 
 FEATURES:
 
