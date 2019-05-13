@@ -21,7 +21,6 @@ var ReservedResourceFields = []string{
 	"connection",
 	"count",
 	"depends_on",
-	"id",
 	"lifecycle",
 	"provider",
 	"provisioner",
@@ -29,7 +28,6 @@ var ReservedResourceFields = []string{
 
 var ReservedProviderFields = []string{
 	"alias",
-	"id",
 	"version",
 }
 

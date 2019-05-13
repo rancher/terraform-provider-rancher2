@@ -59,6 +59,7 @@ func findPluginPaths(kind string, dirs []string) []string {
 			fullName := item.Name()
 
 			if !strings.HasPrefix(fullName, prefix) {
+				log.Printf("[DEBUG] skipping %q, not a %s", fullName, kind)
 				continue
 			}
 
