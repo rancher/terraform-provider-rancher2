@@ -10,18 +10,15 @@ import (
 // Flatteners
 
 func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConfig) error {
-	err := d.Set("access_mode", in.AccessMode)
+	d.Set("access_mode", in.AccessMode)
+
+	err := d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
 	if err != nil {
 		return err
 	}
-	err = d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
-	if err != nil {
-		return err
-	}
-	err = d.Set("enabled", in.Enabled)
-	if err != nil {
-		return err
-	}
+
+	d.Set("enabled", in.Enabled)
+
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -34,90 +31,28 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	if err != nil {
 		return err
 	}
-	err = d.Set("service_account_distinguished_name", in.ServiceAccountDistinguishedName)
-	if err != nil {
-		return err
-	}
-	err = d.Set("user_search_base", in.UserSearchBase)
-	if err != nil {
-		return err
-	}
-	err = d.Set("certificate", in.Certificate)
-	if err != nil {
-		return err
-	}
-	err = d.Set("connection_timeout", int(in.ConnectionTimeout))
-	if err != nil {
-		return err
-	}
-	err = d.Set("group_dn_attribute", in.GroupDNAttribute)
-	if err != nil {
-		return err
-	}
-	err = d.Set("group_member_mapping_attribute", in.GroupMemberMappingAttribute)
-	if err != nil {
-		return err
-	}
-	err = d.Set("group_member_user_attribute", in.GroupMemberUserAttribute)
-	if err != nil {
-		return err
-	}
-	err = d.Set("group_name_attribute", in.GroupNameAttribute)
-	if err != nil {
-		return err
-	}
-	err = d.Set("group_object_class", in.GroupObjectClass)
-	if err != nil {
-		return err
-	}
-	err = d.Set("group_search_attribute", in.GroupSearchAttribute)
-	if err != nil {
-		return err
-	}
-	err = d.Set("group_search_base", in.GroupSearchBase)
-	if err != nil {
-		return err
-	}
-	err = d.Set("nested_group_membership_enabled", in.NestedGroupMembershipEnabled)
-	if err != nil {
-		return err
-	}
-	err = d.Set("port", int(in.Port))
-	if err != nil {
-		return err
-	}
-	err = d.Set("tls", in.TLS)
-	if err != nil {
-		return err
-	}
-	err = d.Set("user_disabled_bit_mask", int(in.UserDisabledBitMask))
-	if err != nil {
-		return err
-	}
-	err = d.Set("user_enabled_attribute", in.UserEnabledAttribute)
-	if err != nil {
-		return err
-	}
-	err = d.Set("user_login_attribute", in.UserLoginAttribute)
-	if err != nil {
-		return err
-	}
-	err = d.Set("user_member_attribute", in.UserMemberAttribute)
-	if err != nil {
-		return err
-	}
-	err = d.Set("user_name_attribute", in.UserNameAttribute)
-	if err != nil {
-		return err
-	}
-	err = d.Set("user_object_class", in.UserObjectClass)
-	if err != nil {
-		return err
-	}
-	err = d.Set("user_search_attribute", in.UserSearchAttribute)
-	if err != nil {
-		return err
-	}
+
+	d.Set("service_account_distinguished_name", in.ServiceAccountDistinguishedName)
+	d.Set("user_search_base", in.UserSearchBase)
+	d.Set("certificate", in.Certificate)
+	d.Set("connection_timeout", int(in.ConnectionTimeout))
+	d.Set("group_dn_attribute", in.GroupDNAttribute)
+	d.Set("group_member_mapping_attribute", in.GroupMemberMappingAttribute)
+	d.Set("group_member_user_attribute", in.GroupMemberUserAttribute)
+	d.Set("group_name_attribute", in.GroupNameAttribute)
+	d.Set("group_object_class", in.GroupObjectClass)
+	d.Set("group_search_attribute", in.GroupSearchAttribute)
+	d.Set("group_search_base", in.GroupSearchBase)
+	d.Set("nested_group_membership_enabled", in.NestedGroupMembershipEnabled)
+	d.Set("port", int(in.Port))
+	d.Set("tls", in.TLS)
+	d.Set("user_disabled_bit_mask", int(in.UserDisabledBitMask))
+	d.Set("user_enabled_attribute", in.UserEnabledAttribute)
+	d.Set("user_login_attribute", in.UserLoginAttribute)
+	d.Set("user_member_attribute", in.UserMemberAttribute)
+	d.Set("user_name_attribute", in.UserNameAttribute)
+	d.Set("user_object_class", in.UserObjectClass)
+	d.Set("user_search_attribute", in.UserSearchAttribute)
 
 	return nil
 }

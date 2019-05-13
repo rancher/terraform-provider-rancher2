@@ -11,28 +11,17 @@ import (
 
 func flattenAuthConfigGithub(d *schema.ResourceData, in *managementClient.GithubConfig) error {
 	d.SetId(AuthConfigGithubName)
+	d.Set("name", AuthConfigGithubName)
+	d.Set("type", managementClient.GithubConfigType)
+	d.Set("access_mode", in.AccessMode)
 
-	err := d.Set("name", AuthConfigGithubName)
-	if err != nil {
-		return err
-	}
-	err = d.Set("type", managementClient.GithubConfigType)
+	err := d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("access_mode", in.AccessMode)
-	if err != nil {
-		return err
-	}
-	err = d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
-	if err != nil {
-		return err
-	}
-	err = d.Set("enabled", in.Enabled)
-	if err != nil {
-		return err
-	}
+	d.Set("enabled", in.Enabled)
+
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -42,18 +31,9 @@ func flattenAuthConfigGithub(d *schema.ResourceData, in *managementClient.Github
 		return err
 	}
 
-	err = d.Set("client_id", in.ClientID)
-	if err != nil {
-		return err
-	}
-	err = d.Set("hostname", in.Hostname)
-	if err != nil {
-		return err
-	}
-	err = d.Set("tls", in.TLS)
-	if err != nil {
-		return err
-	}
+	d.Set("client_id", in.ClientID)
+	d.Set("hostname", in.Hostname)
+	d.Set("tls", in.TLS)
 
 	return nil
 }

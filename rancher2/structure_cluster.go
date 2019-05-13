@@ -46,15 +46,10 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		d.SetId(in.ID)
 	}
 
-	err := d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-	err = d.Set("description", in.Description)
-	if err != nil {
-		return err
-	}
-	err = d.Set("annotations", toMapInterface(in.Annotations))
+	d.Set("name", in.Name)
+	d.Set("description", in.Description)
+
+	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}
@@ -71,15 +66,8 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 
-	err = d.Set("kube_config", kubeConfig.Config)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("driver", in.Driver)
-	if err != nil {
-		return err
-	}
+	d.Set("kube_config", kubeConfig.Config)
+	d.Set("driver", in.Driver)
 
 	switch in.Driver {
 	case clusterDriverAKS:
@@ -87,7 +75,7 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if err != nil {
 			return err
 		}
-		d.Set("aks_config", aksConfig)
+		err = d.Set("aks_config", aksConfig)
 		if err != nil {
 			return err
 		}
@@ -96,7 +84,7 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if err != nil {
 			return err
 		}
-		d.Set("eks_config", eksConfig)
+		err = d.Set("eks_config", eksConfig)
 		if err != nil {
 			return err
 		}
@@ -105,7 +93,7 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if err != nil {
 			return err
 		}
-		d.Set("gke_config", gkeConfig)
+		err = d.Set("gke_config", gkeConfig)
 		if err != nil {
 			return err
 		}

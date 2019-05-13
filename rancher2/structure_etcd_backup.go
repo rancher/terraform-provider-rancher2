@@ -20,30 +20,11 @@ func flattenEtcdBackup(d *schema.ResourceData, in *managementClient.EtcdBackup) 
 		return err
 	}
 
-	err = d.Set("cluster_id", in.ClusterID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("filename", in.Filename)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("manual", in.Manual)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("namespace_id", in.NamespaceId)
-	if err != nil {
-		return err
-	}
+	d.Set("cluster_id", in.ClusterID)
+	d.Set("filename", in.Filename)
+	d.Set("manual", in.Manual)
+	d.Set("name", in.Name)
+	d.Set("namespace_id", in.NamespaceId)
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {

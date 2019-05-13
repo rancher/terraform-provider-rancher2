@@ -13,43 +13,15 @@ func flattenClusterDriver(d *schema.ResourceData, in *managementClient.Kontainer
 	}
 
 	d.SetId(in.ID)
+	d.Set("active", in.Active)
+	d.Set("actual_url", in.ActualURL)
+	d.Set("builtin", in.BuiltIn)
+	d.Set("checksum", in.Checksum)
+	d.Set("name", in.Name)
+	d.Set("ui_url", in.UIURL)
+	d.Set("url", in.URL)
 
-	err := d.Set("active", in.Active)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("actual_url", in.ActualURL)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("builtin", in.BuiltIn)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("checksum", in.Checksum)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("ui_url", in.UIURL)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("url", in.URL)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("whitelist_domains", toArrayInterface(in.WhitelistDomains))
+	err := d.Set("whitelist_domains", toArrayInterface(in.WhitelistDomains))
 	if err != nil {
 		return err
 	}

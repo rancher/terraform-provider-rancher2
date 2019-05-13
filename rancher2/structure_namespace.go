@@ -90,31 +90,21 @@ func flattenNamespace(d *schema.ResourceData, in *clusterClient.Namespace) error
 	d.SetId(in.ID)
 
 	if len(in.ProjectID) > 0 {
-		err := d.Set("project_id", in.ProjectID)
-		if err != nil {
-			return err
-		}
+		d.Set("project_id", in.ProjectID)
 	}
 
-	err := d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("description", in.Description)
-	if err != nil {
-		return err
-	}
+	d.Set("name", in.Name)
+	d.Set("description", in.Description)
 
 	if in.ResourceQuota != nil {
 		resourceQuota := flattenNamespaceResourceQuota(in.ResourceQuota)
-		err = d.Set("resource_quota", resourceQuota)
+		err := d.Set("resource_quota", resourceQuota)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}

@@ -13,43 +13,15 @@ func flattenProjectRoleTemplateBinding(d *schema.ResourceData, in *managementCli
 	}
 
 	d.SetId(in.ID)
+	d.Set("project_id", in.ProjectID)
+	d.Set("role_template_id", in.RoleTemplateID)
+	d.Set("name", in.Name)
+	d.Set("group_id", in.GroupID)
+	d.Set("group_principal_id", in.GroupPrincipalID)
+	d.Set("user_id", in.UserID)
+	d.Set("user_principal_id", in.UserPrincipalID)
 
-	err := d.Set("project_id", in.ProjectID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("role_template_id", in.RoleTemplateID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("group_id", in.GroupID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("group_principal_id", in.GroupPrincipalID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("user_id", in.UserID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("user_principal_id", in.UserPrincipalID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}

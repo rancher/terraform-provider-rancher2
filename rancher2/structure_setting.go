@@ -15,16 +15,10 @@ func flattenSetting(d *schema.ResourceData, in *managementClient.Setting) error 
 	}
 
 	d.SetId(in.ID)
+	d.Set("name", in.Name)
+	d.Set("value", in.Value)
 
-	err := d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-	err = d.Set("value", in.Value)
-	if err != nil {
-		return err
-	}
-	err = d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}

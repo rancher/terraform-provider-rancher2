@@ -11,28 +11,17 @@ import (
 
 func flattenAuthConfigAzureAD(d *schema.ResourceData, in *managementClient.AzureADConfig) error {
 	d.SetId(AuthConfigAzureADName)
+	d.Set("name", AuthConfigAzureADName)
+	d.Set("type", managementClient.AzureADConfigType)
+	d.Set("access_mode", in.AccessMode)
 
-	err := d.Set("name", AuthConfigAzureADName)
-	if err != nil {
-		return err
-	}
-	err = d.Set("type", managementClient.AzureADConfigType)
+	err := d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
 	if err != nil {
 		return err
 	}
 
-	err = d.Set("access_mode", in.AccessMode)
-	if err != nil {
-		return err
-	}
-	err = d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
-	if err != nil {
-		return err
-	}
-	err = d.Set("enabled", in.Enabled)
-	if err != nil {
-		return err
-	}
+	d.Set("enabled", in.Enabled)
+
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -42,34 +31,13 @@ func flattenAuthConfigAzureAD(d *schema.ResourceData, in *managementClient.Azure
 		return err
 	}
 
-	err = d.Set("application_id", in.ApplicationID)
-	if err != nil {
-		return err
-	}
-	err = d.Set("auth_endpoint", in.AuthEndpoint)
-	if err != nil {
-		return err
-	}
-	err = d.Set("endpoint", in.Endpoint)
-	if err != nil {
-		return err
-	}
-	err = d.Set("graph_endpoint", in.GraphEndpoint)
-	if err != nil {
-		return err
-	}
-	err = d.Set("rancher_url", in.RancherURL)
-	if err != nil {
-		return err
-	}
-	err = d.Set("tenant_id", in.TenantID)
-	if err != nil {
-		return err
-	}
-	err = d.Set("token_endpoint", in.TokenEndpoint)
-	if err != nil {
-		return err
-	}
+	d.Set("application_id", in.ApplicationID)
+	d.Set("auth_endpoint", in.AuthEndpoint)
+	d.Set("endpoint", in.Endpoint)
+	d.Set("graph_endpoint", in.GraphEndpoint)
+	d.Set("rancher_url", in.RancherURL)
+	d.Set("tenant_id", in.TenantID)
+	d.Set("token_endpoint", in.TokenEndpoint)
 
 	return nil
 }

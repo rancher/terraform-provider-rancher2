@@ -13,33 +13,13 @@ func flattenCatalog(d *schema.ResourceData, in *managementClient.Catalog) error 
 	}
 
 	d.SetId(in.ID)
+	d.Set("name", in.Name)
+	d.Set("url", in.URL)
+	d.Set("description", in.Description)
+	d.Set("kind", in.Kind)
+	d.Set("branch", in.Branch)
 
-	err := d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("url", in.URL)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("description", in.Description)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("kind", in.Kind)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("branch", in.Branch)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}

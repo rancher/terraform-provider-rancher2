@@ -93,31 +93,19 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 	}
 
 	d.SetId(in.ID)
-
-	err := d.Set("cluster_id", in.ClusterID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("description", in.Description)
-	if err != nil {
-		return err
-	}
+	d.Set("cluster_id", in.ClusterID)
+	d.Set("name", in.Name)
+	d.Set("description", in.Description)
 
 	if in.ResourceQuota != nil && in.NamespaceDefaultResourceQuota != nil {
 		resourceQuota := flattenProjectResourceQuota(in.ResourceQuota, in.NamespaceDefaultResourceQuota)
-		err = d.Set("resource_quota", resourceQuota)
+		err := d.Set("resource_quota", resourceQuota)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}

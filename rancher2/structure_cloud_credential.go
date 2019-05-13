@@ -14,65 +14,71 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 	}
 
 	d.SetId(in.ID)
-
-	err := d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
+	d.Set("name", in.Name)
 	if len(in.Description) > 0 {
-		err = d.Set("description", in.Description)
-		if err != nil {
-			return err
-		}
+		d.Set("description", in.Description)
 	}
 
 	driver := d.Get("driver").(string)
-
 	switch driver {
 	case amazonec2ConfigDriver:
 		v, ok := d.Get("amazonec2_credential_config").([]interface{})
 		if !ok {
 			v = []interface{}{}
 		}
-		d.Set("amazonec2_credential_config", flattenCloudCredentialAmazonec2(in.Amazonec2CredentialConfig, v))
+		err := d.Set("amazonec2_credential_config", flattenCloudCredentialAmazonec2(in.Amazonec2CredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	case azureConfigDriver:
 		v, ok := d.Get("azure_credential_config").([]interface{})
 		if !ok {
 			v = []interface{}{}
 		}
-		d.Set("azure_credential_config", flattenCloudCredentialAzure(in.AzureCredentialConfig, v))
+		err := d.Set("azure_credential_config", flattenCloudCredentialAzure(in.AzureCredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	case digitaloceanConfigDriver:
 		v, ok := d.Get("digitalocean_credential_config").([]interface{})
 		if !ok {
 			v = []interface{}{}
 		}
-		d.Set("digitalocean_credential_config", flattenCloudCredentialDigitalocean(in.DigitaloceanCredentialConfig, v))
+		err := d.Set("digitalocean_credential_config", flattenCloudCredentialDigitalocean(in.DigitaloceanCredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	case openstackConfigDriver:
 		v, ok := d.Get("openstack_credential_config").([]interface{})
 		if !ok {
 			v = []interface{}{}
 		}
-		d.Set("openstack_credential_config", flattenCloudCredentialOpenstack(in.OpenstackCredentialConfig, v))
+		err := d.Set("openstack_credential_config", flattenCloudCredentialOpenstack(in.OpenstackCredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	case vmwarevsphereConfigDriver:
 		v, ok := d.Get("vsphere_credential_config").([]interface{})
 		if !ok {
 			v = []interface{}{}
 		}
-		d.Set("vsphere_credential_config", flattenCloudCredentialVsphere(in.VmwarevsphereCredentialConfig, v))
+		err := d.Set("vsphere_credential_config", flattenCloudCredentialVsphere(in.VmwarevsphereCredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on cloud credential: %s", driver)
 	}
 
 	if len(in.Annotations) > 0 {
-		err = d.Set("annotations", toMapInterface(in.Annotations))
+		err := d.Set("annotations", toMapInterface(in.Annotations))
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(in.Labels) > 0 {
-		err = d.Set("labels", toMapInterface(in.Labels))
+		err := d.Set("labels", toMapInterface(in.Labels))
 		if err != nil {
 			return err
 		}

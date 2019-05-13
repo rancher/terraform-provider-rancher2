@@ -14,15 +14,8 @@ func flattenAuthConfigFreeIpa(d *schema.ResourceData, in *managementClient.LdapC
 	}
 
 	d.SetId(AuthConfigFreeIpaName)
-
-	err = d.Set("name", AuthConfigFreeIpaName)
-	if err != nil {
-		return err
-	}
-	err = d.Set("type", managementClient.FreeIpaConfigType)
-	if err != nil {
-		return err
-	}
+	d.Set("name", AuthConfigFreeIpaName)
+	d.Set("type", managementClient.FreeIpaConfigType)
 
 	return nil
 }

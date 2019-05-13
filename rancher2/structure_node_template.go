@@ -14,16 +14,8 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 	}
 
 	d.SetId(in.ID)
-
-	err := d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("driver", in.Driver)
-	if err != nil {
-		return err
-	}
+	d.Set("name", in.Name)
+	d.Set("driver", in.Driver)
 
 	switch in.Driver {
 	case amazonec2ConfigDriver:
@@ -51,103 +43,79 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 	}
 
 	if len(in.AuthCertificateAuthority) > 0 {
-		err = d.Set("auth_certificate_authority", in.AuthCertificateAuthority)
-		if err != nil {
-			return err
-		}
+		d.Set("auth_certificate_authority", in.AuthCertificateAuthority)
 	}
 
 	if len(in.AuthKey) > 0 {
-		err = d.Set("auth_key", in.AuthKey)
-		if err != nil {
-			return err
-		}
+		d.Set("auth_key", in.AuthKey)
 	}
 
 	if len(in.CloudCredentialID) > 0 {
-		err = d.Set("cloud_credential_id", in.CloudCredentialID)
-		if err != nil {
-			return err
-		}
+		d.Set("cloud_credential_id", in.CloudCredentialID)
 	}
 
 	if len(in.Description) > 0 {
-		err = d.Set("description", in.Description)
-		if err != nil {
-			return err
-		}
+		d.Set("description", in.Description)
 	}
 
 	if len(in.DockerVersion) > 0 {
-		err = d.Set("docker_version", in.DockerVersion)
-		if err != nil {
-			return err
-		}
+		d.Set("docker_version", in.DockerVersion)
 	}
 
 	if len(in.EngineEnv) > 0 {
-		err = d.Set("engine_env", toMapInterface(in.EngineEnv))
+		err := d.Set("engine_env", toMapInterface(in.EngineEnv))
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(in.EngineInsecureRegistry) > 0 {
-		err = d.Set("engine_insecure_registry", toArrayInterface(in.EngineInsecureRegistry))
+		err := d.Set("engine_insecure_registry", toArrayInterface(in.EngineInsecureRegistry))
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(in.EngineInstallURL) > 0 {
-		err = d.Set("engine_install_url", in.EngineInstallURL)
-		if err != nil {
-			return err
-		}
+		d.Set("engine_install_url", in.EngineInstallURL)
 	}
 
 	if len(in.EngineLabel) > 0 {
-		err = d.Set("engine_label", toMapInterface(in.EngineLabel))
+		err := d.Set("engine_label", toMapInterface(in.EngineLabel))
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(in.EngineOpt) > 0 {
-		err = d.Set("engine_opt", toMapInterface(in.EngineOpt))
+		err := d.Set("engine_opt", toMapInterface(in.EngineOpt))
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(in.EngineRegistryMirror) > 0 {
-		err = d.Set("engine_registry_mirror", toArrayInterface(in.EngineRegistryMirror))
+		err := d.Set("engine_registry_mirror", toArrayInterface(in.EngineRegistryMirror))
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(in.EngineStorageDriver) > 0 {
-		err = d.Set("engine_storage_driver", in.EngineStorageDriver)
-		if err != nil {
-			return err
-		}
+		d.Set("engine_storage_driver", in.EngineStorageDriver)
 	}
 
-	err = d.Set("use_internal_ip_address", in.UseInternalIPAddress)
-	if err != nil {
-		return err
-	}
+	d.Set("use_internal_ip_address", in.UseInternalIPAddress)
 
 	if len(in.Annotations) > 0 {
-		err = d.Set("annotations", toMapInterface(in.Annotations))
+		err := d.Set("annotations", toMapInterface(in.Annotations))
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(in.Labels) > 0 {
-		err = d.Set("labels", toMapInterface(in.Labels))
+		err := d.Set("labels", toMapInterface(in.Labels))
 		if err != nil {
 			return err
 		}

@@ -9,17 +9,10 @@ import (
 
 func flattenAuthConfigOpenLdap(d *schema.ResourceData, in *managementClient.LdapConfig) error {
 	d.SetId(AuthConfigOpenLdapName)
+	d.Set("name", AuthConfigOpenLdapName)
+	d.Set("type", managementClient.OpenLdapConfigType)
 
-	err := d.Set("name", AuthConfigOpenLdapName)
-	if err != nil {
-		return err
-	}
-	err = d.Set("type", managementClient.OpenLdapConfigType)
-	if err != nil {
-		return err
-	}
-
-	err = flattenAuthConfigLdap(d, in)
+	err := flattenAuthConfigLdap(d, in)
 	if err != nil {
 		return err
 	}

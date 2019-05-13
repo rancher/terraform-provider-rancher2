@@ -13,48 +13,16 @@ func flattenNodeDriver(d *schema.ResourceData, in *managementClient.NodeDriver) 
 	}
 
 	d.SetId(in.ID)
+	d.Set("active", in.Active)
+	d.Set("builtin", in.Builtin)
+	d.Set("checksum", in.Checksum)
+	d.Set("description", in.Description)
+	d.Set("name", in.Name)
+	d.Set("external_id", in.ExternalID)
+	d.Set("ui_url", in.UIURL)
+	d.Set("url", in.URL)
 
-	err := d.Set("active", in.Active)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("builtin", in.Builtin)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("checksum", in.Checksum)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("description", in.Description)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("external_id", in.ExternalID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("ui_url", in.UIURL)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("url", in.URL)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("whitelist_domains", toArrayInterface(in.WhitelistDomains))
+	err := d.Set("whitelist_domains", toArrayInterface(in.WhitelistDomains))
 	if err != nil {
 		return err
 	}

@@ -15,16 +15,8 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 	}
 
 	d.SetId(in.ID)
-
-	err := d.Set("project_id", in.ProjectID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
+	d.Set("project_id", in.ProjectID)
+	d.Set("name", in.Name)
 
 	kind := d.Get("kind").(string)
 	if kind == "" {
@@ -44,10 +36,7 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 			kind = loggingSyslogKind
 		}
 
-		err = d.Set("kind", kind)
-		if err != nil {
-			return err
-		}
+		d.Set("kind", kind)
 	}
 
 	switch kind {
@@ -100,17 +89,10 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 		return fmt.Errorf("[ERROR] Flattening Cluster Logging resource data: Kind %s not supported", kind)
 	}
 
-	err = d.Set("namespace_id", in.NamespaceId)
-	if err != nil {
-		return err
-	}
+	d.Set("namespace_id", in.NamespaceId)
+	d.Set("output_flush_interval", int(in.OutputFlushInterval))
 
-	err = d.Set("output_flush_interval", int(in.OutputFlushInterval))
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("output_tags", toMapInterface(in.OutputTags))
+	err := d.Set("output_tags", toMapInterface(in.OutputTags))
 	if err != nil {
 		return err
 	}

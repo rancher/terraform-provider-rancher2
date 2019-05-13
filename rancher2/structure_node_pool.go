@@ -13,48 +13,16 @@ func flattenNodePool(d *schema.ResourceData, in *managementClient.NodePool) erro
 	}
 
 	d.SetId(in.ID)
+	d.Set("cluster_id", in.ClusterID)
+	d.Set("name", in.Name)
+	d.Set("hostname_prefix", in.HostnamePrefix)
+	d.Set("node_template_id", in.NodeTemplateID)
+	d.Set("quantity", int(in.Quantity))
+	d.Set("control_plane", in.ControlPlane)
+	d.Set("etcd", in.Etcd)
+	d.Set("worker", in.Worker)
 
-	err := d.Set("cluster_id", in.ClusterID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("name", in.Name)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("hostname_prefix", in.HostnamePrefix)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("node_template_id", in.NodeTemplateID)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("quantity", int(in.Quantity))
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("control_plane", in.ControlPlane)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("etcd", in.Etcd)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("worker", in.Worker)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}

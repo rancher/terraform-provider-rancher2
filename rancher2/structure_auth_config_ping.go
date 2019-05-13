@@ -11,27 +11,17 @@ import (
 
 func flattenAuthConfigPing(d *schema.ResourceData, in *managementClient.PingConfig) error {
 	d.SetId(AuthConfigPingName)
+	d.Set("name", AuthConfigPingName)
+	d.Set("type", managementClient.PingConfigType)
+	d.Set("access_mode", in.AccessMode)
 
-	err := d.Set("name", AuthConfigPingName)
+	err := d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
 	if err != nil {
 		return err
 	}
-	err = d.Set("type", managementClient.PingConfigType)
-	if err != nil {
-		return err
-	}
-	err = d.Set("access_mode", in.AccessMode)
-	if err != nil {
-		return err
-	}
-	err = d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
-	if err != nil {
-		return err
-	}
-	err = d.Set("enabled", in.Enabled)
-	if err != nil {
-		return err
-	}
+
+	d.Set("enabled", in.Enabled)
+
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -41,34 +31,13 @@ func flattenAuthConfigPing(d *schema.ResourceData, in *managementClient.PingConf
 		return err
 	}
 
-	err = d.Set("display_name_field", in.DisplayNameField)
-	if err != nil {
-		return err
-	}
-	err = d.Set("groups_field", in.GroupsField)
-	if err != nil {
-		return err
-	}
-	err = d.Set("idp_metadata_content", in.IDPMetadataContent)
-	if err != nil {
-		return err
-	}
-	err = d.Set("rancher_api_host", in.RancherAPIHost)
-	if err != nil {
-		return err
-	}
-	err = d.Set("sp_cert", in.SpCert)
-	if err != nil {
-		return err
-	}
-	err = d.Set("uid_field", in.UIDField)
-	if err != nil {
-		return err
-	}
-	err = d.Set("user_name_field", in.UserNameField)
-	if err != nil {
-		return err
-	}
+	d.Set("display_name_field", in.DisplayNameField)
+	d.Set("groups_field", in.GroupsField)
+	d.Set("idp_metadata_content", in.IDPMetadataContent)
+	d.Set("rancher_api_host", in.RancherAPIHost)
+	d.Set("sp_cert", in.SpCert)
+	d.Set("uid_field", in.UIDField)
+	d.Set("user_name_field", in.UserNameField)
 
 	return nil
 }
