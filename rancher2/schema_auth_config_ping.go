@@ -26,8 +26,7 @@ func authConfigPingFields() map[string]*schema.Schema {
 		},
 		"rancher_api_host": {
 			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Required: true,
 		},
 		"sp_cert": {
 			Type:      schema.TypeString,
