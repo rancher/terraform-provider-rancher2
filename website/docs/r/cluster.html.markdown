@@ -13,6 +13,7 @@ Provides a Rancher v2 Cluster resource. This can be used to create Clusters for 
 ## Example Usage
 
 Creating Rancher v2 imported cluster
+
 ```hcl
 # Create a new rancher2 imported Cluster 
 resource "rancher2_cluster" "foo-imported" {
@@ -22,6 +23,7 @@ resource "rancher2_cluster" "foo-imported" {
 ```
 
 Creating Rancher v2 rke cluster
+
 ```hcl
 # Create a new rancher2 rke Cluster 
 resource "rancher2_cluster" "foo-custom" {
@@ -36,6 +38,7 @@ resource "rancher2_cluster" "foo-custom" {
 ```
 
 Creating Rancher v2 rke cluster assigning a node pool (overlapped planes)
+
 ```hcl
 # Create a new rancher2 rke Cluster 
 resource "rancher2_cluster" "foo-custom" {
@@ -141,8 +144,8 @@ The following attributes are exported:
 
 ##### Arguments
 
-* `user` - (Required) User to connect bastion host (string)
 * `address` - (Required) Address ip for the bastion host (string)
+* `user` - (Required) User to connect bastion host (string)
 * `port` - (Optional) Port for bastion host. Default `22` (string)
 * `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false` (bool)
 * `ssh_key` - (Optional/Computed/Sensitive) Bastion host SSH private key (string)
@@ -185,8 +188,8 @@ The following attributes are exported:
 
 ###### Arguments
 
-* `region` - (Optional/Computed) (string)
 * `service` - (Required) (string)
+* `region` - (Optional/Computed) (string)
 * `signing_method` - (Optional/Computed) (string)
 * `signing_name` - (Optional/Computed) (string)
 * `signing_region` - (Optional/Computed) (string)
@@ -423,9 +426,9 @@ The following attributes are exported:
 
 ##### Arguments
 
+* `url` - (Required) Registry URL (string)
 * `is_default` - (Optional) Set as default registry. Default `false` (bool)
 * `password` - (Optional/Sensitive) Registry password (string)
-* `url` - (Required) Registry URL (string)
 * `user` - (Optional/Sensitive) Registry user (string)
 
 
@@ -527,20 +530,28 @@ The following attributes are exported:
 
 The following arguments are supported:
 
+* `agent_dns_prefix` - (Required) DNS prefix to be used to create the FQDN for the agent pool (string)
+* `client_id` - (Required/Sensitive) Azure client ID to use (string)
+* `client_secret` - (Required/Sensitive) Azure client secret associated with the \"client id\" (string)
+* `master_dns_prefix` - (Required) DNS prefix to use the Kubernetes cluster control pane (string)
+* `resource_group` - (Required) The name of the Cluster resource group (string)
+* `ssh_public_key_contents` - (Required) Contents of the SSH public key used to authenticate with Linux hosts (string)
+* `subnet` - (Required) The name of an existing Azure Virtual Subnet. Composite of agent virtual network subnet ID (string)
+* `subscription_id` - (Required) Subscription credentials which uniquely identify Microsoft Azure subscription (string)
+* `tenant_id` - (Required) Azure tenant ID to use (string)
+* `virtual_network` - (Required) The name of an existing Azure Virtual Network. Composite of agent virtual network subnet ID (string)
+* `virtual_network_resource_group` - (Required) The resource group of an existing Azure Virtual Network. Composite of agent virtual network subnet ID (string)
 * `add_client_app_id` - (Optional/Sensitive) The ID of an Azure Active Directory client application of type \"Native\". This application is for user login via kubectl (string)
 * `add_server_app_id` - (Optional/Sensitive) The ID of an Azure Active Directory server application of type \"Web app/API\". This application represents the managed cluster's apiserver (Server application) (string)
 * `aad_server_app_secret` - (Optional/Sensitive) The secret of an Azure Active Directory server application (string)
 * `aad_tenant_id` - (Optional/Sensitive) The ID of an Azure Active Directory tenant (string)
 * `admin_username` - (Optional) The administrator username to use for Linux hosts. Default `azureuser` (string)
-* `agent_dns_prefix` - (Required) DNS prefix to be used to create the FQDN for the agent pool (string)
 * `agent_os_disk_size` - (Optional) GB size to be used to specify the disk for every machine in the agent pool. If you specify 0, it will apply the default according to the \"agent vm size\" specified. Default `0` (int)
 * `agent_pool_name` - (Optional) Name for the agent pool, upto 12 alphanumeric characters. Default `agentpool0` (string)
 * `agent_storage_profile` - (Optional) Storage profile specifies what kind of storage used on machine in the agent pool. Chooses from [ManagedDisks StorageAccount]. Default `ManagedDisks` (string)
 * `agent_vm_size` - (Optional) Size of machine in the agent pool. Default `Standard_D1_v2` (string)
 * `auth_base_url` - (Optional) Different authentication API url to use. Default `https://login.microsoftonline.com/` (string)
 * `base_url` - (Optional) Different resource management API url to use. Default `https://management.azure.com/` (string)
-* `client_id` - (Required/Sensitive) Azure client ID to use (string)
-* `client_secret` - (Required/Sensitive) Azure client secret associated with the \"client id\" (string)
 * `count` - (Optional) Number of machines (VMs) in the agent pool. Allowed values must be in the range of 1 to 100 (inclusive). Default `1` (int)
 * `dns_service_ip` - (Optional) An IP address assigned to the Kubernetes DNS service. It must be within the Kubernetes Service address range specified in \"service cidr\". Default `10.0.0.10` (string)
 * `docker_bridge_cidr` - (Required) A CIDR notation IP range assigned to the Docker bridge network. It must not overlap with any Subnet IP ranges or the Kubernetes Service address range specified in \"service cidr\". Default `172.17.0.1/16` (string)
@@ -550,20 +561,12 @@ The following arguments are supported:
 * `location` - (Optional) Azure Kubernetes cluster location. Default `eastus` (string)
 * `log_analytics_workspace` - (Optional) The name of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses '{resource group}-{subscription id}-{location code}' (string)
 * `log_analytics_workspace_resource_group` - (Optional) The resource group of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses the 'Cluster' resource group (string)
-* `master_dns_prefix` - (Required) DNS prefix to use the Kubernetes cluster control pane (string)
 * `max_pods` - (Optional) Maximum number of pods that can run on a node. Default `110` (int)
 * `network_plugin` - (Optional) Network plugin used for building Kubernetes network. Chooses from `azure` or `kubenet`. Default `azure` (string)
 * `network_policy` - (Optional) Network policy used for building Kubernetes network. Chooses from `calico` (string)
 * `pod_cidr` - (Optional) A CIDR notation IP range from which to assign Kubernetes Pod IPs when \"network plugin\" is specified in \"kubenet\". Default `172.244.0.0/16` (string)
-* `resource_group` - (Required) The name of the Cluster resource group (string)
 * `service_cidr` - (Optional) A CIDR notation IP range from which to assign Kubernetes Service cluster IPs. It must not overlap with any Subnet IP ranges. Default `10.0.0.0/16` (string)
-* `ssh_public_key_contents` - (Required) Contents of the SSH public key used to authenticate with Linux hosts (string)
-* `subnet` - (Required) The name of an existing Azure Virtual Subnet. Composite of agent virtual network subnet ID (string)
-* `subscription_id` - (Required) Subscription credentials which uniquely identify Microsoft Azure subscription (string)
 * `tag` - (Optional/Computed) Tags for Kubernetes cluster. For example, foo=bar (map)
-* `tenant_id` - (Required) Azure tenant ID to use (string)
-* `virtual_network` - (Required) The name of an existing Azure Virtual Network. Composite of agent virtual network subnet ID (string)
-* `virtual_network_resource_group` - (Required) The resource group of an existing Azure Virtual Network. Composite of agent virtual network subnet ID (string)
 
 ### `eks_config`
 
@@ -573,6 +576,10 @@ The following arguments are supported:
 
 * `access_key` - (Required/Sensitive) The AWS Client ID to use (string)
 * `secret_key` - (Required/Sensitive) The AWS Client Secret associated with the Client ID (string)
+* `security_groups` - (Required) List of security groups to use for the cluster (list)
+* `service_role` - (Required) The service role to use to perform the cluster operations in AWS (string)
+* `subnets` - (Required) List of subnets in the virtual network to use (list)
+* `virtual_network` - (Required) The name of the virtual network to use (string)
 * `ami` - (Optional) AMI ID to use for the worker nodes instead of the default (string)
 * `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes. Default `true` (bool)
 * `instance_type` - (Optional) The type of machine to use for worker nodes. Default `t2.medium` (string)
@@ -581,12 +588,8 @@ The following arguments are supported:
 * `minimum_nodes` - (Optional) The minimum number of worker nodes. Default `1` (int)
 * `node_volume_size` - (Optional) The volume size for each node. Default `20` (int)
 * `region` - (Optional) The AWS Region to create the EKS cluster in. Default `us-west-2` (string)
-* `security_groups` - (Required) List of security groups to use for the cluster (list)
-* `service_role` - (Required) The service role to use to perform the cluster operations in AWS (string)
 * `session_token` - (Optional) A session token to use with the client key and secret if applicable (string)
-* `subnets` - (Required) List of subnets in the virtual network to use (list)
 * `user_data` - (Optional/Computed) Pass user-data to the nodes to perform automated configuration tasks (string)
-* `virtual_network` - (Required) The name of the virtual network to use (string)
 
 ### `gke_config`
 
@@ -596,9 +599,28 @@ The following arguments are supported:
 
 * `cluster_ipv4_cidr` - (Required) The IP address range of the container pods (string)
 * `credential` - (Required/Sensitive) The contents of the GC credential file (string)
+* `disk_type` - (Required) Type of the disk attached to each node (string)
+* `image_type` - (Required) The image to use for the worker nodes (string)
+* `ip_policy_cluster_ipv4_cidr_block` - (Required) The IP address range for the cluster pod IPs (string)
+* `ip_policy_cluster_secondary_range_name` - (Required) The name of the secondary range to be used for the cluster CIDR block (string)
+* `ip_policy_node_ipv4_cidr_block` - (Required) The IP address range of the instance IPs in this cluster (string)
+* `ip_policy_services_ipv4_cidr_block` - (Required) The IP address range of the services IPs in this cluster (string)
+* `ip_policy_services_secondary_range_name` - (Required) The name of the secondary range to be used for the services CIDR block (string)
+* `ip_policy_subnetwork_name` - (Required) A custom subnetwork name to be used if createSubnetwork is true (string)
+* `locations` - (Required) Locations for GKE cluster (list)
+* `machine_type` - (Required) Machine type for GKE cluster (string)
+* `maintenance_window` - (Required) Maintenance window for GKE cluster (string)
+* `master_ipv4_cidr_block` - (Required) The IP range in CIDR notation to use for the hosted master network (string)
+* `master_version` - (Required) Master version for GKE cluster (string)
+* `network` - (Required) Network for GKE cluster (string)
+* `node_pool` - (Required) The ID of the cluster node pool (string)
+* `node_version` - (Required) Node version for GKE cluster (string)
+* `oauth_scopes` - (Required) The set of Google API scopes to be made available on all of the node VMs under the default service account (list)
+* `project_id` - (Required) Project ID for GKE cluster (string)
+* `service_account` - (Required) The Google Cloud Platform Service Account to be used by the node VMs (string)
+* `sub_network` - (Required) Subnetwork for GKE cluster (string)
 * `description` - (Optional) An optional description of this cluster (string)
 * `disk_size_gb` - (Optional) Size of the disk attached to each node. Default `100` (int)
-* `disk_type` - (Required) Type of the disk attached to each node (string)
 * `enable_alpha_feature` - (Optional) To enable kubernetes alpha feature. Default `true` (bool)
 * `enable_auto_repair` - (Optional) Specifies whether the node auto-repair is enabled for the node pool. Default `false` (bool)
 * `enable_auto_upgrade` - (Optional) Specifies whether node auto-upgrade is enabled for the node pool. Default `false` (bool)
@@ -612,36 +634,17 @@ The following arguments are supported:
 * `enable_private_nodes` - (Optional) Whether nodes have internal IP address only. Default `false` (bool)
 * `enable_stackdriver_logging` - (Optional) Enable stackdriver monitoring. Default `true` (bool)
 * `enable_stackdriver_monitoring` - (Optional) Enable stackdriver monitoring on GKE cluster (bool)
-* `image_type` - (Required) The image to use for the worker nodes (string)
-* `ip_policy_cluster_ipv4_cidr_block` - (Required) The IP address range for the cluster pod IPs (string)
-* `ip_policy_cluster_secondary_range_name` - (Required) The name of the secondary range to be used for the cluster CIDR block (string)
 * `ip_policy_create_subnetwork` - (Optional) Whether a new subnetwork will be created automatically for the cluster. Default `false` (bool)
-* `ip_policy_node_ipv4_cidr_block` - (Required) The IP address range of the instance IPs in this cluster (string)
-* `ip_policy_services_ipv4_cidr_block` - (Required) The IP address range of the services IPs in this cluster (string)
-* `ip_policy_services_secondary_range_name` - (Required) The name of the secondary range to be used for the services CIDR block (string)
-* `ip_policy_subnetwork_name` - (Required) A custom subnetwork name to be used if createSubnetwork is true (string)
 * `issue_client_certificate` - (Optional) Issue a client certificate. Default `false` (bool)
 * `kubernetes_dashboard` - (Optional) Enable the kubernetes dashboard. Default `false` (bool)
 * `labels` - (Optional/Computed) The map of Kubernetes labels to be applied to each node (map)
 * `local_ssd_count` - (Optional) The number of local SSD disks to be attached to the node. Default `0` (int)
-* `locations` - (Required) Locations for GKE cluster (list)
-* `machine_type` - (Required) Machine type for GKE cluster (string)
-* `maintenance_window` - (Required) Maintenance window for GKE cluster (string)
 * `master_authorized_network_cidr_blocks` - (Optional) Define up to 10 external networks that could access Kubernetes master through HTTPS (list)
-* `master_ipv4_cidr_block` - (Required) The IP range in CIDR notation to use for the hosted master network (string)
-* `master_version` - (Required) Master version for GKE cluster (string)
 * `max_node_count` - (Optional) Maximum number of nodes in the NodePool. Must be >= minNodeCount. There has to enough quota to scale up the cluster. Default `0` (int)
 * `min_node_count` - (Optional) Minimmum number of nodes in the NodePool. Must be >= 1 and <= maxNodeCount. Default `0` (int)
-* `network` - (Required) Network for GKE cluster (string)
 * `node_count` - (Optional) Node count for GKE cluster. Default `3` (int)
-* `node_pool` - (Required) The ID of the cluster node pool (string)
-* `node_version` - (Required) Node version for GKE cluster (string)
-* `oauth_scopes` - (Required) The set of Google API scopes to be made available on all of the node VMs under the default service account (list)
 * `preemptible` - (Optional) Whether the nodes are created as preemptible VM instances. Default `false` (bool)
-* `project_id` - (Required) Project ID for GKE cluster (string)
 * `resource_labels` - (Optional/Computed) The map of Kubernetes labels to be applied to each cluster (map)
-* `service_account` - (Required) The Google Cloud Platform Service Account to be used by the node VMs (string)
-* `sub_network` - (Required) Subnetwork for GKE cluster (string)
 * `use_ip_aliases` - (Optional) Whether alias IPs will be used for pod IPs in the cluster. Default `false` (bool)
 * `taints` - (Required) List of kubernetes taints to be applied to each node (list)
 * `zone` - (Required) Zone GKE cluster (string)
