@@ -48,16 +48,44 @@ type amazonec2Config struct {
 
 func amazonec2ConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"ami": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "AWS machine image",
+		},
+		"region": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "AWS Region",
+		},
+		"security_group": {
+			Type:        schema.TypeList,
+			Required:    true,
+			Description: "AWS VPC security group",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"subnet_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "AWS VPC subnet id",
+		},
+		"vpc_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "AWS VPC id",
+		},
+		"zone": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "AWS zone for instance (i.e. a,b,c,d,e)",
+		},
 		"access_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Sensitive:   true,
 			Description: "AWS Access Key",
-		},
-		"ami": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "AWS machine image",
 		},
 		"block_duration_minutes": {
 			Type:        schema.TypeString,
@@ -118,11 +146,6 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Only use a private IP address",
 		},
-		"region": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "AWS Region",
-		},
 		"request_spot_instance": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -146,14 +169,6 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Sensitive:   true,
 			Description: "AWS Secret Key",
-		},
-		"security_group": {
-			Type:        schema.TypeList,
-			Required:    true,
-			Description: "AWS VPC security group",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
 		},
 		"security_group_readonly": {
 			Type:        schema.TypeBool,
@@ -184,11 +199,6 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 			Default:     "ubuntu",
 			Description: "Set the name of the ssh user",
 		},
-		"subnet_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "AWS VPC subnet id",
-		},
 		"tags": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -216,16 +226,6 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "gp2",
 			Description: "Amazon EBS volume type",
-		},
-		"vpc_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "AWS VPC id",
-		},
-		"zone": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "AWS zone for instance (i.e. a,b,c,d,e)",
 		},
 	}
 

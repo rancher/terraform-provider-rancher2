@@ -68,14 +68,14 @@ func clusterRKEConfigCloudProviderAwsGlobalFields() map[string]*schema.Schema {
 
 func clusterRKEConfigCloudProviderAwsServiceOverrideFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"service": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
 		"region": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"service": {
-			Type:     schema.TypeString,
-			Required: true,
 		},
 		"signing_method": {
 			Type:     schema.TypeString,

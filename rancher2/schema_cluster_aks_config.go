@@ -64,6 +64,63 @@ type AzureKubernetesServiceConfig struct {
 
 func clusterAKSConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"agent_dns_prefix": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "DNS prefix to be used to create the FQDN for the agent pool",
+		},
+		"client_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "Azure client ID to use",
+		},
+		"client_secret": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Sensitive:   true,
+			Description: "Azure client secret associated with the \"client id\"",
+		},
+		"master_dns_prefix": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "DNS prefix to use the Kubernetes cluster control pane",
+		},
+		"resource_group": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of the Cluster resource group",
+		},
+		"ssh_public_key_contents": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Contents of the SSH public key used to authenticate with Linux hosts",
+		},
+		"subnet": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of an existing Azure Virtual Subnet. Composite of agent virtual network subnet ID",
+		},
+		"subscription_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Subscription credentials which uniquely identify Microsoft Azure subscription",
+		},
+		"tenant_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Azure tenant ID to use",
+		},
+		"virtual_network": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of an existing Azure Virtual Network. Composite of agent virtual network subnet ID",
+		},
+		"virtual_network_resource_group": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The resource group of an existing Azure Virtual Network. Composite of agent virtual network subnet ID",
+		},
 		"add_client_app_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -93,11 +150,6 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "azureuser",
 			Description: "The administrator username to use for Linux hosts",
-		},
-		"agent_dns_prefix": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "DNS prefix to be used to create the FQDN for the agent pool",
 		},
 		"agent_os_disk_size": {
 			Type:        schema.TypeInt,
@@ -134,18 +186,6 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "https://management.azure.com/",
 			Description: "Different resource management API url to use",
-		},
-		"client_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Sensitive:   true,
-			Description: "Azure client ID to use",
-		},
-		"client_secret": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Sensitive:   true,
-			Description: "Azure client secret associated with the \"client id\"",
 		},
 		"count": {
 			Type:        schema.TypeInt,
@@ -199,11 +239,6 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "The resource group of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses the 'Cluster' resource group",
 		},
-		"master_dns_prefix": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "DNS prefix to use the Kubernetes cluster control pane",
-		},
 		"max_pods": {
 			Type:        schema.TypeInt,
 			Optional:    true,
@@ -229,52 +264,17 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Default:     "172.244.0.0/16",
 			Description: "A CIDR notation IP range from which to assign Kubernetes Pod IPs when \"network plugin\" is specified in \"kubenet\".",
 		},
-		"resource_group": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of the Cluster resource group",
-		},
-		"ssh_public_key_contents": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Contents of the SSH public key used to authenticate with Linux hosts",
-		},
 		"service_cidr": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "10.0.0.0/16",
 			Description: "A CIDR notation IP range from which to assign Kubernetes Service cluster IPs. It must not overlap with any Subnet IP ranges",
 		},
-		"subnet": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of an existing Azure Virtual Subnet. Composite of agent virtual network subnet ID",
-		},
-		"subscription_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Subscription credentials which uniquely identify Microsoft Azure subscription",
-		},
 		"tag": &schema.Schema{
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
 			Description: "Tags for Kubernetes cluster. For example, foo=bar",
-		},
-		"tenant_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Azure tenant ID to use",
-		},
-		"virtual_network": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of an existing Azure Virtual Network. Composite of agent virtual network subnet ID",
-		},
-		"virtual_network_resource_group": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The resource group of an existing Azure Virtual Network. Composite of agent virtual network subnet ID",
 		},
 	}
 

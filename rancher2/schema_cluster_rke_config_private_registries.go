@@ -8,6 +8,10 @@ import (
 
 func clusterRKEConfigPrivateRegistriesFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"url": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
 		"is_default": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -17,10 +21,6 @@ func clusterRKEConfigPrivateRegistriesFields() map[string]*schema.Schema {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Sensitive: true,
-		},
-		"url": {
-			Type:     schema.TypeString,
-			Required: true,
 		},
 		"user": {
 			Type:      schema.TypeString,

@@ -46,11 +46,6 @@ type openstackConfig struct {
 
 func openstackConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"active_timeout": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "200",
-		},
 		"auth_url": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
@@ -58,6 +53,19 @@ func openstackConfigFields() map[string]*schema.Schema {
 		"availability_zone": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+		},
+		"region": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"username": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"active_timeout": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "200",
 		},
 		"cacert": &schema.Schema{
 			Type:     schema.TypeString,
@@ -136,10 +144,6 @@ func openstackConfigFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"region": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
 		"sec_groups": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
@@ -165,10 +169,6 @@ func openstackConfigFields() map[string]*schema.Schema {
 		"user_data_file": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
-		},
-		"username": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
 		},
 	}
 	return s

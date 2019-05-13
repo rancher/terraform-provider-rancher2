@@ -187,20 +187,20 @@ func clusterRKEConfigCloudProviderOpenstackRouteFields() map[string]*schema.Sche
 
 func clusterRKEConfigCloudProviderOpenstackFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"block_storage": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: clusterRKEConfigCloudProviderOpenstackBlockStorageFields(),
-			},
-		},
 		"global": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Required: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigCloudProviderOpenstackGlobalFields(),
+			},
+		},
+		"block_storage": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigCloudProviderOpenstackBlockStorageFields(),
 			},
 		},
 		"load_balancer": {

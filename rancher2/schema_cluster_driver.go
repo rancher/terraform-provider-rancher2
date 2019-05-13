@@ -12,29 +12,29 @@ func clusterDriverFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Required: true,
 		},
-		"actual_url": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
 		"builtin": &schema.Schema{
 			Type:     schema.TypeBool,
 			Required: true,
-		},
-		"checksum": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
 		},
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"ui_url": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
 		"url": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+		},
+		"actual_url": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"checksum": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"ui_url": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"whitelist_domains": &schema.Schema{
 			Type:     schema.TypeList,

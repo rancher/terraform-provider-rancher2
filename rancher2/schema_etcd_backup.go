@@ -8,6 +8,11 @@ import (
 
 func etcdBackupFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"cluster_id": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
 		"backup_config": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -16,11 +21,6 @@ func etcdBackupFields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesEtcdBackupConfigFields(),
 			},
-		},
-		"cluster_id": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
 		},
 		"filename": &schema.Schema{
 			Type:     schema.TypeString,

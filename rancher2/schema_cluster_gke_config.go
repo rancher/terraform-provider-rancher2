@@ -83,6 +83,112 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			Description: "The contents of the GC credential file",
 		},
+		"disk_type": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Type of the disk attached to each node",
+		},
+		"image_type": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The image to use for the worker nodes",
+		},
+		"ip_policy_cluster_ipv4_cidr_block": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The IP address range for the cluster pod IPs",
+		},
+		"ip_policy_cluster_secondary_range_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of the secondary range to be used for the cluster CIDR block",
+		},
+		"ip_policy_node_ipv4_cidr_block": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The IP address range of the instance IPs in this cluster",
+		},
+		"ip_policy_services_ipv4_cidr_block": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The IP address range of the services IPs in this cluster",
+		},
+		"ip_policy_services_secondary_range_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of the secondary range to be used for the services CIDR block",
+		},
+		"ip_policy_subnetwork_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "A custom subnetwork name to be used if createSubnetwork is true",
+		},
+		"locations": {
+			Type:        schema.TypeList,
+			Required:    true,
+			Description: "Locations to use for the cluster",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"machine_type": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The machine type to use for the worker nodes",
+		},
+		"maintenance_window": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "When to performance updates on the nodes, in 24-hour time",
+		},
+		"master_ipv4_cidr_block": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The IP range in CIDR notation to use for the hosted master network",
+		},
+		"master_version": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The kubernetes master version",
+		},
+		"network": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The network to use for the cluster",
+		},
+		"node_pool": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of the cluster node pool",
+		},
+		"node_version": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The version of kubernetes to use on the nodes",
+		},
+		"oauth_scopes": {
+			Type:        schema.TypeList,
+			Required:    true,
+			Description: "The set of Google API scopes to be made available on all of the node VMs under the default service account",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"project_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The ID of your project to use when creating a cluster",
+		},
+		"service_account": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The Google Cloud Platform Service Account to be used by the node VMs",
+		},
+		"sub_network": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The sub-network to use for the cluster",
+		},
 		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -93,11 +199,6 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     100,
 			Description: "Size of the disk attached to each node",
-		},
-		"disk_type": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Type of the disk attached to each node",
 		},
 		"enable_alpha_feature": {
 			Type:        schema.TypeBool,
@@ -183,46 +284,11 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Default:     true,
 			Description: "Enable stackdriver monitoring",
 		},
-		"image_type": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The image to use for the worker nodes",
-		},
-		"ip_policy_cluster_ipv4_cidr_block": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The IP address range for the cluster pod IPs",
-		},
-		"ip_policy_cluster_secondary_range_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of the secondary range to be used for the cluster CIDR block",
-		},
 		"ip_policy_create_subnetwork": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
 			Description: "Whether a new subnetwork will be created automatically for the cluster",
-		},
-		"ip_policy_node_ipv4_cidr_block": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The IP address range of the instance IPs in this cluster",
-		},
-		"ip_policy_services_ipv4_cidr_block": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The IP address range of the services IPs in this cluster",
-		},
-		"ip_policy_services_secondary_range_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of the secondary range to be used for the services CIDR block",
-		},
-		"ip_policy_subnetwork_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "A custom subnetwork name to be used if createSubnetwork is true",
 		},
 		"issue_client_certificate": {
 			Type:        schema.TypeBool,
@@ -248,24 +314,6 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Default:     0,
 			Description: "The number of local SSD disks to be attached to the node",
 		},
-		"locations": {
-			Type:        schema.TypeList,
-			Required:    true,
-			Description: "Locations to use for the cluster",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"machine_type": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The machine type to use for the worker nodes",
-		},
-		"maintenance_window": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "When to performance updates on the nodes, in 24-hour time",
-		},
 		"master_authorized_network_cidr_blocks": {
 			Type:        schema.TypeList,
 			Optional:    true,
@@ -273,16 +321,6 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
-		},
-		"master_ipv4_cidr_block": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The IP range in CIDR notation to use for the hosted master network",
-		},
-		"master_version": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The kubernetes master version",
 		},
 		"max_node_count": {
 			Type:        schema.TypeInt,
@@ -296,34 +334,11 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Default:     0,
 			Description: "Minimmum number of nodes in the NodePool. Must be >= 1 and <= maxNodeCount",
 		},
-		"network": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The network to use for the cluster",
-		},
 		"node_count": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3,
 			Description: "The number of nodes to create in this cluster",
-		},
-		"node_pool": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The ID of the cluster node pool",
-		},
-		"node_version": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The version of kubernetes to use on the nodes",
-		},
-		"oauth_scopes": {
-			Type:        schema.TypeList,
-			Required:    true,
-			Description: "The set of Google API scopes to be made available on all of the node VMs under the default service account",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
 		},
 		"preemptible": {
 			Type:        schema.TypeBool,
@@ -331,26 +346,11 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Whether the nodes are created as preemptible VM instances",
 		},
-		"project_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The ID of your project to use when creating a cluster",
-		},
 		"resource_labels": &schema.Schema{
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
 			Description: "The map of Kubernetes labels (key/value pairs) to be applied to each cluster",
-		},
-		"service_account": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The Google Cloud Platform Service Account to be used by the node VMs",
-		},
-		"sub_network": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The sub-network to use for the cluster",
 		},
 		"use_ip_aliases": {
 			Type:        schema.TypeBool,

@@ -134,6 +134,21 @@ func clusterRKEConfigCloudProviderVsphereWorkspaceFields() map[string]*schema.Sc
 
 func clusterRKEConfigCloudProviderVsphereFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"virtual_center": {
+			Type:     schema.TypeList,
+			Required: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigCloudProviderVsphereVirtualCenterFields(),
+			},
+		},
+		"workspace": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Required: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigCloudProviderVsphereWorkspaceFields(),
+			},
+		},
 		"disk": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -159,21 +174,6 @@ func clusterRKEConfigCloudProviderVsphereFields() map[string]*schema.Schema {
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigCloudProviderVsphereNetworkFields(),
-			},
-		},
-		"virtual_center": {
-			Type:     schema.TypeList,
-			Required: true,
-			Elem: &schema.Resource{
-				Schema: clusterRKEConfigCloudProviderVsphereVirtualCenterFields(),
-			},
-		},
-		"workspace": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Required: true,
-			Elem: &schema.Resource{
-				Schema: clusterRKEConfigCloudProviderVsphereWorkspaceFields(),
 			},
 		},
 	}

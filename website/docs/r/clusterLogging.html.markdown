@@ -73,7 +73,7 @@ The following attributes are exported:
 
 #### Arguments
 
-* `fluent_servers` - (Reqeuired) Servers for the fluentd service (list)
+* `fluent_servers` - (Required) Servers for the fluentd service (list)
 * `certificate` - (Optional/Sensitive) SSL certificate for the fluentd service (string)
 * `compress` - (Optional) Compress data for the fluentd service (bool)
 * `enable_tls` - (Optional) Enable TLS for the fluentd service (bool)

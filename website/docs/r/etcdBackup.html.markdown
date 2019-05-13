@@ -37,8 +37,8 @@ resource "rancher2_etcd_backup" "foo" {
 
 The following arguments are supported:
 
-* `backup_config` - (Optional/Computed) Backup config for etcd backup (list maxitems:1)
 * `cluster_id` - (Required) Cluster ID to config Etcd Backup (string)
+* `backup_config` - (Optional/Computed) Backup config for etcd backup (list maxitems:1)
 * `filename` - (Optional/Computed) Filename of the Etcd Backup (string)
 * `manual` - (Optional) Manual execution of the Etcd Backup. Default `false` (bool)
 * `name` - (Required) The name of the Etcd Backup (string)

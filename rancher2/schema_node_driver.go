@@ -16,6 +16,14 @@ func nodeDriverFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Required: true,
 		},
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"url": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
 		"checksum": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
@@ -28,17 +36,9 @@ func nodeDriverFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
 		"ui_url": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
-		},
-		"url": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
 		},
 		"whitelist_domains": &schema.Schema{
 			Type:     schema.TypeList,

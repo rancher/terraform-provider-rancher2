@@ -17,6 +17,14 @@ func clusterRKEConfigNodesFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"role": {
+			Type:     schema.TypeList,
+			Required: true,
+			Elem: &schema.Schema{
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringInSlice(RKEConfigNodesRoles, true),
+			},
+		},
 		"docker_socket": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -42,14 +50,6 @@ func clusterRKEConfigNodesFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "22",
-		},
-		"role": {
-			Type:     schema.TypeList,
-			Required: true,
-			Elem: &schema.Schema{
-				Type:         schema.TypeString,
-				ValidateFunc: validation.StringInSlice(RKEConfigNodesRoles, true),
-			},
 		},
 		"ssh_agent_auth": {
 			Type:     schema.TypeBool,

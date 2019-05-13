@@ -96,14 +96,13 @@ The following attributes are exported:
 
 #### Arguments
 
-* `access_key` - (Optional/Sensitive) AWS access key. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
-* `secret_key` - (Optional/Sensitive) AWS secret key. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
 * `ami` - (Required) AWS machine image (string)
 * `region` - (Required) AWS region. (string)
 * `security_group` - (Required) AWS VPC security group. (list)
 * `subnet_id` - (Required) AWS VPC subnet id (string)
 * `vpc_id` - (Required) AWS VPC id. (string)
 * `zone` - (Required) AWS zone for instance (i.e. a,b,c,d,e) (string)
+* `access_key` - (Optional/Sensitive) AWS access key. Required on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
 * `block_duration_minutes` - (Optional) AWS spot instance duration in minutes (60, 120, 180, 240, 300, or 360). Default `0` (string)
 * `device_name` - (Optional) AWS root device name. Default `/dev/sda1` (string)
 * `endpoint` - (Optional) Optional endpoint URL (hostname only or fully qualified URI) (string)
@@ -117,6 +116,7 @@ The following attributes are exported:
 * `request_spot_instance` - (Optional) Set this flag to request spot instance. Default `false` (bool)
 * `retries` - (Optional) Set retry count for recoverable failures (use -1 to disable). Default `5` (string)
 * `root_size` - (Optional) AWS root disk size (in GB). Default `16` (string)
+* `secret_key` - (Optional/Sensitive) AWS secret key. Required on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
 * `security_group_readonly` - (Optional) Skip adding default rules to security groups (bool)
 * `session_token` - (Optional/Sensitive) AWS Session Token (string)
 * `spot_price` - (Optional) AWS spot instance bid price (in dollar). Default `0.50` (string)
@@ -178,9 +178,11 @@ The following attributes are exported:
 
 #### Arguments
 
-* `active_timeout`- (Optional) OpenStack active timeout Default `200` (string)
 * `auth_url` - (Required) OpenStack authentication URL (string)
 * `availability_zone` - (Required) OpenStack availability zone (string)
+* `region` - (Required) OpenStack region name (string)
+* `username` - (Required) OpenStack username (string)
+* `active_timeout`- (Optional) OpenStack active timeout Default `200` (string)
 * `cacert` - (Optional) CA certificate bundle to verify against (string)
 * `config_drive` - (Optional) Enables the OpenStack config drive for the instance. Default `false` (bool)
 * `domain_id` - (Required*) OpenStack domain ID. Identity v3 only. Conflicts with `domain_name` (string)
@@ -199,14 +201,12 @@ The following attributes are exported:
 * `nova_network` - (Optional) Use the nova networking services instead of neutron (string)
 * `password` - (Optional/Sensitive) OpenStack password. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
 * `private_key_file` - (Optional) Private keyfile absolute path to use for SSH (string)
-* `region` - (Required) OpenStack region name (string)
 * `sec_groups` - (Optional) OpenStack comma separated security groups for the machine (string)
 * `ssh_port` - (Optional) OpenStack SSH port * Default `22` (string)
 * `ssh_user` - (Optional) OpenStack SSH user * Default: `root` (string)
 * `tenant_id` - (Required*) OpenStack tenant id. Conflicts with `tenant_name` (string)
 * `tenant_name` - (Required*) OpenStack tenant name. Conflicts with `tenant_id` (string)
 * `user_data_file` - (Optional) File containing an openstack userdata script (string)
-* `username` - (Required) OpenStack username (string)
 
 > **Note**: `Required*` denotes that either the _name or _id is required but you cannot use both.
 

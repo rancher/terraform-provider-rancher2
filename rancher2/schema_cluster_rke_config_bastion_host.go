@@ -12,6 +12,10 @@ func clusterRKEConfigBastionHostFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"user": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
 		"port": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -32,10 +36,6 @@ func clusterRKEConfigBastionHostFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"user": {
-			Type:     schema.TypeString,
-			Required: true,
 		},
 	}
 	return s

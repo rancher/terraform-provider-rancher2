@@ -32,12 +32,12 @@ resource "rancher2_cluster_driver" "foo" {
 The following arguments are supported:
 
 * `active` - (Required) Specify if the cluster driver state (bool)
-* `actual_url` - (Optional) Actual url of the cluster driver (string)
 * `builtin` - (Required) Specify wheter the cluster driver is an internal cluster driver or not (bool)
-* `checksum` - (Optional) Verify that the downloaded driver matches the expected checksum (string)
 * `name` - (Required) Name of the cluster driver (string)
-* `ui_url` - (Optional) The URL to load for customized Add Clusters screen for this driver (string)
 * `url` - (Required) The URL to download the machine driver binary for 64-bit Linux (string)
+* `actual_url` - (Optional) Actual url of the cluster driver (string)
+* `checksum` - (Optional) Verify that the downloaded driver matches the expected checksum (string)
+* `ui_url` - (Optional) The URL to load for customized Add Clusters screen for this driver (string)
 * `whitelist_domains` - (Optional) Domains to whitelist for the ui (list)
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
