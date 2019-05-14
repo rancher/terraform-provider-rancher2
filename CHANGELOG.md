@@ -1,3 +1,8 @@
+## 1.0.0
+
+* Initial Terraform Ecosystem Release
+
+
 ## v0.2.0-rc5 (Unreleased)
 
 FEATURES:
