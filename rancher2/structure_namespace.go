@@ -96,15 +96,13 @@ func flattenNamespace(d *schema.ResourceData, in *clusterClient.Namespace) error
 	d.Set("name", in.Name)
 	d.Set("description", in.Description)
 
-	if in.ResourceQuota != nil {
-		resourceQuota := flattenNamespaceResourceQuota(in.ResourceQuota)
-		err := d.Set("resource_quota", resourceQuota)
-		if err != nil {
-			return err
-		}
+	resourceQuota := flattenNamespaceResourceQuota(in.ResourceQuota)
+	err := d.Set("resource_quota", resourceQuota)
+	if err != nil {
+		return err
 	}
 
-	err := d.Set("annotations", toMapInterface(in.Annotations))
+	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}

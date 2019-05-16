@@ -29,7 +29,7 @@ func flattenClusterRegistationToken(in *managementClient.ClusterRegistrationToke
 	return []interface{}{obj}, nil
 }
 
-func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput) error {
+func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput, defaultProjectID, systemProjectID string) error {
 	if in == nil {
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster is nil")
 	}
@@ -67,6 +67,8 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	}
 
 	d.Set("kube_config", kubeConfig.Config)
+	d.Set("default_project_id", defaultProjectID)
+	d.Set("system_project_id", systemProjectID)
 	d.Set("driver", in.Driver)
 
 	switch in.Driver {

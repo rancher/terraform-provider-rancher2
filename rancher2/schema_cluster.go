@@ -127,6 +127,14 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterGKEConfigFields(),
 			},
 		},
+		"default_project_id": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"system_project_id": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"description": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,

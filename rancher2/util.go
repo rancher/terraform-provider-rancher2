@@ -155,7 +155,7 @@ func splitTokenID(token string) string {
 }
 
 func splitID(id string) (clusterID, resourceID string) {
-	separator := ":"
+	separator := "."
 	if strings.Contains(id, separator) {
 		return id[0:strings.Index(id, separator)], id[strings.Index(id, separator)+1:]
 	}

@@ -183,6 +183,34 @@ func (c *Config) GetProjectRoleTemplateBindingsByProjectID(projectID string) ([]
 	return data, err
 }
 
+func (c *Config) IsProjectDefault(project *managementClient.Project) bool {
+	if project == nil {
+		return false
+	}
+
+	for k, v := range project.Labels {
+		if k == projectDefaultLabel && v == "true" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (c *Config) IsProjectSystem(project *managementClient.Project) bool {
+	if project == nil {
+		return false
+	}
+
+	for k, v := range project.Labels {
+		if k == projectSystemLabel && v == "true" {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (c *Config) GetProjectByName(name, clusterID string) (*managementClient.Project, error) {
 	if name == "" {
 		return nil, fmt.Errorf("[ERROR] Project name is nil")
@@ -275,6 +303,57 @@ func (c *Config) RoleTemplateExist(id string) error {
 	}
 
 	return nil
+}
+
+func (c *Config) GetClusterProjects(id string) ([]managementClient.Project, error) {
+	if id == "" {
+		return nil, fmt.Errorf("[ERROR] Cluster id is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	filters := map[string]interface{}{"clusterId": id}
+	listOpts := NewListOpts(filters)
+
+	collection, err := client.Project.List(listOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	return collection.Data, nil
+}
+
+func (c *Config) GetClusterSpecialProjectsID(id string) (string, string, error) {
+	if id == "" {
+		return "", "", fmt.Errorf("[ERROR] Cluster id is nil")
+	}
+
+	projects, err := c.GetClusterProjects(id)
+	if err != nil {
+		return "", "", err
+	}
+
+	found := 0
+	defaultProjectID := ""
+	systemProjectID := ""
+	for _, project := range projects {
+		if c.IsProjectDefault(&project) {
+			found += 1
+			defaultProjectID = project.ID
+		}
+		if c.IsProjectSystem(&project) {
+			found += 1
+			systemProjectID = project.ID
+		}
+		if found == 2 {
+			return defaultProjectID, systemProjectID, nil
+		}
+	}
+
+	return defaultProjectID, systemProjectID, nil
 }
 
 func (c *Config) GetClusterByName(name string) (*managementClient.Cluster, error) {
