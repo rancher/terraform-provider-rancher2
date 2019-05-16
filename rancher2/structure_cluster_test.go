@@ -85,11 +85,13 @@ func init() {
 	testClusterInterfaceAKS = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"kube_config":                "kube_config",
 		"driver":                     clusterDriverAKS,
 		"aks_config":                 testClusterAKSConfigInterface,
+		"system_project_id":          "system_project_id",
 	}
 	testClusterConfEKS = &Cluster{
 		AmazonElasticContainerServiceConfig: testClusterEKSConfigConf,
@@ -100,11 +102,13 @@ func init() {
 	testClusterInterfaceEKS = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"kube_config":                "kube_config",
 		"driver":                     clusterDriverEKS,
 		"eks_config":                 testClusterEKSConfigInterface,
+		"system_project_id":          "system_project_id",
 	}
 	testClusterConfGKE = &Cluster{
 		GoogleKubernetesEngineConfig: testClusterGKEConfigConf,
@@ -115,11 +119,13 @@ func init() {
 	testClusterInterfaceGKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"kube_config":                "kube_config",
 		"driver":                     clusterDriverGKE,
 		"gke_config":                 testClusterGKEConfigInterface,
+		"system_project_id":          "system_project_id",
 	}
 	testClusterConfRKE = &Cluster{}
 	testClusterConfRKE.Name = "test"
@@ -129,11 +135,13 @@ func init() {
 	testClusterInterfaceRKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"kube_config":                "kube_config",
 		"driver":                     clusterDriverRKE,
 		"rke_config":                 testClusterRKEConfigInterface,
+		"system_project_id":          "system_project_id",
 	}
 }
 
@@ -199,7 +207,7 @@ func TestFlattenCluster(t *testing.T) {
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{})
 		tc.InputToken.ID = "id"
-		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube)
+		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string))
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
