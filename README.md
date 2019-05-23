@@ -10,9 +10,8 @@ Terraform Provider for Rancher v2
 Requirements
 ------------
 
-- [Terraform](https://www.terraform.io/downloads.html) 0.11.x
+- [Terraform](https://www.terraform.io/downloads.html) >= 0.11.x
 - [Go](https://golang.org/doc/install) 1.12 to build the provider plugin
-- [Trash](https://github.com/rancher/trash/releases) 0.2.6 to manage vendor dependencies
 - [Docker](https://docs.docker.com/install/) 17.03.x to run acceptance tests
 
 Building The Provider
@@ -71,7 +70,7 @@ $ make test
 
 In order to run the full suite of Acceptance tests, a running rancher system, a rancher API key and a working k8s cluster imported are needed.
 
-To run acceptance tests, you can simply run `make testacc`. `scripts/gotestacc.sh` will be run, deploying all needed requirements, running acceptance tests and cleanup. 
+To run acceptance tests, you can simply run `make testacc`. `scripts/gotestacc.sh` will be run, deploying all needed requirements, running acceptance tests and cleanup.
 
 ```sh
 $ make testacc
@@ -82,17 +81,3 @@ Due to [network limitation](https://docs.docker.com/docker-for-mac/networking/#k
 ```sh
 $ TESTACC_EXPOSE_HOST_PORTS=true make testacc
 ```
-
-
-Managing vendor dependencies
------------------------------
-
-Go vendor dependencies are managed with [Trash](https://github.com/rancher/trash) and vendor.conf file.
-
-To update vendor dependencies, edit `vendor.conf` file and run `trash`
-
-```sh
-$ trash
-```
-
-
