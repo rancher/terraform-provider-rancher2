@@ -19,7 +19,7 @@ func cloudCredentialGenericFields() map[string]*schema.Schema {
 		"driver": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "NodeDriver Name for generic node driver",
+			Description: "NodeDriver Name(for builtin driver) or ID(for custom driver) for generic node driver",
 		},
 		"config": {
 			Type:        schema.TypeMap,
