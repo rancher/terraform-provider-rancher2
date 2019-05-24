@@ -8,7 +8,7 @@ cleanup()
 {
     $(dirname $0)/cleanup_testacc.sh
 }
-trap cleanup EXIT TERM 
+trap cleanup EXIT TERM
 
 source $(dirname $0)/start_testacc.sh
 
@@ -23,6 +23,5 @@ RANCHER_BOOTSTRAP=${RANCHER_BOOTSTRAP:-false}
 
 echo Running acceptance tests
 
-PACKAGES="$(find . -name '*.go' | xargs -I{} dirname {} |  cut -f2 -d/ | sort -u | grep -Ev '(^\.$|.git|.trash-cache|vendor|bin)' | sed -e 's!^!./!' -e 's!$!/...!')"
+PACKAGES="$(find . -name '*.go' | xargs -I{} dirname {} |  cut -f2 -d/ | sort -u | grep -Ev '(^\.$|.git|vendor|bin)' | sed -e 's!^!./!' -e 's!$!/...!')"
 TF_ACC=1 go test -race -cover -tags=test ${PACKAGES} -v -timeout 120m
-
