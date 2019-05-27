@@ -42,14 +42,6 @@ func flattenClusterRKEConfigCloudProviderOpenstackGlobal(in *managementClient.Gl
 		obj["password"] = in.Password
 	}
 
-	if len(in.TenantID) > 0 {
-		obj["tenant_id"] = in.TenantID
-	}
-
-	if len(in.UserID) > 0 {
-		obj["user_id"] = in.UserID
-	}
-
 	if len(in.Username) > 0 {
 		obj["username"] = in.Username
 	}
@@ -68,6 +60,10 @@ func flattenClusterRKEConfigCloudProviderOpenstackGlobal(in *managementClient.Gl
 
 	if len(in.Region) > 0 {
 		obj["region"] = in.Region
+	}
+
+	if len(in.TenantID) > 0 {
+		obj["tenant_id"] = in.TenantID
 	}
 
 	if len(in.TenantName) > 0 {
@@ -256,14 +252,6 @@ func expandClusterRKEConfigCloudProviderOpenstackGlobal(p []interface{}) (*manag
 		obj.Password = v
 	}
 
-	if v, ok := in["tenant_id"].(string); ok && len(v) > 0 {
-		obj.TenantID = v
-	}
-
-	if v, ok := in["user_id"].(string); ok && len(v) > 0 {
-		obj.UserID = v
-	}
-
 	if v, ok := in["username"].(string); ok && len(v) > 0 {
 		obj.Username = v
 	}
@@ -282,6 +270,10 @@ func expandClusterRKEConfigCloudProviderOpenstackGlobal(p []interface{}) (*manag
 
 	if v, ok := in["region"].(string); ok && len(v) > 0 {
 		obj.Region = v
+	}
+
+	if v, ok := in["tenant_id"].(string); ok && len(v) > 0 {
+		obj.TenantID = v
 	}
 
 	if v, ok := in["tenant_name"].(string); ok && len(v) > 0 {
