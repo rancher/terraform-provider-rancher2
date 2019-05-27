@@ -103,16 +103,16 @@ func flattenClusterRKEConfigCloudProviderOpenstackLoadBalancer(in *managementCli
 
 	obj["manage_security_groups"] = in.ManageSecurityGroups
 
-	if in.MonitorDelay > 0 {
-		obj["monitor_delay"] = int(in.MonitorDelay)
+	if len(in.MonitorDelay) > 0 {
+		obj["monitor_delay"] = in.MonitorDelay
 	}
 
 	if in.MonitorMaxRetries > 0 {
 		obj["monitor_max_retries"] = int(in.MonitorMaxRetries)
 	}
 
-	if in.MonitorTimeout > 0 {
-		obj["monitor_timeout"] = int(in.MonitorTimeout)
+	if len(in.MonitorTimeout) > 0 {
+		obj["monitor_timeout"] = in.MonitorTimeout
 	}
 
 	if len(in.SubnetID) > 0 {
@@ -318,16 +318,16 @@ func expandClusterRKEConfigCloudProviderOpenstackLoadBalancer(p []interface{}) (
 		obj.ManageSecurityGroups = v
 	}
 
-	if v, ok := in["monitor_delay"].(int); ok && v > 0 {
-		obj.MonitorDelay = int64(v)
+	if v, ok := in["monitor_delay"].(string); ok && len(v) > 0 {
+		obj.MonitorDelay = v
 	}
 
 	if v, ok := in["monitor_max_retries"].(int); ok && v > 0 {
 		obj.MonitorMaxRetries = int64(v)
 	}
 
-	if v, ok := in["monitor_timeout"].(int); ok && v > 0 {
-		obj.MonitorTimeout = int64(v)
+	if v, ok := in["monitor_timeout"].(string); ok && len(v) > 0 {
+		obj.MonitorTimeout = v
 	}
 
 	if v, ok := in["subnet_id"].(string); ok && len(v) > 0 {

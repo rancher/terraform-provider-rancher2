@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	openstackLBMonitorDelay      = 60
+	openstackLBMonitorDelay      = "60s"
 	openstackLBMonitorMaxRetries = 5
-	openstackLBMonitorTimeout    = 30
+	openstackLBMonitorTimeout    = "30s"
 	cloudProviderOpenstackName   = "openstack"
 )
 
@@ -126,7 +126,7 @@ func clusterRKEConfigCloudProviderOpenstackLoadBalancerFields() map[string]*sche
 			Computed: true,
 		},
 		"monitor_delay": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeString,
 			Optional: true,
 			Default:  openstackLBMonitorDelay,
 		},
@@ -136,7 +136,7 @@ func clusterRKEConfigCloudProviderOpenstackLoadBalancerFields() map[string]*sche
 			Default:  openstackLBMonitorMaxRetries,
 		},
 		"monitor_timeout": {
-			Type:     schema.TypeInt,
+			Type:     schema.TypeString,
 			Optional: true,
 			Default:  openstackLBMonitorTimeout,
 		},
