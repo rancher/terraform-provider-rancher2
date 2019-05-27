@@ -273,9 +273,9 @@ The following attributes are exported:
 * `lb_provider` - (Optional/Computed) (string)
 * `lb_version` - (Optional/Computed) (string)
 * `manage_security_groups` - (Optional/Computed) (bool)
-* `monitor_delay` - (Optional/Computed) Default `60` (int)
-* `monitor_max_retries` - (Optional/Computed) Default `5` (int)
-* `monitor_timeout` - (Optional/Computed) Default `30` (int)
+* `monitor_delay` - (Optional/Computed) Default `60s` (string)
+* `monitor_max_retries` - (Optional/Computed) Default 5 (int)
+* `monitor_timeout` - (Optional/Computed) Default `30s` (string)
 * `subnet_id` - (Optional/Computed) (string)
 * `use_octavia` - (Optional/Computed) (bool)
 
