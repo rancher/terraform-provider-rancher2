@@ -4,6 +4,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	projectDefaultLabel = "authz.management.cattle.io/default-project"
+	projectSystemLabel  = "authz.management.cattle.io/system-project"
+)
+
 //Schemas
 
 func projectResourceQuotaLimitFields() map[string]*schema.Schema {

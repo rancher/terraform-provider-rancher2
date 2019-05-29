@@ -46,16 +46,6 @@ func clusterRKEConfigCloudProviderOpenstackGlobalFields() map[string]*schema.Sch
 			Required:  true,
 			Sensitive: true,
 		},
-		"tenant_id": {
-			Type:      schema.TypeString,
-			Required:  true,
-			Sensitive: true,
-		},
-		"user_id": {
-			Type:      schema.TypeString,
-			Required:  true,
-			Sensitive: true,
-		},
 		"username": {
 			Type:      schema.TypeString,
 			Required:  true,
@@ -81,6 +71,12 @@ func clusterRKEConfigCloudProviderOpenstackGlobalFields() map[string]*schema.Sch
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
+		},
+		"tenant_id": {
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
+			Computed:  true,
 		},
 		"tenant_name": {
 			Type:     schema.TypeString,
@@ -199,6 +195,7 @@ func clusterRKEConfigCloudProviderOpenstackFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigCloudProviderOpenstackBlockStorageFields(),
 			},
@@ -207,6 +204,7 @@ func clusterRKEConfigCloudProviderOpenstackFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigCloudProviderOpenstackLoadBalancerFields(),
 			},
@@ -215,6 +213,7 @@ func clusterRKEConfigCloudProviderOpenstackFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigCloudProviderOpenstackMetadataFields(),
 			},
@@ -223,6 +222,7 @@ func clusterRKEConfigCloudProviderOpenstackFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigCloudProviderOpenstackRouteFields(),
 			},

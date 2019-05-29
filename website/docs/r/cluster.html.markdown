@@ -97,8 +97,10 @@ The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
 * `cluster_registration_token` - (Computed) Cluster Registration Token generated for the cluster (list maxitems:1)
+* `default_project_id` - (Computed) Default project ID for the cluster (string)
 * `driver` - (Computed) The driver used for the Cluster. `imported`, `azurekubernetesservice`, `amazonelasticcontainerservice`, `googlekubernetesengine` and `rancherKubernetesEngine` are supported (string)
 * `kube_config` - (Computed) Kube Config generated for the cluster (string)
+* `system_project_id` - (Computed) System project ID for the cluster (string)
 
 ## Nested blocks
 
@@ -233,10 +235,10 @@ The following attributes are exported:
 ###### Arguments
 
 * `global` - (Required) (list maxitems:1)
-* `block_storage` - (Optional) (list maxitems:1)
-* `load_balancer` - (Optional) (list maxitems:1)
-* `metadata` - (Optional) (list maxitems:1)
-* `route` - (Optional) (list maxitems:1)
+* `block_storage` - (Optional/Computed) (list maxitems:1)
+* `load_balancer` - (Optional/Computed) (list maxitems:1)
+* `metadata` - (Optional/Computed) (list maxitems:1)
+* `route` - (Optional/Computed) (list maxitems:1)
 
 ###### `global`
 
@@ -244,14 +246,13 @@ The following attributes are exported:
 
 * `auth_url` - (Required) (string)
 * `password` - (Required/Sensitive) (string)
-* `tenant_id` - (Required/Sensitive) (string)
-* `user_id` - (Required/Sensitive) (string)
 * `username` - (Required/Sensitive) (string)
 * `ca_file` - (Optional/Computed) (string)
-* `domain_id` - (Optional/Computed/Sensitive) (string)
-* `domain_name` - (Optional/Computed) (string)
+* `domain_id` - (Optional/Computed/Sensitive) Required if `domain_name` not provided. (string)
+* `domain_name` - (Optional/Computed) Required if `domain_id` not provided. (string)
 * `region` - (Optional/Computed) (string)
-* `tenant_name` - (Optional/Computed) (string)
+* `tenant_id` - (Optional/Computed/Sensitive) Required if `tenant_name` not provided. (string)
+* `tenant_name` - (Optional/Computed) Required if `tenant_id` not provided. (string)
 * `trust_id` - (Optional/Computed/Sensitive) (string)
 
 ###### `block_storage`
@@ -272,9 +273,9 @@ The following attributes are exported:
 * `lb_provider` - (Optional/Computed) (string)
 * `lb_version` - (Optional/Computed) (string)
 * `manage_security_groups` - (Optional/Computed) (bool)
-* `monitor_delay` - (Optional/Computed) Default 60 (int)
-* `monitor_max_retries` - (Optional/Computed) Default 5 (int)
-* `monitor_timeout` - (Optional/Computed) Default 30 (int)
+* `monitor_delay` - (Optional/Computed) Default `60` (int)
+* `monitor_max_retries` - (Optional/Computed) Default `5` (int)
+* `monitor_timeout` - (Optional/Computed) Default `30` (int)
 * `subnet_id` - (Optional/Computed) (string)
 * `use_octavia` - (Optional/Computed) (bool)
 

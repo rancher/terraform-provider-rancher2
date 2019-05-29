@@ -33,7 +33,7 @@ resource "rancher2_node_driver" "foo" {
 `
 	testAccRancher2NodeDriverUpdateConfig = `
 resource "rancher2_node_driver" "foo" {
-    active = false,
+    active = false
     builtin = false
     checksum = "0x1"
     description= "Foo description - updated"

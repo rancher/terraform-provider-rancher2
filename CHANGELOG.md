@@ -1,4 +1,20 @@
 ## 1.0.1 (Unreleased)
+
+FEATURES:
+
+ENHANCEMENTS:
+
+* Added `default_project_id` & `system_project_id` attributes to `rancher2_cluster` resource
+* Added support to move `rancher2_namespace` resource to a rancher project when import
+* Added support to terraform 0.12
+
+BUG FIXES:
+
+* Fix: Updated `flattenNamespace` function on `rancher2_namespace` resource to avoid no empty plan if `resource_quota` is not specified
+* Fix: Updated `rke_config` argument for openstack cloud_provider on `rancher2_cluster` resource:
+  * Removed `used_id` field on global argument in favour of `username` following [k8s openstack cloud provider docs](https://github.com/kubernetes/cloud-provider-openstack/blob/master/docs/provider-configuration.md#global-required-parameters)
+  * Set computed=true on optional field to avoid no empty plan if not specified
+
 ## 1.0.0 (May 14, 2019)
 
 * Initial Terraform Ecosystem Release

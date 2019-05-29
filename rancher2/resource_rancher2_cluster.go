@@ -113,7 +113,12 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	err = flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig)
+	defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
+	if err != nil {
+		return err
+	}
+
+	err = flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID)
 	if err != nil {
 		return err
 	}
