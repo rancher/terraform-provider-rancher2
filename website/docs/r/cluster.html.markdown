@@ -88,6 +88,9 @@ The following arguments are supported:
 * `eks_config` - (Optional) The Amazon eks configuration for `eks` Clusters. Conflicts with `aks_config`, `gke_config` and `rke_config` (list maxitems:1)
 * `gke_config` - (Optional) The Google gke configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
+* `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
+* `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support). `restricted` and `unrestricted` are supported (string)
+* `enable_network_policy` - (Optional) Enable project network isolation. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
 
@@ -116,7 +119,7 @@ The following attributes are exported:
 * `bastion_host` - (Optional/Computed) RKE bastion host (list maxitems:1)
 * `cloud_provider` - (Optional/Computed) RKE cloud provider [rke-cloud-providers](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/) (list maxitems:1)
 * `dns` - (Optional/Computed) RKE dns add-on. Just for rancher v2.2.x (list maxitems:1)
-* `ignore_docker_version` - (Optional/Computed) Ignore docker version (bool)
+* `ignore_docker_version` - (Optional) Ignore docker version. Default `true` (bool)
 * `ingress` - (Optional/Computed) Kubernetes ingress configuration (list maxitems:1)
 * `kubernetes_version` - (Optional/Computed) Kubernetes version to deploy (string)
 * `monitoring` - (Optional/Computed) Kubernetes cluster monitoring (list maxitems:1)
@@ -488,7 +491,7 @@ The following attributes are exported:
 * `extra_binds` - (Optional) Extra binds for kube API service (list)
 * `extra_env` - (Optional) Extra environment for kube API service (list)
 * `image` - (Optional/Computed) Docker image for kube API service (string)
-* `pod_security_policy` - (Optional/Computed) Pod Security Policy option for kube API service (bool)
+* `pod_security_policy` - (Optional) Pod Security Policy option for kube API service. Default `false` (bool)
 * `service_cluster_ip_range` - (Optional/Computed) Service Cluster IP Range option for kube API service (string)
 * `service_node_port_range` - (Optional/Computed) Service Node Port Range option for kube API service (string)
 
@@ -649,6 +652,14 @@ The following arguments are supported:
 * `use_ip_aliases` - (Optional) Whether alias IPs will be used for pod IPs in the cluster. Default `false` (bool)
 * `taints` - (Required) List of kubernetes taints to be applied to each node (list)
 * `zone` - (Required) Zone GKE cluster (string)
+
+### `cluster_auth_endpoint`
+
+#### Arguments
+
+* `ca_certs` - (Optional) CA certs for the authorized cluster endpoint (string)
+* `enabled` - (Optional) Enable the authorized cluster endpoint. Default `true` (bool)
+* `fqdn` - (Optional) FQDN for the authorized cluster endpoint (string)
 
 ### `cluster_registration_token`
 
