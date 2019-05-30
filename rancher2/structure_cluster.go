@@ -29,6 +29,19 @@ func flattenClusterRegistationToken(in *managementClient.ClusterRegistrationToke
 	return []interface{}{obj}, nil
 }
 
+func flattenClusterAuthEndpoint(in *managementClient.LocalClusterAuthEndpoint) []interface{} {
+	obj := make(map[string]interface{})
+	if in == nil {
+		return []interface{}{}
+	}
+
+	obj["ca_certs"] = in.CACerts
+	obj["enabled"] = in.Enabled
+	obj["fqdn"] = in.FQDN
+
+	return []interface{}{obj}
+}
+
 func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput, defaultProjectID, systemProjectID string) error {
 	if in == nil {
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster is nil")
@@ -49,7 +62,18 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	d.Set("name", in.Name)
 	d.Set("description", in.Description)
 
-	err := d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("cluster_auth_endpoint", flattenClusterAuthEndpoint(in.LocalClusterAuthEndpoint))
+	if err != nil {
+		return err
+	}
+
+	if len(in.DefaultPodSecurityPolicyTemplateID) > 0 {
+		d.Set("default_pod_security_policy_template_id", in.DefaultPodSecurityPolicyTemplateID)
+	}
+
+	d.Set("enable_network_policy", *in.EnableNetworkPolicy)
+
+	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}
@@ -148,6 +172,28 @@ func expandClusterRegistationToken(p []interface{}, clusterID string) (*manageme
 	return obj, nil
 }
 
+func expandClusterAuthEndpoint(p []interface{}) *managementClient.LocalClusterAuthEndpoint {
+	obj := &managementClient.LocalClusterAuthEndpoint{}
+	if len(p) == 0 || p[0] == nil {
+		return obj
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["ca_certs"].(string); ok && len(v) > 0 {
+		obj.CACerts = v
+	}
+
+	if v, ok := in["enabled"].(bool); ok {
+		obj.Enabled = v
+	}
+
+	if v, ok := in["fqdn"].(string); ok && len(v) > 0 {
+		obj.FQDN = v
+	}
+
+	return obj
+}
+
 func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 	obj := &Cluster{}
 	if in == nil {
@@ -160,6 +206,18 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
+
+	if v, ok := in.Get("cluster_auth_endpoint").([]interface{}); ok && len(v) > 0 {
+		obj.LocalClusterAuthEndpoint = expandClusterAuthEndpoint(v)
+	}
+
+	if v, ok := in.Get("default_pod_security_policy_template_id").(string); ok && len(v) > 0 {
+		obj.DefaultPodSecurityPolicyTemplateID = v
+	}
+
+	if v, ok := in.Get("enable_network_policy").(bool); ok {
+		obj.EnableNetworkPolicy = &v
+	}
 
 	if v, ok := in.Get("aks_config").([]interface{}); ok && len(v) > 0 {
 		aksConfig, err := expandClusterAKSConfig(v, obj.Name)
