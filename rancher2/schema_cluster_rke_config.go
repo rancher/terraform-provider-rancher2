@@ -83,7 +83,7 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 		"ignore_docker_version": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Computed:    true,
+			Default:     true,
 			Description: "Optional ignore docker version on nodes",
 		},
 		"ingress": {

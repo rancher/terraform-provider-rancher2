@@ -155,7 +155,7 @@ func clusterRKEConfigServicesKubeAPIFields() map[string]*schema.Schema {
 		"pod_security_policy": {
 			Type:     schema.TypeBool,
 			Optional: true,
-			Computed: true,
+			Default:  false,
 		},
 		"service_cluster_ip_range": {
 			Type:     schema.TypeString,
