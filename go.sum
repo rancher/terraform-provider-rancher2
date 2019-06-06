@@ -298,10 +298,14 @@ github.com/prometheus/common v0.0.0-20180801064454-c7de2306084e/go.mod h1:daVV7q
 github.com/prometheus/procfs v0.0.0-20180725123919-05ee40e3a273/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 github.com/rancher/norman v0.0.0-20190411163419-01a996623771 h1:1bTIw66/xfxn8YUk7YjdMKekP2D0oO+rKnzMv99E1xE=
 github.com/rancher/norman v0.0.0-20190411163419-01a996623771/go.mod h1:CgWdUHi0tUimz2RgS6WoC/cDHFSLx9G7EBhlp6wE0ck=
+github.com/rancher/norman v0.0.0-20190503155902-ea122abac582 h1:YqE0M4iq2pWwIUkqIhJhnTWXsAXwfcpmLwyYfq0VyMA=
+github.com/rancher/norman v0.0.0-20190503155902-ea122abac582/go.mod h1:CgWdUHi0tUimz2RgS6WoC/cDHFSLx9G7EBhlp6wE0ck=
 github.com/rancher/terraform-provider-rancher2 v0.2.0-rc5 h1:X+irwoAf9a/g+1+tkOel8ynedRKr7uZ7Yqe1d9TxOm4=
 github.com/rancher/terraform-provider-rancher2 v0.2.0-rc5/go.mod h1:2RR5xWbkZ1VbWRjnJdV01FaCmlaNlffYNawteVsbfUg=
 github.com/rancher/types v0.0.0-20190419232237-0aaea5ae1a60 h1:rd98DhPCZG4waQpCjJOc5u9iyOvpSgIVaeG31Q8B8gA=
 github.com/rancher/types v0.0.0-20190419232237-0aaea5ae1a60/go.mod h1:ePTc7xKI37jRSwgLsg63ITTADceptutuNVG8Fj33QaE=
+github.com/rancher/types v0.0.0-20190524211942-2361355c4c51 h1:+QdNZeRXDZ3EyydMo+UHOcU3mQntEQUAokLeVDx9EdQ=
+github.com/rancher/types v0.0.0-20190524211942-2361355c4c51/go.mod h1:ePTc7xKI37jRSwgLsg63ITTADceptutuNVG8Fj33QaE=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/satori/go.uuid v0.0.0-20160927100844-b061729afc07 h1:DEZDfcCVq3xDJrjqdCgyN/dHYVoqR92MCsdqCdxmnhM=
 github.com/satori/go.uuid v0.0.0-20160927100844-b061729afc07/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
