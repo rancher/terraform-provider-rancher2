@@ -98,6 +98,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
+			"rancher2_project": dataSourceRancher2Project(),
 			"rancher2_setting": dataSourceRancher2Setting(),
 		},
 
