@@ -25,7 +25,6 @@ func etcdBackupFields() map[string]*schema.Schema {
 		"filename": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
-			Computed: true,
 		},
 		"manual": &schema.Schema{
 			Type:     schema.TypeBool,
