@@ -12,7 +12,8 @@ const (
 )
 
 var (
-	clusterDrivers = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverRKE}
+	clusterDrivers           = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverRKE}
+	clusterPodSecurityPolicy = []string{"restricted", "unrestricted"}
 )
 
 //Types
@@ -69,6 +70,26 @@ func clusterRegistationTokenFields() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
+		},
+	}
+
+	return s
+}
+
+func clusterAuthEndpoint() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"ca_certs": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"enabled": &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  true,
+		},
+		"fqdn": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 	}
 
@@ -139,6 +160,15 @@ func clusterFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"cluster_auth_endpoint": &schema.Schema{
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: clusterAuthEndpoint(),
+			},
+		},
 		"cluster_registration_token": &schema.Schema{
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -146,6 +176,19 @@ func clusterFields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterRegistationTokenFields(),
 			},
+		},
+		"default_pod_security_policy_template_id": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(clusterPodSecurityPolicy, true),
+			Description:  "Default pod security policy template id",
+		},
+		"enable_network_policy": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable project network isolation",
 		},
 		"annotations": &schema.Schema{
 			Type:     schema.TypeMap,

@@ -214,7 +214,7 @@ The following attributes are exported:
 
 #### Arguments
 
-* `boot2dockerUrl` - (Optional) vSphere URL for boot2docker iso image. Default `https://releases.rancher.com/os/latest/rancheros-vmware.iso` (string)
+* `boot2docker_url` - (Optional) vSphere URL for boot2docker iso image. Default `https://releases.rancher.com/os/latest/rancheros-vmware.iso` (string)
 * `cfgparam` - (Optional) vSphere vm configuration parameters (used for guestinfo) (list)
 * `cloudinit` - (Optional) vSphere cloud-init file or url to set in the guestinfo (string)
 * `cpu_count` - (Optional) vSphere CPU number for docker VM. Default `2` (string)

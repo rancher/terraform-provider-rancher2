@@ -9,6 +9,8 @@ import (
 )
 
 var (
+	testLocalClusterAuthEndpointConf      *managementClient.LocalClusterAuthEndpoint
+	testLocalClusterAuthEndpointInterface []interface{}
 	testClusterRegistrationTokenConf      *managementClient.ClusterRegistrationToken
 	testClusterRegistrationToken2Conf     *managementClient.ClusterRegistrationToken
 	testClusterRegistrationTokenInterface []interface{}
@@ -24,6 +26,18 @@ var (
 )
 
 func init() {
+	testLocalClusterAuthEndpointConf = &managementClient.LocalClusterAuthEndpoint{
+		CACerts: "cacerts",
+		Enabled: true,
+		FQDN:    "fqdn",
+	}
+	testLocalClusterAuthEndpointInterface = []interface{}{
+		map[string]interface{}{
+			"ca_certs": "cacerts",
+			"enabled":  true,
+			"fqdn":     "fqdn",
+		},
+	}
 	testClusterRegistrationTokenConf = &managementClient.ClusterRegistrationToken{
 		ClusterID:          "cluster_test",
 		Name:               clusterRegistrationTokenName,
@@ -82,16 +96,22 @@ func init() {
 	testClusterConfAKS.Name = "test"
 	testClusterConfAKS.Description = "description"
 	testClusterConfAKS.Driver = clusterDriverAKS
+	testClusterConfAKS.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfAKS.EnableNetworkPolicy = newTrue()
+	testClusterConfAKS.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceAKS = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
 		"default_project_id":         "default_project_id",
 		"description":                "description",
+		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"kube_config":                "kube_config",
-		"driver":                     clusterDriverAKS,
-		"aks_config":                 testClusterAKSConfigInterface,
-		"system_project_id":          "system_project_id",
+		"default_pod_security_policy_template_id": "restricted",
+		"enable_network_policy":                   true,
+		"kube_config":                             "kube_config",
+		"driver":                                  clusterDriverAKS,
+		"aks_config":                              testClusterAKSConfigInterface,
+		"system_project_id":                       "system_project_id",
 	}
 	testClusterConfEKS = &Cluster{
 		AmazonElasticContainerServiceConfig: testClusterEKSConfigConf,
@@ -99,16 +119,22 @@ func init() {
 	testClusterConfEKS.Name = "test"
 	testClusterConfEKS.Description = "description"
 	testClusterConfEKS.Driver = clusterDriverEKS
+	testClusterConfEKS.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfEKS.EnableNetworkPolicy = newTrue()
+	testClusterConfEKS.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceEKS = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
 		"default_project_id":         "default_project_id",
 		"description":                "description",
+		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"kube_config":                "kube_config",
-		"driver":                     clusterDriverEKS,
-		"eks_config":                 testClusterEKSConfigInterface,
-		"system_project_id":          "system_project_id",
+		"default_pod_security_policy_template_id": "restricted",
+		"enable_network_policy":                   true,
+		"kube_config":                             "kube_config",
+		"driver":                                  clusterDriverEKS,
+		"eks_config":                              testClusterEKSConfigInterface,
+		"system_project_id":                       "system_project_id",
 	}
 	testClusterConfGKE = &Cluster{
 		GoogleKubernetesEngineConfig: testClusterGKEConfigConf,
@@ -116,32 +142,44 @@ func init() {
 	testClusterConfGKE.Name = "test"
 	testClusterConfGKE.Description = "description"
 	testClusterConfGKE.Driver = clusterDriverGKE
+	testClusterConfGKE.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfGKE.EnableNetworkPolicy = newTrue()
+	testClusterConfGKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceGKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
 		"default_project_id":         "default_project_id",
 		"description":                "description",
+		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"kube_config":                "kube_config",
-		"driver":                     clusterDriverGKE,
-		"gke_config":                 testClusterGKEConfigInterface,
-		"system_project_id":          "system_project_id",
+		"default_pod_security_policy_template_id": "restricted",
+		"enable_network_policy":                   true,
+		"kube_config":                             "kube_config",
+		"driver":                                  clusterDriverGKE,
+		"gke_config":                              testClusterGKEConfigInterface,
+		"system_project_id":                       "system_project_id",
 	}
 	testClusterConfRKE = &Cluster{}
 	testClusterConfRKE.Name = "test"
 	testClusterConfRKE.Description = "description"
 	testClusterConfRKE.RancherKubernetesEngineConfig = testClusterRKEConfigConf
 	testClusterConfRKE.Driver = clusterDriverRKE
+	testClusterConfRKE.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfRKE.EnableNetworkPolicy = newTrue()
+	testClusterConfRKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceRKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
 		"default_project_id":         "default_project_id",
 		"description":                "description",
+		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"kube_config":                "kube_config",
-		"driver":                     clusterDriverRKE,
-		"rke_config":                 testClusterRKEConfigInterface,
-		"system_project_id":          "system_project_id",
+		"default_pod_security_policy_template_id": "restricted",
+		"enable_network_policy":                   true,
+		"kube_config":                             "kube_config",
+		"driver":                                  clusterDriverRKE,
+		"rke_config":                              testClusterRKEConfigInterface,
+		"system_project_id":                       "system_project_id",
 	}
 }
 

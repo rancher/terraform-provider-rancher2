@@ -140,11 +140,15 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	enableNetworkPolicy := d.Get("enable_network_policy").(bool)
 	update := map[string]interface{}{
-		"name":        d.Get("name").(string),
-		"description": d.Get("description").(string),
-		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
+		"name":                               d.Get("name").(string),
+		"description":                        d.Get("description").(string),
+		"defaultPodSecurityPolicyTemplateId": d.Get("default_pod_security_policy_template_id").(string),
+		"enableNetworkPolicy":                &enableNetworkPolicy,
+		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
+		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	switch driver := d.Get("driver").(string); driver {
