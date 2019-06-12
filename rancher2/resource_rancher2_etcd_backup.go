@@ -39,12 +39,9 @@ func resourceRancher2EtcdBackupCreate(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[INFO] Creating Etcd Backup")
 
-	active, err := meta.(*Config).isClusterActive(etcdBackup.ClusterID)
+	err = meta.(*Config).ClusterExist(etcdBackup.ClusterID)
 	if err != nil {
 		return err
-	}
-	if !active {
-		return fmt.Errorf("[ERROR] Creating Etcd Backup: Cluster ID %s is not active", etcdBackup.ClusterID)
 	}
 
 	newEtcdBackup, err := client.EtcdBackup.Create(etcdBackup)
@@ -54,7 +51,7 @@ func resourceRancher2EtcdBackupCreate(d *schema.ResourceData, meta interface{}) 
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{"active"},
+		Target:     []string{"active", "activating"},
 		Refresh:    etcdBackupStateRefreshFunc(client, newEtcdBackup.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
@@ -121,8 +118,8 @@ func resourceRancher2EtcdBackupUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"active"},
-		Target:     []string{"active"},
+		Pending:    []string{"active", "activating"},
+		Target:     []string{"active", "activating"},
 		Refresh:    etcdBackupStateRefreshFunc(client, newEtcdBackup.ID),
 		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,

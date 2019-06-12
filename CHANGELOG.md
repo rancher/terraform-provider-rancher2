@@ -1,4 +1,26 @@
 ## 1.2.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `rancher2_project`
+
+ENHANCEMENTS:
+
+* Added `cluster_auth_endpoint` argument to `rancher2_cluster` resource
+* Added `default_pod_security_policy_template_id` argument to `rancher2_cluster` resource
+* Added `enable_network_policy` argument to `rancher2_cluster` resource
+* Updated acceptance tests
+  * k3s version updated to v0.5.0
+  * Rancher version updated to v2.2.4
+
+BUG FIXES:
+
+* Fix: set default value to `true` on `ignore_docker_version`-`rke_config` argument on `rancher2_cluster` resource
+* Fix: set default value to `false` on `pod_security_policy`-`services`-`rke_config` argument on `rancher2_cluster` resource
+* Fix: typo on `boot2docker_url`-`vsphere_config` argument name on `rancher2_node_template` resource docs
+* Fix: set `monitor_delay` and `monitor_timeout` fields as string type for openstack load_balancer config on `cloud_provider`-`rke_config` argument on `rancher2_cluster` resource
+* Fix: Updated `rancher2_etcd_backup` resource to work on rancher v2.2.4
+
 ## 1.1.0 (May 29, 2019)
 
 FEATURES:
