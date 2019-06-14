@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -24,6 +25,29 @@ const (
 	passDigits                = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 	passDefaultLen            = 20
 )
+
+func Base64Encode(s string) string {
+	if len(s) == 0 {
+		return ""
+	}
+	data := []byte(s)
+
+	return base64.StdEncoding.EncodeToString(data)
+}
+
+func Base64Decode(s string) (string, error) {
+	if len(s) == 0 {
+		return "", nil
+	}
+	data, err := base64.StdEncoding.DecodeString(s)
+
+	return string(data), err
+}
+
+func IsBase64(s string) bool {
+	_, err := base64.StdEncoding.DecodeString(s)
+	return err == nil
+}
 
 func GetRandomPass(n int) string {
 	rand.Seed(time.Now().Unix())
