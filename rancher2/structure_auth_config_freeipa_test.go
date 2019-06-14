@@ -51,7 +51,7 @@ func init() {
 		"servers":                            []interface{}{"server1", "server2"},
 		"service_account_distinguished_name": "service_account_distinguished_name",
 		"user_search_base":                   "user_search_base",
-		"certificate":                        "certificate",
+		"certificate":                        Base64Encode("certificate"),
 		"connection_timeout":                 10,
 		"group_dn_attribute":                 "group_dn_attribute",
 		"group_member_mapping_attribute":     "group_member_mapping_attribute",
