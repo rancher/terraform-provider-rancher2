@@ -35,7 +35,7 @@ The following arguments are supported:
 * `user_search_base` - (Required) User search base DN (string)
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `openldap_user://<DN>`  `openldap_group://<DN>` (list)
-* `certificate` - (Optional/Sensitive) CA certificate for TLS if selfsigned (string)
+* `certificate` - (Optional/Sensitive) Base64 encoded CA certificate for TLS if selfsigned. Use filebase64(<FILE>) for encoding file (string)
 * `connection_timeout` - (Optional) Openldap connection timeout. Default `5000` (int)
 * `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
 * `group_dn_attribute` - (Optional/Computed) Group DN attribute. Default `entryDN` (string)
