@@ -1,4 +1,13 @@
 ## 1.2.1 (Unreleased)
+
+FEATURES:
+
+ENHANCEMENTS:
+
+BUG FIXES:
+
+* Fix: index out of range issue on `vsphere_cloud_provider`-`cloud_provider`-`rke_config` argument on `rancher2_cluster` resource 
+
 ## 1.2.0 (June 12, 2019)
 
 FEATURES:
