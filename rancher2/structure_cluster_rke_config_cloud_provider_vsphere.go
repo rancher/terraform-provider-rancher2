@@ -75,10 +75,11 @@ func flattenClusterRKEConfigCloudProviderVsphereVirtualCenter(in map[string]mana
 	}
 
 	out := make([]interface{}, len(in))
+	lenP := len(p)
 	i := 0
 	for key := range in {
 		var obj map[string]interface{}
-		if p[i] == nil {
+		if lenP <= i {
 			obj = make(map[string]interface{})
 		} else {
 			obj = p[i].(map[string]interface{})
