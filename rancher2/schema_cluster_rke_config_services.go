@@ -6,6 +6,36 @@ import (
 
 //Schemas
 
+func clusterRKEConfigServicesSchedulerFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"extra_args": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+		"extra_binds": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"extra_env": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"image": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+	}
+	return s
+}
+
 func clusterRKEConfigServicesKubeproxyFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"extra_args": {
@@ -356,6 +386,15 @@ func clusterRKEConfigServicesFields() map[string]*schema.Schema {
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesKubeproxyFields(),
+			},
+		},
+		"scheduler": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesSchedulerFields(),
 			},
 		},
 	}
