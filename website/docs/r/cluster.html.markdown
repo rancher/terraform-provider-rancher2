@@ -445,6 +445,7 @@ The following attributes are exported:
 * `kube_controller` - (Optional/Computed) Kube Controller options for RKE services (list maxitems:1)
 * `kubelet` - (Optional/Computed) Kubelet options for RKE services (list maxitems:1)
 * `kubeproxy` - (Optional/Computed) Kubeproxy options for RKE services (list maxitems:1)
+* `scheduler` - (Optional/Computed) Scheduler options for RKE services (list maxitems:1)
 
 ##### `etcd`
 
@@ -527,6 +528,15 @@ The following attributes are exported:
 * `extra_binds` - (Optional) Extra binds for kubeproxy service (list)
 * `extra_env` - (Optional) Extra environment for kubeproxy service (list)
 * `image` - (Optional/Computed) Docker image for kubeproxy service (string)
+
+##### `scheduler`
+
+###### Arguments
+
+* `extra_args` - (Optional/Computed) Extra arguments for scheduler service (map)
+* `extra_binds` - (Optional) Extra binds for scheduler service (list)
+* `extra_env` - (Optional) Extra environment for scheduler service (list)
+* `image` - (Optional/Computed) Docker image for scheduler service (string)
 
 ### `aks_config`
 
