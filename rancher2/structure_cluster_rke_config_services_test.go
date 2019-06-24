@@ -8,6 +8,8 @@ import (
 )
 
 var (
+	testClusterRKEConfigServicesSchedulerConf           *managementClient.SchedulerService
+	testClusterRKEConfigServicesSchedulerInterface      []interface{}
 	testClusterRKEConfigServicesKubeproxyConf           *managementClient.KubeproxyService
 	testClusterRKEConfigServicesKubeproxyInterface      []interface{}
 	testClusterRKEConfigServicesKubeletConf             *managementClient.KubeletService
@@ -27,6 +29,26 @@ var (
 )
 
 func init() {
+	testClusterRKEConfigServicesSchedulerConf = &managementClient.SchedulerService{
+		ExtraArgs: map[string]string{
+			"arg_one": "one",
+			"arg_two": "two",
+		},
+		ExtraBinds: []string{"bind_one", "bind_two"},
+		ExtraEnv:   []string{"env_one", "env_two"},
+		Image:      "image",
+	}
+	testClusterRKEConfigServicesSchedulerInterface = []interface{}{
+		map[string]interface{}{
+			"extra_args": map[string]interface{}{
+				"arg_one": "one",
+				"arg_two": "two",
+			},
+			"extra_binds": []interface{}{"bind_one", "bind_two"},
+			"extra_env":   []interface{}{"env_one", "env_two"},
+			"image":       "image",
+		},
+	}
 	testClusterRKEConfigServicesKubeproxyConf = &managementClient.KubeproxyService{
 		ExtraArgs: map[string]string{
 			"arg_one": "one",
@@ -197,6 +219,7 @@ func init() {
 		KubeController: testClusterRKEConfigServicesKubeControllerConf,
 		Kubelet:        testClusterRKEConfigServicesKubeletConf,
 		Kubeproxy:      testClusterRKEConfigServicesKubeproxyConf,
+		Scheduler:      testClusterRKEConfigServicesSchedulerConf,
 	}
 	testClusterRKEConfigServicesInterface = []interface{}{
 		map[string]interface{}{
@@ -205,6 +228,7 @@ func init() {
 			"kube_controller": testClusterRKEConfigServicesKubeControllerInterface,
 			"kubelet":         testClusterRKEConfigServicesKubeletInterface,
 			"kubeproxy":       testClusterRKEConfigServicesKubeproxyInterface,
+			"scheduler":       testClusterRKEConfigServicesSchedulerInterface,
 		},
 	}
 }

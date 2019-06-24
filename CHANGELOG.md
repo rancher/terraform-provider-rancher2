@@ -4,6 +4,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* Added `scheduler` argument to `services`-`rke_config` argument on `rancher2_cluster` resource
+
 BUG FIXES:
 
 * Fix: index out of range issue on `vsphere_cloud_provider`-`cloud_provider`-`rke_config` argument on `rancher2_cluster` resource 
