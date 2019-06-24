@@ -34,7 +34,7 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 
 	d.Set("service_account_distinguished_name", in.ServiceAccountDistinguishedName)
 	d.Set("user_search_base", in.UserSearchBase)
-	d.Set("certificate", in.Certificate)
+	d.Set("certificate", Base64Encode(in.Certificate))
 	d.Set("connection_timeout", int(in.ConnectionTimeout))
 	d.Set("group_dn_attribute", in.GroupDNAttribute)
 	d.Set("group_member_mapping_attribute", in.GroupMemberMappingAttribute)
@@ -106,7 +106,11 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 	}
 
 	if v, ok := in.Get("certificate").(string); ok && len(v) > 0 {
-		obj.Certificate = v
+		cert, err := Base64Decode(v)
+		if err != nil {
+			return nil, fmt.Errorf("expanding ldap Auth Config: certificate is not base64 encoded: %s", v)
+		}
+		obj.Certificate = cert
 	}
 
 	if v, ok := in.Get("connection_timeout").(int); ok && v > 0 {
