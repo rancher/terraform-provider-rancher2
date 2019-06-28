@@ -123,6 +123,7 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 		"session_token": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Sensitive:   true,
 			Description: "A session token to use with the client key and secret if applicable",
 		},
 		"user_data": {
