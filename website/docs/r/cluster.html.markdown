@@ -602,7 +602,7 @@ The following arguments are supported:
 * `minimum_nodes` - (Optional) The minimum number of worker nodes. Default `1` (int)
 * `node_volume_size` - (Optional) The volume size for each node. Default `20` (int)
 * `region` - (Optional) The AWS Region to create the EKS cluster in. Default `us-west-2` (string)
-* `session_token` - (Optional) A session token to use with the client key and secret if applicable (string)
+* `session_token` - (Optional/Sensitive) A session token to use with the client key and secret if applicable (string)
 * `user_data` - (Optional/Computed) Pass user-data to the nodes to perform automated configuration tasks (string)
 
 ### `gke_config`
