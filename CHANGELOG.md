@@ -1,4 +1,15 @@
 ## 1.4.0 (Unreleased)
+
+FEATURES:
+
+ENHANCEMENTS:
+
+* Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+
+BUG FIXES:
+
+* Fix: `toArrayString` and `toMapString` functions to check `nil` values
+
 ## 1.3.0 (June 26, 2019)
 
 FEATURES:
