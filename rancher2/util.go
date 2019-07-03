@@ -207,6 +207,10 @@ func splitProjectID(id string) (clusterID, projectID string) {
 func toArrayString(in []interface{}) []string {
 	out := make([]string, len(in))
 	for i, v := range in {
+		if v == nil {
+			out[i] = ""
+			continue
+		}
 		out[i] = v.(string)
 	}
 	return out
@@ -223,6 +227,10 @@ func toArrayInterface(in []string) []interface{} {
 func toMapString(in map[string]interface{}) map[string]string {
 	out := make(map[string]string)
 	for i, v := range in {
+		if v == nil {
+			out[i] = ""
+			continue
+		}
 		out[i] = v.(string)
 	}
 	return out
