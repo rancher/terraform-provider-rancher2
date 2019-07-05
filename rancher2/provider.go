@@ -98,8 +98,10 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"rancher2_project": dataSourceRancher2Project(),
-			"rancher2_setting": dataSourceRancher2Setting(),
+			"rancher2_cluster_role_template_binding": dataSourceRancher2ClusterRoleTemplateBinding(),
+			"rancher2_project":                       dataSourceRancher2Project(),
+			"rancher2_project_role_template_binding": dataSourceRancher2ProjectRoleTemplateBinding(),
+			"rancher2_setting":                       dataSourceRancher2Setting(),
 		},
 
 		ConfigureFunc: providerConfigure,
