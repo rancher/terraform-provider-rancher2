@@ -2,6 +2,9 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_cluster_role_template_binding`
+* **New Data Source:** `rancher2_project_role_template_binding`
+
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
