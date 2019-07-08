@@ -2,6 +2,9 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_cluster_logging`
+* **New Data Source:** `rancher2_project_logging`
+
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
