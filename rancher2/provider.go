@@ -87,6 +87,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_cluster_logging":               resourceRancher2ClusterLogging(),
 			"rancher2_cluster_role_template_binding": resourceRancher2ClusterRoleTemplateBinding(),
 			"rancher2_etcd_backup":                   resourceRancher2EtcdBackup(),
+			"rancher2_global_role_binding":           resourceRancher2GlobalRoleBinding(),
 			"rancher2_node_driver":                   resourceRancher2NodeDriver(),
 			"rancher2_node_pool":                     resourceRancher2NodePool(),
 			"rancher2_node_template":                 resourceRancher2NodeTemplate(),
@@ -95,11 +96,14 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_project_role_template_binding": resourceRancher2ProjectRoleTemplateBinding(),
 			"rancher2_namespace":                     resourceRancher2Namespace(),
 			"rancher2_setting":                       resourceRancher2Setting(),
+			"rancher2_user":                          resourceRancher2User(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"rancher2_project": dataSourceRancher2Project(),
-			"rancher2_setting": dataSourceRancher2Setting(),
+			"rancher2_global_role_binding": dataSourceRancher2GlobalRoleBinding(),
+			"rancher2_project":             dataSourceRancher2Project(),
+			"rancher2_setting":             dataSourceRancher2Setting(),
+			"rancher2_user":                dataSourceRancher2User(),
 		},
 
 		ConfigureFunc: providerConfigure,
