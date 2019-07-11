@@ -2,6 +2,11 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_global_role_binding`
+* **New Data Source:** `rancher2_user`
+* **New Resource:** `rancher2_global_role_binding`
+* **New Resource:** `rancher2_user`
+
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
