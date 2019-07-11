@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_cluster`
+
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
