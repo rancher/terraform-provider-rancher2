@@ -590,10 +590,6 @@ The following arguments are supported:
 
 * `access_key` - (Required/Sensitive) The AWS Client ID to use (string)
 * `secret_key` - (Required/Sensitive) The AWS Client Secret associated with the Client ID (string)
-* `security_groups` - (Required) List of security groups to use for the cluster (list)
-* `service_role` - (Required) The service role to use to perform the cluster operations in AWS (string)
-* `subnets` - (Required) List of subnets in the virtual network to use (list)
-* `virtual_network` - (Required) The name of the virtual network to use (string)
 * `ami` - (Optional) AMI ID to use for the worker nodes instead of the default (string)
 * `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes. Default `true` (bool)
 * `instance_type` - (Optional) The type of machine to use for worker nodes. Default `t2.medium` (string)
@@ -602,8 +598,12 @@ The following arguments are supported:
 * `minimum_nodes` - (Optional) The minimum number of worker nodes. Default `1` (int)
 * `node_volume_size` - (Optional) The volume size for each node. Default `20` (int)
 * `region` - (Optional) The AWS Region to create the EKS cluster in. Default `us-west-2` (string)
+ `security_groups` - (Optional) List of security groups to use for the cluster. If it's not specified Rancher will create a new security group (list)
+* `service_role` - (Optional) The service role to use to perform the cluster operations in AWS. If it's not specified Rancher will create a new service role (string)
 * `session_token` - (Optional/Sensitive) A session token to use with the client key and secret if applicable (string)
+* `subnets` - (Optional) List of subnets in the virtual network to use. If it's not specified Rancher will create 3 news subnets (list)
 * `user_data` - (Optional/Computed) Pass user-data to the nodes to perform automated configuration tasks (string)
+* `virtual_network` - (Optional) The name of the virtual network to use. If it's not specified Rancher will create a new VPC (string)
 
 ### `gke_config`
 

@@ -47,32 +47,6 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			Description: "The AWS Client Secret associated with the Client ID",
 		},
-		"security_groups": {
-			Type:        schema.TypeList,
-			Required:    true,
-			Description: "List of security groups to use for the cluster",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"service_role": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The service role to use to perform the cluster operations in AWS",
-		},
-		"subnets": {
-			Type:        schema.TypeList,
-			Required:    true,
-			Description: "List of subnets in the virtual network to use",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"virtual_network": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The name of the virtual network to use",
-		},
 		"ami": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -120,17 +94,43 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Default:     "us-west-2",
 			Description: "The AWS Region to create the EKS cluster in",
 		},
+		"security_groups": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of security groups to use for the cluster",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"service_role": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The service role to use to perform the cluster operations in AWS",
+		},
 		"session_token": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Sensitive:   true,
 			Description: "A session token to use with the client key and secret if applicable",
 		},
+		"subnets": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of subnets in the virtual network to use",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 		"user_data": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
 			Description: "Pass user-data to the nodes to perform automated configuration tasks",
+		},
+		"virtual_network": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of the virtual network to use",
 		},
 	}
 
