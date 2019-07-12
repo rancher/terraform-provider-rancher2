@@ -6,8 +6,12 @@ FEATURES:
 * **New Data Source:** `rancher2_cloud_credential`
 * **New Data Source:** `rancher2_cluster`
 * **New Data Source:** `rancher2_etcd_backup`
+* **New Data Source:** `rancher2_global_role_binding`
 * **New Data Source:** `rancher2_namespace`
 * **New Data Source:** `rancher2_node_pool`
+* **New Data Source:** `rancher2_user`
+* **New Resource:** `rancher2_global_role_binding`
+* **New Resource:** `rancher2_user`
 
 ENHANCEMENTS:
 
