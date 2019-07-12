@@ -9,6 +9,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix: `toArrayString` and `toMapString` functions to check `nil` values
+* Fix: Set `security_groups`, `service_role`, `subnets` and `virtual_network` arguments as optional to `eks_config` argument on `rancher2_cluster` resource
 
 ## 1.3.0 (June 26, 2019)
 
