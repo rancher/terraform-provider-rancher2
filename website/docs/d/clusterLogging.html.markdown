@@ -14,7 +14,6 @@ Use this data source to retrieve information about a Rancher v2 Cluster Logging.
 
 ```hcl
 data "rancher2_cluster_logging" "foo" {
-  name = "foo"
   cluster_id = "<cluster_id>"
 }
 ```
@@ -24,7 +23,6 @@ data "rancher2_cluster_logging" "foo" {
 The following arguments are supported:
 
 * `cluster_id` - (Required) The cluster id to configure logging (string)
-* `name` - (Required) The name of the cluster logging config (string)
 
 ## Attributes Reference
 
@@ -35,6 +33,7 @@ The following attributes are exported:
 * `elasticsearch_config` - (Computed) The elasticsearch config for Cluster Logging. For `kind = elasticsearch`  (list maxitems:1)
 * `fluentd_config` - (Computed) The fluentd config for Cluster Logging. For `kind = fluentd` (list maxitems:1)
 * `kafka_config` - (Computed) The kafka config for Cluster Logging. For `kind = kafka` (list maxitems:1)
+* `name` - (Computed) The name of the cluster logging config (string)
 * `namespace_id` - (Computed) The namespace id from cluster logging (string)
 * `output_flush_interval` - (Computed) How often buffered logs would be flushed. Default: `3` seconds (int)
 * `output_tags` - (computed) The output tags for Cluster Logging (map)
