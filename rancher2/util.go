@@ -117,6 +117,7 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		Proxy:           http.ProxyFromEnvironment,
 	}
 
 	if cacert != "" {
