@@ -81,6 +81,11 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			Description: "Azure client secret associated with the \"client id\"",
 		},
+		"kubernetes_version": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Specify the version of Kubernetes",
+		},
 		"master_dns_prefix": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -216,12 +221,6 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     true,
 			Description: "Turn on Azure Log Analytics monitoring. Uses the Log Analytics \"Default\" workspace if it exists, else creates one. if using an existing workspace, specifies \"log analytics workspace resource id\"",
-		},
-		"kubernetes_version": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "1.11.5",
-			Description: "Specify the version of Kubernetes",
 		},
 		"location": {
 			Type:        schema.TypeString,

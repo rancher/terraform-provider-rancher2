@@ -23,13 +23,22 @@ resource "rancher2_cluster" "foo" {
   }
 }
 `
+	testAccRancher2CloudCredential = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  amazonec2_credential_config {
+	access_key = "XXXXXXXXXXXXXXXXXXXX"
+	secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  }
+}
+`
 	testAccRancher2NodeTemplate = `
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "Terraform node pool acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   amazonec2_config {
-	access_key = "XXXXXXXXXXXXXXXXXXXX"
-	secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 	ami =  "ami-XXXXXXXXXXXXXXX"
 	region = "XX-west-1"
 	security_group = ["XXXXXXXX"]
@@ -48,7 +57,7 @@ var (
 )
 
 func init() {
-	testAccRancher2NodePoolConfig = testAccRancher2Cluster + testAccRancher2NodeTemplate + `
+	testAccRancher2NodePoolConfig = testAccRancher2Cluster + testAccRancher2CloudCredential + testAccRancher2NodeTemplate + `
 resource "rancher2_node_pool" "foo" {
   cluster_id =  "${rancher2_cluster.foo.id}"
   name = "foo"
@@ -61,7 +70,7 @@ resource "rancher2_node_pool" "foo" {
 }
 `
 
-	testAccRancher2NodePoolUpdateConfig = testAccRancher2Cluster + testAccRancher2NodeTemplate + `
+	testAccRancher2NodePoolUpdateConfig = testAccRancher2Cluster + testAccRancher2CloudCredential + testAccRancher2NodeTemplate + `
 resource "rancher2_node_pool" "foo" {
   cluster_id =  "${rancher2_cluster.foo.id}"
   name = "foo"
@@ -74,7 +83,7 @@ resource "rancher2_node_pool" "foo" {
 }
 `
 
-	testAccRancher2NodePoolRecreateConfig = testAccRancher2Cluster + testAccRancher2NodeTemplate + `
+	testAccRancher2NodePoolRecreateConfig = testAccRancher2Cluster + testAccRancher2CloudCredential + testAccRancher2NodeTemplate + `
 resource "rancher2_node_pool" "foo" {
   cluster_id =  "${rancher2_cluster.foo.id}"
   name = "foo"
