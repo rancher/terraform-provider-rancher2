@@ -100,7 +100,7 @@ func Provider() terraform.ResourceProvider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"rancher2_catalog":          dataSourceRancher2Catalog(),
 			"rancher2_cloud_credential": dataSourceRancher2CloudCredential(),
-      "rancher2_node_pool":        dataSourceRancher2NodePool(),
+			"rancher2_node_pool":        dataSourceRancher2NodePool(),
 			"rancher2_project":          dataSourceRancher2Project(),
 			"rancher2_setting":          dataSourceRancher2Setting(),
 		},
