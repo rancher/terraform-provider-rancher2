@@ -2,7 +2,10 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_catalog`
+* **New Data Source:** `rancher2_cloud_credential`
 * **New Data Source:** `rancher2_namespace`
+* **New Data Source:** `rancher2_node_pool`
 
 ENHANCEMENTS:
 
@@ -11,6 +14,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix: `toArrayString` and `toMapString` functions to check `nil` values
+* Fix: Set `kubernetes_version` argument as required on `aks_config` argument on `rancher2_cluster` resource
+* Fix: Set `security_groups`, `service_role`, `subnets` and `virtual_network` arguments as optional to `eks_config` argument on `rancher2_cluster` resource
 
 ## 1.3.0 (June 26, 2019)
 
