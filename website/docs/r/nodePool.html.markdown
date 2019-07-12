@@ -24,13 +24,21 @@ resource "rancher2_cluster" "foo-custom" {
     }
   }
 }
+# Create a new rancher2 Cloud Credential
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  amazonec2_credential_config {
+    access_key = "XXXXXXXXXXXXXXXXXXXX"
+    secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  }
+}
 # Create a new rancher2 Node Template
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "foo test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
   amazonec2_config {
-    access_key = "AWS_ACCESS_KEY"
-    secret_key = "<AWS_SECRET_KEY>"
     ami =  "<AMI_ID>"
     region = "<REGION>"
     security_group = ["<AWS_SECURITY_GROUP>"]

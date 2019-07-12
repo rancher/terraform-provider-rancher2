@@ -2,8 +2,18 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_catalog`
+* **New Data Source:** `rancher2_cloud_credential`
+* **New Data Source:** `rancher2_cluster`
 * **New Data Source:** `rancher2_cluster_role_template_binding`
+* **New Data Source:** `rancher2_etcd_backup`
+* **New Data Source:** `rancher2_global_role_binding`
+* **New Data Source:** `rancher2_namespace`
+* **New Data Source:** `rancher2_node_pool`
 * **New Data Source:** `rancher2_project_role_template_binding`
+* **New Data Source:** `rancher2_user`
+* **New Resource:** `rancher2_global_role_binding`
+* **New Resource:** `rancher2_user`
 
 ENHANCEMENTS:
 
@@ -12,6 +22,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix: `toArrayString` and `toMapString` functions to check `nil` values
+* Fix: Set `kubernetes_version` argument as required on `aks_config` argument on `rancher2_cluster` resource
+* Fix: Set `security_groups`, `service_role`, `subnets` and `virtual_network` arguments as optional to `eks_config` argument on `rancher2_cluster` resource
 
 ## 1.3.0 (June 26, 2019)
 
