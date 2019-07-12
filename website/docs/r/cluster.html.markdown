@@ -547,6 +547,7 @@ The following arguments are supported:
 * `agent_dns_prefix` - (Required) DNS prefix to be used to create the FQDN for the agent pool (string)
 * `client_id` - (Required/Sensitive) Azure client ID to use (string)
 * `client_secret` - (Required/Sensitive) Azure client secret associated with the \"client id\" (string)
+* `kubernetes_version` - (Required) Specify the version of Kubernetes. To check available versions exec `az aks get-versions -l eastus -o table` (string)
 * `master_dns_prefix` - (Required) DNS prefix to use the Kubernetes cluster control pane (string)
 * `resource_group` - (Required) The name of the Cluster resource group (string)
 * `ssh_public_key_contents` - (Required) Contents of the SSH public key used to authenticate with Linux hosts (string)
@@ -571,7 +572,6 @@ The following arguments are supported:
 * `docker_bridge_cidr` - (Required) A CIDR notation IP range assigned to the Docker bridge network. It must not overlap with any Subnet IP ranges or the Kubernetes Service address range specified in \"service cidr\". Default `172.17.0.1/16` (string)
 * `enable_http_application_routing` - (Optional) Enable the Kubernetes ingress with automatic public DNS name creation. Default `false` (bool)
 * `enable_monitoring` - (Optional) Turn on Azure Log Analytics monitoring. Uses the Log Analytics \"Default\" workspace if it exists, else creates one. if using an existing workspace, specifies \"log analytics workspace resource id\". Default `true` (bool)
-* `kubernetes_version` - (Optional) Specify the version of Kubernetes. Default `1.11.5` (string)
 * `location` - (Optional) Azure Kubernetes cluster location. Default `eastus` (string)
 * `log_analytics_workspace` - (Optional) The name of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses '{resource group}-{subscription id}-{location code}' (string)
 * `log_analytics_workspace_resource_group` - (Optional) The resource group of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses the 'Cluster' resource group (string)
@@ -590,10 +590,6 @@ The following arguments are supported:
 
 * `access_key` - (Required/Sensitive) The AWS Client ID to use (string)
 * `secret_key` - (Required/Sensitive) The AWS Client Secret associated with the Client ID (string)
-* `security_groups` - (Required) List of security groups to use for the cluster (list)
-* `service_role` - (Required) The service role to use to perform the cluster operations in AWS (string)
-* `subnets` - (Required) List of subnets in the virtual network to use (list)
-* `virtual_network` - (Required) The name of the virtual network to use (string)
 * `ami` - (Optional) AMI ID to use for the worker nodes instead of the default (string)
 * `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes. Default `true` (bool)
 * `instance_type` - (Optional) The type of machine to use for worker nodes. Default `t2.medium` (string)
@@ -602,8 +598,12 @@ The following arguments are supported:
 * `minimum_nodes` - (Optional) The minimum number of worker nodes. Default `1` (int)
 * `node_volume_size` - (Optional) The volume size for each node. Default `20` (int)
 * `region` - (Optional) The AWS Region to create the EKS cluster in. Default `us-west-2` (string)
+ `security_groups` - (Optional) List of security groups to use for the cluster. If it's not specified Rancher will create a new security group (list)
+* `service_role` - (Optional) The service role to use to perform the cluster operations in AWS. If it's not specified Rancher will create a new service role (string)
 * `session_token` - (Optional/Sensitive) A session token to use with the client key and secret if applicable (string)
+* `subnets` - (Optional) List of subnets in the virtual network to use. If it's not specified Rancher will create 3 news subnets (list)
 * `user_data` - (Optional/Computed) Pass user-data to the nodes to perform automated configuration tasks (string)
+* `virtual_network` - (Optional) The name of the virtual network to use. If it's not specified Rancher will create a new VPC (string)
 
 ### `gke_config`
 
