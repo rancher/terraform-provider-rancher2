@@ -15,10 +15,6 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"kind": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -46,6 +42,10 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: loggingKafkaConfigFields(),
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"namespace_id": {
 				Type:     schema.TypeString,
@@ -94,11 +94,9 @@ func dataSourceRancher2ProjectLoggingRead(d *schema.ResourceData, meta interface
 	}
 
 	projectID := d.Get("project_id").(string)
-	name := d.Get("name").(string)
 
 	filters := map[string]interface{}{
 		"projectId": projectID,
-		"name":      name,
 	}
 	listOpts := NewListOpts(filters)
 
@@ -109,10 +107,10 @@ func dataSourceRancher2ProjectLoggingRead(d *schema.ResourceData, meta interface
 
 	count := len(projectLoggings.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] project logging with name \"%s\" on project ID \"%s\" not found", name, projectID)
+		return fmt.Errorf("[ERROR] project logging on project ID \"%s\" not found", projectID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d project logging with name \"%s\" on project ID \"%s\"", count, name, projectID)
+		return fmt.Errorf("[ERROR] found %d project logging on project ID \"%s\"", count, projectID)
 	}
 
 	return flattenProjectLogging(d, &projectLoggings.Data[0])

@@ -29,7 +29,6 @@ resource "rancher2_cluster_logging" "foo" {
 }
 
 data "` + testAccRancher2ClusterLoggingDataSourceType + `" "foo" {
-  name = "${rancher2_cluster_logging.foo.name}"
   cluster_id = "${rancher2_cluster_logging.foo.cluster_id}"
 }
 `

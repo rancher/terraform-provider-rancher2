@@ -15,10 +15,6 @@ func dataSourceRancher2ClusterLogging() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"kind": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -46,6 +42,10 @@ func dataSourceRancher2ClusterLogging() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: loggingKafkaConfigFields(),
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"namespace_id": {
 				Type:     schema.TypeString,
@@ -94,11 +94,9 @@ func dataSourceRancher2ClusterLoggingRead(d *schema.ResourceData, meta interface
 	}
 
 	clusterID := d.Get("cluster_id").(string)
-	name := d.Get("name").(string)
 
 	filters := map[string]interface{}{
 		"clusterId": clusterID,
-		"name":      name,
 	}
 	listOpts := NewListOpts(filters)
 
@@ -109,10 +107,10 @@ func dataSourceRancher2ClusterLoggingRead(d *schema.ResourceData, meta interface
 
 	count := len(clusterLoggings.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] cluster logging with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
+		return fmt.Errorf("[ERROR] cluster logging on cluster ID \"%s\" not found", clusterID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d cluster logging with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
+		return fmt.Errorf("[ERROR] found %d cluster logging on cluster ID \"%s\"", count, clusterID)
 	}
 
 	return flattenClusterLogging(d, &clusterLoggings.Data[0])

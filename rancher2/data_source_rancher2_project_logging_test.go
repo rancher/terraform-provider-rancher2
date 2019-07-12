@@ -35,7 +35,6 @@ resource "rancher2_project_logging" "foo" {
 }
 
 data "` + testAccRancher2ProjectLoggingDataSourceType + `" "foo" {
-  name = "${rancher2_project_logging.foo.name}"
   project_id = "${rancher2_project_logging.foo.project_id}"
 }
 `
