@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_catalog`
 * **New Data Source:** `rancher2_cloud_credential`
 
 ENHANCEMENTS:
