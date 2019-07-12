@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `rancher2_catalog`
 * **New Data Source:** `rancher2_cloud_credential`
+* **New Data Source:** `rancher2_cluster`
 * **New Data Source:** `rancher2_etcd_backup`
 * **New Data Source:** `rancher2_namespace`
 * **New Data Source:** `rancher2_node_pool`
