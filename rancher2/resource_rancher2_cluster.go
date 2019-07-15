@@ -145,6 +145,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"name":                               d.Get("name").(string),
 		"description":                        d.Get("description").(string),
 		"defaultPodSecurityPolicyTemplateId": d.Get("default_pod_security_policy_template_id").(string),
+		"enableClusterMonitoring":            d.Get("enable_cluster_monitoring").(bool),
 		"enableNetworkPolicy":                &enableNetworkPolicy,
 		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
 		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),

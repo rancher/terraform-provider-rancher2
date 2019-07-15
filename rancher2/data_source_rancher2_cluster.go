@@ -88,6 +88,11 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed:    true,
 				Description: "Default pod security policy template id",
 			},
+			"enable_cluster_monitoring": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable built-in cluster monitoring",
+			},
 			"enable_network_policy": {
 				Type:        schema.TypeBool,
 				Computed:    true,
