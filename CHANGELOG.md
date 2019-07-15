@@ -20,6 +20,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+* Added cluster and project scope support on `rancher2_catalog` resource and datasource
 
 BUG FIXES:
 
