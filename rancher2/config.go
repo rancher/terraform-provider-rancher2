@@ -283,6 +283,28 @@ func (c *Config) ProjectExist(id string) error {
 	return nil
 }
 
+func (c *Config) GetGlobalRoleByID(id string) (*managementClient.GlobalRole, error) {
+	if id == "" {
+		return nil, fmt.Errorf("Global role id is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.GlobalRole.ByID(id)
+}
+
+func (c *Config) GlobalRoleExist(id string) error {
+	_, err := c.GetGlobalRoleByID(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Config) GetRoleTemplateByID(id string) (*managementClient.RoleTemplate, error) {
 	if id == "" {
 		return nil, fmt.Errorf("Role template id is nil")
