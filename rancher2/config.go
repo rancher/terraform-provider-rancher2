@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
@@ -29,6 +30,7 @@ type Config struct {
 	Bootstrap bool   `json:"bootstrap"`
 	ClusterID string `json:"clusterId"`
 	ProjectID string `json:"projectId"`
+	Sync      sync.Mutex
 	Client    Client
 }
 
@@ -69,6 +71,9 @@ func (c *Config) UpdateToken(token string) error {
 
 // ManagementClient creates a Rancher client scoped to the management API
 func (c *Config) ManagementClient() (*managementClient.Client, error) {
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+
 	if c.Client.Management != nil {
 		return c.Client.Management, nil
 	}
@@ -87,6 +92,9 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 
 // ClusterClient creates a Rancher client scoped to a Cluster API
 func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Cluster Client: cluster ID is nil")
 	}
@@ -111,6 +119,9 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 
 // ProjectClient creates a Rancher client scoped to a Project API
 func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Project Client: project ID is nil")
 	}
