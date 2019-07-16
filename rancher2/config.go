@@ -67,10 +67,26 @@ func (c *Config) UpdateToken(token string) error {
 	return nil
 }
 
+func (c *Config) checkCredentials() error {
+	// If no credentials, bail with an error
+	if c.TokenKey == "" && (c.AccessKey == "" || c.SecretKey == "") {
+		return fmt.Errorf("[ERROR] No token_key nor access_key and secret_key are provided")
+	}
+
+	// Credentials are set
+	return nil
+}
+
 // ManagementClient creates a Rancher client scoped to the management API
 func (c *Config) ManagementClient() (*managementClient.Client, error) {
 	if c.Client.Management != nil {
 		return c.Client.Management, nil
+	}
+
+	// Make sure the credentials have been provided
+	err := c.checkCredentials()
+	if err != nil {
+		return nil, err
 	}
 
 	options := c.CreateClientOpts()
@@ -95,6 +111,12 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 		return c.Client.Cluster, nil
 	}
 
+	// Make sure the credentials have been provided
+	err := c.checkCredentials()
+	if err != nil {
+		return nil, err
+	}
+
 	options := c.CreateClientOpts()
 	options.URL = options.URL + "/clusters/" + id
 
@@ -117,6 +139,12 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 
 	if c.Client.Project != nil && id == c.ProjectID {
 		return c.Client.Project, nil
+	}
+
+	// Make sure the credentials have been provided
+	err := c.checkCredentials()
+	if err != nil {
+		return nil, err
 	}
 
 	options := c.CreateClientOpts()

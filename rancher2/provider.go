@@ -168,16 +168,6 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		if config.TokenKey != "" || config.AccessKey != "" || config.SecretKey != "" {
 			return &Config{}, fmt.Errorf("[ERROR] Bootsrap mode activated. Token_key or access_key and secret_key can not be provided")
 		}
-	} else {
-		// Else token or access key and secret key should be provided
-		if config.TokenKey == "" && (config.AccessKey == "" || config.SecretKey == "") {
-			return &Config{}, fmt.Errorf("[ERROR] No token_key nor access_key and secret_key are provided")
-		}
-
-		_, err := config.ManagementClient()
-		if err != nil {
-			return &Config{}, err
-		}
 	}
 
 	return config, nil
