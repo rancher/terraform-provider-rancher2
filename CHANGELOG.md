@@ -29,6 +29,7 @@ ENHANCEMENTS:
 * Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.6
 * Updated rancher to v2.2.6 and k3s to v0.7.0 on acceptance tests
 * Added cluster and project scope support on `rancher2_catalog` resource and datasource
+* Updated `provider` config validation to enable bootstrap and resource creation at same run
 
 BUG FIXES:
 
