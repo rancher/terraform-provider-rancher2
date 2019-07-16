@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
@@ -32,6 +33,8 @@ type Config struct {
 	Client    Client
 }
 
+var clientMutex = &sync.Mutex{}
+
 // UpdateToken update tokenkey and restart client connections
 func (c *Config) UpdateToken(token string) error {
 	if len(token) == 0 {
@@ -41,23 +44,39 @@ func (c *Config) UpdateToken(token string) error {
 	c.TokenKey = token
 
 	if c.Client.Management != nil {
+		// Lock the client for update
+		clientMutex.Lock()
 		c.Client.Management = nil
-	}
-	_, err := c.ManagementClient()
-	if err != nil {
-		return err
+		clientMutex.Unlock()
+
+		// Reload management client
+		_, err := c.ManagementClient()
+		if err != nil {
+			return err
+		}
 	}
 
 	if c.Client.Cluster != nil {
+		// Lock the client for update
+		clientMutex.Lock()
 		c.Client.Cluster = nil
+		clientMutex.Unlock()
+
+		// Reload the cluster client
 		_, err := c.ClusterClient(c.ClusterID)
 		if err != nil {
 			return err
 		}
 
 	}
+
 	if c.Client.Project != nil {
+		// Lock the client for update
+		clientMutex.Lock()
 		c.Client.Project = nil
+		clientMutex.Unlock()
+
+		// Reload the project client
 		_, err := c.ProjectClient(c.ProjectID)
 		if err != nil {
 			return err
@@ -79,6 +98,10 @@ func (c *Config) checkCredentials() error {
 
 // ManagementClient creates a Rancher client scoped to the management API
 func (c *Config) ManagementClient() (*managementClient.Client, error) {
+	// Lock the client for update
+	clientMutex.Lock()
+	defer clientMutex.Unlock()
+
 	if c.Client.Management != nil {
 		return c.Client.Management, nil
 	}
@@ -106,6 +129,10 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Cluster Client: cluster ID is nil")
 	}
+
+	// Lock the client for update
+	clientMutex.Lock()
+	defer clientMutex.Unlock()
 
 	if c.Client.Cluster != nil && id == c.ClusterID {
 		return c.Client.Cluster, nil
@@ -136,6 +163,10 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Project Client: project ID is nil")
 	}
+
+	// Lock the client for update
+	clientMutex.Lock()
+	defer clientMutex.Unlock()
 
 	if c.Client.Project != nil && id == c.ProjectID {
 		return c.Client.Project, nil
