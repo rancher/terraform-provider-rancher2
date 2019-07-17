@@ -108,6 +108,12 @@ func projectFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"enable_project_monitoring": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable built-in project monitoring",
+		},
 		"resource_quota": {
 			Type:     schema.TypeList,
 			MaxItems: 1,

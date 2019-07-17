@@ -96,6 +96,7 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 	d.Set("cluster_id", in.ClusterID)
 	d.Set("name", in.Name)
 	d.Set("description", in.Description)
+	d.Set("enable_project_monitoring", in.EnableProjectMonitoring)
 
 	if in.ResourceQuota != nil && in.NamespaceDefaultResourceQuota != nil {
 		resourceQuota := flattenProjectResourceQuota(in.ResourceQuota, in.NamespaceDefaultResourceQuota)
@@ -219,6 +220,10 @@ func expandProject(in *schema.ResourceData) *managementClient.Project {
 	obj.ClusterID = in.Get("cluster_id").(string)
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
+
+	if v, ok := in.Get("enable_project_monitoring").(bool); ok {
+		obj.EnableProjectMonitoring = v
+	}
 
 	if v, ok := in.Get("resource_quota").([]interface{}); ok && len(v) > 0 {
 		resourceQuota, nsResourceQuota := expandProjectResourceQuota(v)

@@ -29,6 +29,11 @@ func dataSourceRancher2Project() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"enable_project_monitoring": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable built-in project monitoring",
+			},
 			"uuid": {
 				Description: "UUID of the project",
 				Type:        schema.TypeString,
