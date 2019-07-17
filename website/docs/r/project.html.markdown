@@ -39,6 +39,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the project (string)
 * `cluster_id` - (Required) The cluster id where create project (string)
 * `description` - (Optional) A project description (string)
+* `enable_project_monitoring` - (Optional) Enable built-in project monitoring. Default `false` (bool)
 * `resource_quota` - (Optional) Resource quota for project. Rancher v2.1.x or higher (list maxitems:1)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)

@@ -41,5 +41,6 @@ resource "kubernetes_namespace" "my_namespace" {
  * `id` - Cluster-wide unique ID of the Rancher 2 project.
  * `uuid` - UUID of the project as stored by Rancher 2.
  * `description` - The project's description.
+ * `enable_project_monitoring` - (Computed) Enable built-in project monitoring. Default `false` (bool)
  * `annotations` - Annotations of the rancher2 project (map).
  * `labels` - Labels of the rancher2 project (map).
