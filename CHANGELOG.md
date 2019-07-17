@@ -20,6 +20,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+* Added `enable_cluster_monitoring` argument to `rancher2_cluster` resource and datasource
+* Added `enable_project_monitoring` argument to `rancher2_project` resource and datasource
+* Added `token` argument on `cluster_registration_token` argument to rancher2_cluster resource and datasource
 
 BUG FIXES:
 
