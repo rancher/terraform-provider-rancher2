@@ -22,6 +22,7 @@ func flattenClusterRegistationToken(in *managementClient.ClusterRegistrationToke
 	obj["insecure_command"] = in.InsecureCommand
 	obj["manifest_url"] = in.ManifestURL
 	obj["node_command"] = in.NodeCommand
+	obj["token"] = in.Token
 	obj["windows_node_command"] = in.WindowsNodeCommand
 	obj["annotations"] = toMapInterface(in.Annotations)
 	obj["labels"] = toMapInterface(in.Labels)

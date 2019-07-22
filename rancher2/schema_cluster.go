@@ -57,6 +57,11 @@ func clusterRegistationTokenFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"token": &schema.Schema{
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
+		},
 		"windows_node_command": &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
