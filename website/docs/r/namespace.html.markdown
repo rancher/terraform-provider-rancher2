@@ -62,6 +62,7 @@ The following arguments are supported:
 * `project_id` - (Required) The project id where assign namespace. It's on the form `project_id=<cluster_id>:<id>`. Updating `<id>` part on same `<cluster_id>` namespace will be moved between projects (string)
 * `description` - (Optional) A namespace description (string)
 * `resource_quota` - (Optional/Computed) Resource quota for namespace. Rancher v2.1.x or higher (list maxitems:1)
+* `wait_for_cluster` - (Optional) Wait for cluster becomes active. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
 
