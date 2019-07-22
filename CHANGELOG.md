@@ -20,6 +20,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+* Added `wait_for_cluster` argument on `rancher2_namespace` and `rancher2_project` resources
 
 BUG FIXES:
 
