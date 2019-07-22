@@ -682,6 +682,7 @@ The following arguments are supported:
 * `insecure_command` - (Computed) Insecure command to execute in a imported k8s cluster (string)
 * `manifest_url` - (Computed) K8s mnifest url to execute kubectl in a imported k8s cluster (string)
 * `node_command` - (Computed) Node command to execute in linux nodes for custom k8s cluster (string)
+* `token` - (Computed) Token for cluster registration token object (string)
 * `windows_node_command` - (Computed) Node command to execute in windows nodes for custom k8s cluster (string)
 * `annotations` - (Computed) Annotations for cluster registration token object (map)
 * `labels` - (Computed) Labels for cluster registration token object (map)
