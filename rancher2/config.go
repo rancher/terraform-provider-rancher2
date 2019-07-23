@@ -98,7 +98,7 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 	options := c.CreateClientOpts()
 	options.URL = options.URL + "/clusters/" + id
 
-	// Setup the project client
+	// Setup the cluster client
 	cClient, err := clusterClient.NewClient(options)
 	if err != nil {
 		return nil, err
@@ -784,5 +784,134 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 		return &managementClient.PingConfig{}, nil
 	default:
 		return nil, fmt.Errorf("[ERROR] Auth config type %s not supported", kind)
+	}
+}
+
+func (c *Config) GetRegistryByFilters(filters map[string]interface{}) (interface{}, error) {
+	if filters == nil || len(filters["name"].(string)) == 0 || len(filters["projectId"].(string)) == 0 {
+		return nil, fmt.Errorf("[ERROR] Name nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(filters["projectId"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := NewListOpts(filters)
+
+	if filters["namespaceId"] != nil {
+		return client.NamespacedDockerCredential.List(listOpts)
+	}
+
+	return client.DockerCredential.List(listOpts)
+}
+
+func (c *Config) GetRegistry(id, project_id, namespace_id string) (interface{}, error) {
+	if len(id) == 0 || len(project_id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(project_id)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(namespace_id) > 0 {
+		return client.NamespacedDockerCredential.ByID(id)
+	}
+
+	return client.DockerCredential.ByID(id)
+}
+
+func (c *Config) createDockerCredential(registry *projectClient.DockerCredential) (*projectClient.DockerCredential, error) {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.DockerCredential.Create(registry)
+}
+
+func (c *Config) createNamespacedDockerCredential(registry *projectClient.NamespacedDockerCredential) (*projectClient.NamespacedDockerCredential, error) {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedDockerCredential.Create(registry)
+}
+
+func (c *Config) CreateRegistry(registry interface{}) (interface{}, error) {
+	if registry == nil {
+		return nil, fmt.Errorf("[ERROR] Registry can't be nil")
+	}
+
+	switch t := registry.(type) {
+	case *projectClient.NamespacedDockerCredential:
+		return c.createNamespacedDockerCredential(registry.(*projectClient.NamespacedDockerCredential))
+	case *projectClient.DockerCredential:
+		return c.createDockerCredential(registry.(*projectClient.DockerCredential))
+	default:
+		return nil, fmt.Errorf("[ERROR] Registry type %s isn't supported", t)
+	}
+}
+
+func (c *Config) updateDockerCredential(registry *projectClient.DockerCredential, update map[string]interface{}) (*projectClient.DockerCredential, error) {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.DockerCredential.Update(registry, update)
+}
+
+func (c *Config) updateNamespacedDockerCredential(registry *projectClient.NamespacedDockerCredential, update map[string]interface{}) (*projectClient.NamespacedDockerCredential, error) {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedDockerCredential.Update(registry, update)
+}
+
+func (c *Config) UpdateRegistry(registry interface{}, update map[string]interface{}) (interface{}, error) {
+	if registry == nil {
+		return nil, fmt.Errorf("[ERROR] Registry can't be nil")
+	}
+
+	switch t := registry.(type) {
+	case *projectClient.NamespacedDockerCredential:
+		return c.updateNamespacedDockerCredential(registry.(*projectClient.NamespacedDockerCredential), update)
+	case *projectClient.DockerCredential:
+		return c.updateDockerCredential(registry.(*projectClient.DockerCredential), update)
+	default:
+		return nil, fmt.Errorf("[ERROR] Registry type %s isn't supported", t)
+	}
+}
+
+func (c *Config) deleteDockerCredential(registry *projectClient.DockerCredential) error {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.DockerCredential.Delete(registry)
+}
+
+func (c *Config) deleteNamespacedDockerCredential(registry *projectClient.NamespacedDockerCredential) error {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.NamespacedDockerCredential.Delete(registry)
+}
+
+func (c *Config) DeleteRegistry(registry interface{}) error {
+	if registry == nil {
+		return fmt.Errorf("[ERROR] Registry can't be nil")
+	}
+
+	switch t := registry.(type) {
+	case *projectClient.NamespacedDockerCredential:
+		return c.deleteNamespacedDockerCredential(registry.(*projectClient.NamespacedDockerCredential))
+	case *projectClient.DockerCredential:
+		return c.deleteDockerCredential(registry.(*projectClient.DockerCredential))
+	default:
+		return fmt.Errorf("[ERROR] Registry type %s isn't supported", t)
 	}
 }
