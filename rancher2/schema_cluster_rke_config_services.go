@@ -212,6 +212,10 @@ func clusterRKEConfigServicesEtcdBackupConfigS3Fields() map[string]*schema.Schem
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"custom_ca": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"endpoint": {
 			Type:     schema.TypeString,
 			Required: true,
