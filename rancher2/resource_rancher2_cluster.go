@@ -221,6 +221,38 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	switch driver := d.Get("driver").(string); driver {
+	case clusterDriverEKS:
+		eksConfig, err := expandClusterEKSConfig(d.Get("eks_config").([]interface{}), d.Get("name").(string))
+		if eksConfig.AccessKey != "" {
+			log.Printf("[INFO] Updating AWS Creds for cluster (%s) before deletion", d.Id())
+			update := map[string]interface{}{
+				"amazonElasticContainerServiceConfig": eksConfig,
+			}
+
+			newCluster := &CloudCredential{}
+			err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
+			if err != nil {
+				return err
+			}
+
+			log.Printf("[DEBUG] Waiting for cluster (%s) to be updated", id)
+
+			stateConf := &resource.StateChangeConf{
+				Pending:    []string{"active", "provisioning", "pending", "updating"},
+				Target:     []string{"active", "provisioning", "pending"},
+				Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
+				Timeout:    d.Timeout(schema.TimeoutUpdate),
+				Delay:      1 * time.Second,
+				MinTimeout: 3 * time.Second,
+			}
+			_, waitErr := stateConf.WaitForState()
+			if waitErr != nil {
+				return fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr)
+			}
+		}
+	}
+
 	err = client.APIBaseClient.Delete(cluster)
 	if err != nil {
 		return fmt.Errorf("Error removing Cluster: %s", err)
