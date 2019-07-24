@@ -169,6 +169,16 @@ func IsNotFound(err error) bool {
 	return clientbase.IsNotFound(err)
 }
 
+// IsForbidden checks if the given APIError is a Forbidden HTTP statuscode
+func IsForbidden(err error) bool {
+	apiError, ok := err.(*clientbase.APIError)
+	if !ok {
+		return false
+	}
+
+	return apiError.StatusCode == http.StatusForbidden
+}
+
 func splitTokenID(token string) string {
 	separator := ":"
 

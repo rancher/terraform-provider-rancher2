@@ -3,12 +3,10 @@ package rancher2
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/rancher/norman/clientbase"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
@@ -255,10 +253,7 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 		obj := &Cluster{}
 		err := client.APIBaseClient.ByID(managementClient.ClusterType, clusterID, obj)
 		if err != nil {
-			if IsNotFound(err) {
-				return obj, "removed", nil
-			} else if e, ok := err.(*clientbase.APIError); ok && e.StatusCode == http.StatusForbidden {
-				log.Printf("[INFO] Got access denied to the cluster, which means it has been removed")
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err
