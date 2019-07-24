@@ -20,6 +20,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+* Set default value to `engine_install_url` argument on `rancher2_node_template` resource
 
 BUG FIXES:
 
