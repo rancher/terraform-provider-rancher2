@@ -106,7 +106,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 			return err
 		}
 	case clusterDriverEKS:
-		eksConfig, err := flattenClusterEKSConfig(in.AmazonElasticContainerServiceConfig)
+		v, ok := d.Get("rke_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		eksConfig, err := flattenClusterEKSConfig(in.AmazonElasticContainerServiceConfig, v)
 		if err != nil {
 			return err
 		}

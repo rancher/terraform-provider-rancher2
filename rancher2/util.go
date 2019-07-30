@@ -279,3 +279,26 @@ func newFalse() *bool {
 	b := false
 	return &b
 }
+
+func runWithEnv(newEnv map[string]string, f func()) {
+	oldEnv := map[string]*string{}
+	for k, v := range newEnv {
+		if oldValue, ok := os.LookupEnv(k); ok {
+			oldEnv[k] = &oldValue
+		} else {
+			oldEnv[k] = nil
+		}
+		os.Setenv(k, v)
+	}
+	defer func() {
+		for k, v := range oldEnv {
+			if v != nil {
+				os.Setenv(k, *v)
+			} else {
+				os.Unsetenv(k)
+			}
+		}
+	}()
+
+	f()
+}

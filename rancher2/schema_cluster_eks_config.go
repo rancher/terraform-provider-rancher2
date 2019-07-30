@@ -37,15 +37,26 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"access_key": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "The AWS Client ID to use",
 		},
 		"secret_key": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "The AWS Client Secret associated with the Client ID",
+		},
+		"session_token": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Sensitive:   true,
+			Description: "A session token to use with the client key and secret if applicable",
+		},
+		"aws_creds_from_env": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Get AWS credentials from environment variables",
 		},
 		"ami": {
 			Type:        schema.TypeString,
@@ -106,12 +117,6 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The service role to use to perform the cluster operations in AWS",
-		},
-		"session_token": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Sensitive:   true,
-			Description: "A session token to use with the client key and secret if applicable",
 		},
 		"subnets": {
 			Type:        schema.TypeList,

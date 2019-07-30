@@ -15,7 +15,7 @@ Provides a Rancher v2 Cluster resource. This can be used to create Clusters for 
 Creating Rancher v2 imported cluster
 
 ```hcl
-# Create a new rancher2 imported Cluster 
+# Create a new rancher2 imported Cluster
 resource "rancher2_cluster" "foo-imported" {
   name = "foo-imported"
   description = "Foo rancher2 imported cluster"
@@ -25,7 +25,7 @@ resource "rancher2_cluster" "foo-imported" {
 Creating Rancher v2 rke cluster
 
 ```hcl
-# Create a new rancher2 rke Cluster 
+# Create a new rancher2 rke Cluster
 resource "rancher2_cluster" "foo-custom" {
   name = "foo-custom"
   description = "Foo rancher2 custom cluster"
@@ -40,7 +40,7 @@ resource "rancher2_cluster" "foo-custom" {
 Creating Rancher v2 rke cluster assigning a node pool (overlapped planes)
 
 ```hcl
-# Create a new rancher2 rke Cluster 
+# Create a new rancher2 rke Cluster
 resource "rancher2_cluster" "foo-custom" {
   name = "foo-custom"
   description = "Foo rancher2 custom cluster"
@@ -586,10 +586,18 @@ The following arguments are supported:
 
 #### Arguments
 
-The following arguments are supported:
+Valid AWS credentials must be provided by setting:
+
+* `aws_creds_from_env` - (Optional) Pull the AWS credentials from the [standard environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html). (bool)
+
+or explicitely setting:
 
 * `access_key` - (Required/Sensitive) The AWS Client ID to use (string)
 * `secret_key` - (Required/Sensitive) The AWS Client Secret associated with the Client ID (string)
+* `session_token` - (Optional/Sensitive) A session token to use with the client key and secret if applicable (string)
+
+The following additional arguments are supported:
+
 * `ami` - (Optional) AMI ID to use for the worker nodes instead of the default (string)
 * `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes. Default `true` (bool)
 * `instance_type` - (Optional) The type of machine to use for worker nodes. Default `t2.medium` (string)
@@ -600,7 +608,6 @@ The following arguments are supported:
 * `region` - (Optional) The AWS Region to create the EKS cluster in. Default `us-west-2` (string)
  `security_groups` - (Optional) List of security groups to use for the cluster. If it's not specified Rancher will create a new security group (list)
 * `service_role` - (Optional) The service role to use to perform the cluster operations in AWS. If it's not specified Rancher will create a new service role (string)
-* `session_token` - (Optional/Sensitive) A session token to use with the client key and secret if applicable (string)
 * `subnets` - (Optional) List of subnets in the virtual network to use. If it's not specified Rancher will create 3 news subnets (list)
 * `user_data` - (Optional/Computed) Pass user-data to the nodes to perform automated configuration tasks (string)
 * `virtual_network` - (Optional) The name of the virtual network to use. If it's not specified Rancher will create a new VPC (string)

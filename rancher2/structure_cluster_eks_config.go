@@ -1,19 +1,37 @@
 package rancher2
 
+import (
+	"fmt"
+	"os"
+)
+
 // Flatteners
 
-func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig, p []interface{}) ([]interface{}, error) {
 	if in == nil {
 		return []interface{}{}, nil
 	}
 
-	if len(in.AccessKey) > 0 {
-		obj["access_key"] = in.AccessKey
+	var obj map[string]interface{}
+
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
 	}
 
-	if len(in.SecretKey) > 0 {
-		obj["secret_key"] = in.SecretKey
+	if v, ok := obj["aws_creds_from_env"].(bool); !ok || !v {
+		if len(in.AccessKey) > 0 {
+			obj["access_key"] = in.AccessKey
+		}
+
+		if len(in.SecretKey) > 0 {
+			obj["secret_key"] = in.SecretKey
+		}
+
+		if len(in.SessionToken) > 0 {
+			obj["session_token"] = in.SessionToken
+		}
 	}
 
 	if len(in.AMI) > 0 {
@@ -54,10 +72,6 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["service_role"] = in.ServiceRole
 	}
 
-	if len(in.SessionToken) > 0 {
-		obj["session_token"] = in.SessionToken
-	}
-
 	if len(in.Subnets) > 0 {
 		obj["subnets"] = toArrayInterface(in.Subnets)
 	}
@@ -84,12 +98,33 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	obj.DisplayName = name
 
-	if v, ok := in["access_key"].(string); ok && len(v) > 0 {
-		obj.AccessKey = v
-	}
+	if v, ok := in["aws_creds_from_env"].(bool); ok && v {
+		obj.AccessKey, ok = os.LookupEnv("AWS_ACCESS_KEY_ID")
+		if !ok {
+			return obj, fmt.Errorf("[ERROR] 'aws_creds_from_env=true' but env var AWS_ACCESS_KEY_ID is not set")
+		}
+		obj.SecretKey, ok = os.LookupEnv("AWS_SECRET_ACCESS_KEY")
+		if !ok {
+			return obj, fmt.Errorf("[ERROR] 'aws_creds_from_env=true' but env var AWS_SECRET_ACCESS_KEY is not set")
+		}
+		obj.SessionToken = os.Getenv("AWS_SESSION_TOKEN")
 
-	if v, ok := in["secret_key"].(string); ok && len(v) > 0 {
-		obj.SecretKey = v
+	} else {
+		if v, ok := in["access_key"].(string); ok && len(v) > 0 {
+			obj.AccessKey = v
+		} else {
+			return obj, fmt.Errorf("[ERROR] 'aws_creds_from_env=false' or not set but 'access_key' not set")
+		}
+
+		if v, ok := in["secret_key"].(string); ok && len(v) > 0 {
+			obj.SecretKey = v
+		} else {
+			return obj, fmt.Errorf("[ERROR] 'aws_creds_from_env=false' or not set but 'secret_key' not set")
+		}
+
+		if v, ok := in["session_token"].(string); ok && len(v) > 0 {
+			obj.SessionToken = v
+		}
 	}
 
 	if v, ok := in["ami"].(string); ok && len(v) > 0 {
@@ -130,10 +165,6 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["service_role"].(string); ok && len(v) > 0 {
 		obj.ServiceRole = v
-	}
-
-	if v, ok := in["session_token"].(string); ok && len(v) > 0 {
-		obj.SessionToken = v
 	}
 
 	if v, ok := in["subnets"].([]interface{}); ok && len(v) > 0 {
