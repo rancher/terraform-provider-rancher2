@@ -191,10 +191,26 @@ func splitTokenID(token string) string {
 
 func splitID(id string) (clusterID, resourceID string) {
 	separator := "."
+
 	if strings.Contains(id, separator) {
 		return id[0:strings.Index(id, separator)], id[strings.Index(id, separator)+1:]
 	}
 	return "", id
+}
+
+func splitRegistryID(id string) (namespaceID, projectID, resourceID string) {
+	separator := "."
+
+	result := strings.Split(id, separator)
+
+	switch count := len(result); count {
+	case 2:
+		return "", result[0], result[1]
+	case 3:
+		return result[0], result[1], result[2]
+	}
+
+	return "", "", id
 }
 
 func clusterIDFromProjectID(projectID string) (string, error) {

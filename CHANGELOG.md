@@ -15,8 +15,10 @@ FEATURES:
 * **New Data Source:** `rancher2_node_pool`
 * **New Data Source:** `rancher2_project_logging`
 * **New Data Source:** `rancher2_project_role_template_binding`
+* **New Data Source:** `rancher2_registry`
 * **New Data Source:** `rancher2_user`
 * **New Resource:** `rancher2_global_role_binding`
+* **New Resource:** `rancher2_registry`
 * **New Resource:** `rancher2_user`
 
 ENHANCEMENTS:
