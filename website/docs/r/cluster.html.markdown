@@ -221,7 +221,7 @@ The following attributes are exported:
 * `cloud_provider_rate_limit_qps` - (Optional/Computed) (int)
 * `location` - (Optional/Computed) (string)
 * `maximum_load_balancer_rule_count` - (Optional/Computed) (int)
-* `primary_availability_set_name"` - (Optional/Computed) (string)
+* `primary_availability_set_name` - (Optional/Computed) (string)
 * `primary_scale_set_name` - (Optional/Computed) (string)
 * `resource_group` - (Optional/Computed) (string)
 * `route_table_name` - (Optional/Computed) (string)
