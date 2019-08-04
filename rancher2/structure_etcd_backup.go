@@ -42,10 +42,10 @@ func flattenEtcdBackup(d *schema.ResourceData, in *managementClient.EtcdBackup) 
 
 // Expanders
 
-func expandEtcdBackup(in *schema.ResourceData) *managementClient.EtcdBackup {
+func expandEtcdBackup(in *schema.ResourceData) (*managementClient.EtcdBackup, error) {
 	obj := &managementClient.EtcdBackup{}
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	if v := in.Id(); len(v) > 0 {
@@ -53,7 +53,11 @@ func expandEtcdBackup(in *schema.ResourceData) *managementClient.EtcdBackup {
 	}
 
 	if v, ok := in.Get("backup_config").([]interface{}); ok && len(v) > 0 {
-		obj.BackupConfig = expandClusterRKEConfigServicesEtcdBackupConfig(v)
+		backupConfig, err := expandClusterRKEConfigServicesEtcdBackupConfig(v)
+		if err != nil {
+			return nil, err
+		}
+		obj.BackupConfig = backupConfig
 	}
 
 	obj.ClusterID = in.Get("cluster_id").(string)
@@ -82,5 +86,5 @@ func expandEtcdBackup(in *schema.ResourceData) *managementClient.EtcdBackup {
 		obj.Labels = toMapString(v)
 	}
 
-	return obj
+	return obj, nil
 }
