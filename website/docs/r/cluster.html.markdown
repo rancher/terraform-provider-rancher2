@@ -480,6 +480,7 @@ The following attributes are exported:
 
 * `access_key` - (Required/Sensitive) Access key for S3 service (string)
 * `bucket_name` - (Required) Bucket name for S3 service (string)
+* `custom_ca` - (Optional) Base64 encoded custom CA for S3 service. Use filebase64(<FILE>) for encoding file. Available from rancher v2.2.5 (string)
 * `endpoint` - (Required) Endpoint for S3 service (string)
 * `region` - (Required) Region for S3 service (string)
 * `secret_key` - (Required/Sensitive) Secret key for S3 service (string)
