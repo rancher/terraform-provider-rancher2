@@ -1028,3 +1028,68 @@ func (c *Config) DeleteRegistry(registry interface{}) error {
 		return fmt.Errorf("[ERROR] Registry type %s isn't supported", t)
 	}
 }
+
+func (c *Config) GetAppByFilters(filters map[string]interface{}) (interface{}, error) {
+	if filters == nil || len(filters["name"].(string)) == 0 || len(filters["projectId"].(string)) == 0 || len(filters["namespaceId"].(string)) == 0 {
+		return nil, fmt.Errorf("[ERROR] Name nor project_id nor namespace_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(filters["projectId"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := NewListOpts(filters)
+
+	return client.App.List(listOpts)
+}
+
+func (c *Config) GetApp(id, project_id string) (*projectClient.App, error) {
+	if len(id) == 0 || len(project_id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(project_id)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.App.ByID(id)
+}
+
+func (c *Config) CreateApp(app *projectClient.App) (*projectClient.App, error) {
+	if app == nil {
+		return nil, fmt.Errorf("[ERROR] App can't be nil")
+	}
+
+	client, err := c.ProjectClient(app.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.App.Create(app)
+}
+
+func (c *Config) UpdateApp(app *projectClient.App, update map[string]interface{}) (*projectClient.App, error) {
+	if app == nil {
+		return nil, fmt.Errorf("[ERROR] App can't be nil")
+	}
+
+	client, err := c.ProjectClient(app.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.App.Update(app, update)
+}
+
+func (c *Config) DeleteApp(app *projectClient.App) error {
+	if app == nil {
+		return fmt.Errorf("[ERROR] App can't be nil")
+	}
+
+	client, err := c.ProjectClient(app.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.App.Delete(app)
+}

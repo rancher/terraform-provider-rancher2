@@ -179,6 +179,19 @@ func IsForbidden(err error) bool {
 	return apiError.StatusCode == http.StatusForbidden
 }
 
+func splitAppID(id string) (projectID, appID string) {
+	separator := "."
+
+	result := strings.Split(id, separator)
+
+	switch count := len(result); count {
+	case 2:
+		return result[0], result[1]
+	}
+
+	return "", id
+}
+
 func splitTokenID(token string) string {
 	separator := ":"
 
