@@ -72,7 +72,7 @@ The following arguments are supported:
 * `docker_version` - (Optional) Docker version for the node template (string)
 * `engine_env` - (Optional) Engine environment for the node template (string)
 * `engine_insecure_registry` - (Optional) Insecure registry for the node template (list)
-* `engine_install_url` - (Optional) Engine install URL for the node template (string)
+* `engine_install_url` - (Optional) Docker engine install URL for the node template. Default `https://releases.rancher.com/install-docker/18.09.sh`. To install latest docker engine, use `https://get.docker.com`  (string)
 * `engine_label` - (Optional) Engine label for the node template (string)
 * `engine_opt` - (Optional) Engine options for the node template (map)
 * `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)

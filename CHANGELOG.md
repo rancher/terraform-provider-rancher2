@@ -24,6 +24,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+* Set default value to `engine_install_url` argument on `rancher2_node_template` resource
 * Added `custom_ca` argument on etcd `s3_backup_config` on `rancher2_cluster` and `rancher2_etcd_backup` resources
 * Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.6
 * Updated rancher to v2.2.6 and k3s to v0.7.0 on acceptance tests
