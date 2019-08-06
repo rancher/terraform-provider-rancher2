@@ -1030,7 +1030,7 @@ func (c *Config) DeleteRegistry(registry interface{}) error {
 }
 
 func (c *Config) GetAppByFilters(filters map[string]interface{}) (interface{}, error) {
-	if filters == nil || len(filters["name"].(string)) == 0 || len(filters["projectId"].(string)) == 0 || len(filters["namespaceId"].(string)) == 0 {
+	if filters == nil || len(filters["name"].(string)) == 0 || len(filters["projectId"].(string)) == 0 {
 		return nil, fmt.Errorf("[ERROR] Name nor project_id nor namespace_id can't be nil")
 	}
 

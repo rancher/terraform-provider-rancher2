@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -127,6 +128,38 @@ func resourceRancher2AppDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error removing App: %s", err)
 	}
 
+	log.Printf("[DEBUG] Waiting for App (%s) to be removed", id)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"removing"},
+		Target:     []string{"removed"},
+		Refresh:    appStateRefreshFunc(meta, id, projectID),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf(
+			"[ERROR] waiting for App (%s) to be removed: %s", id, waitErr)
+	}
+
 	d.SetId("")
 	return nil
+}
+
+// appStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher App.
+func appStateRefreshFunc(meta interface{}, appID, projectID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := meta.(*Config).GetApp(appID, projectID)
+		if err != nil {
+			if IsNotFound(err) {
+				return obj, "removed", nil
+			}
+			return nil, "", err
+		}
+
+		return obj, obj.State, nil
+	}
 }

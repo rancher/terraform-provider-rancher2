@@ -19,7 +19,8 @@ func dataSourceRancher2App() *schema.Resource {
 			},
 			"target_namespace": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Namespace name to add app",
 			},
 			"name": &schema.Schema{
@@ -29,7 +30,7 @@ func dataSourceRancher2App() *schema.Resource {
 			},
 			"external_id": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Computed:    true,
 				Description: "External ID of the app, like catalog://?catalog=helm&template=cluster-autoscaler&version=3.1.0",
 			},
 			"annotations": &schema.Schema{
@@ -38,7 +39,6 @@ func dataSourceRancher2App() *schema.Resource {
 			},
 			"answers": &schema.Schema{
 				Type:        schema.TypeMap,
-				Optional:    true,
 				Computed:    true,
 				Description: "Answers of the app",
 			},
@@ -61,9 +61,12 @@ func dataSourceRancher2AppRead(d *schema.ResourceData, meta interface{}) error {
 	targetNamespace := d.Get("target_namespace").(string)
 
 	filters := map[string]interface{}{
-		"projectId":       projectID,
-		"name":            name,
-		"targetNamespace": targetNamespace,
+		"projectId": projectID,
+		"name":      name,
+	}
+
+	if len(targetNamespace) > 0 {
+		filters["targetNamespace"] = targetNamespace
 	}
 
 	apps, err := meta.(*Config).GetAppByFilters(filters)

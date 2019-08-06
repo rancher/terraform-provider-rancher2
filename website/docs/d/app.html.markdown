@@ -24,7 +24,7 @@ data "rancher2_app" "rancher2" {
 
 * `name` - (Required) The app name.
 * `project_id` - (Required) The id of the project where the app is installed.
-* `target_namespace` - (Required) The namespace where the app is installed.
+* `target_namespace` - (Optional/Computed) The namespace where the app is installed.
 
 ## Attributes Reference
 
