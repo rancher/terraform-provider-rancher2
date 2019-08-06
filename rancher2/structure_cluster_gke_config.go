@@ -181,6 +181,10 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 		obj["zone"] = in.Zone
 	}
 
+	if len(in.Region) > 0 {
+		obj["region"] = in.Region
+	}
+
 	return []interface{}{obj}, nil
 }
 
@@ -402,6 +406,10 @@ func expandClusterGKEConfig(p []interface{}, name string) (*GoogleKubernetesEngi
 
 	if v, ok := in["zone"].(string); ok && len(v) > 0 {
 		obj.Zone = v
+	}
+
+	if v, ok := in["region"].(string); ok && len(v) > 0 {
+		obj.Region = v
 	}
 
 	return obj, nil
