@@ -8,15 +8,13 @@ description: |-
 
 # rancher2\_bootstrap
 
-Provides a Rancher v2 bootstrap resource. This can be used to bootstrap rancher v2 environments and output information.
+Provides a Rancher v2 bootstrap resource. This can be used to bootstrap rancher v2 environments and output information. It just works if `bootstrap` provider config is added to the tf file. More info at [rancher2 provider](../index.html)
 
 This resource is indeed to bootstrap a rancher system doing following tasks:
 - Update default admin password, provided by `password` or generating a random one.
 - Set `server-url` setting, based on `api_url`.
 - Set `telemetry-opt` setting.
 - Create a token for admin user with concrete TTL.
-
-It just works if `bootstrap = true` is added to the provider configuration or exporting env variable `RANCHER_BOOTSTRAP=true`. In this mode, `token_key` or `access_key` and `secret_key` can not be provided.
 
 Rancher2 admin password could be updated setting `password` field and applying this resource again. 
 
@@ -27,14 +25,32 @@ Login to rancher2 is done using `token` first and if fails, using admin `current
 ## Example Usage
 
 ```hcl
-# Provider config
+# Provider bootstrap config
 provider "rancher2" {
   api_url   = "https://rancher.my-domain.com"
   bootstrap = true
 }
 
-# Create a new rancher2 Bootstrap
+# Create a new rancher2_bootstrap
 resource "rancher2_bootstrap" "admin" {
+  password = "blahblah"
+  telemetry = true
+}
+```
+
+```hcl
+# Provider bootstrap config with alias
+provider "rancher2" {
+  alias = "bootstrap"
+
+  api_url   = "https://rancher.my-domain.com"
+  bootstrap = true
+}
+
+# Create a new rancher2_bootstrap using bootstrap provider config
+resource "rancher2_bootstrap" "admin" {
+  provider = "rancher2.bootstrap"
+
   password = "blahblah"
   telemetry = true
 }

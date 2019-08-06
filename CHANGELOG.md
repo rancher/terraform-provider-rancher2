@@ -6,15 +6,19 @@ FEATURES:
 * **New Data Source:** `rancher2_cloud_credential`
 * **New Data Source:** `rancher2_cluster`
 * **New Data Source:** `rancher2_cluster_driver`
+* **New Data Source:** `rancher2_cluster_logging`
 * **New Data Source:** `rancher2_cluster_role_template_binding`
 * **New Data Source:** `rancher2_etcd_backup`
 * **New Data Source:** `rancher2_global_role_binding`
 * **New Data Source:** `rancher2_namespace`
 * **New Data Source:** `rancher2_node_driver`
 * **New Data Source:** `rancher2_node_pool`
+* **New Data Source:** `rancher2_project_logging`
 * **New Data Source:** `rancher2_project_role_template_binding`
+* **New Data Source:** `rancher2_registry`
 * **New Data Source:** `rancher2_user`
 * **New Resource:** `rancher2_global_role_binding`
+* **New Resource:** `rancher2_registry`
 * **New Resource:** `rancher2_user`
 
 ENHANCEMENTS:
@@ -23,6 +27,12 @@ ENHANCEMENTS:
 * Added `enable_cluster_monitoring` argument to `rancher2_cluster` resource and datasource
 * Added `enable_project_monitoring` argument to `rancher2_project` resource and datasource
 * Added `token` argument on `cluster_registration_token` argument to rancher2_cluster resource and datasource
+* Set default value to `engine_install_url` argument on `rancher2_node_template` resource
+* Added `custom_ca` argument on etcd `s3_backup_config` on `rancher2_cluster` and `rancher2_etcd_backup` resources
+* Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.6
+* Updated rancher to v2.2.6 and k3s to v0.7.0 on acceptance tests
+* Added cluster and project scope support on `rancher2_catalog` resource and datasource
+* Updated `provider` config validation to enable bootstrap and resource creation at same run
 
 BUG FIXES:
 
