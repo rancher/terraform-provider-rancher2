@@ -54,6 +54,12 @@ func appFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Labels of the app",
 		},
+		"values_yaml": &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			ForceNew:    false,
+			Description: "values.yaml file content of the app",
+		},
 	}
 
 	return s

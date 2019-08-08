@@ -32,4 +32,4 @@ data "rancher2_app" "rancher2" {
 * `annotations` - (Computed) Annotations for the catalog (map)
 * `answers` - (Computed) Answers for the app (map)
 * `labels` - (Computed) Labels for the catalog (map)
-
+* `values_yaml` - (Computed) values.yaml file content for the app (string)

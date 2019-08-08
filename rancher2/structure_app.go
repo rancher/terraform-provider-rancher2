@@ -19,6 +19,7 @@ func flattenApp(d *schema.ResourceData, in *projectClient.App) error {
 	d.Set("target_namespace", in.TargetNamespace)
 	d.Set("external_id", in.ExternalID)
 	d.Set("description", in.Description)
+	d.Set("values_yaml", in.ValuesYaml)
 
 	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -57,6 +58,7 @@ func expandApp(in *schema.ResourceData) *projectClient.App {
 	obj.TargetNamespace = in.Get("target_namespace").(string)
 	obj.ExternalID = in.Get("external_id").(string)
 	obj.Description = in.Get("description").(string)
+	obj.ValuesYaml = in.Get("values_yaml").(string)
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)

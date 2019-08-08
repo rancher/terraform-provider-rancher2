@@ -38,6 +38,7 @@ The following arguments are supported:
 * `external_id` - (Required) The url of the app template on a catalog (string)
 * `answers` - (Optional) Answers for the app template (map)
 * `description` - (Optional) An app description (string)
+* `values_yaml` - (Optional) values.yaml file content for the app template (string)
 * `annotations` - (Optional/Computed) Annotations for App object (map)
 * `labels` - (Optional/Computed) Labels for App object (map)
 

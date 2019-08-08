@@ -92,6 +92,7 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 		"answers":         toMapString(d.Get("answers").(map[string]interface{})),
 		"description":     d.Get("description").(string),
 		"labels":          toMapString(d.Get("labels").(map[string]interface{})),
+		"valuesYaml":      d.Get("values_yaml").(string),
 	}
 
 	newApp, err := meta.(*Config).UpdateApp(app, update)

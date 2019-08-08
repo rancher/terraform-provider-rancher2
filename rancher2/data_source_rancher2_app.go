@@ -51,6 +51,11 @@ func dataSourceRancher2App() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			"values_yaml": &schema.Schema{
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "values.yaml file content of the app",
+			},
 		},
 	}
 }
