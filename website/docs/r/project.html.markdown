@@ -38,7 +38,10 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the project (string)
 * `cluster_id` - (Required) The cluster id where create project (string)
+* `container_resource_limit` - (Optional) Default containers resource limits on project (List maxitem:1)
 * `description` - (Optional) A project description (string)
+* `enable_project_monitoring` - (Optional) Enable built-in project monitoring. Default `false` (bool)
+* `pod_security_policy_template_id` - (Optional) Default Pod Security Policy ID for the project (string)
 * `resource_quota` - (Optional) Resource quota for project. Rancher v2.1.x or higher (list maxitems:1)
 * `wait_for_cluster` - (Optional) Wait for cluster becomes active. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
@@ -51,6 +54,15 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource (string)
 
 ## Nested blocks
+
+### `container_resource_limit`
+
+#### Arguments
+
+* `limits_cpu` - (Optional) CPU limit for containers, measured in milli CPUs (string)
+* `limits_memory` - (Optional) Memory limit for containers, measured in MiB (string)
+* `requests_cpu` - (Optional) CPU reservation for containers, measured in milli CPUs (string)
+* `requests_memory` - (Optional) Memory reservation for containers, measured in MiB (string)
 
 ### `resource_quota`
 

@@ -145,6 +145,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"name":                               d.Get("name").(string),
 		"description":                        d.Get("description").(string),
 		"defaultPodSecurityPolicyTemplateId": d.Get("default_pod_security_policy_template_id").(string),
+		"enableClusterMonitoring":            d.Get("enable_cluster_monitoring").(bool),
 		"enableNetworkPolicy":                &enableNetworkPolicy,
 		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
 		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
@@ -253,7 +254,13 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 		obj := &Cluster{}
 		err := client.APIBaseClient.ByID(managementClient.ClusterType, clusterID, obj)
 		if err != nil {
-			if IsNotFound(err) {
+			// The IsForbidden check is used in the case the user performing the action does not have the
+			// right to retrieve the full list of clusters. If the user tries to retrieve the cluster that
+			// just got deleted, instead of getting a 404 not found response it will get a 403 forbidden
+			// eventhough it had the right to access the cluster before it was deleted. If we reach this
+			// code path, it means that the user had the right to access the cluster, delete it, hence
+			// meaning that the delete was successful.
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

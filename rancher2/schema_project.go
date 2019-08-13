@@ -104,7 +104,25 @@ func projectFields() map[string]*schema.Schema {
 			Required: true,
 			ForceNew: true,
 		},
+		"container_resource_limit": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: containerResourceLimitFields(),
+			},
+		},
 		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"enable_project_monitoring": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable built-in project monitoring",
+		},
+		"pod_security_policy_template_id": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},
