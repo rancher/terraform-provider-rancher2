@@ -101,14 +101,16 @@ func init() {
 		ClusterID:                     "cluster-test",
 		Name:                          "test",
 		Description:                   "description",
+		EnableProjectMonitoring:       true,
 		ResourceQuota:                 testProjectResourceQuotaConf,
 		NamespaceDefaultResourceQuota: testProjectNamespaceResourceQuotaConf,
 	}
 	testProjectInterface = map[string]interface{}{
-		"cluster_id":     "cluster-test",
-		"name":           "test",
-		"description":    "description",
-		"resource_quota": testProjectResourceQuotaInterface,
+		"cluster_id":                "cluster-test",
+		"name":                      "test",
+		"description":               "description",
+		"enable_project_monitoring": true,
+		"resource_quota":            testProjectResourceQuotaInterface,
 	}
 }
 

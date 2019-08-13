@@ -24,6 +24,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+* Added `enable_cluster_monitoring` argument to `rancher2_cluster` resource and datasource
+* Added `enable_project_monitoring` argument to `rancher2_project` resource and datasource
+* Added `token` argument on `cluster_registration_token` argument to rancher2_cluster resource and datasource
 * Set default value to `engine_install_url` argument on `rancher2_node_template` resource
 * Added `custom_ca` argument on etcd `s3_backup_config` on `rancher2_cluster` and `rancher2_etcd_backup` resources
 * Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.6

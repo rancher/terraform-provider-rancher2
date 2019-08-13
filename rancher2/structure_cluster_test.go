@@ -45,6 +45,7 @@ func init() {
 		InsecureCommand:    "insecure_command",
 		ManifestURL:        "manifest",
 		NodeCommand:        "node_command",
+		Token:              "token",
 		WindowsNodeCommand: "win_node_command",
 		Annotations: map[string]string{
 			"node_one": "one",
@@ -76,6 +77,7 @@ func init() {
 			"insecure_command":     "insecure_command",
 			"manifest_url":         "manifest",
 			"node_command":         "node_command",
+			"token":                "token",
 			"windows_node_command": "win_node_command",
 			"annotations": map[string]interface{}{
 				"node_one": "one",
@@ -97,6 +99,7 @@ func init() {
 	testClusterConfAKS.Description = "description"
 	testClusterConfAKS.Driver = clusterDriverAKS
 	testClusterConfAKS.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfAKS.EnableClusterMonitoring = true
 	testClusterConfAKS.EnableNetworkPolicy = newTrue()
 	testClusterConfAKS.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceAKS = map[string]interface{}{
@@ -107,6 +110,7 @@ func init() {
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"default_pod_security_policy_template_id": "restricted",
+		"enable_cluster_monitoring":               true,
 		"enable_network_policy":                   true,
 		"kube_config":                             "kube_config",
 		"driver":                                  clusterDriverAKS,
@@ -120,6 +124,7 @@ func init() {
 	testClusterConfEKS.Description = "description"
 	testClusterConfEKS.Driver = clusterDriverEKS
 	testClusterConfEKS.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfEKS.EnableClusterMonitoring = true
 	testClusterConfEKS.EnableNetworkPolicy = newTrue()
 	testClusterConfEKS.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceEKS = map[string]interface{}{
@@ -130,6 +135,7 @@ func init() {
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"default_pod_security_policy_template_id": "restricted",
+		"enable_cluster_monitoring":               true,
 		"enable_network_policy":                   true,
 		"kube_config":                             "kube_config",
 		"driver":                                  clusterDriverEKS,
@@ -143,6 +149,7 @@ func init() {
 	testClusterConfGKE.Description = "description"
 	testClusterConfGKE.Driver = clusterDriverGKE
 	testClusterConfGKE.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfGKE.EnableClusterMonitoring = true
 	testClusterConfGKE.EnableNetworkPolicy = newTrue()
 	testClusterConfGKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceGKE = map[string]interface{}{
@@ -153,6 +160,7 @@ func init() {
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"default_pod_security_policy_template_id": "restricted",
+		"enable_cluster_monitoring":               true,
 		"enable_network_policy":                   true,
 		"kube_config":                             "kube_config",
 		"driver":                                  clusterDriverGKE,
@@ -165,6 +173,7 @@ func init() {
 	testClusterConfRKE.RancherKubernetesEngineConfig = testClusterRKEConfigConf
 	testClusterConfRKE.Driver = clusterDriverRKE
 	testClusterConfRKE.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfRKE.EnableClusterMonitoring = true
 	testClusterConfRKE.EnableNetworkPolicy = newTrue()
 	testClusterConfRKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceRKE = map[string]interface{}{
@@ -175,6 +184,7 @@ func init() {
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"default_pod_security_policy_template_id": "restricted",
+		"enable_cluster_monitoring":               true,
 		"enable_network_policy":                   true,
 		"kube_config":                             "kube_config",
 		"driver":                                  clusterDriverRKE,
