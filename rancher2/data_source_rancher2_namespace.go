@@ -21,6 +21,14 @@ func dataSourceRancher2Namespace() *schema.Resource {
 				Required:    true,
 				Description: "Name of the k8s namespace managed by rancher v2",
 			},
+			"container_resource_limit": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: containerResourceLimitFields(),
+				},
+			},
 			"description": &schema.Schema{
 				Type:        schema.TypeString,
 				Computed:    true,

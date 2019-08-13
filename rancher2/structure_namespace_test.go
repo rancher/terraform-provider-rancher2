@@ -9,15 +9,31 @@ import (
 )
 
 var (
-	testNamespaceResourceQuotaLimitConf      *clusterClient.ResourceQuotaLimit
-	testNamespaceResourceQuotaLimitInterface []interface{}
-	testNamespaceResourceQuotaConf           *clusterClient.NamespaceResourceQuota
-	testNamespaceResourceQuotaInterface      []interface{}
-	testNamespaceConf                        *clusterClient.Namespace
-	testNamespaceInterface                   map[string]interface{}
+	testNamespaceContainerResourceLimitConf      *clusterClient.ContainerResourceLimit
+	testNamespaceContainerResourceLimitInterface []interface{}
+	testNamespaceResourceQuotaLimitConf          *clusterClient.ResourceQuotaLimit
+	testNamespaceResourceQuotaLimitInterface     []interface{}
+	testNamespaceResourceQuotaConf               *clusterClient.NamespaceResourceQuota
+	testNamespaceResourceQuotaInterface          []interface{}
+	testNamespaceConf                            *clusterClient.Namespace
+	testNamespaceInterface                       map[string]interface{}
 )
 
 func init() {
+	testNamespaceContainerResourceLimitConf = &clusterClient.ContainerResourceLimit{
+		LimitsCPU:      "limits_cpu",
+		LimitsMemory:   "limits_memory",
+		RequestsCPU:    "requests_cpu",
+		RequestsMemory: "requests_memory",
+	}
+	testNamespaceContainerResourceLimitInterface = []interface{}{
+		map[string]interface{}{
+			"limits_cpu":      "limits_cpu",
+			"limits_memory":   "limits_memory",
+			"requests_cpu":    "requests_cpu",
+			"requests_memory": "requests_memory",
+		},
+	}
 	testNamespaceResourceQuotaLimitConf = &clusterClient.ResourceQuotaLimit{
 		ConfigMaps:             "config",
 		LimitsCPU:              "cpu",
@@ -59,16 +75,39 @@ func init() {
 		},
 	}
 	testNamespaceConf = &clusterClient.Namespace{
-		ProjectID:     "project:test",
-		Name:          "test",
-		Description:   "description",
-		ResourceQuota: testNamespaceResourceQuotaConf,
+		ProjectID:                     "project:test",
+		Name:                          "test",
+		ContainerDefaultResourceLimit: testNamespaceContainerResourceLimitConf,
+		Description:                   "description",
+		ResourceQuota:                 testNamespaceResourceQuotaConf,
 	}
 	testNamespaceInterface = map[string]interface{}{
-		"project_id":     "project:test",
-		"name":           "test",
-		"description":    "description",
-		"resource_quota": testNamespaceResourceQuotaInterface,
+		"project_id":               "project:test",
+		"name":                     "test",
+		"container_resource_limit": testNamespaceContainerResourceLimitInterface,
+		"description":              "description",
+		"resource_quota":           testNamespaceResourceQuotaInterface,
+	}
+}
+
+func TestFlattenNamespaceContainerResourceLimit(t *testing.T) {
+
+	cases := []struct {
+		Input          *clusterClient.ContainerResourceLimit
+		ExpectedOutput []interface{}
+	}{
+		{
+			testNamespaceContainerResourceLimitConf,
+			testNamespaceContainerResourceLimitInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenNamespaceContainerResourceLimit(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
 	}
 }
 
@@ -139,6 +178,26 @@ func TestFlattenNamespace(t *testing.T) {
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				expectedOutput, output)
+		}
+	}
+}
+
+func TestExpandNamespaceContainerResourceLimit(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput *clusterClient.ContainerResourceLimit
+	}{
+		{
+			testNamespaceContainerResourceLimitInterface,
+			testNamespaceContainerResourceLimitConf,
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandNamespaceContainerResourceLimit(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven: %#v", tc.ExpectedOutput, output)
 		}
 	}
 }

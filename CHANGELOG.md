@@ -24,6 +24,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+* Set default value to `engine_install_url` argument on `rancher2_node_template` resource
 * Added `enable_cluster_monitoring` argument to `rancher2_cluster` resource and datasource
 * Added `enable_project_monitoring` argument to `rancher2_project` resource and datasource
 * Added `token` argument on `cluster_registration_token` argument to rancher2_cluster resource and datasource
@@ -33,6 +34,8 @@ ENHANCEMENTS:
 * Updated rancher to v2.2.6 and k3s to v0.7.0 on acceptance tests
 * Added cluster and project scope support on `rancher2_catalog` resource and datasource
 * Updated `provider` config validation to enable bootstrap and resource creation at same run
+* Added `container_resource_limit` argument on `rancher2_namespace` and `rancher2_project` resources and datasources
+* Added `pod_security_policy_template_id` on `rancher2_project` resource
 
 BUG FIXES:
 
