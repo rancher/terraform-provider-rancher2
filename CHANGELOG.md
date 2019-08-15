@@ -24,6 +24,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+* Added `wait_for_cluster` argument on `rancher2_namespace` and `rancher2_project` resources
 * Set default value to `engine_install_url` argument on `rancher2_node_template` resource
 * Added `enable_cluster_monitoring` argument to `rancher2_cluster` resource and datasource
 * Added `enable_project_monitoring` argument to `rancher2_project` resource and datasource

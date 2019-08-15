@@ -128,6 +128,12 @@ func namespaceFields() map[string]*schema.Schema {
 				Schema: namespaceResourceQuotaFields(),
 			},
 		},
+		"wait_for_cluster": &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Wait for cluster becomes active",
+		},
 		"annotations": &schema.Schema{
 			Type:        schema.TypeMap,
 			Optional:    true,

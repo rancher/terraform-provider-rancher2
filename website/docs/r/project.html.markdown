@@ -43,6 +43,7 @@ The following arguments are supported:
 * `enable_project_monitoring` - (Optional) Enable built-in project monitoring. Default `false` (bool)
 * `pod_security_policy_template_id` - (Optional) Default Pod Security Policy ID for the project (string)
 * `resource_quota` - (Optional) Resource quota for project. Rancher v2.1.x or higher (list maxitems:1)
+* `wait_for_cluster` - (Optional) Wait for cluster becomes active. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
 

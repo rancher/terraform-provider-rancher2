@@ -96,6 +96,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "wait_for_cluster", "false"),
 				),
 			},
 			resource.TestStep{
@@ -105,6 +106,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo-updated"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "wait_for_cluster", "false"),
 				),
 			},
 			resource.TestStep{
@@ -114,6 +116,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "wait_for_cluster", "false"),
 				),
 			},
 		},

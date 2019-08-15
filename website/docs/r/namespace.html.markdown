@@ -63,6 +63,7 @@ The following arguments are supported:
 * `container_resource_limit` - (Optional/Computed) Default containers resource limits on namespace (List maxitem:1)
 * `description` - (Optional) A namespace description (string)
 * `resource_quota` - (Optional/Computed) Resource quota for namespace. Rancher v2.1.x or higher (list maxitems:1)
+* `wait_for_cluster` - (Optional) Wait for cluster becomes active. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
 
