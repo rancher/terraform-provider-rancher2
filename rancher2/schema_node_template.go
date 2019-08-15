@@ -69,10 +69,6 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: digitaloceanConfigFields(),
 			},
 		},
-		"docker_version": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
 		"driver": &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
