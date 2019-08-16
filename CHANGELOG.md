@@ -1,4 +1,13 @@
 ## 1.4.1 (Unreleased)
+
+FEATURES:
+
+ENHANCEMENTS:
+
+BUG FIXES:
+
+* Fix: auth issue when using `access_key` and `secret_key`
+
 ## 1.4.0 (August 15, 2019)
 
 FEATURES:

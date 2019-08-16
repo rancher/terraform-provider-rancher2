@@ -157,10 +157,13 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	insecure := d.Get("insecure").(bool)
 	bootstrap := d.Get("bootstrap").(bool)
 
+	// Set tokenKey based on accessKey and secretKey if needed
+	if tokenKey == providerDefaulEmptyString && accessKey != providerDefaulEmptyString && secretKey != providerDefaulEmptyString {
+		tokenKey = accessKey + ":" + secretKey
+	}
+
 	config := &Config{
 		URL:       apiURL,
-		AccessKey: accessKey,
-		SecretKey: secretKey,
 		TokenKey:  tokenKey,
 		CACerts:   caCerts,
 		Insecure:  insecure,
@@ -179,12 +182,12 @@ func providerValidateConfig(config *Config) (*Config, error) {
 
 	if config.Bootstrap {
 		// If bootstrap tokenkey accesskey nor secretkey can be provided
-		if config.TokenKey != providerDefaulEmptyString || config.AccessKey != providerDefaulEmptyString || config.SecretKey != providerDefaulEmptyString {
+		if config.TokenKey != providerDefaulEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] Bootsrap mode activated. Token_key or access_key and secret_key can not be provided")
 		}
 	} else {
 		// Else token or access key and secret key should be provided
-		if config.TokenKey == providerDefaulEmptyString && (config.AccessKey == providerDefaulEmptyString || config.SecretKey == providerDefaulEmptyString) {
+		if config.TokenKey == providerDefaulEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] No token_key nor access_key and secret_key are provided")
 		}
 	}

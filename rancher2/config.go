@@ -21,8 +21,6 @@ type Client struct {
 
 // Config is the configuration parameters for a Rancher v3 API
 type Config struct {
-	AccessKey string `json:"accessKey"`
-	SecretKey string `json:"secretKey"`
 	TokenKey  string `json:"tokenKey"`
 	URL       string `json:"url"`
 	CACerts   string `json:"cacert"`
@@ -153,12 +151,10 @@ func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
 	c.NormalizeURL()
 
 	options := &clientbase.ClientOpts{
-		URL:       c.URL,
-		AccessKey: c.AccessKey,
-		SecretKey: c.SecretKey,
-		TokenKey:  c.TokenKey,
-		CACerts:   c.CACerts,
-		Insecure:  c.Insecure,
+		URL:      c.URL,
+		TokenKey: c.TokenKey,
+		CACerts:  c.CACerts,
+		Insecure: c.Insecure,
 	}
 
 	return options
