@@ -25,6 +25,12 @@ resource "rancher2_namespace" "foo" {
       requests_storage = "1Gi"
     }
   }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
+  }
 }
 ```
 
@@ -50,6 +56,12 @@ resource "rancher2_namespace" "foo" {
       limits_memory = "100Mi"
       requests_storage = "1Gi"
     }
+  }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
   }
 }
 ```
@@ -79,10 +91,10 @@ The following attributes are exported:
 
 #### Arguments
 
-* `limits_cpu` - (Optional) CPU limit for containers, measured in milli CPUs (string)
-* `limits_memory` - (Optional) Memory limit for containers, measured in MiB (string)
-* `requests_cpu` - (Optional) CPU reservation for containers, measured in milli CPUs (string)
-* `requests_memory` - (Optional) Memory reservation for containers, measured in MiB (string)
+* `limits_cpu` - (Optional) CPU limit for containers (string)
+* `limits_memory` - (Optional) Memory limit for containers (string)
+* `requests_cpu` - (Optional) CPU reservation for containers (string)
+* `requests_memory` - (Optional) Memory reservation for containers (string)
 
 ### `resource_quota`
 
