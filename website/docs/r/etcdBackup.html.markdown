@@ -23,6 +23,7 @@ resource "rancher2_etcd_backup" "foo" {
       access_key = "access_key"
       bucket_name = "bucket_name"
       endpoint = "endpoint"
+      folder = "/folder"
       region = "region"
       secret_key = "secret_key"
     }
@@ -39,7 +40,7 @@ The following arguments are supported:
 
 * `cluster_id` - (Required) Cluster ID to config Etcd Backup (string)
 * `backup_config` - (Optional/Computed) Backup config for etcd backup (list maxitems:1)
-* `filename` - (Optional) Filename of the Etcd Backup (string)
+* `filename` - (Optional/Computed) Filename of the Etcd Backup (string)
 * `manual` - (Optional) Manual execution of the Etcd Backup. Default `false` (bool)
 * `name` - (Required) The name of the Etcd Backup (string)
 * `namespace_id` - (Optional/Computed) Description for the Etcd Backup (string)
@@ -71,7 +72,8 @@ The following attributes are exported:
 * `bucket_name` - (Required) Bucket name for S3 service (string)
 * `custom_ca` - (Optional) Base64 encoded custom CA for S3 service. Use filebase64(<FILE>) for encoding file. Available from rancher v2.2.5 (string)
 * `endpoint` - (Required) Endpoint for S3 service (string)
-* `region` - (Required) Region for S3 service (string)
+* `folder` - (Optional) Folder for S3 service. Available from rancher v2.2.7 (string)
+* `region` - (Optional) Region for S3 service (string)
 * `secret_key` - (Required/Sensitive) Secret key for S3 service (string)
 
 ## Timeouts
