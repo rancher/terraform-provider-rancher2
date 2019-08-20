@@ -116,6 +116,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_namespace":                     dataSourceRancher2Namespace(),
 			"rancher2_node_driver":                   dataSourceRancher2NodeDriver(),
 			"rancher2_node_pool":                     dataSourceRancher2NodePool(),
+			"rancher2_node_template":                 dataSourceRancher2NodeTemplate(),
 			"rancher2_project":                       dataSourceRancher2Project(),
 			"rancher2_project_logging":               dataSourceRancher2ProjectLogging(),
 			"rancher2_project_role_template_binding": dataSourceRancher2ProjectRoleTemplateBinding(),
