@@ -38,6 +38,12 @@ resource "rancher2_project" "foo" {
       requests_storage = "1Gi"
     }
   }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
+  }
 }
 `
 
@@ -58,6 +64,12 @@ resource "rancher2_project" "foo" {
       requests_storage = "1Gi"
     }
   }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
+  }
 }
  `
 
@@ -77,6 +89,12 @@ resource "rancher2_project" "foo" {
       limits_memory = "500Mi"
       requests_storage = "1Gi"
     }
+  }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
   }
 }
  `

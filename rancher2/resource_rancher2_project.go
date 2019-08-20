@@ -136,6 +136,7 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 	update := map[string]interface{}{
 		"name":                          d.Get("name").(string),
 		"description":                   d.Get("description").(string),
+		"containerDefaultResourceLimit": expandProjectContainerResourceLimit(d.Get("container_resource_limit").([]interface{})),
 		"enableProjectMonitoring":       d.Get("enable_project_monitoring").(bool),
 		"namespaceDefaultResourceQuota": nsResourceQuota,
 		"resourceQuota":                 resourceQuota,
