@@ -139,7 +139,7 @@ The following attributes are exported:
 * `dns` - (Optional) A unique DNS label for the public IP adddress (string)
 * `docker_port` - (Optional) Port number for Docker engine. Default `2376` (string)
 * `environment` - (Optional) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud). Default `AzurePublicCloud` (string)
-* `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:16.04.0-LTS:latest` (string)
+* `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:18.04-LTS:latest` (string)
 * `location` - (Optional) Azure region to create the virtual machine. Default `westus` (string)
 * `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false` (bool)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)

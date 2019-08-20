@@ -82,7 +82,7 @@ func azureConfigFields() map[string]*schema.Schema {
 		"image": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "canonical:UbuntuServer:16.04.0-LTS:latest",
+			Default:     "canonical:UbuntuServer:18.04-LTS:latest",
 			Description: "Azure virtual machine OS image",
 		},
 		"location": {
