@@ -1,7 +1,7 @@
 ---
 layout: "rancher2"
 page_title: "Rancher2: rancher2_cluster_driver"
-sidebar_current: "docs-rancher2-resource-cluster_driver"
+sidebar_current: "docs-rancher2-datasource-cluster_driver"
 description: |-
   Get information on a Rancher v2 Cluster Driver resource.
 ---

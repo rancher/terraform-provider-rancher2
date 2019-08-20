@@ -1,7 +1,7 @@
 ---
 layout: "rancher2"
 page_title: "Rancher2: rancher2_node_driver"
-sidebar_current: "docs-rancher2-resource-node_driver"
+sidebar_current: "docs-rancher2-datasource-node_driver"
 description: |-
   Get information on a Rancher v2 Node Driver resource.
 ---

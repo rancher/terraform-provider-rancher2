@@ -1,7 +1,7 @@
 ---
 layout: "rancher2"
 page_title: "Rancher2: rancher2_etcd_backup"
-sidebar_current: "docs-rancher2-resource-etcd_backup"
+sidebar_current: "docs-rancher2-datasource-etcd_backup"
 description: |-
   Get information on a Rancher v2 etcd backup.
 ---
