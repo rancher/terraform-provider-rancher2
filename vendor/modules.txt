@@ -218,7 +218,7 @@ github.com/posener/complete
 github.com/posener/complete/cmd/install
 github.com/posener/complete/cmd
 github.com/posener/complete/match
-# github.com/rancher/norman v0.0.0-20190529015805-c96ac0ef2eee
+# github.com/rancher/norman v0.0.0-20190817004410-659cceabaf2a
 github.com/rancher/norman/clientbase
 github.com/rancher/norman/types
 github.com/rancher/norman/httperror
@@ -227,7 +227,7 @@ github.com/rancher/norman/types/convert
 github.com/rancher/norman/types/definition
 github.com/rancher/norman/types/slice
 github.com/rancher/norman/types/values
-# github.com/rancher/types v0.0.0-20190718220448-0bf4838a6ba2
+# github.com/rancher/types v0.0.0-20190819190701-5c4900572399
 github.com/rancher/types/client/cluster/v3
 github.com/rancher/types/client/management/v3
 github.com/rancher/types/client/project/v3
