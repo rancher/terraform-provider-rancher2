@@ -1,7 +1,7 @@
 ---
 layout: "rancher2"
 page_title: "Rancher2: rancher2_cluster"
-sidebar_current: "docs-rancher2-resource-cluster"
+sidebar_current: "docs-rancher2-datasource-cluster"
 description: |-
   Get information on a Rancher v2 cluster.
 ---

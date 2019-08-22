@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_node_template`
+
 ENHANCEMENTS:
 
 * Updated default image to `canonical:UbuntuServer:18.04-LTS:latest` on Azure node template
@@ -12,6 +14,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix: `container_resource_limit` argument update issue on `rancher2_namespace` and `rancher2_project` resources update
+* Fix: `sidebar_current` definition on datasources docs
+
 
 ## 1.4.1 (August 16, 2019)
 

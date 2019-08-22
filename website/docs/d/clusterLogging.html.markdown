@@ -1,7 +1,7 @@
 ---
 layout: "rancher2"
 page_title: "Rancher2: rancher2_cluster_logging"
-sidebar_current: "docs-rancher2-resource-cluster_logging"
+sidebar_current: "docs-rancher2-datasource-cluster_logging"
 description: |-
   Get information on a Rancher v2 Cluster Logging resource. 
 ---
