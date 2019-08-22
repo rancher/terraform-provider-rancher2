@@ -1,4 +1,15 @@
 ## 1.4.2 (Unreleased)
+
+FEATURES:
+
+ENHANCEMENTS:
+
+* Updated default image to `canonical:UbuntuServer:18.04-LTS:latest` on Azure node template
+
+BUG FIXES:
+
+* Fix: `container_resource_limit` argument update issue on `rancher2_namespace` and `rancher2_project` resources update
+
 ## 1.4.1 (August 16, 2019)
 
 FEATURES:
