@@ -23,6 +23,7 @@ func init() {
 		BucketName: "bucket_name",
 		CustomCA:   "custom_ca",
 		Endpoint:   "endpoint",
+		Folder:     "folder",
 		Region:     "region",
 		SecretKey:  "secret",
 	}
@@ -32,6 +33,7 @@ func init() {
 			"bucket_name": "bucket_name",
 			"custom_ca":   Base64Encode("custom_ca"),
 			"endpoint":    "endpoint",
+			"folder":      "folder",
 			"region":      "region",
 			"secret_key":  "secret",
 		},

@@ -5,6 +5,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * Updated default image to `canonical:UbuntuServer:18.04-LTS:latest` on Azure node template
+* Added `folder` argument on `s3_backup_config`
+* Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.8
+* Updated rancher to v2.2.8 and k3s to v0.8.0 on acceptance tests
 
 BUG FIXES:
 
