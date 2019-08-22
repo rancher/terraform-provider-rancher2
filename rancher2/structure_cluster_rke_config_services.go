@@ -177,7 +177,10 @@ func flattenClusterRKEConfigServicesEtcdBackupConfigS3(in *managementClient.S3Ba
 		return []interface{}{}
 	}
 
-	obj["access_key"] = in.AccessKey
+	if len(in.AccessKey) > 0 {
+		obj["access_key"] = in.AccessKey
+	}
+
 	obj["bucket_name"] = in.BucketName
 	obj["endpoint"] = in.Endpoint
 
