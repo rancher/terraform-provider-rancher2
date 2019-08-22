@@ -180,6 +180,11 @@ func flattenClusterRKEConfigServicesEtcdBackupConfigS3(in *managementClient.S3Ba
 	obj["access_key"] = in.AccessKey
 	obj["bucket_name"] = in.BucketName
 	obj["endpoint"] = in.Endpoint
+
+	if len(in.Folder) > 0 {
+		obj["folder"] = in.Folder
+	}
+
 	obj["region"] = in.Region
 
 	if len(in.CustomCA) > 0 {
@@ -555,6 +560,10 @@ func expandClusterRKEConfigServicesEtcdBackupConfigS3(p []interface{}) (*managem
 
 	if v, ok := in["endpoint"].(string); ok && len(v) > 0 {
 		obj.Endpoint = v
+	}
+
+	if v, ok := in["folder"].(string); ok && len(v) > 0 {
+		obj.Folder = v
 	}
 
 	if v, ok := in["region"].(string); ok && len(v) > 0 {

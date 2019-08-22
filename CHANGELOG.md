@@ -8,13 +8,14 @@ ENHANCEMENTS:
 
 * Updated default image to `canonical:UbuntuServer:18.04-LTS:latest` on Azure node template
 * Added `folder` argument on `s3_backup_config`
-* Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.7
-* Updated rancher to v2.2.7 and k3s to v0.8.0 on acceptance tests
+* Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.8
+* Updated rancher to v2.2.8 and k3s to v0.8.0 on acceptance tests
 
 BUG FIXES:
 
 * Fix: `container_resource_limit` argument update issue on `rancher2_namespace` and `rancher2_project` resources update
 * Fix: `sidebar_current` definition on datasources docs
+
 
 ## 1.4.1 (August 16, 2019)
 

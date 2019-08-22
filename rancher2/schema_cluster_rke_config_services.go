@@ -220,9 +220,13 @@ func clusterRKEConfigServicesEtcdBackupConfigS3Fields() map[string]*schema.Schem
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"folder": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"region": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
 		},
 		"secret_key": {
 			Type:      schema.TypeString,

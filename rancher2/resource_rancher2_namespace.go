@@ -159,10 +159,11 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 	resourceQuota := expandNamespaceResourceQuota(d.Get("resource_quota").([]interface{}))
 
 	update := map[string]interface{}{
-		"description":   d.Get("description").(string),
-		"resourceQuota": resourceQuota,
-		"annotations":   toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":        toMapString(d.Get("labels").(map[string]interface{})),
+		"description":                   d.Get("description").(string),
+		"containerDefaultResourceLimit": expandNamespaceContainerResourceLimit(d.Get("container_resource_limit").([]interface{})),
+		"resourceQuota":                 resourceQuota,
+		"annotations":                   toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":                        toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newNs, err := client.Namespace.Update(ns, update)
