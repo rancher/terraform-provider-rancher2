@@ -10,6 +10,8 @@ ENHANCEMENTS:
 * Added `folder` argument on `s3_backup_config`
 * Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.8
 * Updated rancher to v2.2.8 and k3s to v0.8.0 on acceptance tests
+* Added `key_pair_name` argument on `eks_config` argument on `rancher2_cluster` resource
+* Set `kubernetes_version` argument as required on `eks_config` argument on `rancher2_cluster` resource
 
 BUG FIXES:
 
