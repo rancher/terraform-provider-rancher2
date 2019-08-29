@@ -68,11 +68,41 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 
+	if len(in.ClusterTemplateID) > 0 {
+		d.Set("cluster_template_id", in.ClusterTemplateID)
+		if len(in.ClusterTemplateRevisionID) > 0 {
+			d.Set("cluster_template_revision_id", in.ClusterTemplateRevisionID)
+		}
+		if in.ClusterTemplateAnswers != nil {
+			err = d.Set("cluster_template_answers", flattenAnswer(in.ClusterTemplateAnswers))
+			if err != nil {
+				return err
+			}
+		}
+		if len(in.ClusterTemplateQuestions) > 0 {
+			d.Set("cluster_template_questions", flattenQuestions(in.ClusterTemplateQuestions))
+		}
+	}
+
 	if len(in.DefaultPodSecurityPolicyTemplateID) > 0 {
 		d.Set("default_pod_security_policy_template_id", in.DefaultPodSecurityPolicyTemplateID)
 	}
 
+	if len(in.DesiredAgentImage) > 0 {
+		d.Set("desired_agent_image", in.DesiredAgentImage)
+	}
+
+	if len(in.DesiredAuthImage) > 0 {
+		d.Set("desired_auth_image", in.DesiredAuthImage)
+	}
+
+	if len(in.DockerRootDir) > 0 {
+		d.Set("docker_root_dir", in.DockerRootDir)
+	}
+
+	d.Set("enable_cluster_alerting", in.EnableClusterAlerting)
 	d.Set("enable_cluster_monitoring", in.EnableClusterMonitoring)
+	d.Set("enable_cluster_istio", in.IstioEnabled)
 
 	if in.EnableNetworkPolicy != nil {
 		d.Set("enable_network_policy", *in.EnableNetworkPolicy)
@@ -133,19 +163,20 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if err != nil {
 			return err
 		}
-	case clusterDriverRKE:
-		v, ok := d.Get("rke_config").([]interface{})
-		if !ok {
-			v = []interface{}{}
-		}
-		rkeConfig, err := flattenClusterRKEConfig(in.RancherKubernetesEngineConfig, v)
-		if err != nil {
-			return err
-		}
-		err = d.Set("rke_config", rkeConfig)
-		if err != nil {
-			return err
-		}
+	}
+
+	// Setting rke_config always as computed
+	v, ok := d.Get("rke_config").([]interface{})
+	if !ok {
+		v = []interface{}{}
+	}
+	rkeConfig, err := flattenClusterRKEConfig(in.RancherKubernetesEngineConfig, v)
+	if err != nil {
+		return err
+	}
+	err = d.Set("rke_config", rkeConfig)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -221,12 +252,47 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		obj.LocalClusterAuthEndpoint = expandClusterAuthEndpoint(v)
 	}
 
+	if v, ok := in.Get("cluster_template_id").(string); ok && len(v) > 0 {
+		obj.ClusterTemplateID = v
+		obj.Driver = clusterDriverRKE
+		if v, ok := in.Get("cluster_template_revision_id").(string); ok && len(v) > 0 {
+			obj.ClusterTemplateRevisionID = v
+			obj.Driver = clusterDriverRKE
+		}
+		if v, ok := in.Get("cluster_template_answers").([]interface{}); ok && len(v) > 0 {
+			obj.ClusterTemplateAnswers = expandAnswer(v)
+		}
+		if v, ok := in.Get("cluster_template_questions").([]interface{}); ok && len(v) > 0 {
+			obj.ClusterTemplateQuestions = expandQuestions(v)
+		}
+	}
+
 	if v, ok := in.Get("default_pod_security_policy_template_id").(string); ok && len(v) > 0 {
 		obj.DefaultPodSecurityPolicyTemplateID = v
 	}
 
+	if v, ok := in.Get("desired_agent_image").(string); ok && len(v) > 0 {
+		obj.DesiredAgentImage = v
+	}
+
+	if v, ok := in.Get("desired_auth_image").(string); ok && len(v) > 0 {
+		obj.DesiredAuthImage = v
+	}
+
+	if v, ok := in.Get("docker_root_dir").(string); ok && len(v) > 0 {
+		obj.DockerRootDir = v
+	}
+
+	if v, ok := in.Get("enable_cluster_alerting").(bool); ok {
+		obj.EnableClusterAlerting = v
+	}
+
 	if v, ok := in.Get("enable_cluster_monitoring").(bool); ok {
 		obj.EnableClusterMonitoring = v
+	}
+
+	if v, ok := in.Get("enable_cluster_istio").(bool); ok {
+		obj.IstioEnabled = v
 	}
 
 	if v, ok := in.Get("enable_network_policy").(bool); ok {

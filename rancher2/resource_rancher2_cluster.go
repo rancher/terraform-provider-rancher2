@@ -172,11 +172,29 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"name":                               d.Get("name").(string),
 		"description":                        d.Get("description").(string),
 		"defaultPodSecurityPolicyTemplateId": d.Get("default_pod_security_policy_template_id").(string),
+		"desiredAgentImage":                  d.Get("desired_agent_image").(string),
+		"desiredAuthImage":                   d.Get("desired_auth_image").(string),
+		"dockerRootDir":                      d.Get("docker_root_dir").(string),
+		"enableClusterAlerting":              d.Get("enable_cluster_alerting").(bool),
 		"enableClusterMonitoring":            d.Get("enable_cluster_monitoring").(bool),
 		"enableNetworkPolicy":                &enableNetworkPolicy,
+		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
 		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
 		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
+	}
+
+	if clusterTemplateID, ok := d.Get("cluster_template_id").(string); ok && len(clusterTemplateID) > 0 {
+		update["clusterTemplateId"] = clusterTemplateID
+		if clusterTemplateRevisionID, ok := d.Get("cluster_template_revision_id").(string); ok && len(clusterTemplateRevisionID) > 0 {
+			update["clusterTemplateRevisionId"] = clusterTemplateRevisionID
+		}
+		if answers, ok := d.Get("cluster_template_answers").([]interface{}); ok && len(answers) > 0 {
+			update["answers"] = expandAnswer(answers)
+		}
+		if questions, ok := d.Get("cluster_template_questions").([]interface{}); ok && len(questions) > 0 {
+			update["questions"] = expandQuestions(questions)
+		}
 	}
 
 	switch driver := d.Get("driver").(string); driver {

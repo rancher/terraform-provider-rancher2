@@ -191,11 +191,13 @@ func init() {
 		},
 		ExtraBinds: []string{"bind_one", "bind_two"},
 		ExtraEnv:   []string{"env_one", "env_two"},
+		GID:        int64(1001),
 		Image:      "image",
 		Key:        "ZZZZZZZZ",
 		Path:       "/etcd",
 		Retention:  "6h",
 		Snapshot:   newTrue(),
+		UID:        int64(1001),
 	}
 	testClusterRKEConfigServicesETCDInterface = []interface{}{
 		map[string]interface{}{
@@ -210,11 +212,13 @@ func init() {
 			},
 			"extra_binds": []interface{}{"bind_one", "bind_two"},
 			"extra_env":   []interface{}{"env_one", "env_two"},
+			"gid":         1001,
 			"image":       "image",
 			"key":         "ZZZZZZZZ",
 			"path":        "/etcd",
 			"retention":   "6h",
 			"snapshot":    true,
+			"uid":         1001,
 		},
 	}
 	testClusterRKEConfigServicesConf = &managementClient.RKEConfigServices{
