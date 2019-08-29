@@ -145,26 +145,28 @@ func resourceRancher2ClusterDriverDelete(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	err = client.KontainerDriver.Delete(clusterDriver)
-	if err != nil {
-		return fmt.Errorf("Error removing Cluster Driver: %s", err)
-	}
+	if !clusterDriver.BuiltIn {
+		err = client.KontainerDriver.Delete(clusterDriver)
+		if err != nil {
+			return fmt.Errorf("Error removing Cluster Driver: %s", err)
+		}
 
-	log.Printf("[DEBUG] Waiting for cluster driver (%s) to be removed", id)
+		log.Printf("[DEBUG] Waiting for cluster driver (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"removing"},
-		Target:     []string{"removed"},
-		Refresh:    clusterDriverStateRefreshFunc(client, id),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      1 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"removing"},
+			Target:     []string{"removed"},
+			Refresh:    clusterDriverStateRefreshFunc(client, id),
+			Timeout:    d.Timeout(schema.TimeoutDelete),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
 
-	_, waitErr := stateConf.WaitForState()
-	if waitErr != nil {
-		return fmt.Errorf(
-			"[ERROR] waiting for cluster driver (%s) to be removed: %s", id, waitErr)
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return fmt.Errorf(
+				"[ERROR] waiting for cluster driver (%s) to be removed: %s", id, waitErr)
+		}
 	}
 
 	d.SetId("")
