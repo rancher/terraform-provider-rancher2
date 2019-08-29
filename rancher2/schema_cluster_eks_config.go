@@ -17,6 +17,7 @@ type AmazonElasticContainerServiceConfig struct {
 	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
 	DisplayName                 string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
+	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
 	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
 	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
 	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
@@ -41,6 +42,11 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			Description: "The AWS Client ID to use",
 		},
+		"kubernetes_version": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The kubernetes master version",
+		},
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -64,11 +70,10 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Default:     "t2.medium",
 			Description: "The type of machine to use for worker nodes",
 		},
-		"kubernetes_version": {
+		"key_pair_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "1.10",
-			Description: "The kubernetes master version",
+			Description: "Allow user to specify key name to use",
 		},
 		"maximum_nodes": {
 			Type:        schema.TypeInt,
