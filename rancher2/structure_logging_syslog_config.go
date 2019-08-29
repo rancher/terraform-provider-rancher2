@@ -6,8 +6,14 @@ import (
 
 // Flatteners
 
-func flattenLoggingSyslogConfig(in *managementClient.SyslogConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenLoggingSyslogConfig(in *managementClient.SyslogConfig, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}

@@ -52,7 +52,7 @@ func TestFlattenLoggingSplunkConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenLoggingSplunkConfig(tc.Input)
+		output, err := flattenLoggingSplunkConfig(tc.Input, []interface{}{})
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

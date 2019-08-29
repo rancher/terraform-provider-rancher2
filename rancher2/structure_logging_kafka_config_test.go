@@ -46,7 +46,7 @@ func TestFlattenLoggingKafkaConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenLoggingKafkaConfig(tc.Input)
+		output, err := flattenLoggingKafkaConfig(tc.Input, []interface{}{})
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
