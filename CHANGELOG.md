@@ -18,6 +18,7 @@ BUG FIXES:
 * Fix: `container_resource_limit` argument update issue on `rancher2_namespace` and `rancher2_project` resources update
 * Fix: `sidebar_current` definition on datasources docs
 * Fix: set `access_key` and `secret_key` arguments as optional on `s3_backup_config`
+* Fix: crash `rancher2_cluster`  datasource and resource if `enableNetworkPolicy` doesn't exist
 
 ## 1.4.1 (August 16, 2019)
 
