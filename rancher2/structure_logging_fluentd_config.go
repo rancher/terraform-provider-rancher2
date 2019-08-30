@@ -6,52 +6,69 @@ import (
 
 // Flatteners
 
-func flattenLoggingFluentdConfigFluentServer(data []managementClient.FluentServer) ([]interface{}, error) {
-	result := []interface{}{}
+func flattenLoggingFluentdConfigFluentServer(in []managementClient.FluentServer, p []interface{}) ([]interface{}, error) {
+	result := make([]interface{}, len(in))
 
-	for _, in := range data {
-		obj := make(map[string]interface{})
+	lenP := len(p)
 
-		if len(in.Endpoint) > 0 {
-			obj["endpoint"] = in.Endpoint
+	for i := range in {
+		var obj map[string]interface{}
+		if lenP <= i {
+			obj = make(map[string]interface{})
+		} else {
+			obj = p[i].(map[string]interface{})
 		}
 
-		if len(in.Hostname) > 0 {
-			obj["hostname"] = in.Hostname
+		if len(in[i].Endpoint) > 0 {
+			obj["endpoint"] = in[i].Endpoint
 		}
 
-		if len(in.Password) > 0 {
-			obj["password"] = in.Password
+		if len(in[i].Hostname) > 0 {
+			obj["hostname"] = in[i].Hostname
 		}
 
-		if len(in.SharedKey) > 0 {
-			obj["shared_key"] = in.SharedKey
+		if len(in[i].Password) > 0 {
+			obj["password"] = in[i].Password
 		}
 
-		obj["standby"] = in.Standby
-
-		if len(in.Username) > 0 {
-			obj["username"] = in.Username
+		if len(in[i].SharedKey) > 0 {
+			obj["shared_key"] = in[i].SharedKey
 		}
 
-		if in.Weight > 0 {
-			obj["weight"] = int(in.Weight)
+		obj["standby"] = in[i].Standby
+
+		if len(in[i].Username) > 0 {
+			obj["username"] = in[i].Username
 		}
 
-		result = append(result, obj)
+		if in[i].Weight > 0 {
+			obj["weight"] = int(in[i].Weight)
+		}
+
+		result[i] = obj
 	}
 
 	return result, nil
 }
 
-func flattenLoggingFluentdConfig(in *managementClient.FluentForwarderConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenLoggingFluentdConfig(in *managementClient.FluentForwarderConfig, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
 
 	if in.FluentServers != nil {
-		servers, err := flattenLoggingFluentdConfigFluentServer(in.FluentServers)
+		v, ok := obj["fluent_servers"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		servers, err := flattenLoggingFluentdConfigFluentServer(in.FluentServers, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}

@@ -41,7 +41,11 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 
 	switch kind {
 	case loggingElasticsearchKind:
-		elkConfig, err := flattenLoggingElasticsearchConfig(in.ElasticsearchConfig)
+		v, ok := d.Get("elasticsearch_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		elkConfig, err := flattenLoggingElasticsearchConfig(in.ElasticsearchConfig, v)
 		if err != nil {
 			return err
 		}
@@ -50,7 +54,11 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 			return err
 		}
 	case loggingFluentdKind:
-		fluentdConfig, err := flattenLoggingFluentdConfig(in.FluentForwarderConfig)
+		v, ok := d.Get("fluentd_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		fluentdConfig, err := flattenLoggingFluentdConfig(in.FluentForwarderConfig, v)
 		if err != nil {
 			return err
 		}
@@ -59,7 +67,11 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 			return err
 		}
 	case loggingKafkaKind:
-		kafkaConfig, err := flattenLoggingKafkaConfig(in.KafkaConfig)
+		v, ok := d.Get("kafka_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		kafkaConfig, err := flattenLoggingKafkaConfig(in.KafkaConfig, v)
 		if err != nil {
 			return err
 		}
@@ -68,7 +80,11 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 			return err
 		}
 	case loggingSplunkKind:
-		splunkConfig, err := flattenLoggingSplunkConfig(in.SplunkConfig)
+		v, ok := d.Get("splunk_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		splunkConfig, err := flattenLoggingSplunkConfig(in.SplunkConfig, v)
 		if err != nil {
 			return err
 		}
@@ -77,7 +93,11 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 			return err
 		}
 	case loggingSyslogKind:
-		syslogConfig, err := flattenLoggingSyslogConfig(in.SyslogConfig)
+		v, ok := d.Get("syslog_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		syslogConfig, err := flattenLoggingSyslogConfig(in.SyslogConfig, v)
 		if err != nil {
 			return err
 		}

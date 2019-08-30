@@ -52,7 +52,7 @@ func TestFlattenLoggingSyslogConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenLoggingSyslogConfig(tc.Input)
+		output, err := flattenLoggingSyslogConfig(tc.Input, []interface{}{})
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
