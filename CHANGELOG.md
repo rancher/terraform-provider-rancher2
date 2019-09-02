@@ -1,8 +1,12 @@
-## 1.4.2 (Unreleased)
+## 1.5.0 (Unreleased)
 
 FEATURES:
 
+* **New Data Source:** `rancher2_certificate`
 * **New Data Source:** `rancher2_node_template`
+* **New Data Source:** `rancher2_secret`
+* **New Resource:** `rancher2_certificate`
+* **New Resource:** `rancher2_secret`
 
 ENHANCEMENTS:
 
