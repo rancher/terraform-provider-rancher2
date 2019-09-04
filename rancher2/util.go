@@ -12,9 +12,11 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
+	gover "github.com/hashicorp/go-version"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 	"golang.org/x/crypto/bcrypt"
@@ -231,6 +233,18 @@ func splitProjectID(id string) (clusterID, projectID string) {
 	return id, ""
 }
 
+func splitAppID(id string) (projectID, appID string, err error) {
+	separator := clusterProjectIDSeparator
+
+	fields := strings.Split(id, separator)
+
+	if len(fields) != 3 {
+		return "", "", fmt.Errorf("[ERROR] Getting App ID: Bad project id format %s", id)
+	}
+
+	return fields[0] + separator + fields[1], fields[1] + separator + fields[2], nil
+}
+
 func toArrayString(in []interface{}) []string {
 	out := make([]string, len(in))
 	for i, v := range in {
@@ -294,4 +308,27 @@ func newTrue() *bool {
 func newFalse() *bool {
 	b := false
 	return &b
+}
+
+func sortVersions(list map[string]string) ([]*gover.Version, error) {
+	var versions []*gover.Version
+	for key := range list {
+		v, err := gover.NewVersion(key)
+		if err != nil {
+			return nil, err
+		}
+		versions = append(versions, v)
+	}
+
+	sort.Sort(gover.Collection(versions))
+	return versions, nil
+}
+
+func getLatestVersion(list map[string]string) (string, error) {
+	sorted, err := sortVersions(list)
+	if err != nil {
+		return "", err
+	}
+
+	return sorted[len(sorted)-1].String(), nil
 }
