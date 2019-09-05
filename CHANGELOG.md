@@ -19,6 +19,7 @@ BUG FIXES:
 * Fix: `container_resource_limit` argument update issue on `rancher2_namespace` and `rancher2_project` resources update
 * Fix: `sidebar_current` definition on datasources docs
 * Fix: set `access_key` and `secret_key` arguments as optional on `s3_backup_config`
+* Fix: crash `rancher2_cluster`  datasource and resource if `enableNetworkPolicy` doesn't exist
 * Fix: don't delete builtin cluster nor node drivers from rancher on tf destroy
 * Fix: wrong updates on not changed sensitive arguments on `rancher2_cluster_logging` and `rancher2_project_logging` resources
 

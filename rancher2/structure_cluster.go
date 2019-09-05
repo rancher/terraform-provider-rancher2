@@ -73,7 +73,10 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	}
 
 	d.Set("enable_cluster_monitoring", in.EnableClusterMonitoring)
-	d.Set("enable_network_policy", *in.EnableNetworkPolicy)
+
+	if in.EnableNetworkPolicy != nil {
+		d.Set("enable_network_policy", *in.EnableNetworkPolicy)
+	}
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
