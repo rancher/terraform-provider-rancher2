@@ -4,10 +4,12 @@ FEATURES:
 
 * **New Data Source:** `rancher2_app`
 * **New Data Source:** `rancher2_certificate`
+* **New Data Source:** `rancher2_multi_cluster_app`
 * **New Data Source:** `rancher2_node_template`
 * **New Data Source:** `rancher2_secret`
 * **New Resource:** `rancher2_certificate`
 * **New Resource:** `rancher2_app`
+* **New Resource:** `rancher2_multi_cluster_app`
 * **New Resource:** `rancher2_secret`
 
 ENHANCEMENTS:
