@@ -83,7 +83,7 @@ func flattenApp(d *schema.ResourceData, in *projectClient.App) error {
 // Expanders
 
 func expandAppExternalID(in *schema.ResourceData) string {
-	//Global catalog url: catalog://?catalog=demo&template=test&version=1.23.0
+	//Global catalog url: catalog://?catalog=test&template=test&version=1.23.0
 	//Cluster catalog url: catalog://?catalog=c-XXXXX/test&type=clusterCatalog&template=test&version=1.23.0
 	//Project catalog url: catalog://?catalog=p-XXXXX/test&type=projectCatalog&template=test&version=1.23.0
 
