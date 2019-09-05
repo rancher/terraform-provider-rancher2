@@ -1035,3 +1035,261 @@ func (c *Config) DeleteRegistry(registry interface{}) error {
 		return fmt.Errorf("[ERROR] Registry type %s isn't supported", t)
 	}
 }
+
+func (c *Config) GetSecretByFilters(filters map[string]interface{}) (interface{}, error) {
+	if filters == nil || len(filters["name"].(string)) == 0 || len(filters["projectId"].(string)) == 0 {
+		return nil, fmt.Errorf("[ERROR] Name nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(filters["projectId"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := NewListOpts(filters)
+
+	if filters["namespaceId"] != nil {
+		return client.NamespacedSecret.List(listOpts)
+	}
+
+	return client.Secret.List(listOpts)
+}
+
+func (c *Config) GetSecret(id, project_id, namespace_id string) (interface{}, error) {
+	if len(id) == 0 || len(project_id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(project_id)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(namespace_id) > 0 {
+		return client.NamespacedSecret.ByID(id)
+	}
+
+	return client.Secret.ByID(id)
+}
+
+func (c *Config) createSecret(secret *projectClient.Secret) (*projectClient.Secret, error) {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Secret.Create(secret)
+}
+
+func (c *Config) createNamespacedSecret(secret *projectClient.NamespacedSecret) (*projectClient.NamespacedSecret, error) {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedSecret.Create(secret)
+}
+
+func (c *Config) CreateSecret(secret interface{}) (interface{}, error) {
+	if secret == nil {
+		return nil, fmt.Errorf("[ERROR] Secret can't be nil")
+	}
+
+	switch t := secret.(type) {
+	case *projectClient.NamespacedSecret:
+		return c.createNamespacedSecret(secret.(*projectClient.NamespacedSecret))
+	case *projectClient.Secret:
+		return c.createSecret(secret.(*projectClient.Secret))
+	default:
+		return nil, fmt.Errorf("[ERROR] Secret type %s isn't supported", t)
+	}
+}
+
+func (c *Config) updateSecret(secret *projectClient.Secret, update map[string]interface{}) (*projectClient.Secret, error) {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Secret.Update(secret, update)
+}
+
+func (c *Config) updateNamespacedSecret(secret *projectClient.NamespacedSecret, update map[string]interface{}) (*projectClient.NamespacedSecret, error) {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedSecret.Update(secret, update)
+}
+
+func (c *Config) UpdateSecret(secret interface{}, update map[string]interface{}) (interface{}, error) {
+	if secret == nil {
+		return nil, fmt.Errorf("[ERROR] Secret can't be nil")
+	}
+
+	switch t := secret.(type) {
+	case *projectClient.NamespacedSecret:
+		return c.updateNamespacedSecret(secret.(*projectClient.NamespacedSecret), update)
+	case *projectClient.Secret:
+		return c.updateSecret(secret.(*projectClient.Secret), update)
+	default:
+		return nil, fmt.Errorf("[ERROR] Secret type %s isn't supported", t)
+	}
+}
+
+func (c *Config) deleteSecret(secret *projectClient.Secret) error {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.Secret.Delete(secret)
+}
+
+func (c *Config) deleteNamespacedSecret(secret *projectClient.NamespacedSecret) error {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.NamespacedSecret.Delete(secret)
+}
+
+func (c *Config) DeleteSecret(secret interface{}) error {
+	if secret == nil {
+		return fmt.Errorf("[ERROR] Secret can't be nil")
+	}
+
+	switch t := secret.(type) {
+	case *projectClient.NamespacedSecret:
+		return c.deleteNamespacedSecret(secret.(*projectClient.NamespacedSecret))
+	case *projectClient.Secret:
+		return c.deleteSecret(secret.(*projectClient.Secret))
+	default:
+		return fmt.Errorf("[ERROR] Secret type %s isn't supported", t)
+	}
+}
+
+func (c *Config) GetCertificateByFilters(filters map[string]interface{}) (interface{}, error) {
+	if filters == nil || len(filters["name"].(string)) == 0 || len(filters["projectId"].(string)) == 0 {
+		return nil, fmt.Errorf("[ERROR] Name nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(filters["projectId"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := NewListOpts(filters)
+
+	if filters["namespaceId"] != nil {
+		return client.NamespacedCertificate.List(listOpts)
+	}
+
+	return client.Certificate.List(listOpts)
+}
+
+func (c *Config) GetCertificate(id, project_id, namespace_id string) (interface{}, error) {
+	if len(id) == 0 || len(project_id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(project_id)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(namespace_id) > 0 {
+		return client.NamespacedCertificate.ByID(id)
+	}
+
+	return client.Certificate.ByID(id)
+}
+
+func (c *Config) createCertificate(cert *projectClient.Certificate) (*projectClient.Certificate, error) {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Certificate.Create(cert)
+}
+
+func (c *Config) createNamespacedCertificate(cert *projectClient.NamespacedCertificate) (*projectClient.NamespacedCertificate, error) {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedCertificate.Create(cert)
+}
+
+func (c *Config) CreateCertificate(cert interface{}) (interface{}, error) {
+	if cert == nil {
+		return nil, fmt.Errorf("[ERROR] Certificate can't be nil")
+	}
+
+	switch t := cert.(type) {
+	case *projectClient.NamespacedCertificate:
+		return c.createNamespacedCertificate(cert.(*projectClient.NamespacedCertificate))
+	case *projectClient.Certificate:
+		return c.createCertificate(cert.(*projectClient.Certificate))
+	default:
+		return nil, fmt.Errorf("[ERROR] Certificate type %s isn't supported", t)
+	}
+}
+
+func (c *Config) updateCertificate(cert *projectClient.Certificate, update map[string]interface{}) (*projectClient.Certificate, error) {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Certificate.Update(cert, update)
+}
+
+func (c *Config) updateNamespacedCertificate(cert *projectClient.NamespacedCertificate, update map[string]interface{}) (*projectClient.NamespacedCertificate, error) {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedCertificate.Update(cert, update)
+}
+
+func (c *Config) UpdateCertificate(cert interface{}, update map[string]interface{}) (interface{}, error) {
+	if cert == nil {
+		return nil, fmt.Errorf("[ERROR] Certificate can't be nil")
+	}
+
+	switch t := cert.(type) {
+	case *projectClient.NamespacedCertificate:
+		return c.updateNamespacedCertificate(cert.(*projectClient.NamespacedCertificate), update)
+	case *projectClient.Certificate:
+		return c.updateCertificate(cert.(*projectClient.Certificate), update)
+	default:
+		return nil, fmt.Errorf("[ERROR] Certificate type %s isn't supported", t)
+	}
+}
+
+func (c *Config) deleteCertificate(cert *projectClient.Certificate) error {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.Certificate.Delete(cert)
+}
+
+func (c *Config) deleteNamespacedCertificate(cert *projectClient.NamespacedCertificate) error {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.NamespacedCertificate.Delete(cert)
+}
+
+func (c *Config) DeleteCertificate(cert interface{}) error {
+	if cert == nil {
+		return fmt.Errorf("[ERROR] Certificate can't be nil")
+	}
+
+	switch t := cert.(type) {
+	case *projectClient.NamespacedCertificate:
+		return c.deleteNamespacedCertificate(cert.(*projectClient.NamespacedCertificate))
+	case *projectClient.Certificate:
+		return c.deleteCertificate(cert.(*projectClient.Certificate))
+	default:
+		return fmt.Errorf("[ERROR] Certificate type %s isn't supported", t)
+	}
+}
