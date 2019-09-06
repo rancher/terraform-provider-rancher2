@@ -35,7 +35,7 @@ The following arguments are supported:
 * `application_secret` - (Required/Sensitive) AzureAD auth application secret (string)
 * `auth_endpoint` - (Required) AzureAD auth endpoint (string)
 * `graph_endpoint` - (Required) AzureAD graph endpoint (string)
-* `rancher_url` - (Required) Rancher URL (string)
+* `rancher_url` - (Required) Rancher URL (string). "<rancher_url>/verify-auth-azure"
 * `tenant_id` - (Required) AzureAD tenant ID (string)
 * `token_endpoint` - (Required) AzureAD token endpoint (string)
 * `endpoint` - (Optional) AzureAD endpoint. Default `https://login.microsoftonline.com/` (string)
