@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/go-ini/ini v1.23.1 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
+	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform v0.12.0
 	github.com/rancher/norman v0.0.0-20190817004410-659cceabaf2a
 	github.com/rancher/types v0.0.0-20190819190701-5c4900572399
