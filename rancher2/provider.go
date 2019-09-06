@@ -76,6 +76,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"rancher2_app":                           resourceRancher2App(),
 			"rancher2_auth_config_activedirectory":   resourceRancher2AuthConfigActiveDirectory(),
 			"rancher2_auth_config_adfs":              resourceRancher2AuthConfigADFS(),
 			"rancher2_auth_config_azuread":           resourceRancher2AuthConfigAzureAD(),
@@ -107,6 +108,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
+			"rancher2_app":                           dataSourceRancher2App(),
 			"rancher2_catalog":                       dataSourceRancher2Catalog(),
 			"rancher2_certificate":                   dataSourceRancher2Certificate(),
 			"rancher2_cloud_credential":              dataSourceRancher2CloudCredential(),
