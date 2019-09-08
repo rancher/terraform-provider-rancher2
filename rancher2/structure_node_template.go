@@ -30,6 +30,10 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.DigitaloceanConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires digitalocean_config", in.Driver)
 		}
+	case hetznerConfigDriver:
+		if in.HetznercloudConfig == nil {
+			return fmt.Errorf("[ERROR] Node template driver %s requires hetzner_config", in.Driver)
+		}
 	case openstackConfigDriver:
 		if in.OpenstackConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires openstack_config", in.Driver)
@@ -190,6 +194,11 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 
 	if v, ok := in.Get("engine_storage_driver").(string); ok && len(v) > 0 {
 		obj.EngineStorageDriver = v
+	}
+
+	if v, ok := in.Get("hetzner_config").([]interface{}); ok && len(v) > 0 {
+		obj.HetznercloudConfig = expandHetznercloudConfig(v)
+		obj.Driver = hetznerConfigDriver
 	}
 
 	if v, ok := in.Get("openstack_config").([]interface{}); ok && len(v) > 0 {
