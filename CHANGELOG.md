@@ -1,4 +1,18 @@
 ## 1.5.1 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `rancher2_role_template`
+* **New Resource:** `rancher2_role_template`
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+
+
 ## 1.5.0 (September 06, 2019)
 
 FEATURES:
