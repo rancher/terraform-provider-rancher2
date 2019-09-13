@@ -21,7 +21,7 @@ data "rancher2_node_pool" "foo" {
 
 ## Argument Reference
 
-* `cluster_id` - (Required) The rke cluster id to use Node Pool (string)
+* `cluster_id` - (Required) The RKE cluster id to use Node Pool (string)
 * `name` - (Required) The name of the Node Pool (string)
 * `node_template_id` - (Optional/Computed) The Node Template ID to use for node creation (string)
 

@@ -3,16 +3,16 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_multi_cluster_app"
 sidebar_current: "docs-rancher2-resource-multi_cluster_app"
 description: |-
-  Provides a Rancher v2 multi_cluster_app resource. This can be used to deploy multi cluster apps on rancher v2.
+  Provides a Rancher v2 multi_cluster_app resource. This can be used to deploy multi cluster apps on Rancher v2.
 ---
 
 # rancher2\_multi_cluster_app
 
-Provides a Rancher v2 multi_cluster_app resource. This can be used to deploy multi_cluster_app on rancher v2.
+Provides a Rancher v2 multi_cluster_app resource. This can be used to deploy multi_cluster_app on Rancher v2.
 
-This resource can also modify rancher v2 multi cluster apps in 3 ways:
-- `Add/Remove targets`: If `targets` arguments is modified, the multi cluster app targets will be updated. 
-- `Rollback`: If `revision_id` argument is provided or modified the multi cluster app will be rollbacked accordingly. It will generate a non empty tf plan that will require manual tf file edition. Use carefully.
+This resource can also modify Rancher v2 multi cluster apps in 3 ways:
+- `Add/Remove targets`: If `targets` arguments is modified, the multi cluster app targets will be updated.
+- `Rollback`: If `revision_id` argument is provided or modified the multi cluster app will be rolled back accordingly. It will generate a non-empty tf plan that will require manual .tf file intervention. Use carefully.
 - `Update`: If any other argument is modified the app will be upgraded.
 
 Note: In case of multiple resource modification in a row, `rollback` has preference.
@@ -108,7 +108,7 @@ The following arguments are supported:
 
 #### Arguments
 
-* `access_type` - (Optional) Member access type. Valida values: `["member" | "owner" | "read-only"]` (string)
+* `access_type` - (Optional) Member access type. Valid values: `["member" | "owner" | "read-only"]` (string)
 * `group_principal_id` - (Optional) Member group principal id (string)
 * `user_principal_id` - (Optional) Member user principal id (string)
 

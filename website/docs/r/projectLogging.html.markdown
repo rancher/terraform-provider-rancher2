@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_project_logging"
 sidebar_current: "docs-rancher2-resource-project_logging"
 description: |-
-  Provides a Rancher v2 Project Logging resource. This can be used to create Project Logging for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Project Logging resource. This can be used to create Project Logging for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_project\_logging
 
-Provides a Rancher v2 Project Logging resource. This can be used to create Project Logging for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Project Logging resource. This can be used to create Project Logging for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
@@ -140,7 +140,7 @@ The following attributes are exported:
 
 ## Import
 
-Project Logging can be imported using the rancher Project Logging ID
+Project Logging can be imported using the Rancher Project Logging ID
 
 ```
 $ terraform import rancher2_project_logging.foo <project_logging_id>

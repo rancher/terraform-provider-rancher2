@@ -3,14 +3,14 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_certificate"
 sidebar_current: "docs-rancher2-resource-certificate"
 description: |-
-  Provides a Rancher v2 certificate resource. This can be used to create certificates for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 certificate resource. This can be used to create certificates for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_certificate
 
-Provides a Rancher v2 certificate resource. This can be used to create certificates for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 certificate resource. This can be used to create certificates for Rancher v2 environments and retrieve their information.
 
-Depending of the availability, there are 2 types of Rancher v2 certificates:
+There are 2 types of Rancher v2 certificates:
 - Project certificate: Available to all namespaces in the `project_id`
 - Namespaced certificate: Available to just `namespace_id` in the `project_id`
 
@@ -45,10 +45,10 @@ The following arguments are supported:
 
 * `certs` - (Required) Base64 encoded public certs (string)
 * `key` - (Required) Base64 encoded private key (string)
-* `project_id` - (Required/ForceNew) The project id where to assign the certificate (string)
+* `project_id` - (Required/ForceNew) The project id where the certificate should be created  (string)
 * `description` - (Optional) A certificate description (string)
 * `name` - (Optional/ForceNew) The name of the certificate (string)
-* `namespace_id` - (Optional/ForceNew) The namespace id where to assign the namespaced certificate (string)
+* `namespace_id` - (Optional/ForceNew) The namespace id where the namespaced certificate should be created (string)
 * `annotations` - (Optional/Computed) Annotations for certificate object (map)
 * `labels` - (Optional/Computed) Labels for certificate object (map)
 
@@ -66,4 +66,3 @@ The following attributes are exported:
 - `create` - (Default `10 minutes`) Used for creating registries.
 - `update` - (Default `10 minutes`) Used for certificate modifications.
 - `delete` - (Default `10 minutes`) Used for deleting registries.
-

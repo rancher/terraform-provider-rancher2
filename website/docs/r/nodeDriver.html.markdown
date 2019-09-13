@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_node_driver"
 sidebar_current: "docs-rancher2-resource-node_driver"
 description: |-
-  Provides a Rancher v2 Node Driver resource. This can be used to create Node Driver for rancher v2 rke clusters and retrieve their information.
+  Provides a Rancher v2 Node Driver resource. This can be used to create Node Driver for Rancher v2 RKE clusters and retrieve their information.
 ---
 
 # rancher2\_node\_driver
 
-Provides a Rancher v2 Node Driver resource. This can be used to create Node Driver for rancher v2 rke clusters and retrieve their information.
+Provides a Rancher v2 Node Driver resource. This can be used to create Node Driver for Rancher v2 RKE clusters and retrieve their information.
 
 ## Example Usage
 
@@ -60,7 +60,7 @@ The following attributes are exported:
 
 ## Import
 
-Node Driver can be imported using the rancher Node Driver ID
+Node Driver can be imported using the Rancher Node Driver ID
 
 ```
 $ terraform import rancher2_node_driver.foo <node_driver_id>

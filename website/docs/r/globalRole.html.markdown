@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_global_role_binding"
 sidebar_current: "docs-rancher2-resource-global_role_binding"
 description: |-
-  Provides a Rancher v2 Global Role Binding resource. This can be used to create Global Role Bindings for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Global Role Binding resource. This can be used to create Global Role Bindings for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_global\_role\_binding
 
-Provides a Rancher v2 Global Role Binding resource. This can be used to create Global Role Bindings for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Global Role Binding resource. This can be used to create Global Role Bindings for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
@@ -49,7 +49,7 @@ The following attributes are exported:
 
 ## Import
 
-Global Role Bindings can be imported using the rancher Global Role Binding ID
+Global Role Bindings can be imported using the Rancher Global Role Binding ID
 
 ```
 $ terraform import rancher2_global_role_binding.foo <global_role_binding_id>

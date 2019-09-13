@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_project"
 sidebar_current: "docs-rancher2-resource-project"
 description: |-
-  Provides a Rancher v2 Project resource. This can be used to create projects for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Project resource. This can be used to create projects for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_project
 
-Provides a Rancher v2 Project resource. This can be used to create projects for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Project resource. This can be used to create projects for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
@@ -109,7 +109,7 @@ More info at [resource-quotas](https://rancher.com/docs/rancher/v2.x/en/k8s-in-r
 
 ## Import
 
-Projects can be imported using the rancher Project ID
+Projects can be imported using the Rancher Project ID
 
 ```
 $ terraform import rancher2_project.foo <project_id>
