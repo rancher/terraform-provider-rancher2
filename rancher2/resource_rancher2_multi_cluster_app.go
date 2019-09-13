@@ -94,7 +94,12 @@ func resourceRancher2MultiClusterAppRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return flattenMultiClusterApp(d, multiClusterApp)
+	templateVersion, err := client.TemplateVersion.ByID(multiClusterApp.TemplateVersionID)
+	if err != nil {
+		return err
+	}
+
+	return flattenMultiClusterApp(d, multiClusterApp, templateVersion.ExternalID)
 }
 
 func resourceRancher2MultiClusterAppUpdate(d *schema.ResourceData, meta interface{}) error {
