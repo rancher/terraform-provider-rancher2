@@ -72,19 +72,18 @@ resource "rancher2_app" "foo" {
 
 The following arguments are supported:
 
-* `catalog_name` - (Required) Catalog name of the app. For use scoped catalogs:
+* `catalog_name` - (Required) Catalog name of the app. If modified, app will be upgraded. For use scoped catalogs:
   * add cluster ID before name, `c-XXXXX:<name>`
   * add project ID before name, `p-XXXXX:<name>`
-* `external_id` - (Required) The url of the app template on a catalog. If modified, app will be upgraded (string)
 * `name` - (Required/ForceNew) The name of the app (string)
 * `project_id` - (Required/ForceNew) The project id where the app will be installed (string)
 * `target_namespace` - (Required/ForceNew) The namespace name where the app will be installed (string)
-* `template_name` - (Required) Template name of the app (string)
+* `template_name` - (Required) Template name of the app. If modified, app will be upgraded (string)
 * `answers` - (Optional/Computed) Answers for the app template. If modified, app will be upgraded (map)
 * `description` - (Optional/Computed) Description for the app (string)
 * `force_upgrade` - (Optional) Force app upgrade (string)
 * `revision_id` - (Optional/Computed) Current revision id for the app. If modified, If this argument is provided or modified, app will be rollbacked to `revision_id` (string)
-* `template_version` - (Optional/Computed) Template version of the app. Default: `latest` (string)
+* `template_version` - (Optional/Computed) Template version of the app. If modified, app will be upgraded. Default: `latest` (string)
 * `values_yaml` - (Optional/Computed) values.yaml file content for the app template. If modified, app will be upgraded (string)
 * `annotations` - (Optional/Computed) Annotations for App object (map)
 * `labels` - (Optional/Computed) Labels for App object (map)
@@ -94,6 +93,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
+* `external_id` - (Computed) The url of the app template on a catalog (string)
 
 ## Timeouts
 
