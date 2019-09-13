@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `rancher2_role_template`
+* **New Resource:** `rancher2_cluster_sync`
 * **New Resource:** `rancher2_role_template`
 
 ENHANCEMENTS:
