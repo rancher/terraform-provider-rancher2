@@ -35,7 +35,7 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	active, err := meta.(*Config).isClusterActive(clusterID)
+	active, _, err := meta.(*Config).isClusterActive(clusterID)
 	if err != nil {
 		return err
 	}
