@@ -77,7 +77,7 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 	}
 
 	obj["enable_http_application_routing"] = in.EnableHTTPApplicationRouting
-	obj["enable_monitoring"] = in.EnableMonitoring
+	obj["enable_monitoring"] = *in.EnableMonitoring
 
 	if len(in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = in.KubernetesVersion
@@ -239,7 +239,7 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 	}
 
 	if v, ok := in["enable_monitoring"].(bool); ok {
-		obj.EnableMonitoring = v
+		obj.EnableMonitoring = &v
 	}
 
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
