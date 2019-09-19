@@ -90,6 +90,7 @@ The following arguments are supported:
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support). `restricted` and `unrestricted` are supported (string)
+* `enable_cluster_monitoring` - (Optional) Enable built-in cluster monitoring. Default `false` (bool)
 * `enable_network_policy` - (Optional) Enable project network isolation. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
@@ -478,11 +479,13 @@ The following attributes are exported:
 
 ###### Arguments
 
-* `access_key` - (Required/Sensitive) Access key for S3 service (string)
+* `access_key` - (Optional/Sensitive) Access key for S3 service (string)
 * `bucket_name` - (Required) Bucket name for S3 service (string)
+* `custom_ca` - (Optional) Base64 encoded custom CA for S3 service. Use filebase64(<FILE>) for encoding file. Available from rancher v2.2.5 (string)
 * `endpoint` - (Required) Endpoint for S3 service (string)
-* `region` - (Required) Region for S3 service (string)
-* `secret_key` - (Required/Sensitive) Secret key for S3 service (string)
+* `folder` - (Optional) Folder for S3 service. Available from rancher v2.2.7 (string)
+* `region` - (Optional) Region for S3 service (string)
+* `secret_key` - (Optional/Sensitive) Secret key for S3 service (string)
 
 ##### `kube_api`
 
@@ -589,11 +592,12 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `access_key` - (Required/Sensitive) The AWS Client ID to use (string)
+* `kubernetes_version` - (Required) The kubernetes master version (string)
 * `secret_key` - (Required/Sensitive) The AWS Client Secret associated with the Client ID (string)
 * `ami` - (Optional) AMI ID to use for the worker nodes instead of the default (string)
 * `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes. Default `true` (bool)
 * `instance_type` - (Optional) The type of machine to use for worker nodes. Default `t2.medium` (string)
-* `kubernetes_version` - (Optional) The kubernetes master version. Default `1.10` (string)
+* `key_pair_name` - (Optional) Allow user to specify key name to use. Just for rancher v2.2.7 and above (string)
 * `maximum_nodes` - (Optional) The maximum number of worker nodes. Default `3` (int)
 * `minimum_nodes` - (Optional) The minimum number of worker nodes. Default `1` (int)
 * `node_volume_size` - (Optional) The volume size for each node. Default `20` (int)
@@ -681,6 +685,7 @@ The following arguments are supported:
 * `insecure_command` - (Computed) Insecure command to execute in a imported k8s cluster (string)
 * `manifest_url` - (Computed) K8s mnifest url to execute kubectl in a imported k8s cluster (string)
 * `node_command` - (Computed) Node command to execute in linux nodes for custom k8s cluster (string)
+* `token` - (Computed) Token for cluster registration token object (string)
 * `windows_node_command` - (Computed) Node command to execute in windows nodes for custom k8s cluster (string)
 * `annotations` - (Computed) Annotations for cluster registration token object (map)
 * `labels` - (Computed) Labels for cluster registration token object (map)

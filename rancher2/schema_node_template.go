@@ -69,10 +69,6 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: digitaloceanConfigFields(),
 			},
 		},
-		"docker_version": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
 		"driver": &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
@@ -91,6 +87,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 		"engine_install_url": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
+			Default:  "https://releases.rancher.com/install-docker/18.09.sh",
 		},
 		"engine_label": &schema.Schema{
 			Type:     schema.TypeMap,

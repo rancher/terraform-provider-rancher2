@@ -7,6 +7,28 @@ import (
 
 // Flatteners
 
+func flattenNamespaceContainerResourceLimit(in *clusterClient.ContainerResourceLimit) []interface{} {
+	obj := make(map[string]interface{})
+	if in == nil {
+		return []interface{}{}
+	}
+
+	if len(in.LimitsCPU) > 0 {
+		obj["limits_cpu"] = in.LimitsCPU
+	}
+	if len(in.LimitsMemory) > 0 {
+		obj["limits_memory"] = in.LimitsMemory
+	}
+	if len(in.RequestsCPU) > 0 {
+		obj["requests_cpu"] = in.RequestsCPU
+	}
+	if len(in.RequestsMemory) > 0 {
+		obj["requests_memory"] = in.RequestsMemory
+	}
+
+	return []interface{}{obj}
+}
+
 func flattenNamespaceResourceQuotaLimit(in *clusterClient.ResourceQuotaLimit) []interface{} {
 	obj := make(map[string]interface{})
 	if in == nil {
@@ -96,8 +118,14 @@ func flattenNamespace(d *schema.ResourceData, in *clusterClient.Namespace) error
 	d.Set("name", in.Name)
 	d.Set("description", in.Description)
 
+	containerLimit := flattenNamespaceContainerResourceLimit(in.ContainerDefaultResourceLimit)
+	err := d.Set("container_resource_limit", containerLimit)
+	if err != nil {
+		return err
+	}
+
 	resourceQuota := flattenNamespaceResourceQuota(in.ResourceQuota)
-	err := d.Set("resource_quota", resourceQuota)
+	err = d.Set("resource_quota", resourceQuota)
 	if err != nil {
 		return err
 	}
@@ -117,6 +145,29 @@ func flattenNamespace(d *schema.ResourceData, in *clusterClient.Namespace) error
 }
 
 // Expanders
+
+func expandNamespaceContainerResourceLimit(p []interface{}) *clusterClient.ContainerResourceLimit {
+	obj := &clusterClient.ContainerResourceLimit{}
+	if len(p) == 0 || p[0] == nil {
+		return obj
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["limits_cpu"].(string); ok && len(v) > 0 {
+		obj.LimitsCPU = v
+	}
+	if v, ok := in["limits_memory"].(string); ok && len(v) > 0 {
+		obj.LimitsMemory = v
+	}
+	if v, ok := in["requests_cpu"].(string); ok && len(v) > 0 {
+		obj.RequestsCPU = v
+	}
+	if v, ok := in["requests_memory"].(string); ok && len(v) > 0 {
+		obj.RequestsMemory = v
+	}
+
+	return obj
+}
 
 func expandNamespaceResourceQuotaLimit(p []interface{}) *clusterClient.ResourceQuotaLimit {
 	obj := &clusterClient.ResourceQuotaLimit{}
@@ -211,6 +262,11 @@ func expandNamespace(in *schema.ResourceData) *clusterClient.Namespace {
 	obj.ProjectID = projectID
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
+
+	if v, ok := in.Get("container_resource_limit").([]interface{}); ok && len(v) > 0 {
+		containerLimit := expandNamespaceContainerResourceLimit(v)
+		obj.ContainerDefaultResourceLimit = containerLimit
+	}
 
 	if v, ok := in.Get("resource_quota").([]interface{}); ok && len(v) > 0 {
 		resourceQuota := expandNamespaceResourceQuota(v)

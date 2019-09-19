@@ -38,6 +38,12 @@ resource "rancher2_project" "foo" {
       requests_storage = "1Gi"
     }
   }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
+  }
 }
 `
 
@@ -57,6 +63,12 @@ resource "rancher2_project" "foo" {
       limits_memory = "500Mi"
       requests_storage = "1Gi"
     }
+  }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
   }
 }
  `
@@ -78,6 +90,12 @@ resource "rancher2_project" "foo" {
       requests_storage = "1Gi"
     }
   }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
+  }
 }
  `
 }
@@ -96,6 +114,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "wait_for_cluster", "false"),
 				),
 			},
 			resource.TestStep{
@@ -105,6 +124,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo-updated"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "wait_for_cluster", "false"),
 				),
 			},
 			resource.TestStep{
@@ -114,6 +134,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "description", "Terraform project acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "wait_for_cluster", "false"),
 				),
 			},
 		},

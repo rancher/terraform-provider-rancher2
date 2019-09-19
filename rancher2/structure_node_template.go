@@ -58,10 +58,6 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		d.Set("description", in.Description)
 	}
 
-	if len(in.DockerVersion) > 0 {
-		d.Set("docker_version", in.DockerVersion)
-	}
-
 	if len(in.EngineEnv) > 0 {
 		err := d.Set("engine_env", toMapInterface(in.EngineEnv))
 		if err != nil {

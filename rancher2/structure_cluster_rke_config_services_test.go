@@ -150,14 +150,18 @@ func init() {
 	testClusterRKEConfigServicesETCDBackupS3Conf = &managementClient.S3BackupConfig{
 		AccessKey:  "access_key",
 		BucketName: "bucket_name",
+		CustomCA:   "custom_ca",
 		Endpoint:   "endpoint",
+		Folder:     "folder",
 		Region:     "region",
 	}
 	testClusterRKEConfigServicesETCDBackupS3Interface = []interface{}{
 		map[string]interface{}{
 			"access_key":  "access_key",
 			"bucket_name": "bucket_name",
+			"custom_ca":   Base64Encode("custom_ca"),
 			"endpoint":    "endpoint",
+			"folder":      "folder",
 			"region":      "region",
 		},
 	}
@@ -528,7 +532,10 @@ func TestExpandClusterRKEConfigServicesEtcdBackupConfigS3(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := expandClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input)
+		output, err := expandClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -549,7 +556,10 @@ func TestExpandClusterRKEConfigServicesEtcdBackupConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := expandClusterRKEConfigServicesEtcdBackupConfig(tc.Input)
+		output, err := expandClusterRKEConfigServicesEtcdBackupConfig(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

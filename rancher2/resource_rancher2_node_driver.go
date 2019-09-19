@@ -146,26 +146,28 @@ func resourceRancher2NodeDriverDelete(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	err = client.NodeDriver.Delete(nodeDriver)
-	if err != nil {
-		return fmt.Errorf("Error removing Node Driver: %s", err)
-	}
+	if !nodeDriver.Builtin {
+		err = client.NodeDriver.Delete(nodeDriver)
+		if err != nil {
+			return fmt.Errorf("Error removing Node Driver: %s", err)
+		}
 
-	log.Printf("[DEBUG] Waiting for node driver (%s) to be removed", id)
+		log.Printf("[DEBUG] Waiting for node driver (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"removing"},
-		Target:     []string{"removed"},
-		Refresh:    nodeDriverStateRefreshFunc(client, id),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      1 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"removing"},
+			Target:     []string{"removed"},
+			Refresh:    nodeDriverStateRefreshFunc(client, id),
+			Timeout:    d.Timeout(schema.TimeoutDelete),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
 
-	_, waitErr := stateConf.WaitForState()
-	if waitErr != nil {
-		return fmt.Errorf(
-			"[ERROR] waiting for node driver (%s) to be removed: %s", id, waitErr)
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return fmt.Errorf(
+				"[ERROR] waiting for node driver (%s) to be removed: %s", id, waitErr)
+		}
 	}
 
 	d.SetId("")

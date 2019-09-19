@@ -39,6 +39,12 @@ resource "rancher2_project" "foo" {
       requests_storage = "1Gi"
     }
   }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
+  }
 }
 `
 
@@ -53,6 +59,12 @@ resource "rancher2_namespace" "foo" {
       limits_memory = "100Mi"
       requests_storage = "1Gi"
     }
+  }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
   }
 }
 `
@@ -69,6 +81,12 @@ resource "rancher2_namespace" "foo" {
       requests_storage = "2Gi"
     }
   }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
+  }
 }
  `
 
@@ -83,6 +101,12 @@ resource "rancher2_namespace" "foo" {
       limits_memory = "100Mi"
       requests_storage = "1Gi"
     }
+  }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
   }
 }
  `
@@ -101,6 +125,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Terraform namespace acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "wait_for_cluster", "false"),
 				),
 			},
 			resource.TestStep{
@@ -109,6 +134,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Terraform namespace acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "wait_for_cluster", "false"),
 				),
 			},
 			resource.TestStep{
@@ -117,6 +143,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "description", "Terraform namespace acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "wait_for_cluster", "false"),
 				),
 			},
 		},

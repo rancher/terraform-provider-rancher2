@@ -1,4 +1,62 @@
-## 1.4.0 (Unreleased)
+## 1.5.1 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `rancher2_role_template`
+* **New Resource:** `rancher2_role_template`
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+
+
+## 1.5.0 (September 06, 2019)
+
+FEATURES:
+
+* **New Data Source:** `rancher2_app`
+* **New Data Source:** `rancher2_certificate`
+* **New Data Source:** `rancher2_multi_cluster_app`
+* **New Data Source:** `rancher2_node_template`
+* **New Data Source:** `rancher2_secret`
+* **New Resource:** `rancher2_certificate`
+* **New Resource:** `rancher2_app`
+* **New Resource:** `rancher2_multi_cluster_app`
+* **New Resource:** `rancher2_secret`
+
+ENHANCEMENTS:
+
+* Updated default image to `canonical:UbuntuServer:18.04-LTS:latest` on Azure node template
+* Added `folder` argument on `s3_backup_config`
+* Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.8
+* Updated rancher to v2.2.8 and k3s to v0.8.0 on acceptance tests
+* Added `key_pair_name` argument on `eks_config` argument on `rancher2_cluster` resource
+* Set `kubernetes_version` argument as required on `eks_config` argument on `rancher2_cluster` resource
+* Set `quantity` argument as optional with default value `1` on `rancher2_node_pool` resource. Added validation that value >= 1 
+
+BUG FIXES:
+
+* Fix: `container_resource_limit` argument update issue on `rancher2_namespace` and `rancher2_project` resources update
+* Fix: `sidebar_current` definition on datasources docs
+* Fix: set `access_key` and `secret_key` arguments as optional on `s3_backup_config`
+* Fix: crash `rancher2_cluster`  datasource and resource if `enableNetworkPolicy` doesn't exist
+* Fix: don't delete builtin cluster nor node drivers from rancher on tf destroy
+* Fix: wrong updates on not changed sensitive arguments on `rancher2_cluster_logging` and `rancher2_project_logging` resources
+
+## 1.4.1 (August 16, 2019)
+
+FEATURES:
+
+ENHANCEMENTS:
+
+BUG FIXES:
+
+* Fix: auth issue when using `access_key` and `secret_key`
+
+## 1.4.0 (August 15, 2019)
 
 FEATURES:
 
@@ -6,26 +64,44 @@ FEATURES:
 * **New Data Source:** `rancher2_cloud_credential`
 * **New Data Source:** `rancher2_cluster`
 * **New Data Source:** `rancher2_cluster_driver`
+* **New Data Source:** `rancher2_cluster_logging`
 * **New Data Source:** `rancher2_cluster_role_template_binding`
 * **New Data Source:** `rancher2_etcd_backup`
 * **New Data Source:** `rancher2_global_role_binding`
 * **New Data Source:** `rancher2_namespace`
 * **New Data Source:** `rancher2_node_driver`
 * **New Data Source:** `rancher2_node_pool`
+* **New Data Source:** `rancher2_project_logging`
 * **New Data Source:** `rancher2_project_role_template_binding`
+* **New Data Source:** `rancher2_registry`
 * **New Data Source:** `rancher2_user`
 * **New Resource:** `rancher2_global_role_binding`
+* **New Resource:** `rancher2_registry`
 * **New Resource:** `rancher2_user`
 
 ENHANCEMENTS:
 
 * Set `session_token` argument as sensitive on `eks_config` argument on `rancher2_cluster` resource
+* Added `wait_for_cluster` argument on `rancher2_namespace` and `rancher2_project` resources
+* Set default value to `engine_install_url` argument on `rancher2_node_template` resource
+* Added `enable_cluster_monitoring` argument to `rancher2_cluster` resource and datasource
+* Added `enable_project_monitoring` argument to `rancher2_project` resource and datasource
+* Added `token` argument on `cluster_registration_token` argument to rancher2_cluster resource and datasource
+* Set default value to `engine_install_url` argument on `rancher2_node_template` resource
+* Added `custom_ca` argument on etcd `s3_backup_config` on `rancher2_cluster` and `rancher2_etcd_backup` resources
+* Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.2.6
+* Updated rancher to v2.2.6 and k3s to v0.7.0 on acceptance tests
+* Added cluster and project scope support on `rancher2_catalog` resource and datasource
+* Updated `provider` config validation to enable bootstrap and resource creation at same run
+* Added `container_resource_limit` argument on `rancher2_namespace` and `rancher2_project` resources and datasources
+* Added `pod_security_policy_template_id` on `rancher2_project` resource
 
 BUG FIXES:
 
 * Fix: `toArrayString` and `toMapString` functions to check `nil` values
 * Fix: Set `kubernetes_version` argument as required on `aks_config` argument on `rancher2_cluster` resource
 * Fix: Set `security_groups`, `service_role`, `subnets` and `virtual_network` arguments as optional to `eks_config` argument on `rancher2_cluster` resource
+* Fix: Removed `docker_version` argument from `rancher2_node_template` resource
 
 ## 1.3.0 (June 26, 2019)
 

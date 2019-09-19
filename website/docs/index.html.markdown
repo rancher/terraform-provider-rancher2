@@ -9,18 +9,64 @@ description: |-
 # Rancher2 Provider
 
 The Rancher2 provider is used to interact with the
-resources supported by Rancher v2. The provider needs to be configured
-with the URL of the Rancher server at minimum and API credentials if
-access control is enabled on the server.
+resources supported by Rancher v2. 
+
+The provider can be configured in 2 modes:
+- Admin: this is the default mode, indeed to manage rancher2 resources. It should be configured with the `api_url` of the Rancher server and API credentials, `token_key` or `access_key` and `secret_key`.
+- Bootstrap: this mode is indeed to bootstrap a rancher2 system. It is enabled if `bootstrap = true`. In this mode, `token_key` or `access_key` and `secret_key` can not be provided. More info at [rancher2_bootstrap resource](r/bootstrap.html)
 
 ## Example Usage
 
 ```hcl
-# Configure the Rancher2 provider
+# Configure the Rancher2 provider to admin
 provider "rancher2" {
   api_url    = "https://rancher.my-domain.com"
   access_key = "${var.rancher2_access_key}"
   secret_key = "${var.rancher2_secret_key}"
+}
+```
+
+```hcl
+# Configure the Rancher2 provider to bootstrap
+provider "rancher2" {
+  api_url   = "https://rancher.my-domain.com"
+  bootstrap = true
+}
+```
+
+```hcl
+# Configure the Rancher2 provider to bootstrap and admin
+# Provider config for bootstrap
+provider "rancher2" {
+  alias = "bootstrap"
+
+  api_url   = "https://rancher.my-domain.com"
+  bootstrap = true
+}
+
+# Create a new rancher2_bootstrap using bootstrap provider config
+resource "rancher2_bootstrap" "admin" {
+  provider = "rancher2.bootstrap"
+
+  password = "blahblah"
+  telemetry = true
+}
+
+# Provider config for admin
+provider "rancher2" {
+  alias = "admin"
+
+  api_url = "${rancher2_bootstrap.admin.url}"
+  token_key = "${rancher2_bootstrap.admin.token}"
+  insecure = true
+}
+
+# Create a new rancher2 resource using admin provider config
+resource "rancher2_catalog" "foo" {
+  provider = "rancher2.admin"
+
+  name = "test"
+  url = "http://foo.com:8080"
 }
 ```
 

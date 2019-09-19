@@ -57,6 +57,11 @@ func clusterRegistationTokenFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"token": &schema.Schema{
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
+		},
 		"windows_node_command": &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
@@ -183,6 +188,12 @@ func clusterFields() map[string]*schema.Schema {
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(clusterPodSecurityPolicy, true),
 			Description:  "Default pod security policy template id",
+		},
+		"enable_cluster_monitoring": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,

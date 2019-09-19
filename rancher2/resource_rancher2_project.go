@@ -42,7 +42,27 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 	if !active {
-		return fmt.Errorf("[ERROR] Creating Project: Cluster ID %s is not active", project.ClusterID)
+		if v, ok := d.Get("wait_for_cluster").(bool); ok && !v {
+			return fmt.Errorf("[ERROR] Creating Project: Cluster ID %s is not active", project.ClusterID)
+		}
+
+		mgmtClient, err := meta.(*Config).ManagementClient()
+		if err != nil {
+			return err
+		}
+
+		stateCluster := &resource.StateChangeConf{
+			Pending:    []string{},
+			Target:     []string{"active"},
+			Refresh:    clusterStateRefreshFunc(mgmtClient, project.ClusterID),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitClusterErr := stateCluster.WaitForState()
+		if waitClusterErr != nil {
+			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) to be active: %s", project.ClusterID, waitClusterErr)
+		}
 	}
 
 	log.Printf("[INFO] Creating Project %s on Cluster ID %s", project.Name, project.ClusterID)
@@ -116,6 +136,8 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 	update := map[string]interface{}{
 		"name":                          d.Get("name").(string),
 		"description":                   d.Get("description").(string),
+		"containerDefaultResourceLimit": expandProjectContainerResourceLimit(d.Get("container_resource_limit").([]interface{})),
+		"enableProjectMonitoring":       d.Get("enable_project_monitoring").(bool),
 		"namespaceDefaultResourceQuota": nsResourceQuota,
 		"resourceQuota":                 resourceQuota,
 		"annotations":                   toMapString(d.Get("annotations").(map[string]interface{})),

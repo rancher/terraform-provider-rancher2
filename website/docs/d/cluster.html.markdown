@@ -1,7 +1,7 @@
 ---
 layout: "rancher2"
 page_title: "Rancher2: rancher2_cluster"
-sidebar_current: "docs-rancher2-resource-cluster"
+sidebar_current: "docs-rancher2-datasource-cluster"
 description: |-
   Get information on a Rancher v2 cluster.
 ---
@@ -41,6 +41,7 @@ The following attributes are exported:
 * `description` - (Computed) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `default_pod_security_policy_template_id` - (Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support). `restricted` and `unrestricted` are supported (string)
+* `enable_cluster_monitoring` - (Computed) Enable built-in cluster monitoring. Default `false` (bool)
 * `enable_network_policy` - (Computed) Enable project network isolation. Default `false` (bool)
 * `annotations` - (Computed) Annotations for Node Pool object (map)
 * `labels` - (Computed) Labels for Node Pool object (map)

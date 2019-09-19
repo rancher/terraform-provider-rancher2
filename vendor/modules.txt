@@ -101,7 +101,7 @@ github.com/hashicorp/go-plugin/internal/plugin
 github.com/hashicorp/go-safetemp
 # github.com/hashicorp/go-uuid v1.0.1
 github.com/hashicorp/go-uuid
-# github.com/hashicorp/go-version v1.1.0
+# github.com/hashicorp/go-version v1.2.0
 github.com/hashicorp/go-version
 # github.com/hashicorp/hcl v0.0.0-20170504190234-a4b07c25de5f
 github.com/hashicorp/hcl
@@ -218,7 +218,7 @@ github.com/posener/complete
 github.com/posener/complete/cmd/install
 github.com/posener/complete/cmd
 github.com/posener/complete/match
-# github.com/rancher/norman v0.0.0-20190503155902-ea122abac582
+# github.com/rancher/norman v0.0.0-20190817004410-659cceabaf2a
 github.com/rancher/norman/clientbase
 github.com/rancher/norman/types
 github.com/rancher/norman/httperror
@@ -227,7 +227,7 @@ github.com/rancher/norman/types/convert
 github.com/rancher/norman/types/definition
 github.com/rancher/norman/types/slice
 github.com/rancher/norman/types/values
-# github.com/rancher/types v0.0.0-20190524211942-2361355c4c51
+# github.com/rancher/types v0.0.0-20190819190701-5c4900572399
 github.com/rancher/types/client/cluster/v3
 github.com/rancher/types/client/management/v3
 github.com/rancher/types/client/project/v3

@@ -22,6 +22,7 @@ func flattenClusterRegistationToken(in *managementClient.ClusterRegistrationToke
 	obj["insecure_command"] = in.InsecureCommand
 	obj["manifest_url"] = in.ManifestURL
 	obj["node_command"] = in.NodeCommand
+	obj["token"] = in.Token
 	obj["windows_node_command"] = in.WindowsNodeCommand
 	obj["annotations"] = toMapInterface(in.Annotations)
 	obj["labels"] = toMapInterface(in.Labels)
@@ -71,7 +72,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		d.Set("default_pod_security_policy_template_id", in.DefaultPodSecurityPolicyTemplateID)
 	}
 
-	d.Set("enable_network_policy", *in.EnableNetworkPolicy)
+	d.Set("enable_cluster_monitoring", in.EnableClusterMonitoring)
+
+	if in.EnableNetworkPolicy != nil {
+		d.Set("enable_network_policy", *in.EnableNetworkPolicy)
+	}
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -213,6 +218,10 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if v, ok := in.Get("default_pod_security_policy_template_id").(string); ok && len(v) > 0 {
 		obj.DefaultPodSecurityPolicyTemplateID = v
+	}
+
+	if v, ok := in.Get("enable_cluster_monitoring").(bool); ok {
+		obj.EnableClusterMonitoring = v
 	}
 
 	if v, ok := in.Get("enable_network_policy").(bool); ok {

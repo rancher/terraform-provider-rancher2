@@ -25,6 +25,12 @@ resource "rancher2_namespace" "foo" {
       requests_storage = "1Gi"
     }
   }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
+  }
 }
 ```
 
@@ -51,6 +57,12 @@ resource "rancher2_namespace" "foo" {
       requests_storage = "1Gi"
     }
   }
+  container_resource_limit {
+    limits_cpu = "20m"
+    limits_memory = "20Mi"
+    requests_cpu = "1m"
+    requests_memory = "1Mi"
+  }
 }
 ```
 
@@ -60,8 +72,10 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the namespace (string)
 * `project_id` - (Required) The project id where assign namespace. It's on the form `project_id=<cluster_id>:<id>`. Updating `<id>` part on same `<cluster_id>` namespace will be moved between projects (string)
+* `container_resource_limit` - (Optional/Computed) Default containers resource limits on namespace (List maxitem:1)
 * `description` - (Optional) A namespace description (string)
 * `resource_quota` - (Optional/Computed) Resource quota for namespace. Rancher v2.1.x or higher (list maxitems:1)
+* `wait_for_cluster` - (Optional) Wait for cluster becomes active. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
 
@@ -72,6 +86,15 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource (string)
 
 ## Nested blocks
+
+### `container_resource_limit`
+
+#### Arguments
+
+* `limits_cpu` - (Optional) CPU limit for containers (string)
+* `limits_memory` - (Optional) Memory limit for containers (string)
+* `requests_cpu` - (Optional) CPU reservation for containers (string)
+* `requests_memory` - (Optional) Memory reservation for containers (string)
 
 ### `resource_quota`
 

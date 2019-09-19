@@ -26,6 +26,10 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["instance_type"] = in.InstanceType
 	}
 
+	if len(in.KeyPairName) > 0 {
+		obj["key_pair_name"] = in.KeyPairName
+	}
+
 	if len(in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = in.KubernetesVersion
 	}
@@ -102,6 +106,10 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
 		obj.InstanceType = v
+	}
+
+	if v, ok := in["key_pair_name"].(string); ok && len(v) > 0 {
+		obj.KeyPairName = v
 	}
 
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {

@@ -7,6 +7,10 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+const (
+	providerDefaulEmptyString = "nil"
+)
+
 // CLIConfig used to store data from file.
 type CLIConfig struct {
 	AdminPass string `json:"adminpass"`
@@ -27,14 +31,14 @@ func Provider() terraform.ResourceProvider {
 			"api_url": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("RANCHER_URL", ""),
+				DefaultFunc: schema.EnvDefaultFunc("RANCHER_URL", providerDefaulEmptyString),
 				Description: descriptions["api_url"],
 			},
 			"access_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("RANCHER_ACCESS_KEY", ""),
+				DefaultFunc: schema.EnvDefaultFunc("RANCHER_ACCESS_KEY", providerDefaulEmptyString),
 				Description: descriptions["access_key"],
 			},
 			"bootstrap": &schema.Schema{
@@ -47,14 +51,14 @@ func Provider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("RANCHER_SECRET_KEY", ""),
+				DefaultFunc: schema.EnvDefaultFunc("RANCHER_SECRET_KEY", providerDefaulEmptyString),
 				Description: descriptions["secret_key"],
 			},
 			"token_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("RANCHER_TOKEN_KEY", ""),
+				DefaultFunc: schema.EnvDefaultFunc("RANCHER_TOKEN_KEY", providerDefaulEmptyString),
 				Description: descriptions["token_key"],
 			},
 			"ca_certs": &schema.Schema{
@@ -72,6 +76,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"rancher2_app":                           resourceRancher2App(),
 			"rancher2_auth_config_activedirectory":   resourceRancher2AuthConfigActiveDirectory(),
 			"rancher2_auth_config_adfs":              resourceRancher2AuthConfigADFS(),
 			"rancher2_auth_config_azuread":           resourceRancher2AuthConfigAzureAD(),
@@ -81,6 +86,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_auth_config_ping":              resourceRancher2AuthConfigPing(),
 			"rancher2_bootstrap":                     resourceRancher2Bootstrap(),
 			"rancher2_catalog":                       resourceRancher2Catalog(),
+			"rancher2_certificate":                   resourceRancher2Certificate(),
 			"rancher2_cloud_credential":              resourceRancher2CloudCredential(),
 			"rancher2_cluster":                       resourceRancher2Cluster(),
 			"rancher2_cluster_driver":                resourceRancher2ClusterDriver(),
@@ -88,30 +94,43 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_cluster_role_template_binding": resourceRancher2ClusterRoleTemplateBinding(),
 			"rancher2_etcd_backup":                   resourceRancher2EtcdBackup(),
 			"rancher2_global_role_binding":           resourceRancher2GlobalRoleBinding(),
+			"rancher2_multi_cluster_app":             resourceRancher2MultiClusterApp(),
+			"rancher2_namespace":                     resourceRancher2Namespace(),
 			"rancher2_node_driver":                   resourceRancher2NodeDriver(),
 			"rancher2_node_pool":                     resourceRancher2NodePool(),
 			"rancher2_node_template":                 resourceRancher2NodeTemplate(),
 			"rancher2_project":                       resourceRancher2Project(),
 			"rancher2_project_logging":               resourceRancher2ProjectLogging(),
 			"rancher2_project_role_template_binding": resourceRancher2ProjectRoleTemplateBinding(),
-			"rancher2_namespace":                     resourceRancher2Namespace(),
+			"rancher2_registry":                      resourceRancher2Registry(),
+			"rancher2_role_template":                 resourceRancher2RoleTemplate(),
+			"rancher2_secret":                        resourceRancher2Secret(),
 			"rancher2_setting":                       resourceRancher2Setting(),
 			"rancher2_user":                          resourceRancher2User(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
+			"rancher2_app":                           dataSourceRancher2App(),
 			"rancher2_catalog":                       dataSourceRancher2Catalog(),
+			"rancher2_certificate":                   dataSourceRancher2Certificate(),
 			"rancher2_cloud_credential":              dataSourceRancher2CloudCredential(),
 			"rancher2_cluster":                       dataSourceRancher2Cluster(),
 			"rancher2_cluster_driver":                dataSourceRancher2ClusterDriver(),
+			"rancher2_cluster_logging":               dataSourceRancher2ClusterLogging(),
 			"rancher2_cluster_role_template_binding": dataSourceRancher2ClusterRoleTemplateBinding(),
 			"rancher2_etcd_backup":                   dataSourceRancher2EtcdBackup(),
 			"rancher2_global_role_binding":           dataSourceRancher2GlobalRoleBinding(),
+			"rancher2_multi_cluster_app":             dataSourceRancher2MultiClusterApp(),
 			"rancher2_namespace":                     dataSourceRancher2Namespace(),
 			"rancher2_node_driver":                   dataSourceRancher2NodeDriver(),
 			"rancher2_node_pool":                     dataSourceRancher2NodePool(),
+			"rancher2_node_template":                 dataSourceRancher2NodeTemplate(),
 			"rancher2_project":                       dataSourceRancher2Project(),
+			"rancher2_project_logging":               dataSourceRancher2ProjectLogging(),
 			"rancher2_project_role_template_binding": dataSourceRancher2ProjectRoleTemplateBinding(),
+			"rancher2_registry":                      dataSourceRancher2Registry(),
+			"rancher2_role_template":                 dataSourceRancher2RoleTemplate(),
+			"rancher2_secret":                        dataSourceRancher2Secret(),
 			"rancher2_setting":                       dataSourceRancher2Setting(),
 			"rancher2_user":                          dataSourceRancher2User(),
 		},
@@ -149,34 +168,38 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	insecure := d.Get("insecure").(bool)
 	bootstrap := d.Get("bootstrap").(bool)
 
-	if apiURL == "" {
-		return &Config{}, fmt.Errorf("[ERROR] No api_url provided")
+	// Set tokenKey based on accessKey and secretKey if needed
+	if tokenKey == providerDefaulEmptyString && accessKey != providerDefaulEmptyString && secretKey != providerDefaulEmptyString {
+		tokenKey = accessKey + ":" + secretKey
 	}
 
 	config := &Config{
-		URL:       NormalizeURL(apiURL),
-		AccessKey: accessKey,
-		SecretKey: secretKey,
+		URL:       apiURL,
 		TokenKey:  tokenKey,
 		CACerts:   caCerts,
 		Insecure:  insecure,
 		Bootstrap: bootstrap,
 	}
 
-	// If bootstrap tokenkey accesskey nor secretkey can be provided
-	if bootstrap {
-		if config.TokenKey != "" || config.AccessKey != "" || config.SecretKey != "" {
+	return providerValidateConfig(config)
+}
+
+func providerValidateConfig(config *Config) (*Config, error) {
+	if config.URL == providerDefaulEmptyString {
+		return &Config{}, fmt.Errorf("[ERROR] No api_url provided")
+	}
+
+	config.URL = NormalizeURL(config.URL)
+
+	if config.Bootstrap {
+		// If bootstrap tokenkey accesskey nor secretkey can be provided
+		if config.TokenKey != providerDefaulEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] Bootsrap mode activated. Token_key or access_key and secret_key can not be provided")
 		}
 	} else {
 		// Else token or access key and secret key should be provided
-		if config.TokenKey == "" && (config.AccessKey == "" || config.SecretKey == "") {
+		if config.TokenKey == providerDefaulEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] No token_key nor access_key and secret_key are provided")
-		}
-
-		_, err := config.ManagementClient()
-		if err != nil {
-			return &Config{}, err
 		}
 	}
 

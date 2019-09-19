@@ -12,9 +12,11 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
+	gover "github.com/hashicorp/go-version"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 	"golang.org/x/crypto/bcrypt"
@@ -191,10 +193,26 @@ func splitTokenID(token string) string {
 
 func splitID(id string) (clusterID, resourceID string) {
 	separator := "."
+
 	if strings.Contains(id, separator) {
 		return id[0:strings.Index(id, separator)], id[strings.Index(id, separator)+1:]
 	}
 	return "", id
+}
+
+func splitRegistryID(id string) (namespaceID, projectID, resourceID string) {
+	separator := "."
+
+	result := strings.Split(id, separator)
+
+	switch count := len(result); count {
+	case 2:
+		return "", result[0], result[1]
+	case 3:
+		return result[0], result[1], result[2]
+	}
+
+	return "", "", id
 }
 
 func clusterIDFromProjectID(projectID string) (string, error) {
@@ -213,6 +231,18 @@ func splitProjectID(id string) (clusterID, projectID string) {
 	}
 
 	return id, ""
+}
+
+func splitAppID(id string) (projectID, appID string, err error) {
+	separator := clusterProjectIDSeparator
+
+	fields := strings.Split(id, separator)
+
+	if len(fields) != 3 {
+		return "", "", fmt.Errorf("[ERROR] Getting App ID: Bad project id format %s", id)
+	}
+
+	return fields[0] + separator + fields[1], fields[1] + separator + fields[2], nil
 }
 
 func toArrayString(in []interface{}) []string {
@@ -278,4 +308,27 @@ func newTrue() *bool {
 func newFalse() *bool {
 	b := false
 	return &b
+}
+
+func sortVersions(list map[string]string) ([]*gover.Version, error) {
+	var versions []*gover.Version
+	for key := range list {
+		v, err := gover.NewVersion(key)
+		if err != nil {
+			return nil, err
+		}
+		versions = append(versions, v)
+	}
+
+	sort.Sort(gover.Collection(versions))
+	return versions, nil
+}
+
+func getLatestVersion(list map[string]string) (string, error) {
+	sorted, err := sortVersions(list)
+	if err != nil {
+		return "", err
+	}
+
+	return sorted[len(sorted)-1].String(), nil
 }

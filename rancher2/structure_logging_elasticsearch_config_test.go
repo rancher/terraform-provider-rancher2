@@ -56,7 +56,7 @@ func TestFlattenLoggingElasticsearchConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenLoggingElasticsearchConfig(tc.Input)
+		output, err := flattenLoggingElasticsearchConfig(tc.Input, []interface{}{})
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

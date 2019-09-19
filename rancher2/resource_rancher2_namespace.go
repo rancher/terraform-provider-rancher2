@@ -40,7 +40,27 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	if !active {
-		return fmt.Errorf("[ERROR] Creating namespace: Cluster ID %s is not active", clusterID)
+		if v, ok := d.Get("wait_for_cluster").(bool); ok && !v {
+			return fmt.Errorf("[ERROR] Creating Namespace: Cluster ID %s is not active", clusterID)
+		}
+
+		mgmtClient, err := meta.(*Config).ManagementClient()
+		if err != nil {
+			return err
+		}
+
+		stateCluster := &resource.StateChangeConf{
+			Pending:    []string{},
+			Target:     []string{"active"},
+			Refresh:    clusterStateRefreshFunc(mgmtClient, clusterID),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitClusterErr := stateCluster.WaitForState()
+		if waitClusterErr != nil {
+			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) to be active: %s", clusterID, waitClusterErr)
+		}
 	}
 
 	client, err := meta.(*Config).ClusterClient(clusterID)
@@ -139,10 +159,11 @@ func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) e
 	resourceQuota := expandNamespaceResourceQuota(d.Get("resource_quota").([]interface{}))
 
 	update := map[string]interface{}{
-		"description":   d.Get("description").(string),
-		"resourceQuota": resourceQuota,
-		"annotations":   toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":        toMapString(d.Get("labels").(map[string]interface{})),
+		"description":                   d.Get("description").(string),
+		"containerDefaultResourceLimit": expandNamespaceContainerResourceLimit(d.Get("container_resource_limit").([]interface{})),
+		"resourceQuota":                 resourceQuota,
+		"annotations":                   toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":                        toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newNs, err := client.Namespace.Update(ns, update)
