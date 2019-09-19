@@ -36,6 +36,6 @@ data "rancher2_app" "rancher2" {
 * `revision_id` - (Computed) Current revision id for the app (string)
 * `template_name` - (Computed) Template name of the app (string)
 * `template_version` - (Computed) Template version of the app (string)
-* `values_yaml` - (Computed) values.yaml file content for the app (string)
+* `values_yaml` - (Computed) values.yaml base64 encoded file content for the app (string)
 * `annotations` - (Computed) Annotations for the catalog (map)
 * `labels` - (Computed) Labels for the catalog (map)
