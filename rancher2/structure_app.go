@@ -7,6 +7,10 @@ import (
 	projectClient "github.com/rancher/types/client/project/v3"
 )
 
+const (
+	AppTemplateExternalIDPrefix = "catalog://?"
+)
+
 // Flatteners
 
 func flattenAppExternalID(d *schema.ResourceData, in string) {
@@ -14,7 +18,7 @@ func flattenAppExternalID(d *schema.ResourceData, in string) {
 	//Cluster catalog url: catalog://?catalog=c-XXXXX/test&type=clusterCatalog&template=test&version=1.23.0
 	//Project catalog url: catalog://?catalog=p-XXXXX/test&type=projectCatalog&template=test&version=1.23.0
 
-	str := strings.TrimPrefix(in, "catalog://?")
+	str := strings.TrimPrefix(in, AppTemplateExternalIDPrefix)
 	values := strings.Split(str, "&")
 	out := make(map[string]string, len(values))
 	for _, v := range values {
@@ -91,20 +95,20 @@ func expandAppExternalID(in *schema.ResourceData) string {
 	appName := in.Get("template_name").(string)
 	appVersion := in.Get("template_version").(string)
 
-	catalogPart := "catalog://?catalog=" + catalogName
-	appNamePart := "&template=" + appName
-	appVersionPart := "&version=" + appVersion
-
 	if strings.HasPrefix(catalogName, "c-") {
 		catalogName = strings.Replace(catalogName, ":", "/", -1)
-		catalogPart = catalogPart + "&type=clusterCatalog"
+		catalogName = catalogName + "&type=clusterCatalog"
 	}
 	if strings.HasPrefix(catalogName, "p-") {
 		catalogName = strings.Replace(catalogName, ":", "/", -1)
-		catalogPart = catalogPart + "&type=projectCatalog"
+		catalogName = catalogName + "&type=projectCatalog"
 	}
 
-	return catalogPart + appNamePart + appVersionPart
+	catalogPart := "catalog=" + catalogName
+	appNamePart := "&template=" + appName
+	appVersionPart := "&version=" + appVersion
+
+	return AppTemplateExternalIDPrefix + catalogPart + appNamePart + appVersionPart
 }
 
 func expandApp(in *schema.ResourceData) *projectClient.App {

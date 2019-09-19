@@ -14,22 +14,29 @@ const (
 
 // Flatteners
 
-func flattenMultiClusterAppTemplateVersionID(d *schema.ResourceData, in string) {
+func flattenMultiClusterAppTemplateVersionID(d *schema.ResourceData, externalID string) string {
+	//Global catalog url: catalog://?catalog=demo&template=test&version=1.23.0
+
+	str := strings.TrimPrefix(externalID, AppTemplateExternalIDPrefix)
+	values := strings.Split(str, "&")
+	out := make(map[string]string, len(values))
+	for _, v := range values {
+		pair := strings.Split(v, "=")
+		if len(pair) != 2 {
+			continue
+		}
+		out[pair[0]] = pair[1]
+	}
+
+	d.Set("catalog_name", out["catalog"])
+	d.Set("template_name", out["template"])
+	d.Set("template_version", out["version"])
+
 	//Template version ID: cattle-global-data:test-test-1.23.0
-
-	data := strings.TrimPrefix(in, MultiClusterAppTemplatePrefix)
-	separator := "-"
-
-	first := strings.Index(data, separator)
-	last := strings.LastIndex(data, separator)
-
-	d.Set("template_version_id", in)
-	d.Set("catalog_name", data[:first])
-	d.Set("template_name", data[first+1:last])
-	d.Set("template_version", data[last+1:])
+	return MultiClusterAppTemplatePrefix + out["catalog"] + "-" + out["template"] + "-" + out["version"]
 }
 
-func flattenMultiClusterApp(d *schema.ResourceData, in *managementClient.MultiClusterApp) error {
+func flattenMultiClusterApp(d *schema.ResourceData, in *managementClient.MultiClusterApp, externalID string) error {
 	if in == nil {
 		return fmt.Errorf("[ERROR] flattening multi cluster app: Input setting is nil")
 	}
@@ -47,7 +54,7 @@ func flattenMultiClusterApp(d *schema.ResourceData, in *managementClient.MultiCl
 		return err
 	}
 
-	flattenMultiClusterAppTemplateVersionID(d, in.TemplateVersionID)
+	d.Set("template_version_id", flattenMultiClusterAppTemplateVersionID(d, externalID))
 
 	err = d.Set("answers", flattenAnswers(in.Answers))
 	if err != nil {

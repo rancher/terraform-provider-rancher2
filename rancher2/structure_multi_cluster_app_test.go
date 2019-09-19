@@ -20,6 +20,7 @@ var (
 	testMultiClusterAppRollingUpdateInterface   []interface{}
 	testMultiClusterAppUpgradeStrategyConf      *managementClient.UpgradeStrategy
 	testMultiClusterAppUpgradeStrategyInterface []interface{}
+	testMultiClusterAppExternalID               string
 	testMultiClusterAppConf                     *managementClient.MultiClusterApp
 	testMultiClusterAppInterface                map[string]interface{}
 )
@@ -96,6 +97,7 @@ func init() {
 			"rolling_update": testMultiClusterAppRollingUpdateInterface,
 		},
 	}
+	testMultiClusterAppExternalID = "catalog://?catalog=test&template=test-demo&version=1.23.0"
 	testMultiClusterAppConf = &managementClient.MultiClusterApp{
 		Name:                 "foo",
 		Targets:              testMultiClusterAppTargetsConf,
@@ -158,7 +160,7 @@ func TestFlattenMultiClusterApp(t *testing.T) {
 
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, multiClusterAppFields(), map[string]interface{}{})
-		err := flattenMultiClusterApp(output, tc.Input)
+		err := flattenMultiClusterApp(output, tc.Input, testMultiClusterAppExternalID)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
@@ -167,7 +169,7 @@ func TestFlattenMultiClusterApp(t *testing.T) {
 			expectedOutput[k] = output.Get(k)
 		}
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven: %#v", tc.ExpectedOutput, output)
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven: %#v", tc.ExpectedOutput, expectedOutput)
 		}
 	}
 }

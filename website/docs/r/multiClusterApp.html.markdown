@@ -85,6 +85,13 @@ The following arguments are supported:
 * `annotations` - (Optional/Computed) Annotations for multi cluster app object (map)
 * `labels` - (Optional/Computed) Labels for multi cluster app object (map)
 
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - (Computed) The ID of the resource (string)
+* `template_version_id` - (Computed) The multi cluster app template version ID (string)
+
 ## Nested blocks
 
 ### `targets`
@@ -124,13 +131,6 @@ The following arguments are supported:
 
 * `batch_size` - (Optional) Rolling update batch size. Default `1` (int)
 * `interval` - (Optional) Rolling update interval. Default `1` (int)
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `id` - (Computed) The ID of the resource (string)
-* `template_version_id` - (Computed) The multi cluster app template version ID (string)
 
 ## Timeouts
 
