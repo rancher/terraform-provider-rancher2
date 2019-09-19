@@ -92,6 +92,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_cluster_driver":                resourceRancher2ClusterDriver(),
 			"rancher2_cluster_logging":               resourceRancher2ClusterLogging(),
 			"rancher2_cluster_role_template_binding": resourceRancher2ClusterRoleTemplateBinding(),
+			"rancher2_cluster_sync":                  resourceRancher2ClusterSync(),
 			"rancher2_etcd_backup":                   resourceRancher2EtcdBackup(),
 			"rancher2_global_role_binding":           resourceRancher2GlobalRoleBinding(),
 			"rancher2_multi_cluster_app":             resourceRancher2MultiClusterApp(),

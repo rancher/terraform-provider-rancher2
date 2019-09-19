@@ -37,7 +37,7 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 
 	project := expandProject(d)
 
-	active, err := meta.(*Config).isClusterActive(project.ClusterID)
+	active, _, err := meta.(*Config).isClusterActive(project.ClusterID)
 	if err != nil {
 		return err
 	}

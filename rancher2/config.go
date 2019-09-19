@@ -449,17 +449,17 @@ func (c *Config) UpdateClusterByID(cluster *managementClient.Cluster, update map
 	return client.Cluster.Update(cluster, update)
 }
 
-func (c *Config) isClusterActive(id string) (bool, error) {
+func (c *Config) isClusterActive(id string) (bool, *managementClient.Cluster, error) {
 	clus, err := c.GetClusterByID(id)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 
 	if clus.State == "active" {
-		return true, nil
+		return true, clus, nil
 	}
 
-	return false, nil
+	return false, clus, nil
 }
 
 func (c *Config) ClusterExist(id string) error {
