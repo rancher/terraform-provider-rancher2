@@ -38,7 +38,7 @@ type AzureKubernetesServiceConfig struct {
 	DNSServiceIP                       string            `json:"dnsServiceIp,omitempty" yaml:"dnsServiceIp,omitempty"`
 	DockerBridgeCIDR                   string            `json:"dockerBridgeCidr,omitempty" yaml:"dockerBridgeCidr,omitempty"`
 	EnableHTTPApplicationRouting       bool              `json:"enableHttpApplicationRouting,omitempty" yaml:"enableHttpApplicationRouting,omitempty"`
-	EnableMonitoring                   bool              `json:"enableMonitoring,omitempty" yaml:"enableMonitoring,omitempty"`
+	EnableMonitoring                   *bool             `json:"enableMonitoring,omitempty" yaml:"enableMonitoring,omitempty"`
 	KubernetesVersion                  string            `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
 	Location                           string            `json:"location,omitempty" yaml:"location,omitempty"`
 	LogAnalyticsWorkspace              string            `json:"logAnalyticsWorkspace,omitempty" yaml:"logAnalyticsWorkspace,omitempty"`

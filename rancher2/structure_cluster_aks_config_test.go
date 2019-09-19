@@ -30,7 +30,7 @@ func init() {
 		DNSServiceIP:                       "dns_ip",
 		DockerBridgeCIDR:                   "192.168.1.0/16",
 		EnableHTTPApplicationRouting:       true,
-		EnableMonitoring:                   true,
+		EnableMonitoring:                   newTrue(),
 		KubernetesVersion:                  "version",
 		Location:                           "location",
 		LogAnalyticsWorkspace:              "log_analytics_workspace",
