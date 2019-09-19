@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -67,7 +68,7 @@ func flattenApp(d *schema.ResourceData, in *projectClient.App) error {
 	}
 
 	if len(in.ValuesYaml) > 0 {
-		d.Set("values_yaml", in.ValuesYaml)
+		d.Set("values_yaml", Base64Encode(in.ValuesYaml))
 	}
 
 	err := d.Set("annotations", toMapInterface(in.Annotations))
@@ -111,10 +112,10 @@ func expandAppExternalID(in *schema.ResourceData) string {
 	return AppTemplateExternalIDPrefix + catalogPart + appNamePart + appVersionPart
 }
 
-func expandApp(in *schema.ResourceData) *projectClient.App {
+func expandApp(in *schema.ResourceData) (*projectClient.App, error) {
 	obj := &projectClient.App{}
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	if v := in.Id(); len(v) > 0 {
@@ -139,7 +140,11 @@ func expandApp(in *schema.ResourceData) *projectClient.App {
 	}
 
 	if v, ok := in.Get("values_yaml").(string); ok && len(v) > 0 {
-		obj.ValuesYaml = v
+		values, err := Base64Decode(v)
+		if err != nil {
+			return nil, fmt.Errorf("expanding app: values_yaml is not base64 encoded: %s", v)
+		}
+		obj.ValuesYaml = values
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
@@ -150,5 +155,5 @@ func expandApp(in *schema.ResourceData) *projectClient.App {
 		obj.Labels = toMapString(v)
 	}
 
-	return obj
+	return obj, nil
 }

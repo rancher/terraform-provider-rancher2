@@ -53,7 +53,7 @@ func init() {
 		"description":      "description",
 		"revision_id":      "revision_id",
 		"template_version": "1.23.0",
-		"values_yaml":      "values_yaml",
+		"values_yaml":      Base64Encode("values_yaml"),
 		"annotations": map[string]interface{}{
 			"node_one": "one",
 			"node_two": "two",
@@ -97,7 +97,7 @@ func init() {
 		"description":      "description",
 		"revision_id":      "revision_id",
 		"template_version": "1.23.0",
-		"values_yaml":      "values_yaml",
+		"values_yaml":      Base64Encode("values_yaml"),
 		"annotations": map[string]interface{}{
 			"node_one": "one",
 			"node_two": "two",
@@ -141,7 +141,7 @@ func init() {
 		"description":      "description",
 		"revision_id":      "revision_id",
 		"template_version": "1.23.0",
-		"values_yaml":      "values_yaml",
+		"values_yaml":      Base64Encode("values_yaml"),
 		"annotations": map[string]interface{}{
 			"node_one": "one",
 			"node_two": "two",
@@ -212,7 +212,10 @@ func TestExpandApp(t *testing.T) {
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, appFields(), tc.Input)
-		output := expandApp(inputResourceData)
+		output, err := expandApp(inputResourceData)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
