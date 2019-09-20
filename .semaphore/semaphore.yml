@@ -18,7 +18,7 @@ blocks:
             - sudo apt-get -y install python3-pip
             - pip3 install awscli --upgrade --user
               # Simple sem2 versioning mechanism
-            - cache restore version-counter || echo 0 > VERSION_COUNTER
+            - cache has_key version-counter && cache restore version-counter || echo 0 > VERSION_COUNTER
             - NEXT_VERSION=$(cat VERSION_COUNTER)
             - ((NEXT_VERSION++))
             - echo $NEXT_VERSION > VERSION_COUNTER
