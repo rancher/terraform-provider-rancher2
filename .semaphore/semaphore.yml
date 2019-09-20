@@ -12,13 +12,13 @@ blocks:
           commands:
               # Simple sem2 versioning mechanism
             - cache has_key version-counter && cache restore version-counter || echo 0 > VERSION_COUNTER
-            - echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"
+            - 'echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"'
             - NEXT_VERSION=$(cat VERSION_COUNTER)
-            - echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"
+            - 'echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"'
             - ((NEXT_VERSION++))
-            - echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"
+            - 'echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"'
             - echo $NEXT_VERSION > VERSION_COUNTER
-            - echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"
+            - 'echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"'
               # Setup
             - sem-version go 1.12
             - checkout
