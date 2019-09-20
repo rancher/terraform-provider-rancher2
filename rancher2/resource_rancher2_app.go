@@ -45,7 +45,10 @@ func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	app := expandApp(d)
+	app, err := expandApp(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[INFO] Creating App %s on Project ID %s", name, projectID)
 
@@ -145,14 +148,19 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 	} else if d.HasChange("answers") || d.HasChange("catalog_name") || d.HasChange("template_name") || d.HasChange("template_version") || d.HasChange("values_yaml") {
 		log.Printf("[INFO] Upgrading App ID %s", id)
 
+		values, err := Base64Decode(d.Get("values_yaml").(string))
+		if err != nil {
+			return err
+		}
+
 		upgrade := &projectClient.AppUpgradeConfig{
 			Answers:      toMapString(d.Get("answers").(map[string]interface{})),
 			ExternalID:   expandAppExternalID(d),
 			ForceUpgrade: d.Get("force_upgrade").(bool),
-			ValuesYaml:   d.Get("values_yaml").(string),
+			ValuesYaml:   values,
 		}
 
-		err := client.App.ActionUpgrade(app, upgrade)
+		err = client.App.ActionUpgrade(app, upgrade)
 		if err != nil {
 			return err
 		}
