@@ -10,18 +10,24 @@ blocks:
       jobs:
         - name: Build it
           commands:
+              # Simple sem2 versioning mechanism
+            - cache has_key version-counter && cache restore version-counter || echo 0 > VERSION_COUNTER
+            - echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"
+            - NEXT_VERSION=$(cat VERSION_COUNTER)
+            - echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"
+            - ((NEXT_VERSION++))
+            - echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"
+            - echo $NEXT_VERSION > VERSION_COUNTER
+            - echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"
+              # Setup
             - sem-version go 1.12
             - checkout
               # Intentionally using go build rather than make as this is a public repo and we don't want to run arbitrary code on creation of a PR
             - go build -mod=vendor
+              # Install deps
             - sudo apt-get update
             - sudo apt-get -y install python3-pip
             - pip3 install awscli --upgrade --user
-              # Simple sem2 versioning mechanism
-            - cache has_key version-counter && cache restore version-counter || echo 0 > VERSION_COUNTER
-            - NEXT_VERSION=$(cat VERSION_COUNTER)
-            - ((NEXT_VERSION++))
-            - echo $NEXT_VERSION > VERSION_COUNTER
             - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp terraform-provider-rancher2 s3://cloud.confluent.terraform-artifacts/terraform-provider-rancher2_v90.0.${NEXT_VERSION}-linux-amd64 && cache store version-counter VERSION_COUNTER ; fi
       secrets:
         - name: aws_credentials
