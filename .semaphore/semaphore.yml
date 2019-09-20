@@ -10,6 +10,7 @@ blocks:
       jobs:
         - name: Build it
           commands:
+            - ls -al /home/semaphore/.aws/credentials
             - sem-version go 1.12
             - checkout
               # Intentionally using go build rather than make as this is a public repo and we don't want to run arbitrary code on creation of a PR
@@ -19,4 +20,4 @@ blocks:
             - pip3 install awscli --upgrade --user
             - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp terraform-provider-rancher2 s3://cloud.confluent.terraform-artifacts/terraform-provider-rancher2_v90.0.${SEMAPHORE_BUILD_NUMBER}-linux-amd64 ; fi
       secrets:
-        - name: aws
+        - name: aws_credentials
