@@ -15,7 +15,7 @@ blocks:
             - 'echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"'
             - NEXT_VERSION=$(cat VERSION_COUNTER)
             - 'echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"'
-            - ((NEXT_VERSION++))
+            - NEXT_VERSION="$((NEXT_VERSION+1))"
             - 'echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"'
             - echo $NEXT_VERSION > VERSION_COUNTER
             - 'echo "DEBUG: ${NEXT_VERSION} $(cat VERSION_COUNTER)"'
