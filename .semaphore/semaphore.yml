@@ -22,6 +22,6 @@ blocks:
             - sudo apt-get update
             - sudo apt-get -y install python3-pip
             - pip3 install awscli --upgrade --user
-            - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp terraform-provider-rancher2 s3://cloud.confluent.terraform-artifacts/terraform-provider-rancher2_{VERSION_STRING}-linux-amd64 ; fi
+            - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp terraform-provider-rancher2 s3://cloud.confluent.terraform-artifacts/terraform-provider-rancher2_${VERSION_STRING}-linux-amd64 ; fi
       secrets:
         - name: aws_credentials
