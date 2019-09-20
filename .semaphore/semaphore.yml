@@ -1,5 +1,5 @@
 version: v1.0
-name:terraform-provider-rancher2
+name: terraform-provider-rancher2
 agent:
   machine:
     type: e1-standard-2
@@ -8,12 +8,15 @@ blocks:
   - name: Build
     task:
       jobs:
-      - name: Build it
-        commands:
-          - checkout
-# Intentionally using go build rather than make as this is a public repo and we don't want to run arbitrary code on creation of a PR
-          - go build -mod=vendor
-          - apt-get update
-          - apt-get -y install python3-pip
-          - pip3 install awscli --upgrade --user
-          - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp terraform-provider-rancher2 s3://cloud.confluent.terraform-artifacts/terraform-provider-rancher2_v90.0.${SEMAPHORE_BUILD_NUMBER}-linux-amd64 ; fi
+        - name: Build it
+          commands:
+            - sem-version go 1.12
+            - checkout
+              # Intentionally using go build rather than make as this is a public repo and we don't want to run arbitrary code on creation of a PR
+            - go build -mod=vendor
+            - apt-get update
+            - apt-get -y install python3-pip
+            - pip3 install awscli --upgrade --user
+            - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp terraform-provider-rancher2 s3://cloud.confluent.terraform-artifacts/terraform-provider-rancher2_v90.0.${SEMAPHORE_BUILD_NUMBER}-linux-amd64 ; fi
+      secrets:
+        - name: aws
