@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_cluster_driver"
 sidebar_current: "docs-rancher2-resource-cluster_driver"
 description: |-
-  Provides a Rancher v2 Cluster Driver resource. This can be used to create Cluster Driver for Rancher v2 RKE clusters and retrieve their information.
+  Provides a Rancher v2 Cluster Driver resource. This can be used to create Cluster Driver for Rancher v2 Kontainer Engine clusters and retrieve their information.
 ---
 
 # rancher2\_cluster\_driver
 
-Provides a Rancher v2 Cluster Driver resource. This can be used to create Cluster Driver for Rancher v2.2.x RKE clusters and retrieve their information.
+Provides a Rancher v2 Cluster Driver resource. This can be used to create Cluster Driver for Rancher v2.2.x Kontainer Engine clusters and retrieve their information.
 
 ## Example Usage
 
