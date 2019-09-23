@@ -27,7 +27,7 @@ func clusterRKEConfigDNSFields() map[string]*schema.Schema {
 		"provider": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			Default:      clusterRKEDNSProviderKube,
+			Default:      clusterRKEDNSProviderCore,
 			ValidateFunc: validation.StringInSlice(clusterRKEDNSProviderList, true),
 		},
 		"reverse_cidrs": {
