@@ -8,9 +8,9 @@ description: |-
 
 # rancher2\_user
 
-Provides a Rancher v2 user resource. This can be used to create Users for Rancher v2 environments and retrieve their information.
+Provides a Rancher v2 User resource. This can be used to create Users for Rancher v2 environments and retrieve their information.
 
-Once Rancher user is created, it hasn't any global role binding. At least, `user-base` global role binding in needed in order to enable user login.
+When a Rancher User is created, it doesn't have a global role binding. At least, `user-base` global role binding in needed in order to enable user login.
 
 ## Example Usage
 
@@ -64,4 +64,3 @@ Users can be imported using the Rancher User ID
 ```
 $ terraform import rancher2_user.foo <user_id>
 ```
-
