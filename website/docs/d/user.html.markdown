@@ -15,18 +15,18 @@ Use this data source to retrieve information about a Rancher v2 user
 ```
 data "rancher2_user" "foo" {
     username = "foo"
-    global_role_id = "foo_id"
 }
 ```
 
 ## Argument Reference
 
 * `username` - (Required) The name of the user (string)
-* `global_role_id` - (Optional/Computed) The global role id (string)
 
 ## Attributes Reference
 
 * `id` - (Computed) The ID of the resource (string)
-* `user_id` - (Computed) The user ID to assign global role binding (string)
+* `name` - (Computed) The user common name (string)
 * `annotations` - (Computed) Annotations of the resource (map)
+* `enabled` - (Computed) The user is enabled (bool)
+* `principal_ids` - (Computed) The user principal IDs (list)
 * `labels` - (Computed) Labels of the resource (map)
