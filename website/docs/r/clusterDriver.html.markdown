@@ -3,17 +3,17 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_cluster_driver"
 sidebar_current: "docs-rancher2-resource-cluster_driver"
 description: |-
-  Provides a Rancher v2 Cluster Driver resource. This can be used to create Cluster Driver for rancher v2 rke clusters and retrieve their information.
+  Provides a Rancher v2 Cluster Driver resource. This can be used to create Cluster Driver for Rancher v2 Kontainer Engine clusters and retrieve their information.
 ---
 
 # rancher2\_cluster\_driver
 
-Provides a Rancher v2 Cluster Driver resource. This can be used to create Cluster Driver for rancher v2.2.x kontainer engine and retrieve their information.
+Provides a Rancher v2 Cluster Driver resource. This can be used to create Cluster Driver for Rancher v2.2.x Kontainer Engine clusters and retrieve their information.
 
 ## Example Usage
 
 ```hcl
-# Create a new rancher2 Cluster Driver
+# Create a new Rancher2 Cluster Driver
 resource "rancher2_cluster_driver" "foo" {
     active = true
     builtin = false
@@ -31,8 +31,8 @@ resource "rancher2_cluster_driver" "foo" {
 
 The following arguments are supported:
 
-* `active` - (Required) Specify if the cluster driver state (bool)
-* `builtin` - (Required) Specify wheter the cluster driver is an internal cluster driver or not (bool)
+* `active` - (Required) Specify the cluster driver state (bool)
+* `builtin` - (Required) Specify whether the cluster driver is an internal cluster driver or not (bool)
 * `name` - (Required) Name of the cluster driver (string)
 * `url` - (Required) The URL to download the machine driver binary for 64-bit Linux (string)
 * `actual_url` - (Optional) Actual url of the cluster driver (string)
@@ -59,7 +59,7 @@ The following attributes are exported:
 
 ## Import
 
-Cluster Driver can be imported using the rancher Cluster Driver ID
+Cluster Driver can be imported using the Rancher Cluster Driver ID
 
 ```
 $ terraform import rancher2_cluster_driver.foo <cluster_driver_id>

@@ -3,14 +3,14 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_auth_config_ping"
 sidebar_current: "docs-rancher2-auth-config-ping"
 description: |-
-  Provides a Rancher v2 Auth Config Ping resource. This can be used to configure and enable Auth Config Ping for rancher v2 rke clusters and retrieve their information.
+  Provides a Rancher v2 Auth Config Ping resource. This can be used to configure and enable Auth Config Ping for Rancher v2 RKE clusters and retrieve their information.
 ---
 
 # rancher2\_auth\_config\_ping
 
-Provides a Rancher v2 Auth Config Ping resource. This can be used to configure and enable Auth Config Ping for rancher v2 rke clusters and retrieve their information.
+Provides a Rancher v2 Auth Config Ping resource. This can be used to configure and enable Auth Config Ping for Rancher v2 RKE clusters and retrieve their information.
 
-Beside local, just one auth config provider could be enabled at once.
+In addition to the built-in local auth, only one external auth config provider can be enabled at a time.
 
 ## Example Usage
 
@@ -45,7 +45,6 @@ The following arguments are supported:
 * `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
-                
 
 ## Attributes Reference
 
@@ -54,4 +53,3 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource (string)
 * `name` - (Computed) The name of the resource (string)
 * `type` - (Computed) The type of the resource (string)
-

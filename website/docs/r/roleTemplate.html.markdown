@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_role_template"
 sidebar_current: "docs-rancher2-resource-role_template"
 description: |-
-  Provides a Rancher v2 Role Template resource. This can be used to create Role template for rancher v2 rke clusters and retrieve their information.
+  Provides a Rancher v2 Role Template resource. This can be used to create Role template for Rancher v2 RKE clusters and retrieve their information.
 ---
 
 # rancher2\_role\_template
 
-Provides a Rancher v2 Role Template resource. This can be used to create Role Template for rancher v2 and retrieve their information. 
+Provides a Rancher v2 Role Template resource. This can be used to create Role Template for Rancher v2 and retrieve their information. 
 
 `cluster` and `project` scopes are supported for role templates.
 
@@ -91,7 +91,7 @@ The following attributes are exported:
 
 ## Import
 
-Role Template can be imported using the rancher Role Template ID
+Role Template can be imported using the Rancher Role Template ID
 
 ```
 $ terraform import rancher2_role_template.foo <role_template_id>

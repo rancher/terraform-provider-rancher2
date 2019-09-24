@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_namespace"
 sidebar_current: "docs-rancher2-resource-namespace"
 description: |-
-  Provides a Rancher v2 Namespace resource. This can be used to create namespaces for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Namespace resource. This can be used to create namespaces for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_namespace
 
-Provides a Rancher v2 Namespace resource. This can be used to create namespaces for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Namespace resource. This can be used to create namespaces for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 

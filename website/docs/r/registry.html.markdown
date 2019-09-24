@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_registry"
 sidebar_current: "docs-rancher2-resource-registry"
 description: |-
-  Provides a Rancher v2 docker registry resource. This can be used to create docker registries for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 docker registry resource. This can be used to create docker registries for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_registry
 
-Provides a Rancher v2 Registry resource. This can be used to create docker registries for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Registry resource. This can be used to create docker registries for Rancher v2 environments and retrieve their information.
 
 Depending of the availability, there are 2 types of Rancher v2 docker registries:
 - Project registry: Available to all namespaces in the `project_id`

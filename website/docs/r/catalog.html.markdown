@@ -3,28 +3,28 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_catalog"
 sidebar_current: "docs-rancher2-resource-catalog"
 description: |-
-  Provides a Rancher v2 Catalog resource. This can be used to create cluster, global and/or project catalogs for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Catalog resource. This can be used to create cluster, global and/or project catalogs for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_catalog
 
-Provides a Rancher v2 Catalog resource. This can be used to create cluster, global and/or project catalogs for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Catalog resource. This can be used to create cluster, global and/or project catalogs for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
 ```hcl
-# Create a new rancher2 Global Catalog
+# Create a new Rancher2 Global Catalog
 resource "rancher2_catalog" "foo-global" {
   name = "foo-global"
   url = "https://<CATALOG_URL>"
 }
-# Create a new rancher2 Cluster Catalog
+# Create a new Rancher2 Cluster Catalog
 resource "rancher2_catalog" "foo-cluster" {
   name = "foo-cluster"
   url = "https://<CATALOG_URL>"
   scope = "cluster"
 }
-# Create a new rancher2 Project Catalog
+# Create a new Rancher2 Project Catalog
 resource "rancher2_catalog" "foo-project" {
   name = "foo-project"
   url = "https://<CATALOG_URL>"
@@ -66,9 +66,8 @@ The following attributes are exported:
 
 ## Import
 
-Catalogs can be imported using the rancher Catalog ID and its scope.
+Catalogs can be imported using the Rancher Catalog ID and its scope.
 
 ```
 $ terraform import rancher2_catalog.foo <scope>.<catalog_id>
 ```
-

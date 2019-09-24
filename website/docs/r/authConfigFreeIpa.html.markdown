@@ -3,14 +3,14 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_auth_config_freeipa"
 sidebar_current: "docs-rancher2-auth-config-freeipa"
 description: |-
-  Provides a Rancher v2 Auth Config FreeIpa resource. This can be used to configure and enable Auth Config FreeIpa for rancher v2 rke clusters and retrieve their information.
+  Provides a Rancher v2 Auth Config FreeIpa resource. This can be used to configure and enable Auth Config FreeIpa for Rancher v2 RKE clusters and retrieve their information.
 ---
 
 # rancher2\_auth\_config\_freeipa
 
-Provides a Rancher v2 Auth Config FreeIpa resource. This can be used to configure and enable Auth Config FreeIpa for rancher v2 rke clusters and retrieve their information.
+Provides a Rancher v2 Auth Config FreeIpa resource. This can be used to configure and enable Auth Config FreeIpa for Rancher v2 RKE clusters and retrieve their information.
 
-Beside local, just one auth config provider could be enabled at once.
+In addition to the built-in local auth, only one external auth config provider can be enabled at a time.
 
 ## Example Usage
 
@@ -35,7 +35,7 @@ The following arguments are supported:
 * `user_search_base` - (Required) User search base DN (string)
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `freeipa_user://<DN>`  `freeipa_group://<DN>` (list)
-* `certificate` - (Optional/Sensitive) Base64 encoded CA certificate for TLS if selfsigned. Use filebase64(<FILE>) for encoding file (string)
+* `certificate` - (Optional/Sensitive) Base64 encoded CA certificate for TLS if self-signed. Use filebase64(<FILE>) for encoding file (string)
 * `connection_timeout` - (Optional) FreeIpa connection timeout. Default `5000` (int)
 * `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
 * `group_dn_attribute` - (Optional/Computed) Group DN attribute. Default `entryDN` (string)
@@ -57,7 +57,6 @@ The following arguments are supported:
 * `tls` - (Optional/Computed) Enable TLS connection (bool)
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
-                
 
 ## Attributes Reference
 
@@ -66,4 +65,3 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource (string)
 * `name` - (Computed) The name of the resource (string)
 * `type` - (Computed) The type of the resource (string)
-
