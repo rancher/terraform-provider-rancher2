@@ -14,7 +14,7 @@ blocks:
             - sem-version go 1.12
             - checkout
             - export SHORT_GIT=$(echo ${SEMAPHORE_GIT_SHA} | cut -c1-6)
-            - export VERSION_STRING="$(git tag -l|tail -n1).${SHORT_GIT}"
+            - export VERSION_STRING="$(git tag -l|tail -n1|cut -c2-999).${SHORT_GIT}"
             - echo "Looking to build ${VERSION_STRING}"
               # Intentionally using go build rather than make as this is a public repo and we don't want to run arbitrary code on creation of a PR
             - go build -mod=vendor
@@ -22,6 +22,6 @@ blocks:
             - sudo apt-get update
             - sudo apt-get -y install python3-pip
             - pip3 install awscli --upgrade --user
-            - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp terraform-provider-rancher2 s3://cloud.confluent.terraform-artifacts/terraform-provider-rancher2_${VERSION_STRING}-linux-amd64 ; fi
+            - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp terraform-provider-rancher2 s3://cloud.confluent.terraform-artifacts/terraform-provider-rancher2_v${VERSION_STRING}-linux-amd64 && git clone -b confluent-master --depth 1 git@github.com:confluentinc/cc-terraform && cd cc-terraform && sed -i -e "s/terraform-provider-rancher2 .*/terraform-provider-rancher2 ${VERSION_STRING}/" CUSTOM_PROVIDERS && git add CUSTOM_PROVIDERS && git commit -m "Auto-version bump terraform-provider-rancher2 ${VERSION_STRING}" && git push origin master; fi
       secrets:
         - name: aws_credentials
