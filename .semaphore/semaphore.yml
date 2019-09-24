@@ -10,10 +10,8 @@ blocks:
       jobs:
         - name: Build it
           commands:
-            # Correct premissions since they are too open by default:
-            - chmod 0600 ~/.keys/private-repo
-            # Add the key to the ssh agent:
-            - ssh-add ~/.keys/private-repo
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - chmod 400 ~/.ssh/id_rsa
               # Setup
             - sem-version go 1.12
             - checkout
@@ -29,4 +27,6 @@ blocks:
             - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp terraform-provider-rancher2 s3://cloud.confluent.terraform-artifacts/terraform-provider-rancher2_v${VERSION_STRING}-linux-amd64 && git clone --depth 1 git@github.com:confluentinc/cc-terraform.git && cd cc-terraform && sed -i -e "s/terraform-provider-rancher2 .*/terraform-provider-rancher2 ${VERSION_STRING}/" CUSTOM_PROVIDERS && git add CUSTOM_PROVIDERS && git commit -m "Auto-version bump terraform-provider-rancher2 ${VERSION_STRING}" && git push origin master; fi
       secrets:
         - name: aws_credentials
-        - name: private-repo
+        - name: ssh_id_rsa
+        - name: ssh_config
+        - name: gitconfig
