@@ -117,20 +117,66 @@ resource "rancher2_node_pool" "foo" {
 }
 ```
 
+Creating Rancher v2 RKE cluster from template. For Rancher v2.3.x or above.
+
+```hcl
+# Create a new rancher2 cluster template
+resource "rancher2_cluster_template" "foo" {
+  name = "foo"
+  members {
+    access_type = "owner"
+    user_principal_id = "local://user-XXXXX"
+  }
+  template_revisions {
+    name = "V1"
+    cluster_config {
+      rke_config {
+        network {
+          plugin = "canal"
+        }
+        services {
+          etcd {
+            creation = "6h"
+            retention = "24h"
+          }
+        }
+      }
+    }
+    default = true
+  }
+  description = "Test cluster template v2"
+}
+# Create a new rancher2 RKE Cluster from template
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  cluster_template_id = "${rancher2_cluster_template.foo.id}"
+  cluster_template_revision_id = "${rancher2_cluster_template.foo.default_revision_id}"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
-* `rke_config` - (Optional) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config` and `gke_config` (list maxitems:1)
+* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config` and `gke_config` (list maxitems:1)
 * `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `gke_config` and `rke_config` (list maxitems:1)
 * `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `gke_config` and `rke_config` (list maxitems:1)
 * `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_monitoring_input` - (Optional/Computed) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
+* `cluster_template_answers` - (Optional) Cluster template answers. Just for Rancher v2.3.x and above (list maxitems:1)
+* `cluster_template_id` - (Optional) Cluster template ID. Just for Rancher v2.3.x and above (string)
+* `cluster_template_questions` - (Optional) Cluster template questions. Just for Rancher v2.3.x and above (list)
+* `cluster_template_revision_id` - (Optional) Cluster template revision ID. Just for Rancher v2.3.x and above (string)
 * `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support) (string)
+* `desired_agent_image` - (Optional/Computed) Desired agent image. Just for Rancher v2.3.x and above (string)
+* `desired_auth_image` - (Optional/Computed) Desired auth image. Just for Rancher v2.3.x and above (string)
+* `docker_root_dir` - (Optional/Computed) Desired auth image. Just for Rancher v2.3.x and above (string)
+* `enable_cluster_alerting` - (Optional) Enable built-in cluster alerting. Default `false` (bool)
 * `enable_cluster_monitoring` - (Optional) Enable built-in cluster monitoring. Default `false` (bool)
+* `enable_cluster_istio` - (Optional) Enable built-in cluster istio. Default `false`. Just for Rancher v2.3.x and above (bool)
 * `enable_network_policy` - (Optional) Enable project network isolation. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
@@ -500,11 +546,13 @@ The following attributes are exported:
 * `extra_args` - (Optional/Computed) Extra arguments for etcd service (map)
 * `extra_binds` - (Optional) Extra binds for etcd service (list)
 * `extra_env` - (Optional) Extra environment for etcd service (list)
+* `gid` - (Optional) Etcd service GID. Default: `0`. For Rancher v2.3.x or above (int)
 * `image` - (Optional/Computed) Docker image for etcd service (string)
 * `key` - (Optional/Computed/Sensitive) TLS key for etcd service (string)
 * `path` - (Optional/Computed) Path for etcd service (string)
 * `retention` - (Optional/Computed) Retention option for etcd service (string)
 * `snapshot` - (Optional/Computed) Snapshot option for etcd service (bool)
+* `uid` - (Optional) Etcd service UID. Default: `0`. For Rancher v2.3.x or above (int)
 
 ###### `backup_config`
 
@@ -715,11 +763,30 @@ The following arguments are supported:
 * `enabled` - (Optional) Enable the authorized cluster endpoint. Default `true` (bool)
 * `fqdn` - (Optional) FQDN for the authorized cluster endpoint (string)
 
+<<<<<<< HEAD
 ### `cluster_monitoring_input`
 
 #### Arguments
 
 * `answers` - (Optional/Computed) Key/value answers for monitor input (map)
+=======
+### `cluster_template_answers`
+
+#### Arguments
+
+* `cluster_id` - (Optional) Cluster ID to apply answer (string)
+* `project_id` - (Optional) Project ID to apply answer (string)
+* `values` - (Optional) Key/values for answer (map)
+
+### `cluster_template_questions`
+
+#### Arguments
+
+* `default` - (Required) Default variable value (string)
+* `required` - (Optional) Required variable. Default `false` (bool)
+* `type` - (Optional) Variable type. `boolean`, `int` and `string` are allowed. Default `string` (string)
+* `variable` - (Optional) Variable name (string)
+>>>>>>> c6a2cbc... Feat: added rancher2_cluster_template datasource and resource. For rancher V2.3.x. Doc files
 
 ### `cluster_registration_token`
 
