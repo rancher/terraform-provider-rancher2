@@ -1,9 +1,10 @@
-## 1.5.1 (Unreleased)
+## 1.6.0 (Unreleased)
 
 FEATURES:
 
 * **New Data Source:** `rancher2_cluster_alert_group`
 * **New Data Source:** `rancher2_cluster_alert_rule`
+* **New Data Source:** `rancher2_cluster_template`
 * **New Data Source:** `rancher2_notifier`
 * **New Data Source:** `rancher2_project_alert_group`
 * **New Data Source:** `rancher2_project_alert_rule`
@@ -13,6 +14,7 @@ FEATURES:
 * **New Resource:** `rancher2_cluster_alert_group`
 * **New Resource:** `rancher2_cluster_alert_rule`
 * **New Resource:** `rancher2_cluster_sync`
+* **New Resource:** `rancher2_cluster_template`
 * **New Resource:** `rancher2_notifier`
 * **New Resource:** `rancher2_project_alert_group`
 * **New Resource:** `rancher2_project_alert_rule`
