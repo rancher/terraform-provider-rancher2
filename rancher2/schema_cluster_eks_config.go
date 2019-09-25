@@ -75,7 +75,7 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "The type of machine to use for worker nodes",
+			Description: "The name of an existing cluster placement group into which you want to launch your instances",
 		},
 		"key_pair_name": {
 			Type:        schema.TypeString,
