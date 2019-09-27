@@ -17,6 +17,7 @@ type AmazonElasticContainerServiceConfig struct {
 	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
 	DisplayName                 string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
+	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
 	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
 	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
 	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
@@ -69,6 +70,12 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "t2.medium",
 			Description: "The type of machine to use for worker nodes",
+		},
+		"placement_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "The name of an existing cluster placement group into which you want to launch your instances",
 		},
 		"key_pair_name": {
 			Type:        schema.TypeString,
