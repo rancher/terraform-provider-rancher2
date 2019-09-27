@@ -25,7 +25,7 @@ blocks:
             - sudo apt-get update
             - sudo apt-get -y install python3-pip
             - pip3 install awscli --upgrade --user
-            - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp --acl public-read terraform-provider-rancher2_v${VERSION_STRING}-linux-amd64 s3://cloud.confluent.terraform-artifacts/ && aws s3 cp --acl public-read terraform-provider-rancher2_v${VERSION_STRING}-darwin-amd64 s3://cloud.confluent.terraform-artifacts/ && git clone --depth 1 git@github.com:confluentinc/cc-terraform.git && cd cc-terraform && sed -i -e "s/terraform-provider-rancher2 .*/terraform-provider-rancher2 ${VERSION_STRING}/" CUSTOM_PROVIDERS && git add CUSTOM_PROVIDERS && git commit -m "Auto-version bump terraform-provider-rancher2 ${VERSION_STRING}" && git push origin master; fi
+            - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp --acl public-read terraform-provider-rancher2_v${VERSION_STRING}-linux-amd64 s3://cloud.confluent.terraform-artifacts/ && aws s3 cp --acl public-read terraform-provider-rancher2_v${VERSION_STRING}-darwin-amd64 s3://cloud.confluent.terraform-artifacts/ && git clone --depth 1 git@github.com:confluentinc/cc-terraform.git && cd cc-terraform && sed -i -e "s/terraform-provider-rancher2 .*/terraform-provider-rancher2 ${VERSION_STRING}/" CUSTOM_PROVIDERS && sed -i -e "s/  version = \"= .*\"/  version = \"= ${VERSION_STRING}\"/" variables-rancher.tf && git add CUSTOM_PROVIDERS variables-rancher.tf && git commit -m "Auto-version bump terraform-provider-rancher2 ${VERSION_STRING}" && git push origin master; fi
       secrets:
         - name: aws_credentials
         - name: ssh_id_rsa
