@@ -2,13 +2,15 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_notifier`
 * **New Data Source:** `rancher2_role_template`
 * **New Resource:** `rancher2_cluster_sync`
+* **New Resource:** `rancher2_notifier`
 * **New Resource:** `rancher2_role_template`
 
 ENHANCEMENTS:
 
-
+* Improved capitalization/spelling/grammar/etc in docs
 
 BUG FIXES:
 
