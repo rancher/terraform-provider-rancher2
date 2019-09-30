@@ -43,7 +43,7 @@ func flattenClusterAuthEndpoint(in *managementClient.LocalClusterAuthEndpoint) [
 	return []interface{}{obj}
 }
 
-func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput, defaultProjectID, systemProjectID string) error {
+func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput, defaultProjectID, systemProjectID string, monitoringInput *managementClient.MonitoringInput) error {
 	if in == nil {
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster is nil")
 	}
@@ -91,6 +91,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 	err = d.Set("cluster_registration_token", regToken)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("cluster_monitoring_input", flattenMonitoringInput(monitoringInput))
 	if err != nil {
 		return err
 	}

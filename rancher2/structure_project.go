@@ -109,7 +109,7 @@ func flattenProjectResourceQuota(pQuota *managementClient.ProjectResourceQuota, 
 	return []interface{}{obj}
 }
 
-func flattenProject(d *schema.ResourceData, in *managementClient.Project) error {
+func flattenProject(d *schema.ResourceData, in *managementClient.Project, monitoringInput *managementClient.MonitoringInput) error {
 	if in == nil {
 		return nil
 	}
@@ -138,7 +138,12 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 		}
 	}
 
-	err := d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("project_monitoring_input", flattenMonitoringInput(monitoringInput))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}

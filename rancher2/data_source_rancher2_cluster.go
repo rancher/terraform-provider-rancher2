@@ -75,6 +75,15 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterAuthEndpoint(),
 				},
 			},
+			"cluster_monitoring_input": &schema.Schema{
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Computed:    true,
+				Description: "Cluster monitoring configuration",
+				Elem: &schema.Resource{
+					Schema: monitoringInputFields(),
+				},
+			},
 			"cluster_registration_token": &schema.Schema{
 				Type:     schema.TypeList,
 				MaxItems: 1,
