@@ -265,6 +265,12 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 			return nil, "", err
 		}
 
+		// If we encounter an error, such as "only one of zone or region must be specified"
+		// on GCP for instance, that is not recoverable
+		if obj.Transitioning == "error" {
+			return nil, "", err
+		}
+
 		return obj, obj.State, nil
 	}
 }
