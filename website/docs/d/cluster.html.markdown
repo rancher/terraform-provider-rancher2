@@ -40,6 +40,7 @@ The following attributes are exported:
 * `gke_config` - (Computed) The Google gke configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config` (list maxitems:1)
 * `description` - (Computed) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
+* `cluster_monitoring_input` - (Computed) Cluster monitoring config (list maxitems:1)
 * `default_pod_security_policy_template_id` - (Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support). `restricted` and `unrestricted` are supported (string)
 * `enable_cluster_monitoring` - (Computed) Enable built-in cluster monitoring. Default `false` (bool)
 * `enable_network_policy` - (Computed) Enable project network isolation. Default `false` (bool)
