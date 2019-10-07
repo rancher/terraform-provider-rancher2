@@ -2,19 +2,30 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_cluster_alert_group`
+* **New Data Source:** `rancher2_cluster_alert_rule`
+* **New Data Source:** `rancher2_project_alert_group`
+* **New Data Source:** `rancher2_project_alert_rule`
 * **New Data Source:** `rancher2_role_template`
+* **New Resource:** `rancher2_auth_config_keycloak`
+* **New Resource:** `rancher2_auth_config_okta`
+* **New Resource:** `rancher2_cluster_alert_group`
+* **New Resource:** `rancher2_cluster_alert_rule`
 * **New Resource:** `rancher2_cluster_sync`
+* **New Resource:** `rancher2_project_alert_group`
+* **New Resource:** `rancher2_project_alert_rule`
 * **New Resource:** `rancher2_role_template`
 
 ENHANCEMENTS:
 
-
+* Added `monitoring_input` argument to define monitoring config for `rancher2_cluster` and `rancher2_project`
 
 BUG FIXES:
 
 * Fix `expandAppExternalID` function on `rancher2_app` resource. Function was generating a wrong `ExternalID` catalog URL, on `cluster` and `project` scope
 * Fix `flattenMultiClusterApp` function on `rancher2_multi-cluster_app` resource. Function wasn't updating fine `catalog_name`, `template_name` and/or `template_version` arguments, when contains char `-`
 * Fix: set `value_yaml` multiline argument as base64 encoded
+* Fix: removed `restricted` and `unrestricted` values checking for `default_pod_security_policy_template_id` argument on `rancher2_cluster` resource
 
 ## 1.5.0 (September 06, 2019)
 
