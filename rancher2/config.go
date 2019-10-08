@@ -1297,3 +1297,41 @@ func (c *Config) DeleteCertificate(cert interface{}) error {
 		return fmt.Errorf("[ERROR] Certificate type %s isn't supported", t)
 	}
 }
+
+func (c *Config) GetRecipientByNotifier(id string) (*managementClient.Recipient, error) {
+	if len(id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Notifier ID can't be nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	notifier, err := client.Notifier.ByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	out := &managementClient.Recipient{}
+
+	out.NotifierID = notifier.ID
+	if notifier.PagerdutyConfig != nil {
+		out.NotifierType = recipientTypePagerduty
+		out.Recipient = notifier.PagerdutyConfig.ServiceKey
+	} else if notifier.SlackConfig != nil {
+		out.NotifierType = recipientTypeSlack
+		out.Recipient = notifier.SlackConfig.DefaultRecipient
+	} else if notifier.SMTPConfig != nil {
+		out.NotifierType = recipientTypeSMTP
+		out.Recipient = notifier.SMTPConfig.DefaultRecipient
+	} else if notifier.WebhookConfig != nil {
+		out.NotifierType = recipientTypeWebhook
+		out.Recipient = notifier.WebhookConfig.URL
+	} else if notifier.WechatConfig != nil {
+		out.NotifierType = recipientTypeWechat
+		out.Recipient = notifier.WechatConfig.DefaultRecipient
+	}
+
+	return out, nil
+}
