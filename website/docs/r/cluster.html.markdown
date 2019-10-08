@@ -37,6 +37,45 @@ resource "rancher2_cluster" "foo-custom" {
 }
 ```
 
+Creating Rancher v2 RKE cluster enabling and customizing monitoring
+
+```hcl
+# Create a new rancher2 RKE Cluster
+resource "rancher2_cluster" "foo-custom" {
+  name = "foo-custom"
+  description = "Foo rancher2 custom cluster"
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+  }
+  enable_cluster_monitoring = true
+  cluster_monitoring_input {
+    answers = {
+      "exporter-kubelets.https" = true
+      "exporter-node.enabled" = true
+      "exporter-node.ports.metrics.port" = 9796
+      "exporter-node.resources.limits.cpu" = "200m"
+      "exporter-node.resources.limits.memory" = "200Mi"
+      "grafana.persistence.enabled" = false
+      "grafana.persistence.size" = "10Gi"
+      "grafana.persistence.storageClass" = "default"
+      "operator.resources.limits.memory" = "500Mi"
+      "prometheus.persistence.enabled" = "false"
+      "prometheus.persistence.size" = "50Gi"
+      "prometheus.persistence.storageClass" = "default"
+      "prometheus.persistent.useReleaseName" = "true"
+      "prometheus.resources.core.limits.cpu" = "1000m",
+      "prometheus.resources.core.limits.memory" = "1500Mi"
+      "prometheus.resources.core.requests.cpu" = "750m"
+      "prometheus.resources.core.requests.memory" = "750Mi"
+      "prometheus.retention" = "12h"
+    }
+  }
+}
+```
+
+
 Creating Rancher v2 RKE cluster assigning a node pool (overlapped planes)
 
 ```hcl
@@ -89,7 +128,8 @@ The following arguments are supported:
 * `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
-* `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support). `restricted` and `unrestricted` are supported (string)
+* `cluster_monitoring_input` - (Optional/Computed) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
+* `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support) (string)
 * `enable_cluster_monitoring` - (Optional) Enable built-in cluster monitoring. Default `false` (bool)
 * `enable_network_policy` - (Optional) Enable project network isolation. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
@@ -674,6 +714,12 @@ The following arguments are supported:
 * `ca_certs` - (Optional) CA certs for the authorized cluster endpoint (string)
 * `enabled` - (Optional) Enable the authorized cluster endpoint. Default `true` (bool)
 * `fqdn` - (Optional) FQDN for the authorized cluster endpoint (string)
+
+### `cluster_monitoring_input`
+
+#### Arguments
+
+* `answers` - (Optional/Computed) Key/value answers for monitor input (map)
 
 ### `cluster_registration_token`
 

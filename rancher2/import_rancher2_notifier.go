@@ -4,8 +4,8 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceRancher2ProjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	err := resourceRancher2ProjectRead(d, meta)
+func resourceRancher2NotifierImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	err := resourceRancher2NotifierRead(d, meta)
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}

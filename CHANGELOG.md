@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `rancher2_cluster_alert_group`
 * **New Data Source:** `rancher2_cluster_alert_rule`
+* **New Data Source:** `rancher2_notifier`
 * **New Data Source:** `rancher2_project_alert_group`
 * **New Data Source:** `rancher2_project_alert_rule`
 * **New Data Source:** `rancher2_role_template`
@@ -12,6 +13,7 @@ FEATURES:
 * **New Resource:** `rancher2_cluster_alert_group`
 * **New Resource:** `rancher2_cluster_alert_rule`
 * **New Resource:** `rancher2_cluster_sync`
+* **New Resource:** `rancher2_notifier`
 * **New Resource:** `rancher2_project_alert_group`
 * **New Resource:** `rancher2_project_alert_rule`
 * **New Resource:** `rancher2_role_template`
@@ -19,6 +21,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Added `monitoring_input` argument to define monitoring config for `rancher2_cluster` and `rancher2_project`
+* Improved capitalization/spelling/grammar/etc in docs
 
 BUG FIXES:
 
