@@ -2,15 +2,18 @@
 
 FEATURES:
 
+* **New Data Source:** `rancher2_notifier`
 * **New Data Source:** `rancher2_role_template`
 * **New Resource:** `rancher2_auth_config_keycloak`
 * **New Resource:** `rancher2_auth_config_okta`
 * **New Resource:** `rancher2_cluster_sync`
+* **New Resource:** `rancher2_notifier`
 * **New Resource:** `rancher2_role_template`
 
 ENHANCEMENTS:
 
 * Added `monitoring_input` argument to define monitoring config for `rancher2_cluster` and `rancher2_project`
+* Improved capitalization/spelling/grammar/etc in docs
 
 BUG FIXES:
 

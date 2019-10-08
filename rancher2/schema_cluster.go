@@ -12,8 +12,7 @@ const (
 )
 
 var (
-	clusterDrivers           = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverRKE}
-	clusterPodSecurityPolicy = []string{"restricted", "unrestricted"}
+	clusterDrivers = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverRKE}
 )
 
 //Types
@@ -193,11 +192,10 @@ func clusterFields() map[string]*schema.Schema {
 			},
 		},
 		"default_pod_security_policy_template_id": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			ValidateFunc: validation.StringInSlice(clusterPodSecurityPolicy, true),
-			Description:  "Default pod security policy template id",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Default pod security policy template id",
 		},
 		"enable_cluster_monitoring": {
 			Type:        schema.TypeBool,
