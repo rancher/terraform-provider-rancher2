@@ -12,6 +12,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* Added `monitoring_input` argument to define monitoring config for `rancher2_cluster` and `rancher2_project`
 * Improved capitalization/spelling/grammar/etc in docs
 
 BUG FIXES:

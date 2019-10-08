@@ -255,7 +255,7 @@ func TestFlattenCluster(t *testing.T) {
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{})
 		tc.InputToken.ID = "id"
-		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string))
+		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

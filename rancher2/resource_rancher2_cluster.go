@@ -72,6 +72,20 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be created: %s", newCluster.ID, waitErr)
 	}
 
+	monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
+	if newCluster.EnableClusterMonitoring && monitoringInput != nil {
+		clusterResource := &norman.Resource{
+			ID:      newCluster.ID,
+			Type:    newCluster.Type,
+			Links:   newCluster.Links,
+			Actions: newCluster.Actions,
+		}
+		err = client.APIBaseClient.Action(managementClient.ClusterType, "editMonitoring", clusterResource, monitoringInput, nil)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(newCluster.ID)
 
 	return resourceRancher2ClusterRead(d, meta)
@@ -118,7 +132,20 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	err = flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID)
+	monitoringInput := &managementClient.MonitoringInput{}
+	if cluster.EnableClusterMonitoring {
+		monitoringOutput := &managementClient.MonitoringOutput{}
+		err = client.APIBaseClient.Action(managementClient.ClusterType, "viewMonitoring", clusterResource, nil, monitoringOutput)
+		if err != nil {
+			return err
+		}
+
+		if monitoringOutput != nil && len(monitoringOutput.Answers) > 0 {
+			monitoringInput.Answers = monitoringOutput.Answers
+		}
+	}
+
+	err = flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID, monitoringInput)
 	if err != nil {
 		return err
 	}
@@ -179,7 +206,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		update["rancherKubernetesEngineConfig"] = rkeConfig
 	}
 
-	newCluster := &CloudCredential{}
+	newCluster := &Cluster{}
 	err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
 	if err != nil {
 		return err
@@ -196,6 +223,22 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr)
+	}
+
+	if d.HasChange("enable_cluster_monitoring") || d.HasChange("cluster_monitoring_input") {
+		monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
+		if newCluster.EnableClusterMonitoring && monitoringInput != nil {
+			clusterResource := &norman.Resource{
+				ID:      newCluster.ID,
+				Type:    newCluster.Type,
+				Links:   newCluster.Links,
+				Actions: newCluster.Actions,
+			}
+			err = client.APIBaseClient.Action(managementClient.ClusterType, "editMonitoring", clusterResource, monitoringInput, nil)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(newCluster.ID)

@@ -86,7 +86,15 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 			"[ERROR] waiting for project (%s) to be created: %s", newProject.ID, waitErr)
 	}
 
-	err = flattenProject(d, newProject)
+	monitoringInput := expandMonitoringInput(d.Get("project_monitoring_input").([]interface{}))
+	if newProject.EnableProjectMonitoring && monitoringInput != nil {
+		err = client.Project.ActionEditMonitoring(newProject, monitoringInput)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = flattenProject(d, newProject, monitoringInput)
 	if err != nil {
 		return err
 	}
@@ -111,7 +119,19 @@ func resourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	err = flattenProject(d, project)
+	monitoringInput := &managementClient.MonitoringInput{}
+	if project.EnableProjectMonitoring {
+		monitoringOutput, err := client.Project.ActionViewMonitoring(project)
+		if err != nil {
+			return err
+		}
+
+		if monitoringOutput != nil && len(monitoringOutput.Answers) > 0 {
+			monitoringInput.Answers = monitoringOutput.Answers
+		}
+	}
+
+	err = flattenProject(d, project, monitoringInput)
 	if err != nil {
 		return err
 	}
@@ -161,6 +181,16 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 	if waitErr != nil {
 		return fmt.Errorf(
 			"[ERROR] waiting for project (%s) to be updated: %s", newProject.ID, waitErr)
+	}
+
+	if d.HasChange("enable_project_monitoring") || d.HasChange("project_monitoring_input") {
+		monitoringInput := expandMonitoringInput(d.Get("project_monitoring_input").([]interface{}))
+		if newProject.EnableProjectMonitoring && monitoringInput != nil {
+			err = client.Project.ActionEditMonitoring(newProject, monitoringInput)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return resourceRancher2ProjectRead(d, meta)
