@@ -92,10 +92,42 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterRegistationTokenFields(),
 				},
 			},
+			"cluster_template_answers": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				MaxItems:    1,
+				Description: "Cluster template answers",
+				Elem: &schema.Resource{
+					Schema: answerFields(),
+				},
+			},
+			"cluster_template_id": &schema.Schema{
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Cluster template ID",
+			},
+			"cluster_template_questions": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Cluster template questions",
+				Elem: &schema.Resource{
+					Schema: questionFields(),
+				},
+			},
+			"cluster_template_revision_id": &schema.Schema{
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Cluster template revision ID",
+			},
 			"default_pod_security_policy_template_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Default pod security policy template id",
+			},
+			"enable_cluster_alerting": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable built-in cluster alerting",
 			},
 			"enable_cluster_monitoring": {
 				Type:        schema.TypeBool,

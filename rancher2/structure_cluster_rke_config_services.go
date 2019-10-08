@@ -282,6 +282,10 @@ func flattenClusterRKEConfigServicesEtcd(in *managementClient.ETCDService, p []i
 		obj["extra_env"] = toArrayInterface(in.ExtraEnv)
 	}
 
+	if in.GID >= 0 {
+		obj["gid"] = int(in.GID)
+	}
+
 	if len(in.Image) > 0 {
 		obj["image"] = in.Image
 	}
@@ -296,6 +300,10 @@ func flattenClusterRKEConfigServicesEtcd(in *managementClient.ETCDService, p []i
 
 	if len(in.Retention) > 0 {
 		obj["retention"] = in.Retention
+	}
+
+	if in.UID >= 0 {
+		obj["uid"] = int(in.UID)
 	}
 
 	obj["snapshot"] = *in.Snapshot
@@ -653,6 +661,10 @@ func expandClusterRKEConfigServicesEtcd(p []interface{}) (*managementClient.ETCD
 		obj.ExtraEnv = toArrayString(v)
 	}
 
+	if v, ok := in["gid"].(int); ok && v >= 0 {
+		obj.GID = int64(v)
+	}
+
 	if v, ok := in["image"].(string); ok && len(v) > 0 {
 		obj.Image = v
 	}
@@ -671,6 +683,10 @@ func expandClusterRKEConfigServicesEtcd(p []interface{}) (*managementClient.ETCD
 
 	if v, ok := in["snapshot"].(bool); ok {
 		obj.Snapshot = &v
+	}
+
+	if v, ok := in["uid"].(int); ok && v >= 0 {
+		obj.UID = int64(v)
 	}
 
 	return obj, nil

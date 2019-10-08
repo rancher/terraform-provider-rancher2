@@ -319,6 +319,11 @@ func clusterRKEConfigServicesEtcdFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
+		"gid": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  0,
+		},
 		"image": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -344,6 +349,11 @@ func clusterRKEConfigServicesEtcdFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
+		},
+		"uid": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  0,
 		},
 	}
 	return s
