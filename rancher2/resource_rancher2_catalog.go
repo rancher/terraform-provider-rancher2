@@ -61,6 +61,11 @@ func resourceRancher2CatalogCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
+		// Removing catalog if not getting active state
+		err = meta.(*Config).DeleteCatalog(scope, newCatalog)
+		if err != nil {
+			return fmt.Errorf("Error removing %s Catalog: %s", scope, err)
+		}
 		return fmt.Errorf(
 			"[ERROR] waiting for catalog (%s) to be created: %s", id, waitErr)
 	}
