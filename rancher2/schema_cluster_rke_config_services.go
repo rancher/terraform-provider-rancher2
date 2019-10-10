@@ -158,6 +158,11 @@ func clusterRKEConfigServicesKubeControllerFields() map[string]*schema.Schema {
 
 func clusterRKEConfigServicesKubeAPIFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"always_pull_images": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
 		"extra_args": {
 			Type:     schema.TypeMap,
 			Optional: true,

@@ -136,6 +136,8 @@ func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService)
 		return []interface{}{}, nil
 	}
 
+	obj["always_pull_images"] = in.AlwaysPullImages
+
 	if len(in.ExtraArgs) > 0 {
 		obj["extra_args"] = toMapInterface(in.ExtraArgs)
 	}
@@ -514,6 +516,10 @@ func expandClusterRKEConfigServicesKubeAPI(p []interface{}) (*managementClient.K
 		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
+
+	if v, ok := in["always_pull_images"].(bool); ok {
+		obj.AlwaysPullImages = v
+	}
 
 	if v, ok := in["extra_args"].(map[string]interface{}); ok && len(v) > 0 {
 		obj.ExtraArgs = toMapString(v)
