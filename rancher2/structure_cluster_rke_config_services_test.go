@@ -122,6 +122,7 @@ func init() {
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIConf = &managementClient.KubeAPIService{
+		AlwaysPullImages: true,
 		ExtraArgs: map[string]string{
 			"arg_one": "one",
 			"arg_two": "two",
@@ -135,6 +136,7 @@ func init() {
 	}
 	testClusterRKEConfigServicesKubeAPIInterface = []interface{}{
 		map[string]interface{}{
+			"always_pull_images": true,
 			"extra_args": map[string]interface{}{
 				"arg_one": "one",
 				"arg_two": "two",

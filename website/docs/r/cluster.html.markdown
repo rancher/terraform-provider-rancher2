@@ -579,6 +579,7 @@ The following attributes are exported:
 
 ###### Arguments
 
+* `always_pull_images` - (Optional) Always pull kube API images. Default: `false` (bool)
 * `extra_args` - (Optional/Computed) Extra arguments for kube API service (map)
 * `extra_binds` - (Optional) Extra binds for kube API service (list)
 * `extra_env` - (Optional) Extra environment for kube API service (list)
