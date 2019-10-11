@@ -1,4 +1,13 @@
 ## 1.6.1 (Unreleased)
+
+FEATURES:
+
+ENHANCEMENTS:
+
+* Added `always_pull_images` argument on `kube_api` argument on `rke_config` argument for `rancher2_clusters` resource
+
+BUG FIXES:
+
 ## 1.6.0 (October 08, 2019)
 
 FEATURES:
