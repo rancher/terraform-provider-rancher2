@@ -5,8 +5,11 @@ FEATURES:
 ENHANCEMENTS:
 
 * Added `always_pull_images` argument on `kube_api` argument on `rke_config` argument for `rancher2_clusters` resource
+* Added resource deletion if not getting active state on creation for `rancher2_catalog` resource
 
 BUG FIXES:
+
+* Fix `password` argument update for `rancher2_catalog` resource
 
 ## 1.6.0 (October 08, 2019)
 
