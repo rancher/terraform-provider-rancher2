@@ -691,7 +691,7 @@ The following arguments are supported:
 * `minimum_nodes` - (Optional) The minimum number of worker nodes. Default `1` (int)
 * `node_volume_size` - (Optional) The volume size for each node. Default `20` (int)
 * `region` - (Optional) The AWS Region to create the EKS cluster in. Default `us-west-2` (string)
- `security_groups` - (Optional) List of security groups to use for the cluster. If it's not specified Rancher will create a new security group (list)
+* `security_groups` - (Optional) List of security groups to use for the cluster. If it's not specified Rancher will create a new security group (list)
 * `service_role` - (Optional) The service role to use to perform the cluster operations in AWS. If it's not specified Rancher will create a new service role (string)
 * `session_token` - (Optional/Sensitive) A session token to use with the client key and secret if applicable (string)
 * `subnets` - (Optional) List of subnets in the virtual network to use. If it's not specified Rancher will create 3 news subnets (list)
