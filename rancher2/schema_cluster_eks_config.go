@@ -6,31 +6,34 @@ import (
 
 const (
 	clusterEKSKind   = "eks"
-	clusterDriverEKS = "amazonelasticcontainerservice"
+	clusterDriverEKS = "amazonElasticContainerService"
 )
 
 //Types
 
 type AmazonElasticContainerServiceConfig struct {
-	AMI                         string   `json:"ami,omitempty" yaml:"ami,omitempty"`
-	AccessKey                   string   `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
-	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
-	DisplayName                 string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
-	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
-	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
-	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
-	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
-	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
-	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
-	NodeVolumeSize              int64    `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
-	Region                      string   `json:"region,omitempty" yaml:"region,omitempty"`
-	SecretKey                   string   `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
-	SecurityGroups              []string `json:"securityGroups,omitempty" yaml:"securityGroups,omitempty"`
-	ServiceRole                 string   `json:"serviceRole,omitempty" yaml:"serviceRole,omitempty"`
-	SessionToken                string   `json:"sessionToken,omitempty" yaml:"sessionToken,omitempty"`
-	Subnets                     []string `json:"subnets,omitempty" yaml:"subnets,omitempty"`
-	UserData                    string   `json:"userData,omitempty" yaml:"userData,omitempty"`
-	VirtualNetwork              string   `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
+	AMI                         string            `json:"ami,omitempty" yaml:"ami,omitempty"`
+	AccessKey                   string            `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
+	Annotations                 map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+	AssociateWorkerNodePublicIP *bool             `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
+	DesiredNodes                int64             `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
+	DisplayName                 string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	DriverName                  string            `json:"driverName" yaml:"driverName"`
+	InstanceType                string            `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
+	KeyPairName                 string            `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
+	KubernetesVersion           string            `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
+	MaximumNodes                int64             `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
+	MinimumNodes                int64             `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
+	NodeVolumeSize              int64             `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
+	PlacementGroup              string            `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
+	Region                      string            `json:"region,omitempty" yaml:"region,omitempty"`
+	SecretKey                   string            `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
+	SecurityGroups              []string          `json:"securityGroups,omitempty" yaml:"securityGroups,omitempty"`
+	ServiceRole                 string            `json:"serviceRole,omitempty" yaml:"serviceRole,omitempty"`
+	SessionToken                string            `json:"sessionToken,omitempty" yaml:"sessionToken,omitempty"`
+	Subnets                     []string          `json:"subnets,omitempty" yaml:"subnets,omitempty"`
+	UserData                    string            `json:"userData,omitempty" yaml:"userData,omitempty"`
+	VirtualNetwork              string            `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
 }
 
 //Schemas

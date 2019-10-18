@@ -134,7 +134,16 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	cluster := &norman.Resource{}
+	// Gets used to later execute the update request
+	rawCluster := &norman.Resource{}
+	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), rawCluster)
+	if err != nil {
+		return err
+	}
+
+	// Gets used as base for creating the update request. If we use an empty object we will delete properties on the
+	// cluster and potentially break it
+	cluster := &Cluster{}
 	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 	if err != nil {
 		return err
@@ -160,7 +169,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		update["azureKubernetesServiceConfig"] = aksConfig
 	case clusterDriverEKS:
-		eksConfig, err := expandClusterEKSConfig(d.Get("eks_config").([]interface{}), d.Get("name").(string))
+		eksConfig, err := expandClusterEKSConfig(cluster.AmazonElasticContainerServiceConfig, d.Get("eks_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
 			return err
 		}
@@ -180,7 +189,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	newCluster := &CloudCredential{}
-	err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
+	err = client.APIBaseClient.Update(managementClient.ClusterType, rawCluster, update, newCluster)
 	if err != nil {
 		return err
 	}
