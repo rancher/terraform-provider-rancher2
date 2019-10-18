@@ -14,3 +14,5 @@ require (
 	golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
 )
+
+replace k8s.io/client-go => k8s.io/client-go v12.0.0+incompatible
