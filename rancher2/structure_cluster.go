@@ -238,7 +238,7 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 	}
 
 	if v, ok := in.Get("eks_config").([]interface{}); ok && len(v) > 0 {
-		eksConfig, err := expandClusterEKSConfig(v, obj.Name)
+		eksConfig, err := expandClusterEKSConfig(&AmazonElasticContainerServiceConfig{}, v, obj.Name)
 		if err != nil {
 			return nil, err
 		}
