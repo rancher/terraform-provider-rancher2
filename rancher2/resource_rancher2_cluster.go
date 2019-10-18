@@ -186,6 +186,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["rancherKubernetesEngineConfig"] = rkeConfig
+	default:
+		log.Printf("[INFO] Skipping update of the KubernetesEngineConfig due to an unknown driver '%s'", driver)
 	}
 
 	newCluster := &CloudCredential{}
