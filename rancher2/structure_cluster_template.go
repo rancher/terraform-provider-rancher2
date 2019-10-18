@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 

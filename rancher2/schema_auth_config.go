@@ -1,8 +1,8 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const authDefaultAccessMode = "unrestricted"

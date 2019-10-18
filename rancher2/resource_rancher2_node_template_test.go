@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
