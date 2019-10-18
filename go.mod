@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/terraform v0.12.8
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/rancher/norman v0.0.0-20191003174345-0ac7dd6ccb36
-	github.com/rancher/types v0.0.0-20191003184925-ab3403a2c8ca
+	github.com/rancher/types v0.0.0-20191017022642-c4c5ca1581f9
 	golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
 )
