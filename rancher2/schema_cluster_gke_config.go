@@ -380,7 +380,7 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Default:     "us-central1",
 			Description: "The region to launch the cluster",
 		},
-		"defaultMaxPodsConstraint": {
+		"default_max_pods_constraint": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     110,
