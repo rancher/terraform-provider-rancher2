@@ -185,6 +185,10 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 		obj["region"] = in.Region
 	}
 
+	if in.DefaultMaxPodsConstraint > 0 {
+		obj["default_max_pods_constraint"] = in.DefaultMaxPodsConstraint
+	}
+
 	return []interface{}{obj}, nil
 }
 
@@ -410,6 +414,10 @@ func expandClusterGKEConfig(p []interface{}, name string) (*GoogleKubernetesEngi
 
 	if v, ok := in["region"].(string); ok && len(v) > 0 {
 		obj.Region = v
+	}
+
+	if v, ok := in["default_max_pods_constraint"].(int); ok && v > 0 {
+		obj.DefaultMaxPodsConstraint = int64(v)
 	}
 
 	return obj, nil
