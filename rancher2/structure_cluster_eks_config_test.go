@@ -31,6 +31,7 @@ func init() {
 		Subnets:                     []string{"subnet1", "subnet2"},
 		UserData:                    "user_data",
 		VirtualNetwork:              "network",
+		WorkerSubnets:               []string{"worker1", "worker2"},
 	}
 	testClusterEKSConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -52,6 +53,7 @@ func init() {
 			"subnets":                         []interface{}{"subnet1", "subnet2"},
 			"user_data":                       "user_data",
 			"virtual_network":                 "network",
+			"worker_subnets":                  []interface{}{"worker1", "worker1"},
 		},
 	}
 }
