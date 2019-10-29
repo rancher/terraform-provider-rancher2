@@ -487,6 +487,8 @@ github.com/rancher/norman v0.0.0-20191003174345-0ac7dd6ccb36 h1:N0ZUBJRq/ydy2ULi
 github.com/rancher/norman v0.0.0-20191003174345-0ac7dd6ccb36/go.mod h1:kVWc1OyHK9decIY90IYExSHedI5a5qze7IfLiEOTmXQ=
 github.com/rancher/types v0.0.0-20191017022642-c4c5ca1581f9 h1:PxyLXd8gg3hQurS3Lud8Izd80uF5xZCqQD/ZYIh0F28=
 github.com/rancher/types v0.0.0-20191017022642-c4c5ca1581f9/go.mod h1:3k1KigFfdRBJhiE8EXTpoM0aPXAFuYuGxKtU93oNxAY=
+github.com/rancher/types v0.0.0-20191023170600-1563e7864c02 h1:KUkhl//mPmHN0wYGH+KjN+hFqhtNqraHLv4wcmdE6d0=
+github.com/rancher/types v0.0.0-20191023170600-1563e7864c02/go.mod h1:3k1KigFfdRBJhiE8EXTpoM0aPXAFuYuGxKtU93oNxAY=
 github.com/rancher/wrangler v0.1.5 h1:HiXOeP6Kci2DK+e04D1g6INT77xAYpAr54zmTTe0Spk=
 github.com/rancher/wrangler v0.1.5/go.mod h1:EYP7cqpg42YqElaCm+U9ieSrGQKAXxUH5xsr+XGpWyE=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=

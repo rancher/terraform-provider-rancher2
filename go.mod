@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.0.0
 	github.com/rancher/norman v0.0.0-20191003174345-0ac7dd6ccb36
-	github.com/rancher/types v0.0.0-20191017022642-c4c5ca1581f9
+	github.com/rancher/types v0.0.0-20191023170600-1563e7864c02
 	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586
 )
 
