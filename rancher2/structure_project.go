@@ -162,7 +162,7 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project, monito
 func expandProjectContainerResourceLimit(p []interface{}) *managementClient.ContainerResourceLimit {
 	obj := &managementClient.ContainerResourceLimit{}
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -186,7 +186,7 @@ func expandProjectResourceQuotaLimit(p []interface{}) *managementClient.Resource
 	obj := &managementClient.ResourceQuotaLimit{}
 
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -250,7 +250,7 @@ func expandProjectResourceQuota(p []interface{}) (*managementClient.ProjectResou
 	nsQuota := &managementClient.NamespaceResourceQuota{}
 
 	if len(p) == 0 || p[0] == nil {
-		return pQuota, nsQuota
+		return nil, nil
 	}
 	in := p[0].(map[string]interface{})
 

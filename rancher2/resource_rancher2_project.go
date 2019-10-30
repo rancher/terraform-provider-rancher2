@@ -183,6 +183,19 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 			"[ERROR] waiting for project (%s) to be updated: %s", newProject.ID, waitErr)
 	}
 
+	if d.HasChange("pod_security_policy_template_id") {
+		pspInput := &managementClient.SetPodSecurityPolicyTemplateInput{
+			PodSecurityPolicyTemplateName: d.Get("pod_security_policy_template_id").(string),
+		}
+		_, err = client.Project.ActionSetpodsecuritypolicytemplate(newProject, pspInput)
+		if err != nil {
+			// Checking error due to ActionSetpodsecuritypolicytemplate() issue
+			if error.Error(err) != "unexpected end of JSON input" {
+				return err
+			}
+		}
+	}
+
 	if d.HasChange("enable_project_monitoring") || d.HasChange("project_monitoring_input") {
 		monitoringInput := expandMonitoringInput(d.Get("project_monitoring_input").([]interface{}))
 		if newProject.EnableProjectMonitoring && monitoringInput != nil {
