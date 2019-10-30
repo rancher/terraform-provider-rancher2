@@ -15,6 +15,7 @@ type AmazonElasticContainerServiceConfig struct {
 	AMI                         string   `json:"ami,omitempty" yaml:"ami,omitempty"`
 	AccessKey                   string   `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
 	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
+	DesiredNodes                int64    `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
 	DisplayName                 string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
@@ -63,6 +64,12 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     true,
 			Description: "Associate public ip EKS worker nodes",
+		},
+		"desired_nodes": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3,
+			Description: "The desired number of worker nodes",
 		},
 		"instance_type": {
 			Type:        schema.TypeString,

@@ -685,6 +685,7 @@ The following arguments are supported:
 * `secret_key` - (Required/Sensitive) The AWS Client Secret associated with the Client ID (string)
 * `ami` - (Optional) AMI ID to use for the worker nodes instead of the default (string)
 * `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes. Default `true` (bool)
+* `desired_nodes` - (Optional) The desired number of worker nodes. Just for Rancher v2.3.x and above. Default `3` (int)
 * `instance_type` - (Optional) The type of machine to use for worker nodes. Default `t2.medium` (string)
 * `key_pair_name` - (Optional) Allow user to specify key name to use. Just for Rancher v2.2.7 and above (string)
 * `maximum_nodes` - (Optional) The maximum number of worker nodes. Default `3` (int)

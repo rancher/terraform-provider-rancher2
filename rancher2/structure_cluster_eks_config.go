@@ -22,6 +22,10 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 
 	obj["associate_worker_node_public_ip"] = *in.AssociateWorkerNodePublicIP
 
+	if in.DesiredNodes > 0 {
+		obj["desired_nodes"] = int(in.DesiredNodes)
+	}
+
 	if len(in.InstanceType) > 0 {
 		obj["instance_type"] = in.InstanceType
 	}
@@ -102,6 +106,10 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["associate_worker_node_public_ip"].(bool); ok {
 		obj.AssociateWorkerNodePublicIP = &v
+	}
+
+	if v, ok := in["desired_nodes"].(int); ok && v > 0 {
+		obj.DesiredNodes = int64(v)
 	}
 
 	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
