@@ -44,7 +44,7 @@ resource "rancher2_certificate" "foo" {
 The following arguments are supported:
 
 * `certs` - (Required) Base64 encoded public certs (string)
-* `key` - (Required) Base64 encoded private key (string)
+* `key` - (Required/Sensitive) Base64 encoded private key (string)
 * `project_id` - (Required/ForceNew) The project id where the certificate should be created  (string)
 * `description` - (Optional) A certificate description (string)
 * `name` - (Optional/ForceNew) The name of the certificate (string)

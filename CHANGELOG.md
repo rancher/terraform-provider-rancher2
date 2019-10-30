@@ -2,6 +2,8 @@
 
 FEATURES:
 
+
+
 ENHANCEMENTS:
 
 * Added `always_pull_images` argument on `kube_api` argument on `rke_config` argument for `rancher2_clusters` resource
@@ -10,6 +12,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix `password` argument update for `rancher2_catalog` resource
+* Fix: set `key` argument as sensitive on `rancher2_certificate` resource. 
 
 ## 1.6.0 (October 08, 2019)
 
