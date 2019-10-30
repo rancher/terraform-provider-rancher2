@@ -13,6 +13,9 @@ BUG FIXES:
 
 * Fix `password` argument update for `rancher2_catalog` resource
 * Fix: set `key` argument as sensitive on `rancher2_certificate` resource. 
+* Fix continuous diff issues on `rancher2_project` resource
+* Fix `pod_security_policy_template_id` update on `rancher2_project` resource
+* Fix continuous diff issues on `rancher2_namespace` resource
 
 ## 1.6.0 (October 08, 2019)
 
