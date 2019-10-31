@@ -121,12 +121,10 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("description") || d.HasChange("annotations") || d.HasChange("labels") {
 		log.Printf("[INFO] Updating App ID %s", id)
 
-		update := map[string]interface{}{
-			"description": d.Get("description").(string),
-			"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-			"labels":      toMapString(d.Get("labels").(map[string]interface{})),
-		}
-		_, err := client.App.Update(app, update)
+		app.Description = d.Get("description").(string)
+		app.Annotations = toMapString(d.Get("annotations").(map[string]interface{}))
+		app.Labels = toMapString(d.Get("labels").(map[string]interface{}))
+		_, err := client.App.Replace(app)
 		if err != nil {
 			return err
 		}

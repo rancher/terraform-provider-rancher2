@@ -65,7 +65,7 @@ resource "rancher2_app" "foo" {
   description = "Terraform app acceptance test"
   project_id = "${rancher2_project.foo.id}"
   template_name = "docker-registry"
-  template_version = "1.6.1"
+  template_version = "1.8.1"
   target_namespace = "${rancher2_namespace.foo.name}"
   answers = {
     "ingress_host" = "test.xip.io"
@@ -80,7 +80,7 @@ resource "rancher2_app" "foo" {
   description = "Terraform app acceptance test - updated"
   project_id = "${rancher2_project.foo.id}"
   template_name = "docker-registry"
-  template_version = "1.4.3"
+  template_version = "1.8.1"
   target_namespace = "${rancher2_namespace.foo.name}"
   answers = {
     "ingress_host" = "test2.xip.io"
@@ -95,7 +95,7 @@ resource "rancher2_app" "foo" {
   description = "Terraform app acceptance test"
   project_id = "${rancher2_project.foo.id}"
   template_name = "docker-registry"
-  template_version = "1.6.1"
+  template_version = "1.8.1"
   target_namespace = "${rancher2_namespace.foo.name}"
   answers = {
     "ingress_host" = "test.xip.io"
@@ -118,7 +118,7 @@ func TestAccRancher2App_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "description", "Terraform app acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.6.1"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test.xip.io"),
 				),
 			},
@@ -129,7 +129,7 @@ func TestAccRancher2App_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "description", "Terraform app acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.4.3"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test2.xip.io"),
 				),
 			},
@@ -140,7 +140,7 @@ func TestAccRancher2App_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "description", "Terraform app acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.6.1"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test.xip.io"),
 				),
 			},
