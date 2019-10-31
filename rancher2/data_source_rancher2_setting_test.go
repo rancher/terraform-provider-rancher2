@@ -3,7 +3,7 @@ package rancher2
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccRancher2SettingDataSource_accessLog(t *testing.T) {
