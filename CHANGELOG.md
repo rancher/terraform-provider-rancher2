@@ -8,11 +8,13 @@ ENHANCEMENTS:
 
 * Added `always_pull_images` argument on `kube_api` argument on `rke_config` argument for `rancher2_clusters` resource
 * Added resource deletion if not getting active state on creation for `rancher2_catalog` resource
+* Updated rancher to v2.3.2 and k3s to v0.10.1 on acceptance tests
 
 BUG FIXES:
 
 * Fix `password` argument update for `rancher2_catalog` resource
-* Fix: set `key` argument as sensitive on `rancher2_certificate` resource. 
+* Fix: set `key` argument as sensitive on `rancher2_certificate` resource
+* Fix `rancher2_app` update issue on Rancher v2.3.2
 
 ## 1.6.0 (October 08, 2019)
 
