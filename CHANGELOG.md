@@ -1,4 +1,4 @@
-## 1.6.1 (Unreleased)
+## 1.7.0 (Unreleased)
 
 FEATURES:
 
@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * Added `always_pull_images` argument on `kube_api` argument on `rke_config` argument for `rancher2_clusters` resource
 * Added resource deletion if not getting active state on creation for `rancher2_catalog` resource
+* Updated rancher to v2.3.2 and k3s to v0.10.1 on acceptance tests
 * Added `desired nodes` support on `eks_config` argument on `rancher2_cluster` resource
 * Added `managed disk` support on `azure_config` argument on `rancher2_node_template` resource
 * Migrated provider to use `terraform-plugin-sdk`
@@ -15,6 +16,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix `password` argument update for `rancher2_catalog` resource
+* Fix `rancher2_app` update issue on Rancher v2.3.2
 * Fix: set `key` argument as sensitive on `rancher2_certificate` resource. 
 * Fix continuous diff issues on `rancher2_project` resource
 * Fix `pod_security_policy_template_id` update on `rancher2_project` resource
