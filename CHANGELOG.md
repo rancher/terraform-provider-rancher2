@@ -9,6 +9,8 @@ ENHANCEMENTS:
 * Added `always_pull_images` argument on `kube_api` argument on `rke_config` argument for `rancher2_clusters` resource
 * Added resource deletion if not getting active state on creation for `rancher2_catalog` resource
 * Added `desired nodes` support on `eks_config` argument on `rancher2_cluster` resource
+* Added `managed disk` support on `azure_config` argument on `rancher2_node_template` resource
+* Migrated provider to use `terraform-plugin-sdk`
 
 BUG FIXES:
 
