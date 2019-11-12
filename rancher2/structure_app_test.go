@@ -4,17 +4,21 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	projectClient "github.com/rancher/types/client/project/v3"
 )
 
 var (
-	testAppConf      *projectClient.App
-	testAppInterface map[string]interface{}
+	testAppConfGlobal       *projectClient.App
+	testAppInterfaceGlobal  map[string]interface{}
+	testAppConfCluster      *projectClient.App
+	testAppInterfaceCluster map[string]interface{}
+	testAppConfProject      *projectClient.App
+	testAppInterfaceProject map[string]interface{}
 )
 
 func init() {
-	testAppConf = &projectClient.App{
+	testAppConfGlobal = &projectClient.App{
 		ExternalID:      "catalog://?catalog=test&template=test&version=1.23.0",
 		Name:            "name",
 		ProjectID:       "project:test",
@@ -35,7 +39,7 @@ func init() {
 			"option2": "value2",
 		},
 	}
-	testAppInterface = map[string]interface{}{
+	testAppInterfaceGlobal = map[string]interface{}{
 		"catalog_name": "test",
 		//"external_id":      "catalog://?catalog=test&template=test&version=1.23.0",
 		"name":             "name",
@@ -49,7 +53,95 @@ func init() {
 		"description":      "description",
 		"revision_id":      "revision_id",
 		"template_version": "1.23.0",
-		"values_yaml":      "values_yaml",
+		"values_yaml":      Base64Encode("values_yaml"),
+		"annotations": map[string]interface{}{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		"labels": map[string]interface{}{
+			"option1": "value1",
+			"option2": "value2",
+		},
+	}
+	testAppConfCluster = &projectClient.App{
+		ExternalID:      "catalog://?catalog=c-XXXXX/test&type=clusterCatalog&template=test&version=1.23.0",
+		Name:            "name",
+		ProjectID:       "project:test",
+		TargetNamespace: "target_namespace",
+		Answers: map[string]string{
+			"answers1": "one",
+			"answers2": "two",
+		},
+		Description:   "description",
+		AppRevisionID: "revision_id",
+		ValuesYaml:    "values_yaml",
+		Annotations: map[string]string{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		Labels: map[string]string{
+			"option1": "value1",
+			"option2": "value2",
+		},
+	}
+	testAppInterfaceCluster = map[string]interface{}{
+		"catalog_name":     "c-XXXXX:test",
+		"name":             "name",
+		"project_id":       "project:test",
+		"target_namespace": "target_namespace",
+		"template_name":    "test",
+		"answers": map[string]interface{}{
+			"answers1": "one",
+			"answers2": "two",
+		},
+		"description":      "description",
+		"revision_id":      "revision_id",
+		"template_version": "1.23.0",
+		"values_yaml":      Base64Encode("values_yaml"),
+		"annotations": map[string]interface{}{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		"labels": map[string]interface{}{
+			"option1": "value1",
+			"option2": "value2",
+		},
+	}
+	testAppConfProject = &projectClient.App{
+		ExternalID:      "catalog://?catalog=p-XXXXX/test&type=projectCatalog&template=test&version=1.23.0",
+		Name:            "name",
+		ProjectID:       "project:test",
+		TargetNamespace: "target_namespace",
+		Answers: map[string]string{
+			"answers1": "one",
+			"answers2": "two",
+		},
+		Description:   "description",
+		AppRevisionID: "revision_id",
+		ValuesYaml:    "values_yaml",
+		Annotations: map[string]string{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		Labels: map[string]string{
+			"option1": "value1",
+			"option2": "value2",
+		},
+	}
+	testAppInterfaceProject = map[string]interface{}{
+		"catalog_name":     "p-XXXXX:test",
+		"name":             "name",
+		"project_id":       "project:test",
+		"target_namespace": "target_namespace",
+		"template_name":    "test",
+		"answers": map[string]interface{}{
+			"answers1": "one",
+			"answers2": "two",
+		},
+		"description":      "description",
+		"revision_id":      "revision_id",
+		"template_version": "1.23.0",
+		"values_yaml":      Base64Encode("values_yaml"),
 		"annotations": map[string]interface{}{
 			"node_one": "one",
 			"node_two": "two",
@@ -68,8 +160,16 @@ func TestFlattenApp(t *testing.T) {
 		ExpectedOutput map[string]interface{}
 	}{
 		{
-			testAppConf,
-			testAppInterface,
+			testAppConfGlobal,
+			testAppInterfaceGlobal,
+		},
+		{
+			testAppConfCluster,
+			testAppInterfaceCluster,
+		},
+		{
+			testAppConfProject,
+			testAppInterfaceProject,
 		},
 	}
 
@@ -97,14 +197,25 @@ func TestExpandApp(t *testing.T) {
 		ExpectedOutput interface{}
 	}{
 		{
-			testAppInterface,
-			testAppConf,
+			testAppInterfaceGlobal,
+			testAppConfGlobal,
+		},
+		{
+			testAppInterfaceCluster,
+			testAppConfCluster,
+		},
+		{
+			testAppInterfaceProject,
+			testAppConfProject,
 		},
 	}
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, appFields(), tc.Input)
-		output := expandApp(inputResourceData)
+		output, err := expandApp(inputResourceData)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

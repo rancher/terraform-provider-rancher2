@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_namespace"
 sidebar_current: "docs-rancher2-resource-namespace"
 description: |-
-  Provides a Rancher v2 Namespace resource. This can be used to create namespaces for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Namespace resource. This can be used to create namespaces for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_namespace
 
-Provides a Rancher v2 Namespace resource. This can be used to create namespaces for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Namespace resource. This can be used to create namespaces for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
@@ -72,9 +72,9 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the namespace (string)
 * `project_id` - (Required) The project id where assign namespace. It's on the form `project_id=<cluster_id>:<id>`. Updating `<id>` part on same `<cluster_id>` namespace will be moved between projects (string)
-* `container_resource_limit` - (Optional/Computed) Default containers resource limits on namespace (List maxitem:1)
+* `container_resource_limit` - (Optional) Default containers resource limits on namespace (List maxitem:1)
 * `description` - (Optional) A namespace description (string)
-* `resource_quota` - (Optional/Computed) Resource quota for namespace. Rancher v2.1.x or higher (list maxitems:1)
+* `resource_quota` - (Optional) Resource quota for namespace. Rancher v2.1.x or higher (list maxitems:1)
 * `wait_for_cluster` - (Optional) Wait for cluster becomes active. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)

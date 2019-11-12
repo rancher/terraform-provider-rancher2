@@ -3,14 +3,14 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_auth_config_activedirectory"
 sidebar_current: "docs-rancher2-auth-config-activedirectory"
 description: |-
-  Provides a Rancher v2 Auth Config ActiveDirectory resource. This can be used to configure and enable Auth Config ActiveDirectory for rancher v2 rke clusters and retrieve their information.
+  Provides a Rancher v2 Auth Config ActiveDirectory resource. This can be used to configure and enable Auth Config ActiveDirectory for Rancher v2 RKE clusters and retrieve their information.
 ---
 
 # rancher2\_auth\_config\_activedirectory
 
-Provides a Rancher v2 Auth Config ActiveDirectory resource. This can be used to configure and enable Auth Config ActiveDirectory for rancher v2 rke clusters and retrieve their information.
+Provides a Rancher v2 Auth Config ActiveDirectory resource. This can be used to configure and enable Auth Config ActiveDirectory for Rancher v2 RKE clusters and retrieve their information.
 
-Beside local, just one auth config provider could be enabled at once.
+In addition to the built-in local auth, only one external auth config provider can be enabled at a time.
 
 ## Example Usage
 
@@ -59,7 +59,7 @@ The following arguments are supported:
 * `tls` - (Optional/Computed) Enable TLS connection (bool)
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
-                
+
 
 ## Attributes Reference
 
@@ -68,4 +68,3 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource (string)
 * `name` - (Computed) The name of the resource (string)
 * `type` - (Computed) The type of the resource (string)
-

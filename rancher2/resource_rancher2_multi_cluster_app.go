@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -94,7 +94,12 @@ func resourceRancher2MultiClusterAppRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return flattenMultiClusterApp(d, multiClusterApp)
+	templateVersion, err := client.TemplateVersion.ByID(multiClusterApp.TemplateVersionID)
+	if err != nil {
+		return err
+	}
+
+	return flattenMultiClusterApp(d, multiClusterApp, templateVersion.ExternalID)
 }
 
 func resourceRancher2MultiClusterAppUpdate(d *schema.ResourceData, meta interface{}) error {

@@ -1,17 +1,60 @@
-## 1.5.1 (Unreleased)
+## 1.7.0 (Unreleased)
 
 FEATURES:
 
+
+
+ENHANCEMENTS:
+
+* Added `always_pull_images` argument on `kube_api` argument on `rke_config` argument for `rancher2_clusters` resource
+* Added resource deletion if not getting active state on creation for `rancher2_catalog` resource
+* Updated rancher to v2.3.2 and k3s to v0.10.1 on acceptance tests
+* Added `desired nodes` support on `eks_config` argument on `rancher2_cluster` resource
+* Added `managed disk` support on `azure_config` argument on `rancher2_node_template` resource
+* Migrated provider to use `terraform-plugin-sdk`
+
+BUG FIXES:
+
+* Fix `password` argument update for `rancher2_catalog` resource
+* Fix `rancher2_app` update issue on Rancher v2.3.2
+* Fix: set `key` argument as sensitive on `rancher2_certificate` resource. 
+* Fix continuous diff issues on `rancher2_project` resource
+* Fix `pod_security_policy_template_id` update on `rancher2_project` resource
+* Fix continuous diff issues on `rancher2_namespace` resource
+
+## 1.6.0 (October 08, 2019)
+
+FEATURES:
+
+* **New Data Source:** `rancher2_cluster_alert_group`
+* **New Data Source:** `rancher2_cluster_alert_rule`
+* **New Data Source:** `rancher2_cluster_template`
+* **New Data Source:** `rancher2_notifier`
+* **New Data Source:** `rancher2_project_alert_group`
+* **New Data Source:** `rancher2_project_alert_rule`
 * **New Data Source:** `rancher2_role_template`
+* **New Resource:** `rancher2_auth_config_keycloak`
+* **New Resource:** `rancher2_auth_config_okta`
+* **New Resource:** `rancher2_cluster_alert_group`
+* **New Resource:** `rancher2_cluster_alert_rule`
+* **New Resource:** `rancher2_cluster_sync`
+* **New Resource:** `rancher2_cluster_template`
+* **New Resource:** `rancher2_notifier`
+* **New Resource:** `rancher2_project_alert_group`
+* **New Resource:** `rancher2_project_alert_rule`
 * **New Resource:** `rancher2_role_template`
 
 ENHANCEMENTS:
 
-
+* Added `monitoring_input` argument to define monitoring config for `rancher2_cluster` and `rancher2_project`
+* Improved capitalization/spelling/grammar/etc in docs
 
 BUG FIXES:
 
-
+* Fix `expandAppExternalID` function on `rancher2_app` resource. Function was generating a wrong `ExternalID` catalog URL, on `cluster` and `project` scope
+* Fix `flattenMultiClusterApp` function on `rancher2_multi-cluster_app` resource. Function wasn't updating fine `catalog_name`, `template_name` and/or `template_version` arguments, when contains char `-`
+* Fix: set `value_yaml` multiline argument as base64 encoded
+* Fix: removed `restricted` and `unrestricted` values checking for `default_pod_security_policy_template_id` argument on `rancher2_cluster` resource
 
 ## 1.5.0 (September 06, 2019)
 

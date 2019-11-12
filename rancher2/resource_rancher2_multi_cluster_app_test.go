@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -51,7 +51,7 @@ resource "rancher2_multi_cluster_app" "foo" {
     project_id = "${rancher2_project.foo.id}"
   }
   template_name = "docker-registry"
-  template_version = "1.6.1"
+  template_version = "1.8.1"
   answers {
     values = {
       "ingress_host" = "test.xip.io"
@@ -69,7 +69,7 @@ resource "rancher2_multi_cluster_app" "foo" {
     project_id = "${rancher2_project.foo.id}"
   }
   template_name = "docker-registry"
-  template_version = "1.4.3"
+  template_version = "1.8.1"
   answers {
     values = {
       "ingress_host" = "test2.xip.io"
@@ -87,7 +87,7 @@ resource "rancher2_multi_cluster_app" "foo" {
     project_id = "${rancher2_project.foo.id}"
   }
   template_name = "docker-registry"
-  template_version = "1.6.1"
+  template_version = "1.8.1"
   answers {
     values = {
       "ingress_host" = "test.xip.io"
@@ -110,7 +110,7 @@ func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2MultiClusterAppExists(testAccRancher2MultiClusterAppType+".foo", app),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "template_version_id", "cattle-global-data:library-docker-registry-1.6.1"),
+					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "template_version_id", "cattle-global-data:library-docker-registry-1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "answers.0.values.ingress_host", "test.xip.io"),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "roles.0", "project-member"),
 				),
@@ -120,7 +120,7 @@ func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2MultiClusterAppExists(testAccRancher2MultiClusterAppType+".foo", app),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "template_version_id", "cattle-global-data:library-docker-registry-1.4.3"),
+					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "template_version_id", "cattle-global-data:library-docker-registry-1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "answers.0.values.ingress_host", "test2.xip.io"),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "roles.0", "cluster-admin"),
 				),
@@ -130,7 +130,7 @@ func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2MultiClusterAppExists(testAccRancher2MultiClusterAppType+".foo", app),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "template_version_id", "cattle-global-data:library-docker-registry-1.6.1"),
+					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "template_version_id", "cattle-global-data:library-docker-registry-1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "answers.0.values.ingress_host", "test.xip.io"),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "roles.0", "project-member"),
 				),

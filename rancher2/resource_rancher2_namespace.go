@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	clusterClient "github.com/rancher/types/client/cluster/v3"
 )
 
@@ -35,7 +35,7 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	active, err := meta.(*Config).isClusterActive(clusterID)
+	active, _, err := meta.(*Config).isClusterActive(clusterID)
 	if err != nil {
 		return err
 	}

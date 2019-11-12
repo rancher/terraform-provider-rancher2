@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 //Schemas
@@ -158,6 +158,11 @@ func clusterRKEConfigServicesKubeControllerFields() map[string]*schema.Schema {
 
 func clusterRKEConfigServicesKubeAPIFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"always_pull_images": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
 		"extra_args": {
 			Type:     schema.TypeMap,
 			Optional: true,
@@ -319,6 +324,11 @@ func clusterRKEConfigServicesEtcdFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
+		"gid": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  0,
+		},
 		"image": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -344,6 +354,11 @@ func clusterRKEConfigServicesEtcdFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
+		},
+		"uid": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  0,
 		},
 	}
 	return s

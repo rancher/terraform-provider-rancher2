@@ -449,17 +449,17 @@ func (c *Config) UpdateClusterByID(cluster *managementClient.Cluster, update map
 	return client.Cluster.Update(cluster, update)
 }
 
-func (c *Config) isClusterActive(id string) (bool, error) {
+func (c *Config) isClusterActive(id string) (bool, *managementClient.Cluster, error) {
 	clus, err := c.GetClusterByID(id)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 
 	if clus.State == "active" {
-		return true, nil
+		return true, clus, nil
 	}
 
-	return false, nil
+	return false, clus, nil
 }
 
 func (c *Config) ClusterExist(id string) error {
@@ -898,6 +898,10 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 		return &managementClient.LdapConfig{}, nil
 	case managementClient.GithubConfigType:
 		return &managementClient.GithubConfig{}, nil
+	case managementClient.KeyCloakConfigType:
+		return &managementClient.KeyCloakConfig{}, nil
+	case managementClient.OKTAConfigType:
+		return &managementClient.OKTAConfig{}, nil
 	case managementClient.OpenLdapConfigType:
 		return &managementClient.LdapConfig{}, nil
 	case managementClient.PingConfigType:
@@ -1292,4 +1296,42 @@ func (c *Config) DeleteCertificate(cert interface{}) error {
 	default:
 		return fmt.Errorf("[ERROR] Certificate type %s isn't supported", t)
 	}
+}
+
+func (c *Config) GetRecipientByNotifier(id string) (*managementClient.Recipient, error) {
+	if len(id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Notifier ID can't be nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	notifier, err := client.Notifier.ByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	out := &managementClient.Recipient{}
+
+	out.NotifierID = notifier.ID
+	if notifier.PagerdutyConfig != nil {
+		out.NotifierType = recipientTypePagerduty
+		out.Recipient = notifier.PagerdutyConfig.ServiceKey
+	} else if notifier.SlackConfig != nil {
+		out.NotifierType = recipientTypeSlack
+		out.Recipient = notifier.SlackConfig.DefaultRecipient
+	} else if notifier.SMTPConfig != nil {
+		out.NotifierType = recipientTypeSMTP
+		out.Recipient = notifier.SMTPConfig.DefaultRecipient
+	} else if notifier.WebhookConfig != nil {
+		out.NotifierType = recipientTypeWebhook
+		out.Recipient = notifier.WebhookConfig.URL
+	} else if notifier.WechatConfig != nil {
+		out.NotifierType = recipientTypeWechat
+		out.Recipient = notifier.WechatConfig.DefaultRecipient
+	}
+
+	return out, nil
 }

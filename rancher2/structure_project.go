@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -109,7 +109,7 @@ func flattenProjectResourceQuota(pQuota *managementClient.ProjectResourceQuota, 
 	return []interface{}{obj}
 }
 
-func flattenProject(d *schema.ResourceData, in *managementClient.Project) error {
+func flattenProject(d *schema.ResourceData, in *managementClient.Project, monitoringInput *managementClient.MonitoringInput) error {
 	if in == nil {
 		return nil
 	}
@@ -138,7 +138,12 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 		}
 	}
 
-	err := d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("project_monitoring_input", flattenMonitoringInput(monitoringInput))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}
@@ -157,7 +162,7 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 func expandProjectContainerResourceLimit(p []interface{}) *managementClient.ContainerResourceLimit {
 	obj := &managementClient.ContainerResourceLimit{}
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -181,7 +186,7 @@ func expandProjectResourceQuotaLimit(p []interface{}) *managementClient.Resource
 	obj := &managementClient.ResourceQuotaLimit{}
 
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -245,7 +250,7 @@ func expandProjectResourceQuota(p []interface{}) (*managementClient.ProjectResou
 	nsQuota := &managementClient.NamespaceResourceQuota{}
 
 	if len(p) == 0 || p[0] == nil {
-		return pQuota, nsQuota
+		return nil, nil
 	}
 	in := p[0].(map[string]interface{})
 

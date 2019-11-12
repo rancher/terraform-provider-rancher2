@@ -3,7 +3,7 @@ package rancher2
 import (
 	"log"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	clusterClient "github.com/rancher/types/client/cluster/v3"
 )
 

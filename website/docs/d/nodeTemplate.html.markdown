@@ -29,7 +29,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
-* `cloud_credential_id` - (Computed) Cloud credential ID for the Node Template. Required from rancher v2.2.x (string)
+* `cloud_credential_id` - (Computed) Cloud credential ID for the Node Template. Required from Rancher v2.2.x (string)
 * `description` - (Computed) Description for the Node Template (string)
 * `driver` - (Computed) The driver of the node template (string)
 * `engine_env` - (Computed) Engine environment for the node template (string)
