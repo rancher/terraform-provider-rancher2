@@ -73,6 +73,7 @@ func init() {
 		Taints:                   []string{"taint1", "taint2"},
 		Zone:                     "zone",
 		DefaultMaxPodsConstraint: 32,
+		Region:                   "region",
 	}
 	testClusterGKEConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -135,6 +136,7 @@ func init() {
 			"taints":                      []interface{}{"taint1", "taint2"},
 			"zone":                        "zone",
 			"default_max_pods_constraint": 32,
+			"region":                      "region",
 		},
 	}
 }

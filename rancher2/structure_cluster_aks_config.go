@@ -151,14 +151,14 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 		obj["virtual_network_resource_group"] = in.VirtualNetworkResourceGroup
 	}
 
-	obj["enable_auto_scaling"] = in.EnableAutoScaling
+	obj["enable_auto_scaling"] = *in.EnableAutoScaling
 
 	if in.MinCount > 0 {
-		obj["min_count"] = in.MinCount
+		obj["min_count"] = int(in.MinCount)
 	}
 
 	if in.MaxCount > 0 {
-		obj["max_count"] = in.MaxCount
+		obj["max_count"] = int(in.MaxCount)
 	}
 
 	if len(in.AgentPoolType) > 0 {
