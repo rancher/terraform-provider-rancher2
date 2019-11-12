@@ -151,6 +151,28 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 		obj["virtual_network_resource_group"] = in.VirtualNetworkResourceGroup
 	}
 
+	obj["enable_auto_scaling"] = in.EnableAutoScaling
+
+	if in.MinCount > 0 {
+		obj["min_count"] = in.MinCount
+	}
+
+	if in.MaxCount > 0 {
+		obj["max_count"] = in.MaxCount
+	}
+
+	if len(in.AgentPoolType) > 0 {
+		obj["agent_pool_type"] = in.AgentPoolType
+	}
+
+	if len(in.AvailabilityZones) > 0 {
+		obj["availability_zones"] = toArrayInterface(in.AvailabilityZones)
+	}
+
+	if len(in.LoadBalancerSku) > 0 {
+		obj["load_balancer_sku"] = in.LoadBalancerSku
+	}
+
 	return []interface{}{obj}, nil
 }
 
@@ -312,6 +334,30 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 
 	if v, ok := in["virtual_network_resource_group"].(string); ok && len(v) > 0 {
 		obj.VirtualNetworkResourceGroup = v
+	}
+
+	if v, ok := in["enable_auto_scaling"].(bool); ok {
+		obj.EnableAutoScaling = &v
+	}
+
+	if v, ok := in["max_count"].(int); ok && v > 0 {
+		obj.MaxCount = int64(v)
+	}
+
+	if v, ok := in["min_count"].(int); ok && v > 0 {
+		obj.MinCount = int64(v)
+	}
+
+	if v, ok := in["agent_pool_type"].(string); ok && len(v) > 0 {
+		obj.AgentPoolType = v
+	}
+
+	if v, ok := in["load_balancer_sku"].(string); ok && len(v) > 0 {
+		obj.LoadBalancerSku = v
+	}
+
+	if v, ok := in["availability_zones"].([]interface{}); ok && len(v) > 0 {
+		obj.AvailabilityZones = toArrayString(v)
 	}
 
 	return obj, nil

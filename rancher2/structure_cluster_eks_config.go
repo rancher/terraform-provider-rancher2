@@ -50,6 +50,10 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["region"] = in.Region
 	}
 
+	if len(in.PlacementGroup) > 0 {
+		obj["placement_group"] = in.PlacementGroup
+	}
+
 	if len(in.SecurityGroups) > 0 {
 		obj["security_groups"] = toArrayInterface(in.SecurityGroups)
 	}
@@ -126,6 +130,10 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["node_volume_size"].(int); ok && v > 0 {
 		obj.NodeVolumeSize = int64(v)
+	}
+
+	if v, ok := in["placement_group"].(string); ok && len(v) > 0 {
+		obj.PlacementGroup = v
 	}
 
 	if v, ok := in["region"].(string); ok && len(v) > 0 {

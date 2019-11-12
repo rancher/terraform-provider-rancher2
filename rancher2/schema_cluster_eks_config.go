@@ -22,6 +22,7 @@ type AmazonElasticContainerServiceConfig struct {
 	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
 	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
 	NodeVolumeSize              int64    `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
+	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
 	Region                      string   `json:"region,omitempty" yaml:"region,omitempty"`
 	SecretKey                   string   `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
 	SecurityGroups              []string `json:"securityGroups,omitempty" yaml:"securityGroups,omitempty"`
@@ -92,6 +93,11 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     20,
 			Description: "The volume size for each node",
+		},
+		"placement_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of the placement group to use",
 		},
 		"region": {
 			Type:        schema.TypeString,
