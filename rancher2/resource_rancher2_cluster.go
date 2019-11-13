@@ -161,7 +161,16 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	cluster := &norman.Resource{}
+	// Gets used to later execute the update request
+	rawCluster := &norman.Resource{}
+	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), rawCluster)
+	if err != nil {
+		return err
+	}
+
+	// Gets used as base for creating the update request. If we use an empty object we will delete properties on the
+	// cluster and potentially break it
+	cluster := &Cluster{}
 	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 	if err != nil {
 		return err
@@ -205,7 +214,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		update["azureKubernetesServiceConfig"] = aksConfig
 	case clusterDriverEKS:
-		eksConfig, err := expandClusterEKSConfig(d.Get("eks_config").([]interface{}), d.Get("name").(string))
+		eksConfig, err := expandClusterEKSConfig(cluster.AmazonElasticContainerServiceConfig, d.Get("eks_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
 			return err
 		}
@@ -222,6 +231,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["rancherKubernetesEngineConfig"] = rkeConfig
+	default:
+		log.Printf("[INFO] Skipping update of the KubernetesEngineConfig due to an unknown driver '%s'", driver)
 	}
 
 	newCluster := &Cluster{}
@@ -324,6 +335,12 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
+			return nil, "", err
+		}
+
+		// If we encounter an error, such as "only one of zone or region must be specified"
+		// on GCP for instance, that is not recoverable
+		if obj.Transitioning == "error" {
 			return nil, "", err
 		}
 

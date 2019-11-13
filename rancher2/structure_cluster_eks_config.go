@@ -30,6 +30,10 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["instance_type"] = in.InstanceType
 	}
 
+	if len(in.PlacementGroup) > 0 {
+		obj["placement_group"] = in.PlacementGroup
+	}
+
 	if len(in.KeyPairName) > 0 {
 		obj["key_pair_name"] = in.KeyPairName
 	}
@@ -97,8 +101,7 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 
 // Expanders
 
-func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContainerServiceConfig, error) {
-	obj := &AmazonElasticContainerServiceConfig{}
+func expandClusterEKSConfig(obj *AmazonElasticContainerServiceConfig, p []interface{}, name string) (*AmazonElasticContainerServiceConfig, error) {
 	if len(p) == 0 || p[0] == nil {
 		return obj, nil
 	}
@@ -128,6 +131,10 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
 		obj.InstanceType = v
+	}
+
+	if v, ok := in["placement_group"].(string); ok && len(v) > 0 {
+		obj.PlacementGroup = v
 	}
 
 	if v, ok := in["key_pair_name"].(string); ok && len(v) > 0 {
@@ -192,6 +199,10 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["worker_subnets"].([]interface{}); ok && len(v) > 0 {
 		obj.WorkerSubnets = toArrayString(v)
+	}
+
+	if obj.DesiredNodes == 0 {
+		obj.DesiredNodes = obj.MinimumNodes
 	}
 
 	return obj, nil

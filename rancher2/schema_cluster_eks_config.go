@@ -6,7 +6,7 @@ import (
 
 const (
 	clusterEKSKind   = "eks"
-	clusterDriverEKS = "amazonelasticcontainerservice"
+	clusterDriverEKS = "amazonElasticContainerService"
 )
 
 //Types
@@ -81,6 +81,12 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Default:     "t2.medium",
 			Description: "The type of machine to use for worker nodes",
 		},
+		"placement_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "The name of an existing cluster placement group into which you want to launch your instances",
+		},
 		"key_pair_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -151,7 +157,15 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 		"subnets": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Description: "List of subnets in the virtual network to use",
+			Description: "List of subnets in the virtual network to use for the master",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"worker_subnets": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of subnets in the virtual network to use for the worker nodes",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},

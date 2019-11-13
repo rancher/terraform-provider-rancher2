@@ -14,6 +14,7 @@ var (
 	clusterAKSAgentStorageProfile = []string{"ManagedDisks", "StorageAccount"}
 	clusterAKSNetworkPlugin       = []string{"azure", "kubenet"}
 	clusterAKSNetworkPolicy       = []string{"calico"}
+	clusterAKSAgentPoolType       = []string{"AvailabilitySet", "VirtualMachineScaleSets"}
 )
 
 //Types
@@ -316,7 +317,7 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 		"load_balancer_sku": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "AvailabilitySet",
+			Default:     "Basic",
 			Description: "Load balancer type (must be standard for auto-scaling)",
 		},
 	}

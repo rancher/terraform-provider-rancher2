@@ -40,6 +40,10 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 		obj["agent_pool_name"] = in.AgentPoolName
 	}
 
+	if len(in.AgentPoolType) > 0 {
+		obj["agent_pool_type"] = in.AgentPoolType
+	}
+
 	if len(in.AgentStorageProfile) > 0 {
 		obj["agent_storage_profile"] = in.AgentStorageProfile
 	}
@@ -50,6 +54,10 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 
 	if len(in.AuthBaseURL) > 0 {
 		obj["auth_base_url"] = in.AuthBaseURL
+	}
+
+	if len(in.AvailabilityZones) > 0 {
+		obj["availability_zones"] = toArrayInterface(in.AvailabilityZones)
 	}
 
 	if len(in.BaseURL) > 0 {
@@ -76,11 +84,16 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 		obj["docker_bridge_cidr"] = in.DockerBridgeCIDR
 	}
 
+	obj["enable_auto_scaling"] = in.EnableAutoScaling
 	obj["enable_http_application_routing"] = in.EnableHTTPApplicationRouting
 	obj["enable_monitoring"] = *in.EnableMonitoring
 
 	if len(in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = in.KubernetesVersion
+	}
+
+	if len(in.LoadBalancerSku) > 0 {
+		obj["load_balancer_sku"] = in.LoadBalancerSku
 	}
 
 	if len(in.Location) > 0 {
@@ -99,8 +112,16 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 		obj["master_dns_prefix"] = in.MasterDNSPrefix
 	}
 
+	if in.MaxCount > 0 {
+		obj["max_count"] = int(in.MaxCount)
+	}
+
 	if in.MaxPods > 0 {
 		obj["max_pods"] = int(in.MaxPods)
+	}
+
+	if in.MinCount > 0 {
+		obj["min_count"] = int(in.MinCount)
 	}
 
 	if len(in.NetworkPlugin) > 0 {
@@ -220,6 +241,10 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 		obj.AgentPoolName = v
 	}
 
+	if v, ok := in["agent_pool_type"].(string); ok && len(v) > 0 {
+		obj.AgentPoolType = v
+	}
+
 	if v, ok := in["agent_storage_profile"].(string); ok && len(v) > 0 {
 		obj.AgentStorageProfile = v
 	}
@@ -230,6 +255,10 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 
 	if v, ok := in["auth_base_url"].(string); ok && len(v) > 0 {
 		obj.AuthBaseURL = v
+	}
+
+	if v, ok := in["availability_zones"].([]interface{}); ok && len(v) > 0 {
+		obj.AvailabilityZones = toArrayString(v)
 	}
 
 	if v, ok := in["base_url"].(string); ok && len(v) > 0 {
@@ -256,6 +285,10 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 		obj.DockerBridgeCIDR = v
 	}
 
+	if v, ok := in["enable_auto_scaling"].(bool); ok {
+		obj.EnableAutoScaling = v
+	}
+
 	if v, ok := in["enable_http_application_routing"].(bool); ok {
 		obj.EnableHTTPApplicationRouting = v
 	}
@@ -266,6 +299,10 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
 		obj.KubernetesVersion = v
+	}
+
+	if v, ok := in["load_balancer_sku"].(string); ok && len(v) > 0 {
+		obj.LoadBalancerSku = v
 	}
 
 	if v, ok := in["location"].(string); ok && len(v) > 0 {
@@ -284,8 +321,16 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 		obj.MasterDNSPrefix = v
 	}
 
+	if v, ok := in["max_count"].(int); ok && v > 0 {
+		obj.MaxCount = int64(v)
+	}
+
 	if v, ok := in["max_pods"].(int); ok && v > 0 {
 		obj.MaxPods = int64(v)
+	}
+
+	if v, ok := in["min_count"].(int); ok && v > 0 {
+		obj.MinCount = int64(v)
 	}
 
 	if v, ok := in["network_plugin"].(string); ok && len(v) > 0 {

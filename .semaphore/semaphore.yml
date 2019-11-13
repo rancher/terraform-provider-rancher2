@@ -31,4 +31,3 @@ blocks:
         - name: ssh_id_rsa
         - name: ssh_config
         - name: gitconfig
-
