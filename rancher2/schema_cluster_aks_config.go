@@ -1,8 +1,8 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const (
@@ -28,11 +28,11 @@ type AzureKubernetesServiceConfig struct {
 	AgentDNSPrefix                     string            `json:"agentDnsPrefix,omitempty" yaml:"agentDnsPrefix,omitempty"`
 	AgentOsdiskSizeGB                  int64             `json:"agentOsdiskSize,omitempty" yaml:"agentOsdiskSize,omitempty"`
 	AgentPoolName                      string            `json:"agentPoolName,omitempty" yaml:"agentPoolName,omitempty"`
-	AgentPoolType                      string            `json:"agentPoolType,omitempty"`
+	AgentPoolType                      string            `json:"agentPoolType,omitempty" yaml:"agentPoolType,omitempty"`
 	AgentStorageProfile                string            `json:"agentStorageProfile,omitempty" yaml:"agentStorageProfile,omitempty"`
 	AgentVMSize                        string            `json:"agentVmSize,omitempty" yaml:"agentVmSize,omitempty"`
 	AuthBaseURL                        string            `json:"authBaseUrl" yaml:"authBaseUrl"`
-	AvailabilityZones                  []string          `json:"availabilityZones,omitempty"`
+	AvailabilityZones                  []string          `json:"availabilityZones,omitempty" yaml:"availabilityZones,omitempty"`
 	BaseURL                            string            `json:"baseUrl,omitempty" yaml:"baseUrl,omitempty"`
 	ClientID                           string            `json:"clientId,omitempty" yaml:"clientId,omitempty"`
 	ClientSecret                       string            `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
@@ -40,18 +40,18 @@ type AzureKubernetesServiceConfig struct {
 	DisplayName                        string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	DNSServiceIP                       string            `json:"dnsServiceIp,omitempty" yaml:"dnsServiceIp,omitempty"`
 	DockerBridgeCIDR                   string            `json:"dockerBridgeCidr,omitempty" yaml:"dockerBridgeCidr,omitempty"`
-	EnableAutoScaling                  bool              `json:"enableAutoScaling,omitempty"`
+	EnableAutoScaling                  *bool             `json:"enableAutoScaling,omitempty" yaml:"enableAutoScaling,omitempty"`
 	EnableHTTPApplicationRouting       bool              `json:"enableHttpApplicationRouting,omitempty" yaml:"enableHttpApplicationRouting,omitempty"`
 	EnableMonitoring                   *bool             `json:"enableMonitoring,omitempty" yaml:"enableMonitoring,omitempty"`
 	KubernetesVersion                  string            `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
-	LoadBalancerSku                    string            `json:"loadBalancerSku,omitempty"`
+	LoadBalancerSku                    string            `json:"loadBalancerSku,omitempty" yaml:"loadBalancerSku,omitempty"`
 	Location                           string            `json:"location,omitempty" yaml:"location,omitempty"`
 	LogAnalyticsWorkspace              string            `json:"logAnalyticsWorkspace,omitempty" yaml:"logAnalyticsWorkspace,omitempty"`
 	LogAnalyticsWorkspaceResourceGroup string            `json:"logAnalyticsWorkspaceResourceGroup,omitempty" yaml:"logAnalyticsWorkspaceResourceGroup,omitempty"`
 	MasterDNSPrefix                    string            `json:"masterDnsPrefix,omitempty" yaml:"masterDnsPrefix,omitempty"`
 	MaxPods                            int64             `json:"maxPods,omitempty" yaml:"maxPods,omitempty"`
-	MaxCount                           int64             `json:"maxCount,omitempty"`
-	MinCount                           int64             `json:"minCount,omitempty"`
+	MaxCount                           int64             `json:"maxCount,omitempty" yaml:"maxCount,omitempty"`
+	MinCount                           int64             `json:"minCount,omitempty" yaml:"minCount,omitempty"`
 	Name                               string            `json:"name,omitempty" yaml:"name,omitempty"`
 	NetworkPlugin                      string            `json:"networkPlugin,omitempty" yaml:"networkPlugin,omitempty"`
 	NetworkPolicy                      string            `json:"networkPolicy,omitempty" yaml:"networkPolicy,omitempty"`
@@ -282,35 +282,34 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Tags for Kubernetes cluster. For example, foo=bar",
 		},
-
 		"enable_auto_scaling": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "Enable AKS auto-scaling feature",
+			Description: "Enable auto-scaling of worker nodes",
 		},
 		"min_count": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     1,
-			Description: "Minimum number of nodes per agent pool",
+			Description: "Minimum number of worker nodes in the auto-scaling cluster",
 		},
 		"max_count": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Default:     3,
-			Description: "Maximum number of nodes per agent pool",
+			Default:     10,
+			Description: "Maximum number of worker nodes in the auto-scaling cluster",
 		},
 		"agent_pool_type": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "AvailabilitySet",
-			Description: "Agent pool type. Choose from [AvailabilitySet VirtualMachineScaleSets]",
+			Description: "Agent pool type (VirtualMachineScaleSets or AvailabilitySet).",
 		},
 		"availability_zones": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Description: "List of availability zones to use (an agent pool will be created for each)",
+			Description: "List of availability zones to use for the cluster",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
@@ -319,7 +318,7 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "Basic",
-			Description: "Load Balancer SKU. Choose from [Basic Standard]",
+			Description: "Load balancer type (must be standard for auto-scaling)",
 		},
 	}
 

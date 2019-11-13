@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -213,7 +213,7 @@ func TestFlattenProject(t *testing.T) {
 
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, projectFields(), map[string]interface{}{})
-		err := flattenProject(output, tc.Input)
+		err := flattenProject(output, tc.Input, nil)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

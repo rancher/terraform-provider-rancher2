@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -384,7 +384,7 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     110,
-			Description: "The default maximum number of pods per node",
+			Description: "Default maximum pods per node constraint",
 		},
 	}
 

@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // Shemas
@@ -16,6 +16,7 @@ func certificateFields() map[string]*schema.Schema {
 		"key": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Certificate key base64 encoded",
 		},
 		"project_id": &schema.Schema{

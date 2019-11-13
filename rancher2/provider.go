@@ -3,8 +3,8 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 const (
@@ -82,6 +82,8 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_auth_config_azuread":           resourceRancher2AuthConfigAzureAD(),
 			"rancher2_auth_config_freeipa":           resourceRancher2AuthConfigFreeIpa(),
 			"rancher2_auth_config_github":            resourceRancher2AuthConfigGithub(),
+			"rancher2_auth_config_keycloak":          resourceRancher2AuthConfigKeyCloak(),
+			"rancher2_auth_config_okta":              resourceRancher2AuthConfigOKTA(),
 			"rancher2_auth_config_openldap":          resourceRancher2AuthConfigOpenLdap(),
 			"rancher2_auth_config_ping":              resourceRancher2AuthConfigPing(),
 			"rancher2_bootstrap":                     resourceRancher2Bootstrap(),
@@ -89,9 +91,13 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_certificate":                   resourceRancher2Certificate(),
 			"rancher2_cloud_credential":              resourceRancher2CloudCredential(),
 			"rancher2_cluster":                       resourceRancher2Cluster(),
+			"rancher2_cluster_alert_group":           resourceRancher2ClusterAlertGroup(),
+			"rancher2_cluster_alert_rule":            resourceRancher2ClusterAlertRule(),
 			"rancher2_cluster_driver":                resourceRancher2ClusterDriver(),
 			"rancher2_cluster_logging":               resourceRancher2ClusterLogging(),
 			"rancher2_cluster_role_template_binding": resourceRancher2ClusterRoleTemplateBinding(),
+			"rancher2_cluster_sync":                  resourceRancher2ClusterSync(),
+			"rancher2_cluster_template":              resourceRancher2ClusterTemplate(),
 			"rancher2_etcd_backup":                   resourceRancher2EtcdBackup(),
 			"rancher2_global_role_binding":           resourceRancher2GlobalRoleBinding(),
 			"rancher2_multi_cluster_app":             resourceRancher2MultiClusterApp(),
@@ -99,7 +105,10 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_node_driver":                   resourceRancher2NodeDriver(),
 			"rancher2_node_pool":                     resourceRancher2NodePool(),
 			"rancher2_node_template":                 resourceRancher2NodeTemplate(),
+			"rancher2_notifier":                      resourceRancher2Notifier(),
 			"rancher2_project":                       resourceRancher2Project(),
+			"rancher2_project_alert_group":           resourceRancher2ProjectAlertGroup(),
+			"rancher2_project_alert_rule":            resourceRancher2ProjectAlertRule(),
 			"rancher2_project_logging":               resourceRancher2ProjectLogging(),
 			"rancher2_project_role_template_binding": resourceRancher2ProjectRoleTemplateBinding(),
 			"rancher2_registry":                      resourceRancher2Registry(),
@@ -115,9 +124,12 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_certificate":                   dataSourceRancher2Certificate(),
 			"rancher2_cloud_credential":              dataSourceRancher2CloudCredential(),
 			"rancher2_cluster":                       dataSourceRancher2Cluster(),
+			"rancher2_cluster_alert_group":           dataSourceRancher2ClusterAlertGroup(),
+			"rancher2_cluster_alert_rule":            dataSourceRancher2ClusterAlertRule(),
 			"rancher2_cluster_driver":                dataSourceRancher2ClusterDriver(),
 			"rancher2_cluster_logging":               dataSourceRancher2ClusterLogging(),
 			"rancher2_cluster_role_template_binding": dataSourceRancher2ClusterRoleTemplateBinding(),
+			"rancher2_cluster_template":              dataSourceRancher2ClusterTemplate(),
 			"rancher2_etcd_backup":                   dataSourceRancher2EtcdBackup(),
 			"rancher2_global_role_binding":           dataSourceRancher2GlobalRoleBinding(),
 			"rancher2_multi_cluster_app":             dataSourceRancher2MultiClusterApp(),
@@ -125,7 +137,10 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_node_driver":                   dataSourceRancher2NodeDriver(),
 			"rancher2_node_pool":                     dataSourceRancher2NodePool(),
 			"rancher2_node_template":                 dataSourceRancher2NodeTemplate(),
+			"rancher2_notifier":                      dataSourceRancher2Notifier(),
 			"rancher2_project":                       dataSourceRancher2Project(),
+			"rancher2_project_alert_group":           dataSourceRancher2ProjectAlertGroup(),
+			"rancher2_project_alert_rule":            dataSourceRancher2ProjectAlertRule(),
 			"rancher2_project_logging":               dataSourceRancher2ProjectLogging(),
 			"rancher2_project_role_template_binding": dataSourceRancher2ProjectRoleTemplateBinding(),
 			"rancher2_registry":                      dataSourceRancher2Registry(),

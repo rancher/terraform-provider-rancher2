@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -125,6 +125,16 @@ func projectFields() map[string]*schema.Schema {
 		"pod_security_policy_template_id": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
+		},
+		"project_monitoring_input": &schema.Schema{
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster monitoring configuration",
+			Elem: &schema.Resource{
+				Schema: monitoringInputFields(),
+			},
 		},
 		"resource_quota": {
 			Type:     schema.TypeList,

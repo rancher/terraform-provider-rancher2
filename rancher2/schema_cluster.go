@@ -1,8 +1,8 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -12,8 +12,7 @@ const (
 )
 
 var (
-	clusterDrivers           = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverRKE}
-	clusterPodSecurityPolicy = []string{"restricted", "unrestricted"}
+	clusterDrivers = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverRKE}
 )
 
 //Types
@@ -121,6 +120,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
+			Computed:      true,
 			ConflictsWith: []string{"aks_config", "eks_config", "gke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigFields(),
@@ -174,6 +174,16 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterAuthEndpoint(),
 			},
 		},
+		"cluster_monitoring_input": &schema.Schema{
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster monitoring configuration",
+			Elem: &schema.Resource{
+				Schema: monitoringInputFields(),
+			},
+		},
 		"cluster_registration_token": &schema.Schema{
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -182,18 +192,71 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterRegistationTokenFields(),
 			},
 		},
+		"cluster_template_answers": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Description: "Cluster template answers",
+			Elem: &schema.Resource{
+				Schema: answerFields(),
+			},
+		},
+		"cluster_template_id": &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Cluster template ID",
+		},
+		"cluster_template_questions": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Cluster template questions",
+			Elem: &schema.Resource{
+				Schema: questionFields(),
+			},
+		},
+		"cluster_template_revision_id": &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Cluster template revision ID",
+		},
 		"default_pod_security_policy_template_id": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			ValidateFunc: validation.StringInSlice(clusterPodSecurityPolicy, true),
-			Description:  "Default pod security policy template id",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Default pod security policy template id",
+		},
+		"desired_agent_image": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"desired_auth_image": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"docker_root_dir": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"enable_cluster_alerting": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable built-in cluster alerting",
 		},
 		"enable_cluster_monitoring": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
 			Description: "Enable built-in cluster monitoring",
+		},
+		"enable_cluster_istio": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable built-in cluster istio",
 		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,

@@ -3,17 +3,17 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_cluster_logging"
 sidebar_current: "docs-rancher2-resource-cluster_logging"
 description: |-
-  Provides a Rancher v2 Cluster Logging resource. This can be used to create Cluster Logging for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Cluster Logging resource. This can be used to configure Cluster Logging for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_cluster\_logging
 
-Provides a Rancher v2 Cluster Logging resource. This can be used to create Cluster Logging for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Cluster Logging resource. This can be used to configure Cluster Logging for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
 ```hcl
-# Create a new rancher2 Cluster Logging
+# Create a new Rancher2 Cluster Logging
 resource "rancher2_cluster_logging" "foo" {
   name = "foo"
   cluster_id = "<cluster_id>"
@@ -140,9 +140,8 @@ The following attributes are exported:
 
 ## Import
 
-Cluster Logging can be imported using the rancher Cluster Logging ID
+Cluster Logging can be imported using the Rancher Cluster Logging ID
 
 ```
 $ terraform import rancher2_cluster_logging.foo <cluster_logging_id>
 ```
-

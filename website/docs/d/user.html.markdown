@@ -6,7 +6,7 @@ description: |-
   Get information on a Rancher v2 user.
 ---
 
-# rancher2\_global\_role\_binding
+# rancher2\_user
 
 Use this data source to retrieve information about a Rancher v2 user
 
@@ -14,19 +14,19 @@ Use this data source to retrieve information about a Rancher v2 user
 
 ```
 data "rancher2_user" "foo" {
-    name = "foo"
-    global_role_id = "foo_id"
+    username = "foo"
 }
 ```
 
 ## Argument Reference
 
-* `name` - (Required) The name of the global role binding (string)
-* `global_role_id` - (Optional/Computed) The global role id (string)
+* `username` - (Required) The name of the user (string)
 
 ## Attributes Reference
 
 * `id` - (Computed) The ID of the resource (string)
-* `user_id` - (Computed) The user ID to assign global role binding (string)
+* `name` - (Computed) The user common name (string)
 * `annotations` - (Computed) Annotations of the resource (map)
+* `enabled` - (Computed) The user is enabled (bool)
+* `principal_ids` - (Computed) The user principal IDs (list)
 * `labels` - (Computed) Labels of the resource (map)

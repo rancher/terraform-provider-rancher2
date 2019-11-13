@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 //Schemas
@@ -39,7 +39,6 @@ func appFields() map[string]*schema.Schema {
 		"answers": &schema.Schema{
 			Type:        schema.TypeMap,
 			Optional:    true,
-			Computed:    true,
 			Description: "Answers of the app",
 		},
 		"description": &schema.Schema{
@@ -73,8 +72,7 @@ func appFields() map[string]*schema.Schema {
 		"values_yaml": &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
-			Computed:    true,
-			Description: "values.yaml file content of the app",
+			Description: "values.yaml base64 encoded file content of the app",
 		},
 		"annotations": &schema.Schema{
 			Type:        schema.TypeMap,

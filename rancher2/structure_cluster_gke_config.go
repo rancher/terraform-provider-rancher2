@@ -186,7 +186,7 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 	}
 
 	if in.DefaultMaxPodsConstraint > 0 {
-		obj["default_max_pods_constraint"] = in.DefaultMaxPodsConstraint
+		obj["default_max_pods_constraint"] = int(in.DefaultMaxPodsConstraint)
 	}
 
 	return []interface{}{obj}, nil

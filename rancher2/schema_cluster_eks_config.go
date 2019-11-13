@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -12,29 +12,29 @@ const (
 //Types
 
 type AmazonElasticContainerServiceConfig struct {
-	AMI                         string            `json:"ami,omitempty" yaml:"ami,omitempty"`
-	AccessKey                   string            `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
-	Annotations                 map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
-	AssociateWorkerNodePublicIP *bool             `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
-	DesiredNodes                int64             `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
-	DisplayName                 string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
-	DriverName                  string            `json:"driverName" yaml:"driverName"`
-	InstanceType                string            `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
-	KeyPairName                 string            `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
-	KubernetesVersion           string            `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
-	MaximumNodes                int64             `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
-	MinimumNodes                int64             `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
-	NodeVolumeSize              int64             `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
-	PlacementGroup              string            `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
-	Region                      string            `json:"region,omitempty" yaml:"region,omitempty"`
-	SecretKey                   string            `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
-	SecurityGroups              []string          `json:"securityGroups,omitempty" yaml:"securityGroups,omitempty"`
-	ServiceRole                 string            `json:"serviceRole,omitempty" yaml:"serviceRole,omitempty"`
-	SessionToken                string            `json:"sessionToken,omitempty" yaml:"sessionToken,omitempty"`
-	Subnets                     []string          `json:"subnets,omitempty" yaml:"subnets,omitempty"`
-	UserData                    string            `json:"userData,omitempty" yaml:"userData,omitempty"`
-	VirtualNetwork              string            `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
-	WorkerSubnets               []string          `json:"workerSubnets,omitempty" yaml:"workerSubnets,omitempty"`
+	AMI                         string   `json:"ami,omitempty" yaml:"ami,omitempty"`
+	AccessKey                   string   `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
+	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
+	DesiredNodes                int64    `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
+	DisplayName                 string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
+	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
+	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
+	ManageOwnSecurityGroups     *bool    `json:"manageOwnSecurityGroups,omitempty" yaml:"manageOwnSecurityGroups,omitempty"`
+	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
+	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
+	NodeSecurityGroups          []string `json:"nodeSecurityGroups,omitempty" yaml:"nodeSecurityGroups,omitempty"`
+	NodeVolumeSize              int64    `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
+	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
+	Region                      string   `json:"region,omitempty" yaml:"region,omitempty"`
+	SecretKey                   string   `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
+	SecurityGroups              []string `json:"securityGroups,omitempty" yaml:"securityGroups,omitempty"`
+	ServiceRole                 string   `json:"serviceRole,omitempty" yaml:"serviceRole,omitempty"`
+	SessionToken                string   `json:"sessionToken,omitempty" yaml:"sessionToken,omitempty"`
+	Subnets                     []string `json:"subnets,omitempty" yaml:"subnets,omitempty"`
+	UserData                    string   `json:"userData,omitempty" yaml:"userData,omitempty"`
+	VirtualNetwork              string   `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
+	WorkerSubnets               []string `json:"workerSubnets,omitempty" yaml:"workerSubnets,omitempty"`
 }
 
 //Schemas
@@ -69,6 +69,12 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Default:     true,
 			Description: "Associate public ip EKS worker nodes",
 		},
+		"desired_nodes": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3,
+			Description: "The desired number of worker nodes",
+		},
 		"instance_type": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -86,6 +92,12 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Allow user to specify key name to use",
 		},
+		"manage_own_security_groups": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "When true, do not create or edit security groups, only assign them",
+		},
 		"maximum_nodes": {
 			Type:        schema.TypeInt,
 			Optional:    true,
@@ -97,6 +109,14 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     1,
 			Description: "The minimum number of worker nodes",
+		},
+		"node_security_groups": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of security groups to assign to the worker nodes",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 		"node_volume_size": {
 			Type:        schema.TypeInt,
@@ -137,14 +157,6 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"worker_subnets": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "List of subnets in the virtual network to use for the worker nodes",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
 		"user_data": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -155,6 +167,14 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The name of the virtual network to use",
+		},
+		"worker_subnets": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of worker subnets in the virtual network to use",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 	}
 

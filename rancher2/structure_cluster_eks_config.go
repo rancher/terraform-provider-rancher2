@@ -22,12 +22,12 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 
 	obj["associate_worker_node_public_ip"] = *in.AssociateWorkerNodePublicIP
 
-	if len(in.InstanceType) > 0 {
-		obj["instance_type"] = in.InstanceType
+	if in.DesiredNodes > 0 {
+		obj["desired_nodes"] = int(in.DesiredNodes)
 	}
 
-	if len(in.PlacementGroup) > 0 {
-		obj["placement_group"] = in.PlacementGroup
+	if len(in.InstanceType) > 0 {
+		obj["instance_type"] = in.InstanceType
 	}
 
 	if len(in.KeyPairName) > 0 {
@@ -38,6 +38,8 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["kubernetes_version"] = in.KubernetesVersion
 	}
 
+	obj["manage_own_security_groups"] = *in.ManageOwnSecurityGroups
+
 	if in.MaximumNodes > 0 {
 		obj["maximum_nodes"] = int(in.MaximumNodes)
 	}
@@ -46,12 +48,20 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["minimum_nodes"] = int(in.MinimumNodes)
 	}
 
+	if len(in.NodeSecurityGroups) > 0 {
+		obj["node_security_groups"] = toArrayInterface(in.NodeSecurityGroups)
+	}
+
 	if in.NodeVolumeSize > 0 {
 		obj["node_volume_size"] = int(in.NodeVolumeSize)
 	}
 
 	if len(in.Region) > 0 {
 		obj["region"] = in.Region
+	}
+
+	if len(in.PlacementGroup) > 0 {
+		obj["placement_group"] = in.PlacementGroup
 	}
 
 	if len(in.SecurityGroups) > 0 {
@@ -87,7 +97,8 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 
 // Expanders
 
-func expandClusterEKSConfig(obj *AmazonElasticContainerServiceConfig, p []interface{}, name string) (*AmazonElasticContainerServiceConfig, error) {
+func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContainerServiceConfig, error) {
+	obj := &AmazonElasticContainerServiceConfig{}
 	if len(p) == 0 || p[0] == nil {
 		return obj, nil
 	}
@@ -111,12 +122,12 @@ func expandClusterEKSConfig(obj *AmazonElasticContainerServiceConfig, p []interf
 		obj.AssociateWorkerNodePublicIP = &v
 	}
 
-	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
-		obj.InstanceType = v
+	if v, ok := in["desired_nodes"].(int); ok && v > 0 {
+		obj.DesiredNodes = int64(v)
 	}
 
-	if v, ok := in["placement_group"].(string); ok && len(v) > 0 {
-		obj.PlacementGroup = v
+	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
+		obj.InstanceType = v
 	}
 
 	if v, ok := in["key_pair_name"].(string); ok && len(v) > 0 {
@@ -127,6 +138,10 @@ func expandClusterEKSConfig(obj *AmazonElasticContainerServiceConfig, p []interf
 		obj.KubernetesVersion = v
 	}
 
+	if v, ok := in["manage_own_security_groups"].(bool); ok {
+		obj.ManageOwnSecurityGroups = &v
+	}
+
 	if v, ok := in["maximum_nodes"].(int); ok && v > 0 {
 		obj.MaximumNodes = int64(v)
 	}
@@ -135,8 +150,16 @@ func expandClusterEKSConfig(obj *AmazonElasticContainerServiceConfig, p []interf
 		obj.MinimumNodes = int64(v)
 	}
 
+	if v, ok := in["node_security_groups"].([]interface{}); ok && len(v) > 0 {
+		obj.NodeSecurityGroups = toArrayString(v)
+	}
+
 	if v, ok := in["node_volume_size"].(int); ok && v > 0 {
 		obj.NodeVolumeSize = int64(v)
+	}
+
+	if v, ok := in["placement_group"].(string); ok && len(v) > 0 {
+		obj.PlacementGroup = v
 	}
 
 	if v, ok := in["region"].(string); ok && len(v) > 0 {

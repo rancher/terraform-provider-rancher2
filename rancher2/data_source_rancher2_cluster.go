@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceRancher2Cluster() *schema.Resource {
@@ -75,6 +75,15 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterAuthEndpoint(),
 				},
 			},
+			"cluster_monitoring_input": &schema.Schema{
+				Type:        schema.TypeList,
+				MaxItems:    1,
+				Computed:    true,
+				Description: "Cluster monitoring configuration",
+				Elem: &schema.Resource{
+					Schema: monitoringInputFields(),
+				},
+			},
 			"cluster_registration_token": &schema.Schema{
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -83,10 +92,42 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterRegistationTokenFields(),
 				},
 			},
+			"cluster_template_answers": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				MaxItems:    1,
+				Description: "Cluster template answers",
+				Elem: &schema.Resource{
+					Schema: answerFields(),
+				},
+			},
+			"cluster_template_id": &schema.Schema{
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Cluster template ID",
+			},
+			"cluster_template_questions": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Cluster template questions",
+				Elem: &schema.Resource{
+					Schema: questionFields(),
+				},
+			},
+			"cluster_template_revision_id": &schema.Schema{
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Cluster template revision ID",
+			},
 			"default_pod_security_policy_template_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Default pod security policy template id",
+			},
+			"enable_cluster_alerting": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable built-in cluster alerting",
 			},
 			"enable_cluster_monitoring": {
 				Type:        schema.TypeBool,

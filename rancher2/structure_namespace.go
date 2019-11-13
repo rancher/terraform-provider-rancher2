@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	clusterClient "github.com/rancher/types/client/cluster/v3"
 )
 
@@ -9,7 +9,8 @@ import (
 
 func flattenNamespaceContainerResourceLimit(in *clusterClient.ContainerResourceLimit) []interface{} {
 	obj := make(map[string]interface{})
-	if in == nil {
+	empty := clusterClient.ContainerResourceLimit{}
+	if in == nil || *in == empty {
 		return []interface{}{}
 	}
 
@@ -92,7 +93,8 @@ func flattenNamespaceResourceQuotaLimit(in *clusterClient.ResourceQuotaLimit) []
 
 func flattenNamespaceResourceQuota(in *clusterClient.NamespaceResourceQuota) []interface{} {
 	obj := make(map[string]interface{})
-	if in == nil {
+	empty := clusterClient.NamespaceResourceQuota{}
+	if in == nil || *in == empty {
 		return []interface{}{}
 	}
 
@@ -263,10 +265,8 @@ func expandNamespace(in *schema.ResourceData) *clusterClient.Namespace {
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
 
-	if v, ok := in.Get("container_resource_limit").([]interface{}); ok && len(v) > 0 {
-		containerLimit := expandNamespaceContainerResourceLimit(v)
-		obj.ContainerDefaultResourceLimit = containerLimit
-	}
+	containerLimit := expandNamespaceContainerResourceLimit(in.Get("container_resource_limit").([]interface{}))
+	obj.ContainerDefaultResourceLimit = containerLimit
 
 	if v, ok := in.Get("resource_quota").([]interface{}); ok && len(v) > 0 {
 		resourceQuota := expandNamespaceResourceQuota(v)

@@ -1,10 +1,15 @@
 package rancher2
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	projectClient "github.com/rancher/types/client/project/v3"
+)
+
+const (
+	AppTemplateExternalIDPrefix = "catalog://?"
 )
 
 // Flatteners
@@ -14,7 +19,7 @@ func flattenAppExternalID(d *schema.ResourceData, in string) {
 	//Cluster catalog url: catalog://?catalog=c-XXXXX/test&type=clusterCatalog&template=test&version=1.23.0
 	//Project catalog url: catalog://?catalog=p-XXXXX/test&type=projectCatalog&template=test&version=1.23.0
 
-	str := strings.TrimPrefix(in, "catalog://?")
+	str := strings.TrimPrefix(in, AppTemplateExternalIDPrefix)
 	values := strings.Split(str, "&")
 	out := make(map[string]string, len(values))
 	for _, v := range values {
@@ -63,7 +68,7 @@ func flattenApp(d *schema.ResourceData, in *projectClient.App) error {
 	}
 
 	if len(in.ValuesYaml) > 0 {
-		d.Set("values_yaml", in.ValuesYaml)
+		d.Set("values_yaml", Base64Encode(in.ValuesYaml))
 	}
 
 	err := d.Set("annotations", toMapInterface(in.Annotations))
@@ -91,26 +96,26 @@ func expandAppExternalID(in *schema.ResourceData) string {
 	appName := in.Get("template_name").(string)
 	appVersion := in.Get("template_version").(string)
 
-	catalogPart := "catalog://?catalog=" + catalogName
-	appNamePart := "&template=" + appName
-	appVersionPart := "&version=" + appVersion
-
 	if strings.HasPrefix(catalogName, "c-") {
 		catalogName = strings.Replace(catalogName, ":", "/", -1)
-		catalogPart = catalogPart + "&type=clusterCatalog"
+		catalogName = catalogName + "&type=clusterCatalog"
 	}
 	if strings.HasPrefix(catalogName, "p-") {
 		catalogName = strings.Replace(catalogName, ":", "/", -1)
-		catalogPart = catalogPart + "&type=projectCatalog"
+		catalogName = catalogName + "&type=projectCatalog"
 	}
 
-	return catalogPart + appNamePart + appVersionPart
+	catalogPart := "catalog=" + catalogName
+	appNamePart := "&template=" + appName
+	appVersionPart := "&version=" + appVersion
+
+	return AppTemplateExternalIDPrefix + catalogPart + appNamePart + appVersionPart
 }
 
-func expandApp(in *schema.ResourceData) *projectClient.App {
+func expandApp(in *schema.ResourceData) (*projectClient.App, error) {
 	obj := &projectClient.App{}
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	if v := in.Id(); len(v) > 0 {
@@ -135,7 +140,11 @@ func expandApp(in *schema.ResourceData) *projectClient.App {
 	}
 
 	if v, ok := in.Get("values_yaml").(string); ok && len(v) > 0 {
-		obj.ValuesYaml = v
+		values, err := Base64Decode(v)
+		if err != nil {
+			return nil, fmt.Errorf("expanding app: values_yaml is not base64 encoded: %s", v)
+		}
+		obj.ValuesYaml = values
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
@@ -146,5 +155,5 @@ func expandApp(in *schema.ResourceData) *projectClient.App {
 		obj.Labels = toMapString(v)
 	}
 
-	return obj
+	return obj, nil
 }

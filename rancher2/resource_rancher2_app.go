@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	//managementClient "github.com/rancher/types/client/management/v3"
 	projectClient "github.com/rancher/types/client/project/v3"
 )
@@ -45,7 +45,10 @@ func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	app := expandApp(d)
+	app, err := expandApp(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[INFO] Creating App %s on Project ID %s", name, projectID)
 
@@ -118,12 +121,10 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("description") || d.HasChange("annotations") || d.HasChange("labels") {
 		log.Printf("[INFO] Updating App ID %s", id)
 
-		update := map[string]interface{}{
-			"description": d.Get("description").(string),
-			"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-			"labels":      toMapString(d.Get("labels").(map[string]interface{})),
-		}
-		_, err := client.App.Update(app, update)
+		app.Description = d.Get("description").(string)
+		app.Annotations = toMapString(d.Get("annotations").(map[string]interface{}))
+		app.Labels = toMapString(d.Get("labels").(map[string]interface{}))
+		_, err := client.App.Replace(app)
 		if err != nil {
 			return err
 		}
@@ -145,14 +146,19 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 	} else if d.HasChange("answers") || d.HasChange("catalog_name") || d.HasChange("template_name") || d.HasChange("template_version") || d.HasChange("values_yaml") {
 		log.Printf("[INFO] Upgrading App ID %s", id)
 
+		values, err := Base64Decode(d.Get("values_yaml").(string))
+		if err != nil {
+			return err
+		}
+
 		upgrade := &projectClient.AppUpgradeConfig{
 			Answers:      toMapString(d.Get("answers").(map[string]interface{})),
 			ExternalID:   expandAppExternalID(d),
 			ForceUpgrade: d.Get("force_upgrade").(bool),
-			ValuesYaml:   d.Get("values_yaml").(string),
+			ValuesYaml:   values,
 		}
 
-		err := client.App.ActionUpgrade(app, upgrade)
+		err = client.App.ActionUpgrade(app, upgrade)
 		if err != nil {
 			return err
 		}

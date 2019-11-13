@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_secret"
 sidebar_current: "docs-rancher2-resource-secret"
 description: |-
-  Provides a Rancher v2 secret resource. This can be used to create secrets for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 secret resource. This can be used to create secrets for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_secret
 
-Provides a Rancher v2 Secret resource. This can be used to create secrets for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Secret resource. This can be used to create secrets for Rancher v2 environments and retrieve their information.
 
 Depending of the availability, there are 2 types of Rancher v2 secrets:
 - Project secret: Available to all namespaces in the `project_id`

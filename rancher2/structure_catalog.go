@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -20,7 +20,11 @@ func flattenClusterCatalog(d *schema.ResourceData, in *managementClient.ClusterC
 	d.Set("description", in.Description)
 	d.Set("kind", in.Kind)
 	d.Set("branch", in.Branch)
-	d.Set("password", in.Password)
+
+	if len(in.Password) > 0 {
+		d.Set("password", in.Password)
+	}
+
 	d.Set("username", in.Username)
 	d.Set("cluster_id", in.ClusterID)
 
@@ -48,7 +52,11 @@ func flattenGlobalCatalog(d *schema.ResourceData, in *managementClient.Catalog) 
 	d.Set("description", in.Description)
 	d.Set("kind", in.Kind)
 	d.Set("branch", in.Branch)
-	d.Set("password", in.Password)
+
+	if len(in.Password) > 0 {
+		d.Set("password", in.Password)
+	}
+
 	d.Set("username", in.Username)
 
 	err := d.Set("annotations", toMapInterface(in.Annotations))
@@ -75,7 +83,11 @@ func flattenProjectCatalog(d *schema.ResourceData, in *managementClient.ProjectC
 	d.Set("description", in.Description)
 	d.Set("kind", in.Kind)
 	d.Set("branch", in.Branch)
-	d.Set("password", in.Password)
+
+	if len(in.Password) > 0 {
+		d.Set("password", in.Password)
+	}
+
 	d.Set("username", in.Username)
 	d.Set("project_id", in.ProjectID)
 

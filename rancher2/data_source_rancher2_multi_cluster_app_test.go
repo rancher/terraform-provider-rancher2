@@ -3,7 +3,7 @@ package rancher2
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 const (
@@ -40,7 +40,7 @@ resource "rancher2_multi_cluster_app" "foo" {
     project_id = "${rancher2_project.foo.id}"
   }
   template_name = "docker-registry"
-  template_version = "1.6.1"
+  template_version = "1.8.1"
   answers {
     values = {
       "ingress_host" = "test.xip.io"
@@ -63,7 +63,7 @@ func TestAccRancher2MultiClusterAppDataSource(t *testing.T) {
 				Config: testAccCheckRancher2MultiClusterAppDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data."+testAccRancher2MultiClusterAppDataSourceType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2MultiClusterAppDataSourceType+".foo", "template_version_id", "cattle-global-data:library-docker-registry-1.6.1"),
+					resource.TestCheckResourceAttr("data."+testAccRancher2MultiClusterAppDataSourceType+".foo", "template_version_id", "cattle-global-data:library-docker-registry-1.8.1"),
 					resource.TestCheckResourceAttr("data."+testAccRancher2MultiClusterAppDataSourceType+".foo", "answers.0.values.ingress_host", "test.xip.io"),
 					resource.TestCheckResourceAttr("data."+testAccRancher2MultiClusterAppDataSourceType+".foo", "roles.0", "project-member"),
 				),

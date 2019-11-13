@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceRancher2MultiClusterApp() *schema.Resource {
@@ -125,5 +125,10 @@ func dataSourceRancher2MultiClusterAppRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("[ERROR] found %d multi cluster app with name \"%s\"", count, name)
 	}
 
-	return flattenMultiClusterApp(d, &multiClusterApps.Data[0])
+	templateVersion, err := client.TemplateVersion.ByID(multiClusterApps.Data[0].TemplateVersionID)
+	if err != nil {
+		return err
+	}
+
+	return flattenMultiClusterApp(d, &multiClusterApps.Data[0], templateVersion.ExternalID)
 }

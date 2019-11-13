@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_project_role_template_binding"
 sidebar_current: "docs-rancher2-resource-project_role_template_binding"
 description: |-
-  Provides a Rancher v2 Project Role Template Binding resource. This can be used to create Project Role Template Bindings for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Project Role Template Binding resource. This can be used to create Project Role Template Bindings for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_project\_role\_template\_binding
 
-Provides a Rancher v2 Project Role Template Binding resource. This can be used to create Project Role Template Bindings for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Project Role Template Binding resource. This can be used to create Project Role Template Bindings for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
@@ -53,7 +53,7 @@ The following attributes are exported:
 
 ## Import
 
-Project Role Template Bindings can be imported using the rancher Project Role Template Binding ID
+Project Role Template Bindings can be imported using the Rancher Project Role Template Binding ID
 
 ```
 $ terraform import rancher2_project_role_template_binding.foo <project_role_template_binding_id>

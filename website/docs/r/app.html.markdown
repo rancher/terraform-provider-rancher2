@@ -3,19 +3,19 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_app"
 sidebar_current: "docs-rancher2-resource-app"
 description: |-
-  Provides a Rancher v2 app resource. This can be used to deploy apps within rancher v2 projects.
+  Provides a Rancher v2 app resource. This can be used to deploy apps within Rancher v2 projects.
 ---
 
 # rancher2\_app
 
-Provides a Rancher v2 app resource. This can be used to deploy apps within rancher v2 projects.
+Provides a Rancher v2 app resource. This can be used to deploy apps within Rancher v2 projects.
 
-This resource can also modify rancher v2 apps in 3 ways:
-- `Update`: If `description`, `annotations` or `labels` arguments are modified the app will be updated. No new `revision_id` will be generated at rancher.
-- `Upgrade`: If `answers`, `catalog_name`, `template_name`, `template_version` or `values_yaml` arguments are modified, the app will be upgraded. A new `revision_id` will be generated at rancher.
-- `Rollback`: If `revision_id` argument is provided or modified the app will be rollbacked accordingly. A new `revision_id` will be generated at rancher. It will also generate a non empty tf plan that will require manual tf file edition. Use carefully.
+This resource can also modify Rancher v2 apps in 3 ways:
+- `Update`: If `description`, `annotations` or `labels` arguments are modified the app will be updated. No new `revision_id` will be generated in Rancher.
+- `Upgrade`: If `answers`, `catalog_name`, `template_name`, `template_version` or `values_yaml` arguments are modified, the app will be upgraded. A new `revision_id` will be generated in Rancher.
+- `Rollback`: If `revision_id` argument is provided or modified the app will be rolled back accordingly. A new `revision_id` will be generated in Rancher. It will also generate a non-empty terraform plan that will require manual .tf file intervention. Use carefully.
 
-Note: In case of multiple resource modification in a row, `rollback` has preference over `upgrade`.
+Note: In case of multiple resource modifications in a row, `rollback` has preference over `upgrade`.
 
 ## Example Usage
 
@@ -72,20 +72,19 @@ resource "rancher2_app" "foo" {
 
 The following arguments are supported:
 
-* `catalog_name` - (Required) Catalog name of the app. For use scoped catalogs:
+* `catalog_name` - (Required) Catalog name of the app. If modified, app will be upgraded. For use scoped catalogs:
   * add cluster ID before name, `c-XXXXX:<name>`
   * add project ID before name, `p-XXXXX:<name>`
-* `external_id` - (Required) The url of the app template on a catalog. If modified, app will be upgraded (string)
 * `name` - (Required/ForceNew) The name of the app (string)
 * `project_id` - (Required/ForceNew) The project id where the app will be installed (string)
 * `target_namespace` - (Required/ForceNew) The namespace name where the app will be installed (string)
-* `template_name` - (Required) Template name of the app (string)
-* `answers` - (Optional/Computed) Answers for the app template. If modified, app will be upgraded (map)
+* `template_name` - (Required) Template name of the app. If modified, app will be upgraded (string)
+* `answers` - (Optional) Answers for the app template. If modified, app will be upgraded (map)
 * `description` - (Optional/Computed) Description for the app (string)
 * `force_upgrade` - (Optional) Force app upgrade (string)
 * `revision_id` - (Optional/Computed) Current revision id for the app. If modified, If this argument is provided or modified, app will be rollbacked to `revision_id` (string)
-* `template_version` - (Optional/Computed) Template version of the app. Default: `latest` (string)
-* `values_yaml` - (Optional/Computed) values.yaml file content for the app template. If modified, app will be upgraded (string)
+* `template_version` - (Optional/Computed) Template version of the app. If modified, app will be upgraded. Default: `latest` (string)
+* `values_yaml` - (Optional) values.yaml base64 encoded file content for the app template. If modified, app will be upgraded (string)
 * `annotations` - (Optional/Computed) Annotations for App object (map)
 * `labels` - (Optional/Computed) Labels for App object (map)
 
@@ -94,6 +93,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
+* `external_id` - (Computed) The url of the app template on a catalog (string)
 
 ## Timeouts
 
