@@ -82,6 +82,10 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["virtual_network"] = in.VirtualNetwork
 	}
 
+	if len(in.WorkerSubnets) > 0 {
+		obj["worker_subnets"] = toArrayInterface(in.WorkerSubnets)
+	}
+
 	return []interface{}{obj}, nil
 }
 
@@ -170,6 +174,10 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["virtual_network"].(string); ok && len(v) > 0 {
 		obj.VirtualNetwork = v
+	}
+
+	if v, ok := in["worker_subnets"].([]interface{}); ok && len(v) > 0 {
+		obj.WorkerSubnets = toArrayString(v)
 	}
 
 	return obj, nil
