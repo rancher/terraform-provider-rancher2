@@ -124,11 +124,6 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Default:     20,
 			Description: "The volume size for each node",
 		},
-		"placement_group": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The name of the placement group to use",
-		},
 		"region": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -158,14 +153,6 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Description: "List of subnets in the virtual network to use for the master",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"worker_subnets": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "List of subnets in the virtual network to use for the worker nodes",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},

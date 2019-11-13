@@ -174,14 +174,6 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 
 	obj["enable_auto_scaling"] = *in.EnableAutoScaling
 
-	if in.MinCount > 0 {
-		obj["min_count"] = int(in.MinCount)
-	}
-
-	if in.MaxCount > 0 {
-		obj["max_count"] = int(in.MaxCount)
-	}
-
 	if len(in.AgentPoolType) > 0 {
 		obj["agent_pool_type"] = in.AgentPoolType
 	}
@@ -286,7 +278,7 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 	}
 
 	if v, ok := in["enable_auto_scaling"].(bool); ok {
-		obj.EnableAutoScaling = v
+		obj.EnableAutoScaling = &v
 	}
 
 	if v, ok := in["enable_http_application_routing"].(bool); ok {
@@ -383,14 +375,6 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 
 	if v, ok := in["enable_auto_scaling"].(bool); ok {
 		obj.EnableAutoScaling = &v
-	}
-
-	if v, ok := in["max_count"].(int); ok && v > 0 {
-		obj.MaxCount = int64(v)
-	}
-
-	if v, ok := in["min_count"].(int); ok && v > 0 {
-		obj.MinCount = int64(v)
 	}
 
 	if v, ok := in["agent_pool_type"].(string); ok && len(v) > 0 {
