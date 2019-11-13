@@ -20,8 +20,10 @@ type AmazonElasticContainerServiceConfig struct {
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
 	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
+	ManageOwnSecurityGroups     *bool    `json:"manageOwnSecurityGroups,omitempty" yaml:"manageOwnSecurityGroups,omitempty"`
 	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
 	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
+	NodeSecurityGroups          []string `json:"nodeSecurityGroups,omitempty" yaml:"nodeSecurityGroups,omitempty"`
 	NodeVolumeSize              int64    `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
 	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
 	Region                      string   `json:"region,omitempty" yaml:"region,omitempty"`
@@ -84,6 +86,12 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Allow user to specify key name to use",
 		},
+		"manage_own_security_groups": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "When true, do not create or edit security groups, only assign them",
+		},
 		"maximum_nodes": {
 			Type:        schema.TypeInt,
 			Optional:    true,
@@ -95,6 +103,14 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     1,
 			Description: "The minimum number of worker nodes",
+		},
+		"node_security_groups": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of security groups to assign to the worker nodes",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 		"node_volume_size": {
 			Type:        schema.TypeInt,

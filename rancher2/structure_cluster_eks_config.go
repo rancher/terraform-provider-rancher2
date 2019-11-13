@@ -38,12 +38,18 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["kubernetes_version"] = in.KubernetesVersion
 	}
 
+	obj["manage_own_security_groups"] = *in.ManageOwnSecurityGroups
+
 	if in.MaximumNodes > 0 {
 		obj["maximum_nodes"] = int(in.MaximumNodes)
 	}
 
 	if in.MinimumNodes > 0 {
 		obj["minimum_nodes"] = int(in.MinimumNodes)
+	}
+
+	if len(in.NodeSecurityGroups) > 0 {
+		obj["node_security_groups"] = toArrayInterface(in.NodeSecurityGroups)
 	}
 
 	if in.NodeVolumeSize > 0 {
@@ -132,12 +138,20 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 		obj.KubernetesVersion = v
 	}
 
+	if v, ok := in["manage_own_security_groups"].(bool); ok {
+		obj.ManageOwnSecurityGroups = &v
+	}
+
 	if v, ok := in["maximum_nodes"].(int); ok && v > 0 {
 		obj.MaximumNodes = int64(v)
 	}
 
 	if v, ok := in["minimum_nodes"].(int); ok && v > 0 {
 		obj.MinimumNodes = int64(v)
+	}
+
+	if v, ok := in["node_security_groups"].([]interface{}); ok && len(v) > 0 {
+		obj.NodeSecurityGroups = toArrayString(v)
 	}
 
 	if v, ok := in["node_volume_size"].(int); ok && v > 0 {
