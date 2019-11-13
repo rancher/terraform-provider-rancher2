@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"fmt"
+
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -134,6 +136,8 @@ func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService)
 		return []interface{}{}, nil
 	}
 
+	obj["always_pull_images"] = in.AlwaysPullImages
+
 	if len(in.ExtraArgs) > 0 {
 		obj["extra_args"] = toMapInterface(in.ExtraArgs)
 	}
@@ -175,10 +179,22 @@ func flattenClusterRKEConfigServicesEtcdBackupConfigS3(in *managementClient.S3Ba
 		return []interface{}{}
 	}
 
-	obj["access_key"] = in.AccessKey
+	if len(in.AccessKey) > 0 {
+		obj["access_key"] = in.AccessKey
+	}
+
 	obj["bucket_name"] = in.BucketName
 	obj["endpoint"] = in.Endpoint
+
+	if len(in.Folder) > 0 {
+		obj["folder"] = in.Folder
+	}
+
 	obj["region"] = in.Region
+
+	if len(in.CustomCA) > 0 {
+		obj["custom_ca"] = Base64Encode(in.CustomCA)
+	}
 
 	if len(in.SecretKey) > 0 {
 		obj["secret_key"] = in.SecretKey
@@ -268,6 +284,10 @@ func flattenClusterRKEConfigServicesEtcd(in *managementClient.ETCDService, p []i
 		obj["extra_env"] = toArrayInterface(in.ExtraEnv)
 	}
 
+	if in.GID >= 0 {
+		obj["gid"] = int(in.GID)
+	}
+
 	if len(in.Image) > 0 {
 		obj["image"] = in.Image
 	}
@@ -282,6 +302,10 @@ func flattenClusterRKEConfigServicesEtcd(in *managementClient.ETCDService, p []i
 
 	if len(in.Retention) > 0 {
 		obj["retention"] = in.Retention
+	}
+
+	if in.UID >= 0 {
+		obj["uid"] = int(in.UID)
 	}
 
 	obj["snapshot"] = *in.Snapshot
@@ -493,6 +517,10 @@ func expandClusterRKEConfigServicesKubeAPI(p []interface{}) (*managementClient.K
 	}
 	in := p[0].(map[string]interface{})
 
+	if v, ok := in["always_pull_images"].(bool); ok {
+		obj.AlwaysPullImages = v
+	}
+
 	if v, ok := in["extra_args"].(map[string]interface{}); ok && len(v) > 0 {
 		obj.ExtraArgs = toMapString(v)
 	}
@@ -524,10 +552,10 @@ func expandClusterRKEConfigServicesKubeAPI(p []interface{}) (*managementClient.K
 	return obj, nil
 }
 
-func expandClusterRKEConfigServicesEtcdBackupConfigS3(p []interface{}) *managementClient.S3BackupConfig {
+func expandClusterRKEConfigServicesEtcdBackupConfigS3(p []interface{}) (*managementClient.S3BackupConfig, error) {
 	obj := &managementClient.S3BackupConfig{}
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -539,8 +567,20 @@ func expandClusterRKEConfigServicesEtcdBackupConfigS3(p []interface{}) *manageme
 		obj.BucketName = v
 	}
 
+	if v, ok := in["custom_ca"].(string); ok && len(v) > 0 {
+		customCA, err := Base64Decode(v)
+		if err != nil {
+			return nil, fmt.Errorf("expanding etcd backup S3 Config: custom_ca is not base64 encoded: %s", v)
+		}
+		obj.CustomCA = customCA
+	}
+
 	if v, ok := in["endpoint"].(string); ok && len(v) > 0 {
 		obj.Endpoint = v
+	}
+
+	if v, ok := in["folder"].(string); ok && len(v) > 0 {
+		obj.Folder = v
 	}
 
 	if v, ok := in["region"].(string); ok && len(v) > 0 {
@@ -551,13 +591,13 @@ func expandClusterRKEConfigServicesEtcdBackupConfigS3(p []interface{}) *manageme
 		obj.SecretKey = v
 	}
 
-	return obj
+	return obj, nil
 }
 
-func expandClusterRKEConfigServicesEtcdBackupConfig(p []interface{}) *managementClient.BackupConfig {
+func expandClusterRKEConfigServicesEtcdBackupConfig(p []interface{}) (*managementClient.BackupConfig, error) {
 	obj := &managementClient.BackupConfig{}
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -574,10 +614,14 @@ func expandClusterRKEConfigServicesEtcdBackupConfig(p []interface{}) *management
 	}
 
 	if v, ok := in["s3_backup_config"].([]interface{}); ok && len(v) > 0 {
-		obj.S3BackupConfig = expandClusterRKEConfigServicesEtcdBackupConfigS3(v)
+		s3BackupConfig, err := expandClusterRKEConfigServicesEtcdBackupConfigS3(v)
+		if err != nil {
+			return nil, err
+		}
+		obj.S3BackupConfig = s3BackupConfig
 	}
 
-	return obj
+	return obj, nil
 }
 
 func expandClusterRKEConfigServicesEtcd(p []interface{}) (*managementClient.ETCDService, error) {
@@ -588,7 +632,11 @@ func expandClusterRKEConfigServicesEtcd(p []interface{}) (*managementClient.ETCD
 	in := p[0].(map[string]interface{})
 
 	if v, ok := in["backup_config"].([]interface{}); ok && len(v) > 0 {
-		obj.BackupConfig = expandClusterRKEConfigServicesEtcdBackupConfig(v)
+		backupConfig, err := expandClusterRKEConfigServicesEtcdBackupConfig(v)
+		if err != nil {
+			return nil, err
+		}
+		obj.BackupConfig = backupConfig
 	}
 
 	if v, ok := in["ca_cert"].(string); ok && len(v) > 0 {
@@ -619,6 +667,10 @@ func expandClusterRKEConfigServicesEtcd(p []interface{}) (*managementClient.ETCD
 		obj.ExtraEnv = toArrayString(v)
 	}
 
+	if v, ok := in["gid"].(int); ok && v >= 0 {
+		obj.GID = int64(v)
+	}
+
 	if v, ok := in["image"].(string); ok && len(v) > 0 {
 		obj.Image = v
 	}
@@ -637,6 +689,10 @@ func expandClusterRKEConfigServicesEtcd(p []interface{}) (*managementClient.ETCD
 
 	if v, ok := in["snapshot"].(bool); ok {
 		obj.Snapshot = &v
+	}
+
+	if v, ok := in["uid"].(int); ok && v >= 0 {
+		obj.UID = int64(v)
 	}
 
 	return obj, nil

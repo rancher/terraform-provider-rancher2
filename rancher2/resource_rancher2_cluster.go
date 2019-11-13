@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
@@ -72,6 +72,20 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be created: %s", newCluster.ID, waitErr)
 	}
 
+	monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
+	if newCluster.EnableClusterMonitoring && monitoringInput != nil {
+		clusterResource := &norman.Resource{
+			ID:      newCluster.ID,
+			Type:    newCluster.Type,
+			Links:   newCluster.Links,
+			Actions: newCluster.Actions,
+		}
+		err = client.APIBaseClient.Action(managementClient.ClusterType, "editMonitoring", clusterResource, monitoringInput, nil)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(newCluster.ID)
 
 	return resourceRancher2ClusterRead(d, meta)
@@ -118,7 +132,20 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	err = flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID)
+	monitoringInput := &managementClient.MonitoringInput{}
+	if cluster.EnableClusterMonitoring {
+		monitoringOutput := &managementClient.MonitoringOutput{}
+		err = client.APIBaseClient.Action(managementClient.ClusterType, "viewMonitoring", clusterResource, nil, monitoringOutput)
+		if err != nil {
+			return err
+		}
+
+		if monitoringOutput != nil && len(monitoringOutput.Answers) > 0 {
+			monitoringInput.Answers = monitoringOutput.Answers
+		}
+	}
+
+	err = flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID, monitoringInput)
 	if err != nil {
 		return err
 	}
@@ -145,10 +172,29 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"name":                               d.Get("name").(string),
 		"description":                        d.Get("description").(string),
 		"defaultPodSecurityPolicyTemplateId": d.Get("default_pod_security_policy_template_id").(string),
+		"desiredAgentImage":                  d.Get("desired_agent_image").(string),
+		"desiredAuthImage":                   d.Get("desired_auth_image").(string),
+		"dockerRootDir":                      d.Get("docker_root_dir").(string),
+		"enableClusterAlerting":              d.Get("enable_cluster_alerting").(bool),
+		"enableClusterMonitoring":            d.Get("enable_cluster_monitoring").(bool),
 		"enableNetworkPolicy":                &enableNetworkPolicy,
+		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
 		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
 		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
+	}
+
+	if clusterTemplateID, ok := d.Get("cluster_template_id").(string); ok && len(clusterTemplateID) > 0 {
+		update["clusterTemplateId"] = clusterTemplateID
+		if clusterTemplateRevisionID, ok := d.Get("cluster_template_revision_id").(string); ok && len(clusterTemplateRevisionID) > 0 {
+			update["clusterTemplateRevisionId"] = clusterTemplateRevisionID
+		}
+		if answers, ok := d.Get("cluster_template_answers").([]interface{}); ok && len(answers) > 0 {
+			update["answers"] = expandAnswer(answers)
+		}
+		if questions, ok := d.Get("cluster_template_questions").([]interface{}); ok && len(questions) > 0 {
+			update["questions"] = expandQuestions(questions)
+		}
 	}
 
 	switch driver := d.Get("driver").(string); driver {
@@ -178,7 +224,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		update["rancherKubernetesEngineConfig"] = rkeConfig
 	}
 
-	newCluster := &CloudCredential{}
+	newCluster := &Cluster{}
 	err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
 	if err != nil {
 		return err
@@ -195,6 +241,22 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr)
+	}
+
+	if d.HasChange("enable_cluster_monitoring") || d.HasChange("cluster_monitoring_input") {
+		monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
+		if newCluster.EnableClusterMonitoring && monitoringInput != nil {
+			clusterResource := &norman.Resource{
+				ID:      newCluster.ID,
+				Type:    newCluster.Type,
+				Links:   newCluster.Links,
+				Actions: newCluster.Actions,
+			}
+			err = client.APIBaseClient.Action(managementClient.ClusterType, "editMonitoring", clusterResource, monitoringInput, nil)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(newCluster.ID)

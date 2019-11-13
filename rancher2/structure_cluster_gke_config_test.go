@@ -67,11 +67,13 @@ func init() {
 			"Rlabel1": "value1",
 			"Rlabel2": "value2",
 		},
-		ServiceAccount: "service_account",
-		SubNetwork:     "subnetwork",
-		UseIPAliases:   true,
-		Taints:         []string{"taint1", "taint2"},
-		Zone:           "zone",
+		ServiceAccount:           "service_account",
+		SubNetwork:               "subnetwork",
+		UseIPAliases:             true,
+		Taints:                   []string{"taint1", "taint2"},
+		Zone:                     "zone",
+		DefaultMaxPodsConstraint: 32,
+		Region:                   "region",
 	}
 	testClusterGKEConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -128,11 +130,13 @@ func init() {
 				"Rlabel1": "value1",
 				"Rlabel2": "value2",
 			},
-			"service_account": "service_account",
-			"sub_network":     "subnetwork",
-			"use_ip_aliases":  true,
-			"taints":          []interface{}{"taint1", "taint2"},
-			"zone":            "zone",
+			"service_account":             "service_account",
+			"sub_network":                 "subnetwork",
+			"use_ip_aliases":              true,
+			"taints":                      []interface{}{"taint1", "taint2"},
+			"zone":                        "zone",
+			"default_max_pods_constraint": 32,
+			"region":                      "region",
 		},
 	}
 }

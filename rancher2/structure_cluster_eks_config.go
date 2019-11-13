@@ -22,8 +22,16 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 
 	obj["associate_worker_node_public_ip"] = *in.AssociateWorkerNodePublicIP
 
+	if in.DesiredNodes > 0 {
+		obj["desired_nodes"] = int(in.DesiredNodes)
+	}
+
 	if len(in.InstanceType) > 0 {
 		obj["instance_type"] = in.InstanceType
+	}
+
+	if len(in.KeyPairName) > 0 {
+		obj["key_pair_name"] = in.KeyPairName
 	}
 
 	if len(in.KubernetesVersion) > 0 {
@@ -44,6 +52,10 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 
 	if len(in.Region) > 0 {
 		obj["region"] = in.Region
+	}
+
+	if len(in.PlacementGroup) > 0 {
+		obj["placement_group"] = in.PlacementGroup
 	}
 
 	if len(in.SecurityGroups) > 0 {
@@ -100,8 +112,16 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 		obj.AssociateWorkerNodePublicIP = &v
 	}
 
+	if v, ok := in["desired_nodes"].(int); ok && v > 0 {
+		obj.DesiredNodes = int64(v)
+	}
+
 	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
 		obj.InstanceType = v
+	}
+
+	if v, ok := in["key_pair_name"].(string); ok && len(v) > 0 {
+		obj.KeyPairName = v
 	}
 
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
@@ -118,6 +138,10 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["node_volume_size"].(int); ok && v > 0 {
 		obj.NodeVolumeSize = int64(v)
+	}
+
+	if v, ok := in["placement_group"].(string); ok && len(v) > 0 {
+		obj.PlacementGroup = v
 	}
 
 	if v, ok := in["region"].(string); ok && len(v) > 0 {

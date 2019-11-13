@@ -1,7 +1,8 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 //Schemas
@@ -24,10 +25,6 @@ func nodePoolFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"quantity": &schema.Schema{
-			Type:     schema.TypeInt,
-			Required: true,
-		},
 		"control_plane": &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -35,6 +32,12 @@ func nodePoolFields() map[string]*schema.Schema {
 		"etcd": &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
+		},
+		"quantity": &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      1,
+			ValidateFunc: validation.IntAtLeast(1),
 		},
 		"worker": &schema.Schema{
 			Type:     schema.TypeBool,

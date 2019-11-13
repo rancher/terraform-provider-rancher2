@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
@@ -128,7 +128,6 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 		"authCertificateAuthority": d.Get("auth_certificate_authority").(string),
 		"authKey":                  d.Get("auth_key").(string),
 		"description":              d.Get("description").(string),
-		"dockerVersion":            d.Get("docker_version").(string),
 		"engineEnv":                toMapString(d.Get("engine_env").(map[string]interface{})),
 		"engineInsecureRegistry":   toArrayString(d.Get("engine_insecure_registry").([]interface{})),
 		"engineInstallURL":         d.Get("engine_install_url").(string),

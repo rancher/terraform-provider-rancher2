@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -35,7 +35,10 @@ func resourceRancher2EtcdBackupCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	etcdBackup := expandEtcdBackup(d)
+	etcdBackup, err := expandEtcdBackup(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[INFO] Creating Etcd Backup")
 
@@ -104,8 +107,13 @@ func resourceRancher2EtcdBackupUpdate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
+	backupConfig, err := expandClusterRKEConfigServicesEtcdBackupConfig(d.Get("backup_config").([]interface{}))
+	if err != nil {
+		return err
+	}
+
 	update := map[string]interface{}{
-		"backup_config": expandClusterRKEConfigServicesEtcdBackupConfig(d.Get("backup_config").([]interface{})),
+		"backup_config": backupConfig,
 		"filename":      d.Get("filename").(string),
 		"manual":        d.Get("manual").(bool),
 		"annotations":   toMapString(d.Get("annotations").(map[string]interface{})),

@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 //Schemas
@@ -25,6 +25,7 @@ func etcdBackupFields() map[string]*schema.Schema {
 		"filename": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true,
 		},
 		"manual": &schema.Schema{
 			Type:     schema.TypeBool,

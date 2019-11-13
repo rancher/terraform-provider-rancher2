@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -15,12 +15,15 @@ type AmazonElasticContainerServiceConfig struct {
 	AMI                         string   `json:"ami,omitempty" yaml:"ami,omitempty"`
 	AccessKey                   string   `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
 	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
+	DesiredNodes                int64    `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
 	DisplayName                 string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
+	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
 	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
 	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
 	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
 	NodeVolumeSize              int64    `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
+	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
 	Region                      string   `json:"region,omitempty" yaml:"region,omitempty"`
 	SecretKey                   string   `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
 	SecurityGroups              []string `json:"securityGroups,omitempty" yaml:"securityGroups,omitempty"`
@@ -41,6 +44,11 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			Description: "The AWS Client ID to use",
 		},
+		"kubernetes_version": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The kubernetes master version",
+		},
 		"secret_key": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -58,17 +66,22 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Default:     true,
 			Description: "Associate public ip EKS worker nodes",
 		},
+		"desired_nodes": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     3,
+			Description: "The desired number of worker nodes",
+		},
 		"instance_type": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "t2.medium",
 			Description: "The type of machine to use for worker nodes",
 		},
-		"kubernetes_version": {
+		"key_pair_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "1.10",
-			Description: "The kubernetes master version",
+			Description: "Allow user to specify key name to use",
 		},
 		"maximum_nodes": {
 			Type:        schema.TypeInt,
@@ -87,6 +100,11 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     20,
 			Description: "The volume size for each node",
+		},
+		"placement_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The name of the placement group to use",
 		},
 		"region": {
 			Type:        schema.TypeString,

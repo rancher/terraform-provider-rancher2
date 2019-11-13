@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_setting"
 sidebar_current: "docs-rancher2-resource-setting"
 description: |-
-  Provides a Rancher v2 Setting resource. This can be used to create settings for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Setting resource. This can be used to create settings for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_setting
 
-Provides a Rancher v2 Setting resource. This can be used to create settings for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Setting resource. This can be used to create settings for Rancher v2 environments and retrieve their information.
 
 On create, if setting already exists, provider will import it and update its value.
 
@@ -41,7 +41,7 @@ The following attributes are exported:
 
 ## Import
 
-Setting can be imported using the rancher setting ID.
+Setting can be imported using the Rancher setting ID.
 
 ```
 $ terraform import rancher2_setting.foo <setting_id>

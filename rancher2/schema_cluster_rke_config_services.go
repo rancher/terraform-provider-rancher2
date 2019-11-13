@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 //Schemas
@@ -158,6 +158,11 @@ func clusterRKEConfigServicesKubeControllerFields() map[string]*schema.Schema {
 
 func clusterRKEConfigServicesKubeAPIFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"always_pull_images": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
 		"extra_args": {
 			Type:     schema.TypeMap,
 			Optional: true,
@@ -205,24 +210,32 @@ func clusterRKEConfigServicesEtcdBackupConfigS3Fields() map[string]*schema.Schem
 	s := map[string]*schema.Schema{
 		"access_key": {
 			Type:      schema.TypeString,
-			Required:  true,
+			Optional:  true,
 			Sensitive: true,
 		},
 		"bucket_name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"custom_ca": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"endpoint": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"folder": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"region": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
 		},
 		"secret_key": {
 			Type:      schema.TypeString,
-			Required:  true,
+			Optional:  true,
 			Sensitive: true,
 		},
 	}
@@ -311,6 +324,11 @@ func clusterRKEConfigServicesEtcdFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
+		"gid": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  0,
+		},
 		"image": {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -336,6 +354,11 @@ func clusterRKEConfigServicesEtcdFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
+		},
+		"uid": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Default:  0,
 		},
 	}
 	return s

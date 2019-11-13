@@ -4,11 +4,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
+	testProjectContainerResourceLimitConf           *managementClient.ContainerResourceLimit
+	testProjectContainerResourceLimitInterface      []interface{}
 	testProjectResourceQuotaLimitConf               *managementClient.ResourceQuotaLimit
 	testProjectResourceQuotaLimitInterface          []interface{}
 	testProjectResourceQuotaLimitNamespaceConf      *managementClient.ResourceQuotaLimit
@@ -21,6 +23,20 @@ var (
 )
 
 func init() {
+	testProjectContainerResourceLimitConf = &managementClient.ContainerResourceLimit{
+		LimitsCPU:      "limits_cpu",
+		LimitsMemory:   "limits_memory",
+		RequestsCPU:    "requests_cpu",
+		RequestsMemory: "requests_memory",
+	}
+	testProjectContainerResourceLimitInterface = []interface{}{
+		map[string]interface{}{
+			"limits_cpu":      "limits_cpu",
+			"limits_memory":   "limits_memory",
+			"requests_cpu":    "requests_cpu",
+			"requests_memory": "requests_memory",
+		},
+	}
 	testProjectResourceQuotaLimitConf = &managementClient.ResourceQuotaLimit{
 		ConfigMaps:             "config",
 		LimitsCPU:              "cpu",
@@ -100,15 +116,42 @@ func init() {
 	testProjectConf = &managementClient.Project{
 		ClusterID:                     "cluster-test",
 		Name:                          "test",
+		ContainerDefaultResourceLimit: testProjectContainerResourceLimitConf,
 		Description:                   "description",
+		EnableProjectMonitoring:       true,
+		PodSecurityPolicyTemplateName: "pod_security_policy_template_id",
 		ResourceQuota:                 testProjectResourceQuotaConf,
 		NamespaceDefaultResourceQuota: testProjectNamespaceResourceQuotaConf,
 	}
 	testProjectInterface = map[string]interface{}{
-		"cluster_id":     "cluster-test",
-		"name":           "test",
-		"description":    "description",
-		"resource_quota": testProjectResourceQuotaInterface,
+		"cluster_id":                      "cluster-test",
+		"name":                            "test",
+		"container_resource_limit":        testProjectContainerResourceLimitInterface,
+		"description":                     "description",
+		"enable_project_monitoring":       true,
+		"pod_security_policy_template_id": "pod_security_policy_template_id",
+		"resource_quota":                  testProjectResourceQuotaInterface,
+	}
+}
+
+func TestFlattenProjectContainerResourceLimit(t *testing.T) {
+
+	cases := []struct {
+		Input          *managementClient.ContainerResourceLimit
+		ExpectedOutput []interface{}
+	}{
+		{
+			testProjectContainerResourceLimitConf,
+			testProjectContainerResourceLimitInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenProjectContainerResourceLimit(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
 	}
 }
 
@@ -170,7 +213,7 @@ func TestFlattenProject(t *testing.T) {
 
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, projectFields(), map[string]interface{}{})
-		err := flattenProject(output, tc.Input)
+		err := flattenProject(output, tc.Input, nil)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
@@ -181,6 +224,26 @@ func TestFlattenProject(t *testing.T) {
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				expectedOutput, output)
+		}
+	}
+}
+
+func TestExpandProjectContainerResourceLimit(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput *managementClient.ContainerResourceLimit
+	}{
+		{
+			testProjectContainerResourceLimitInterface,
+			testProjectContainerResourceLimitConf,
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandProjectContainerResourceLimit(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven: %#v", tc.ExpectedOutput, output)
 		}
 	}
 }

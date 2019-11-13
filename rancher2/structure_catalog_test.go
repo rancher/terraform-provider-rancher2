@@ -4,46 +4,93 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testCatalogConf      *managementClient.Catalog
-	testCatalogInterface map[string]interface{}
+	testCatalogGlobalConf       *managementClient.Catalog
+	testCatalogGlobalInterface  map[string]interface{}
+	testCatalogClusterConf      *managementClient.ClusterCatalog
+	testCatalogClusterInterface map[string]interface{}
+	testCatalogProjectConf      *managementClient.ProjectCatalog
+	testCatalogProjectInterface map[string]interface{}
 )
 
 func init() {
-	testCatalogConf = &managementClient.Catalog{
+	testCatalogGlobalConf = &managementClient.Catalog{
 		Name:        "catalog-test",
 		URL:         "url",
 		Description: "description",
 		Kind:        "kind",
 		Branch:      "branch",
 	}
-	testCatalogInterface = map[string]interface{}{
+	testCatalogGlobalInterface = map[string]interface{}{
 		"name":        "catalog-test",
 		"url":         "url",
 		"description": "description",
 		"kind":        "kind",
 		"branch":      "branch",
+		"scope":       "global",
+	}
+	testCatalogClusterConf = &managementClient.ClusterCatalog{
+		Name:        "catalog-test",
+		URL:         "url",
+		Description: "description",
+		Kind:        "kind",
+		Branch:      "branch",
+		ClusterID:   "cluster_id",
+	}
+	testCatalogClusterInterface = map[string]interface{}{
+		"name":        "catalog-test",
+		"url":         "url",
+		"description": "description",
+		"kind":        "kind",
+		"branch":      "branch",
+		"scope":       "cluster",
+		"cluster_id":  "cluster_id",
+	}
+	testCatalogProjectConf = &managementClient.ProjectCatalog{
+		Name:        "catalog-test",
+		URL:         "url",
+		Description: "description",
+		Kind:        "kind",
+		Branch:      "branch",
+		ProjectID:   "project_id",
+	}
+	testCatalogProjectInterface = map[string]interface{}{
+		"name":        "catalog-test",
+		"url":         "url",
+		"description": "description",
+		"kind":        "kind",
+		"branch":      "branch",
+		"scope":       "project",
+		"project_id":  "project_id",
 	}
 }
 
 func TestFlattenCatalog(t *testing.T) {
 
 	cases := []struct {
-		Input          *managementClient.Catalog
+		Input          interface{}
 		ExpectedOutput map[string]interface{}
 	}{
 		{
-			testCatalogConf,
-			testCatalogInterface,
+			testCatalogGlobalConf,
+			testCatalogGlobalInterface,
+		},
+		{
+			testCatalogClusterConf,
+			testCatalogClusterInterface,
+		},
+		{
+			testCatalogProjectConf,
+			testCatalogProjectInterface,
 		},
 	}
 
 	for _, tc := range cases {
-		output := schema.TestResourceDataRaw(t, catalogFields(), map[string]interface{}{})
+		output := schema.TestResourceDataRaw(t, catalogFields(), tc.ExpectedOutput)
 		err := flattenCatalog(output, tc.Input)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
@@ -63,11 +110,19 @@ func TestExpandCatalog(t *testing.T) {
 
 	cases := []struct {
 		Input          map[string]interface{}
-		ExpectedOutput *managementClient.Catalog
+		ExpectedOutput interface{}
 	}{
 		{
-			testCatalogInterface,
-			testCatalogConf,
+			testCatalogGlobalInterface,
+			testCatalogGlobalConf,
+		},
+		{
+			testCatalogClusterInterface,
+			testCatalogClusterConf,
+		},
+		{
+			testCatalogProjectInterface,
+			testCatalogProjectConf,
 		},
 	}
 

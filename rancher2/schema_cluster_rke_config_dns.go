@@ -1,8 +1,8 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const (
@@ -27,7 +27,7 @@ func clusterRKEConfigDNSFields() map[string]*schema.Schema {
 		"provider": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			Default:      clusterRKEDNSProviderKube,
+			Default:      clusterRKEDNSProviderCore,
 			ValidateFunc: validation.StringInSlice(clusterRKEDNSProviderList, true),
 		},
 		"reverse_cidrs": {

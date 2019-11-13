@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -15,10 +15,13 @@ type azureConfig struct {
 	ClientID           string   `json:"clientId,omitempty" yaml:"clientId,omitempty"`
 	ClientSecret       string   `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
 	CustomData         string   `json:"customData,omitempty" yaml:"customData,omitempty"`
+	DiskSize           string   `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
 	DNS                string   `json:"dns,omitempty" yaml:"dns,omitempty"`
 	Environment        string   `json:"environment,omitempty" yaml:"environment,omitempty"`
+	FaultDomainCount   string   `json:"faultDomainCount,omitempty" yaml:"faultDomainCount,omitempty"`
 	Image              string   `json:"image,omitempty" yaml:"image,omitempty"`
 	Location           string   `json:"location,omitempty" yaml:"location,omitempty"`
+	ManagedDisks       bool     `json:"managedDisks,omitempty" yaml:"managedDisks,omitempty"`
 	NoPublicIP         bool     `json:"noPublicIp,omitempty" yaml:"noPublicIp,omitempty"`
 	OpenPort           []string `json:"openPort,omitempty" yaml:"openPort,omitempty"`
 	PrivateAddressOnly bool     `json:"privateAddressOnly,omitempty" yaml:"privateAddressOnly,omitempty"`
@@ -31,6 +34,7 @@ type azureConfig struct {
 	Subnet             string   `json:"subnet,omitempty" yaml:"subnet,omitempty"`
 	SubnetPrefix       string   `json:"subnetPrefix,omitempty" yaml:"subnetPrefix,omitempty"`
 	SubscriptionID     string   `json:"subscriptionId,omitempty" yaml:"subscriptionId,omitempty"`
+	UpdateDomainCount  string   `json:"updateDomainCount,omitempty" yaml:"updateDomainCount,omitempty"`
 	UsePrivateIP       bool     `json:"usePrivateIp,omitempty" yaml:"usePrivateIp,omitempty"`
 	Vnet               string   `json:"vnet,omitempty" yaml:"vnet,omitempty"`
 }
@@ -62,6 +66,12 @@ func azureConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Path to file with custom-data",
 		},
+		"disk_size": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "30",
+			Description: "Disk size if using managed disk",
+		},
 		"dns": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -79,10 +89,16 @@ func azureConfigFields() map[string]*schema.Schema {
 			Default:     "AzurePublicCloud",
 			Description: "Azure environment (e.g. AzurePublicCloud, AzureChinaCloud)",
 		},
+		"fault_domain_count": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "3",
+			Description: "Fault domain count to use for availability set",
+		},
 		"image": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "canonical:UbuntuServer:16.04.0-LTS:latest",
+			Default:     "canonical:UbuntuServer:18.04-LTS:latest",
 			Description: "Azure virtual machine OS image",
 		},
 		"location": {
@@ -90,6 +106,12 @@ func azureConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "westus",
 			Description: "Azure region to create the virtual machine",
+		},
+		"managed_disks": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Configures VM and availability set for managed disks",
 		},
 		"no_public_ip": {
 			Type:        schema.TypeBool,
@@ -158,8 +180,14 @@ func azureConfigFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			Description: "Azure Subscription ID",
 		},
-		"use_private_ip": {
+		"update_domain_count": {
 			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "5",
+			Description: "Update domain count to use for availability set",
+		},
+		"use_private_ip": {
+			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
 			Description: "Use private IP address of the machine to connect",

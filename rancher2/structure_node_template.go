@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // Flatteners
@@ -56,10 +56,6 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 
 	if len(in.Description) > 0 {
 		d.Set("description", in.Description)
-	}
-
-	if len(in.DockerVersion) > 0 {
-		d.Set("docker_version", in.DockerVersion)
 	}
 
 	if len(in.EngineEnv) > 0 {

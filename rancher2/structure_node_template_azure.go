@@ -24,12 +24,20 @@ func flattenAzureConfig(in *azureConfig) []interface{} {
 		obj["custom_data"] = in.CustomData
 	}
 
+	if len(in.DiskSize) > 0 {
+		obj["disk_size"] = in.DiskSize
+	}
+
 	if len(in.DNS) > 0 {
 		obj["dns"] = in.DNS
 	}
 
 	if len(in.Environment) > 0 {
 		obj["environment"] = in.Environment
+	}
+
+	if len(in.FaultDomainCount) > 0 {
+		obj["fault_domain_count"] = in.FaultDomainCount
 	}
 
 	if len(in.Image) > 0 {
@@ -40,6 +48,7 @@ func flattenAzureConfig(in *azureConfig) []interface{} {
 		obj["location"] = in.Location
 	}
 
+	obj["managed_disks"] = in.ManagedDisks
 	obj["no_public_ip"] = in.NoPublicIP
 
 	if len(in.OpenPort) > 0 {
@@ -82,6 +91,10 @@ func flattenAzureConfig(in *azureConfig) []interface{} {
 		obj["subscription_id"] = in.SubscriptionID
 	}
 
+	if len(in.UpdateDomainCount) > 0 {
+		obj["update_domain_count"] = in.UpdateDomainCount
+	}
+
 	obj["use_private_ip"] = in.UsePrivateIP
 
 	if len(in.Vnet) > 0 {
@@ -116,6 +129,10 @@ func expandAzureConfig(p []interface{}) *azureConfig {
 		obj.CustomData = v
 	}
 
+	if v, ok := in["disk_size"].(string); ok && len(v) > 0 {
+		obj.DiskSize = v
+	}
+
 	if v, ok := in["dns"].(string); ok && len(v) > 0 {
 		obj.DNS = v
 	}
@@ -124,12 +141,20 @@ func expandAzureConfig(p []interface{}) *azureConfig {
 		obj.Environment = v
 	}
 
+	if v, ok := in["fault_domain_count"].(string); ok && len(v) > 0 {
+		obj.FaultDomainCount = v
+	}
+
 	if v, ok := in["image"].(string); ok && len(v) > 0 {
 		obj.Image = v
 	}
 
 	if v, ok := in["location"].(string); ok && len(v) > 0 {
 		obj.Location = v
+	}
+
+	if v, ok := in["managed_disks"].(bool); ok {
+		obj.ManagedDisks = v
 	}
 
 	if v, ok := in["no_public_ip"].(bool); ok {
@@ -178,6 +203,10 @@ func expandAzureConfig(p []interface{}) *azureConfig {
 
 	if v, ok := in["subscription_id"].(string); ok && len(v) > 0 {
 		obj.SubscriptionID = v
+	}
+
+	if v, ok := in["update_domain_count"].(string); ok && len(v) > 0 {
+		obj.UpdateDomainCount = v
 	}
 
 	if v, ok := in["use_private_ip"].(bool); ok {

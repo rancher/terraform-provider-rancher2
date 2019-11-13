@@ -122,6 +122,7 @@ func init() {
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIConf = &managementClient.KubeAPIService{
+		AlwaysPullImages: true,
 		ExtraArgs: map[string]string{
 			"arg_one": "one",
 			"arg_two": "two",
@@ -135,6 +136,7 @@ func init() {
 	}
 	testClusterRKEConfigServicesKubeAPIInterface = []interface{}{
 		map[string]interface{}{
+			"always_pull_images": true,
 			"extra_args": map[string]interface{}{
 				"arg_one": "one",
 				"arg_two": "two",
@@ -150,14 +152,18 @@ func init() {
 	testClusterRKEConfigServicesETCDBackupS3Conf = &managementClient.S3BackupConfig{
 		AccessKey:  "access_key",
 		BucketName: "bucket_name",
+		CustomCA:   "custom_ca",
 		Endpoint:   "endpoint",
+		Folder:     "folder",
 		Region:     "region",
 	}
 	testClusterRKEConfigServicesETCDBackupS3Interface = []interface{}{
 		map[string]interface{}{
 			"access_key":  "access_key",
 			"bucket_name": "bucket_name",
+			"custom_ca":   Base64Encode("custom_ca"),
 			"endpoint":    "endpoint",
+			"folder":      "folder",
 			"region":      "region",
 		},
 	}
@@ -187,11 +193,13 @@ func init() {
 		},
 		ExtraBinds: []string{"bind_one", "bind_two"},
 		ExtraEnv:   []string{"env_one", "env_two"},
+		GID:        int64(1001),
 		Image:      "image",
 		Key:        "ZZZZZZZZ",
 		Path:       "/etcd",
 		Retention:  "6h",
 		Snapshot:   newTrue(),
+		UID:        int64(1001),
 	}
 	testClusterRKEConfigServicesETCDInterface = []interface{}{
 		map[string]interface{}{
@@ -206,11 +214,13 @@ func init() {
 			},
 			"extra_binds": []interface{}{"bind_one", "bind_two"},
 			"extra_env":   []interface{}{"env_one", "env_two"},
+			"gid":         1001,
 			"image":       "image",
 			"key":         "ZZZZZZZZ",
 			"path":        "/etcd",
 			"retention":   "6h",
 			"snapshot":    true,
+			"uid":         1001,
 		},
 	}
 	testClusterRKEConfigServicesConf = &managementClient.RKEConfigServices{
@@ -528,7 +538,10 @@ func TestExpandClusterRKEConfigServicesEtcdBackupConfigS3(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := expandClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input)
+		output, err := expandClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -549,7 +562,10 @@ func TestExpandClusterRKEConfigServicesEtcdBackupConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := expandClusterRKEConfigServicesEtcdBackupConfig(tc.Input)
+		output, err := expandClusterRKEConfigServicesEtcdBackupConfig(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

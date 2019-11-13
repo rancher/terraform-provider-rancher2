@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_project_logging"
 sidebar_current: "docs-rancher2-resource-project_logging"
 description: |-
-  Provides a Rancher v2 Project Logging resource. This can be used to create Project Logging for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Project Logging resource. This can be used to create Project Logging for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_project\_logging
 
-Provides a Rancher v2 Project Logging resource. This can be used to create Project Logging for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Project Logging resource. This can be used to create Project Logging for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
@@ -33,7 +33,7 @@ The following arguments are supported:
 
 * `project_id` - (Required) The project id to configure logging (string)
 * `name` - (Required) The name of the Project Logging config (string)
-* `kind` - (Required) The kind of the Project Logging. `elasticsearch`, `fluentd`, `kafka`, `splunk` and `kafka` are supported (string)
+* `kind` - (Required) The kind of the Project Logging. `elasticsearch`, `fluentd`, `kafka`, `splunk` and `syslog` are supported (string)
 * `elasticsearch_config` - (Optional) The elasticsearch config for Project Logging. For `kind = elasticsearch`. Conflicts with `fluentd_config`, `kafka_config`, `splunk_config` and `syslog_config` (list maxitems:1)
 * `fluentd_config` - (Optional) The fluentd config for Project Logging. For `kind = fluentd`. Conflicts with `elasticsearch_config`, `kafka_config`, `splunk_config` and `syslog_config` (list maxitems:1)
 * `kafka_config` - (Optional) The kafka config for Project Logging. For `kind = kafka`. Conflicts with `elasticsearch_config`, `fluentd_config`, `splunk_config` and `syslog_config` (list maxitems:1)
@@ -140,7 +140,7 @@ The following attributes are exported:
 
 ## Import
 
-Project Logging can be imported using the rancher Project Logging ID
+Project Logging can be imported using the Rancher Project Logging ID
 
 ```
 $ terraform import rancher2_project_logging.foo <project_logging_id>

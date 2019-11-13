@@ -3,20 +3,32 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_catalog"
 sidebar_current: "docs-rancher2-resource-catalog"
 description: |-
-  Provides a Rancher v2 Catalog resource. This can be used to create catalogs for rancher v2 environments and retrieve their information.
+  Provides a Rancher v2 Catalog resource. This can be used to create cluster, global and/or project catalogs for Rancher v2 environments and retrieve their information.
 ---
 
 # rancher2\_catalog
 
-Provides a Rancher v2 Catalog resource. This can be used to create catalogs for rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Catalog resource. This can be used to create cluster, global and/or project catalogs for Rancher v2 environments and retrieve their information.
 
 ## Example Usage
 
 ```hcl
-# Create a new rancher2 Catalog
-resource "rancher2_catalog" "foo" {
-  name = "foo"
+# Create a new Rancher2 Global Catalog
+resource "rancher2_catalog" "foo-global" {
+  name = "foo-global"
   url = "https://<CATALOG_URL>"
+}
+# Create a new Rancher2 Cluster Catalog
+resource "rancher2_catalog" "foo-cluster" {
+  name = "foo-cluster"
+  url = "https://<CATALOG_URL>"
+  scope = "cluster"
+}
+# Create a new Rancher2 Project Catalog
+resource "rancher2_catalog" "foo-project" {
+  name = "foo-project"
+  url = "https://<CATALOG_URL>"
+  scope = "project"
 }
 ```
 
@@ -26,9 +38,14 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the catalog (string)
 * `url` - (Required) The url of the catalog repo (string)
+* `branch` - (Optional) The branch of the catalog repo to use. Default `master` (string)
+* `cluster_id` - (Optional/ForceNew) The cluster id of the catalog. Mandatory if `scope = cluster` (string)
 * `description` - (Optional) A catalog description (string)
 * `kind` - (Optional) The kind of the catalog. Just helm by the moment (string)
-* `branch` - (Optional) The branch of the catalog repo to use (string)
+* `password` - (Optional/Sensitive) The password to access the catalog if needed (string)
+* `project_id` - (Optional/ForceNew) The project id of the catalog. Mandatory if `scope = project` (string)
+* `scope` - (Optional) The scope of the catalog. `cluster`, `global`, and `project` are supported. Default `global` (string)
+* `username` - (Optional/Sensitive) The username to access the catalog if needed (string)
 * `annotations` - (Optional/Computed) Annotations for the catalog (map)
 * `labels` - (Optional/Computed) Labels for the catalog (map)
 
@@ -49,9 +66,8 @@ The following attributes are exported:
 
 ## Import
 
-Catalogs can be imported using the rancher Catalog ID.
+Catalogs can be imported using the Rancher Catalog ID and its scope.
 
 ```
-$ terraform import rancher2_catalog.foo <catalog_id>
+$ terraform import rancher2_catalog.foo <scope>.<catalog_id>
 ```
-

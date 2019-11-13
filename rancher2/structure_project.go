@@ -1,11 +1,33 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
+
+func flattenProjectContainerResourceLimit(in *managementClient.ContainerResourceLimit) []interface{} {
+	obj := make(map[string]interface{})
+	if in == nil {
+		return []interface{}{}
+	}
+
+	if len(in.LimitsCPU) > 0 {
+		obj["limits_cpu"] = in.LimitsCPU
+	}
+	if len(in.LimitsMemory) > 0 {
+		obj["limits_memory"] = in.LimitsMemory
+	}
+	if len(in.RequestsCPU) > 0 {
+		obj["requests_cpu"] = in.RequestsCPU
+	}
+	if len(in.RequestsMemory) > 0 {
+		obj["requests_memory"] = in.RequestsMemory
+	}
+
+	return []interface{}{obj}
+}
 
 func flattenProjectResourceQuotaLimit(in *managementClient.ResourceQuotaLimit) []interface{} {
 	obj := make(map[string]interface{})
@@ -87,7 +109,7 @@ func flattenProjectResourceQuota(pQuota *managementClient.ProjectResourceQuota, 
 	return []interface{}{obj}
 }
 
-func flattenProject(d *schema.ResourceData, in *managementClient.Project) error {
+func flattenProject(d *schema.ResourceData, in *managementClient.Project, monitoringInput *managementClient.MonitoringInput) error {
 	if in == nil {
 		return nil
 	}
@@ -96,6 +118,17 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 	d.Set("cluster_id", in.ClusterID)
 	d.Set("name", in.Name)
 	d.Set("description", in.Description)
+	d.Set("enable_project_monitoring", in.EnableProjectMonitoring)
+
+	if in.ContainerDefaultResourceLimit != nil {
+		containerLimit := flattenProjectContainerResourceLimit(in.ContainerDefaultResourceLimit)
+		err := d.Set("container_resource_limit", containerLimit)
+		if err != nil {
+			return err
+		}
+	}
+
+	d.Set("pod_security_policy_template_id", in.PodSecurityPolicyTemplateName)
 
 	if in.ResourceQuota != nil && in.NamespaceDefaultResourceQuota != nil {
 		resourceQuota := flattenProjectResourceQuota(in.ResourceQuota, in.NamespaceDefaultResourceQuota)
@@ -105,7 +138,12 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 		}
 	}
 
-	err := d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("project_monitoring_input", flattenMonitoringInput(monitoringInput))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}
@@ -121,11 +159,34 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 
 // Expanders
 
+func expandProjectContainerResourceLimit(p []interface{}) *managementClient.ContainerResourceLimit {
+	obj := &managementClient.ContainerResourceLimit{}
+	if len(p) == 0 || p[0] == nil {
+		return nil
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["limits_cpu"].(string); ok && len(v) > 0 {
+		obj.LimitsCPU = v
+	}
+	if v, ok := in["limits_memory"].(string); ok && len(v) > 0 {
+		obj.LimitsMemory = v
+	}
+	if v, ok := in["requests_cpu"].(string); ok && len(v) > 0 {
+		obj.RequestsCPU = v
+	}
+	if v, ok := in["requests_memory"].(string); ok && len(v) > 0 {
+		obj.RequestsMemory = v
+	}
+
+	return obj
+}
+
 func expandProjectResourceQuotaLimit(p []interface{}) *managementClient.ResourceQuotaLimit {
 	obj := &managementClient.ResourceQuotaLimit{}
 
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -189,7 +250,7 @@ func expandProjectResourceQuota(p []interface{}) (*managementClient.ProjectResou
 	nsQuota := &managementClient.NamespaceResourceQuota{}
 
 	if len(p) == 0 || p[0] == nil {
-		return pQuota, nsQuota
+		return nil, nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -219,6 +280,17 @@ func expandProject(in *schema.ResourceData) *managementClient.Project {
 	obj.ClusterID = in.Get("cluster_id").(string)
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
+
+	if v, ok := in.Get("container_resource_limit").([]interface{}); ok && len(v) > 0 {
+		containerLimit := expandProjectContainerResourceLimit(v)
+		obj.ContainerDefaultResourceLimit = containerLimit
+	}
+
+	if v, ok := in.Get("enable_project_monitoring").(bool); ok {
+		obj.EnableProjectMonitoring = v
+	}
+
+	obj.PodSecurityPolicyTemplateName = in.Get("pod_security_policy_template_id").(string)
 
 	if v, ok := in.Get("resource_quota").([]interface{}); ok && len(v) > 0 {
 		resourceQuota, nsResourceQuota := expandProjectResourceQuota(v)

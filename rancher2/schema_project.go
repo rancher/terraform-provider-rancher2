@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -104,9 +104,37 @@ func projectFields() map[string]*schema.Schema {
 			Required: true,
 			ForceNew: true,
 		},
+		"container_resource_limit": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: containerResourceLimitFields(),
+			},
+		},
 		"description": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
+		},
+		"enable_project_monitoring": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable built-in project monitoring",
+		},
+		"pod_security_policy_template_id": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"project_monitoring_input": &schema.Schema{
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster monitoring configuration",
+			Elem: &schema.Resource{
+				Schema: monitoringInputFields(),
+			},
 		},
 		"resource_quota": {
 			Type:     schema.TypeList,
@@ -115,6 +143,12 @@ func projectFields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: projectResourceQuotaFields(),
 			},
+		},
+		"wait_for_cluster": &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Wait for cluster becomes active",
 		},
 		"annotations": &schema.Schema{
 			Type:        schema.TypeMap,

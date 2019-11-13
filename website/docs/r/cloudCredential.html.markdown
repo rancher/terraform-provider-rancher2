@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_cloud_credential"
 sidebar_current: "docs-rancher2-resource-cloud_credential"
 description: |-
-  Provides a Rancher v2.2.x Cloud Credential resource. This can be used to create Cloud Credential for rancher v2.2 node templates and retrieve their information.
+  Provides a Rancher v2.2.x Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2 node templates and retrieve their information.
 ---
 
 # rancher2\_cloud\_credential
 
-Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for rancher v2.2.x and retrieve their information. 
+Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2.x and retrieve their information.
 
 amazonec2, azure, digitalocean, openstack and vsphere credentials config are supported for Cloud Credential.
 
@@ -34,8 +34,8 @@ The following arguments are supported:
 * `amazonec2_credential_config` - (Optional) AWS config for the Cloud Credential (list maxitems:1)
 * `azure_credential_config` - (Optional) Azure config for the Cloud Credential (list maxitems:1)
 * `description` - (Optional) Description for the Cloud Credential (string)
-* `digitalocean_credential_config` - (Optional) Digitalocean config for the Cloud Credential (list maxitems:1)
-* `openstack_credential_config` - (Optional) Openstack config for the Cloud Credential (list maxitems:1)
+* `digitalocean_credential_config` - (Optional) DigitalOcean config for the Cloud Credential (list maxitems:1)
+* `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
 * `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
 * `annotations` - (Optional) Annotations for Cloud Credential object (map)
 * `labels` - (Optional/Computed) Labels for Cloud Credential object (map)
@@ -68,13 +68,13 @@ The following attributes are exported:
 
 #### Arguments
 
-* `access_token` - (Required/Sensitive) Digital Ocean access token (string)
+* `access_token` - (Required/Sensitive) DigitalOcean access token (string)
 
 ### `openstack_credential_config`
 
 #### Arguments
 
-* `password` - (Required/Sensitive) Openstack password (string)
+* `password` - (Required/Sensitive) OpenStack password (string)
 
 ### `vsphere_credential_config`
 
@@ -93,4 +93,3 @@ The following attributes are exported:
 - `create` - (Default `10 minutes`) Used for creating cloud credentials.
 - `update` - (Default `10 minutes`) Used for cloud credential modifications.
 - `delete` - (Default `10 minutes`) Used for deleting cloud credentials.
-

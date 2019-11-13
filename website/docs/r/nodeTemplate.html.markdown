@@ -3,19 +3,19 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_node_template"
 sidebar_current: "docs-rancher2-resource-node_template"
 description: |-
-  Provides a Rancher v2 Node Template resource. This can be used to create Node template for rancher v2 rke clusters and retrieve their information.
+  Provides a Rancher v2 Node Template resource. This can be used to create Node template for Rancher v2 RKE clusters and retrieve their information.
 ---
 
 # rancher2\_node\_template
 
-Provides a Rancher v2 Node Template resource. This can be used to create Node Template for rancher v2 and retrieve their information. 
+Provides a Rancher v2 Node Template resource. This can be used to create Node Template for Rancher v2 and retrieve their information. 
 
 amazonec2, azure, digitalocean, openstack and vsphere drivers are supported for node templates.
 
 ## Example Usage
 
 ```hcl
-# Create a new rancher2 Node Template up to rancher 2.1.x
+# Create a new rancher2 Node Template up to Rancher 2.1.x
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "foo test"
@@ -33,7 +33,7 @@ resource "rancher2_node_template" "foo" {
 ```
 
 ```hcl
-# Create a new rancher2 Node Template from rancher 2.2.x
+# Create a new rancher2 Node Template from Rancher 2.2.x
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   description = "foo test"
@@ -66,13 +66,12 @@ The following arguments are supported:
 * `auth_certificate_authority` - (Optional/Sensitive) Auth certificate authority for the Node Template (string)
 * `auth_key` - (Optional/Sensitive) Auth key for the Node Template (string)
 * `azure_config` - (Optional) Azure config for the Node Template (list maxitems:1)
-* `cloud_credential_id` - (Optional) Cloud credential ID for the Node Template. Required from rancher v2.2.x (string)
+* `cloud_credential_id` - (Optional) Cloud credential ID for the Node Template. Required from Rancher v2.2.x (string)
 * `description` - (Optional) Description for the Node Template (string)
 * `digitalocean_config` - (Optional) Digitalocean config for the Node Template (list maxitems:1)
-* `docker_version` - (Optional) Docker version for the node template (string)
 * `engine_env` - (Optional) Engine environment for the node template (string)
 * `engine_insecure_registry` - (Optional) Insecure registry for the node template (list)
-* `engine_install_url` - (Optional) Engine install URL for the node template (string)
+* `engine_install_url` - (Optional) Docker engine install URL for the node template. Default `https://releases.rancher.com/install-docker/18.09.sh`. Available install docker versions at `https://github.com/rancher/install-docker` (string)
 * `engine_label` - (Optional) Engine label for the node template (string)
 * `engine_opt` - (Optional) Engine options for the node template (map)
 * `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
@@ -102,7 +101,7 @@ The following attributes are exported:
 * `subnet_id` - (Required) AWS VPC subnet id (string)
 * `vpc_id` - (Required) AWS VPC id. (string)
 * `zone` - (Required) AWS zone for instance (i.e. a,b,c,d,e) (string)
-* `access_key` - (Optional/Sensitive) AWS access key. Required on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
+* `access_key` - (Optional/Sensitive) AWS access key. Required on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `block_duration_minutes` - (Optional) AWS spot instance duration in minutes (60, 120, 180, 240, 300, or 360). Default `0` (string)
 * `device_name` - (Optional) AWS root device name. Default `/dev/sda1` (string)
 * `endpoint` - (Optional) Optional endpoint URL (hostname only or fully qualified URI) (string)
@@ -116,7 +115,7 @@ The following attributes are exported:
 * `request_spot_instance` - (Optional) Set this flag to request spot instance. Default `false` (bool)
 * `retries` - (Optional) Set retry count for recoverable failures (use -1 to disable). Default `5` (string)
 * `root_size` - (Optional) AWS root disk size (in GB). Default `16` (string)
-* `secret_key` - (Optional/Sensitive) AWS secret key. Required on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
+* `secret_key` - (Optional/Sensitive) AWS secret key. Required on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `security_group_readonly` - (Optional) Skip adding default rules to security groups (bool)
 * `session_token` - (Optional/Sensitive) AWS Session Token (string)
 * `spot_price` - (Optional) AWS spot instance bid price (in dollar). Default `0.50` (string)
@@ -132,16 +131,19 @@ The following attributes are exported:
 
 #### Arguments
 
-* `client_id` - (Optional/Sensitive) Azure Service Principal Account ID. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
-* `client_secret` - (Optional/Sensitive) Azure Service Principal Account password. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
-* `subscription_id` - (Optional/Sensitive) Azure Subscription ID. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
+* `client_id` - (Optional/Sensitive) Azure Service Principal Account ID. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
+* `client_secret` - (Optional/Sensitive) Azure Service Principal Account password. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
+* `subscription_id` - (Optional/Sensitive) Azure Subscription ID. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `availability_set` - (Optional) Azure Availability Set to place the virtual machine into. Default `docker-machine` (string)
 * `custom_data` - (Optional) Path to file with custom-data (string)
+* `disk_size` - (Optional) Disk size if using managed disk. Just for Rancher v2.3.x and above. Default `30` (string)
 * `dns` - (Optional) A unique DNS label for the public IP adddress (string)
 * `docker_port` - (Optional) Port number for Docker engine. Default `2376` (string)
 * `environment` - (Optional) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud). Default `AzurePublicCloud` (string)
-* `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:16.04.0-LTS:latest` (string)
+`fault_domain_count` - (Optional) Fault domain count to use for availability set. Default `3` (string)
+* `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:18.04-LTS:latest` (string)
 * `location` - (Optional) Azure region to create the virtual machine. Default `westus` (string)
+* `managed_disks` - (Optional) Configures VM and availability set for managed disks. Just for Rancher v2.3.x and above. Default `false` (bool)
 * `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false` (bool)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
 * `private_ip_address` - (Optional) Specify a static private IP address for the machine. (string)
@@ -152,14 +154,15 @@ The following attributes are exported:
 * `storage_type` - (Optional) Type of Storage Account to host the OS Disk for the machine. Default `Standard_LRS` (string)
 * `subnet` - (Optional) Azure Subnet Name to be used within the Virtual Network. Default `docker-machine` (string)
 * `subnet_prefix` - (Optional) Private CIDR block to be used for the new subnet, should comply RFC 1918. Default `192.168.0.0/16` (string)
-* `use_private_ip` - (Optional) Use private IP address of the machine to connect. Default `false` (string)
+* `update_domain_count` - (Optional) Update domain count to use for availability set. Default `5` (string)
+* `use_private_ip` - (Optional) Use private IP address of the machine to connect. Default `false` (bool)
 * `vnet` - (Optional) Azure Virtual Network name to connect the virtual machine (in [resourcegroup:]name format). Default `docker-machine-vnet` (string)
 
 ### `digitalocean_config`
 
 #### Arguments
 
-* `access_token` - (Optional/Sensitive) Digital Ocean access token. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
+* `access_token` - (Optional/Sensitive) Digital Ocean access token. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `backups` - (Optional) Enable backups for droplet. Default `false` (bool)
 * `image` - (Optional) Digital Ocean Image. Default `ubuntu-16-04-x64` (string)
 * `ipv6` - (Optional) Enable ipv6 for droplet. Default `false` (bool)
@@ -199,7 +202,7 @@ The following attributes are exported:
 * `net_id` - (Required*) OpenStack network id the machine will be connected on. Conflicts with `net_name` (string)
 * `net_name` - (Required*) OpenStack network name the machine will be connected on. Conflicts with `net_id` (string)
 * `nova_network` - (Optional) Use the nova networking services instead of neutron (string)
-* `password` - (Optional/Sensitive) OpenStack password. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
+* `password` - (Optional/Sensitive) OpenStack password. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `private_key_file` - (Optional) Private keyfile absolute path to use for SSH (string)
 * `sec_groups` - (Optional) OpenStack comma separated security groups for the machine (string)
 * `ssh_port` - (Optional) OpenStack SSH port * Default `22` (string)
@@ -225,15 +228,15 @@ The following attributes are exported:
 * `hostsystem` - (Optional) vSphere compute resource where the docker VM will be instantiated. This can be omitted if using a cluster with DRS (string)
 * `memory_size` - (Optional) vSphere size of memory for docker VM (in MB). Default `2048` (string)
 * `network` - (Optional) vSphere network where the docker VM will be attached (list)
-* `password` - (Optional/Sensitive) vSphere password. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
+* `password` - (Optional/Sensitive) vSphere password. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `pool` - (Optional) vSphere resource pool for docker VM (string)
-* `username` - (Optional/Sensitive) vSphere username. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
+* `username` - (Optional/Sensitive) vSphere username. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `vapp_ip_allocation_policy` - (Optional) vSphere vApp IP allocation policy. Supported values are: `dhcp`, `fixed`, `transient` and `fixedAllocated` (string)
 * `vapp_ip_protocol` - (Optional) vSphere vApp IP protocol for this deployment. Supported values are: `IPv4` and `IPv6` (string)
 * `vapp_property` - (Optional) vSphere vApp properties (list)
 * `vapp_transport` - (Optional) vSphere OVF environment transports to use for properties. Supported values are: `iso` and `com.vmware.guestInfo` (string)
-* `vcenter` - (Optional/Sensitive) vSphere IP/hostname for vCenter. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x (string)
-* `vcenter_port` - (Optional/Sensitive) vSphere Port for vCenter. Mandatory on rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from rancher v2.2.x. Default `443` (string)
+* `vcenter` - (Optional/Sensitive) vSphere IP/hostname for vCenter. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
+* `vcenter_port` - (Optional/Sensitive) vSphere Port for vCenter. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x. Default `443` (string)
 
 ## Timeouts
 
@@ -246,7 +249,7 @@ The following attributes are exported:
 
 ## Import
 
-Node Template can be imported using the rancher Node Template ID
+Node Template can be imported using the Rancher Node Template ID
 
 ```
 $ terraform import rancher2_node_template.foo <node_template_id>

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/rancher/norman/types"
 )
 
@@ -24,10 +24,35 @@ func dataSourceRancher2Project() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			"container_resource_limit": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: containerResourceLimitFields(),
+				},
+			},
 			"description": {
 				Description: "Description of the project",
 				Type:        schema.TypeString,
 				Computed:    true,
+			},
+			"enable_project_monitoring": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable built-in project monitoring",
+			},
+			"pod_security_policy_template_id": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"resource_quota": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: projectResourceQuotaFields(),
+				},
 			},
 			"uuid": {
 				Description: "UUID of the project",
@@ -114,6 +139,25 @@ func dataSourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("description", project.Description)
 	d.Set("name", project.Name)
 	d.Set("uuid", project.UUID)
+
+	if project.ContainerDefaultResourceLimit != nil {
+		containerLimit := flattenProjectContainerResourceLimit(project.ContainerDefaultResourceLimit)
+		err := d.Set("container_resource_limit", containerLimit)
+		if err != nil {
+			return err
+		}
+	}
+
+	d.Set("pod_security_policy_template_id", project.PodSecurityPolicyTemplateName)
+
+	if project.ResourceQuota != nil && project.NamespaceDefaultResourceQuota != nil {
+		resourceQuota := flattenProjectResourceQuota(project.ResourceQuota, project.NamespaceDefaultResourceQuota)
+		err := d.Set("resource_quota", resourceQuota)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = d.Set("annotations", toMapInterface(project.Annotations))
 	if err != nil {
 		return err

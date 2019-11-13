@@ -3,38 +3,54 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_bootstrap"
 sidebar_current: "docs-rancher2-resource-bootstrap"
 description: |-
-  Provides a Rancher v2 bootstrap resource. This can be used to bootstrap rancher v2 environments and output information.
+  Provides a Rancher v2 bootstrap resource. This can be used to bootstrap Rancher v2 environments and output information.
 ---
 
 # rancher2\_bootstrap
 
-Provides a Rancher v2 bootstrap resource. This can be used to bootstrap rancher v2 environments and output information.
+Provides a Rancher v2 bootstrap resource. This can be used to bootstrap Rancher v2 environments and output information. It just works if `bootstrap` provider config is added to the .tf file. More info at [rancher2 provider](../index.html)
 
-This resource is indeed to bootstrap a rancher system doing following tasks:
-- Update default admin password, provided by `password` or generating a random one.
-- Set `server-url` setting, based on `api_url`.
-- Set `telemetry-opt` setting.
-- Create a token for admin user with concrete TTL.
+This resource bootstraps a Rancher system by performing the following tasks:
+- Updates the default admin password, provided by setting `password` or generating a random one.
+- Sets `server-url` setting, based on `api_url`.
+- Sets `telemetry-opt` setting.
+- Creates a token for admin user with concrete TTL.
 
-It just works if `bootstrap = true` is added to the provider configuration or exporting env variable `RANCHER_BOOTSTRAP=true`. In this mode, `token_key` or `access_key` and `secret_key` can not be provided.
+Rancher2 admin password can be updated after the initial run of terraform by setting `password` field and applying this resource again.
 
-Rancher2 admin password could be updated setting `password` field and applying this resource again. 
+Rancher2 admin `token` can also be regenerated if `token_update` is set to true. Refresh resource function will check if token is expired. If it is expired, `token_update` will be set to true to force token regeneration on next `terraform apply`.
 
-Rancher2 admin `token` could also be updated if `token_update` is set to true. Refresh resource function will check if token is expired. If it's expired, `token_update` will be set to true to force token regeneration on next `terraform apply`.
-
-Login to rancher2 is done using `token` first and if fails, using admin `current_password`. If admin password has been changed from other methods and terraform token is expired, `current_password` field could be especified to recover terraform configuration and reset admin password and token.
+Login to Rancher2 is done by trying to use `token` first. If it fails, it uses admin `current_password`. If admin password has been changed outside of terraform and the terraform `token` is expired, `current_password` field can be specified to allow terraform to manage admin password and token again.
 
 ## Example Usage
 
 ```hcl
-# Provider config
+# Provider bootstrap config
 provider "rancher2" {
   api_url   = "https://rancher.my-domain.com"
   bootstrap = true
 }
 
-# Create a new rancher2 Bootstrap
+# Create a new rancher2_bootstrap
 resource "rancher2_bootstrap" "admin" {
+  password = "blahblah"
+  telemetry = true
+}
+```
+
+```hcl
+# Provider bootstrap config with alias
+provider "rancher2" {
+  alias = "bootstrap"
+
+  api_url   = "https://rancher.my-domain.com"
+  bootstrap = true
+}
+
+# Create a new rancher2_bootstrap using bootstrap provider config
+resource "rancher2_bootstrap" "admin" {
+  provider = "rancher2.bootstrap"
+
   password = "blahblah"
   telemetry = true
 }

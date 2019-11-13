@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -25,7 +25,7 @@ func init() {
 resource "rancher2_cluster_role_template_binding" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
-  role_template_id = "project-member"
+  role_template_id = "cluster-admin"
 }
 `
 
@@ -33,7 +33,7 @@ resource "rancher2_cluster_role_template_binding" "foo" {
 resource "rancher2_cluster_role_template_binding" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
-  role_template_id = "project-owner"
+  role_template_id = "projects-create"
 }
  `
 
@@ -41,7 +41,7 @@ resource "rancher2_cluster_role_template_binding" "foo" {
 resource "rancher2_cluster_role_template_binding" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
-  role_template_id = "project-member"
+  role_template_id = "cluster-admin"
 }
  `
 }
@@ -59,7 +59,7 @@ func TestAccRancher2ClusterRoleTemplateBinding_basic(t *testing.T) {
 					testAccCheckRancher2ClusterRoleTemplateBindingExists(testAccRancher2ClusterRoleTemplateBindingType+".foo", clusterRole),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "cluster_id", testAccRancher2ClusterID),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "cluster-admin"),
 				),
 			},
 			resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccRancher2ClusterRoleTemplateBinding_basic(t *testing.T) {
 					testAccCheckRancher2ClusterRoleTemplateBindingExists(testAccRancher2ClusterRoleTemplateBindingType+".foo", clusterRole),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "cluster_id", testAccRancher2ClusterID),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "project-owner"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "projects-create"),
 				),
 			},
 			resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccRancher2ClusterRoleTemplateBinding_basic(t *testing.T) {
 					testAccCheckRancher2ClusterRoleTemplateBindingExists(testAccRancher2ClusterRoleTemplateBindingType+".foo", clusterRole),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "cluster_id", testAccRancher2ClusterID),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "cluster-admin"),
 				),
 			},
 		},

@@ -6,14 +6,23 @@ import (
 
 // Flatteners
 
-func flattenLoggingSplunkConfig(in *managementClient.SplunkConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenLoggingSplunkConfig(in *managementClient.SplunkConfig, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
 
 	obj["endpoint"] = in.Endpoint
-	obj["token"] = in.Token
+
+	if len(in.Token) > 0 {
+		obj["token"] = in.Token
+	}
 
 	if len(in.Certificate) > 0 {
 		obj["certificate"] = in.Certificate

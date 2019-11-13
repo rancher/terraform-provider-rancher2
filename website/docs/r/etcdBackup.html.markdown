@@ -3,12 +3,12 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_etcd_backup"
 sidebar_current: "docs-rancher2-resource-etcd_backup"
 description: |-
-  Provides a Rancher v2.2.x Etcd Backup resource. This can be used to create Etcd Backup for rancher v2.2 node templates and retrieve their information.
+  Provides a Rancher v2.2.x Etcd Backup resource. This can be used to create Etcd Backup for Rancher v2.2 node templates and retrieve their information.
 ---
 
 # rancher2\_etcd\_backup
 
-Provides a Rancher v2 Etcd Backup resource. This can be used to create Etcd Backup for rancher v2.2.x and retrieve their information. 
+Provides a Rancher v2 Etcd Backup resource. This can be used to create Etcd Backup for Rancher v2.2.x and retrieve their information. 
 
 ## Example Usage
 
@@ -23,6 +23,7 @@ resource "rancher2_etcd_backup" "foo" {
       access_key = "access_key"
       bucket_name = "bucket_name"
       endpoint = "endpoint"
+      folder = "/folder"
       region = "region"
       secret_key = "secret_key"
     }
@@ -39,7 +40,7 @@ The following arguments are supported:
 
 * `cluster_id` - (Required) Cluster ID to config Etcd Backup (string)
 * `backup_config` - (Optional/Computed) Backup config for etcd backup (list maxitems:1)
-* `filename` - (Optional) Filename of the Etcd Backup (string)
+* `filename` - (Optional/Computed) Filename of the Etcd Backup (string)
 * `manual` - (Optional) Manual execution of the Etcd Backup. Default `false` (bool)
 * `name` - (Required) The name of the Etcd Backup (string)
 * `namespace_id` - (Optional/Computed) Description for the Etcd Backup (string)
@@ -67,11 +68,13 @@ The following attributes are exported:
 
 ##### Arguments
 
-* `access_key` - (Required/Sensitive) Access key for S3 service (string)
+* `access_key` - (Optional/Sensitive) Access key for S3 service (string)
 * `bucket_name` - (Required) Bucket name for S3 service (string)
+* `custom_ca` - (Optional) Base64 encoded custom CA for S3 service. Use filebase64(<FILE>) for encoding file. Available from Rancher v2.2.5 (string)
 * `endpoint` - (Required) Endpoint for S3 service (string)
-* `region` - (Required) Region for S3 service (string)
-* `secret_key` - (Required/Sensitive) Secret key for S3 service (string)
+* `folder` - (Optional) Folder for S3 service. Available from Rancher v2.2.7 (string)
+* `region` - (Optional) Region for S3 service (string)
+* `secret_key` - (Optional/Sensitive) Secret key for S3 service (string)
 
 ## Timeouts
 
@@ -84,7 +87,7 @@ The following attributes are exported:
 
 ## Import
 
-Etcd Backup can be imported using the rancher etcd backup ID
+Etcd Backup can be imported using the Rancher etcd backup ID
 
 ```
 $ terraform import rancher2_etcd_backup.foo <etcd_backup_id>

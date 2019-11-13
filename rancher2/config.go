@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
@@ -20,8 +21,6 @@ type Client struct {
 
 // Config is the configuration parameters for a Rancher v3 API
 type Config struct {
-	AccessKey string `json:"accessKey"`
-	SecretKey string `json:"secretKey"`
 	TokenKey  string `json:"tokenKey"`
 	URL       string `json:"url"`
 	CACerts   string `json:"cacert"`
@@ -29,6 +28,7 @@ type Config struct {
 	Bootstrap bool   `json:"bootstrap"`
 	ClusterID string `json:"clusterId"`
 	ProjectID string `json:"projectId"`
+	Sync      sync.Mutex
 	Client    Client
 }
 
@@ -69,6 +69,9 @@ func (c *Config) UpdateToken(token string) error {
 
 // ManagementClient creates a Rancher client scoped to the management API
 func (c *Config) ManagementClient() (*managementClient.Client, error) {
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+
 	if c.Client.Management != nil {
 		return c.Client.Management, nil
 	}
@@ -87,6 +90,9 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 
 // ClusterClient creates a Rancher client scoped to a Cluster API
 func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Cluster Client: cluster ID is nil")
 	}
@@ -98,7 +104,7 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 	options := c.CreateClientOpts()
 	options.URL = options.URL + "/clusters/" + id
 
-	// Setup the project client
+	// Setup the cluster client
 	cClient, err := clusterClient.NewClient(options)
 	if err != nil {
 		return nil, err
@@ -111,6 +117,9 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 
 // ProjectClient creates a Rancher client scoped to a Project API
 func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Project Client: project ID is nil")
 	}
@@ -142,12 +151,10 @@ func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
 	c.NormalizeURL()
 
 	options := &clientbase.ClientOpts{
-		URL:       c.URL,
-		AccessKey: c.AccessKey,
-		SecretKey: c.SecretKey,
-		TokenKey:  c.TokenKey,
-		CACerts:   c.CACerts,
-		Insecure:  c.Insecure,
+		URL:      c.URL,
+		TokenKey: c.TokenKey,
+		CACerts:  c.CACerts,
+		Insecure: c.Insecure,
 	}
 
 	return options
@@ -442,17 +449,17 @@ func (c *Config) UpdateClusterByID(cluster *managementClient.Cluster, update map
 	return client.Cluster.Update(cluster, update)
 }
 
-func (c *Config) isClusterActive(id string) (bool, error) {
+func (c *Config) isClusterActive(id string) (bool, *managementClient.Cluster, error) {
 	clus, err := c.GetClusterByID(id)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 
 	if clus.State == "active" {
-		return true, nil
+		return true, clus, nil
 	}
 
-	return false, nil
+	return false, clus, nil
 }
 
 func (c *Config) ClusterExist(id string) error {
@@ -766,6 +773,119 @@ func (c *Config) GetSettingValue(name string) (string, error) {
 	return setting.Value, nil
 }
 
+func (c *Config) GetCatalogByName(name, scope string) (interface{}, error) {
+	if len(name) == 0 || len(scope) == 0 {
+		return nil, fmt.Errorf("[ERROR] Name nor scope can't be nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	filters := map[string]interface{}{"name": name}
+	listOpts := NewListOpts(filters)
+
+	switch scope {
+	case catalogScopeCluster:
+		return client.ClusterCatalog.List(listOpts)
+	case catalogScopeGlobal:
+		return client.Catalog.List(listOpts)
+	case catalogScopeProject:
+		return client.ProjectCatalog.List(listOpts)
+	default:
+		return nil, fmt.Errorf("[ERROR] Unsupported scope on catalog: %s", scope)
+	}
+}
+
+func (c *Config) GetCatalog(id, scope string) (interface{}, error) {
+	if len(id) == 0 || len(scope) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor scope can't be nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	switch scope {
+	case catalogScopeCluster:
+		return client.ClusterCatalog.ByID(id)
+	case catalogScopeGlobal:
+		return client.Catalog.ByID(id)
+	case catalogScopeProject:
+		return client.ProjectCatalog.ByID(id)
+	default:
+		return nil, fmt.Errorf("[ERROR] Unsupported scope on catalog: %s", scope)
+	}
+}
+
+func (c *Config) CreateCatalog(scope string, catalog interface{}) (interface{}, error) {
+	if catalog == nil || len(scope) == 0 {
+		return nil, fmt.Errorf("[ERROR] Catalog nor scope can't be nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	switch scope {
+	case catalogScopeCluster:
+		return client.ClusterCatalog.Create(catalog.(*managementClient.ClusterCatalog))
+	case catalogScopeGlobal:
+		return client.Catalog.Create(catalog.(*managementClient.Catalog))
+	case catalogScopeProject:
+		return client.ProjectCatalog.Create(catalog.(*managementClient.ProjectCatalog))
+	default:
+		return nil, fmt.Errorf("[ERROR] Unsupported scope on catalog: %s", scope)
+	}
+}
+
+func (c *Config) UpdateCatalog(scope string, catalog interface{}, update map[string]interface{}) (interface{}, error) {
+	if catalog == nil || len(scope) == 0 {
+		return nil, fmt.Errorf("[ERROR] Catalog nor scope can't be nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	switch scope {
+	case catalogScopeCluster:
+		return client.ClusterCatalog.Update(catalog.(*managementClient.ClusterCatalog), update)
+	case catalogScopeGlobal:
+		return client.Catalog.Update(catalog.(*managementClient.Catalog), update)
+	case catalogScopeProject:
+		return client.ProjectCatalog.Update(catalog.(*managementClient.ProjectCatalog), update)
+	default:
+		return nil, fmt.Errorf("[ERROR] Unsupported scope on catalog: %s", scope)
+	}
+}
+
+func (c *Config) DeleteCatalog(scope string, catalog interface{}) error {
+	if catalog == nil || len(scope) == 0 {
+		return fmt.Errorf("[ERROR] Catalog nor scope can't be nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	switch scope {
+	case catalogScopeCluster:
+		return client.ClusterCatalog.Delete(catalog.(*managementClient.ClusterCatalog))
+	case catalogScopeGlobal:
+		return client.Catalog.Delete(catalog.(*managementClient.Catalog))
+	case catalogScopeProject:
+		return client.ProjectCatalog.Delete(catalog.(*managementClient.ProjectCatalog))
+	default:
+		return fmt.Errorf("[ERROR] Unsupported scope on catalog: %s", scope)
+	}
+}
+
 func getAuthConfigObject(kind string) (interface{}, error) {
 	switch kind {
 	case managementClient.ActiveDirectoryConfigType:
@@ -778,6 +898,10 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 		return &managementClient.LdapConfig{}, nil
 	case managementClient.GithubConfigType:
 		return &managementClient.GithubConfig{}, nil
+	case managementClient.KeyCloakConfigType:
+		return &managementClient.KeyCloakConfig{}, nil
+	case managementClient.OKTAConfigType:
+		return &managementClient.OKTAConfig{}, nil
 	case managementClient.OpenLdapConfigType:
 		return &managementClient.LdapConfig{}, nil
 	case managementClient.PingConfigType:
@@ -785,4 +909,429 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 	default:
 		return nil, fmt.Errorf("[ERROR] Auth config type %s not supported", kind)
 	}
+}
+
+func (c *Config) GetRegistryByFilters(filters map[string]interface{}) (interface{}, error) {
+	if filters == nil || len(filters["name"].(string)) == 0 || len(filters["projectId"].(string)) == 0 {
+		return nil, fmt.Errorf("[ERROR] Name nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(filters["projectId"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := NewListOpts(filters)
+
+	if filters["namespaceId"] != nil {
+		return client.NamespacedDockerCredential.List(listOpts)
+	}
+
+	return client.DockerCredential.List(listOpts)
+}
+
+func (c *Config) GetRegistry(id, project_id, namespace_id string) (interface{}, error) {
+	if len(id) == 0 || len(project_id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(project_id)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(namespace_id) > 0 {
+		return client.NamespacedDockerCredential.ByID(id)
+	}
+
+	return client.DockerCredential.ByID(id)
+}
+
+func (c *Config) createDockerCredential(registry *projectClient.DockerCredential) (*projectClient.DockerCredential, error) {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.DockerCredential.Create(registry)
+}
+
+func (c *Config) createNamespacedDockerCredential(registry *projectClient.NamespacedDockerCredential) (*projectClient.NamespacedDockerCredential, error) {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedDockerCredential.Create(registry)
+}
+
+func (c *Config) CreateRegistry(registry interface{}) (interface{}, error) {
+	if registry == nil {
+		return nil, fmt.Errorf("[ERROR] Registry can't be nil")
+	}
+
+	switch t := registry.(type) {
+	case *projectClient.NamespacedDockerCredential:
+		return c.createNamespacedDockerCredential(registry.(*projectClient.NamespacedDockerCredential))
+	case *projectClient.DockerCredential:
+		return c.createDockerCredential(registry.(*projectClient.DockerCredential))
+	default:
+		return nil, fmt.Errorf("[ERROR] Registry type %s isn't supported", t)
+	}
+}
+
+func (c *Config) updateDockerCredential(registry *projectClient.DockerCredential, update map[string]interface{}) (*projectClient.DockerCredential, error) {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.DockerCredential.Update(registry, update)
+}
+
+func (c *Config) updateNamespacedDockerCredential(registry *projectClient.NamespacedDockerCredential, update map[string]interface{}) (*projectClient.NamespacedDockerCredential, error) {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedDockerCredential.Update(registry, update)
+}
+
+func (c *Config) UpdateRegistry(registry interface{}, update map[string]interface{}) (interface{}, error) {
+	if registry == nil {
+		return nil, fmt.Errorf("[ERROR] Registry can't be nil")
+	}
+
+	switch t := registry.(type) {
+	case *projectClient.NamespacedDockerCredential:
+		return c.updateNamespacedDockerCredential(registry.(*projectClient.NamespacedDockerCredential), update)
+	case *projectClient.DockerCredential:
+		return c.updateDockerCredential(registry.(*projectClient.DockerCredential), update)
+	default:
+		return nil, fmt.Errorf("[ERROR] Registry type %s isn't supported", t)
+	}
+}
+
+func (c *Config) deleteDockerCredential(registry *projectClient.DockerCredential) error {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.DockerCredential.Delete(registry)
+}
+
+func (c *Config) deleteNamespacedDockerCredential(registry *projectClient.NamespacedDockerCredential) error {
+	client, err := c.ProjectClient(registry.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.NamespacedDockerCredential.Delete(registry)
+}
+
+func (c *Config) DeleteRegistry(registry interface{}) error {
+	if registry == nil {
+		return fmt.Errorf("[ERROR] Registry can't be nil")
+	}
+
+	switch t := registry.(type) {
+	case *projectClient.NamespacedDockerCredential:
+		return c.deleteNamespacedDockerCredential(registry.(*projectClient.NamespacedDockerCredential))
+	case *projectClient.DockerCredential:
+		return c.deleteDockerCredential(registry.(*projectClient.DockerCredential))
+	default:
+		return fmt.Errorf("[ERROR] Registry type %s isn't supported", t)
+	}
+}
+
+func (c *Config) GetSecretByFilters(filters map[string]interface{}) (interface{}, error) {
+	if filters == nil || len(filters["name"].(string)) == 0 || len(filters["projectId"].(string)) == 0 {
+		return nil, fmt.Errorf("[ERROR] Name nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(filters["projectId"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := NewListOpts(filters)
+
+	if filters["namespaceId"] != nil {
+		return client.NamespacedSecret.List(listOpts)
+	}
+
+	return client.Secret.List(listOpts)
+}
+
+func (c *Config) GetSecret(id, project_id, namespace_id string) (interface{}, error) {
+	if len(id) == 0 || len(project_id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(project_id)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(namespace_id) > 0 {
+		return client.NamespacedSecret.ByID(id)
+	}
+
+	return client.Secret.ByID(id)
+}
+
+func (c *Config) createSecret(secret *projectClient.Secret) (*projectClient.Secret, error) {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Secret.Create(secret)
+}
+
+func (c *Config) createNamespacedSecret(secret *projectClient.NamespacedSecret) (*projectClient.NamespacedSecret, error) {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedSecret.Create(secret)
+}
+
+func (c *Config) CreateSecret(secret interface{}) (interface{}, error) {
+	if secret == nil {
+		return nil, fmt.Errorf("[ERROR] Secret can't be nil")
+	}
+
+	switch t := secret.(type) {
+	case *projectClient.NamespacedSecret:
+		return c.createNamespacedSecret(secret.(*projectClient.NamespacedSecret))
+	case *projectClient.Secret:
+		return c.createSecret(secret.(*projectClient.Secret))
+	default:
+		return nil, fmt.Errorf("[ERROR] Secret type %s isn't supported", t)
+	}
+}
+
+func (c *Config) updateSecret(secret *projectClient.Secret, update map[string]interface{}) (*projectClient.Secret, error) {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Secret.Update(secret, update)
+}
+
+func (c *Config) updateNamespacedSecret(secret *projectClient.NamespacedSecret, update map[string]interface{}) (*projectClient.NamespacedSecret, error) {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedSecret.Update(secret, update)
+}
+
+func (c *Config) UpdateSecret(secret interface{}, update map[string]interface{}) (interface{}, error) {
+	if secret == nil {
+		return nil, fmt.Errorf("[ERROR] Secret can't be nil")
+	}
+
+	switch t := secret.(type) {
+	case *projectClient.NamespacedSecret:
+		return c.updateNamespacedSecret(secret.(*projectClient.NamespacedSecret), update)
+	case *projectClient.Secret:
+		return c.updateSecret(secret.(*projectClient.Secret), update)
+	default:
+		return nil, fmt.Errorf("[ERROR] Secret type %s isn't supported", t)
+	}
+}
+
+func (c *Config) deleteSecret(secret *projectClient.Secret) error {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.Secret.Delete(secret)
+}
+
+func (c *Config) deleteNamespacedSecret(secret *projectClient.NamespacedSecret) error {
+	client, err := c.ProjectClient(secret.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.NamespacedSecret.Delete(secret)
+}
+
+func (c *Config) DeleteSecret(secret interface{}) error {
+	if secret == nil {
+		return fmt.Errorf("[ERROR] Secret can't be nil")
+	}
+
+	switch t := secret.(type) {
+	case *projectClient.NamespacedSecret:
+		return c.deleteNamespacedSecret(secret.(*projectClient.NamespacedSecret))
+	case *projectClient.Secret:
+		return c.deleteSecret(secret.(*projectClient.Secret))
+	default:
+		return fmt.Errorf("[ERROR] Secret type %s isn't supported", t)
+	}
+}
+
+func (c *Config) GetCertificateByFilters(filters map[string]interface{}) (interface{}, error) {
+	if filters == nil || len(filters["name"].(string)) == 0 || len(filters["projectId"].(string)) == 0 {
+		return nil, fmt.Errorf("[ERROR] Name nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(filters["projectId"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := NewListOpts(filters)
+
+	if filters["namespaceId"] != nil {
+		return client.NamespacedCertificate.List(listOpts)
+	}
+
+	return client.Certificate.List(listOpts)
+}
+
+func (c *Config) GetCertificate(id, project_id, namespace_id string) (interface{}, error) {
+	if len(id) == 0 || len(project_id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+	}
+
+	client, err := c.ProjectClient(project_id)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(namespace_id) > 0 {
+		return client.NamespacedCertificate.ByID(id)
+	}
+
+	return client.Certificate.ByID(id)
+}
+
+func (c *Config) createCertificate(cert *projectClient.Certificate) (*projectClient.Certificate, error) {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Certificate.Create(cert)
+}
+
+func (c *Config) createNamespacedCertificate(cert *projectClient.NamespacedCertificate) (*projectClient.NamespacedCertificate, error) {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedCertificate.Create(cert)
+}
+
+func (c *Config) CreateCertificate(cert interface{}) (interface{}, error) {
+	if cert == nil {
+		return nil, fmt.Errorf("[ERROR] Certificate can't be nil")
+	}
+
+	switch t := cert.(type) {
+	case *projectClient.NamespacedCertificate:
+		return c.createNamespacedCertificate(cert.(*projectClient.NamespacedCertificate))
+	case *projectClient.Certificate:
+		return c.createCertificate(cert.(*projectClient.Certificate))
+	default:
+		return nil, fmt.Errorf("[ERROR] Certificate type %s isn't supported", t)
+	}
+}
+
+func (c *Config) updateCertificate(cert *projectClient.Certificate, update map[string]interface{}) (*projectClient.Certificate, error) {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Certificate.Update(cert, update)
+}
+
+func (c *Config) updateNamespacedCertificate(cert *projectClient.NamespacedCertificate, update map[string]interface{}) (*projectClient.NamespacedCertificate, error) {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	return client.NamespacedCertificate.Update(cert, update)
+}
+
+func (c *Config) UpdateCertificate(cert interface{}, update map[string]interface{}) (interface{}, error) {
+	if cert == nil {
+		return nil, fmt.Errorf("[ERROR] Certificate can't be nil")
+	}
+
+	switch t := cert.(type) {
+	case *projectClient.NamespacedCertificate:
+		return c.updateNamespacedCertificate(cert.(*projectClient.NamespacedCertificate), update)
+	case *projectClient.Certificate:
+		return c.updateCertificate(cert.(*projectClient.Certificate), update)
+	default:
+		return nil, fmt.Errorf("[ERROR] Certificate type %s isn't supported", t)
+	}
+}
+
+func (c *Config) deleteCertificate(cert *projectClient.Certificate) error {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.Certificate.Delete(cert)
+}
+
+func (c *Config) deleteNamespacedCertificate(cert *projectClient.NamespacedCertificate) error {
+	client, err := c.ProjectClient(cert.ProjectID)
+	if err != nil {
+		return err
+	}
+	return client.NamespacedCertificate.Delete(cert)
+}
+
+func (c *Config) DeleteCertificate(cert interface{}) error {
+	if cert == nil {
+		return fmt.Errorf("[ERROR] Certificate can't be nil")
+	}
+
+	switch t := cert.(type) {
+	case *projectClient.NamespacedCertificate:
+		return c.deleteNamespacedCertificate(cert.(*projectClient.NamespacedCertificate))
+	case *projectClient.Certificate:
+		return c.deleteCertificate(cert.(*projectClient.Certificate))
+	default:
+		return fmt.Errorf("[ERROR] Certificate type %s isn't supported", t)
+	}
+}
+
+func (c *Config) GetRecipientByNotifier(id string) (*managementClient.Recipient, error) {
+	if len(id) == 0 {
+		return nil, fmt.Errorf("[ERROR] Notifier ID can't be nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	notifier, err := client.Notifier.ByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	out := &managementClient.Recipient{}
+
+	out.NotifierID = notifier.ID
+	if notifier.PagerdutyConfig != nil {
+		out.NotifierType = recipientTypePagerduty
+		out.Recipient = notifier.PagerdutyConfig.ServiceKey
+	} else if notifier.SlackConfig != nil {
+		out.NotifierType = recipientTypeSlack
+		out.Recipient = notifier.SlackConfig.DefaultRecipient
+	} else if notifier.SMTPConfig != nil {
+		out.NotifierType = recipientTypeSMTP
+		out.Recipient = notifier.SMTPConfig.DefaultRecipient
+	} else if notifier.WebhookConfig != nil {
+		out.NotifierType = recipientTypeWebhook
+		out.Recipient = notifier.WebhookConfig.URL
+	} else if notifier.WechatConfig != nil {
+		out.NotifierType = recipientTypeWechat
+		out.Recipient = notifier.WechatConfig.DefaultRecipient
+	}
+
+	return out, nil
 }

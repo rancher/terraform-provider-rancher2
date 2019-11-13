@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 const (
@@ -71,14 +71,16 @@ func testAccCheck() error {
 			return fmt.Errorf("RANCHER_URL must be set for acceptance tests")
 		}
 
-		if tokenKey == "" && (accessKey == "" || secretKey == "") {
+		if tokenKey == "" && accessKey != "" && secretKey != "" {
+			tokenKey = accessKey + ":" + secretKey
+		}
+
+		if tokenKey == "" {
 			return fmt.Errorf("RANCHER_TOKEN_KEY or RANCHER_ACCESS_KEY and RANCHER_SECRET_KEY must be set for acceptance tests")
 		}
 
 		config := &Config{
 			URL:       apiURL,
-			AccessKey: accessKey,
-			SecretKey: secretKey,
 			TokenKey:  tokenKey,
 			CACerts:   caCerts,
 			Insecure:  insecure,

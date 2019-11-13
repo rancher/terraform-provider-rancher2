@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -21,7 +21,9 @@ func init() {
 	testEtcdBackupConfigS3Conf = &managementClient.S3BackupConfig{
 		AccessKey:  "access_key",
 		BucketName: "bucket_name",
+		CustomCA:   "custom_ca",
 		Endpoint:   "endpoint",
+		Folder:     "folder",
 		Region:     "region",
 		SecretKey:  "secret",
 	}
@@ -29,7 +31,9 @@ func init() {
 		map[string]interface{}{
 			"access_key":  "access_key",
 			"bucket_name": "bucket_name",
+			"custom_ca":   Base64Encode("custom_ca"),
 			"endpoint":    "endpoint",
+			"folder":      "folder",
 			"region":      "region",
 			"secret_key":  "secret",
 		},
@@ -109,7 +113,10 @@ func TestExpandEtcdBackup(t *testing.T) {
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, etcdBackupFields(), tc.Input)
-		output := expandEtcdBackup(inputResourceData)
+		output, err := expandEtcdBackup(inputResourceData)
+		if err != nil {
+			t.Fatalf("[ERROR] on expnader: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

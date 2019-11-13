@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 const (
@@ -27,7 +27,7 @@ func init() {
 	testAccRancher2ProviderConfig = `
 provider "rancher2" {
   bootstrap = true
-  token_key = ""
+  token_key = "` + providerDefaulEmptyString + `"
 }
 `
 

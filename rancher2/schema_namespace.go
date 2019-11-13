@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 //Schemas
@@ -105,6 +105,14 @@ func namespaceFields() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Name of the k8s namespace managed by rancher v2",
 		},
+		"container_resource_limit": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: containerResourceLimitFields(),
+			},
+		},
 		"description": &schema.Schema{
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -114,10 +122,15 @@ func namespaceFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
-			Computed: true,
 			Elem: &schema.Resource{
 				Schema: namespaceResourceQuotaFields(),
 			},
+		},
+		"wait_for_cluster": &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Wait for cluster becomes active",
 		},
 		"annotations": &schema.Schema{
 			Type:        schema.TypeMap,
