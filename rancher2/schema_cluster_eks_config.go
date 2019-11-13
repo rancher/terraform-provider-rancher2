@@ -34,6 +34,7 @@ type AmazonElasticContainerServiceConfig struct {
 	Subnets                     []string          `json:"subnets,omitempty" yaml:"subnets,omitempty"`
 	UserData                    string            `json:"userData,omitempty" yaml:"userData,omitempty"`
 	VirtualNetwork              string            `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
+	WorkerSubnets               []string          `json:"workerSubnets,omitempty" yaml:"workerSubnets,omitempty"`
 }
 
 //Schemas
@@ -131,7 +132,15 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 		"subnets": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Description: "List of subnets in the virtual network to use",
+			Description: "List of subnets in the virtual network to use for the master",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"worker_subnets": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of subnets in the virtual network to use for the worker nodes",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
