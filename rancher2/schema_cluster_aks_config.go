@@ -61,7 +61,7 @@ type AzureKubernetesServiceConfig struct {
 	ServiceCIDR                        string            `json:"serviceCidr,omitempty" yaml:"serviceCidr,omitempty"`
 	Subnet                             string            `json:"subnet,omitempty" yaml:"subnet,omitempty"`
 	SubscriptionID                     string            `json:"subscriptionId,omitempty" yaml:"subscriptionId,omitempty"`
-	Tag                                map[string]string `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Tags                               map[string]string `json:"tags,omitempty" yaml:"tags,omitempty"`
 	TenantID                           string            `json:"tenantId,omitempty" yaml:"tenantId,omitempty"`
 	VirtualNetwork                     string            `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
 	VirtualNetworkResourceGroup        string            `json:"virtualNetworkResourceGroup,omitempty" yaml:"virtualNetworkResourceGroup,omitempty"`
@@ -276,7 +276,7 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Default:     "10.0.0.0/16",
 			Description: "A CIDR notation IP range from which to assign Kubernetes Service cluster IPs. It must not overlap with any Subnet IP ranges",
 		},
-		"tag": &schema.Schema{
+		"tags": &schema.Schema{
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
