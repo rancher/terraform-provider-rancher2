@@ -115,6 +115,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_role_template":                 resourceRancher2RoleTemplate(),
 			"rancher2_secret":                        resourceRancher2Secret(),
 			"rancher2_setting":                       resourceRancher2Setting(),
+			"rancher2_token":                         resourceRancher2Token(),
 			"rancher2_user":                          resourceRancher2User(),
 		},
 

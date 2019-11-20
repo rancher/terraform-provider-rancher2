@@ -2,7 +2,7 @@
 
 FEATURES:
 
-
+* **New Resource:** `rancher2_token`
 
 ENHANCEMENTS:
 
