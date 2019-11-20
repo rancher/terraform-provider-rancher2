@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * Added `desired nodes` support on `eks_config` argument on `rancher2_cluster` resource
 * Added `managed disk` support on `azure_config` argument on `rancher2_node_template` resource
 * Migrated provider to use `terraform-plugin-sdk`
+* Updated `rancher2_etcd_backup` documentation
 
 BUG FIXES:
 

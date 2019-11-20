@@ -10,6 +10,8 @@ description: |-
 
 Provides a Rancher v2 Etcd Backup resource. This can be used to create Etcd Backup for Rancher v2.2.x and retrieve their information. 
 
+`rancher2_etcd_backup` resource is used to define extra etcd backups for `rancher2_cluster`. The main etcd backup config for the cluster should be set on the [cluster config](https://www.terraform.io/docs/providers/rancher2/r/cluster.html#backup_config-1)
+
 ## Example Usage
 
 ```hcl
