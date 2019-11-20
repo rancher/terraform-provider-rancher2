@@ -66,6 +66,8 @@ type GoogleKubernetesEngineConfig struct {
 	UseIPAliases                       bool              `json:"useIpAliases,omitempty" yaml:"useIpAliases,omitempty"`
 	Taints                             []string          `json:"taints,omitempty" yaml:"taints,omitempty"`
 	Zone                               string            `json:"zone,omitempty" yaml:"zone,omitempty"`
+	Region                             string            `json:"region,omitempty" yaml:"region,omitempty"`
+	DefaultMaxPodsConstraint           int64             `json:"defaultMaxPodsConstraint,omitempty" yaml:"defaultMaxPodsConstraint,omitempty"`
 }
 
 //Schemas
@@ -371,6 +373,18 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "us-central1-a",
 			Description: "The zone to launch the cluster",
+		},
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "us-central1",
+			Description: "The region to launch the cluster",
+		},
+		"default_max_pods_constraint": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     110,
+			Description: "Default maximum pods per node constraint",
 		},
 	}
 
