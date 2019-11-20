@@ -200,7 +200,7 @@ The following attributes are exported:
 
 * `addon_job_timeout` - (Optional/Computed) Duration in seconds of addon job (int)
 * `addons` - (Optional) Addons descripton to deploy on RKE cluster.
-* `addons_include` - (Optional) Addons yaml manisfests to deploy on RKE cluster (list)
+* `addons_include` - (Optional) Addons yaml manifests to deploy on RKE cluster (list)
 * `authentication` - (Optional/Computed) Kubernetes cluster authentication (list maxitems:1)
 * `authorization` - (Optional/Computed) Kubernetes cluster authorization (list maxitems:1)
 * `bastion_host` - (Optional/Computed) RKE bastion host (list maxitems:1)
