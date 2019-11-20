@@ -53,7 +53,7 @@ func init() {
 		ServiceCIDR:                        "service_cidr",
 		Subnet:                             "subnet",
 		SubscriptionID:                     "subscription_id",
-		Tag: map[string]string{
+		Tags: map[string]string{
 			"tag1": "value1",
 			"tag2": "value2",
 		},
@@ -102,7 +102,7 @@ func init() {
 			"service_cidr":                           "service_cidr",
 			"subnet":                                 "subnet",
 			"subscription_id":                        "subscription_id",
-			"tag": map[string]interface{}{
+			"tags": map[string]interface{}{
 				"tag1": "value1",
 				"tag2": "value2",
 			},
