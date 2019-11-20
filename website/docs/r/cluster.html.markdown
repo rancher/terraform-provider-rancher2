@@ -765,7 +765,6 @@ The following arguments are supported:
 * `enabled` - (Optional) Enable the authorized cluster endpoint. Default `true` (bool)
 * `fqdn` - (Optional) FQDN for the authorized cluster endpoint (string)
 
-<<<<<<< HEAD
 ### `cluster_monitoring_input`
 
 #### Arguments
