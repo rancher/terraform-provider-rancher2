@@ -38,6 +38,8 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["kubernetes_version"] = in.KubernetesVersion
 	}
 
+	obj["manage_own_security_groups"] = *in.ManageOwnSecurityGroups
+
 	if in.MaximumNodes > 0 {
 		obj["maximum_nodes"] = int(in.MaximumNodes)
 	}
@@ -46,12 +48,20 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		obj["minimum_nodes"] = int(in.MinimumNodes)
 	}
 
+	if len(in.NodeSecurityGroups) > 0 {
+		obj["node_security_groups"] = toArrayInterface(in.NodeSecurityGroups)
+	}
+
 	if in.NodeVolumeSize > 0 {
 		obj["node_volume_size"] = int(in.NodeVolumeSize)
 	}
 
 	if len(in.Region) > 0 {
 		obj["region"] = in.Region
+	}
+
+	if len(in.PlacementGroup) > 0 {
+		obj["placement_group"] = in.PlacementGroup
 	}
 
 	if len(in.SecurityGroups) > 0 {
@@ -76,6 +86,10 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 
 	if len(in.VirtualNetwork) > 0 {
 		obj["virtual_network"] = in.VirtualNetwork
+	}
+
+	if len(in.WorkerSubnets) > 0 {
+		obj["worker_subnets"] = toArrayInterface(in.WorkerSubnets)
 	}
 
 	return []interface{}{obj}, nil
@@ -124,6 +138,10 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 		obj.KubernetesVersion = v
 	}
 
+	if v, ok := in["manage_own_security_groups"].(bool); ok {
+		obj.ManageOwnSecurityGroups = &v
+	}
+
 	if v, ok := in["maximum_nodes"].(int); ok && v > 0 {
 		obj.MaximumNodes = int64(v)
 	}
@@ -132,8 +150,16 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 		obj.MinimumNodes = int64(v)
 	}
 
+	if v, ok := in["node_security_groups"].([]interface{}); ok && len(v) > 0 {
+		obj.NodeSecurityGroups = toArrayString(v)
+	}
+
 	if v, ok := in["node_volume_size"].(int); ok && v > 0 {
 		obj.NodeVolumeSize = int64(v)
+	}
+
+	if v, ok := in["placement_group"].(string); ok && len(v) > 0 {
+		obj.PlacementGroup = v
 	}
 
 	if v, ok := in["region"].(string); ok && len(v) > 0 {
@@ -162,6 +188,14 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["virtual_network"].(string); ok && len(v) > 0 {
 		obj.VirtualNetwork = v
+	}
+
+	if v, ok := in["worker_subnets"].([]interface{}); ok && len(v) > 0 {
+		obj.WorkerSubnets = toArrayString(v)
+	}
+
+	if obj.DesiredNodes == 0 {
+		obj.DesiredNodes = obj.MinimumNodes
 	}
 
 	return obj, nil

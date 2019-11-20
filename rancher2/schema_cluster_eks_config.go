@@ -6,7 +6,7 @@ import (
 
 const (
 	clusterEKSKind   = "eks"
-	clusterDriverEKS = "amazonelasticcontainerservice"
+	clusterDriverEKS = "amazonElasticContainerService"
 )
 
 //Types
@@ -20,9 +20,12 @@ type AmazonElasticContainerServiceConfig struct {
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
 	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
+	ManageOwnSecurityGroups     *bool    `json:"manageOwnSecurityGroups,omitempty" yaml:"manageOwnSecurityGroups,omitempty"`
 	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
 	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
+	NodeSecurityGroups          []string `json:"nodeSecurityGroups,omitempty" yaml:"nodeSecurityGroups,omitempty"`
 	NodeVolumeSize              int64    `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
+	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
 	Region                      string   `json:"region,omitempty" yaml:"region,omitempty"`
 	SecretKey                   string   `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
 	SecurityGroups              []string `json:"securityGroups,omitempty" yaml:"securityGroups,omitempty"`
@@ -31,6 +34,7 @@ type AmazonElasticContainerServiceConfig struct {
 	Subnets                     []string `json:"subnets,omitempty" yaml:"subnets,omitempty"`
 	UserData                    string   `json:"userData,omitempty" yaml:"userData,omitempty"`
 	VirtualNetwork              string   `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
+	WorkerSubnets               []string `json:"workerSubnets,omitempty" yaml:"workerSubnets,omitempty"`
 }
 
 //Schemas
@@ -77,10 +81,22 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Default:     "t2.medium",
 			Description: "The type of machine to use for worker nodes",
 		},
+		"placement_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "The name of an existing cluster placement group into which you want to launch your instances",
+		},
 		"key_pair_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Allow user to specify key name to use",
+		},
+		"manage_own_security_groups": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "When true, do not create or edit security groups, only assign them",
 		},
 		"maximum_nodes": {
 			Type:        schema.TypeInt,
@@ -93,6 +109,14 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     1,
 			Description: "The minimum number of worker nodes",
+		},
+		"node_security_groups": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of security groups to assign to the worker nodes",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 		"node_volume_size": {
 			Type:        schema.TypeInt,
@@ -128,7 +152,7 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 		"subnets": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Description: "List of subnets in the virtual network to use",
+			Description: "List of subnets in the virtual network to use for the master",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
@@ -143,6 +167,14 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The name of the virtual network to use",
+		},
+		"worker_subnets": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of worker subnets in the virtual network to use",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 	}
 

@@ -21,9 +21,12 @@ func init() {
 		InstanceType:                "instance",
 		KeyPairName:                 "key_pair_name",
 		KubernetesVersion:           "1.11",
+		ManageOwnSecurityGroups:     newTrue(),
 		MaximumNodes:                5,
 		MinimumNodes:                3,
+		NodeSecurityGroups:          []string{"node-sg1", "node-sg2"},
 		NodeVolumeSize:              40,
+		PlacementGroup:              "placement_group",
 		Region:                      "region",
 		SecurityGroups:              []string{"sg1", "sg2"},
 		ServiceRole:                 "role",
@@ -31,6 +34,7 @@ func init() {
 		Subnets:                     []string{"subnet1", "subnet2"},
 		UserData:                    "user_data",
 		VirtualNetwork:              "network",
+		WorkerSubnets:               []string{"worker1", "worker2"},
 	}
 	testClusterEKSConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -42,9 +46,12 @@ func init() {
 			"instance_type":                   "instance",
 			"key_pair_name":                   "key_pair_name",
 			"kubernetes_version":              "1.11",
+			"manage_own_security_groups":      true,
 			"maximum_nodes":                   5,
 			"minimum_nodes":                   3,
+			"node_security_groups":            []interface{}{"node-sg1", "node-sg2"},
 			"node_volume_size":                40,
+			"placement_group":                 "placement_group",
 			"region":                          "region",
 			"security_groups":                 []interface{}{"sg1", "sg2"},
 			"service_role":                    "role",
@@ -52,6 +59,7 @@ func init() {
 			"subnets":                         []interface{}{"subnet1", "subnet2"},
 			"user_data":                       "user_data",
 			"virtual_network":                 "network",
+			"worker_subnets":                  []interface{}{"worker1", "worker2"},
 		},
 	}
 }
