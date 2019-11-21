@@ -97,8 +97,7 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 
 // Expanders
 
-func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContainerServiceConfig, error) {
-	obj := &AmazonElasticContainerServiceConfig{}
+func expandClusterEKSConfig(obj *AmazonElasticContainerServiceConfig, p []interface{}, name string) (*AmazonElasticContainerServiceConfig, error) {
 	if len(p) == 0 || p[0] == nil {
 		return obj, nil
 	}

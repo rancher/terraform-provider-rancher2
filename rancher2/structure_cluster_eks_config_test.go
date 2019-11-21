@@ -101,7 +101,7 @@ func TestExpandClusterEKSConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := expandClusterEKSConfig(tc.Input, "test")
+		output, err := expandClusterEKSConfig(&AmazonElasticContainerServiceConfig{}, tc.Input, "test")
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
