@@ -102,6 +102,10 @@ func init() {
 			"service_cidr":                           "service_cidr",
 			"subnet":                                 "subnet",
 			"subscription_id":                        "subscription_id",
+			"tag": map[string]interface{}{
+				"tag1": "value1",
+				"tag2": "value2",
+			},
 			"tags": map[string]interface{}{
 				"tag1": "value1",
 				"tag2": "value2",

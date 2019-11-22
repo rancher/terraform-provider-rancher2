@@ -157,6 +157,7 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 	}
 
 	if len(in.Tags) > 0 {
+		obj["tag"] = toMapInterface(in.Tags)
 		obj["tags"] = toMapInterface(in.Tags)
 	}
 
@@ -355,6 +356,10 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 
 	if v, ok := in["subscription_id"].(string); ok && len(v) > 0 {
 		obj.SubscriptionID = v
+	}
+
+	if v, ok := in["tag"].(map[string]interface{}); ok && len(v) > 0 {
+		obj.Tags = toMapString(v)
 	}
 
 	if v, ok := in["tags"].(map[string]interface{}); ok && len(v) > 0 {
