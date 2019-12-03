@@ -28,8 +28,29 @@ type Config struct {
 	Bootstrap bool   `json:"bootstrap"`
 	ClusterID string `json:"clusterId"`
 	ProjectID string `json:"projectId"`
+	Version   string
 	Sync      sync.Mutex
 	Client    Client
+}
+
+// GetRancherVersion get Rancher server version
+func (c *Config) GetRancherVersion() (string, error) {
+	if len(c.Version) > 0 {
+		return c.Version, nil
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return "", fmt.Errorf("[ERROR] Getting Rancher version: %s", err)
+	}
+
+	version, err := client.Setting.ByID("server-version")
+	if err != nil {
+		return "", fmt.Errorf("[ERROR] Getting Rancher version: %s", err)
+	}
+	c.Version = version.Value
+
+	return c.Version, nil
 }
 
 // UpdateToken update tokenkey and restart client connections
@@ -84,6 +105,12 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 		return nil, err
 	}
 	c.Client.Management = mClient
+
+	version, err := mClient.Setting.ByID("server-version")
+	if err != nil {
+		return nil, err
+	}
+	c.Version = version.Value
 
 	return c.Client.Management, nil
 }
