@@ -14,17 +14,35 @@ func flattenVsphereConfig(in *vmwarevsphereConfig) []interface{} {
 	if len(in.Cfgparam) > 0 {
 		obj["cfgparam"] = toArrayInterface(in.Cfgparam)
 	}
+	if len(in.CloneFrom) > 0 {
+		obj["clone_from"] = in.CloneFrom
+	}
+	if len(in.CloudConfig) > 0 {
+		obj["cloud_config"] = in.CloudConfig
+	}
 	if len(in.Cloudinit) > 0 {
 		obj["cloudinit"] = in.Cloudinit
+	}
+	if len(in.ContentLibrary) > 0 {
+		obj["content_library"] = in.ContentLibrary
 	}
 	if len(in.CPUCount) > 0 {
 		obj["cpu_count"] = in.CPUCount
 	}
+	if len(in.CreationType) > 0 {
+		obj["creation_type"] = in.CreationType
+	}
+	if len(in.CustomAttributes) > 0 {
+		obj["custom_attributes"] = toArrayInterface(in.CustomAttributes)
+	}
 	if len(in.Datacenter) > 0 {
-		obj["datacenter"] = in.Datastore
+		obj["datacenter"] = in.Datacenter
 	}
 	if len(in.Datastore) > 0 {
 		obj["datastore"] = in.Datastore
+	}
+	if len(in.DatastoreCluster) > 0 {
+		obj["datastore_cluster"] = in.DatastoreCluster
 	}
 	if len(in.DiskSize) > 0 {
 		obj["disk_size"] = in.DiskSize
@@ -46,6 +64,21 @@ func flattenVsphereConfig(in *vmwarevsphereConfig) []interface{} {
 	}
 	if len(in.Pool) > 0 {
 		obj["pool"] = in.Pool
+	}
+	if len(in.SshPassword) > 0 {
+		obj["ssh_password"] = in.SshPassword
+	}
+	if len(in.SshPort) > 0 {
+		obj["ssh_port"] = in.SshPort
+	}
+	if len(in.SshUser) > 0 {
+		obj["ssh_user"] = in.SshUser
+	}
+	if len(in.SshUserGroup) > 0 {
+		obj["ssh_user_group"] = in.SshUserGroup
+	}
+	if len(in.Tags) > 0 {
+		obj["tags"] = toArrayInterface(in.Tags)
 	}
 	if len(in.Username) > 0 {
 		obj["username"] = in.Username
@@ -87,17 +120,35 @@ func expandVsphereConfig(p []interface{}) *vmwarevsphereConfig {
 	if v, ok := in["cfgparam"].([]interface{}); ok && len(v) > 0 {
 		obj.Cfgparam = toArrayString(v)
 	}
+	if v, ok := in["clone_from"].(string); ok && len(v) > 0 {
+		obj.CloneFrom = v
+	}
+	if v, ok := in["cloud_config"].(string); ok && len(v) > 0 {
+		obj.CloudConfig = v
+	}
 	if v, ok := in["cloudinit"].(string); ok && len(v) > 0 {
 		obj.Cloudinit = v
 	}
+	if v, ok := in["content_library"].(string); ok && len(v) > 0 {
+		obj.ContentLibrary = v
+	}
 	if v, ok := in["cpu_count"].(string); ok && len(v) > 0 {
 		obj.CPUCount = v
+	}
+	if v, ok := in["creation_type"].(string); ok && len(v) > 0 {
+		obj.CreationType = v
+	}
+	if v, ok := in["custom_attributes"].([]interface{}); ok && len(v) > 0 {
+		obj.CustomAttributes = toArrayString(v)
 	}
 	if v, ok := in["datacenter"].(string); ok && len(v) > 0 {
 		obj.Datacenter = v
 	}
 	if v, ok := in["datastore"].(string); ok && len(v) > 0 {
 		obj.Datastore = v
+	}
+	if v, ok := in["datastore_cluster"].(string); ok && len(v) > 0 {
+		obj.DatastoreCluster = v
 	}
 	if v, ok := in["disk_size"].(string); ok && len(v) > 0 {
 		obj.DiskSize = v
@@ -119,6 +170,21 @@ func expandVsphereConfig(p []interface{}) *vmwarevsphereConfig {
 	}
 	if v, ok := in["pool"].(string); ok && len(v) > 0 {
 		obj.Pool = v
+	}
+	if v, ok := in["ssh_password"].(string); ok && len(v) > 0 {
+		obj.SshPassword = v
+	}
+	if v, ok := in["ssh_port"].(string); ok && len(v) > 0 {
+		obj.SshPort = v
+	}
+	if v, ok := in["ssh_user"].(string); ok && len(v) > 0 {
+		obj.SshUser = v
+	}
+	if v, ok := in["ssh_user_group"].(string); ok && len(v) > 0 {
+		obj.SshUserGroup = v
+	}
+	if v, ok := in["tags"].([]interface{}); ok && len(v) > 0 {
+		obj.Tags = toArrayString(v)
 	}
 	if v, ok := in["username"].(string); ok && len(v) > 0 {
 		obj.Username = v

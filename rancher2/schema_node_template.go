@@ -134,6 +134,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 		"annotations": &schema.Schema{
 			Type:     schema.TypeMap,
 			Optional: true,
+			Computed: true,
 		},
 		"labels": &schema.Schema{
 			Type:     schema.TypeMap,
