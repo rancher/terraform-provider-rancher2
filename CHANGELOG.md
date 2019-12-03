@@ -1,4 +1,20 @@
 ## 1.7.1 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added GetRancherVersion function to provider config
+* Updated `vsphere_config` argument schema on `rancher2_node_template` resource to support Rancher v2.3.3 features
+* Updated rancher to v2.3.3 and k3s to v0.10.2 on acceptance tests
+
+BUG FIXES:
+
+* Set `annotations` argument as computed on `rancher2_node_template` resource
+* Added `rancher2_node_template` resource workaround on docs when upgrade Rancher to v2.3.3
+
 ## 1.7.0 (November 20, 2019)
 
 FEATURES:
