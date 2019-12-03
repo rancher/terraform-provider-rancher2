@@ -12,6 +12,8 @@ Provides a Rancher v2 Node Template resource. This can be used to create Node Te
 
 amazonec2, azure, digitalocean, openstack and vsphere drivers are supported for node templates.
 
+**Note** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
+
 ## Example Usage
 
 ```hcl
@@ -219,10 +221,16 @@ The following attributes are exported:
 
 * `boot2docker_url` - (Optional) vSphere URL for boot2docker iso image. Default `https://releases.rancher.com/os/latest/rancheros-vmware.iso` (string)
 * `cfgparam` - (Optional) vSphere vm configuration parameters (used for guestinfo) (list)
+* `clone_from` - (Optional) If you choose creation type clone a name of what you want to clone is required. From Rancher v2.3.3 (string)
+* `cloud_config` - (Optional) Filepath to a cloud-config yaml file to put into the ISO user-data. From Rancher v2.3.3 (string)
 * `cloudinit` - (Optional) vSphere cloud-init file or url to set in the guestinfo (string)
+* `content_library` - (Optional) If you choose to clone from a content library template specify the name of the library. From Rancher v2.3.3 (string)
 * `cpu_count` - (Optional) vSphere CPU number for docker VM. Default `2` (string)
+* `creation_type` - (Optional) Creation type when creating a new virtual machine. Supported values: vm, template, library, legacy. Default `legacy`. From Rancher v2.3.3 (string)
+* `custom_attributes` - (Optional) vSphere custom attributes, format key/value e.g. `200=my custom value`. From Rancher v2.3.3 (List)
 * `datacenter` - (Optional) vSphere datacenter for docker VM (string)
 * `datastore` - (Optional) vSphere datastore for docker VM (string)
+* `datastore_cluster` - (Optional) vSphere datastore cluster for virtual machine. From Rancher v2.3.3 (string)
 * `disk_size` - (Optional) vSphere size of disk for docker VM (in MB). Default `20480` (string)
 * `folder` - (Optional) vSphere folder for the docker VM. This folder must already exist in the datacenter (string)
 * `hostsystem` - (Optional) vSphere compute resource where the docker VM will be instantiated. This can be omitted if using a cluster with DRS (string)
@@ -230,6 +238,11 @@ The following attributes are exported:
 * `network` - (Optional) vSphere network where the docker VM will be attached (list)
 * `password` - (Optional/Sensitive) vSphere password. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `pool` - (Optional) vSphere resource pool for docker VM (string)
+* `ssh_password` - (Optional) If using a non-B2D image you can specify the ssh password. Default `tcuser`. From Rancher v2.3.3 (string)
+* `ssh_port` - (Optional) If using a non-B2D image you can specify the ssh port. Default `22`. From Rancher v2.3.3 (string)
+* `ssh_user` - (Optional) If using a non-B2D image you can specify the ssh user. Default `docker`. From Rancher v2.3.3 (string)
+* `ssh_user_group` - (Optional) If using a non-B2D image the uploaded keys will need chown'ed. Default `staff`. From Rancher v2.3.3 (string)
+* `tags` - (Optional) vSphere tags id e.g. `urn:xxx`. From Rancher v2.3.3 (list)
 * `username` - (Optional/Sensitive) vSphere username. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `vapp_ip_allocation_policy` - (Optional) vSphere vApp IP allocation policy. Supported values are: `dhcp`, `fixed`, `transient` and `fixedAllocated` (string)
 * `vapp_ip_protocol` - (Optional) vSphere vApp IP protocol for this deployment. Supported values are: `IPv4` and `IPv6` (string)
@@ -255,3 +268,15 @@ Node Template can be imported using the Rancher Node Template ID
 $ terraform import rancher2_node_template.foo <node_template_id>
 ```
 
+## Upgrading to Rancher v2.3.3
+
+Due to [this feature](https://github.com/rancher/rancher/pull/23718) included on Rancher v2.3.3, `rancher2_node_template` are now global scope objects with RBAC around them, instead of user scope objects as they were. This means that existing node templates `id` field is changing on upgrade. Because the Terraform provider can not find the old `id`, it will try to recreate them.
+
+As a workaround, if you are upgrading Rancher from previous releases to v2.3.3, you need to get node templates new id from Rancher API, refresh tfstate and import `rancher2_node_template` resources with new id.
+
+```
+$ curl -sk -X GET -H "Authorization: Bearer ${RANCHER_TOKEN_KEY}" ${RANCHER_URL}/v3/nodeTemplates | jq .data
+$ terraform refresh
+$ terraform import rancher2_node_template.<name> <new_id>
+$ terraform apply
+```
