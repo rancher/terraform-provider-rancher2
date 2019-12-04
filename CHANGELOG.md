@@ -1,4 +1,4 @@
-## 1.7.1 (Unreleased)
+## 1.7.1 (December 04, 2019)
 
 FEATURES:
 
