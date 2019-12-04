@@ -667,7 +667,7 @@ The following arguments are supported:
 * `enable_auto_scaling` - (Optional) Enable auto scaling feature. Default `false` (bool)
 * `enable_http_application_routing` - (Optional) Enable the Kubernetes ingress with automatic public DNS name creation. Default `false` (bool)
 * `enable_monitoring` - (Optional) Turn on Azure Log Analytics monitoring. Uses the Log Analytics \"Default\" workspace if it exists, else creates one. if using an existing workspace, specifies \"log analytics workspace resource id\". Default `true` (bool)
-* `load_balancer_sku` - (Optional) Load balancer type (must be standard for auto-scaling). Default `Basic` (string)
+* `load_balancer_sku` - (Optional) Load balancer type (must be standard for auto-scaling). Default `basic` (string)
 * `location` - (Optional) Azure Kubernetes cluster location. Default `eastus` (string)
 * `log_analytics_workspace` - (Optional) The name of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses '{resource group}-{subscription id}-{location code}' (string)
 * `log_analytics_workspace_resource_group` - (Optional) The resource group of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses the 'Cluster' resource group (string)
