@@ -323,7 +323,7 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 		"load_balancer_sku": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "Basic",
+			Default:     "basic",
 			Description: "Load balancer type (must be standard for auto-scaling)",
 		},
 	}
