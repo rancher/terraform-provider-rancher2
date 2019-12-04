@@ -6,10 +6,12 @@ import (
 )
 
 const (
-	vmwarevsphereConfigDriver = "vmwarevsphere"
+	vmwarevsphereConfigDriver              = "vmwarevsphere"
+	vmwarevsphereConfigCreationTypeDefault = "legacy"
 )
 
 var (
+	vmwarevsphereConfigCreationType             = []string{"vm", "template", "library", "legacy"}
 	vmwarevsphereConfigVappIpallocationpolicies = []string{"dhcp", "fixed", "transient", "fixedAllocated"}
 	vmwarevsphereConfigVappIpprotocols          = []string{"IPv4", "IPv6"}
 	vmwarevsphereConfigVappTransports           = []string{"iso", "com.vmware.guestInfo"}
@@ -20,10 +22,16 @@ var (
 type vmwarevsphereConfig struct {
 	Boot2dockerURL         string   `json:"boot2dockerUrl,omitempty" yaml:"boot2dockerUrl,omitempty"`
 	Cfgparam               []string `json:"cfgparam,omitempty" yaml:"cfgparam,omitempty"`
+	CloneFrom              string   `json:"cloneFrom,omitempty" yaml:"cloneFrom,omitempty"`
+	CloudConfig            string   `json:"cloudConfig,omitempty" yaml:"cloudConfig,omitempty"`
 	Cloudinit              string   `json:"cloudinit,omitempty" yaml:"cloudinit,omitempty"`
+	ContentLibrary         string   `json:"contentLibrary,omitempty" yaml:"contentLibrary,omitempty"`
 	CPUCount               string   `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
+	CreationType           string   `json:"creationType,omitempty" yaml:"creationType,omitempty"`
+	CustomAttributes       []string `json:"customAttribute,omitempty" yaml:"customAttribute,omitempty"`
 	Datacenter             string   `json:"datacenter,omitempty" yaml:"datacenter,omitempty"`
 	Datastore              string   `json:"datastore,omitempty" yaml:"datastore,omitempty"`
+	DatastoreCluster       string   `json:"datastoreCluster,omitempty" yaml:"datastoreCluster,omitempty"`
 	DiskSize               string   `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
 	Folder                 string   `json:"folder,omitempty" yaml:"folder,omitempty"`
 	Hostsystem             string   `json:"hostsystem,omitempty" yaml:"hostsystem,omitempty"`
@@ -31,6 +39,11 @@ type vmwarevsphereConfig struct {
 	Network                []string `json:"network,omitempty" yaml:"network,omitempty"`
 	Password               string   `json:"password,omitempty" yaml:"password,omitempty"`
 	Pool                   string   `json:"pool,omitempty" yaml:"pool,omitempty"`
+	SshPassword            string   `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
+	SshPort                string   `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
+	SshUser                string   `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	SshUserGroup           string   `json:"sshUserGroup,omitempty" yaml:"sshUserGroup,omitempty"`
+	Tags                   []string `json:"tag,omitempty" yaml:"tag,omitempty"`
 	Username               string   `json:"username,omitempty" yaml:"username,omitempty"`
 	VappIpallocationpolicy string   `json:"vappIpallocationpolicy,omitempty" yaml:"vappIpallocationpolicy,omitempty"`
 	VappIpprotocol         string   `json:"vappIpprotocol,omitempty" yaml:"vappIpprotocol,omitempty"`
@@ -45,55 +58,101 @@ type vmwarevsphereConfig struct {
 func vsphereConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"boot2docker_url": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "https://releases.rancher.com/os/latest/rancheros-vmware.iso",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "https://releases.rancher.com/os/latest/rancheros-vmware.iso",
+			Description: "vSphere URL for boot2docker image",
 		},
 		"cfgparam": &schema.Schema{
-			Type:     schema.TypeList,
-			Optional: true,
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "vSphere vm configuration parameters (used for guestinfo)",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 		},
+		"clone_from": &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "If you choose creation type clone a name of what you want to clone is required",
+		},
+		"cloud_config": &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Filepath to a cloud-config yaml file to put into the ISO user-data",
+		},
 		"cloudinit": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "vSphere cloud-init filepath or url to add to guestinfo",
+		},
+		"content_library": &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "If you choose to clone from a content library template specify the name of the library",
 		},
 		"cpu_count": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "2",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "2",
+			Description: "vSphere CPU number for docker VM",
+		},
+		"creation_type": &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      vmwarevsphereConfigCreationTypeDefault,
+			ValidateFunc: validation.StringInSlice(vmwarevsphereConfigCreationType, true),
+			Description:  "Creation type when creating a new virtual machine. Supported values: vm, template, library, legacy",
+		},
+		"custom_attributes": &schema.Schema{
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "vSphere custom attributes, format key/value e.g. '200=my custom value'",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 		"datacenter": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "vSphere datacenter for virtual machine",
 		},
 		"datastore": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "vSphere datastore for virtual machine",
+		},
+		"datastore_cluster": &schema.Schema{
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "vSphere datastore cluster for virtual machine",
 		},
 		"disk_size": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "20480",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "20480",
+			Description: "vSphere size of disk for docker VM (in MB)",
 		},
 		"folder": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "vSphere folder for the docker VM. This folder must already exist in the datacenter",
 		},
 		"hostsystem": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "vSphere compute resource where the docker VM will be instantiated. This can be omitted if using a cluster with DRS",
 		},
 		"memory_size": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "2048",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "2048",
+			Description: "vSphere size of memory for docker VM (in MB)",
 		},
 		"network": &schema.Schema{
-			Type:     schema.TypeList,
-			Optional: true,
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "vSphere network where the virtual machine will be attached",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
@@ -105,8 +164,42 @@ func vsphereConfigFields() map[string]*schema.Schema {
 			Description: "vSphere password",
 		},
 		"pool": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "vSphere resource pool for docker VM",
+		},
+		"ssh_password": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Sensitive:   true,
+			Default:     "tcuser",
+			Description: "If using a non-B2D image you can specify the ssh password",
+		},
+		"ssh_port": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "22",
+			Description: "If using a non-B2D image you can specify the ssh port",
+		},
+		"ssh_user": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "docker",
+			Description: "If using a non-B2D image you can specify the ssh user",
+		},
+		"ssh_user_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "staff",
+			Description: "If using a non-B2D image the uploaded keys will need chown'ed, defaults to staff e.g. docker:staff",
+		},
+		"tags": &schema.Schema{
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "vSphere tags id e.g. urn:xxx",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 		"username": {
 			Type:        schema.TypeString,
@@ -116,16 +209,19 @@ func vsphereConfigFields() map[string]*schema.Schema {
 		"vapp_ip_allocation_policy": &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
+			Description:  "vSphere vApp IP allocation policy. Supported values are: dhcp, fixed, transient and fixedAllocated",
 			ValidateFunc: validation.StringInSlice(vmwarevsphereConfigVappIpallocationpolicies, true),
 		},
 		"vapp_ip_protocol": &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
+			Description:  "vSphere vApp IP protocol for this deployment. Supported values are: IPv4 and IPv6",
 			ValidateFunc: validation.StringInSlice(vmwarevsphereConfigVappIpprotocols, true),
 		},
 		"vapp_property": &schema.Schema{
-			Type:     schema.TypeList,
-			Optional: true,
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "vSphere vApp properties",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
@@ -133,6 +229,7 @@ func vsphereConfigFields() map[string]*schema.Schema {
 		"vapp_transport": &schema.Schema{
 			Type:         schema.TypeString,
 			Optional:     true,
+			Description:  "vSphere OVF environment transports to use for properties. Supported values are: iso and com.vmware.guestInfo",
 			ValidateFunc: validation.StringInSlice(vmwarevsphereConfigVappTransports, true),
 		},
 		"vcenter": {
