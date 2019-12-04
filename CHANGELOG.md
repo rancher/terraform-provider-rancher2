@@ -1,4 +1,17 @@
 ## 1.7.1 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added GetRancherVersion function to provider config
+
+BUG FIXES:
+
+
+
 ## 1.7.0 (November 20, 2019)
 
 FEATURES:
