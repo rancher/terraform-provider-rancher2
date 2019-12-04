@@ -22,6 +22,7 @@ const (
 	metricRuleComparisonLessOrEqual             = "less-or-equal"
 	metricRuleComparisonLessThan                = "less-than"
 	metricRuleComparisonNotEqual                = "not-equal"
+	metricRuleComparisonNotNull                 = "has-value"
 	nodeRuleConditionCPU                        = "cpu"
 	nodeRuleConditionMem                        = "mem"
 	nodeRuleConditionNotReady                   = "notready"
@@ -50,6 +51,7 @@ var (
 		metricRuleComparisonLessOrEqual,
 		metricRuleComparisonLessThan,
 		metricRuleComparisonNotEqual,
+		metricRuleComparisonNotNull,
 	}
 	nodeRuleConditions = []string{
 		nodeRuleConditionCPU,
