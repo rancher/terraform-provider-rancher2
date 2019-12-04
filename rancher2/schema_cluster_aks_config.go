@@ -15,6 +15,7 @@ var (
 	clusterAKSNetworkPlugin       = []string{"azure", "kubenet"}
 	clusterAKSNetworkPolicy       = []string{"calico"}
 	clusterAKSAgentPoolType       = []string{"AvailabilitySet", "VirtualMachineScaleSets"}
+	clusterAKSLoadBalancerSku     = []string{"basic", "standard"}
 )
 
 //Types
@@ -321,10 +322,11 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			},
 		},
 		"load_balancer_sku": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "basic",
-			Description: "Load balancer type (must be standard for auto-scaling)",
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "basic",
+			Description:  "Load balancer type (must be standard for auto-scaling)",
+			ValidateFunc: validation.StringInSlice(clusterAKSLoadBalancerSku, true),
 		},
 	}
 
