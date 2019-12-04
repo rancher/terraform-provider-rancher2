@@ -73,7 +73,7 @@ The following attributes are exported:
 * `duration` - (Required) Metric rule duration (string)
 * `expression` - (Required) Metric rule expression (string)
 * `threshold_value` - (Required) Metric rule threshold value (float64)
-* `comparison` - (Optional) Metric rule comparison. Supported values : `"equal" | "greater-or-equal" | "greater-than" | "less-or-equal" | "less-than" | "not-equal"`. Default: `equal`  (string)
+* `comparison` - (Optional) Metric rule comparison. Supported values : `"equal" | "greater-or-equal" | "greater-than" | "less-or-equal" | "less-than" | "not-equal" | "has-value"`. Default: `equal`  (string)
 * `description` - (Optional) Metric rule description (string)
 
 ### `node_rule`
