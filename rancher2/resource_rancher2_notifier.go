@@ -107,11 +107,12 @@ func resourceRancher2NotifierUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	update := map[string]interface{}{
-		"name":        d.Get("name").(string),
-		"description": d.Get("description").(string),
-		"clusterId":   d.Get("cluster_id").(string),
-		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
+		"name":         d.Get("name").(string),
+		"description":  d.Get("description").(string),
+		"clusterId":    d.Get("cluster_id").(string),
+		"sendResolved": d.Get("send_resolved").(bool),
+		"annotations":  toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":       toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	if notifier.PagerdutyConfig != nil && d.HasChange("pagerduty_config") {
