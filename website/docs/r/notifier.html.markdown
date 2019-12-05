@@ -18,6 +18,7 @@ resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "<cluster_id>"
   description = "Terraform notifier acceptance test"
+  send_resolved = "true"
   pagerduty_config {
     service_key = "XXXXXXXX"
     proxy_url = "http://proxy.test.io"
@@ -32,6 +33,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the notifier (string)
 * `cluster_id` - (Required/ForceNew) The cluster id where create notifier (string)
 * `description` - (Optional) The notifier description (string)
+* `send_resolved` = (Optional) Enable the notifier to send resolved notifications. Default `false` (bool)
 * `pagerduty_config` - (Optional) Pagerduty config for notifier (list maxitems:1)
 * `slack_config` - (Optional) Slack config for notifier (list maxitems:1)
 * `smtp_config` - (Optional) SMTP config for notifier (list maxitems:1)
