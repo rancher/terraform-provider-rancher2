@@ -98,6 +98,26 @@ func resourceRancher2CatalogRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
+	if d.Get("refresh").(bool) {
+		_, err := meta.(*Config).RefreshCatalog(scope, catalog)
+		if err != nil {
+			return err
+		}
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"refreshed"},
+			Target:     []string{"active"},
+			Refresh:    catalogStateRefreshFunc(meta, id, scope),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return fmt.Errorf(
+				"[ERROR] waiting for catalog (%s) to be refreshed: %s", id, waitErr)
+		}
+	}
+
 	return nil
 }
 
