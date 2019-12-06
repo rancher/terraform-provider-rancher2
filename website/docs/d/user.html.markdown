@@ -20,7 +20,9 @@ data "rancher2_user" "foo" {
 
 ## Argument Reference
 
-* `username` - (Required) The name of the user (string)
+* `is_external` - (Optional) Set is the user if the user is external. Default: `false` (bool)
+* `name` - (Optional) The name of the user (string)
+* `username` - (Optional) The username of the user (string)
 
 ## Attributes Reference
 
