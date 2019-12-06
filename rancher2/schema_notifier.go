@@ -28,6 +28,7 @@ func notifierFields() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Description: "Notifier send resolved",
+			Default:     false,
 		},
 		"pagerduty_config": &schema.Schema{
 			Type:          schema.TypeList,
