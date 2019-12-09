@@ -37,6 +37,7 @@ func init() {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   pagerduty_config {
     service_key = "XXXXXXXX"
@@ -49,6 +50,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   pagerduty_config {
     service_key = "YYYYYYYY"
@@ -61,6 +63,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   pagerduty_config {
     service_key = "XXXXXXXX"
@@ -73,6 +76,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   slack_config {
     default_recipient = "XXXXXXXX"
@@ -86,6 +90,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   slack_config {
     default_recipient = "YYYYYYYY"
@@ -99,6 +104,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   slack_config {
     default_recipient = "XXXXXXXX"
@@ -112,6 +118,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   smtp_config {
     default_recipient = "XXXXXXXX"
@@ -127,6 +134,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   smtp_config {
     default_recipient = "YYYYYYYY"
@@ -142,6 +150,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   smtp_config {
     default_recipient = "XXXXXXXX"
@@ -157,6 +166,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   webhook_config {
     url = "http://url.test.io"
@@ -169,6 +179,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   webhook_config {
     url = "http://url2.test.io"
@@ -181,6 +192,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   webhook_config {
     url = "http://url.test.io"
@@ -193,6 +205,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   wechat_config {
     agent = "agent_id"
@@ -208,6 +221,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   wechat_config {
     agent = "agent_id"
@@ -223,6 +237,7 @@ resource "rancher2_notifier" "foo" {
 resource "rancher2_notifier" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
+  send_resolved = "true"
   description = "Terraform notifier acceptance test"
   wechat_config {
     agent = "agent_id"
@@ -250,6 +265,7 @@ func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.service_key", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.proxy_url", "http://proxy.test.io"),
 				),
@@ -260,6 +276,7 @@ func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "false"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.proxy_url", "http://proxy2.test.io"),
 				),
 			},
@@ -269,6 +286,7 @@ func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.service_key", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.proxy_url", "http://proxy.test.io"),
 				),
@@ -311,6 +329,7 @@ func TestAccRancher2Notifier_basic_Slack(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.default_recipient", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.url", "http://url.test.io"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.proxy_url", "http://proxy.test.io"),
@@ -332,6 +351,7 @@ func TestAccRancher2Notifier_basic_Slack(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.default_recipient", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.url", "http://url.test.io"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.proxy_url", "http://proxy.test.io"),
@@ -375,6 +395,7 @@ func TestAccRancher2Notifier_basic_SMTP(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.default_recipient", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.host", "host.test.io"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.sender", "sender@test.io"),
@@ -396,6 +417,7 @@ func TestAccRancher2Notifier_basic_SMTP(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.default_recipient", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.host", "host.test.io"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.sender", "sender@test.io"),
@@ -439,6 +461,7 @@ func TestAccRancher2Notifier_basic_Webhook(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.url", "http://url.test.io"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.proxy_url", "http://proxy.test.io"),
 				),
@@ -458,6 +481,7 @@ func TestAccRancher2Notifier_basic_Webhook(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.url", "http://url.test.io"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.proxy_url", "http://proxy.test.io"),
 				),
@@ -500,6 +524,7 @@ func TestAccRancher2Notifier_basic_Wechat(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.default_recipient", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.secret", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.proxy_url", "http://proxy.test.io"),
@@ -521,6 +546,7 @@ func TestAccRancher2Notifier_basic_Wechat(t *testing.T) {
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.default_recipient", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.secret", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.proxy_url", "http://proxy.test.io"),
