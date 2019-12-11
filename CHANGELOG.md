@@ -1,4 +1,19 @@
 ## 1.7.2 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added `refresh` argument to `rancher2_catalog` resource
+* Added `name` and `is_external` arguments to `rancher2_user` datasource
+* Added `delete_not_ready_after_secs` and `node_taints` arguments to `node_pool` resource
+
+BUG FIXES:
+
+
+
 ## 1.7.1 (December 04, 2019)
 
 FEATURES:
