@@ -160,6 +160,12 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Optional use ssh agent auth",
 		},
+		"ssh_cert_path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Optional cluster level SSH certificate path",
+		},
 		"ssh_key_path": {
 			Type:        schema.TypeString,
 			Optional:    true,
