@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Added `refresh` argument to `rancher2_catalog` resource
+* Added `name` and `is_external` arguments to `rancher2_user` datasource
 
 BUG FIXES:
 
