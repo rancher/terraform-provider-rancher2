@@ -216,6 +216,7 @@ The following attributes are exported:
 * `private_registries` - (Optional) private registries for docker images (list)
 * `services` - (Optional/Computed) Kubernetes cluster services (list maxitems:1)
 * `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
+* `ssh_cert_path` - (Optional/Computed) Cluster level SSH certificate path (string)
 * `ssh_key_path` - (Optional/Computed) Cluster level SSH private key path (string)
 
 #### `authentication`
@@ -562,6 +563,7 @@ The following attributes are exported:
 * `interval_hours` - (Optional) Interval hours for etcd backup. Default `12` (int)
 * `retention` - (Optional) Retention for etcd backup. Default `6` (int)
 * `s3_backup_config` - (Optional) S3 config options for etcd backup (list maxitems:1)
+* `safe_timestamp` - (Optional) Safe timestamp for etcd backup. Default: `false` (bool)
 
 ###### `s3_backup_config`
 
@@ -579,14 +581,50 @@ The following attributes are exported:
 
 ###### Arguments
 
+* `admission_configuration` - (Optional) Admission configuration (map)
 * `always_pull_images` - (Optional) Enable [AlwaysPullImages](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#alwayspullimages) Admission controller plugin. [Rancher docs](https://rancher.com/docs/rke/latest/en/config-options/services/#kubernetes-api-server-options) Default: `false` (bool)
+* `audit_log` - (Optional) K8s audit log configuration. (list maxitem: 1)
+* `event_rate_limit` - (Optional) K8s event rate limit configuration. (list maxitem: 1)
 * `extra_args` - (Optional/Computed) Extra arguments for kube API service (map)
 * `extra_binds` - (Optional) Extra binds for kube API service (list)
 * `extra_env` - (Optional) Extra environment for kube API service (list)
 * `image` - (Optional/Computed) Docker image for kube API service (string)
 * `pod_security_policy` - (Optional) Pod Security Policy option for kube API service. Default `false` (bool)
+* `secrets_encryption_config` - (Optional) [Encrypt k8s secret data configration](https://rancher.com/docs/rke/latest/en/config-options/secrets-encryption/). (list maxitem: 1)
 * `service_cluster_ip_range` - (Optional/Computed) Service Cluster IP Range option for kube API service (string)
 * `service_node_port_range` - (Optional/Computed) Service Node Port Range option for kube API service (string)
+
+###### `audit_log`
+
+###### Arguments
+
+* `configuration` - (Optional) Audit log configuration. (list maxtiem: 1)
+* `enabled` - (Optional) Enable audit log. Default: `false` (bool)
+
+###### `configuration`
+
+###### Arguments
+
+* `format` - (Optional) Audit log format. Default: 'json' (string)
+* `max_age` - (Optional) Audit log max age. Default: `30` (int)
+* `max_backup` - (Optional) Audit log max backup. Default: `10` (int)
+* `max_size` - (Optional) Audit log max size. Default: `100` (int)
+* `path` - (Optional) (Optional) Audit log path. Default: `/var/log/kube-audit/audit-log.json` (string)
+* `policy` - (Optional) Audit log policy (map)
+
+###### `event_rate_limit`
+
+###### Arguments
+
+* `configuration` - (Optional) Event rate limit configuration. (map)
+* `enabled` - (Optional) Enable event rate limit. Default: `false` (bool)
+
+###### `secrets_encryption_config`
+
+###### Arguments
+
+* `custom_config` - (Optional) Secrets encryption configuration. (map)
+* `enabled` - (Optional) Enable secrets encryption. Default: `false` (bool)
 
 ##### `kube_controller`
 
@@ -609,6 +647,7 @@ The following attributes are exported:
 * `extra_binds` - (Optional) Extra binds for kubelet service (list)
 * `extra_env` - (Optional) Extra environment for kubelet service (list)
 * `fail_swap_on` - (Optional/Computed) Enable or disable failing when swap on is not supported (bool)
+* `generate_serving_certificate` [Generate a certificate signed by the kube-ca](https://rancher.com/docs/rke/latest/en/config-options/services/#kubelet-serving-certificate-requirements). Default `false` (bool)
 * `image` - (Optional/Computed) Docker image for kubelet service (string)
 * `infra_container_image` - (Optional/Computed) Infra container image for kubelet service (string)
 

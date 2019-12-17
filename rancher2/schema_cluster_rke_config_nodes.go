@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// RKEConfigNodesRoles available RKE roles for nodes
 	RKEConfigNodesRoles = []string{"controlplane", "etcd", "worker"}
 )
 

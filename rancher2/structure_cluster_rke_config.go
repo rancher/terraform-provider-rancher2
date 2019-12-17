@@ -138,6 +138,10 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig,
 
 	obj["ssh_agent_auth"] = in.SSHAgentAuth
 
+	if len(in.SSHCertPath) > 0 {
+		obj["ssh_cert_path"] = in.SSHCertPath
+	}
+
 	if len(in.SSHKeyPath) > 0 {
 		obj["ssh_key_path"] = in.SSHKeyPath
 	}
@@ -278,6 +282,10 @@ func expandClusterRKEConfig(p []interface{}, name string) (*managementClient.Ran
 
 	if v, ok := in["ssh_agent_auth"].(bool); ok {
 		obj.SSHAgentAuth = v
+	}
+
+	if v, ok := in["ssh_cert_path"].(string); ok && len(v) > 0 {
+		obj.SSHCertPath = v
 	}
 
 	if v, ok := in["ssh_key_path"].(string); ok && len(v) > 0 {
