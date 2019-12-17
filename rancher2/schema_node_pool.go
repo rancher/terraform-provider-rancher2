@@ -25,6 +25,19 @@ func nodePoolFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"node_taints": &schema.Schema{
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: taintFields(),
+			},
+		},
+		"delete_not_ready_after_secs": &schema.Schema{
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      0,
+			ValidateFunc: validation.IntAtLeast(0),
+		},
 		"control_plane": &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
