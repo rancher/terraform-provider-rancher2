@@ -68,12 +68,25 @@ The following arguments are supported:
 * `name` - (Required) The name of the Node Pool (string)
 * `hostname_prefix` - (Required) The prefix for created nodes of the Node Pool (string)
 * `node_template_id` - (Required) The Node Template ID to use for node creation (string)
+* `delete_not_ready_after_secs` - (Optional) Delete not ready node after secs. For Rancher v2.3.3 or above. Default `0` (int)
+* `node_taints` - (Required) Node taints. For Rancher v2.3.3 or above (List)
 * `control_plane` - (Optional) RKE control plane role for created nodes (bool)
 * `etcd` - (Optional) RKE etcd role for created nodes (bool)
 * `quantity` - (Optional) The number of nodes to create on Node Pool. Default `1`. Only values >= 1 allowed (int)
 * `worker` - (Optional) RKE role role for created nodes (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
+
+## Nested blocks
+
+### `node_taints`
+
+#### Arguments
+
+* `key` - (Required) Taint key (string)
+* `value` - (Required) Taint value (string)
+* `effect` - (Optional) Taint effect. Supported values : `"NoExecute" | "NoSchedule" | "PreferNoSchedule"` (string)
+* `time_added` - (Optional) Taint time added (string)
 
 ## Attributes Reference
 

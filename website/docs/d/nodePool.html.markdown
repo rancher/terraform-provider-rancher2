@@ -30,6 +30,8 @@ data "rancher2_node_pool" "foo" {
 
 * `id` - (Computed) The ID of the resource (string)
 * `hostname_prefix` - (Computed) The prefix for created nodes of the Node Pool (string)
+* `delete_not_ready_after_secs` - (Computed) Delete not ready node after secs. Default `0` (int)
+* `node_taints` - (Computed) Node taints (List)
 * `quantity` - (Computed) The number of nodes to create on Node Pool (int)
 * `control_plane` - (Computed) RKE control plane role for created nodes (bool)
 * `etcd` - (Computed) RKE etcd role for created nodes (bool)

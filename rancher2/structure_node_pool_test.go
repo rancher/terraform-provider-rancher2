@@ -15,24 +15,26 @@ var (
 
 func init() {
 	testNodePoolConf = &managementClient.NodePool{
-		ClusterID:      "cluster-test",
-		Name:           "test",
-		HostnamePrefix: "terraform-test",
-		NodeTemplateID: "node-test",
-		Quantity:       3,
-		ControlPlane:   true,
-		Etcd:           true,
-		Worker:         true,
+		ClusterID:               "cluster-test",
+		Name:                    "test",
+		DeleteNotReadyAfterSecs: 0,
+		HostnamePrefix:          "terraform-test",
+		NodeTemplateID:          "node-test",
+		Quantity:                3,
+		ControlPlane:            true,
+		Etcd:                    true,
+		Worker:                  true,
 	}
 	testNodePoolInterface = map[string]interface{}{
-		"cluster_id":       "cluster-test",
-		"name":             "test",
-		"hostname_prefix":  "terraform-test",
-		"node_template_id": "node-test",
-		"quantity":         3,
-		"control_plane":    true,
-		"etcd":             true,
-		"worker":           true,
+		"cluster_id":                  "cluster-test",
+		"name":                        "test",
+		"delete_not_ready_after_secs": 0,
+		"hostname_prefix":             "terraform-test",
+		"node_template_id":            "node-test",
+		"quantity":                    3,
+		"control_plane":               true,
+		"etcd":                        true,
+		"worker":                      true,
 	}
 }
 

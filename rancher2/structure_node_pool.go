@@ -15,14 +15,21 @@ func flattenNodePool(d *schema.ResourceData, in *managementClient.NodePool) erro
 	d.SetId(in.ID)
 	d.Set("cluster_id", in.ClusterID)
 	d.Set("name", in.Name)
+	d.Set("delete_not_ready_after_secs", int(in.DeleteNotReadyAfterSecs))
 	d.Set("hostname_prefix", in.HostnamePrefix)
 	d.Set("node_template_id", in.NodeTemplateID)
+
+	err := d.Set("node_taints", flattenTaints(in.NodeTaints))
+	if err != nil {
+		return err
+	}
+
 	d.Set("quantity", int(in.Quantity))
 	d.Set("control_plane", in.ControlPlane)
 	d.Set("etcd", in.Etcd)
 	d.Set("worker", in.Worker)
 
-	err := d.Set("annotations", toMapInterface(in.Annotations))
+	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}
@@ -48,8 +55,14 @@ func expandNodePool(in *schema.ResourceData) *managementClient.NodePool {
 
 	obj.ClusterID = in.Get("cluster_id").(string)
 	obj.Name = in.Get("name").(string)
+	obj.DeleteNotReadyAfterSecs = int64(in.Get("delete_not_ready_after_secs").(int))
 	obj.HostnamePrefix = in.Get("hostname_prefix").(string)
 	obj.NodeTemplateID = in.Get("node_template_id").(string)
+
+	if v, ok := in.Get("node_taints").([]interface{}); ok && len(v) > 0 {
+		obj.NodeTaints = expandTaints(v)
+	}
+
 	obj.Quantity = int64(in.Get("quantity").(int))
 	obj.ControlPlane = in.Get("control_plane").(bool)
 	obj.Etcd = in.Get("etcd").(bool)

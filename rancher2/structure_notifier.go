@@ -22,6 +22,8 @@ func flattenNotifier(d *schema.ResourceData, in *managementClient.Notifier) erro
 		d.Set("description", in.Description)
 	}
 
+	d.Set("send_resolved", in.SendResolved)
+
 	if in.PagerdutyConfig != nil {
 		v, ok := d.Get("pagerduty_config").([]interface{})
 		if !ok {
@@ -98,6 +100,10 @@ func expandNotifier(in *schema.ResourceData) (*managementClient.Notifier, error)
 
 	if v, ok := in.Get("description").(string); ok && len(v) > 0 {
 		obj.Description = v
+	}
+
+	if v, ok := in.Get("send_resolved").(bool); ok {
+		obj.SendResolved = v
 	}
 
 	if v, ok := in.Get("pagerduty_config").([]interface{}); ok && len(v) > 0 {

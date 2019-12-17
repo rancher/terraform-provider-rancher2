@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * Added `refresh` argument to `rancher2_catalog` resource
 * Added `name` and `is_external` arguments to `rancher2_user` datasource
+* Added `delete_not_ready_after_secs` and `node_taints` arguments to `node_pool` resource
 * Added `delete_not_ready_after_secs` and `node_taints` arguments to `rancher2_node_pool` resource
 * Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.3.3
 * Splitted schema, structure and test `cluster_rke_config_services` files for every rke service 

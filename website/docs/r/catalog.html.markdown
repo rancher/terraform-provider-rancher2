@@ -44,6 +44,7 @@ The following arguments are supported:
 * `kind` - (Optional) The kind of the catalog. Just helm by the moment (string)
 * `password` - (Optional/Sensitive) The password to access the catalog if needed (string)
 * `project_id` - (Optional/ForceNew) The project id of the catalog. Mandatory if `scope = project` (string)
+* `refresh` - (Optional) Catalog will wait for refresh after tf creation and on every tf read. Default `false` (bool)
 * `scope` - (Optional) The scope of the catalog. `cluster`, `global`, and `project` are supported. Default `global` (string)
 * `username` - (Optional/Sensitive) The username to access the catalog if needed (string)
 * `annotations` - (Optional/Computed) Annotations for the catalog (map)

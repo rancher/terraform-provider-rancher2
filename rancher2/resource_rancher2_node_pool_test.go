@@ -62,6 +62,7 @@ resource "rancher2_node_pool" "foo" {
   cluster_id =  "${rancher2_cluster.foo.id}"
   name = "foo"
   hostname_prefix =  "foo-cluster-0"
+  delete_not_ready_after_secs = 120
   node_template_id = "${rancher2_node_template.foo.id}"
   quantity = 1
   control_plane = true
@@ -75,6 +76,7 @@ resource "rancher2_node_pool" "foo" {
   cluster_id =  "${rancher2_cluster.foo.id}"
   name = "foo"
   hostname_prefix =  "foo-cluster-0"
+  delete_not_ready_after_secs = 60
   node_template_id = "${rancher2_node_template.foo.id}"
   quantity = 3
   control_plane = false
@@ -88,6 +90,7 @@ resource "rancher2_node_pool" "foo" {
   cluster_id =  "${rancher2_cluster.foo.id}"
   name = "foo"
   hostname_prefix =  "foo-cluster-0"
+  delete_not_ready_after_secs = 120
   node_template_id = "${rancher2_node_template.foo.id}"
   quantity = 1
   control_plane = true
@@ -112,6 +115,7 @@ func TestAccRancher2NodePool_basic(t *testing.T) {
 					testAccCheckRancher2NodePoolExists(name, nodePool),
 					resource.TestCheckResourceAttr(name, "name", "foo"),
 					resource.TestCheckResourceAttr(name, "hostname_prefix", "foo-cluster-0"),
+					resource.TestCheckResourceAttr(name, "delete_not_ready_after_secs", "120"),
 					resource.TestCheckResourceAttr(name, "control_plane", "true"),
 					resource.TestCheckResourceAttr(name, "etcd", "true"),
 					resource.TestCheckResourceAttr(name, "worker", "true"),
@@ -124,6 +128,7 @@ func TestAccRancher2NodePool_basic(t *testing.T) {
 					testAccCheckRancher2NodePoolExists(name, nodePool),
 					resource.TestCheckResourceAttr(name, "name", "foo"),
 					resource.TestCheckResourceAttr(name, "hostname_prefix", "foo-cluster-0"),
+					resource.TestCheckResourceAttr(name, "delete_not_ready_after_secs", "60"),
 					resource.TestCheckResourceAttr(name, "control_plane", "false"),
 					resource.TestCheckResourceAttr(name, "etcd", "true"),
 					resource.TestCheckResourceAttr(name, "worker", "false"),
@@ -136,6 +141,7 @@ func TestAccRancher2NodePool_basic(t *testing.T) {
 					testAccCheckRancher2NodePoolExists(name, nodePool),
 					resource.TestCheckResourceAttr(name, "name", "foo"),
 					resource.TestCheckResourceAttr(name, "hostname_prefix", "foo-cluster-0"),
+					resource.TestCheckResourceAttr(name, "delete_not_ready_after_secs", "120"),
 					resource.TestCheckResourceAttr(name, "control_plane", "true"),
 					resource.TestCheckResourceAttr(name, "etcd", "true"),
 					resource.TestCheckResourceAttr(name, "worker", "true"),

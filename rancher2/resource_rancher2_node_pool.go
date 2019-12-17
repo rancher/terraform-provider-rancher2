@@ -105,15 +105,17 @@ func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	update := map[string]interface{}{
-		"clusterId":      d.Get("cluster_id").(string),
-		"hostnamePrefix": d.Get("hostname_prefix").(string),
-		"nodeTemplateId": d.Get("node_template_id").(string),
-		"quantity":       int64(d.Get("quantity").(int)),
-		"controlPlane":   d.Get("control_plane").(bool),
-		"etcd":           d.Get("etcd").(bool),
-		"worker":         d.Get("worker").(bool),
-		"annotations":    toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":         toMapString(d.Get("labels").(map[string]interface{})),
+		"clusterId":               d.Get("cluster_id").(string),
+		"hostnamePrefix":          d.Get("hostname_prefix").(string),
+		"deleteNotReadyAfterSecs": int64(d.Get("delete_not_ready_after_secs").(int)),
+		"nodeTemplateId":          d.Get("node_template_id").(string),
+		"nodeTaints":              expandTaints(d.Get("node_taints").([]interface{})),
+		"quantity":                int64(d.Get("quantity").(int)),
+		"controlPlane":            d.Get("control_plane").(bool),
+		"etcd":                    d.Get("etcd").(bool),
+		"worker":                  d.Get("worker").(bool),
+		"annotations":             toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":                  toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newNodePool, err := client.NodePool.Update(nodePool, update)

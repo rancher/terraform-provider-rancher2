@@ -24,9 +24,20 @@ func dataSourceRancher2NodePool() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"delete_not_ready_after_secs": &schema.Schema{
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"hostname_prefix": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"node_taints": &schema.Schema{
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: taintFields(),
+				},
 			},
 			"quantity": &schema.Schema{
 				Type:     schema.TypeInt,
