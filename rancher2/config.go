@@ -913,6 +913,28 @@ func (c *Config) DeleteCatalog(scope string, catalog interface{}) error {
 	}
 }
 
+func (c *Config) RefreshCatalog(scope string, catalog interface{}) (*managementClient.CatalogRefresh, error) {
+	if catalog == nil || len(scope) == 0 {
+		return nil, fmt.Errorf("[ERROR] Catalog nor scope can't be nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	switch scope {
+	case catalogScopeCluster:
+		return client.ClusterCatalog.ActionRefresh(catalog.(*managementClient.ClusterCatalog))
+	case catalogScopeGlobal:
+		return client.Catalog.ActionRefresh(catalog.(*managementClient.Catalog))
+	case catalogScopeProject:
+		return client.ProjectCatalog.ActionRefresh(catalog.(*managementClient.ProjectCatalog))
+	default:
+		return nil, fmt.Errorf("[ERROR] Unsupported scope on catalog: %s", scope)
+	}
+}
+
 func getAuthConfigObject(kind string) (interface{}, error) {
 	switch kind {
 	case managementClient.ActiveDirectoryConfigType:
