@@ -100,7 +100,7 @@ func podSecurityPolicySpecFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Elem: &schema.Resource{
-				Schema: podSecurityPolicyHostPortsFields(),
+				Schema: podSecurityPolicyHostPortRangeFields(),
 			},
 		},
 		"privileged": {

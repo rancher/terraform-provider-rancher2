@@ -6,7 +6,7 @@ import (
 
 //Schemas
 
-func podSecurityPolicyHostPortsFields() map[string]*schema.Schema {
+func podSecurityPolicyHostPortRangeFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
         "min": {
             Type:        schema.TypeInt,
