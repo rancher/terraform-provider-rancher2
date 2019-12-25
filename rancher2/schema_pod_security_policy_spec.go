@@ -69,7 +69,7 @@ func podSecurityPolicySpecFields() map[string]*schema.Schema {
 		},
 		"fs_group": {
 			Type:        schema.TypeList,
-			Description: "readOnlyRootFilesystem when set to true will force containers to run with a read only root file system.  If the container specifically requests to run with a non-read only root file system the PSP should deny the pod. If set to false the container may run with a read only root file system if it wishes but it will not be forced to.",
+			Description: "fsGroup is the strategy that will dictate what fs group is used by the SecurityContext.",
 			Optional:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
@@ -111,7 +111,7 @@ func podSecurityPolicySpecFields() map[string]*schema.Schema {
 		},
 		"read_only_root_filesystem": {
 			Type:        schema.TypeBool,
-			Description: "defaultAllowPrivilegeEscalation controls the default setting for whether a process can gain more privileges than its parent process.",
+			Description: "readOnlyRootFilesystem when set to true will force containers to run with a read only root file system.  If the container specifically requests to run with a non-read only root file system the PSP should deny the pod. If set to false the container may run with a read only root file system if it wishes but it will not be forced to.",
 			Optional:    true,
 			Computed:    true,
 		},
@@ -151,7 +151,7 @@ func podSecurityPolicySpecFields() map[string]*schema.Schema {
 		},
 		"supplemental_groups": {
 			Type:        schema.TypeList,
-			Description: "fsGroup is the strategy that will dictate what fs group is used by the SecurityContext.",
+			Description: "supplementalGroups is the strategy that will dictate what supplemental groups are used by the SecurityContext.",
 			Optional:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
