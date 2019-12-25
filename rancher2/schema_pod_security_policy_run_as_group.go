@@ -9,7 +9,7 @@ const (
 	RunAsGroupStrategyMustRunAs        = "MustRunAs"
 	RunAsGroupStrategyMustRunAsNonRoot = "MustRunAsNonRoot"
 	RunAsGroupStrategyRunAsAny         = "RunAsAny"
-
+)
 
 var (
 	runAsGroupStrategies = []string{
