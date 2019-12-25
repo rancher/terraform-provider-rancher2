@@ -23,7 +23,7 @@ var (
 
 func podSecurityPolicySupplementalGroupsFields() map[string]*schema.Schema {
     s := map[string]*schema.Schema{
-        "range": {
+        "ranges": {
             Type:        schema.TypeList,
             Description: "ranges are the allowed ranges of supplemental groups.  If you would like to force a single supplemental group then supply a single range with the same start and end. Required for MustRunAs.",
             Optional:    true,
