@@ -6,35 +6,35 @@ import (
 )
 
 const (
-    AzureFile             FSType = "azureFile"
-	Flocker               FSType = "flocker"
-	FlexVolume            FSType = "flexVolume"
-	HostPath              FSType = "hostPath"
-	EmptyDir              FSType = "emptyDir"
-	GCEPersistentDisk     FSType = "gcePersistentDisk"
-	AWSElasticBlockStore  FSType = "awsElasticBlockStore"
-	GitRepo               FSType = "gitRepo"
-	Secret                FSType = "secret"
-	NFS                   FSType = "nfs"
-	ISCSI                 FSType = "iscsi"
-	Glusterfs             FSType = "glusterfs"
-	PersistentVolumeClaim FSType = "persistentVolumeClaim"
-	RBD                   FSType = "rbd"
-	Cinder                FSType = "cinder"
-	CephFS                FSType = "cephFS"
-	DownwardAPI           FSType = "downwardAPI"
-	FC                    FSType = "fc"
-	ConfigMap             FSType = "configMap"
-	VsphereVolume         FSType = "vsphereVolume"
-	Quobyte               FSType = "quobyte"
-	AzureDisk             FSType = "azureDisk"
-	PhotonPersistentDisk  FSType = "photonPersistentDisk"
-	StorageOS             FSType = "storageos"
-	Projected             FSType = "projected"
-	PortworxVolume        FSType = "portworxVolume"
-	ScaleIO               FSType = "scaleIO"
-	CSI                   FSType = "csi"
-	All                   FSType = "*"
+    AzureFile             string = "azureFile"
+	Flocker               string = "flocker"
+	FlexVolume            string = "flexVolume"
+	HostPath              string = "hostPath"
+	EmptyDir              string = "emptyDir"
+	GCEPersistentDisk     string = "gcePersistentDisk"
+	AWSElasticBlockStore  string = "awsElasticBlockStore"
+	GitRepo               string = "gitRepo"
+	Secret                string = "secret"
+	NFS                   string = "nfs"
+	ISCSI                 string = "iscsi"
+	Glusterfs             string = "glusterfs"
+	PersistentVolumeClaim string = "persistentVolumeClaim"
+	RBD                   string = "rbd"
+	Cinder                string = "cinder"
+	CephFS                string = "cephFS"
+	DownwardAPI           string = "downwardAPI"
+	FC                    string = "fc"
+	ConfigMap             string = "configMap"
+	VsphereVolume         string = "vsphereVolume"
+	Quobyte               string = "quobyte"
+	AzureDisk             string = "azureDisk"
+	PhotonPersistentDisk  string = "photonPersistentDisk"
+	StorageOS             string = "storageos"
+	Projected             string = "projected"
+	PortworxVolume        string = "portworxVolume"
+	ScaleIO               string = "scaleIO"
+	CSI                   string = "csi"
+	All                   string = "*"
 )
 
 var (
@@ -73,7 +73,7 @@ var (
 
 func podSecurityPolicyVolumesFields() *schema.Schema {
 	s := &schema.Schema{
-		Type: schema.TypeString
+		Type: schema.TypeString,
 		ValidateFunc: validation.StringInSlice(fsTypes, true),
 	}
 
