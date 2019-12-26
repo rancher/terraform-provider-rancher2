@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	testPodSecurityPolicyIDRange          []policyv1.IDRange
-	testPodSecurityPolicyIDRangeInterface []interface{}
+	testPodSecurityPolicyIDRangesConf      []policyv1.IDRange
+	testPodSecurityPolicyIDRangesInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyIDRange = []policyv1.IDRange{
+	testPodSecurityPolicyIDRangesConf = []policyv1.IDRange{
 		{
 			Min: int64(1),
 			Max: int64(3000),
@@ -23,7 +23,7 @@ func init() {
 			Max: int64(5000),
 		},
 	}
-	testPodSecurityPolicyIDRangeInterface = []interface{}{
+	testPodSecurityPolicyIDRangesInterface = []interface{}{
 		map[string]interface{}{
 			"min": 1,
 			"max": 3000,
@@ -35,15 +35,15 @@ func init() {
 	}
 }
 
-func TestFlattenPodSecurityPolicyIPRanges(t *testing.T) {
+func TestFlattenPodSecurityPolicyIDRanges(t *testing.T) {
 
 	cases := []struct {
 		Input          []policyv1.IDRange
 		ExpectedOutput []interface{}
 	}{
 		{
-			testPodSecurityPolicyIDRange,
-			testPodSecurityPolicyIDRangeInterface,
+			testPodSecurityPolicyIDRangesConf,
+			testPodSecurityPolicyIDRangesInterface,
 		},
 	}
 
@@ -56,15 +56,15 @@ func TestFlattenPodSecurityPolicyIPRanges(t *testing.T) {
 	}
 }
 
-func TestExpandPodSecurityPolicyIPRanges(t *testing.T) {
+func TestExpandPodSecurityPolicyIDRanges(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
 		ExpectedOutput []policyv1.IDRange
 	}{
 		{
-			testPodSecurityPolicyIDRangeInterface,
-			testPodSecurityPolicyIDRange,
+			testPodSecurityPolicyIDRangesInterface,
+			testPodSecurityPolicyIDRangesConf,
 		},
 	}
 

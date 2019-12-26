@@ -6,7 +6,7 @@ import (
 
 // Flatteners
 
-func flattenPodSecurityPolicySupplementalGroups(in policyv1.SupplementalGroupsStrategyOptions) []interface{} {
+func flattenPodSecurityPolicyFSGroup(in policyv1.FSGroupStrategyOptions) []interface{} {
 
 	obj := make(map[string]interface{})
 
@@ -22,18 +22,18 @@ func flattenPodSecurityPolicySupplementalGroups(in policyv1.SupplementalGroupsSt
 
 // Expanders
 
-func expandPodSecurityPolicySupplementalGroups(supplementalGroups []interface{}) policyv1.SupplementalGroupsStrategyOptions {
+func expandPodSecurityPolicyFSGroup(fsGroup []interface{}) policyv1.FSGroupStrategyOptions {
 
-	obj := policyv1.SupplementalGroupsStrategyOptions{}
+	obj := policyv1.FSGroupStrategyOptions{}
 
-	if len(supplementalGroups) == 0 || supplementalGroups[0] == nil {
+	if len(fsGroup) == 0 || fsGroup[0] == nil {
 		return obj
 	}
 
-	in := supplementalGroups[0].(map[string]interface{})
+	in := fsGroup[0].(map[string]interface{})
 
 	if v, ok := in["rule"].(string); ok {
-		obj.Rule = policyv1.SupplementalGroupsStrategyType(v)
+		obj.Rule = policyv1.FSGroupStrategyType(v)
 	}
 
 	if v, ok := in["ranges"].([]interface{}); ok && len(v) > 0 {

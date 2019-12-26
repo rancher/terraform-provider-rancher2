@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	testPodSecurityPolicyVolumes          []policyv1.FSType
+	testPodSecurityPolicyVolumesConf      []policyv1.FSType
 	testPodSecurityPolicyVolumesSlice     []string
 )
 
 func init() {
-	testPodSecurityPolicyVolumes = []policyv1.FSType{
+	testPodSecurityPolicyVolumesConf = []policyv1.FSType{
 		"hostPath",
 		"emptyDir",
 	}
@@ -30,7 +30,7 @@ func TestFlattenPodSecurityPolicyVolumes(t *testing.T) {
 		ExpectedOutput []string
 	}{
 		{
-			testPodSecurityPolicyVolumes,
+			testPodSecurityPolicyVolumesConf,
 			testPodSecurityPolicyVolumesSlice,
 		},
 	}
@@ -52,7 +52,7 @@ func TestExpandPodSecurityPolicyVolumes(t *testing.T) {
 	}{
 		{
 			testPodSecurityPolicyVolumesSlice,
-			testPodSecurityPolicyVolumes,
+			testPodSecurityPolicyVolumesConf,
 		},
 	}
 
