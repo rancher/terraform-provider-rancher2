@@ -41,7 +41,7 @@ func podSecurityPolicySpecFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Description: "AllowedProcMountTypes is a whitelist of allowed ProcMountTypes. Empty or nil indicates that only the DefaultProcMountType may be used. This requires the ProcMountType feature flag to be enabled.",
 			Optional:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
+			Elem:        podSecurityPolicyProcMountTypeFields(),
 		},
 		"allowed_unsafe_sysctls": {
 			Type:        schema.TypeList,
