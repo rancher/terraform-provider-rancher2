@@ -36,8 +36,6 @@ func podSecurityPolicyRunAsUserFields() map[string]*schema.Schema {
             Description: "rule is the strategy that will dictate the allowable RunAsUser values that may be set.",
 			Required:    true,
 			ValidateFunc: validation.StringInSlice(runAsUserStrategies, true),
-
-		
         },
     }
 
