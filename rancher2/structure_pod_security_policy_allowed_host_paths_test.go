@@ -4,16 +4,16 @@ import (
 	"reflect"
 	"testing"
 
-	policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testPodSecurityPolicyAllowedHostPathsConf      []policyv1.AllowedHostPath
+	testPodSecurityPolicyAllowedHostPathsConf      []managementClient.AllowedHostPath
 	testPodSecurityPolicyAllowedHostPathsInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyAllowedHostPathsConf = []policyv1.AllowedHostPath{
+	testPodSecurityPolicyAllowedHostPathsConf = []managementClient.AllowedHostPath{
         {
             PathPrefix: "/var/lib",
             ReadOnly:   true,
@@ -37,7 +37,7 @@ func init() {
 func TestFlattenPodSecurityPolicyAllowedHostPaths(t *testing.T) {
 
 	cases := []struct {
-		Input          []policyv1.AllowedHostPath
+		Input          []managementClient.AllowedHostPath
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -59,7 +59,7 @@ func TestExpandPodSecurityPolicyAllowedHostPaths(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput []policyv1.AllowedHostPath
+		ExpectedOutput []managementClient.AllowedHostPath
 	}{
 		{
 			testPodSecurityPolicyAllowedHostPathsInterface,

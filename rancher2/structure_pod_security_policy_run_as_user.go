@@ -1,12 +1,12 @@
 package rancher2
 
 import (
-    policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
-func flattenPodSecurityPolicyRunAsUser(in policyv1.RunAsUserStrategyOptions) []interface{} {
+func flattenPodSecurityPolicyRunAsUser(in *managementClient.RunAsUserStrategyOptions) []interface{} {
 
 	obj := make(map[string]interface{})
 
@@ -22,14 +22,14 @@ func flattenPodSecurityPolicyRunAsUser(in policyv1.RunAsUserStrategyOptions) []i
 
 // Expanders
 
-func expandPodSecurityPolicyRunAsUser(in []interface{}) policyv1.RunAsUserStrategyOptions {
+func expandPodSecurityPolicyRunAsUser(in []interface{}) *managementClient.RunAsUserStrategyOptions {
 
-	obj := policyv1.RunAsUserStrategyOptions{}
+	obj := &managementClient.RunAsUserStrategyOptions{}
 
 	m := in[0].(map[string]interface{})
 
 	if v, ok := m["rule"].(string); ok {
-		obj.Rule = policyv1.RunAsUserStrategy(v)
+		obj.Rule = v
 	}
 
 	if v, ok := m["ranges"].([]interface{}); ok && len(v) > 0 {

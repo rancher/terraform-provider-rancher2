@@ -4,18 +4,18 @@ import (
 	"reflect"
 	"testing"
 
-	policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testPodSecurityPolicyIDRanges3Conf      []policyv1.IDRange
-	testPodSecurityPolicyIDRanges3Interface []interface{}
-	testPodSecurityPolicySupplementalGroupsConf          policyv1.SupplementalGroupsStrategyOptions
+	testPodSecurityPolicyIDRanges3Conf               []managementClient.IDRange
+	testPodSecurityPolicyIDRanges3Interface          []interface{}
+	testPodSecurityPolicySupplementalGroupsConf      *managementClient.SupplementalGroupsStrategyOptions
 	testPodSecurityPolicySupplementalGroupsInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyIDRanges3Conf = []policyv1.IDRange{
+	testPodSecurityPolicyIDRanges3Conf = []managementClient.IDRange{
 		{
 			Min: int64(1),
 			Max: int64(3000),
@@ -35,7 +35,7 @@ func init() {
 			"max": 5000,
 		},
 	}
-	testPodSecurityPolicySupplementalGroupsConf = policyv1.SupplementalGroupsStrategyOptions{
+	testPodSecurityPolicySupplementalGroupsConf = &managementClient.SupplementalGroupsStrategyOptions{
 		Rule: "RunAsAny",
 		Ranges: testPodSecurityPolicyIDRanges3Conf,
 	}
@@ -50,7 +50,7 @@ func init() {
 func TestFlattenPodSecurityPolicySupplementalGroups(t *testing.T) {
 
 	cases := []struct {
-		Input          policyv1.SupplementalGroupsStrategyOptions
+		Input          *managementClient.SupplementalGroupsStrategyOptions
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -72,7 +72,7 @@ func TestExpandPodSecurityPolicySupplementalGroups(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput policyv1.SupplementalGroupsStrategyOptions
+		ExpectedOutput *managementClient.SupplementalGroupsStrategyOptions
 	}{
 		{
 			testPodSecurityPolicySupplementalGroupsInterface,

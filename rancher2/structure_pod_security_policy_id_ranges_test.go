@@ -4,16 +4,16 @@ import (
 	"reflect"
 	"testing"
 
-	policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testPodSecurityPolicyIDRangesConf      []policyv1.IDRange
+	testPodSecurityPolicyIDRangesConf      []managementClient.IDRange
 	testPodSecurityPolicyIDRangesInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyIDRangesConf = []policyv1.IDRange{
+	testPodSecurityPolicyIDRangesConf = []managementClient.IDRange{
 		{
 			Min: int64(1),
 			Max: int64(3000),
@@ -38,7 +38,7 @@ func init() {
 func TestFlattenPodSecurityPolicyIDRanges(t *testing.T) {
 
 	cases := []struct {
-		Input          []policyv1.IDRange
+		Input          []managementClient.IDRange
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -60,7 +60,7 @@ func TestExpandPodSecurityPolicyIDRanges(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput []policyv1.IDRange
+		ExpectedOutput []managementClient.IDRange
 	}{
 		{
 			testPodSecurityPolicyIDRangesInterface,

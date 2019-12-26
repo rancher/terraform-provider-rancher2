@@ -1,12 +1,12 @@
 package rancher2
 
 import (
-    policyv1 "k8s.io/api/policy/v1beta1"
+    managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
-func flattenPodSecurityPolicyAllowedHostPaths(in []policyv1.AllowedHostPath) []interface{} {
+func flattenPodSecurityPolicyAllowedHostPaths(in []managementClient.AllowedHostPath) []interface{} {
 
 	out := make([]interface{}, len(in))
 
@@ -24,13 +24,13 @@ func flattenPodSecurityPolicyAllowedHostPaths(in []policyv1.AllowedHostPath) []i
 
 // Expanders
 
-func expandPodSecurityPolicyAllowedHostPaths(in []interface{}) []policyv1.AllowedHostPath {
+func expandPodSecurityPolicyAllowedHostPaths(in []interface{}) []managementClient.AllowedHostPath {
 
-	obj := make([]policyv1.AllowedHostPath, len(in))
+	obj := make([]managementClient.AllowedHostPath, len(in))
 
 	for i, v := range in {
 		if m, ok := v.(map[string]interface{}); ok {
-			hp := policyv1.AllowedHostPath{
+			hp := managementClient.AllowedHostPath{
 				PathPrefix: m["path_prefix"].(string),
 			}
 

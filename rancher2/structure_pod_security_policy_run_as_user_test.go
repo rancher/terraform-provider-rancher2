@@ -4,16 +4,16 @@ import (
 	"reflect"
 	"testing"
 
-	policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testPodSecurityPolicyRunAsUserConf      policyv1.RunAsUserStrategyOptions
+	testPodSecurityPolicyRunAsUserConf      *managementClient.RunAsUserStrategyOptions
 	testPodSecurityPolicyRunAsUserInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyRunAsUserConf = policyv1.RunAsUserStrategyOptions{
+	testPodSecurityPolicyRunAsUserConf = &managementClient.RunAsUserStrategyOptions{
 		Rule: "RunAsAny",
 		Ranges: testPodSecurityPolicyIDRangesConf,
 	}
@@ -28,7 +28,7 @@ func init() {
 func TestFlattenPodSecurityPolicyRunAsUser(t *testing.T) {
 
 	cases := []struct {
-		Input          policyv1.RunAsUserStrategyOptions
+		Input          *managementClient.RunAsUserStrategyOptions
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -51,7 +51,7 @@ func TestExpandPodSecurityPolicyRunAsUser(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput policyv1.RunAsUserStrategyOptions
+		ExpectedOutput *managementClient.RunAsUserStrategyOptions
 	}{
 		{
 			testPodSecurityPolicyRunAsUserInterface,

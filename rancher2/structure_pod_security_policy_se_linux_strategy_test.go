@@ -4,16 +4,16 @@ import (
 	"reflect"
 	"testing"
 
-	policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testPodSecurityPolicySELinuxStrategyConf      policyv1.SELinuxStrategyOptions
+	testPodSecurityPolicySELinuxStrategyConf      *managementClient.SELinuxStrategyOptions
 	testPodSecurityPolicySELinuxStrategyInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicySELinuxStrategyConf = policyv1.SELinuxStrategyOptions{
+	testPodSecurityPolicySELinuxStrategyConf = &managementClient.SELinuxStrategyOptions{
 		Rule: "RunAsAny",
 		SELinuxOptions: testPodSecurityPolicySELinuxOptionsConf,
 	}
@@ -28,7 +28,7 @@ func init() {
 func TestFlattenPodSecurityPolicySELinuxStrategy(t *testing.T) {
 
 	cases := []struct {
-		Input          policyv1.SELinuxStrategyOptions
+		Input          *managementClient.SELinuxStrategyOptions
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -50,7 +50,7 @@ func TestExpandPodSecurityPolicySELinuxStrategy(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput policyv1.SELinuxStrategyOptions
+		ExpectedOutput *managementClient.SELinuxStrategyOptions
 	}{
 		{
 			testPodSecurityPolicySELinuxStrategyInterface,

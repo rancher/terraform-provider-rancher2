@@ -1,12 +1,12 @@
 package rancher2
 
 import (
-    policyv1 "k8s.io/api/policy/v1beta1"
+    managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
-func flattenPodSecurityPolicyIDRanges(in []policyv1.IDRange) []interface{} {
+func flattenPodSecurityPolicyIDRanges(in []managementClient.IDRange) []interface{} {
 
 	out := make([]interface{}, len(in))
 	
@@ -22,13 +22,13 @@ func flattenPodSecurityPolicyIDRanges(in []policyv1.IDRange) []interface{} {
 
 // Expanders
 
-func expandPodSecurityPolicyIDRanges(in []interface{}) []policyv1.IDRange {
+func expandPodSecurityPolicyIDRanges(in []interface{}) []managementClient.IDRange {
 
-	obj := make([]policyv1.IDRange, len(in))
+	obj := make([]managementClient.IDRange, len(in))
 
 	for i, v := range in {
 		if m, ok := v.(map[string]interface{}); ok {
-			obj[i] = policyv1.IDRange{
+			obj[i] = managementClient.IDRange{
 				Min: int64(m["min"].(int)),
 				Max: int64(m["max"].(int)),
 			}

@@ -1,12 +1,12 @@
 package rancher2
 
 import (
-    v1 "k8s.io/api/core/v1"
+    managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
-func flattenPodSecurityPolicySELinuxOptions(in *v1.SELinuxOptions) []interface{} {
+func flattenPodSecurityPolicySELinuxOptions(in *managementClient.SELinuxOptions) []interface{} {
 	
 	obj := make(map[string]interface{})
 
@@ -31,9 +31,9 @@ func flattenPodSecurityPolicySELinuxOptions(in *v1.SELinuxOptions) []interface{}
 
 // Expanders
 
-func expandPodSecurityPolicySELinuxOptions(in []interface{}) *v1.SELinuxOptions {
+func expandPodSecurityPolicySELinuxOptions(in []interface{}) *managementClient.SELinuxOptions {
 
-	obj := &v1.SELinuxOptions{}
+	obj := &managementClient.SELinuxOptions{}
 
 	m := in[0].(map[string]interface{})
 

@@ -1,17 +1,17 @@
 package rancher2
 
 import (
-    policyv1 "k8s.io/api/policy/v1beta1"
+    managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
-func flattenPodSecurityPolicySELinuxStrategy(in policyv1.SELinuxStrategyOptions) []interface{} {
+func flattenPodSecurityPolicySELinuxStrategy(in *managementClient.SELinuxStrategyOptions) []interface{} {
 	
 	obj := make(map[string]interface{})
 
 	if len(in.Rule) > 0 {
-		obj["rule"] = string(in.Rule)
+		obj["rule"] = in.Rule
 	}
     if in.SELinuxOptions != nil {
 	    obj["se_linux_options"] = flattenPodSecurityPolicySELinuxOptions(in.SELinuxOptions)
@@ -22,14 +22,14 @@ func flattenPodSecurityPolicySELinuxStrategy(in policyv1.SELinuxStrategyOptions)
 
 // Expanders
 
-func expandPodSecurityPolicySELinuxStrategy(in []interface{}) policyv1.SELinuxStrategyOptions {
+func expandPodSecurityPolicySELinuxStrategy(in []interface{}) *managementClient.SELinuxStrategyOptions {
 
-	obj := policyv1.SELinuxStrategyOptions{}
+	obj := &managementClient.SELinuxStrategyOptions{}
 
 	m := in[0].(map[string]interface{})
 
 	if v, ok := m["rule"].(string); ok {
-		obj.Rule = policyv1.SELinuxStrategy(v)
+		obj.Rule = v
 	}
 
 	if v, ok := m["se_linux_options"].([]interface{}); ok && len(v) > 0 {

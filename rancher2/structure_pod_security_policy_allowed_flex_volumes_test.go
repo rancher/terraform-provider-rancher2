@@ -4,16 +4,16 @@ import (
 	"reflect"
 	"testing"
 
-	policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testPodSecurityPolicyAllowedFlexVolumesConf      []policyv1.AllowedFlexVolume
+	testPodSecurityPolicyAllowedFlexVolumesConf      []managementClient.AllowedFlexVolume
 	testPodSecurityPolicyAllowedFlexVolumesInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyAllowedFlexVolumesConf = []policyv1.AllowedFlexVolume{
+	testPodSecurityPolicyAllowedFlexVolumesConf = []managementClient.AllowedFlexVolume{
         {
             Driver: "foo",
         },
@@ -34,7 +34,7 @@ func init() {
 func TestFlattenPodSecurityPolicyAllowedFlexVolumes(t *testing.T) {
 
 	cases := []struct {
-		Input          []policyv1.AllowedFlexVolume
+		Input          []managementClient.AllowedFlexVolume
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -56,7 +56,7 @@ func TestExpandPodSecurityPolicyAllowedFlexVolumes(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput []policyv1.AllowedFlexVolume
+		ExpectedOutput []managementClient.AllowedFlexVolume
 	}{
 		{
 			testPodSecurityPolicyAllowedFlexVolumesInterface,

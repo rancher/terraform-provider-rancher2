@@ -1,12 +1,12 @@
 package rancher2
 
 import (
-    policyv1 "k8s.io/api/policy/v1beta1"
+    managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
-func flattenPodSecurityPolicySpec(in *policyv1.PodSecurityPolicySpec) []interface{} {
+func flattenPodSecurityPolicySpec(in *managementClient.PodSecurityPolicySpec) []interface{} {
     spec := make(map[string]interface{})
 
     if in.AllowPrivilegeEscalation != nil {
@@ -14,7 +14,7 @@ func flattenPodSecurityPolicySpec(in *policyv1.PodSecurityPolicySpec) []interfac
 	}
 
 	if len(in.AllowedCapabilities) > 0 {
-		spec["allowed_capabilities"] = flattenPodSecurityPolicyCapabilities(in.AllowedCapabilities)
+		spec["allowed_capabilities"] = toArrayInterface(in.AllowedCapabilities)
 	}
 
 	if len(in.AllowedFlexVolumes) > 0 {
@@ -26,7 +26,7 @@ func flattenPodSecurityPolicySpec(in *policyv1.PodSecurityPolicySpec) []interfac
 	}
 
 	if len(in.AllowedProcMountTypes) > 0 {
-		spec["allowed_proc_mount_types"] = flattenPodSecurityPolicyAllowedProcMountTypes(in.AllowedProcMountTypes)
+		spec["allowed_proc_mount_types"] = toArrayInterface(in.AllowedProcMountTypes)
 	}
 
 	if len(in.AllowedUnsafeSysctls) > 0 {
@@ -34,7 +34,7 @@ func flattenPodSecurityPolicySpec(in *policyv1.PodSecurityPolicySpec) []interfac
 	}
 
 	if len(in.DefaultAddCapabilities) > 0 {
-		spec["default_add_capabilities"] = flattenPodSecurityPolicyCapabilities(in.DefaultAddCapabilities)
+		spec["default_add_capabilities"] = toArrayInterface(in.DefaultAddCapabilities)
 	}
 
 	if in.DefaultAllowPrivilegeEscalation != nil {
@@ -58,7 +58,7 @@ func flattenPodSecurityPolicySpec(in *policyv1.PodSecurityPolicySpec) []interfac
 	spec["read_only_root_filesystem"] = in.ReadOnlyRootFilesystem
 
 	if len(in.RequiredDropCapabilities) > 0 {
-		spec["required_drop_capabilities"] = flattenPodSecurityPolicyCapabilities(in.RequiredDropCapabilities)
+		spec["required_drop_capabilities"] = toArrayInterface(in.RequiredDropCapabilities)
 	}
 
 	spec["run_as_user"] = flattenPodSecurityPolicyRunAsUser(in.RunAsUser)
@@ -69,13 +69,13 @@ func flattenPodSecurityPolicySpec(in *policyv1.PodSecurityPolicySpec) []interfac
 
 	spec["se_linux"] = flattenPodSecurityPolicySELinuxStrategy(in.SELinux)
 	spec["supplemental_groups"] = flattenPodSecurityPolicySupplementalGroups(in.SupplementalGroups)
-	spec["volumes"] = flattenPodSecurityPolicyVolumes(in.Volumes)
+	spec["volumes"] = toArrayInterface(in.Volumes)
 
     return []interface{}{spec}
 }
 
-func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySpec {
-	spec := &policyv1.PodSecurityPolicySpec{}
+func expandPodSecurityPolicySpec(in []interface{}) *managementClient.PodSecurityPolicySpec {
+	spec := &managementClient.PodSecurityPolicySpec{}
 	if len(in) == 0 || in[0] == nil {
 		return spec
 	}
@@ -90,7 +90,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 	}
 
 	if v, ok := m["allowed_capabilities"].([]interface{}); ok && len(v) > 0 {
-		spec.AllowedCapabilities = expandPodSecurityPolicyCapabilities(v)
+		spec.AllowedCapabilities = toArrayString(v)
 	}
 
 	if v, ok := m["allowed_flex_volumes"].([]interface{}); ok && len(v) > 0 {
@@ -102,7 +102,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 	}
 
 	if v, ok := m["allowed_proc_mount_types"].([]interface{}); ok && len(v) > 0 {
-		spec.AllowedProcMountTypes = expandPodSecurityPolicyAllowedProcMountTypes(v)
+		spec.AllowedProcMountTypes = toArrayString(v)
 	}
 
 	if v, ok := m["allowed_unsafe_sysctls"].([]interface{}); ok && len(v) > 0 {
@@ -110,7 +110,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 	}
 
 	if v, ok := m["default_add_capabilities"].([]interface{}); ok && len(v) > 0 {
-		spec.DefaultAddCapabilities = expandPodSecurityPolicyCapabilities(v)
+		spec.DefaultAddCapabilities = toArrayString(v)
 	}
 
 	if v, ok := m["default_allow_privilege_escalation"].(bool); ok {
@@ -150,7 +150,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 	}
 
 	if v, ok := m["required_drop_capabilities"].([]interface{}); ok && len(v) > 0 {
-		spec.RequiredDropCapabilities = expandPodSecurityPolicyCapabilities(v)
+		spec.RequiredDropCapabilities = toArrayString(v)
 	}
 
 	if v, ok := m["run_as_user"].([]interface{}); ok && len(v) > 0 {
@@ -170,7 +170,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 	}
 
 	if v, ok := m["volumes"].([]interface{}); ok && len(v) > 0 {
-		spec.Volumes = expandPodSecurityPolicyVolumes(v)
+		spec.Volumes = toArrayString(v)
 	}
 
 	return spec

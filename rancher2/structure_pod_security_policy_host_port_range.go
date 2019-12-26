@@ -1,12 +1,12 @@
 package rancher2
 
 import (
-    policyv1 "k8s.io/api/policy/v1beta1"
+    managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
-func flattenPodSecurityPolicyHostPortRanges(in []policyv1.HostPortRange) []interface{} {
+func flattenPodSecurityPolicyHostPortRanges(in []managementClient.HostPortRange) []interface{} {
 
 	out := make([]interface{}, len(in))
 
@@ -23,15 +23,15 @@ func flattenPodSecurityPolicyHostPortRanges(in []policyv1.HostPortRange) []inter
 
 // Expanders
 
-func expandPodSecurityPolicyHostPortRanges(in []interface{}) []policyv1.HostPortRange {
+func expandPodSecurityPolicyHostPortRanges(in []interface{}) []managementClient.HostPortRange {
 
-	obj := make([]policyv1.HostPortRange, len(in))
+	obj := make([]managementClient.HostPortRange, len(in))
 
 	for i, v := range in {
 		if m, ok := v.(map[string]interface{}); ok {
-			obj[i] = policyv1.HostPortRange{
-				Min: int32(m["min"].(int)),
-				Max: int32(m["max"].(int)),
+			obj[i] = managementClient.HostPortRange{
+				Min: int64(m["min"].(int)),
+				Max: int64(m["max"].(int)),
 			}
 		}
 	}

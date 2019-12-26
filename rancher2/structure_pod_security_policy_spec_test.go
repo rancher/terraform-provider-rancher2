@@ -4,21 +4,21 @@ import (
 	"reflect"
 	"testing"
 
-	policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
 	testPodSecurityPolicyBool                         bool
-	testPodSecurityPolicySpecConf                     *policyv1.PodSecurityPolicySpec
+	testPodSecurityPolicySpecConf                     *managementClient.PodSecurityPolicySpec
 	testPodSecurityPolicySpecInterface                []interface{}
-	testPodSecurityPolicySupplementalGroups2Conf      policyv1.SupplementalGroupsStrategyOptions
+	testPodSecurityPolicySupplementalGroups2Conf      *managementClient.SupplementalGroupsStrategyOptions
 	testPodSecurityPolicySupplementalGroups2Interface []interface{}
-	testPodSecurityPolicyIDRanges4Conf                []policyv1.IDRange
+	testPodSecurityPolicyIDRanges4Conf                []managementClient.IDRange
 	testPodSecurityPolicyIDRanges4Interface           []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyIDRanges4Conf = []policyv1.IDRange{
+	testPodSecurityPolicyIDRanges4Conf = []managementClient.IDRange{
 		{
 			Min: int64(1),
 			Max: int64(3000),
@@ -38,7 +38,7 @@ func init() {
 			"max": 5000,
 		},
 	}
-	testPodSecurityPolicySupplementalGroups2Conf = policyv1.SupplementalGroupsStrategyOptions{
+	testPodSecurityPolicySupplementalGroups2Conf = &managementClient.SupplementalGroupsStrategyOptions{
 		Rule: "RunAsAny",
 		Ranges: testPodSecurityPolicyIDRanges4Conf,
 	}
@@ -50,12 +50,12 @@ func init() {
 	}
 
 	testPodSecurityPolicyBool = true
-	testPodSecurityPolicySpecConf = &policyv1.PodSecurityPolicySpec{
+	testPodSecurityPolicySpecConf = &managementClient.PodSecurityPolicySpec{
 		Privileged: true,
-		DefaultAddCapabilities: testPodSecurityPolicyCapabilitiesConf,	
-		RequiredDropCapabilities: testPodSecurityPolicyCapabilitiesConf,
-		AllowedCapabilities: testPodSecurityPolicyCapabilitiesConf,
-		Volumes: []policyv1.FSType{"hostPath", "emptyDir"},
+		DefaultAddCapabilities: []string{"NET_ADMIN"},
+		RequiredDropCapabilities: []string{"NET_ADMIN"},
+		AllowedCapabilities: []string{"NET_ADMIN"},
+		Volumes: []string{"hostPath", "emptyDir"},
 		HostNetwork: true,
 		HostPorts: testPodSecurityPolicyHostPortRangesConf,
 		HostPID: false,
@@ -72,15 +72,15 @@ func init() {
 		AllowedFlexVolumes: testPodSecurityPolicyAllowedFlexVolumesConf,
 		AllowedUnsafeSysctls: []string{"foo", "bar"},
 		ForbiddenSysctls: []string{"foo", "bar"},
-		AllowedProcMountTypes: testPodSecurityPolicyAllowedProcMountTypesConf,
+		AllowedProcMountTypes: []string{"Default", "Unmasked"},
 	}
 	testPodSecurityPolicySpecInterface = []interface{}{
 		map[string]interface{}{
 			"privileged": true,
-			"default_add_capabilities": testPodSecurityPolicyCapabilitiesSlice,
-			"required_drop_capabilities": testPodSecurityPolicyCapabilitiesSlice,
-			"allowed_capabilities": testPodSecurityPolicyCapabilitiesSlice,
-			"volumes": []interface{}{"hostPath", "emptyDir"},
+			"default_add_capabilities": toArrayInterface([]string{"NET_ADMIN"}),
+			"required_drop_capabilities": toArrayInterface([]string{"NET_ADMIN"}),
+			"allowed_capabilities": toArrayInterface([]string{"NET_ADMIN"}),
+			"volumes": toArrayInterface([]string{"hostPath", "emptyDir"}),
 			"host_network": true,
 			"host_ports": testPodSecurityPolicyHostPortRangesInterface,
 			"host_pid": false,
@@ -97,7 +97,7 @@ func init() {
 			"allowed_flex_volumes": testPodSecurityPolicyAllowedFlexVolumesInterface,
 			"allowed_unsafe_sysctls": toArrayInterface([]string{"foo", "bar"}),
 			"forbidden_sysctls": toArrayInterface([]string{"foo", "bar"}),
-			"allowed_proc_mount_types": testPodSecurityPolicyAllowedProcMountTypesSlice,
+			"allowed_proc_mount_types": toArrayInterface([]string{"Default", "Unmasked"}),
 		},
 	}
 }
@@ -105,7 +105,7 @@ func init() {
 func TestFlattenPodSecurityPolicySpec(t *testing.T) {
 
 	cases := []struct {
-		Input          *policyv1.PodSecurityPolicySpec
+		Input          *managementClient.PodSecurityPolicySpec
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -127,7 +127,7 @@ func TestExpandPodSecurityPolicySpec(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput *policyv1.PodSecurityPolicySpec
+		ExpectedOutput *managementClient.PodSecurityPolicySpec
 	}{
 		{
 			testPodSecurityPolicySpecInterface,

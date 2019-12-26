@@ -1,17 +1,17 @@
 package rancher2
 
 import (
-    policyv1 "k8s.io/api/policy/v1beta1"
+    managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
-func flattenPodSecurityPolicySupplementalGroups(in policyv1.SupplementalGroupsStrategyOptions) []interface{} {
+func flattenPodSecurityPolicySupplementalGroups(in *managementClient.SupplementalGroupsStrategyOptions) []interface{} {
 
 	obj := make(map[string]interface{})
 
 	if len(in.Rule) > 0 {
-		obj["rule"] = string(in.Rule)
+		obj["rule"] = in.Rule
 	}
     if len(in.Ranges) > 0 {
 	    obj["ranges"] = flattenPodSecurityPolicyIDRanges(in.Ranges)
@@ -22,14 +22,14 @@ func flattenPodSecurityPolicySupplementalGroups(in policyv1.SupplementalGroupsSt
 
 // Expanders
 
-func expandPodSecurityPolicySupplementalGroups(in []interface{}) policyv1.SupplementalGroupsStrategyOptions {
+func expandPodSecurityPolicySupplementalGroups(in []interface{}) *managementClient.SupplementalGroupsStrategyOptions {
 
-	obj := policyv1.SupplementalGroupsStrategyOptions{}
+	obj := &managementClient.SupplementalGroupsStrategyOptions{}
 
 	m := in[0].(map[string]interface{})
 
 	if v, ok := m["rule"].(string); ok {
-		obj.Rule = policyv1.SupplementalGroupsStrategyType(v)
+		obj.Rule = v
 	}
 
 	if v, ok := m["ranges"].([]interface{}); ok && len(v) > 0 {

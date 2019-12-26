@@ -4,18 +4,18 @@ import (
 	"reflect"
 	"testing"
 
-	policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testPodSecurityPolicyIDRanges2Conf      []policyv1.IDRange
+	testPodSecurityPolicyIDRanges2Conf      []managementClient.IDRange
 	testPodSecurityPolicyIDRanges2Interface []interface{}
-	testPodSecurityPolicyFSGroupConf      policyv1.FSGroupStrategyOptions
+	testPodSecurityPolicyFSGroupConf      *managementClient.FSGroupStrategyOptions
 	testPodSecurityPolicyFSGroupInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyIDRanges2Conf = []policyv1.IDRange{
+	testPodSecurityPolicyIDRanges2Conf = []managementClient.IDRange{
 		{
 			Min: int64(1),
 			Max: int64(3000),
@@ -35,7 +35,7 @@ func init() {
 			"max": 5000,
 		},
 	}
-    testPodSecurityPolicyFSGroupConf = policyv1.FSGroupStrategyOptions{
+    testPodSecurityPolicyFSGroupConf = &managementClient.FSGroupStrategyOptions{
 		Rule: "RunAsAny",
 		Ranges: testPodSecurityPolicyIDRanges2Conf,
 	}
@@ -50,7 +50,7 @@ func init() {
 func TestFlattenPodSecurityPolicyFSGroup(t *testing.T) {
 
 	cases := []struct {
-		Input          policyv1.FSGroupStrategyOptions
+		Input          *managementClient.FSGroupStrategyOptions
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -72,7 +72,7 @@ func TestExpandPodSecurityPolicyFSGroup(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput policyv1.FSGroupStrategyOptions
+		ExpectedOutput *managementClient.FSGroupStrategyOptions
 	}{
 		{
 			testPodSecurityPolicyFSGroupInterface,

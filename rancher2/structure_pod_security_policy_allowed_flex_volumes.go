@@ -1,19 +1,19 @@
 package rancher2
 
 import (
-    policyv1 "k8s.io/api/policy/v1beta1"
+    managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
-func flattenPodSecurityPolicyAllowedFlexVolumes(in []policyv1.AllowedFlexVolume) []interface{} {
+func flattenPodSecurityPolicyAllowedFlexVolumes(in []managementClient.AllowedFlexVolume) []interface{} {
 
 	out := make([]interface{}, len(in))
 
 	for i, v := range in {
         obj := make(map[string]interface{})
 
-		obj["driver"] = string(v.Driver)
+		obj["driver"] = v.Driver
 		
 		out[i] = obj
 	}
@@ -23,13 +23,13 @@ func flattenPodSecurityPolicyAllowedFlexVolumes(in []policyv1.AllowedFlexVolume)
 
 // Expanders
 
-func expandPodSecurityPolicyAllowedFlexVolumes(in []interface{}) []policyv1.AllowedFlexVolume {
+func expandPodSecurityPolicyAllowedFlexVolumes(in []interface{}) []managementClient.AllowedFlexVolume {
 
-	obj := make([]policyv1.AllowedFlexVolume, len(in))
+	obj := make([]managementClient.AllowedFlexVolume, len(in))
 
 	for i, v := range in {
 		if m, ok := v.(map[string]interface{}); ok {
-			obj[i] = policyv1.AllowedFlexVolume{
+			obj[i] = managementClient.AllowedFlexVolume{
 				Driver: m["driver"].(string),
 			}
 		}

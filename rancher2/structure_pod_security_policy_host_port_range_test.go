@@ -4,16 +4,16 @@ import (
 	"reflect"
 	"testing"
 
-	policyv1 "k8s.io/api/policy/v1beta1"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 var (
-	testPodSecurityPolicyHostPortRangesConf      []policyv1.HostPortRange
+	testPodSecurityPolicyHostPortRangesConf      []managementClient.HostPortRange
 	testPodSecurityPolicyHostPortRangesInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyHostPortRangesConf = []policyv1.HostPortRange{
+	testPodSecurityPolicyHostPortRangesConf = []managementClient.HostPortRange{
 		{
 			Min: 1,
 			Max: 3000,
@@ -38,7 +38,7 @@ func init() {
 func TestFlattenPodSecurityPolicyHostPortRanges(t *testing.T) {
 
 	cases := []struct {
-		Input          []policyv1.HostPortRange
+		Input          []managementClient.HostPortRange
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -60,7 +60,7 @@ func TestExpandPodSecurityPolicyHostPortRanges(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput []policyv1.HostPortRange
+		ExpectedOutput []managementClient.HostPortRange
 	}{
 		{
 			testPodSecurityPolicyHostPortRangesInterface,
