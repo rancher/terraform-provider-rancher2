@@ -6,14 +6,12 @@ import (
 
 // Flatteners
 
-func flattenPodSecurityPolicyVolumes(v []policyv1.FSType) []string {
-	if len(v) == 0 {
-		return []string{}
-	}
-
-	out := make([]string, len(v))
-	for i, in := range v {
-		out[i] = string(in)
+func flattenPodSecurityPolicyVolumes(in []policyv1.FSType) []interface{} {
+	
+	out := make([]interface{}, len(in))
+	
+	for i, v := range in {
+		out[i] = string(v)
 	}
 	
 	return out
@@ -21,16 +19,14 @@ func flattenPodSecurityPolicyVolumes(v []policyv1.FSType) []string {
 
 // Expanders
 
-func expandPodSecurityPolicyVolumes(v []string) []policyv1.FSType {
+func expandPodSecurityPolicyVolumes(in []interface{}) []policyv1.FSType {
 
-	if len(v) == 0 {
-		return []policyv1.FSType{}
-	}
+	obj := make([]policyv1.FSType, len(in))
 
-	obj := make([]policyv1.FSType, len(v))
-
-    for i, in := range v {
-        obj[i] = policyv1.FSType(in)
+    for i, v := range in {
+		if s, ok := v.(string); ok {
+			obj[i] = policyv1.FSType(s)
+		}
 	}
 
 	return obj

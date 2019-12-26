@@ -9,7 +9,7 @@ import (
 
 var (
 	testPodSecurityPolicyAllowedProcMountTypesConf      []v1.ProcMountType
-	testPodSecurityPolicyAllowedProcMountTypesSlice     []string
+	testPodSecurityPolicyAllowedProcMountTypesSlice     []interface{}
 )
 
 func init() {
@@ -17,7 +17,7 @@ func init() {
 		"Default",
 		"Unmasked",
 	}
-	testPodSecurityPolicyAllowedProcMountTypesSlice = []string{
+	testPodSecurityPolicyAllowedProcMountTypesSlice = []interface{}{
 		"Default",
 		"Unmasked",
 	}
@@ -27,7 +27,7 @@ func TestFlattenPodSecurityAllowedProcMountTypes(t *testing.T) {
 
 	cases := []struct {
 		Input          []v1.ProcMountType
-		ExpectedOutput []string
+		ExpectedOutput []interface{}
 	}{
 		{
 			testPodSecurityPolicyAllowedProcMountTypesConf,
@@ -47,7 +47,7 @@ func TestFlattenPodSecurityAllowedProcMountTypes(t *testing.T) {
 func TestExpandPodSecurityAllowedProcMountTypes(t *testing.T) {
 
 	cases := []struct {
-		Input          []string
+		Input          []interface{}
 		ExpectedOutput []v1.ProcMountType
 	}{
 		{

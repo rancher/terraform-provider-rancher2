@@ -6,12 +6,10 @@ import (
 
 // Flatteners
 
-func flattenPodSecurityPolicyAllowedProcMountTypes(p []v1.ProcMountType) []string {
-	if len(p) == 0 {
-		return []string{}
-	}
+func flattenPodSecurityPolicyAllowedProcMountTypes(p []v1.ProcMountType) []interface{} {
 
-	out := make([]string, len(p))
+	out := make([]interface{}, len(p))
+
 	for i, in := range p {
 		out[i] = string(in)
 	}
@@ -21,16 +19,14 @@ func flattenPodSecurityPolicyAllowedProcMountTypes(p []v1.ProcMountType) []strin
 
 // Expanders
 
-func expandPodSecurityPolicyAllowedProcMountTypes(p []string) []v1.ProcMountType {
-
-	if len(p) == 0 {
-		return []v1.ProcMountType{}
-	}
+func expandPodSecurityPolicyAllowedProcMountTypes(p []interface{}) []v1.ProcMountType {
 
 	obj := make([]v1.ProcMountType, len(p))
 
     for i, in := range p {
-        obj[i] = v1.ProcMountType(in)
+		if s, ok := in.(string); ok {
+			obj[i] = v1.ProcMountType(s)
+		}
 	}
 
 	return obj

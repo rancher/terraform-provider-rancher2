@@ -6,16 +6,14 @@ import (
 
 // Flatteners
 
-func flattenPodSecurityPolicyAllowedFlexVolumes(fv []policyv1.AllowedFlexVolume) []interface{} {
-	if len(fv) == 0 {
-		return []interface{}{}
-	}
+func flattenPodSecurityPolicyAllowedFlexVolumes(in []policyv1.AllowedFlexVolume) []interface{} {
 
-	out := make([]interface{}, len(fv))
-	for i, in := range fv {
+	out := make([]interface{}, len(in))
+
+	for i, v := range in {
         obj := make(map[string]interface{})
 
-		obj["driver"] = string(in.Driver)
+		obj["driver"] = string(v.Driver)
 		
 		out[i] = obj
 	}
@@ -25,17 +23,16 @@ func flattenPodSecurityPolicyAllowedFlexVolumes(fv []policyv1.AllowedFlexVolume)
 
 // Expanders
 
-func expandPodSecurityPolicyAllowedFlexVolumes(fv []interface{}) []policyv1.AllowedFlexVolume {
-	if len(fv) == 0 || fv[0] == nil {
-		return []policyv1.AllowedFlexVolume{}
-	}
+func expandPodSecurityPolicyAllowedFlexVolumes(in []interface{}) []policyv1.AllowedFlexVolume {
 
-	obj := make([]policyv1.AllowedFlexVolume, len(fv))
+	obj := make([]policyv1.AllowedFlexVolume, len(in))
 
-	for i := range fv {
-		in := fv[i].(map[string]interface{})
-
-		obj[i].Driver = in["driver"].(string)
+	for i, v := range in {
+		if m, ok := v.(map[string]interface{}); ok {
+			obj[i] = policyv1.AllowedFlexVolume{
+				Driver: m["driver"].(string),
+			}
+		}
 	}
 
 	return obj

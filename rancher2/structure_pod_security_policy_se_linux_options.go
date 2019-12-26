@@ -8,10 +8,6 @@ import (
 
 func flattenPodSecurityPolicySELinuxOptions(in *v1.SELinuxOptions) []interface{} {
 	
-	if in == nil {
-		return []interface{}{}
-	}
-
 	obj := make(map[string]interface{})
 
 	if len(in.User) > 0 {
@@ -35,29 +31,25 @@ func flattenPodSecurityPolicySELinuxOptions(in *v1.SELinuxOptions) []interface{}
 
 // Expanders
 
-func expandPodSecurityPolicySELinuxOptions(selinuxOptions []interface{}) *v1.SELinuxOptions {
+func expandPodSecurityPolicySELinuxOptions(in []interface{}) *v1.SELinuxOptions {
 
 	obj := &v1.SELinuxOptions{}
 
-	if len(selinuxOptions) == 0 || selinuxOptions[0] == nil {
-		return obj
-	}
+	m := in[0].(map[string]interface{})
 
-	in := selinuxOptions[0].(map[string]interface{})
-
-	if v, ok := in["user"].(string); ok {
+	if v, ok := m["user"].(string); ok {
 		obj.User = v
 	}
 
-	if v, ok := in["role"].(string); ok {
+	if v, ok := m["role"].(string); ok {
 		obj.Role = v
 	}
 
-    if v, ok := in["type"].(string); ok {
+    if v, ok := m["type"].(string); ok {
 		obj.Type = v
 	}
 
-    if v, ok := in["level"].(string); ok {
+    if v, ok := m["level"].(string); ok {
 		obj.Level = v
 	}
 

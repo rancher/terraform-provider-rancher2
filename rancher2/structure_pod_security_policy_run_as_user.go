@@ -22,21 +22,17 @@ func flattenPodSecurityPolicyRunAsUser(in policyv1.RunAsUserStrategyOptions) []i
 
 // Expanders
 
-func expandPodSecurityPolicyRunAsUser(runAsUser []interface{}) policyv1.RunAsUserStrategyOptions {
+func expandPodSecurityPolicyRunAsUser(in []interface{}) policyv1.RunAsUserStrategyOptions {
 
 	obj := policyv1.RunAsUserStrategyOptions{}
 
-	if len(runAsUser) == 0 || runAsUser[0] == nil {
-		return obj
-	}
+	m := in[0].(map[string]interface{})
 
-	in := runAsUser[0].(map[string]interface{})
-
-	if v, ok := in["rule"].(string); ok {
+	if v, ok := m["rule"].(string); ok {
 		obj.Rule = policyv1.RunAsUserStrategy(v)
 	}
 
-	if v, ok := in["ranges"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ranges"].([]interface{}); ok && len(v) > 0 {
 		obj.Ranges = expandPodSecurityPolicyIDRanges(v)
 	}
 

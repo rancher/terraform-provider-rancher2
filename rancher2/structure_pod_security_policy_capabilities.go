@@ -6,12 +6,10 @@ import (
 
 // Flatteners
 
-func flattenPodSecurityPolicyCapabilities(v []v1.Capability) []string {
-	if len(v) == 0 {
-		return []string{}
-	}
+func flattenPodSecurityPolicyCapabilities(v []v1.Capability) []interface{} {
+	
+	out := make([]interface{}, len(v))
 
-	out := make([]string, len(v))
 	for i, in := range v {
 		out[i] = string(in)
 	}
@@ -21,17 +19,15 @@ func flattenPodSecurityPolicyCapabilities(v []v1.Capability) []string {
 
 // Expanders
 
-func expandPodSecurityPolicyCapabilities(v []string) []v1.Capability {
-
-	if len(v) == 0 {
-		return []v1.Capability{}
-	}
+func expandPodSecurityPolicyCapabilities(v []interface{}) []v1.Capability {
 
 	obj := make([]v1.Capability, len(v))
 
     for i, in := range v {
-        obj[i] = v1.Capability(in)
+		if s, ok := in.(string); ok {
+			obj[i] = v1.Capability(s)
+		}
 	}
-
+	
 	return obj
 }

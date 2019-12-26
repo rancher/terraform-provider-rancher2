@@ -6,17 +6,15 @@ import (
 
 // Flatteners
 
-func flattenPodSecurityPolicyAllowedHostPaths(hp []policyv1.AllowedHostPath) []interface{} {
-	if len(hp) == 0 {
-		return []interface{}{}
-	}
+func flattenPodSecurityPolicyAllowedHostPaths(in []policyv1.AllowedHostPath) []interface{} {
 
-	out := make([]interface{}, len(hp))
-	for i, in := range hp {
+	out := make([]interface{}, len(in))
+
+	for i, v := range in {
         obj := make(map[string]interface{})
 
-        obj["path_prefix"] = in.PathPrefix
-		obj["read_only"] = in.ReadOnly
+        obj["path_prefix"] = v.PathPrefix
+		obj["read_only"] = v.ReadOnly
 
 		out[i] = obj
 	}
@@ -26,23 +24,22 @@ func flattenPodSecurityPolicyAllowedHostPaths(hp []policyv1.AllowedHostPath) []i
 
 // Expanders
 
-func expandPodSecurityPolicyAllowedHostPaths(hp []interface{}) []policyv1.AllowedHostPath {
+func expandPodSecurityPolicyAllowedHostPaths(in []interface{}) []policyv1.AllowedHostPath {
 
-	if len(hp) == 0 || hp[0] == nil {
-		return []policyv1.AllowedHostPath{}
-	}
+	obj := make([]policyv1.AllowedHostPath, len(in))
 
-	obj := make([]policyv1.AllowedHostPath, len(hp))
+	for i, v := range in {
+		if m, ok := v.(map[string]interface{}); ok {
+			hp := policyv1.AllowedHostPath{
+				PathPrefix: m["path_prefix"].(string),
+			}
 
-	for i := range hp {
-		in := hp[i].(map[string]interface{})
+			if ro, ok := m["read_only"].(bool); ok {
+				hp.ReadOnly = ro
+			}
 
-		obj[i].PathPrefix = in["path_prefix"].(string)
-
-        if ro, ok := in["read_only"].(bool); ok {
-				obj[i].ReadOnly = ro
+			obj[i] = hp
 		}
-
 	}
 
 	return obj

@@ -22,21 +22,17 @@ func flattenPodSecurityPolicyFSGroup(in policyv1.FSGroupStrategyOptions) []inter
 
 // Expanders
 
-func expandPodSecurityPolicyFSGroup(fsGroup []interface{}) policyv1.FSGroupStrategyOptions {
+func expandPodSecurityPolicyFSGroup(in []interface{}) policyv1.FSGroupStrategyOptions {
 
-	obj := policyv1.FSGroupStrategyOptions{}
+	obj := policyv1.FSGroupStrategyOptions{}	
 
-	if len(fsGroup) == 0 || fsGroup[0] == nil {
-		return obj
-	}
+	m := in[0].(map[string]interface{})
 
-	in := fsGroup[0].(map[string]interface{})
-
-	if v, ok := in["rule"].(string); ok {
+	if v, ok := m["rule"].(string); ok {
 		obj.Rule = policyv1.FSGroupStrategyType(v)
 	}
 
-	if v, ok := in["ranges"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ranges"].([]interface{}); ok && len(v) > 0 {
 		obj.Ranges = expandPodSecurityPolicyIDRanges(v)
 	}
 

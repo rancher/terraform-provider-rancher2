@@ -8,19 +8,54 @@ import (
 )
 
 var (
-	testPodSecurityPolicyBoolPtr       *bool
-	testPodSecurityPolicySpecConf      *policyv1.PodSecurityPolicySpec
-	testPodSecurityPolicySpecInterface []interface{}
+	testPodSecurityPolicyBool                         bool
+	testPodSecurityPolicySpecConf                     *policyv1.PodSecurityPolicySpec
+	testPodSecurityPolicySpecInterface                []interface{}
+	testPodSecurityPolicySupplementalGroups2Conf      policyv1.SupplementalGroupsStrategyOptions
+	testPodSecurityPolicySupplementalGroups2Interface []interface{}
+	testPodSecurityPolicyIDRanges4Conf                []policyv1.IDRange
+	testPodSecurityPolicyIDRanges4Interface           []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyBoolPtr := true
+	testPodSecurityPolicyIDRanges4Conf = []policyv1.IDRange{
+		{
+			Min: int64(1),
+			Max: int64(3000),
+		},
+		{
+			Min: int64(0),
+			Max: int64(5000),
+		},
+	}
+	testPodSecurityPolicyIDRanges4Interface = []interface{}{
+		map[string]interface{}{
+			"min": 1,
+			"max": 3000,
+		},
+		map[string]interface{}{
+			"min": 0,
+			"max": 5000,
+		},
+	}
+	testPodSecurityPolicySupplementalGroups2Conf = policyv1.SupplementalGroupsStrategyOptions{
+		Rule: "RunAsAny",
+		Ranges: testPodSecurityPolicyIDRanges4Conf,
+	}
+	testPodSecurityPolicySupplementalGroups2Interface = []interface{}{
+		map[string]interface{}{
+			"rule": "RunAsAny",
+			"ranges": testPodSecurityPolicyIDRanges4Interface,
+		},
+	}
+
+	testPodSecurityPolicyBool = true
 	testPodSecurityPolicySpecConf = &policyv1.PodSecurityPolicySpec{
 		Privileged: true,
 		DefaultAddCapabilities: testPodSecurityPolicyCapabilitiesConf,	
 		RequiredDropCapabilities: testPodSecurityPolicyCapabilitiesConf,
 		AllowedCapabilities: testPodSecurityPolicyCapabilitiesConf,
-		Volumes: testPodSecurityPolicyVolumesConf,
+		Volumes: []policyv1.FSType{"hostPath", "emptyDir"},
 		HostNetwork: true,
 		HostPorts: testPodSecurityPolicyHostPortRangesConf,
 		HostPID: false,
@@ -28,11 +63,11 @@ func init() {
 		SELinux: testPodSecurityPolicySELinuxStrategyConf,
 		RunAsUser: testPodSecurityPolicyRunAsUserConf,
 		RunAsGroup: testPodSecurityPolicyRunAsGroupConf,
-		SupplementalGroups: testPodSecurityPolicySupplementalGroupsConf,
+		SupplementalGroups: testPodSecurityPolicySupplementalGroups2Conf,
 		FSGroup: testPodSecurityPolicyFSGroupConf,
 		ReadOnlyRootFilesystem: false,
-		DefaultAllowPrivilegeEscalation: &testPodSecurityPolicyBoolPtr,
-		AllowPrivilegeEscalation: &testPodSecurityPolicyBoolPtr,
+		DefaultAllowPrivilegeEscalation: &testPodSecurityPolicyBool,
+		AllowPrivilegeEscalation: &testPodSecurityPolicyBool,
 		AllowedHostPaths: testPodSecurityPolicyAllowedHostPathsConf,
 		AllowedFlexVolumes: testPodSecurityPolicyAllowedFlexVolumesConf,
 		AllowedUnsafeSysctls: []string{"foo", "bar"},
@@ -45,7 +80,7 @@ func init() {
 			"default_add_capabilities": testPodSecurityPolicyCapabilitiesSlice,
 			"required_drop_capabilities": testPodSecurityPolicyCapabilitiesSlice,
 			"allowed_capabilities": testPodSecurityPolicyCapabilitiesSlice,
-			"volumes": testPodSecurityPolicyVolumesSlice,
+			"volumes": []interface{}{"hostPath", "emptyDir"},
 			"host_network": true,
 			"host_ports": testPodSecurityPolicyHostPortRangesInterface,
 			"host_pid": false,
@@ -53,11 +88,11 @@ func init() {
 			"se_linux": testPodSecurityPolicySELinuxStrategyInterface,
 			"run_as_user": testPodSecurityPolicyRunAsUserInterface,
 			"run_as_group": testPodSecurityPolicyRunAsGroupInterface,
-			"supplemental_groups": testPodSecurityPolicySupplementalGroupsInterface,
+			"supplemental_groups": testPodSecurityPolicySupplementalGroups2Interface,
 			"fs_group": testPodSecurityPolicyFSGroupInterface,
 			"read_only_root_filesystem": false,
-			"default_allow_privilege_escalation": &testPodSecurityPolicyBoolPtr,
-			"allow_privilege_escalation": &testPodSecurityPolicyBoolPtr,
+			"default_allow_privilege_escalation": testPodSecurityPolicyBool,
+			"allow_privilege_escalation": testPodSecurityPolicyBool,
 			"allowed_host_paths": testPodSecurityPolicyAllowedHostPathsInterface,
 			"allowed_flex_volumes": testPodSecurityPolicyAllowedFlexVolumesInterface,
 			"allowed_unsafe_sysctls": toArrayInterface([]string{"foo", "bar"}),

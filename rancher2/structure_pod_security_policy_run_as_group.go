@@ -7,9 +7,6 @@ import (
 // Flatteners
 
 func flattenPodSecurityPolicyRunAsGroup(in *policyv1.RunAsGroupStrategyOptions) []interface{} {
-	if in == nil {
-		return []interface{}{}
-	}
 
 	obj := make(map[string]interface{})
 
@@ -25,21 +22,17 @@ func flattenPodSecurityPolicyRunAsGroup(in *policyv1.RunAsGroupStrategyOptions) 
 
 // Expanders
 
-func expandPodSecurityPolicyRunAsGroup(runAsGroup []interface{}) *policyv1.RunAsGroupStrategyOptions {
+func expandPodSecurityPolicyRunAsGroup(in []interface{}) *policyv1.RunAsGroupStrategyOptions {
 
 	obj := &policyv1.RunAsGroupStrategyOptions{}
 
-	if len(runAsGroup) == 0 || runAsGroup[0] == nil {
-		return obj
-	}
+	m := in[0].(map[string]interface{})
 
-	in := runAsGroup[0].(map[string]interface{})
-
-	if v, ok := in["rule"].(string); ok {
+	if v, ok := m["rule"].(string); ok {
 		obj.Rule = policyv1.RunAsGroupStrategy(v)
 	}
 
-	if v, ok := in["ranges"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ranges"].([]interface{}); ok && len(v) > 0 {
 		obj.Ranges = expandPodSecurityPolicyIDRanges(v)
 	}
 

@@ -9,7 +9,7 @@ import (
 
 var (
 	testPodSecurityPolicyCapabilitiesConf      []v1.Capability
-	testPodSecurityPolicyCapabilitiesSlice     []string
+	testPodSecurityPolicyCapabilitiesSlice     []interface{}
 )
 
 func init() {
@@ -17,7 +17,7 @@ func init() {
 		"foo",
 		"bar",
 	}
-	testPodSecurityPolicyCapabilitiesSlice = []string{
+	testPodSecurityPolicyCapabilitiesSlice = []interface{}{
 		"foo",
 		"bar",
 	}
@@ -27,7 +27,7 @@ func TestFlattenPodSecurityPolicyCapabilities(t *testing.T) {
 
 	cases := []struct {
 		Input          []v1.Capability
-		ExpectedOutput []string
+		ExpectedOutput []interface{}
 	}{
 		{
 			testPodSecurityPolicyCapabilitiesConf,
@@ -47,7 +47,7 @@ func TestFlattenPodSecurityPolicyCapabilities(t *testing.T) {
 func TestExpandPodSecurityPolicyCapabilities(t *testing.T) {
 
 	cases := []struct {
-		Input          []string
+		Input          []interface{}
 		ExpectedOutput []v1.Capability
 	}{
 		{

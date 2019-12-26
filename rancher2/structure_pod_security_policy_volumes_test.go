@@ -9,7 +9,7 @@ import (
 
 var (
 	testPodSecurityPolicyVolumesConf      []policyv1.FSType
-	testPodSecurityPolicyVolumesSlice     []string
+	testPodSecurityPolicyVolumesInterface []interface{}
 )
 
 func init() {
@@ -17,7 +17,7 @@ func init() {
 		"hostPath",
 		"emptyDir",
 	}
-	testPodSecurityPolicyVolumesSlice = []string{
+	testPodSecurityPolicyVolumesInterface = []interface{}{
 		"hostPath",
 		"emptyDir",
 	}
@@ -27,11 +27,11 @@ func TestFlattenPodSecurityPolicyVolumes(t *testing.T) {
 
 	cases := []struct {
 		Input          []policyv1.FSType
-		ExpectedOutput []string
+		ExpectedOutput []interface{}
 	}{
 		{
 			testPodSecurityPolicyVolumesConf,
-			testPodSecurityPolicyVolumesSlice,
+			testPodSecurityPolicyVolumesInterface,
 		},
 	}
 
@@ -47,11 +47,11 @@ func TestFlattenPodSecurityPolicyVolumes(t *testing.T) {
 func TestExpandPodSecurityPolicyVolumes(t *testing.T) {
 
 	cases := []struct {
-		Input          []string
+		Input          []interface{}
 		ExpectedOutput []policyv1.FSType
 	}{
 		{
-			testPodSecurityPolicyVolumesSlice,
+			testPodSecurityPolicyVolumesInterface,
 			testPodSecurityPolicyVolumesConf,
 		},
 	}

@@ -22,21 +22,17 @@ func flattenPodSecurityPolicySupplementalGroups(in policyv1.SupplementalGroupsSt
 
 // Expanders
 
-func expandPodSecurityPolicySupplementalGroups(supplementalGroups []interface{}) policyv1.SupplementalGroupsStrategyOptions {
+func expandPodSecurityPolicySupplementalGroups(in []interface{}) policyv1.SupplementalGroupsStrategyOptions {
 
 	obj := policyv1.SupplementalGroupsStrategyOptions{}
 
-	if len(supplementalGroups) == 0 || supplementalGroups[0] == nil {
-		return obj
-	}
+	m := in[0].(map[string]interface{})
 
-	in := supplementalGroups[0].(map[string]interface{})
-
-	if v, ok := in["rule"].(string); ok {
+	if v, ok := m["rule"].(string); ok {
 		obj.Rule = policyv1.SupplementalGroupsStrategyType(v)
 	}
 
-	if v, ok := in["ranges"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["ranges"].([]interface{}); ok && len(v) > 0 {
 		obj.Ranges = expandPodSecurityPolicyIDRanges(v)
 	}
 

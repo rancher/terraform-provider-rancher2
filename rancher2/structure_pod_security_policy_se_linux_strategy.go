@@ -22,21 +22,17 @@ func flattenPodSecurityPolicySELinuxStrategy(in policyv1.SELinuxStrategyOptions)
 
 // Expanders
 
-func expandPodSecurityPolicySELinuxStrategy(selinux []interface{}) policyv1.SELinuxStrategyOptions {
+func expandPodSecurityPolicySELinuxStrategy(in []interface{}) policyv1.SELinuxStrategyOptions {
 
 	obj := policyv1.SELinuxStrategyOptions{}
 
-	if len(selinux) == 0 || selinux[0] == nil {
-		return obj
-	}
+	m := in[0].(map[string]interface{})
 
-	in := selinux[0].(map[string]interface{})
-
-	if v, ok := in["rule"].(string); ok {
+	if v, ok := m["rule"].(string); ok {
 		obj.Rule = policyv1.SELinuxStrategy(v)
 	}
 
-	if v, ok := in["se_linux_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["se_linux_options"].([]interface{}); ok && len(v) > 0 {
 		obj.SELinuxOptions = expandPodSecurityPolicySELinuxOptions(v)
 	}
 

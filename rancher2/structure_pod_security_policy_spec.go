@@ -10,7 +10,7 @@ func flattenPodSecurityPolicySpec(in *policyv1.PodSecurityPolicySpec) []interfac
     spec := make(map[string]interface{})
 
     if in.AllowPrivilegeEscalation != nil {
-		spec["allow_privilege_escalation"] = in.AllowPrivilegeEscalation
+		spec["allow_privilege_escalation"] = *in.AllowPrivilegeEscalation
 	}
 
 	if len(in.AllowedCapabilities) > 0 {
@@ -38,7 +38,7 @@ func flattenPodSecurityPolicySpec(in *policyv1.PodSecurityPolicySpec) []interfac
 	}
 
 	if in.DefaultAllowPrivilegeEscalation != nil {
-		spec["default_allow_privilege_escalation"] = in.DefaultAllowPrivilegeEscalation
+		spec["default_allow_privilege_escalation"] = *in.DefaultAllowPrivilegeEscalation
 	}
 
 	if len(in.ForbiddenSysctls) > 0 {
@@ -89,7 +89,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 		spec.AllowPrivilegeEscalation = &v
 	}
 
-	if v, ok := m["allowed_capabilities"].([]string); ok && len(v) > 0 {
+	if v, ok := m["allowed_capabilities"].([]interface{}); ok && len(v) > 0 {
 		spec.AllowedCapabilities = expandPodSecurityPolicyCapabilities(v)
 	}
 
@@ -101,7 +101,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 		spec.AllowedHostPaths = expandPodSecurityPolicyAllowedHostPaths(v)
 	}
 
-	if v, ok := m["allowed_proc_mount_types"].([]string); ok && len(v) > 0 {
+	if v, ok := m["allowed_proc_mount_types"].([]interface{}); ok && len(v) > 0 {
 		spec.AllowedProcMountTypes = expandPodSecurityPolicyAllowedProcMountTypes(v)
 	}
 
@@ -109,7 +109,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 		spec.AllowedUnsafeSysctls = toArrayString(v)
 	}
 
-	if v, ok := m["default_add_capabilities"].([]string); ok && len(v) > 0 {
+	if v, ok := m["default_add_capabilities"].([]interface{}); ok && len(v) > 0 {
 		spec.DefaultAddCapabilities = expandPodSecurityPolicyCapabilities(v)
 	}
 
@@ -149,7 +149,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 		spec.ReadOnlyRootFilesystem = v
 	}
 
-	if v, ok := m["required_drop_capabilities"].([]string); ok && len(v) > 0 {
+	if v, ok := m["required_drop_capabilities"].([]interface{}); ok && len(v) > 0 {
 		spec.RequiredDropCapabilities = expandPodSecurityPolicyCapabilities(v)
 	}
 
@@ -169,7 +169,7 @@ func expandPodSecurityPolicySpec(in []interface{}) *policyv1.PodSecurityPolicySp
 		spec.SupplementalGroups = expandPodSecurityPolicySupplementalGroups(v)
 	}
 
-	if v, ok := m["volumes"].([]string); ok && len(v) > 0 {
+	if v, ok := m["volumes"].([]interface{}); ok && len(v) > 0 {
 		spec.Volumes = expandPodSecurityPolicyVolumes(v)
 	}
 

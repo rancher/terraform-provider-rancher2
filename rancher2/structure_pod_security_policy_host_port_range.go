@@ -6,19 +6,15 @@ import (
 
 // Flatteners
 
-func flattenPodSecurityPolicyHostPortRanges(hp []policyv1.HostPortRange) []interface{} {
-	if len(hp) == 0 {
-		return []interface{}{}
-	}
+func flattenPodSecurityPolicyHostPortRanges(in []policyv1.HostPortRange) []interface{} {
 
-	out := make([]interface{}, len(hp))
-	for i, in := range hp {
-        obj := make(map[string]interface{})
+	out := make([]interface{}, len(in))
 
-        obj["min"] = int(in.Min)
-		obj["max"] = int(in.Max)
-
-		out[i] = obj
+	for i, v := range in {
+        out[i] = map[string]interface{}{
+			"min": int(v.Min),
+			"max": int(v.Max),
+		}
 	}
 	
 	return out
@@ -27,20 +23,17 @@ func flattenPodSecurityPolicyHostPortRanges(hp []policyv1.HostPortRange) []inter
 
 // Expanders
 
-func expandPodSecurityPolicyHostPortRanges(hp []interface{}) []policyv1.HostPortRange {
+func expandPodSecurityPolicyHostPortRanges(in []interface{}) []policyv1.HostPortRange {
 
-	if len(hp) == 0 || hp[0] == nil {
-		return []policyv1.HostPortRange{}
-	}
+	obj := make([]policyv1.HostPortRange, len(in))
 
-	obj := make([]policyv1.HostPortRange, len(hp))
-
-	for i := range hp {
-		in := hp[i].(map[string]interface{})
-
-		obj[i].Min = int32(in["min"].(int))
-		obj[i].Max = int32(in["max"].(int))
-
+	for i, v := range in {
+		if m, ok := v.(map[string]interface{}); ok {
+			obj[i] = policyv1.HostPortRange{
+				Min: int32(m["min"].(int)),
+				Max: int32(m["max"].(int)),
+			}
+		}
 	}
 
 	return obj

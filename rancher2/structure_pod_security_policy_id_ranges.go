@@ -6,20 +6,15 @@ import (
 
 // Flatteners
 
-func flattenPodSecurityPolicyIDRanges(idRange []policyv1.IDRange) []interface{} {
-	if len(idRange) == 0 {
-		return []interface{}{}
-	}
+func flattenPodSecurityPolicyIDRanges(in []policyv1.IDRange) []interface{} {
 
-	out := make([]interface{}, len(idRange))
+	out := make([]interface{}, len(in))
 	
-	for i, in := range idRange {
-		obj := make(map[string]interface{})
-
-		obj["min"] = int(in.Min)
-		obj["max"] = int(in.Max)
-
-		out[i] = obj
+	for i, v := range in {
+		out[i] = map[string]interface{}{
+			"min": int(v.Min),
+			"max": int(v.Max),
+		}
 	}
 
 	return out
@@ -27,20 +22,17 @@ func flattenPodSecurityPolicyIDRanges(idRange []policyv1.IDRange) []interface{} 
 
 // Expanders
 
-func expandPodSecurityPolicyIDRanges(idRange []interface{}) []policyv1.IDRange {
+func expandPodSecurityPolicyIDRanges(in []interface{}) []policyv1.IDRange {
 
-	if len(idRange) == 0 || idRange[0] == nil {
-		return []policyv1.IDRange{}
-	}
+	obj := make([]policyv1.IDRange, len(in))
 
-	obj := make([]policyv1.IDRange, len(idRange))
-
-	for i := range idRange {
-		in := idRange[i].(map[string]interface{})
-
-		obj[i].Min = int64(in["min"].(int))
-		obj[i].Max = int64(in["max"].(int))
-
+	for i, v := range in {
+		if m, ok := v.(map[string]interface{}); ok {
+			obj[i] = policyv1.IDRange{
+				Min: int64(m["min"].(int)),
+				Max: int64(m["max"].(int)),
+			}
+		}
 	}
 
 	return obj
