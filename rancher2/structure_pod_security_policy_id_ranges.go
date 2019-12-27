@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-    managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
@@ -9,7 +9,7 @@ import (
 func flattenPodSecurityPolicyIDRanges(in []managementClient.IDRange) []interface{} {
 
 	out := make([]interface{}, len(in))
-	
+
 	for i, v := range in {
 		out[i] = map[string]interface{}{
 			"min": int(v.Min),

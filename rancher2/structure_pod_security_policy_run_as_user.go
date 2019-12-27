@@ -13,9 +13,9 @@ func flattenPodSecurityPolicyRunAsUser(in *managementClient.RunAsUserStrategyOpt
 	if len(in.Rule) > 0 {
 		obj["rule"] = string(in.Rule)
 	}
-    if len(in.Ranges) > 0 {
-	    obj["ranges"] = flattenPodSecurityPolicyIDRanges(in.Ranges)
-    }
+	if len(in.Ranges) > 0 {
+		obj["ranges"] = flattenPodSecurityPolicyIDRanges(in.Ranges)
+	}
 
 	return []interface{}{obj}
 }

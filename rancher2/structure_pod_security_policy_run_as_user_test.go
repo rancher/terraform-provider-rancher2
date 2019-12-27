@@ -14,12 +14,12 @@ var (
 
 func init() {
 	testPodSecurityPolicyRunAsUserConf = &managementClient.RunAsUserStrategyOptions{
-		Rule: "RunAsAny",
+		Rule:   "RunAsAny",
 		Ranges: testPodSecurityPolicyIDRangesConf,
 	}
 	testPodSecurityPolicyRunAsUserInterface = []interface{}{
 		map[string]interface{}{
-			"rule": "RunAsAny",
+			"rule":   "RunAsAny",
 			"ranges": testPodSecurityPolicyIDRangesInterface,
 		},
 	}
@@ -36,7 +36,7 @@ func TestFlattenPodSecurityPolicyRunAsUser(t *testing.T) {
 			testPodSecurityPolicyRunAsUserInterface,
 		},
 	}
-	
+
 	for _, tc := range cases {
 		t.Logf("Expected: %#v\nGiven:    %#v", tc.Input, tc.ExpectedOutput)
 		output := flattenPodSecurityPolicyRunAsUser(tc.Input)

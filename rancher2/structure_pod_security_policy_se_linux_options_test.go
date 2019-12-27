@@ -16,8 +16,8 @@ func init() {
 	testPodSecurityPolicySELinuxOptionsConf = &managementClient.SELinuxOptions{
 		User:  "user",
 		Role:  "role",
-        Type:  "type",
-        Level: "level",
+		Type:  "type",
+		Level: "level",
 	}
 	testPodSecurityPolicySELinuxOptionsInterface = []interface{}{
 		map[string]interface{}{

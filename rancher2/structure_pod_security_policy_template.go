@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-    managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
 func flattenPodSecurityPolicyTemplate(d *schema.ResourceData, in *managementClient.PodSecurityPolicyTemplate) error {
-    if in == nil {
+	if in == nil {
 		return fmt.Errorf("[ERROR] flattening pod security policy template: Input setting is nil")
 	}
 
@@ -31,7 +31,7 @@ func flattenPodSecurityPolicyTemplate(d *schema.ResourceData, in *managementClie
 		return err
 	}
 
-    if in.AllowPrivilegeEscalation != nil {
+	if in.AllowPrivilegeEscalation != nil {
 		d.Set("allow_privilege_escalation", *in.AllowPrivilegeEscalation)
 	}
 
@@ -98,11 +98,11 @@ func flattenPodSecurityPolicyTemplate(d *schema.ResourceData, in *managementClie
 	d.Set("supplemental_groups", flattenPodSecurityPolicySupplementalGroups(in.SupplementalGroups))
 	d.Set("volumes", toArrayInterface(in.Volumes))
 
-    return nil
+	return nil
 }
 
 func expandPodSecurityPolicyTemplate(in *schema.ResourceData) *managementClient.PodSecurityPolicyTemplate {
-	
+
 	if in == nil {
 		return nil
 	}

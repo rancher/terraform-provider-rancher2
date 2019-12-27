@@ -35,13 +35,13 @@ func init() {
 			"max": 5000,
 		},
 	}
-    testPodSecurityPolicyFSGroupConf = &managementClient.FSGroupStrategyOptions{
-		Rule: "RunAsAny",
+	testPodSecurityPolicyFSGroupConf = &managementClient.FSGroupStrategyOptions{
+		Rule:   "RunAsAny",
 		Ranges: testPodSecurityPolicyFSGroupIDRangesConf,
 	}
 	testPodSecurityPolicyFSGroupInterface = []interface{}{
 		map[string]interface{}{
-			"rule": "RunAsAny",
+			"rule":   "RunAsAny",
 			"ranges": testPodSecurityPolicyFSGroupIDRangesInterface,
 		},
 	}

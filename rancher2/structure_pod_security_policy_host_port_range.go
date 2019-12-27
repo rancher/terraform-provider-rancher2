@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-    managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
@@ -11,12 +11,12 @@ func flattenPodSecurityPolicyHostPortRanges(in []managementClient.HostPortRange)
 	out := make([]interface{}, len(in))
 
 	for i, v := range in {
-        out[i] = map[string]interface{}{
+		out[i] = map[string]interface{}{
 			"min": int(v.Min),
 			"max": int(v.Max),
 		}
 	}
-	
+
 	return out
 
 }

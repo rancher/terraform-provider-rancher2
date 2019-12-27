@@ -14,22 +14,22 @@ var (
 
 func init() {
 	testPodSecurityPolicyAllowedHostPathsConf = []managementClient.AllowedHostPath{
-        {
-            PathPrefix: "/var/lib",
-            ReadOnly:   true,
-        },
-        {
+		{
+			PathPrefix: "/var/lib",
+			ReadOnly:   true,
+		},
+		{
 			PathPrefix: "/tmp",
-        },
+		},
 	}
 	testPodSecurityPolicyAllowedHostPathsInterface = []interface{}{
 		map[string]interface{}{
 			"path_prefix": "/var/lib",
-			"read_only": true,
+			"read_only":   true,
 		},
 		map[string]interface{}{
 			"path_prefix": "/tmp",
-			"read_only": false,
+			"read_only":   false,
 		},
 	}
 }

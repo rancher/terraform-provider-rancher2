@@ -9,15 +9,15 @@ import (
 )
 
 var (
-	testPodSecurityPolicyBool                         bool
-	testPodSecurityPolicyTemplateConf                 *managementClient.PodSecurityPolicyTemplate
-	testPodSecurityPolicyTemplateInterface            map[string]interface{}
+	testPodSecurityPolicyBool              bool
+	testPodSecurityPolicyTemplateConf      *managementClient.PodSecurityPolicyTemplate
+	testPodSecurityPolicyTemplateInterface map[string]interface{}
 )
 
 func init() {
 	testPodSecurityPolicyBool = true
 	testPodSecurityPolicyTemplateConf = &managementClient.PodSecurityPolicyTemplate{
-		Name: "name",
+		Name:        "name",
 		Description: "description",
 		Annotations: map[string]string{
 			"node_one": "one",
@@ -27,33 +27,33 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
-		Privileged: true,
-		DefaultAddCapabilities: []string{"NET_ADMIN"},
-		RequiredDropCapabilities: []string{"NET_ADMIN"},
-		AllowedCapabilities: []string{"NET_ADMIN"},
-		Volumes: []string{"hostPath", "emptyDir"},
-		HostNetwork: true,
-		HostPorts: testPodSecurityPolicyHostPortRangesConf,
-		HostPID: false,
-		HostIPC: true,
-		SELinux: testPodSecurityPolicySELinuxStrategyConf,
-		RunAsUser: testPodSecurityPolicyRunAsUserConf,
-		RunAsGroup: testPodSecurityPolicyRunAsGroupConf,
-		SupplementalGroups: testPodSecurityPolicySupplementalGroupsConf,
-		FSGroup: testPodSecurityPolicyFSGroupConf,
-		ReadOnlyRootFilesystem: false,
+		Privileged:                      true,
+		DefaultAddCapabilities:          []string{"NET_ADMIN"},
+		RequiredDropCapabilities:        []string{"NET_ADMIN"},
+		AllowedCapabilities:             []string{"NET_ADMIN"},
+		Volumes:                         []string{"hostPath", "emptyDir"},
+		HostNetwork:                     true,
+		HostPorts:                       testPodSecurityPolicyHostPortRangesConf,
+		HostPID:                         false,
+		HostIPC:                         true,
+		SELinux:                         testPodSecurityPolicySELinuxStrategyConf,
+		RunAsUser:                       testPodSecurityPolicyRunAsUserConf,
+		RunAsGroup:                      testPodSecurityPolicyRunAsGroupConf,
+		SupplementalGroups:              testPodSecurityPolicySupplementalGroupsConf,
+		FSGroup:                         testPodSecurityPolicyFSGroupConf,
+		ReadOnlyRootFilesystem:          false,
 		DefaultAllowPrivilegeEscalation: &testPodSecurityPolicyBool,
-		AllowPrivilegeEscalation: &testPodSecurityPolicyBool,
-		AllowedHostPaths: testPodSecurityPolicyAllowedHostPathsConf,
-		AllowedFlexVolumes: testPodSecurityPolicyAllowedFlexVolumesConf,
-		AllowedCSIDrivers: testPodSecurityPolicyAllowedCSIDriversConf,
-		AllowedUnsafeSysctls: []string{"foo", "bar"},
-		ForbiddenSysctls: []string{"foo", "bar"},
-		AllowedProcMountTypes: []string{"Default", "Unmasked"},
-		RuntimeClass: testPodSecurityPolicyRuntimeClassStrategyConf,
+		AllowPrivilegeEscalation:        &testPodSecurityPolicyBool,
+		AllowedHostPaths:                testPodSecurityPolicyAllowedHostPathsConf,
+		AllowedFlexVolumes:              testPodSecurityPolicyAllowedFlexVolumesConf,
+		AllowedCSIDrivers:               testPodSecurityPolicyAllowedCSIDriversConf,
+		AllowedUnsafeSysctls:            []string{"foo", "bar"},
+		ForbiddenSysctls:                []string{"foo", "bar"},
+		AllowedProcMountTypes:           []string{"Default", "Unmasked"},
+		RuntimeClass:                    testPodSecurityPolicyRuntimeClassStrategyConf,
 	}
 	testPodSecurityPolicyTemplateInterface = map[string]interface{}{
-		"name": "name",
+		"name":        "name",
 		"description": "description",
 		"annotations": map[string]interface{}{
 			"node_one": "one",
@@ -63,30 +63,30 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
-		"privileged": true,
-		"default_add_capabilities": toArrayInterface([]string{"NET_ADMIN"}),
-		"required_drop_capabilities": toArrayInterface([]string{"NET_ADMIN"}),
-		"allowed_capabilities": toArrayInterface([]string{"NET_ADMIN"}),
-		"volumes": toArrayInterface([]string{"hostPath", "emptyDir"}),
-		"host_network": true,
-		"host_ports": testPodSecurityPolicyHostPortRangesInterface,
-		"host_pid": false,
-		"host_ipc": true,
-		"se_linux": testPodSecurityPolicySELinuxStrategyInterface,
-		"run_as_user": testPodSecurityPolicyRunAsUserInterface,
-		"run_as_group": testPodSecurityPolicyRunAsGroupInterface,
-		"supplemental_groups": testPodSecurityPolicySupplementalGroupsInterface,
-		"fs_group": testPodSecurityPolicyFSGroupInterface,
-		"read_only_root_filesystem": false,
+		"privileged":                         true,
+		"default_add_capabilities":           toArrayInterface([]string{"NET_ADMIN"}),
+		"required_drop_capabilities":         toArrayInterface([]string{"NET_ADMIN"}),
+		"allowed_capabilities":               toArrayInterface([]string{"NET_ADMIN"}),
+		"volumes":                            toArrayInterface([]string{"hostPath", "emptyDir"}),
+		"host_network":                       true,
+		"host_ports":                         testPodSecurityPolicyHostPortRangesInterface,
+		"host_pid":                           false,
+		"host_ipc":                           true,
+		"se_linux":                           testPodSecurityPolicySELinuxStrategyInterface,
+		"run_as_user":                        testPodSecurityPolicyRunAsUserInterface,
+		"run_as_group":                       testPodSecurityPolicyRunAsGroupInterface,
+		"supplemental_groups":                testPodSecurityPolicySupplementalGroupsInterface,
+		"fs_group":                           testPodSecurityPolicyFSGroupInterface,
+		"read_only_root_filesystem":          false,
 		"default_allow_privilege_escalation": testPodSecurityPolicyBool,
-		"allow_privilege_escalation": testPodSecurityPolicyBool,
-		"allowed_host_paths": testPodSecurityPolicyAllowedHostPathsInterface,
-		"allowed_flex_volumes": testPodSecurityPolicyAllowedFlexVolumesInterface,
-		"allowed_csi_drivers": testPodSecurityPolicyAllowedCSIDriversInterface,
-		"allowed_unsafe_sysctls": toArrayInterface([]string{"foo", "bar"}),
-		"forbidden_sysctls": toArrayInterface([]string{"foo", "bar"}),
-		"allowed_proc_mount_types": toArrayInterface([]string{"Default", "Unmasked"}),
-		"runtime_class": testPodSecurityPolicyRuntimeClassStrategyInterface,
+		"allow_privilege_escalation":         testPodSecurityPolicyBool,
+		"allowed_host_paths":                 testPodSecurityPolicyAllowedHostPathsInterface,
+		"allowed_flex_volumes":               testPodSecurityPolicyAllowedFlexVolumesInterface,
+		"allowed_csi_drivers":                testPodSecurityPolicyAllowedCSIDriversInterface,
+		"allowed_unsafe_sysctls":             toArrayInterface([]string{"foo", "bar"}),
+		"forbidden_sysctls":                  toArrayInterface([]string{"foo", "bar"}),
+		"allowed_proc_mount_types":           toArrayInterface([]string{"Default", "Unmasked"}),
+		"runtime_class":                      testPodSecurityPolicyRuntimeClassStrategyInterface,
 	}
 }
 
@@ -114,7 +114,7 @@ func TestFlattenPodSecurityPolicyTemplate(t *testing.T) {
 		}
 		if !reflect.DeepEqual(given, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-			tc.ExpectedOutput, given)
+				tc.ExpectedOutput, given)
 		}
 	}
 }

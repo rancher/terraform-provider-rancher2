@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-    managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
@@ -11,13 +11,13 @@ func flattenPodSecurityPolicyAllowedFlexVolumes(in []managementClient.AllowedFle
 	out := make([]interface{}, len(in))
 
 	for i, v := range in {
-        obj := make(map[string]interface{})
+		obj := make(map[string]interface{})
 
 		obj["driver"] = v.Driver
-		
+
 		out[i] = obj
 	}
-	
+
 	return out
 }
 

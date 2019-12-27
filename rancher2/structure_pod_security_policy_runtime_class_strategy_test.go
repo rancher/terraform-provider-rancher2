@@ -15,12 +15,12 @@ var (
 func init() {
 	testPodSecurityPolicyRuntimeClassStrategyConf = &managementClient.RuntimeClassStrategyOptions{
 		AllowedRuntimeClassNames: []string{"foo", "bar"},
-		DefaultRuntimeClassName: "foo",
+		DefaultRuntimeClassName:  "foo",
 	}
 	testPodSecurityPolicyRuntimeClassStrategyInterface = []interface{}{
 		map[string]interface{}{
 			"allowed_runtime_class_names": toArrayInterface([]string{"foo", "bar"}),
-			"default_runtime_class_name": "foo",
+			"default_runtime_class_name":  "foo",
 		},
 	}
 }

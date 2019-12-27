@@ -14,12 +14,12 @@ var (
 
 func init() {
 	testPodSecurityPolicySELinuxStrategyConf = &managementClient.SELinuxStrategyOptions{
-		Rule: "RunAsAny",
+		Rule:           "RunAsAny",
 		SELinuxOptions: testPodSecurityPolicySELinuxOptionsConf,
 	}
 	testPodSecurityPolicySELinuxStrategyInterface = []interface{}{
 		map[string]interface{}{
-			"rule": "RunAsAny",
+			"rule":             "RunAsAny",
 			"se_linux_options": testPodSecurityPolicySELinuxOptionsInterface,
 		},
 	}

@@ -195,7 +195,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Optional:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
-				Schema:	 podSecurityPolicySupplementalGroupsFields(),
+				Schema: podSecurityPolicySupplementalGroupsFields(),
 			},
 		},
 		"volumes": {

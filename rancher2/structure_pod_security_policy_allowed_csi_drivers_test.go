@@ -14,12 +14,12 @@ var (
 
 func init() {
 	testPodSecurityPolicyAllowedCSIDriversConf = []managementClient.AllowedCSIDriver{
-        {
-            Name: "foo",
-        },
-        {
+		{
+			Name: "foo",
+		},
+		{
 			Name: "bar",
-        },
+		},
 	}
 	testPodSecurityPolicyAllowedCSIDriversInterface = []interface{}{
 		map[string]interface{}{

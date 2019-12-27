@@ -1,21 +1,21 @@
 package rancher2
 
 import (
-    managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
 
 func flattenPodSecurityPolicySELinuxStrategy(in *managementClient.SELinuxStrategyOptions) []interface{} {
-	
+
 	obj := make(map[string]interface{})
 
 	if len(in.Rule) > 0 {
 		obj["rule"] = in.Rule
 	}
-    if in.SELinuxOptions != nil {
-	    obj["se_linux_options"] = flattenPodSecurityPolicySELinuxOptions(in.SELinuxOptions)
-    }
+	if in.SELinuxOptions != nil {
+		obj["se_linux_options"] = flattenPodSecurityPolicySELinuxOptions(in.SELinuxOptions)
+	}
 
 	return []interface{}{obj}
 }

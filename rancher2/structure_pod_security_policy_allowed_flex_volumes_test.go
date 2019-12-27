@@ -14,12 +14,12 @@ var (
 
 func init() {
 	testPodSecurityPolicyAllowedFlexVolumesConf = []managementClient.AllowedFlexVolume{
-        {
-            Driver: "foo",
-        },
-        {
+		{
+			Driver: "foo",
+		},
+		{
 			Driver: "bar",
-        },
+		},
 	}
 	testPodSecurityPolicyAllowedFlexVolumesInterface = []interface{}{
 		map[string]interface{}{

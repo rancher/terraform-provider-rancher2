@@ -7,13 +7,13 @@ import (
 //Schemas
 
 func podSecurityPolicyAllowedCSIDriverFields() map[string]*schema.Schema {
-    s := map[string]*schema.Schema{
-        "name": {
-            Type:        schema.TypeString,
-            Description: "Name is the registered name of the CSI driver",
-            Required:    true,
-        },
-    }
+	s := map[string]*schema.Schema{
+		"name": {
+			Type:        schema.TypeString,
+			Description: "Name is the registered name of the CSI driver",
+			Required:    true,
+		},
+	}
 
-    return s
+	return s
 }

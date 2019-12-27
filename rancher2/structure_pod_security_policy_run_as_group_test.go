@@ -14,12 +14,12 @@ var (
 
 func init() {
 	testPodSecurityPolicyRunAsGroupConf = &managementClient.RunAsGroupStrategyOptions{
-		Rule: "RunAsAny",
+		Rule:   "RunAsAny",
 		Ranges: testPodSecurityPolicyIDRangesConf,
 	}
 	testPodSecurityPolicyRunAsGroupInterface = []interface{}{
 		map[string]interface{}{
-			"rule": "RunAsAny",
+			"rule":   "RunAsAny",
 			"ranges": testPodSecurityPolicyIDRangesInterface,
 		},
 	}

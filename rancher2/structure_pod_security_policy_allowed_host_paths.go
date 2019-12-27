@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-    managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
@@ -11,14 +11,14 @@ func flattenPodSecurityPolicyAllowedHostPaths(in []managementClient.AllowedHostP
 	out := make([]interface{}, len(in))
 
 	for i, v := range in {
-        obj := make(map[string]interface{})
+		obj := make(map[string]interface{})
 
-        obj["path_prefix"] = v.PathPrefix
+		obj["path_prefix"] = v.PathPrefix
 		obj["read_only"] = v.ReadOnly
 
 		out[i] = obj
 	}
-	
+
 	return out
 }
 

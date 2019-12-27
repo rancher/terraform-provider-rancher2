@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-    managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/types/client/management/v3"
 )
 
 // Flatteners
@@ -13,9 +13,9 @@ func flattenPodSecurityPolicyFSGroup(in *managementClient.FSGroupStrategyOptions
 	if len(in.Rule) > 0 {
 		obj["rule"] = in.Rule
 	}
-    if len(in.Ranges) > 0 {
-	    obj["ranges"] = flattenPodSecurityPolicyIDRanges(in.Ranges)
-    }
+	if len(in.Ranges) > 0 {
+		obj["ranges"] = flattenPodSecurityPolicyIDRanges(in.Ranges)
+	}
 
 	return []interface{}{obj}
 }
