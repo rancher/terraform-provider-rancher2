@@ -17,6 +17,16 @@ var (
 func init() {
 	testPodSecurityPolicyBool = true
 	testPodSecurityPolicyTemplateConf = &managementClient.PodSecurityPolicyTemplate{
+		Name: "name",
+		Description: "description",
+		Annotations: map[string]string{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		Labels: map[string]string{
+			"option1": "value1",
+			"option2": "value2",
+		},
 		Privileged: true,
 		DefaultAddCapabilities: []string{"NET_ADMIN"},
 		RequiredDropCapabilities: []string{"NET_ADMIN"},
@@ -43,6 +53,16 @@ func init() {
 		RuntimeClass: testPodSecurityPolicyRuntimeClassStrategyConf,
 	}
 	testPodSecurityPolicyTemplateInterface = map[string]interface{}{
+		"name": "name",
+		"description": "description",
+		"annotations": map[string]interface{}{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		"labels": map[string]interface{}{
+			"option1": "value1",
+			"option2": "value2",
+		},
 		"privileged": true,
 		"default_add_capabilities": toArrayInterface([]string{"NET_ADMIN"}),
 		"required_drop_capabilities": toArrayInterface([]string{"NET_ADMIN"}),

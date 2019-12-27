@@ -113,6 +113,22 @@ func expandPodSecurityPolicyTemplate(in *schema.ResourceData) *managementClient.
 		obj.ID = v
 	}
 
+	if v, ok := in.Get("name").(string); ok && len(v) > 0 {
+		obj.Name = v
+	}
+
+	if v, ok := in.Get("description").(string); ok && len(v) > 0 {
+		obj.Description = v
+	}
+
+	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Annotations = toMapString(v)
+	}
+
+	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Labels = toMapString(v)
+	}
+
 	if v, ok := in.Get("allow_privilege_escalation").(bool); ok {
 		obj.AllowPrivilegeEscalation = &v
 	}
