@@ -21,6 +21,14 @@ func podSecurityPolicySpecFields() map[string]*schema.Schema {
 			Computed:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
+		"allowed_csi_drivers": {
+			Type:        schema.TypeList,
+			Description: "AllowedCSIDrivers is a whitelist of inline CSI drivers that must be explicitly set to be embedded within a pod spec. An empty value indicates that any CSI driver can be used for inline ephemeral volumes. This is an alpha field, and is only honored if the API server enables the CSIInlineVolume feature gate.",
+			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: podSecurityPolicyAllowedCSIDriverFields(),
+			},
+		},
 		"allowed_flex_volumes": {
 			Type:        schema.TypeList,
 			Description: "allowedFlexVolumes is a whitelist of allowed Flexvolumes.  Empty or nil indicates that all Flexvolumes may be used.  This parameter is effective only when the usage of the Flexvolumes is allowed in the \"volumes\" field.",
@@ -138,6 +146,15 @@ func podSecurityPolicySpecFields() map[string]*schema.Schema {
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicyRunAsGroupFields(),
+			},
+		},
+		"runtime_class": {
+			Type:        schema.TypeList,
+			Description: "runtimeClass is the strategy that will dictate the allowable RuntimeClasses for a pod. If this field is omitted, the pod's runtimeClassName field is unrestricted. Enforcement of this field depends on the RuntimeClass feature gate being enabled.",
+			Optional:    true,
+			MaxItems:    1,
+			Elem: &schema.Resource{
+				Schema: podSecurityPolicyRuntimeClassFields(),
 			},
 		},
 		"se_linux": {

@@ -70,9 +70,11 @@ func init() {
 		AllowPrivilegeEscalation: &testPodSecurityPolicyBool,
 		AllowedHostPaths: testPodSecurityPolicyAllowedHostPathsConf,
 		AllowedFlexVolumes: testPodSecurityPolicyAllowedFlexVolumesConf,
+		AllowedCSIDrivers: testPodSecurityPolicyAllowedCSIDriversConf,
 		AllowedUnsafeSysctls: []string{"foo", "bar"},
 		ForbiddenSysctls: []string{"foo", "bar"},
 		AllowedProcMountTypes: []string{"Default", "Unmasked"},
+		RuntimeClass: testPodSecurityPolicyRuntimeClassStrategyConf,
 	}
 	testPodSecurityPolicySpecInterface = []interface{}{
 		map[string]interface{}{
@@ -95,9 +97,11 @@ func init() {
 			"allow_privilege_escalation": testPodSecurityPolicyBool,
 			"allowed_host_paths": testPodSecurityPolicyAllowedHostPathsInterface,
 			"allowed_flex_volumes": testPodSecurityPolicyAllowedFlexVolumesInterface,
+			"allowed_csi_drivers": testPodSecurityPolicyAllowedCSIDriversInterface,
 			"allowed_unsafe_sysctls": toArrayInterface([]string{"foo", "bar"}),
 			"forbidden_sysctls": toArrayInterface([]string{"foo", "bar"}),
 			"allowed_proc_mount_types": toArrayInterface([]string{"Default", "Unmasked"}),
+			"runtime_class": testPodSecurityPolicyRuntimeClassStrategyInterface,
 		},
 	}
 }

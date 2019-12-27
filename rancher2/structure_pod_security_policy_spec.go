@@ -17,6 +17,10 @@ func flattenPodSecurityPolicySpec(in *managementClient.PodSecurityPolicySpec) []
 		spec["allowed_capabilities"] = toArrayInterface(in.AllowedCapabilities)
 	}
 
+	if len(in.AllowedCSIDrivers) > 0 {
+		spec["allowed_csi_drivers"] = flattenPodSecurityPolicyAllowedCSIDrivers(in.AllowedCSIDrivers)
+	}
+
 	if len(in.AllowedFlexVolumes) > 0 {
 		spec["allowed_flex_volumes"] = flattenPodSecurityPolicyAllowedFlexVolumes(in.AllowedFlexVolumes)
 	}
@@ -67,6 +71,7 @@ func flattenPodSecurityPolicySpec(in *managementClient.PodSecurityPolicySpec) []
 		spec["run_as_group"] = flattenPodSecurityPolicyRunAsGroup(in.RunAsGroup)
 	}
 
+	spec["runtime_class"] = flattenPodSecurityPolicyRuntimeClassStrategy(in.RuntimeClass)
 	spec["se_linux"] = flattenPodSecurityPolicySELinuxStrategy(in.SELinux)
 	spec["supplemental_groups"] = flattenPodSecurityPolicySupplementalGroups(in.SupplementalGroups)
 	spec["volumes"] = toArrayInterface(in.Volumes)
@@ -91,6 +96,10 @@ func expandPodSecurityPolicySpec(in []interface{}) *managementClient.PodSecurity
 
 	if v, ok := m["allowed_capabilities"].([]interface{}); ok && len(v) > 0 {
 		spec.AllowedCapabilities = toArrayString(v)
+	}
+
+	if v, ok := m["allowed_csi_drivers"].([]interface{}); ok && len(v) > 0 {
+		spec.AllowedCSIDrivers = expandPodSecurityPolicyAllowedCSIDrivers(v)
 	}
 
 	if v, ok := m["allowed_flex_volumes"].([]interface{}); ok && len(v) > 0 {
@@ -159,6 +168,10 @@ func expandPodSecurityPolicySpec(in []interface{}) *managementClient.PodSecurity
 
 	if v, ok := m["run_as_group"].([]interface{}); ok && len(v) > 0 {
 		spec.RunAsGroup = expandPodSecurityPolicyRunAsGroup(v)
+	}
+
+	if v, ok := m["runtime_class"].([]interface{}); ok && len(v) > 0 {
+		spec.RuntimeClass = expandPodSecurityPolicyRuntimeClassStrategy(v)
 	}
 
 	if v, ok := m["se_linux"].([]interface{}); ok && len(v) > 0 {
