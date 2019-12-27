@@ -1,13 +1,13 @@
 package rancher2
 
 import (
-    "github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-    "github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const (
-	SELinuxStrategyMustRunAs        = "MustRunAs"
-	SELinuxStrategyRunAsAny         = "RunAsAny"
+	SELinuxStrategyMustRunAs = "MustRunAs"
+	SELinuxStrategyRunAsAny  = "RunAsAny"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 //Schemas
 
 func podSecurityPolicySELinuxFields() map[string]*schema.Schema {
-	s :=  map[string]*schema.Schema{
+	s := map[string]*schema.Schema{
 		"se_linux_options": {
 			Type:        schema.TypeList,
 			Description: "seLinuxOptions required to run as; required for MustRunAs. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
@@ -30,9 +30,9 @@ func podSecurityPolicySELinuxFields() map[string]*schema.Schema {
 			},
 		},
 		"rule": {
-			Type:        schema.TypeString,
-			Description: "rule is the strategy that will dictate the allowable labels that may be set.",
-			Required:    true,
+			Type:         schema.TypeString,
+			Description:  "rule is the strategy that will dictate the allowable labels that may be set.",
+			Required:     true,
 			ValidateFunc: validation.StringInSlice(seLinuxStrategies, true),
 		},
 	}
