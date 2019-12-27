@@ -8,41 +8,19 @@ import (
 )
 
 var (
-	testPodSecurityPolicyIDRanges3Conf               []managementClient.IDRange
-	testPodSecurityPolicyIDRanges3Interface          []interface{}
 	testPodSecurityPolicySupplementalGroupsConf      *managementClient.SupplementalGroupsStrategyOptions
 	testPodSecurityPolicySupplementalGroupsInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyIDRanges3Conf = []managementClient.IDRange{
-		{
-			Min: int64(1),
-			Max: int64(3000),
-		},
-		{
-			Min: int64(0),
-			Max: int64(5000),
-		},
-	}
-	testPodSecurityPolicyIDRanges3Interface = []interface{}{
-		map[string]interface{}{
-			"min": 1,
-			"max": 3000,
-		},
-		map[string]interface{}{
-			"min": 0,
-			"max": 5000,
-		},
-	}
 	testPodSecurityPolicySupplementalGroupsConf = &managementClient.SupplementalGroupsStrategyOptions{
 		Rule: "RunAsAny",
-		Ranges: testPodSecurityPolicyIDRanges3Conf,
+		Ranges: testPodSecurityPolicyIDRangesConf,
 	}
 	testPodSecurityPolicySupplementalGroupsInterface = []interface{}{
 		map[string]interface{}{
 			"rule": "RunAsAny",
-			"ranges": testPodSecurityPolicyIDRanges3Interface,
+			"ranges": testPodSecurityPolicyIDRangesInterface,
 		},
 	}
 }
