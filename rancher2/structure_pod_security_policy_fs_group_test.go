@@ -8,14 +8,14 @@ import (
 )
 
 var (
-	testPodSecurityPolicyIDRanges2Conf      []managementClient.IDRange
-	testPodSecurityPolicyIDRanges2Interface []interface{}
-	testPodSecurityPolicyFSGroupConf      *managementClient.FSGroupStrategyOptions
-	testPodSecurityPolicyFSGroupInterface []interface{}
+	testPodSecurityPolicyFSGroupConf              *managementClient.FSGroupStrategyOptions
+	testPodSecurityPolicyFSGroupInterface         []interface{}
+	testPodSecurityPolicyFSGroupIDRangesConf      []managementClient.IDRange
+	testPodSecurityPolicyFSGroupIDRangesInterface []interface{}
 )
 
 func init() {
-	testPodSecurityPolicyIDRanges2Conf = []managementClient.IDRange{
+	testPodSecurityPolicyFSGroupIDRangesConf = []managementClient.IDRange{
 		{
 			Min: int64(1),
 			Max: int64(3000),
@@ -25,7 +25,7 @@ func init() {
 			Max: int64(5000),
 		},
 	}
-	testPodSecurityPolicyIDRanges2Interface = []interface{}{
+	testPodSecurityPolicyFSGroupIDRangesInterface = []interface{}{
 		map[string]interface{}{
 			"min": 1,
 			"max": 3000,
@@ -37,12 +37,12 @@ func init() {
 	}
     testPodSecurityPolicyFSGroupConf = &managementClient.FSGroupStrategyOptions{
 		Rule: "RunAsAny",
-		Ranges: testPodSecurityPolicyIDRanges2Conf,
+		Ranges: testPodSecurityPolicyFSGroupIDRangesConf,
 	}
 	testPodSecurityPolicyFSGroupInterface = []interface{}{
 		map[string]interface{}{
 			"rule": "RunAsAny",
-			"ranges": testPodSecurityPolicyIDRanges2Interface,
+			"ranges": testPodSecurityPolicyFSGroupIDRangesInterface,
 		},
 	}
 }
