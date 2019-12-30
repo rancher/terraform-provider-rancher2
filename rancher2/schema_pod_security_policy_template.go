@@ -41,7 +41,6 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Description: "allowedCapabilities is a list of capabilities that can be requested to add to the container. Capabilities in this field may be added at the pod author's discretion. You must not list a capability in both allowedCapabilities and requiredDropCapabilities.",
 			Optional:    true,
-			Computed:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
 		"allowed_csi_drivers": {
@@ -90,7 +89,6 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Description: "defaultAllowPrivilegeEscalation controls the default setting for whether a process can gain more privileges than its parent process.",
 			Optional:    true,
-			Computed:    true,
 		},
 		"forbidden_sysctls": {
 			Type:        schema.TypeList,
@@ -102,6 +100,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Description: "fsGroup is the strategy that will dictate what fs group is used by the SecurityContext.",
 			Optional:    true,
+			Computed:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicyAllowedFsGroupFields(),
@@ -150,13 +149,13 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Description: "requiredDropCapabilities are the capabilities that will be dropped from the container.  These are required to be dropped and cannot be added.",
 			Optional:    true,
-			Computed:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
 		"run_as_user": {
 			Type:        schema.TypeList,
 			Description: "runAsUser is the strategy that will dictate the allowable RunAsUser values that may be set.",
 			Optional:    true,
+			Computed:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicyRunAsUserFields(),
@@ -184,6 +183,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Description: "seLinux is the strategy that will dictate the allowable labels that may be set.",
 			Optional:    true,
+			Computed:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicySELinuxFields(),
@@ -193,6 +193,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Description: "supplementalGroups is the strategy that will dictate what supplemental groups are used by the SecurityContext.",
 			Optional:    true,
+			Computed:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicySupplementalGroupsFields(),
