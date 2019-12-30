@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicySELinuxStrategyConf      *managementClient.SELinuxStrategyOptions
-	testPodSecurityPolicySELinuxStrategyInterface []interface{}
+	testPodSecurityPolicySELinuxStrategyConf           *managementClient.SELinuxStrategyOptions
+	testPodSecurityPolicySELinuxStrategyInterface      []interface{}
+	testNilPodSecurityPolicySELinuxStrategyConf        *managementClient.SELinuxStrategyOptions
+	testEmptyPodSecurityPolicySELinuxStrategyInterface []interface{}
 )
 
 func init() {
@@ -23,6 +25,7 @@ func init() {
 			"se_linux_options": testPodSecurityPolicySELinuxOptionsInterface,
 		},
 	}
+	testEmptyPodSecurityPolicySELinuxStrategyInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicySELinuxStrategy(t *testing.T) {
@@ -34,6 +37,10 @@ func TestFlattenPodSecurityPolicySELinuxStrategy(t *testing.T) {
 		{
 			testPodSecurityPolicySELinuxStrategyConf,
 			testPodSecurityPolicySELinuxStrategyInterface,
+		},
+		{
+			testNilPodSecurityPolicySELinuxStrategyConf,
+			testEmptyPodSecurityPolicySELinuxStrategyInterface,
 		},
 	}
 

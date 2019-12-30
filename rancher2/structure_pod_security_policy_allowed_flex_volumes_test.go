@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicyAllowedFlexVolumesConf      []managementClient.AllowedFlexVolume
-	testPodSecurityPolicyAllowedFlexVolumesInterface []interface{}
+	testPodSecurityPolicyAllowedFlexVolumesConf           []managementClient.AllowedFlexVolume
+	testPodSecurityPolicyAllowedFlexVolumesInterface      []interface{}
+	testEmptyPodSecurityPolicyAllowedFlexVolumesConf      []managementClient.AllowedFlexVolume
+	testEmptyPodSecurityPolicyAllowedFlexVolumesInterface []interface{}
 )
 
 func init() {
@@ -29,6 +31,7 @@ func init() {
 			"driver": "bar",
 		},
 	}
+	testEmptyPodSecurityPolicyAllowedFlexVolumesInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicyAllowedFlexVolumes(t *testing.T) {
@@ -40,6 +43,10 @@ func TestFlattenPodSecurityPolicyAllowedFlexVolumes(t *testing.T) {
 		{
 			testPodSecurityPolicyAllowedFlexVolumesConf,
 			testPodSecurityPolicyAllowedFlexVolumesInterface,
+		},
+		{
+			testEmptyPodSecurityPolicyAllowedFlexVolumesConf,
+			testEmptyPodSecurityPolicyAllowedFlexVolumesInterface,
 		},
 	}
 

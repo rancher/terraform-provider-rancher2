@@ -8,6 +8,10 @@ import (
 
 func flattenPodSecurityPolicySELinuxStrategy(in *managementClient.SELinuxStrategyOptions) []interface{} {
 
+	if in == nil {
+		return []interface{}{}
+	}
+
 	obj := make(map[string]interface{})
 
 	if len(in.Rule) > 0 {

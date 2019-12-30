@@ -8,6 +8,10 @@ import (
 
 func flattenPodSecurityPolicyFSGroup(in *managementClient.FSGroupStrategyOptions) []interface{} {
 
+	if in == nil {
+		return []interface{}{}
+	}
+
 	obj := make(map[string]interface{})
 
 	if len(in.Rule) > 0 {

@@ -8,6 +8,10 @@ import (
 
 func flattenPodSecurityPolicyAllowedCSIDrivers(in []managementClient.AllowedCSIDriver) []interface{} {
 
+	if len(in) == 0 {
+		return []interface{}{}
+	}
+
 	out := make([]interface{}, len(in))
 
 	for i, v := range in {

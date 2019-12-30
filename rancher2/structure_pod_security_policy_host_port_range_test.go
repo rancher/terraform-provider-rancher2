@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicyHostPortRangesConf      []managementClient.HostPortRange
-	testPodSecurityPolicyHostPortRangesInterface []interface{}
+	testPodSecurityPolicyHostPortRangesConf           []managementClient.HostPortRange
+	testPodSecurityPolicyHostPortRangesInterface      []interface{}
+	testEmptyPodSecurityPolicyHostPortRangesConf      []managementClient.HostPortRange
+	testEmptyPodSecurityPolicyHostPortRangesInterface []interface{}
 )
 
 func init() {
@@ -33,6 +35,7 @@ func init() {
 			"max": 4000,
 		},
 	}
+	testEmptyPodSecurityPolicyHostPortRangesInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicyHostPortRanges(t *testing.T) {
@@ -44,6 +47,10 @@ func TestFlattenPodSecurityPolicyHostPortRanges(t *testing.T) {
 		{
 			testPodSecurityPolicyHostPortRangesConf,
 			testPodSecurityPolicyHostPortRangesInterface,
+		},
+		{
+			testEmptyPodSecurityPolicyHostPortRangesConf,
+			testEmptyPodSecurityPolicyHostPortRangesInterface,
 		},
 	}
 

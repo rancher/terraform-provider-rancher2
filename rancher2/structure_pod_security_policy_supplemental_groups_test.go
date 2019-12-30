@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicySupplementalGroupsConf      *managementClient.SupplementalGroupsStrategyOptions
-	testPodSecurityPolicySupplementalGroupsInterface []interface{}
+	testPodSecurityPolicySupplementalGroupsConf           *managementClient.SupplementalGroupsStrategyOptions
+	testPodSecurityPolicySupplementalGroupsInterface      []interface{}
+	testNilPodSecurityPolicySupplementalGroupsConf        *managementClient.SupplementalGroupsStrategyOptions
+	testEmptyPodSecurityPolicySupplementalGroupsInterface []interface{}
 )
 
 func init() {
@@ -23,6 +25,7 @@ func init() {
 			"ranges": testPodSecurityPolicyIDRangesInterface,
 		},
 	}
+	testEmptyPodSecurityPolicySupplementalGroupsInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicySupplementalGroups(t *testing.T) {
@@ -34,6 +37,10 @@ func TestFlattenPodSecurityPolicySupplementalGroups(t *testing.T) {
 		{
 			testPodSecurityPolicySupplementalGroupsConf,
 			testPodSecurityPolicySupplementalGroupsInterface,
+		},
+		{
+			testNilPodSecurityPolicySupplementalGroupsConf,
+			testEmptyPodSecurityPolicySupplementalGroupsInterface,
 		},
 	}
 

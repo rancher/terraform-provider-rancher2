@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicyAllowedHostPathsConf      []managementClient.AllowedHostPath
-	testPodSecurityPolicyAllowedHostPathsInterface []interface{}
+	testPodSecurityPolicyAllowedHostPathsConf           []managementClient.AllowedHostPath
+	testPodSecurityPolicyAllowedHostPathsInterface      []interface{}
+	testEmptyPodSecurityPolicyAllowedHostPathsConf      []managementClient.AllowedHostPath
+	testEmptyPodSecurityPolicyAllowedHostPathsInterface []interface{}
 )
 
 func init() {
@@ -32,6 +34,7 @@ func init() {
 			"read_only":   false,
 		},
 	}
+	testEmptyPodSecurityPolicyAllowedHostPathsInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicyAllowedHostPaths(t *testing.T) {
@@ -43,6 +46,10 @@ func TestFlattenPodSecurityPolicyAllowedHostPaths(t *testing.T) {
 		{
 			testPodSecurityPolicyAllowedHostPathsConf,
 			testPodSecurityPolicyAllowedHostPathsInterface,
+		},
+		{
+			testEmptyPodSecurityPolicyAllowedHostPathsConf,
+			testEmptyPodSecurityPolicyAllowedHostPathsInterface,
 		},
 	}
 

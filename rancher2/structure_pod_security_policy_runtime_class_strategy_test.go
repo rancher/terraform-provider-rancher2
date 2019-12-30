@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicyRuntimeClassStrategyConf      *managementClient.RuntimeClassStrategyOptions
-	testPodSecurityPolicyRuntimeClassStrategyInterface []interface{}
+	testPodSecurityPolicyRuntimeClassStrategyConf           *managementClient.RuntimeClassStrategyOptions
+	testPodSecurityPolicyRuntimeClassStrategyInterface      []interface{}
+	testNilPodSecurityPolicyRuntimeClassStrategyConf        *managementClient.RuntimeClassStrategyOptions
+	testEmptyPodSecurityPolicyRuntimeClassStrategyInterface []interface{}
 )
 
 func init() {
@@ -23,6 +25,7 @@ func init() {
 			"default_runtime_class_name":  "foo",
 		},
 	}
+	testEmptyPodSecurityPolicyRuntimeClassStrategyInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicyRuntimeClassStrategy(t *testing.T) {
@@ -34,6 +37,10 @@ func TestFlattenPodSecurityPolicyRuntimeClassStrategy(t *testing.T) {
 		{
 			testPodSecurityPolicyRuntimeClassStrategyConf,
 			testPodSecurityPolicyRuntimeClassStrategyInterface,
+		},
+		{
+			testNilPodSecurityPolicyRuntimeClassStrategyConf,
+			testEmptyPodSecurityPolicyRuntimeClassStrategyInterface,
 		},
 	}
 

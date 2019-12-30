@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicyRunAsUserConf      *managementClient.RunAsUserStrategyOptions
-	testPodSecurityPolicyRunAsUserInterface []interface{}
+	testPodSecurityPolicyRunAsUserConf           *managementClient.RunAsUserStrategyOptions
+	testPodSecurityPolicyRunAsUserInterface      []interface{}
+	testNilPodSecurityPolicyRunAsUserConf        *managementClient.RunAsUserStrategyOptions
+	testEmptyPodSecurityPolicyRunAsUserInterface []interface{}
 )
 
 func init() {
@@ -23,6 +25,7 @@ func init() {
 			"ranges": testPodSecurityPolicyIDRangesInterface,
 		},
 	}
+	testEmptyPodSecurityPolicyRunAsUserInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicyRunAsUser(t *testing.T) {
@@ -34,6 +37,10 @@ func TestFlattenPodSecurityPolicyRunAsUser(t *testing.T) {
 		{
 			testPodSecurityPolicyRunAsUserConf,
 			testPodSecurityPolicyRunAsUserInterface,
+		},
+		{
+			testNilPodSecurityPolicyRunAsUserConf,
+			testEmptyPodSecurityPolicyRunAsUserInterface,
 		},
 	}
 

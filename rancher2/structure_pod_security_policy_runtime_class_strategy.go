@@ -8,6 +8,10 @@ import (
 
 func flattenPodSecurityPolicyRuntimeClassStrategy(in *managementClient.RuntimeClassStrategyOptions) []interface{} {
 
+	if in == nil {
+		return []interface{}{}
+	}
+
 	obj := make(map[string]interface{})
 
 	if len(in.AllowedRuntimeClassNames) > 0 {

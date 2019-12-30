@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicyIDRangesConf      []managementClient.IDRange
-	testPodSecurityPolicyIDRangesInterface []interface{}
+	testPodSecurityPolicyIDRangesConf           []managementClient.IDRange
+	testPodSecurityPolicyIDRangesInterface      []interface{}
+	testEmptyPodSecurityPolicyIDRangesConf      []managementClient.IDRange
+	testEmptyPodSecurityPolicyIDRangesInterface []interface{}
 )
 
 func init() {
@@ -33,6 +35,7 @@ func init() {
 			"max": 5000,
 		},
 	}
+	testEmptyPodSecurityPolicyIDRangesInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicyIDRanges(t *testing.T) {
@@ -44,6 +47,10 @@ func TestFlattenPodSecurityPolicyIDRanges(t *testing.T) {
 		{
 			testPodSecurityPolicyIDRangesConf,
 			testPodSecurityPolicyIDRangesInterface,
+		},
+		{
+			testEmptyPodSecurityPolicyIDRangesConf,
+			testEmptyPodSecurityPolicyIDRangesInterface,
 		},
 	}
 

@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicyAllowedCSIDriversConf      []managementClient.AllowedCSIDriver
-	testPodSecurityPolicyAllowedCSIDriversInterface []interface{}
+	testPodSecurityPolicyAllowedCSIDriversConf           []managementClient.AllowedCSIDriver
+	testPodSecurityPolicyAllowedCSIDriversInterface      []interface{}
+	testEmptyPodSecurityPolicyAllowedCSIDriversConf      []managementClient.AllowedCSIDriver
+	testEmptyPodSecurityPolicyAllowedCSIDriversInterface []interface{}
 )
 
 func init() {
@@ -29,6 +31,7 @@ func init() {
 			"name": "bar",
 		},
 	}
+	testEmptyPodSecurityPolicyAllowedCSIDriversInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicyAllowedCSIDrivers(t *testing.T) {
@@ -40,6 +43,10 @@ func TestFlattenPodSecurityPolicyAllowedCSIDrivers(t *testing.T) {
 		{
 			testPodSecurityPolicyAllowedCSIDriversConf,
 			testPodSecurityPolicyAllowedCSIDriversInterface,
+		},
+		{
+			testEmptyPodSecurityPolicyAllowedCSIDriversConf,
+			testEmptyPodSecurityPolicyAllowedCSIDriversInterface,
 		},
 	}
 

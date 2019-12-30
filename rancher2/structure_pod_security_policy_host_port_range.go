@@ -8,6 +8,10 @@ import (
 
 func flattenPodSecurityPolicyHostPortRanges(in []managementClient.HostPortRange) []interface{} {
 
+	if len(in) == 0 {
+		return []interface{}{}
+	}
+
 	out := make([]interface{}, len(in))
 
 	for i, v := range in {

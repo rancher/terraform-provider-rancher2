@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	testPodSecurityPolicyRunAsGroupConf      *managementClient.RunAsGroupStrategyOptions
-	testPodSecurityPolicyRunAsGroupInterface []interface{}
+	testPodSecurityPolicyRunAsGroupConf           *managementClient.RunAsGroupStrategyOptions
+	testPodSecurityPolicyRunAsGroupInterface      []interface{}
+	testNilPodSecurityPolicyRunAsGroupConf        *managementClient.RunAsGroupStrategyOptions
+	testEmptyPodSecurityPolicyRunAsGroupInterface []interface{}
 )
 
 func init() {
@@ -23,6 +25,7 @@ func init() {
 			"ranges": testPodSecurityPolicyIDRangesInterface,
 		},
 	}
+	testEmptyPodSecurityPolicyRunAsGroupInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicyRunAsGroup(t *testing.T) {
@@ -34,6 +37,10 @@ func TestFlattenPodSecurityPolicyRunAsGroup(t *testing.T) {
 		{
 			testPodSecurityPolicyRunAsGroupConf,
 			testPodSecurityPolicyRunAsGroupInterface,
+		},
+		{
+			testNilPodSecurityPolicyRunAsGroupConf,
+			testEmptyPodSecurityPolicyRunAsGroupInterface,
 		},
 	}
 

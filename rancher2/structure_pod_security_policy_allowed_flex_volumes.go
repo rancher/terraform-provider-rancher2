@@ -8,6 +8,10 @@ import (
 
 func flattenPodSecurityPolicyAllowedFlexVolumes(in []managementClient.AllowedFlexVolume) []interface{} {
 
+	if len(in) == 0 {
+		return []interface{}{}
+	}
+
 	out := make([]interface{}, len(in))
 
 	for i, v := range in {

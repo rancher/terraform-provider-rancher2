@@ -12,6 +12,8 @@ var (
 	testPodSecurityPolicyFSGroupInterface         []interface{}
 	testPodSecurityPolicyFSGroupIDRangesConf      []managementClient.IDRange
 	testPodSecurityPolicyFSGroupIDRangesInterface []interface{}
+	testNilPodSecurityPolicyFSGroupConf           *managementClient.FSGroupStrategyOptions
+	testEmptyPodSecurityPolicyFSGroupInterface    []interface{}
 )
 
 func init() {
@@ -45,6 +47,7 @@ func init() {
 			"ranges": testPodSecurityPolicyFSGroupIDRangesInterface,
 		},
 	}
+	testEmptyPodSecurityPolicyFSGroupInterface = []interface{}{}
 }
 
 func TestFlattenPodSecurityPolicyFSGroup(t *testing.T) {
@@ -56,6 +59,10 @@ func TestFlattenPodSecurityPolicyFSGroup(t *testing.T) {
 		{
 			testPodSecurityPolicyFSGroupConf,
 			testPodSecurityPolicyFSGroupInterface,
+		},
+		{
+			testNilPodSecurityPolicyFSGroupConf,
+			testEmptyPodSecurityPolicyFSGroupInterface,
 		},
 	}
 
