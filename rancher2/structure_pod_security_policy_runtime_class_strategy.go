@@ -30,6 +30,10 @@ func expandPodSecurityPolicyRuntimeClassStrategy(in []interface{}) *managementCl
 
 	obj := &managementClient.RuntimeClassStrategyOptions{}
 
+	if len(in) == 0 || in[0] == nil {
+		return obj
+	}
+
 	m := in[0].(map[string]interface{})
 
 	if v, ok := m["allowed_runtime_class_names"].([]interface{}); ok {

@@ -39,6 +39,10 @@ func expandPodSecurityPolicySELinuxOptions(in []interface{}) *managementClient.S
 
 	obj := &managementClient.SELinuxOptions{}
 
+	if len(in) == 0 || in[0] == nil {
+		return obj
+	}
+
 	m := in[0].(map[string]interface{})
 
 	if v, ok := m["user"].(string); ok {

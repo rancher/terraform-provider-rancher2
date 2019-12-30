@@ -29,6 +29,10 @@ func flattenPodSecurityPolicyAllowedFlexVolumes(in []managementClient.AllowedFle
 
 func expandPodSecurityPolicyAllowedFlexVolumes(in []interface{}) []managementClient.AllowedFlexVolume {
 
+	if len(in) == 0 || in[0] == nil {
+		return []managementClient.AllowedFlexVolume{}
+	}
+
 	obj := make([]managementClient.AllowedFlexVolume, len(in))
 
 	for i, v := range in {

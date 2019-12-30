@@ -28,6 +28,10 @@ func flattenPodSecurityPolicyIDRanges(in []managementClient.IDRange) []interface
 
 func expandPodSecurityPolicyIDRanges(in []interface{}) []managementClient.IDRange {
 
+	if len(in) == 0 || in[0] == nil {
+		return []managementClient.IDRange{}
+	}
+
 	obj := make([]managementClient.IDRange, len(in))
 
 	for i, v := range in {

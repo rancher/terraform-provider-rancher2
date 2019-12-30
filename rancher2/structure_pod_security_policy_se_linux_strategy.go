@@ -30,6 +30,10 @@ func expandPodSecurityPolicySELinuxStrategy(in []interface{}) *managementClient.
 
 	obj := &managementClient.SELinuxStrategyOptions{}
 
+	if len(in) == 0 || in[0] == nil {
+		return obj
+	}
+
 	m := in[0].(map[string]interface{})
 
 	if v, ok := m["rule"].(string); ok {

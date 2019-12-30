@@ -29,6 +29,10 @@ func flattenPodSecurityPolicyAllowedCSIDrivers(in []managementClient.AllowedCSID
 
 func expandPodSecurityPolicyAllowedCSIDrivers(in []interface{}) []managementClient.AllowedCSIDriver {
 
+	if len(in) == 0 || in[0] == nil {
+		return []managementClient.AllowedCSIDriver{}
+	}
+
 	obj := make([]managementClient.AllowedCSIDriver, len(in))
 
 	for i, v := range in {

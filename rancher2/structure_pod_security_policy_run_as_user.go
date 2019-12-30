@@ -30,6 +30,10 @@ func expandPodSecurityPolicyRunAsUser(in []interface{}) *managementClient.RunAsU
 
 	obj := &managementClient.RunAsUserStrategyOptions{}
 
+	if len(in) == 0 || in[0] == nil {
+		return obj
+	}
+
 	m := in[0].(map[string]interface{})
 
 	if v, ok := m["rule"].(string); ok {

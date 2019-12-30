@@ -29,6 +29,10 @@ func flattenPodSecurityPolicyHostPortRanges(in []managementClient.HostPortRange)
 
 func expandPodSecurityPolicyHostPortRanges(in []interface{}) []managementClient.HostPortRange {
 
+	if len(in) == 0 || in[0] == nil {
+		return []managementClient.HostPortRange{}
+	}
+
 	obj := make([]managementClient.HostPortRange, len(in))
 
 	for i, v := range in {

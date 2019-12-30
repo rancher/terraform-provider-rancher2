@@ -30,6 +30,10 @@ func flattenPodSecurityPolicyAllowedHostPaths(in []managementClient.AllowedHostP
 
 func expandPodSecurityPolicyAllowedHostPaths(in []interface{}) []managementClient.AllowedHostPath {
 
+	if len(in) == 0 || in[0] == nil {
+		return []managementClient.AllowedHostPath{}
+	}
+
 	obj := make([]managementClient.AllowedHostPath, len(in))
 
 	for i, v := range in {
