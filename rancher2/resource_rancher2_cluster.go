@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
 	"log"
 	"time"
 
@@ -27,6 +28,9 @@ func resourceRancher2Cluster() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
+		CustomizeDiff: customdiff.All(
+			windowsPreferredClusterCustomDiffHandler(),
+		),
 	}
 }
 
@@ -397,4 +401,13 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 		return nil, fmt.Errorf("[ERROR] waiting for cluster registration token (%s) to be created: %s", newRegToken.ID, waitErr)
 	}
 	return newRegToken, nil
+}
+
+func windowsPreferredClusterCustomDiffHandler()  schema.CustomizeDiffFunc{
+	//Cluster must be recreated to implement this if there is a change to windows var if the cluster is not
+	//already a windows cluster. Currently this is unsupported by rancher, so force new resource here.
+	//https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/windows-clusters/
+	return customdiff.ForceNewIfChange("windows_prefered_cluster", func (old, new, meta interface{}) bool {
+		return new.(bool) != old.(bool)
+	})
 }

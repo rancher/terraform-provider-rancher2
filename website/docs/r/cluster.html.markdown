@@ -180,6 +180,7 @@ The following arguments are supported:
 * `enable_network_policy` - (Optional) Enable project network isolation. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
+* `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
 
 ## Attributes Reference
 
