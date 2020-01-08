@@ -12,31 +12,64 @@ const (
 //Types
 
 type AmazonElasticContainerServiceConfig struct {
+	AccessKey               string            `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
+	Annotations             map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+	DisplayName             string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	DriverName              string            `json:"driverName" yaml:"driverName"`
+	KeyPairName             string            `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
+	KubernetesVersion       string            `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
+	ManageOwnSecurityGroups *bool             `json:"manageOwnSecurityGroups,omitempty" yaml:"manageOwnSecurityGroups,omitempty"`
+	NodeSecurityGroups      []string          `json:"nodeSecurityGroups,omitempty" yaml:"nodeSecurityGroups,omitempty"`
+	Region                  string            `json:"region,omitempty" yaml:"region,omitempty"`
+	SecretKey               string            `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
+	SecurityGroups          []string          `json:"securityGroups,omitempty" yaml:"securityGroups,omitempty"`
+	ServiceRole             string            `json:"serviceRole,omitempty" yaml:"serviceRole,omitempty"`
+	SessionToken            string            `json:"sessionToken,omitempty" yaml:"sessionToken,omitempty"`
+	Subnets                 []string          `json:"subnets,omitempty" yaml:"subnets,omitempty"`
+	VirtualNetwork          string            `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
+
+	// list of json objects. Each object matches the schema defined by `AmazonElasticContainerWorkerPool`
+	WorkerPools []string `json:"workerPools,omitempty" yaml:"workerPools,omitempty"`
+
+	// TODO remove fields from here on once all clusters have being migrated to new state (use "workerPools") in rancher
+	AMI                         string   `json:"ami,omitempty" yaml:"ami,omitempty"`
+	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
+	DesiredNodes                int64    `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
+	EBSEncryption               bool     `json:"ebsEncryption,omitempty" yaml:"ebsEncryption,omitempty"`
+	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
+	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
+	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
+	Name                        string   `json:"name,omitempty" yaml:"name,omitempty"`
+	NodeVolumeSize              int64    `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
+	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
+	UserData                    string   `json:"userData,omitempty" yaml:"userData,omitempty"`
+	WorkerSubnets               []string `json:"workerSubnets,omitempty" yaml:"workerSubnets,omitempty"`
+}
+
+type AmazonElasticContainerWorkerPool struct {
+	AddDefaultLabel             bool              `json:"addDefaultLabel,omitempty" yaml:"addDefaultLabel,omitempty"`
+	AddDefaultTaint             bool              `json:"addDefaultTaint,omitempty" yaml:"addDefaultTaint,omitempty"`
+	AdditionalLabels            map[string]string `json:"additionalLabels,omitempty" yaml:"additionalLabels,omitempty"`
+	AdditionalTaints            []K8sTaint        `json:"additionalTaints,omitempty" yaml:"additionalTaints,omitempty"`
 	AMI                         string            `json:"ami,omitempty" yaml:"ami,omitempty"`
-	AccessKey                   string            `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
-	Annotations                 map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 	AssociateWorkerNodePublicIP *bool             `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
 	DesiredNodes                int64             `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
-	DisplayName                 string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
-	DriverName                  string            `json:"driverName" yaml:"driverName"`
+	EBSEncryption               bool              `json:"ebsEncryption,omitempty" yaml:"ebsEncryption,omitempty"`
 	InstanceType                string            `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
-	KeyPairName                 string            `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
-	KubernetesVersion           string            `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
-	ManageOwnSecurityGroups     *bool             `json:"manageOwnSecurityGroups,omitempty" yaml:"manageOwnSecurityGroups,omitempty"`
 	MaximumNodes                int64             `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
 	MinimumNodes                int64             `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
-	NodeSecurityGroups          []string          `json:"nodeSecurityGroups,omitempty" yaml:"nodeSecurityGroups,omitempty"`
+	Name                        string            `json:"name,omitempty" yaml:"name,omitempty"`
 	NodeVolumeSize              int64             `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
 	PlacementGroup              string            `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
-	Region                      string            `json:"region,omitempty" yaml:"region,omitempty"`
-	SecretKey                   string            `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
-	SecurityGroups              []string          `json:"securityGroups,omitempty" yaml:"securityGroups,omitempty"`
-	ServiceRole                 string            `json:"serviceRole,omitempty" yaml:"serviceRole,omitempty"`
-	SessionToken                string            `json:"sessionToken,omitempty" yaml:"sessionToken,omitempty"`
-	Subnets                     []string          `json:"subnets,omitempty" yaml:"subnets,omitempty"`
 	UserData                    string            `json:"userData,omitempty" yaml:"userData,omitempty"`
-	VirtualNetwork              string            `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
-	WorkerSubnets               []string          `json:"workerSubnets,omitempty" yaml:"workerSubnets,omitempty"`
+	Subnets                     []string          `json:"subnets,omitempty" yaml:"subnets,omitempty"`
+}
+
+type K8sTaint struct {
+	Effect   string `json:"effect,omitempty" yaml:"effect,omitempty"`
+	Operator string `json:"operator,omitempty" yaml:"operator,omitempty"`
+	Key      string `json:"key,omitempty" yaml:"key,omitempty"`
+	Value    string `json:"value,omitempty" yaml:"value,omitempty"`
 }
 
 //Schemas
@@ -60,35 +93,6 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			Description: "The AWS Client Secret associated with the Client ID",
 		},
-		"ami": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "A custom AMI ID to use for the worker nodes instead of the default",
-		},
-		"associate_worker_node_public_ip": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     true,
-			Description: "Associate public ip EKS worker nodes",
-		},
-		"desired_nodes": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     3,
-			Description: "The desired number of worker nodes",
-		},
-		"instance_type": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "t2.medium",
-			Description: "The type of machine to use for worker nodes",
-		},
-		"placement_group": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "The name of an existing cluster placement group into which you want to launch your instances",
-		},
 		"key_pair_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -100,18 +104,6 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "When true, do not create or edit security groups, only assign them",
 		},
-		"maximum_nodes": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     3,
-			Description: "The maximum number of worker nodes",
-		},
-		"minimum_nodes": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     1,
-			Description: "The minimum number of worker nodes",
-		},
 		"node_security_groups": {
 			Type:        schema.TypeList,
 			Optional:    true,
@@ -119,12 +111,6 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
-		},
-		"node_volume_size": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     20,
-			Description: "The volume size for each node",
 		},
 		"region": {
 			Type:        schema.TypeString,
@@ -159,23 +145,140 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"user_data": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Pass user-data to the nodes to perform automated configuration tasks",
-		},
 		"virtual_network": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The name of the virtual network to use",
 		},
-		"worker_subnets": {
+		"worker_pools": {
 			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "List of worker subnets in the virtual network to use",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
+			Required:    true,
+			Description: "List of worker pools",
+			MinItems:    1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"add_default_label": {
+						Type:        schema.TypeBool,
+						Optional:    true,
+						Default:     false,
+						Description: "Adds default label for EKS worker nodes",
+					},
+					"add_default_taint": {
+						Type:        schema.TypeBool,
+						Optional:    true,
+						Default:     false,
+						Description: "Adds default taint for EKS worker nodes",
+					},
+					"additional_labels": {
+						Type:        schema.TypeMap,
+						Optional:    true,
+						Description: "Additional labels for EKS worker nodes",
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"additional_taints": {
+						Type:        schema.TypeList,
+						Optional:    true,
+						Description: "List of additional taints",
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"effect": {
+									Type:     schema.TypeString,
+									Optional: true,
+									Default:  "",
+								},
+								"key": {
+									Type:     schema.TypeString,
+									Optional: true,
+									Default:  "",
+								},
+								"operator": {
+									Type:     schema.TypeString,
+									Optional: true,
+									Default:  "",
+								},
+								"value": {
+									Type:     schema.TypeString,
+									Optional: true,
+									Default:  "",
+								},
+							},
+						},
+					},
+					"ami": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "A custom AMI ID to use for the worker nodes instead of the default",
+					},
+					"associate_worker_node_public_ip": {
+						Type:        schema.TypeBool,
+						Optional:    true,
+						Default:     true,
+						Description: "Associate public ip EKS worker nodes",
+					},
+					"desired_nodes": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Default:     3,
+						Description: "The desired number of worker nodes",
+					},
+					"ebs_encryption": {
+						Type:        schema.TypeBool,
+						Optional:    true,
+						Default:     false,
+						Description: "Enable EBS encryption for EKS worker nodes",
+					},
+					"instance_type": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Default:     "t2.medium",
+						Description: "The type of machine to use for worker nodes",
+					},
+					"placement_group": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Default:     "",
+						Description: "The name of an existing cluster placement group into which you want to launch your instances",
+					},
+					"maximum_nodes": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Default:     3,
+						Description: "The maximum number of worker nodes",
+					},
+					"minimum_nodes": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Default:     1,
+						Description: "The minimum number of worker nodes",
+					},
+					"name": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Name of the worker pool",
+					},
+					"node_volume_size": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Default:     20,
+						Description: "The volume size for each node",
+					},
+					"user_data": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Computed:    true,
+						Description: "Pass user-data to the nodes to perform automated configuration tasks",
+					},
+					"subnets": {
+						Type:        schema.TypeList,
+						Optional:    true,
+						Description: "List of worker subnets in the virtual network to use",
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+				},
 			},
 		},
 	}

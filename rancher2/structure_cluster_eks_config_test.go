@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -11,55 +12,96 @@ var (
 )
 
 func init() {
+	workerPoolBytes, _ := json.Marshal(
+		AmazonElasticContainerWorkerPool{
+			AddDefaultLabel: false,
+			AddDefaultTaint: false,
+			AdditionalLabels: map[string]string{
+				"pool-name": "main-pool",
+			},
+			AdditionalTaints: []K8sTaint{
+				{
+					Key:      "pool-name",
+					Operator: "Equal",
+					Value:    "main-pool",
+					Effect:   "NoSchedule",
+				},
+			},
+			AMI:                         "ami",
+			AssociateWorkerNodePublicIP: newTrue(),
+			DesiredNodes:                4,
+			InstanceType:                "instance",
+			MaximumNodes:                5,
+			MinimumNodes:                3,
+			Name:                        "main-pool",
+			NodeVolumeSize:              40,
+			PlacementGroup:              "placement_group",
+			UserData:                    "user_data",
+			Subnets:                     []string{"worker1", "worker2"},
+		},
+	)
+
 	testClusterEKSConfigConf = &AmazonElasticContainerServiceConfig{
-		AccessKey:                   "XXXXXXXX",
-		SecretKey:                   "YYYYYYYY",
-		AMI:                         "ami",
-		AssociateWorkerNodePublicIP: newTrue(),
-		DesiredNodes:                4,
-		DisplayName:                 "test",
-		InstanceType:                "instance",
-		KeyPairName:                 "key_pair_name",
-		KubernetesVersion:           "1.11",
-		ManageOwnSecurityGroups:     newTrue(),
-		MaximumNodes:                5,
-		MinimumNodes:                3,
-		NodeSecurityGroups:          []string{"node-sg1", "node-sg2"},
-		NodeVolumeSize:              40,
-		PlacementGroup:              "placement_group",
-		Region:                      "region",
-		SecurityGroups:              []string{"sg1", "sg2"},
-		ServiceRole:                 "role",
-		SessionToken:                "session_token",
-		Subnets:                     []string{"subnet1", "subnet2"},
-		UserData:                    "user_data",
-		VirtualNetwork:              "network",
-		WorkerSubnets:               []string{"worker1", "worker2"},
+		AccessKey:               "XXXXXXXX",
+		SecretKey:               "YYYYYYYY",
+		DisplayName:             "test",
+		KeyPairName:             "key_pair_name",
+		KubernetesVersion:       "1.11",
+		ManageOwnSecurityGroups: newTrue(),
+		NodeSecurityGroups:      []string{"node-sg1", "node-sg2"},
+		Region:                  "region",
+		SecurityGroups:          []string{"sg1", "sg2"},
+		ServiceRole:             "role",
+		SessionToken:            "session_token",
+		Subnets:                 []string{"subnet1", "subnet2"},
+		VirtualNetwork:          "network",
+		WorkerPools: []string{
+			string(workerPoolBytes),
+		},
 	}
 	testClusterEKSConfigInterface = []interface{}{
 		map[string]interface{}{
-			"access_key":                      "XXXXXXXX",
-			"secret_key":                      "YYYYYYYY",
-			"ami":                             "ami",
-			"associate_worker_node_public_ip": true,
-			"desired_nodes":                   4,
-			"instance_type":                   "instance",
-			"key_pair_name":                   "key_pair_name",
-			"kubernetes_version":              "1.11",
-			"manage_own_security_groups":      true,
-			"maximum_nodes":                   5,
-			"minimum_nodes":                   3,
-			"node_security_groups":            []interface{}{"node-sg1", "node-sg2"},
-			"node_volume_size":                40,
-			"placement_group":                 "placement_group",
-			"region":                          "region",
-			"security_groups":                 []interface{}{"sg1", "sg2"},
-			"service_role":                    "role",
-			"session_token":                   "session_token",
-			"subnets":                         []interface{}{"subnet1", "subnet2"},
-			"user_data":                       "user_data",
-			"virtual_network":                 "network",
-			"worker_subnets":                  []interface{}{"worker1", "worker2"},
+			"access_key":                 "XXXXXXXX",
+			"secret_key":                 "YYYYYYYY",
+			"key_pair_name":              "key_pair_name",
+			"kubernetes_version":         "1.11",
+			"manage_own_security_groups": true,
+			"node_security_groups":       []interface{}{"node-sg1", "node-sg2"},
+			"region":                     "region",
+			"security_groups":            []interface{}{"sg1", "sg2"},
+			"service_role":               "role",
+			"session_token":              "session_token",
+			"subnets":                    []interface{}{"subnet1", "subnet2"},
+			"virtual_network":            "network",
+			"worker_pools": []interface{}{
+				map[string]interface{}{
+					"add_default_label": false,
+					"add_default_taint": false,
+					"additional_labels": map[string]interface{}{
+						"pool-name": "main-pool",
+					},
+					"additional_taints": []interface{}{
+						map[string]interface{}{
+							"key":      "pool-name",
+							"operator": "Equal",
+							"value":    "main-pool",
+							"effect":   "NoSchedule",
+						},
+					},
+					"ami":                             "ami",
+					"associate_worker_node_public_ip": true,
+					"desired_nodes":                   4,
+					"ebs_encryption":                  false,
+					"instance_type":                   "instance",
+					"maximum_nodes":                   5,
+					"minimum_nodes":                   3,
+					"name":                            "main-pool",
+					"node_volume_size":                40,
+					"placement_group":                 "placement_group",
+					"user_data":                       "user_data",
+					"subnets":                         []interface{}{"worker1", "worker2"},
+				},
+			},
 		},
 	}
 }
