@@ -193,7 +193,7 @@ func flattenClusterTemplate(d *schema.ResourceData, in *managementClient.Cluster
 
 func expandQuestions(p []interface{}) []managementClient.Question {
 	if len(p) == 0 || p[0] == nil {
-		return []managementClient.Question{}
+		return nil
 	}
 
 	obj := make([]managementClient.Question, len(p))
