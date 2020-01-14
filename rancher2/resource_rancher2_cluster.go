@@ -324,6 +324,7 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj := &Cluster{}
+		log.Printf("[TRACE] Refreshing cluster state %s", clusterID)
 		err := client.APIBaseClient.ByID(managementClient.ClusterType, clusterID, obj)
 		if err != nil {
 			// The IsForbidden check is used in the case the user performing the action does not have the
@@ -335,7 +336,8 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
-			return nil, "", err
+			log.Printf("[WARN] Error refreshing cluster state, retrying. %v", err)
+			return obj, "retry", nil
 		}
 
 		// If we encounter an error, such as "only one of zone or region must be specified"
@@ -351,12 +353,14 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 // clusterRegistrationTokenStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher ClusterRegistrationToken.
 func clusterRegistrationTokenStateRefreshFunc(client *managementClient.Client, clusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
+		log.Printf("[TRACE] Refreshing cluster registration state %s", clusterID)
 		obj, err := client.ClusterRegistrationToken.ByID(clusterID)
 		if err != nil {
 			if IsNotFound(err) {
 				return obj, "removed", nil
 			}
-			return nil, "", err
+			log.Printf("[WARN] Error refreshing cluster registration state, retrying. %v", err)
+			return obj, "retry", nil
 		}
 
 		if obj.Removed != "" {
