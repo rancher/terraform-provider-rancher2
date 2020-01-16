@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -27,6 +28,10 @@ const (
 	passDigits                = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 	passDefaultLen            = 20
 )
+
+func AreEqual(o, n interface{}) bool {
+	return reflect.DeepEqual(o, n)
+}
 
 func Base64Encode(s string) string {
 	if len(s) == 0 {

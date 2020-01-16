@@ -171,17 +171,17 @@ func resourceRancher2ClusterTemplateUpdate(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	defaultRevisionId := d.Get("default_revision_id").(string)
+	defaultRevisionID := d.Get("default_revision_id").(string)
 	clusterTemplateRevisions := []managementClient.ClusterTemplateRevision{}
 	if d.HasChange("template_revisions") {
-		defaultRevisionId, clusterTemplateRevisions, err = clusterTemplateRevisionsUpdate(client, id, d.Get("template_revisions").([]interface{}))
+		defaultRevisionID, clusterTemplateRevisions, err = clusterTemplateRevisionsUpdate(client, id, d.Get("template_revisions").([]interface{}))
 		if err != nil {
 			return err
 		}
 	}
 
 	update := map[string]interface{}{
-		"defaultRevisionId": defaultRevisionId,
+		"defaultRevisionId": defaultRevisionID,
 		"description":       d.Get("description").(string),
 		"members":           expandMembers(d.Get("members").([]interface{})),
 		"name":              d.Get("name").(string),
@@ -306,11 +306,12 @@ func clusterTemplateRevisionsUpdate(client *managementClient.Client, ctID string
 			clusterTemplateRevisions[i] = *newCtr
 			continue
 		}
-		// Update existing clusterTemplateRevisions
+		// Update existing clusterTemplateRevisions if changed
 		ctr, err := client.ClusterTemplateRevision.ByID(ctrs[i].ID)
 		if err != nil {
 			return "", nil, err
 		}
+
 		enabled := in["enabled"].(bool)
 		update := map[string]interface{}{
 			"clusterConfig": expandClusterSpecBase(in["cluster_config"].([]interface{})),
@@ -321,15 +322,26 @@ func clusterTemplateRevisionsUpdate(client *managementClient.Client, ctID string
 			"labels":        toMapString(in["labels"].(map[string]interface{})),
 		}
 
-		newCtr, err := client.ClusterTemplateRevision.Update(ctr, update)
-		if err != nil {
-			return "", nil, err
+		if !AreEqual(ctr.ClusterConfig, update["clusterConfig"]) ||
+			!AreEqual(*ctr.Enabled, enabled) ||
+			!AreEqual(ctr.Name, update["name"]) ||
+			!AreEqual(ctr.Questions, update["questions"]) ||
+			!AreEqual(ctr.Annotations, update["annotations"]) ||
+			!AreEqual(ctr.Labels, update["labels"]) {
+
+			ctr, err = client.ClusterTemplateRevision.Update(ctr, update)
+			if err != nil {
+				return "", nil, err
+			}
 		}
 
-		clusterTemplateRevisions[i] = *newCtr
+		clusterTemplateRevisions[i] = *ctr
 	}
 
 	ctrID, _, err := flattenClusterTemplateRevisions(clusterTemplateRevisions, "", data)
+	if err != nil {
+		return "", nil, err
+	}
 
 	return ctrID, clusterTemplateRevisions, nil
 }
