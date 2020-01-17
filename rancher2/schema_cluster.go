@@ -196,6 +196,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			MaxItems:    1,
+			Computed:    true,
 			Description: "Cluster template answers",
 			Elem: &schema.Resource{
 				Schema: answerFields(),
@@ -279,6 +280,7 @@ func clusterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     false,
 			Description: "Windows preferred cluster",
+			ForceNew:    true,
 		},
 	}
 

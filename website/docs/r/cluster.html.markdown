@@ -150,7 +150,7 @@ resource "rancher2_cluster_template" "foo" {
 resource "rancher2_cluster" "foo" {
   name = "foo"
   cluster_template_id = "${rancher2_cluster_template.foo.id}"
-  cluster_template_revision_id = "${rancher2_cluster_template.foo.default_revision_id}"
+  cluster_template_revision_id = "${rancher2_cluster_template.foo.template_revisions.0.id}"
 }
 ```
 
@@ -166,7 +166,7 @@ The following arguments are supported:
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_monitoring_input` - (Optional/Computed) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
-* `cluster_template_answers` - (Optional) Cluster template answers. Just for Rancher v2.3.x and above (list maxitems:1)
+* `cluster_template_answers` - (Optional/Computed) Cluster template answers. Just for Rancher v2.3.x and above (list maxitems:1)
 * `cluster_template_id` - (Optional) Cluster template ID. Just for Rancher v2.3.x and above (string)
 * `cluster_template_questions` - (Optional) Cluster template questions. Just for Rancher v2.3.x and above (list)
 * `cluster_template_revision_id` - (Optional) Cluster template revision ID. Just for Rancher v2.3.x and above (string)
