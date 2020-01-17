@@ -450,6 +450,7 @@ The following attributes are exported:
 
 ##### Arguments
 
+* `dns_policy` - (Optional/Computed) DNS Policy for RKE Ingress (map)
 * `extra_args` - (Optional/Computed) Extra arguments for RKE Ingress (map)
 * `node_selector` - (Optional/Computed) Node selector for RKE Ingress (map)
 * `options` - (Optional/Computed) RKE options for Ingress (map)

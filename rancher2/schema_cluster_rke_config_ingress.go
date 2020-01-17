@@ -28,6 +28,11 @@ func clusterRKEConfigIngressFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+		"dns_policy": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
 	}
 	return s
 }

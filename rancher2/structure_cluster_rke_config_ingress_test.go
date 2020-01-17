@@ -30,6 +30,7 @@ func init() {
 	}
 	testClusterRKEConfigIngressInterface = []interface{}{
 		map[string]interface{}{
+			"dns_policy": "test",
 			"extra_args": map[string]interface{}{
 				"arg_one": "one",
 				"arg_two": "two",
