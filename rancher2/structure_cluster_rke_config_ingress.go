@@ -12,6 +12,10 @@ func flattenClusterRKEConfigIngress(in *managementClient.IngressConfig) ([]inter
 		return []interface{}{}, nil
 	}
 
+	if len(in.DNSPolicy) > 0 {
+		obj["dns_policy"] = in.DNSPolicy
+	}
+
 	if len(in.ExtraArgs) > 0 {
 		obj["extra_args"] = toMapInterface(in.ExtraArgs)
 	}
@@ -39,6 +43,10 @@ func expandClusterRKEConfigIngress(p []interface{}) (*managementClient.IngressCo
 		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
+
+	if v, ok := in["dns_policy"].(string); ok && len(v) > 0 {
+		obj.DNSPolicy = v
+	}
 
 	if v, ok := in["extra_args"].(map[string]interface{}); ok && len(v) > 0 {
 		obj.ExtraArgs = toMapString(v)

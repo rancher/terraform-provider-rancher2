@@ -14,6 +14,7 @@ var (
 
 func init() {
 	testClusterRKEConfigIngressConf = &managementClient.IngressConfig{
+		DNSPolicy: "test",
 		ExtraArgs: map[string]string{
 			"arg_one": "one",
 			"arg_two": "two",
