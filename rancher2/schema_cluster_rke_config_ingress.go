@@ -2,6 +2,23 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+)
+
+const (
+	clusterRKEConfigIngressDNSPolicyClusterFirst            = "ClusterFirst"
+	clusterRKEConfigIngressDNSPolicyClusterFirstWithHostNet = "ClusterFirstWithHostNet"
+	clusterRKEConfigIngressDNSPolicyDefault                 = "Default"
+	clusterRKEConfigIngressDNSPolicyNone                    = "None"
+)
+
+var (
+	clusterRKEConfigIngressDNSPolicyList = []string{
+		clusterRKEConfigIngressDNSPolicyClusterFirst,
+		clusterRKEConfigIngressDNSPolicyClusterFirstWithHostNet,
+		clusterRKEConfigIngressDNSPolicyDefault,
+		clusterRKEConfigIngressDNSPolicyNone,
+	}
 )
 
 //Schemas
@@ -29,9 +46,10 @@ func clusterRKEConfigIngressFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"dns_policy": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(clusterRKEConfigIngressDNSPolicyList, true),
 		},
 	}
 	return s
