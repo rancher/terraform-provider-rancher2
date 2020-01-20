@@ -275,6 +275,13 @@ func clusterFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+		"windows_prefered_cluster": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Windows preferred cluster",
+			ForceNew:    true,
+		},
 	}
 
 	return s

@@ -230,6 +230,7 @@ func init() {
 		"driver":                                  clusterDriverRKE,
 		"rke_config":                              testClusterRKEConfigInterface,
 		"system_project_id":                       "system_project_id",
+		"windows_prefered_cluster":                false,
 	}
 	testClusterConfTemplate = &Cluster{}
 	testClusterConfTemplate.Name = "test"
@@ -263,6 +264,7 @@ func init() {
 		"cluster_template_revision_id":            "cluster_template_revision_id",
 		"rke_config":                              []interface{}{},
 		"system_project_id":                       "system_project_id",
+		"windows_prefered_cluster":                false,
 	}
 }
 

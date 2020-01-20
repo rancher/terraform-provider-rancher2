@@ -179,6 +179,8 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 
+	d.Set("windows_prefered_cluster", in.WindowsPreferedCluster)
+
 	return nil
 }
 
@@ -345,6 +347,10 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("windows_prefered_cluster").(bool); ok {
+		obj.WindowsPreferedCluster = v
 	}
 
 	return obj, nil
