@@ -450,7 +450,7 @@ The following attributes are exported:
 
 ##### Arguments
 
-* `dns_policy` - (Optional/Computed) DNS Policy for RKE Ingress (map)
+* `dns_policy` - (Optional/Computed) Ingress controller DNS policy. `ClusterFirstWithHostNet`, `ClusterFirst`, `Default`, and `None` are supported. [K8S dns Policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy) (string)
 * `extra_args` - (Optional/Computed) Extra arguments for RKE Ingress (map)
 * `node_selector` - (Optional/Computed) Node selector for RKE Ingress (map)
 * `options` - (Optional/Computed) RKE options for Ingress (map)
