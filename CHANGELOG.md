@@ -19,6 +19,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix `template_revisions` update on `rancher2_cluster_template` resource
+* Fix `rke_config.services.kube_api.policy` argument on `rancher2_cluster` resource
 
 ## 1.7.1 (December 04, 2019)
 
