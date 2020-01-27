@@ -6,10 +6,10 @@ import (
 
 // Flatteners
 
-func flattenClusterRKEConfigServicesKubeAPIAuditLogConfig(in *managementClient.AuditLogConfig) []interface{} {
+func flattenClusterRKEConfigServicesKubeAPIAuditLogConfig(in *managementClient.AuditLogConfig) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
-		return []interface{}{}
+		return []interface{}{}, nil
 	}
 
 	obj["format"] = in.Format
@@ -19,22 +19,38 @@ func flattenClusterRKEConfigServicesKubeAPIAuditLogConfig(in *managementClient.A
 	obj["path"] = in.Path
 
 	if len(in.Policy) > 0 {
-		obj["policy"] = in.Policy
+		policy := map[string]interface{}{}
+
+		for _, field := range servicesKubeAPIAuditLogPolicy {
+			if in.Policy[field] != nil {
+				policy[field] = in.Policy[field]
+			}
+		}
+		policyMap, err := mapInterfaceToJson(policy)
+		if err != nil {
+			return nil, err
+		}
+		obj["policy"] = policyMap
 	}
 
-	return []interface{}{obj}
+	return []interface{}{obj}, nil
 }
 
-func flattenClusterRKEConfigServicesKubeAPIAuditLog(in *managementClient.AuditLog) []interface{} {
+func flattenClusterRKEConfigServicesKubeAPIAuditLog(in *managementClient.AuditLog) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
-		return []interface{}{}
+		return []interface{}{}, nil
 	}
 
 	obj["enabled"] = in.Enabled
-	obj["configuration"] = flattenClusterRKEConfigServicesKubeAPIAuditLogConfig(in.Configuration)
 
-	return []interface{}{obj}
+	config, err := flattenClusterRKEConfigServicesKubeAPIAuditLogConfig(in.Configuration)
+	if err != nil {
+		return []interface{}{}, err
+	}
+	obj["configuration"] = config
+
+	return []interface{}{obj}, nil
 }
 
 func flattenClusterRKEConfigServicesKubeAPIEventRateLimit(in *managementClient.EventRateLimit) []interface{} {
@@ -80,7 +96,11 @@ func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService)
 	obj["always_pull_images"] = in.AlwaysPullImages
 
 	if in.AuditLog != nil {
-		obj["audit_log"] = flattenClusterRKEConfigServicesKubeAPIAuditLog(in.AuditLog)
+		auditLog, err := flattenClusterRKEConfigServicesKubeAPIAuditLog(in.AuditLog)
+		if err != nil {
+			return []interface{}{}, err
+		}
+		obj["audit_log"] = auditLog
 	}
 
 	if in.EventRateLimit != nil {
@@ -122,10 +142,10 @@ func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService)
 
 // Expanders
 
-func expandClusterRKEConfigServicesKubeAPIAuditLogConfig(p []interface{}) *managementClient.AuditLogConfig {
+func expandClusterRKEConfigServicesKubeAPIAuditLogConfig(p []interface{}) (*managementClient.AuditLogConfig, error) {
 	obj := &managementClient.AuditLogConfig{}
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -149,17 +169,29 @@ func expandClusterRKEConfigServicesKubeAPIAuditLogConfig(p []interface{}) *manag
 		obj.Path = v
 	}
 
-	if v, ok := in["policy"].(map[string]interface{}); ok && len(v) > 0 {
-		obj.Policy = v
+	if v, ok := in["policy"].(string); ok && len(v) > 0 {
+		policyMap, err := jsonToMapInterface(v)
+		if err != nil {
+			return nil, err
+		}
+		policy := map[string]interface{}{}
+
+		for _, field := range servicesKubeAPIAuditLogPolicy {
+			if policyMap[field] != nil {
+				policy[field] = policyMap[field]
+			}
+		}
+
+		obj.Policy = policy
 	}
 
-	return obj
+	return obj, nil
 }
 
-func expandClusterRKEConfigServicesKubeAPIAuditLog(p []interface{}) *managementClient.AuditLog {
+func expandClusterRKEConfigServicesKubeAPIAuditLog(p []interface{}) (*managementClient.AuditLog, error) {
 	obj := &managementClient.AuditLog{}
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -168,10 +200,14 @@ func expandClusterRKEConfigServicesKubeAPIAuditLog(p []interface{}) *managementC
 	}
 
 	if v, ok := in["configuration"].([]interface{}); ok && len(v) > 0 {
-		obj.Configuration = expandClusterRKEConfigServicesKubeAPIAuditLogConfig(v)
+		config, err := expandClusterRKEConfigServicesKubeAPIAuditLogConfig(v)
+		if err != nil {
+			return nil, err
+		}
+		obj.Configuration = config
 	}
 
-	return obj
+	return obj, nil
 }
 
 func expandClusterRKEConfigServicesKubeAPIEventRateLimit(p []interface{}) *managementClient.EventRateLimit {
@@ -226,7 +262,11 @@ func expandClusterRKEConfigServicesKubeAPI(p []interface{}) (*managementClient.K
 	}
 
 	if v, ok := in["audit_log"].([]interface{}); ok && len(v) > 0 {
-		obj.AuditLog = expandClusterRKEConfigServicesKubeAPIAuditLog(v)
+		auditLog, err := expandClusterRKEConfigServicesKubeAPIAuditLog(v)
+		if err != nil {
+			return nil, err
+		}
+		obj.AuditLog = auditLog
 	}
 
 	if v, ok := in["event_rate_limit"].([]interface{}); ok && len(v) > 0 {

@@ -28,8 +28,8 @@ func init() {
 		MaxSize:   100,
 		Path:      "path",
 		Policy: map[string]interface{}{
-			"pol1": "conf1",
-			"pol2": "conf2",
+			"omitStages": "conf1",
+			"rules":      "conf2",
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIAuditLogConfigInterface = []interface{}{
@@ -39,10 +39,7 @@ func init() {
 			"max_backup": 10,
 			"max_size":   100,
 			"path":       "path",
-			"policy": map[string]interface{}{
-				"pol1": "conf1",
-				"pol2": "conf2",
-			},
+			"policy":     `{"omitStages":"conf1","rules":"conf2"}`,
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIAuditLogConf = &managementClient.AuditLog{
@@ -136,7 +133,10 @@ func TestFlattenClusterRKEConfigServicesKubeAPIAuditLogConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenClusterRKEConfigServicesKubeAPIAuditLogConfig(tc.Input)
+		output, err := flattenClusterRKEConfigServicesKubeAPIAuditLogConfig(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -157,7 +157,10 @@ func TestFlattenClusterRKEConfigServicesKubeAPIAuditLog(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenClusterRKEConfigServicesKubeAPIAuditLog(tc.Input)
+		output, err := flattenClusterRKEConfigServicesKubeAPIAuditLog(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -244,7 +247,10 @@ func TestExpandClusterRKEConfigServicesKubeAPIAuditLogConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := expandClusterRKEConfigServicesKubeAPIAuditLogConfig(tc.Input)
+		output, err := expandClusterRKEConfigServicesKubeAPIAuditLogConfig(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -265,7 +271,10 @@ func TestExpandClusterRKEConfigServicesKubeAPIAuditLog(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := expandClusterRKEConfigServicesKubeAPIAuditLog(tc.Input)
+		output, err := expandClusterRKEConfigServicesKubeAPIAuditLog(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
