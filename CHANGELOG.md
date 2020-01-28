@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * Added `ssh_cert_path` argument to `rke_config` argument on `rancher2_cluster` resource
 * Added `audit_log`, `event_rate_limit` and `secrets_encryption_config` arguments to `rke_config.services.kube_api` argument on `rancher2_cluster` resource
 * Added `generate_serving_certificate` argument to `rke_config.services.kubelet` argument on `rancher2_cluster` resource
+* Added `driver_id` argument on `rancher2_node_template` resource to reference user created `rancher2_node_driver`
 
 BUG FIXES:
 
