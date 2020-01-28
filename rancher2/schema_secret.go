@@ -11,6 +11,7 @@ func secretFields() map[string]*schema.Schema {
 		"data": &schema.Schema{
 			Type:        schema.TypeMap,
 			Required:    true,
+			Sensitive:   true,
 			Description: "Secret data base64 encoded",
 		},
 		"project_id": &schema.Schema{
