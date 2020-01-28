@@ -214,5 +214,10 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 		obj.Labels = toMapString(v)
 	}
 
+	// Computing driver_id if empty
+	if v, ok := in.Get("driver_id").(string); ok && len(v) == 0 {
+		in.Set("driver_id", obj.Driver)
+	}
+
 	return obj
 }

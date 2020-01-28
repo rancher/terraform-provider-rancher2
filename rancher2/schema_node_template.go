@@ -73,6 +73,11 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"driver_id": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
 		"engine_env": &schema.Schema{
 			Type:     schema.TypeMap,
 			Optional: true,
