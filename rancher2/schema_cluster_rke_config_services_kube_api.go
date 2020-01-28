@@ -4,6 +4,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+const (
+	servicesKubeAPIAuditLogPolicyOmitStages = "omitStages"
+	servicesKubeAPIAuditLogPolicyRules      = "rules"
+)
+
+var (
+	servicesKubeAPIAuditLogPolicy = []string{servicesKubeAPIAuditLogPolicyOmitStages, servicesKubeAPIAuditLogPolicyRules}
+)
+
 //Schemas
 
 func clusterRKEConfigServicesKubeAPIAuditLogConfigFields() map[string]*schema.Schema {
@@ -34,7 +43,7 @@ func clusterRKEConfigServicesKubeAPIAuditLogConfigFields() map[string]*schema.Sc
 			Default:  "/var/log/kube-audit/audit-log.json",
 		},
 		"policy": {
-			Type:     schema.TypeMap,
+			Type:     schema.TypeString,
 			Optional: true,
 		},
 	}

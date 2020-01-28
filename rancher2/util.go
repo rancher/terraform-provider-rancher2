@@ -290,6 +290,26 @@ func toMapInterface(in map[string]string) map[string]interface{} {
 	return out
 }
 
+func jsonToMapInterface(in string) (map[string]interface{}, error) {
+	out := make(map[string]interface{})
+	err := json.Unmarshal([]byte(in), &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, err
+}
+
+func mapInterfaceToJson(in map[string]interface{}) (string, error) {
+	if in == nil {
+		return "", nil
+	}
+	out, err := json.Marshal(in)
+	if err != nil {
+		return "", err
+	}
+	return string(out), err
+}
+
 func FileExist(path string) (bool, error) {
 	if path == "" {
 		return false, nil
