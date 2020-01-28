@@ -1,4 +1,4 @@
-## 1.7.2 (Unreleased)
+## 1.7.2 (January 28, 2020)
 
 FEATURES:
 
