@@ -40,7 +40,9 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	err = meta.(*Config).activateNodeDriver(nodeTemplate.Driver)
+	driverID := d.Get("driver_id").(string)
+
+	err = meta.(*Config).activateNodeDriver(driverID)
 	if err != nil {
 		return err
 	}
@@ -48,14 +50,14 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
-		Refresh:    nodeDriverStateRefreshFunc(client, nodeTemplate.Driver),
+		Refresh:    nodeDriverStateRefreshFunc(client, driverID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for node driver (%s) to be activated: %s", nodeTemplate.Driver, waitErr)
+		return fmt.Errorf("[ERROR] waiting for node driver (%s) to be activated: %s", driverID, waitErr)
 	}
 
 	newNodeTemplate := &NodeTemplate{}
