@@ -33,6 +33,21 @@ resource "rancher2_cluster" "foo-custom" {
     network {
       plugin = "canal"
     }
+    services {
+      kube_api {
+        audit_log {
+          enabled = true
+          configuration {
+            max_age = 5
+            max_backup = 5
+            max_size = 100
+            path = "-"
+            format = "json"
+            policy = jsonencode({"rules":[{"level": "Metadata"}]})
+          }
+        }
+      }
+    }
   }
 }
 ```
@@ -612,7 +627,7 @@ The following attributes are exported:
 * `max_backup` - (Optional) Audit log max backup. Default: `10` (int)
 * `max_size` - (Optional) Audit log max size. Default: `100` (int)
 * `path` - (Optional) (Optional) Audit log path. Default: `/var/log/kube-audit/audit-log.json` (string)
-* `policy` - (Optional) Audit log policy (map)
+* `policy` - (Optional) Audit log policy json formated string. `omitStages` and `rules` json fields are supported. Example: `policy = jsonencode({"rules":[{"level": "Metadata"}]})` (string)
 
 ###### `event_rate_limit`
 
