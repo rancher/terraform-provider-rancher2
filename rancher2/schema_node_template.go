@@ -14,7 +14,7 @@ type NodeTemplate struct {
 	DigitaloceanConfig  *digitaloceanConfig  `json:"digitaloceanConfig,omitempty" yaml:"digitaloceanConfig,omitempty"`
 	OpenstackConfig     *openstackConfig     `json:"openstackConfig,omitempty" yaml:"openstackConfig,omitempty"`
 	VmwarevsphereConfig *vmwarevsphereConfig `json:"vmwarevsphereConfig,omitempty" yaml:"vmwarevsphereConfig,omitempty"`
-	OpennebulaConfig    *opennebulaConfig    `json:"opennebula,omitempty" yaml:"opennebula,omitempty"`
+	OpennebulaConfig    *opennebulaConfig    `json:"opennebulaConfig,omitempty" yaml:"opennebulaConfig,omitempty"`
 }
 
 //Schemas
