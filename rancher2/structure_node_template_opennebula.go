@@ -8,25 +8,25 @@ func flattenOpenNebulaConfig(in *opennebulaConfig) []interface{} {
 		return []interface{}{}
 	}
 
-	obj["b2dSize"] = in.b2dsize
-	obj["devPrefix"] = in.devprefix
-	obj["diskResize"] = in.diskresize
-	obj["imageName"] = in.imagename
-	obj["memory"] = in.memory
-	obj["networkName"] = in.networkname
-	obj["password"] = in.password
-	obj["templateId"] = in.templateid
-	obj["user"] = in.user
-	obj["xmlrpcurl"] = in.xmlrpcurl
-	obj["cpu"] = in.cpu
-	obj["disableVnc"] = in.disablevnc
-	obj["imageId"] = in.imageid
-	obj["imageOwner"] = in.imageowner
-	obj["networkId"] = in.networkid
-	obj["networkOwner"] = in.networkowner
-	obj["sshUser"] = in.sshuser
-	obj["templateName"] = in.templatename
-	obj["vcpu"] = in.vcpu
+	obj["b2d_size"] = in.B2dSize
+	obj["dev_prefix"] = in.DevPrefix
+	obj["disk_resize"] = in.DiskResize
+	obj["image_name"] = in.ImageName
+	obj["memory"] = in.Memory
+	obj["network_name"] = in.NetworkName
+	obj["password"] = in.Password
+	obj["template_id"] = in.TemplateID
+	obj["user"] = in.User
+	obj["xml_rpc_url"] = in.XMLRPCURL
+	obj["cpu"] = in.CPU
+	obj["disable_vnc"] = in.DisableVnc
+	obj["image_id"] = in.ImageID
+	obj["image_owner"] = in.ImageOwner
+	obj["network_id"] = in.NetworkID
+	obj["network_owner"] = in.NetworkOwner
+	obj["ssh_user"] = in.SSHUser
+	obj["template_name"] = in.TemplateName
+	obj["vcpu"] = in.Vcpu
 
 	return []interface{}{obj}
 }
@@ -40,62 +40,62 @@ func expandOpennebulaConfig(p []interface{}) *opennebulaConfig {
 	}
 	in := p[0].(map[string]interface{})
 
-	if v, ok := in["b2dSize"].(string); ok && len(v) > 0 {
-		obj.b2dsize = v
+	if v, ok := in["b2d_size"].(string); ok && len(v) > 0 {
+		obj.B2dSize = v
 	}
-	if v, ok := in["devPrefix"].(string); ok && len(v) > 0 {
-		obj.devprefix = v
+	if v, ok := in["dev_prefix"].(string); ok && len(v) > 0 {
+		obj.DevPrefix = v
 	}
-	if v, ok := in["diskResize"].(string); ok && len(v) > 0 {
-		obj.diskresize = v
+	if v, ok := in["disk_resize"].(string); ok && len(v) > 0 {
+		obj.DiskResize = v
 	}
-	if v, ok := in["imageName"].(string); ok && len(v) > 0 {
-		obj.imagename = v
+	if v, ok := in["image_name"].(string); ok && len(v) > 0 {
+		obj.ImageName = v
 	}
 	if v, ok := in["memory"].(string); ok && len(v) > 0 {
-		obj.memory = v
+		obj.Memory = v
 	}
-	if v, ok := in["networkName"].(string); ok && len(v) > 0 {
-		obj.networkname = v
+	if v, ok := in["network_name"].(string); ok && len(v) > 0 {
+		obj.NetworkName = v
 	}
 	if v, ok := in["password"].(string); ok && len(v) > 0 {
-		obj.password = v
+		obj.Password = v
 	}
-	if v, ok := in["templateId"].(string); ok && len(v) > 0 {
-		obj.templateid = v
+	if v, ok := in["template_id"].(string); ok && len(v) > 0 {
+		obj.TemplateID = v
 	}
 	if v, ok := in["user"].(string); ok && len(v) > 0 {
-		obj.user = v
+		obj.User = v
 	}
-	if v, ok := in["xmlrpcurl"].(string); ok && len(v) > 0 {
-		obj.xmlrpcurl = v
+	if v, ok := in["xml_rpc_url"].(string); ok && len(v) > 0 {
+		obj.XMLRPCURL = v
 	}
 	if v, ok := in["cpu"].(string); ok && len(v) > 0 {
-		obj.cpu = v
+		obj.CPU = v
 	}
-	if v, ok := in["disableVnc"].(bool); ok {
-		obj.disablevnc = v
+	if v, ok := in["disable_vnc"].(bool); ok {
+		obj.DisableVnc = v
 	}
-	if v, ok := in["imageId"].(string); ok && len(v) > 0 {
-		obj.imageid = v
+	if v, ok := in["image_id"].(string); ok && len(v) > 0 {
+		obj.ImageID = v
 	}
-	if v, ok := in["imageOwner"].(string); ok && len(v) > 0 {
-		obj.imageowner = v
+	if v, ok := in["image_owner"].(string); ok && len(v) > 0 {
+		obj.ImageOwner = v
 	}
-	if v, ok := in["networkId"].(string); ok && len(v) > 0 {
-		obj.networkid = v
+	if v, ok := in["network_id"].(string); ok && len(v) > 0 {
+		obj.NetworkID = v
 	}
-	if v, ok := in["networkOwner"].(string); ok && len(v) > 0 {
-		obj.networkowner = v
+	if v, ok := in["network_owner"].(string); ok && len(v) > 0 {
+		obj.NetworkOwner = v
 	}
-	if v, ok := in["sshUser"].(string); ok && len(v) > 0 {
-		obj.sshuser = v
+	if v, ok := in["ssh_user"].(string); ok && len(v) > 0 {
+		obj.SSHUser = v
 	}
-	if v, ok := in["templateName"].(string); ok && len(v) > 0 {
-		obj.templatename = v
+	if v, ok := in["template_name"].(string); ok && len(v) > 0 {
+		obj.TemplateName = v
 	}
 	if v, ok := in["vcpu"].(string); ok && len(v) > 0 {
-		obj.vcpu = v
+		obj.Vcpu = v
 	}
 
 	return obj

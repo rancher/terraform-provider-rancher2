@@ -205,6 +205,45 @@ resource "rancher2_node_template" "foo" {
   }
 }
 `
+	testAccRancher2NodeTemplateConfigOpennebula = `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver opennebula acceptance test"
+  opennebula_config {
+	user = "apiuser"
+	password =  "password123"
+	ssh_user = "rancher"
+	template_name = "template-YYYYYYYY"
+	xml_rpc_url = "http://XXXXXXXX/RPC2"
+  }
+}
+`
+	testAccRancher2NodeTemplateUpdateConfigOpennebula = `
+resource "rancher2_node_template" "foo" {
+  name = "foo2"
+  description = "Terraform node driver opennebula acceptance test - updated"
+  opennebula_config {
+  	user = "apiuser"
+	password =  "password123"
+	ssh_user = "rancher"
+	template_name = "template-YYYYYYYY"
+	xml_rpc_url = "http://XXXXXXXX/RPC2"
+  }
+}
+`
+	testAccRancher2NodeTemplateRecreateConfigOpennebula = `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver opennbula acceptance test"
+  opennebula_config {
+	user = "apiuser"
+	password =  "password123"
+	ssh_user = "rancher"
+	template_name = "template-YYYYYYYY"
+	xml_rpc_url = "http://XXXXXXXX/RPC2"
+  }
+}
+`
 )
 
 func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
@@ -530,6 +569,72 @@ func TestAccRancher2NodeTemplate_disappears_Vsphere(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRancher2NodeTemplateConfigVsphere,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo", nodeTemplate),
+					testAccRancher2NodeTemplateDisappears(nodeTemplate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_basic_Opennebula(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	name := testAccRancher2NodeTemplateType + ".foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigOpennebula,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver opennebula acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", opennebulaConfigDriver),
+					resource.TestCheckResourceAttr(name, "opennebula_config.0.template_name", "template-YYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "opennebula_config.0.ssh_user", "user-XXXXXXXX"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateUpdateConfigOpennebula,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo2"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver opennebula acceptance test - updated"),
+					resource.TestCheckResourceAttr(name, "driver", opennebulaConfigDriver),
+					resource.TestCheckResourceAttr(name, "opennebula_config.0.template_name", "template-YYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "opennebula_config.0.ssh_user", "user-XXXXXXXX"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateRecreateConfigOpennebula,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver opennebula acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", opennebulaConfigDriver),
+					resource.TestCheckResourceAttr(name, "opennebula_config.0.template_name", "template-YYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "opennebula_config.0.ssh_user", "user-XXXXXXXX"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_disappears_Opennebula(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigOpennebula,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo", nodeTemplate),
 					testAccRancher2NodeTemplateDisappears(nodeTemplate),

@@ -11,44 +11,44 @@ const (
 //Types
 
 type opennebulaConfig struct {
-	b2dsize      string `json:"b2dSize,omitempty" yaml:"b2dSize,omitempty"`
-	devprefix    string `json:"devPrefix,omitempty" yaml:"devPrefix,omitempty"`
-	diskresize   string `json:"diskResize,omitempty" yaml:"diskResize,omitempty"`
-	imagename    string `json:"imageName,omitempty" yaml:"imageName,omitempty"`
-	memory       string `json:"memory,omitempty" yaml:"memory,omitempty"`
-	networkname  string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
-	password     string `json:"password,omitempty" yaml:"password,omitempty"`
-	templateid   string `json:"templateId,omitempty" yaml:"templateId,omitempty"`
-	user         string `json:"user,omitempty" yaml:"user,omitempty"`
-	xmlrpcurl    string `json:"xmlrpcurl,omitempty" yaml:"xmlrpcurl,omitempty"`
-	cpu          string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
-	disablevnc   bool   `json:"disableVnc,omitempty" yaml:"disableVnc,omitempty"`
-	imageid      string `json:"imageId,omitempty" yaml:"imageId,omitempty"`
-	imageowner   string `json:"imageOwner,omitempty" yaml:"imageOwner,omitempty"`
-	networkid    string `json:"networkId,omitempty" yaml:"networkId,omitempty"`
-	networkowner string `json:"networkOwner,omitempty" yaml:"networkOwner,omitempty"`
-	sshuser      string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	templatename string `json:"templateName,omitempty" yaml:"templateName,omitempty"`
-	vcpu         string `json:"vcpu,omitempty" yaml:"vcpu,omitempty"`
+	B2dSize      string `json:"b2dSize,omitempty" yaml:"b2dSize,omitempty"`
+	DevPrefix    string `json:"devPrefix,omitempty" yaml:"devPrefix,omitempty"`
+	DiskResize   string `json:"diskResize,omitempty" yaml:"diskResize,omitempty"`
+	ImageName    string `json:"imageName,omitempty" yaml:"imageName,omitempty"`
+	Memory       string `json:"memory,omitempty" yaml:"memory,omitempty"`
+	NetworkName  string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
+	Password     string `json:"password,omitempty" yaml:"password,omitempty"`
+	TemplateID   string `json:"templateId,omitempty" yaml:"templateId,omitempty"`
+	User         string `json:"user,omitempty" yaml:"user,omitempty"`
+	XMLRPCURL    string `json:"xmlrpcurl,omitempty" yaml:"xmlrpcurl,omitempty"`
+	CPU          string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
+	DisableVnc   bool   `json:"disableVnc,omitempty" yaml:"disableVnc,omitempty"`
+	ImageID      string `json:"imageId,omitempty" yaml:"imageId,omitempty"`
+	ImageOwner   string `json:"imageOwner,omitempty" yaml:"imageOwner,omitempty"`
+	NetworkID    string `json:"networkId,omitempty" yaml:"networkId,omitempty"`
+	NetworkOwner string `json:"networkOwner,omitempty" yaml:"networkOwner,omitempty"`
+	SSHUser      string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	TemplateName string `json:"templateName,omitempty" yaml:"templateName,omitempty"`
+	Vcpu         string `json:"vcpu,omitempty" yaml:"vcpu,omitempty"`
 }
 
 //Schemas
 
 func opennebulaConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"b2dsize": &schema.Schema{
+		"b2d_size": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"devprefix": &schema.Schema{
+		"dev_prefix": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"diskresize": &schema.Schema{
+		"disk_resize": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"imagename": &schema.Schema{
+		"image_name": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -56,7 +56,7 @@ func opennebulaConfigFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"networkname": &schema.Schema{
+		"network_name": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -64,7 +64,7 @@ func opennebulaConfigFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"templateid": &schema.Schema{
+		"template_id": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
 		},
@@ -72,7 +72,7 @@ func opennebulaConfigFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"xmlrpcurl": &schema.Schema{
+		"xml_rpc_url": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
 		},
@@ -80,33 +80,32 @@ func opennebulaConfigFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"disablevnc": &schema.Schema{
+		"disable_vnc": &schema.Schema{
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
-		"imageid": &schema.Schema{
+		"image_id": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"imageowner": &schema.Schema{
+		"image_owner": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"networkid": &schema.Schema{
+		"network_id": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"networkowner": &schema.Schema{
+		"network_owner": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
-			Default:  false,
 		},
-		"sshuser": &schema.Schema{
+		"ssh_user": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "docker",
 		},
-		"templatename": &schema.Schema{
+		"template_name": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
 		},

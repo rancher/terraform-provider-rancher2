@@ -8,9 +8,9 @@ description: |-
 
 # rancher2\_node\_template
 
-Provides a Rancher v2 Node Template resource. This can be used to create Node Template for Rancher v2 and retrieve their information. 
+Provides a Rancher v2 Node Template resource. This can be used to create Node Template for Rancher v2 and retrieve their information.
 
-amazonec2, azure, digitalocean, openstack and vsphere drivers are supported for node templates.
+amazonec2, azure, digitalocean, openstack, vsphere and opennebula drivers are supported for node templates.
 
 **Note** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
 
@@ -79,6 +79,7 @@ The following arguments are supported:
 * `engine_opt` - (Optional) Engine options for the node template (map)
 * `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
 * `engine_storage_driver` - (Optional) Engine storage driver for the node template (string)
+* `opennebula_config` - (Optional) Opennebula config for the Node Template (list maxitems:1)
 * `openstack_config` - (Optional) Openstack config for the Node Template (list maxitems:1)
 * `use_internal_ip_address` - (Optional) Engine storage driver for the node template (bool)
 * `vsphere_config` - (Optional) vSphere config for the Node Template (list maxitems:1)
@@ -179,6 +180,32 @@ The following attributes are exported:
 * `ssh_user` - (Optional) SSH username. Default `root` (string)
 * `tags` - (Optional) Comma-separated list of tags to apply to the Droplet (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
+
+### `opennebula_config`
+
+#### Arguments
+
+* `b2d_size` - (Optional) Size of the Volatile disk in MB - only for b2d (string)
+* `cpu` - (Optional) CPU value for the VM (string)
+* `dev_prefix` - (Optional) Dev prefix to use for the images. E.g.: 'vd', 'sd', 'hd' (string)
+* `disk_resize` - (Optional) Size of the disk for the VM in MB (string)
+* `disable_vnc` - (Optional) VNC is enabled by default. Disable it with this flag (bool)
+* `image_id` - (Required*) Image ID to use as the VM OS (string)
+* `image_name` - (Required*) Opennebula image to use as the VM OS (string)
+* `image_owner` - (Optional) Owner of the image to use as the VM OS (string)
+* `memory`- (Optional) Size of the memory for the VM in MB (string)
+* `network_id` - (Optional) Opennebula network ID to connect the machine to (string)
+* `network_name` - (Optional) Opennebula network to connect the machine to (string)
+* `network_owner` - (Optional) Opennebula user ID of the Network to connect the machine to (string)
+* `password` - (Required) Set the password for the XML-RPC API authentication (string)
+* `ssh_user` - (Optional) Set the name of the SSH user. Defaults to docker (string)
+* `template_id` - (Required*) Opennebula template ID to use (string)
+* `template_name` - (Required*) Name of the Opennbula template to use (string)
+* `user` - (Required) Set the user for the XML-RPC API authentication (string)
+* `vcpu` - (Optional) VCPUs for the VM (string)
+* `xml_rpc_url` - (Required) Set the url for the Opennebula XML-RPC API (string)
+
+> **Note**: `Required*` denotes that one of image_name / image_id or template_name / template_id is required but you cannot combine them.
 
 ### `openstack_config`
 
