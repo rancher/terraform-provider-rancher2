@@ -29,7 +29,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"azure_config", "digitalocean_config", "openstack_config", "vsphere_config", "opennebula_config"},
+			ConflictsWith: []string{"azure_config", "digitalocean_config", "opennebula_config", "openstack_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: amazonec2ConfigFields(),
 			},
@@ -48,7 +48,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "digitalocean_config", "openstack_config", "vsphere_config", "opennebula_config"},
+			ConflictsWith: []string{"amazonec2_config", "digitalocean_config", "opennebula_config", "openstack_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: azureConfigFields(),
 			},
@@ -65,7 +65,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "openstack_config", "vsphere_config", "opennebula_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "opennebula_config", "openstack_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: digitaloceanConfigFields(),
 			},
@@ -118,7 +118,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "vsphere_config", "opennebula_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "opennebula_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: openstackConfigFields(),
 			},
@@ -132,7 +132,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "openstack_config", "opennebula_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "opennebula_config", "openstack_config"},
 			Elem: &schema.Resource{
 				Schema: vsphereConfigFields(),
 			},
