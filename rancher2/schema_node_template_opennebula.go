@@ -20,8 +20,8 @@ type opennebulaConfig struct {
 	ImageID      string `json:"imageId,omitempty" yaml:"imageId,omitempty"`
 	ImageOwner   string `json:"imageOwner,omitempty" yaml:"imageOwner,omitempty"`
 	Memory       string `json:"memory,omitempty" yaml:"memory,omitempty"`
-	NetworkName  string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
 	NetworkID    string `json:"networkId,omitempty" yaml:"networkId,omitempty"`
+	NetworkName  string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
 	NetworkOwner string `json:"networkOwner,omitempty" yaml:"networkOwner,omitempty"`
 	Password     string `json:"password,omitempty" yaml:"password,omitempty"`
 	SSHUser      string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
