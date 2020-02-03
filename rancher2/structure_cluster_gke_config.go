@@ -133,6 +133,10 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 		obj["min_node_count"] = int(in.MinNodeCount)
 	}
 
+	if len(in.MinCpuPlatform) > 0 {
+		obj["min_cpu_platform"] = in.MinCpuPlatform
+	}
+
 	if len(in.Network) > 0 {
 		obj["network"] = in.Network
 	}
@@ -358,6 +362,10 @@ func expandClusterGKEConfig(p []interface{}, name string) (*GoogleKubernetesEngi
 
 	if v, ok := in["min_node_count"].(int); ok && v > 0 {
 		obj.MinNodeCount = int64(v)
+	}
+
+	if v, ok := in["min_cpu_platform"].(string); ok && len(v) > 0 {
+		obj.MinCpuPlatform = v
 	}
 
 	if v, ok := in["network"].(string); ok && len(v) > 0 {
