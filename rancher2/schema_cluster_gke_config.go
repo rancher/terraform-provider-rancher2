@@ -52,6 +52,7 @@ type GoogleKubernetesEngineConfig struct {
 	MasterVersion                      string            `json:"masterVersion,omitempty" yaml:"masterVersion,omitempty"`
 	MaxNodeCount                       int64             `json:"maxNodeCount,omitempty" yaml:"maxNodeCount,omitempty"`
 	MinNodeCount                       int64             `json:"minNodeCount,omitempty" yaml:"minNodeCount,omitempty"`
+	MinCpuPlatform                     string            `json:"minCpuPlatform,omitempty" yaml:"minCpuPlatform,omitempty"`
 	Name                               string            `json:"name,omitempty" yaml:"name,omitempty"`
 	Network                            string            `json:"network,omitempty" yaml:"network,omitempty"`
 	NodeCount                          int64             `json:"nodeCount,omitempty" yaml:"nodeCount,omitempty"`
@@ -152,6 +153,11 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The kubernetes master version",
+		},
+		"min_cpu_platform": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The min CPU platform to request",
 		},
 		"network": {
 			Type:        schema.TypeString,
