@@ -150,6 +150,8 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 		update["digitaloceanConfig"] = expandDigitaloceanConfig(d.Get("digitalocean_config").([]interface{}))
 	case openstackConfigDriver:
 		update["openstackConfig"] = expandOpenstackConfig(d.Get("openstack_config").([]interface{}))
+	case opennebulaConfigDriver:
+		update["opennebulaConfig"] = expandOpennebulaConfig(d.Get("opennebula_config").([]interface{}))
 	case vmwarevsphereConfigDriver:
 		update["vmwarevsphereConfig"] = expandVsphereConfig(d.Get("vsphere_config").([]interface{}))
 	}
