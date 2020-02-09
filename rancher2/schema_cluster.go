@@ -113,8 +113,8 @@ func clusterFields() map[string]*schema.Schema {
 			ValidateFunc: validation.StringInSlice(clusterDrivers, true),
 		},
 		"kube_config": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:      schema.TypeString,
+			Computed:  true,
 			Sensitive: true,
 		},
 		"rke_config": &schema.Schema{
