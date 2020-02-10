@@ -205,7 +205,7 @@ The following attributes are exported:
 * `cluster_registration_token` - (Computed) Cluster Registration Token generated for the cluster (list maxitems:1)
 * `default_project_id` - (Computed) Default project ID for the cluster (string)
 * `driver` - (Computed) The driver used for the Cluster. `imported`, `azurekubernetesservice`, `amazonelasticcontainerservice`, `googlekubernetesengine` and `rancherKubernetesEngine` are supported (string)
-* `kube_config` - (Computed) Kube Config generated for the cluster (string)
+* `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster (string)
 * `system_project_id` - (Computed) System project ID for the cluster (string)
 
 ## Nested blocks
