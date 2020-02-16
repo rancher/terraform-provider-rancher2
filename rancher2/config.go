@@ -1347,6 +1347,8 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 		return &managementClient.LdapConfig{}, nil
 	case managementClient.PingConfigType:
 		return &managementClient.PingConfig{}, nil
+	case managementClient.GoogleOauthConfigType:
+		return &managementClient.GoogleOauthConfig{}, nil
 	default:
 		return nil, fmt.Errorf("[ERROR] Auth config type %s not supported", kind)
 	}
