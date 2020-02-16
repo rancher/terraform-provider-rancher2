@@ -7,6 +7,7 @@ page_title: "rancher2_bootstrap Resource"
 Provides a Rancher v2 bootstrap resource. This can be used to bootstrap Rancher v2 environments and output information. It just works if `bootstrap` provider config is added to the .tf file. More info at [rancher2 provider](../index.html)
 
 This resource bootstraps a Rancher system by performing the following tasks:
+
 - Updates the default admin password, provided by setting `password` or generating a random one.
 - Sets `server-url` setting, based on `api_url`.
 - Sets `telemetry-opt` setting.
