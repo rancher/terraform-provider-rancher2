@@ -9,12 +9,19 @@ const (
 	networkPluginCalicoName  = "calico"
 	networkPluginCanalName   = "canal"
 	networkPluginFlannelName = "flannel"
+	networkPluginNonelName   = "none"
 	networkPluginWeaveName   = "weave"
 )
 
 var (
 	networkPluginDefault = networkPluginCanalName
-	networkPluginList    = []string{networkPluginCalicoName, networkPluginCanalName, networkPluginFlannelName, networkPluginWeaveName}
+	networkPluginList    = []string{
+		networkPluginCalicoName,
+		networkPluginCanalName,
+		networkPluginFlannelName,
+		networkPluginNonelName,
+		networkPluginWeaveName,
+	}
 )
 
 //Schemas
