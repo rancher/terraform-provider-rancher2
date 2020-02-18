@@ -1,4 +1,17 @@
 ## 1.7.3 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
+
+BUG FIXES:
+
+
+
 ## 1.7.2 (January 28, 2020)
 
 FEATURES:
