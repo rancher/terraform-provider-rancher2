@@ -2,15 +2,18 @@
 
 FEATURES:
 
-
+* **New Data Source:** `rancher2_pod_security_policy_template`
+* **New Resource:** `rancher2_pod_security_policy_template`
 
 ENHANCEMENTS:
 
-* Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
-* Updated multiline arguments to trim spaces by default and avoid false diff
+* Updated `rancher/norman` go modules and vendor files
 
 BUG FIXES:
 
+* Fix `audit_log.configuration.policy` argument to `rke_config.services.kube_api` argument on `rancher2_cluster` resource
+* Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
+* Updated multiline arguments to trim spaces by default and avoid false diff
 * Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs 
 
 ## 1.7.2 (January 28, 2020)
