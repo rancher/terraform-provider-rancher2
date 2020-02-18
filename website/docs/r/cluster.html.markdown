@@ -25,6 +25,16 @@ resource "rancher2_cluster" "foo-imported" {
 Creating Rancher v2 RKE cluster
 
 ```hcl
+# Create auditlog policy yaml file
+auditlog_policy.yaml
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  - level: RequestResponse
+    resources:
+    - group: ""
+      resources: ["pods"]
+
 # Create a new rancher2 RKE Cluster
 resource "rancher2_cluster" "foo-custom" {
   name = "foo-custom"
@@ -43,7 +53,7 @@ resource "rancher2_cluster" "foo-custom" {
             max_size = 100
             path = "-"
             format = "json"
-            policy = jsonencode({"rules":[{"level": "Metadata"}]})
+            policy = file("auditlog_policy.yaml")
           }
         }
       }
@@ -615,7 +625,7 @@ The following attributes are exported:
 
 ###### Arguments
 
-* `configuration` - (Optional) Audit log configuration. (list maxtiem: 1)
+* `configuration` - (Optional/Computed) Audit log configuration. (list maxtiem: 1)
 * `enabled` - (Optional) Enable audit log. Default: `false` (bool)
 
 ###### `configuration`
@@ -627,7 +637,7 @@ The following attributes are exported:
 * `max_backup` - (Optional) Audit log max backup. Default: `10` (int)
 * `max_size` - (Optional) Audit log max size. Default: `100` (int)
 * `path` - (Optional) (Optional) Audit log path. Default: `/var/log/kube-audit/audit-log.json` (string)
-* `policy` - (Optional) Audit log policy json formated string. `omitStages` and `rules` json fields are supported. Example: `policy = jsonencode({"rules":[{"level": "Metadata"}]})` (string)
+* `policy` - (Optional/Computed) Audit policy yaml encoded definition. `apiVersion` and `kind: Policy\nrules:"` fields are required in the yaml. Ex. `"apiVersion: audit.k8s.io/v1\nkind: Policy\nrules:\n- level: RequestResponse\n  resources:\n  - resources:\n    - pods\n"` [More info](https://rancher.com/docs/rke/latest/en/config-options/audit-log/) (string)
 
 ###### `event_rate_limit`
 
