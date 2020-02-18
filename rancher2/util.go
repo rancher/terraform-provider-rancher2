@@ -17,10 +17,12 @@ import (
 	"strings"
 	"time"
 
+	ghodssyaml "github.com/ghodss/yaml"
 	gover "github.com/hashicorp/go-version"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -296,18 +298,91 @@ func toMapInterface(in map[string]string) map[string]interface{} {
 
 func jsonToMapInterface(in string) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
-	err := json.Unmarshal([]byte(in), &out)
+	err := jsonToInterface(in, &out)
+	return out, err
+}
+
+func jsonToInterface(in string, out interface{}) error {
+	if out == nil {
+		return nil
+	}
+	err := json.Unmarshal([]byte(in), out)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func ghodssyamlToMapInterface(in string) (map[string]interface{}, error) {
+	out := make(map[string]interface{})
+	err := ghodssyaml.Unmarshal([]byte(in), &out)
 	if err != nil {
 		return nil, err
 	}
 	return out, err
 }
 
-func mapInterfaceToJson(in map[string]interface{}) (string, error) {
+func ghodssyamlToInterface(in string, out interface{}) error {
+	if out == nil {
+		return nil
+	}
+	err := ghodssyaml.Unmarshal([]byte(in), out)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func yamlToMapInterface(in string) (map[string]interface{}, error) {
+	out := make(map[string]interface{})
+	err := yaml.Unmarshal([]byte(in), &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, err
+}
+
+func yamlToInterface(in string, out interface{}) error {
+	if out == nil {
+		return nil
+	}
+	err := yaml.Unmarshal([]byte(in), out)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func mapInterfaceToJSON(in map[string]interface{}) (string, error) {
+	if in == nil {
+		return "", nil
+	}
+	return interfaceToJSON(in)
+}
+
+func mapInterfaceToYAML(in map[string]interface{}) (string, error) {
+	if in == nil {
+		return "", nil
+	}
+	return interfaceToYAML(in)
+}
+
+func interfaceToJSON(in interface{}) (string, error) {
 	if in == nil {
 		return "", nil
 	}
 	out, err := json.Marshal(in)
+	if err != nil {
+		return "", err
+	}
+	return string(out), err
+}
+
+func interfaceToYAML(in interface{}) (string, error) {
+	if in == nil {
+		return "", nil
+	}
+	out, err := yaml.Marshal(in)
 	if err != nil {
 		return "", err
 	}

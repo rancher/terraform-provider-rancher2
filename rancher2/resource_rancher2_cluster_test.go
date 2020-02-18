@@ -26,7 +26,20 @@ resource "rancher2_cluster" "foo" {
         creation = "6h"
         retention = "24h"
       }
-	}
+      kube_api {
+        audit_log {
+          enabled = true
+          configuration {
+            max_age = 5
+            max_backup = 5
+            max_size = 100
+            path = "-"
+            format = "json"
+            policy = "apiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n  creationTimestamp: null\nomitStages:\n- RequestReceived\nrules:\n- level: RequestResponse\n  resources:\n  - resources:\n    - pods\n"
+          }
+        }
+      }
+    }
   }
 }
 `
@@ -44,7 +57,20 @@ resource "rancher2_cluster" "foo" {
         creation = "12h"
         retention = "72h"
       }
-	}
+      kube_api {
+        audit_log {
+          enabled = true
+          configuration {
+            max_age = 7
+            max_backup = 5
+            max_size = 100
+            path = "-"
+            format = "json"
+            policy = "apiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n  creationTimestamp: null\nomitStages:\n- RequestReceived\nrules:\n- level: RequestResponse\n  resources:\n  - resources:\n    - pods\n"
+          }
+        }
+      }
+    }
   }
 }
  `
@@ -62,7 +88,20 @@ resource "rancher2_cluster" "foo" {
         creation = "6h"
         retention = "24h"
       }
-	}
+      kube_api {
+        audit_log {
+          enabled = true
+          configuration {
+            max_age = 5
+            max_backup = 5
+            max_size = 100
+            path = "-"
+            format = "json"
+            policy = "apiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n  creationTimestamp: null\nomitStages:\n- RequestReceived\nrules:\n- level: RequestResponse\n  resources:\n  - resources:\n    - pods\n"
+          }
+        }
+      }
+    }
   }
 }
  `
@@ -105,6 +144,7 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform custom cluster acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "5"),
 				),
 			},
 			resource.TestStep{
@@ -115,6 +155,7 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform custom cluster acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "12h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "72h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "7"),
 				),
 			},
 			resource.TestStep{
@@ -125,6 +166,7 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform custom cluster acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "5"),
 				),
 			},
 		},
