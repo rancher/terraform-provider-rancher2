@@ -23,6 +23,7 @@ func authConfigKeyCloakFields() map[string]*schema.Schema {
 			Type:      schema.TypeString,
 			Required:  true,
 			Sensitive: true,
+			StateFunc: TrimSpace,
 		},
 		"rancher_api_host": {
 			Type:     schema.TypeString,
@@ -32,11 +33,13 @@ func authConfigKeyCloakFields() map[string]*schema.Schema {
 			Type:      schema.TypeString,
 			Required:  true,
 			Sensitive: true,
+			StateFunc: TrimSpace,
 		},
 		"sp_key": {
 			Type:      schema.TypeString,
 			Required:  true,
 			Sensitive: true,
+			StateFunc: TrimSpace,
 		},
 		"uid_field": {
 			Type:     schema.TypeString,

@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 // Shemas
@@ -9,15 +10,25 @@ import (
 func certificateFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"certs": &schema.Schema{
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Certificate certs base64 encoded",
+			Type:         schema.TypeString,
+			Required:     true,
+			Description:  "Certificate certs base64 encoded",
+			ValidateFunc: validation.StringIsBase64,
+			StateFunc: func(val interface{}) string {
+				s, _ := Base64Decode(val.(string))
+				return Base64Encode(TrimSpace(s))
+			},
 		},
 		"key": &schema.Schema{
-			Type:        schema.TypeString,
-			Required:    true,
-			Sensitive:   true,
-			Description: "Certificate key base64 encoded",
+			Type:         schema.TypeString,
+			Required:     true,
+			Sensitive:    true,
+			Description:  "Certificate key base64 encoded",
+			ValidateFunc: validation.StringIsBase64,
+			StateFunc: func(val interface{}) string {
+				s, _ := Base64Decode(val.(string))
+				return Base64Encode(TrimSpace(s))
+			},
 		},
 		"project_id": &schema.Schema{
 			Type:        schema.TypeString,

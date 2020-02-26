@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 //Schemas
@@ -70,9 +71,14 @@ func appFields() map[string]*schema.Schema {
 			Description: "Template version of the app",
 		},
 		"values_yaml": &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "values.yaml base64 encoded file content of the app",
+			Type:         schema.TypeString,
+			Optional:     true,
+			Description:  "values.yaml base64 encoded file content of the app",
+			ValidateFunc: validation.StringIsBase64,
+			StateFunc: func(val interface{}) string {
+				s, _ := Base64Decode(val.(string))
+				return Base64Encode(TrimSpace(s))
+			},
 		},
 		"annotations": &schema.Schema{
 			Type:        schema.TypeMap,
