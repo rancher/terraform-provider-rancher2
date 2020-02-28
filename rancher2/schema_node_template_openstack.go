@@ -141,8 +141,9 @@ func openstackConfigFields() map[string]*schema.Schema {
 			Sensitive: true,
 		},
 		"private_key_file": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"sec_groups": &schema.Schema{
 			Type:     schema.TypeString,
