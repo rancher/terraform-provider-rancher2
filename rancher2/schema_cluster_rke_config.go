@@ -23,6 +23,7 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Optional addons descripton to deploy on rke cluster.",
+			StateFunc:   TrimSpace,
 		},
 		"addons_include": {
 			Type:        schema.TypeList,

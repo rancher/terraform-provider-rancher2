@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
+* Updated multiline arguments to trim spaces by default and avoid false diff
 
 BUG FIXES:
 

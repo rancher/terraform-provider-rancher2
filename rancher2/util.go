@@ -56,6 +56,10 @@ func IsBase64(s string) bool {
 	return err == nil
 }
 
+func TrimSpace(val interface{}) string {
+	return strings.TrimSpace(val.(string))
+}
+
 func GetRandomPass(n int) string {
 	rand.Seed(time.Now().Unix())
 	b := make([]byte, n)

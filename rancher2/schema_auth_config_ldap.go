@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 //Schemas
@@ -31,9 +32,14 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Required: true,
 		},
 		"certificate": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Sensitive: true,
+			Type:         schema.TypeString,
+			Optional:     true,
+			Sensitive:    true,
+			ValidateFunc: validation.StringIsBase64,
+			StateFunc: func(val interface{}) string {
+				s, _ := Base64Decode(val.(string))
+				return Base64Encode(TrimSpace(s))
+			},
 		},
 		"connection_timeout": {
 			Type:     schema.TypeInt,
