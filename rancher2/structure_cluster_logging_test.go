@@ -9,6 +9,8 @@ import (
 )
 
 var (
+	testClusterLoggingConfCustomTarget       *managementClient.ClusterLogging
+	testClusterLoggingInterfaceCustomTarget  map[string]interface{}
 	testClusterLoggingConfElasticSearch      *managementClient.ClusterLogging
 	testClusterLoggingInterfaceElasticSearch map[string]interface{}
 	testClusterLoggingConfFluentd            *managementClient.ClusterLogging
@@ -22,6 +24,20 @@ var (
 )
 
 func init() {
+	testLoggingCustomTargetConf = &managementClient.CustomTargetConfig{
+		Certificate: "certificate",
+		ClientCert:  "client_cert",
+		ClientKey:   "client_key",
+		Content:     "content",
+	}
+	testLoggingCustomTargetInterface = []interface{}{
+		map[string]interface{}{
+			"certificate": "certificate",
+			"client_cert": "client_cert",
+			"client_key":  "client_key",
+			"content":     "content",
+		},
+	}
 	testLoggingElasticsearchConf = &managementClient.ElasticsearchConfig{
 		Endpoint:      "hostname.test",
 		DateFormat:    "YYYY-MM-DD",
@@ -152,6 +168,29 @@ func init() {
 			"token":       "XXXXXXXXXXXX",
 		},
 	}
+	testClusterLoggingConfCustomTarget = &managementClient.ClusterLogging{
+		ClusterID:           "cluster-test",
+		Name:                "test",
+		CustomTargetConfig:  testLoggingCustomTargetConf,
+		NamespaceId:         "namespace-test",
+		OutputFlushInterval: 10,
+		OutputTags: map[string]string{
+			"outputTag1": "value1",
+			"outputTag2": "value2",
+		},
+	}
+	testClusterLoggingInterfaceCustomTarget = map[string]interface{}{
+		"cluster_id":            "cluster-test",
+		"name":                  "test",
+		"kind":                  loggingCustomTargetKind,
+		"custom_target_config":  testLoggingCustomTargetInterface,
+		"namespace_id":          "namespace-test",
+		"output_flush_interval": 10,
+		"output_tags": map[string]interface{}{
+			"outputTag1": "value1",
+			"outputTag2": "value2",
+		},
+	}
 	testClusterLoggingConfElasticSearch = &managementClient.ClusterLogging{
 		ClusterID:           "cluster-test",
 		Name:                "test",
@@ -276,6 +315,10 @@ func TestFlattenClusterLogging(t *testing.T) {
 		ExpectedOutput map[string]interface{}
 	}{
 		{
+			testClusterLoggingConfCustomTarget,
+			testClusterLoggingInterfaceCustomTarget,
+		},
+		{
 			testClusterLoggingConfElasticSearch,
 			testClusterLoggingInterfaceElasticSearch,
 		},
@@ -320,6 +363,10 @@ func TestExpandClusterLogging(t *testing.T) {
 		Input          map[string]interface{}
 		ExpectedOutput *managementClient.ClusterLogging
 	}{
+		{
+			testClusterLoggingInterfaceCustomTarget,
+			testClusterLoggingConfCustomTarget,
+		},
 		{
 			testClusterLoggingInterfaceElasticSearch,
 			testClusterLoggingConfElasticSearch,
