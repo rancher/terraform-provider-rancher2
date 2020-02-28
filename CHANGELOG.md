@@ -10,7 +10,6 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* Fix `audit_log.configuration.policy` argument to `rke_config.services.kube_api` argument on `rancher2_cluster` resource
 * Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs 
 
 ## 1.7.2 (January 28, 2020)
