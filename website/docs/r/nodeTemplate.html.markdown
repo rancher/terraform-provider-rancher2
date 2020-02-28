@@ -233,7 +233,7 @@ The following attributes are exported:
 * `net_name` - (Required*) OpenStack network name the machine will be connected on. Conflicts with `net_id` (string)
 * `nova_network` - (Optional) Use the nova networking services instead of neutron (string)
 * `password` - (Optional/Sensitive) OpenStack password. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
-* `private_key_file` - (Optional) Private keyfile absolute path to use for SSH (string)
+* `private_key_file` - (Optional/Sensitive) Private key content to use for SSH (string)
 * `sec_groups` - (Optional) OpenStack comma separated security groups for the machine (string)
 * `ssh_port` - (Optional) OpenStack SSH port * Default `22` (string)
 * `ssh_user` - (Optional) OpenStack SSH user * Default: `root` (string)

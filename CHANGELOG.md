@@ -10,7 +10,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-
+* Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs 
 
 ## 1.7.2 (January 28, 2020)
 
