@@ -220,7 +220,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		update["amazonElasticContainerServiceConfig"] = eksConfig
 	case clusterDriverGKE:
-		gkeConfig, err := expandClusterGKEConfig(d.Get("gke_config").([]interface{}), d.Get("name").(string))
+		gkeConfig, err := expandClusterGKEConfig(cluster.GoogleKubernetesEngineConfig, d.Get("gke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
 			return err
 		}

@@ -180,7 +180,7 @@ func TestExpandClusterGKEConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := expandClusterGKEConfig(tc.Input, "test")
+		output, err := expandClusterGKEConfig(&GoogleKubernetesEngineConfig{}, tc.Input, "test")
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}

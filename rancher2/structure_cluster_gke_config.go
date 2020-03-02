@@ -198,8 +198,7 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 
 // Expanders
 
-func expandClusterGKEConfig(p []interface{}, name string) (*GoogleKubernetesEngineConfig, error) {
-	obj := &GoogleKubernetesEngineConfig{}
+func expandClusterGKEConfig(obj *GoogleKubernetesEngineConfig, p []interface{}, name string) (*GoogleKubernetesEngineConfig, error) {
 	if len(p) == 0 || p[0] == nil {
 		return obj, nil
 	}

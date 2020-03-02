@@ -318,7 +318,7 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 	}
 
 	if v, ok := in.Get("gke_config").([]interface{}); ok && len(v) > 0 {
-		gkeConfig, err := expandClusterGKEConfig(v, obj.Name)
+		gkeConfig, err := expandClusterGKEConfig(&GoogleKubernetesEngineConfig{}, v, obj.Name)
 		if err != nil {
 			return nil, err
 		}
