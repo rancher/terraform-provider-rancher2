@@ -43,7 +43,7 @@ type AmazonElasticContainerWorkerPool struct {
 	EBSEncryption               bool              `json:"ebsEncryption,omitempty" yaml:"ebsEncryption,omitempty"`
 	InstanceType                string            `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	MaximumNodes                int64             `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
-	MinimumNodes                int64             `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
+	MinimumNodes                int64             `json:"minimumNodes" yaml:"minimumNodes"`
 	Name                        string            `json:"name,omitempty" yaml:"name,omitempty"`
 	NodeVolumeSize              int64             `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
 	PlacementGroup              string            `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
