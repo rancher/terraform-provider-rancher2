@@ -154,55 +154,6 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 		workerPoolObjs = append(workerPoolObjs, workerPoolObj)
 	}
 
-	// when rancher returns details of a cluster that hasn't been migrated to new state model, we fallback to old
-	// fields to extract existing worker pool details
-	if len(workerPoolObjs) == 0 {
-		workerPoolObj := make(map[string]interface{})
-		workerPoolObj["name"] = "main-pool"
-
-		if len(in.AMI) > 0 {
-			workerPoolObj["ami"] = in.AMI
-		}
-
-		workerPoolObj["associate_worker_node_public_ip"] = *in.AssociateWorkerNodePublicIP
-
-		if in.DesiredNodes > 0 {
-			workerPoolObj["desired_nodes"] = int(in.DesiredNodes)
-		}
-
-		workerPoolObj["ebs_encryption"] = in.EBSEncryption
-
-		if len(in.InstanceType) > 0 {
-			workerPoolObj["instance_type"] = in.InstanceType
-		}
-
-		if in.MaximumNodes > 0 {
-			workerPoolObj["maximum_nodes"] = int(in.MaximumNodes)
-		}
-
-		if in.MinimumNodes > 0 {
-			workerPoolObj["minimum_nodes"] = int(in.MinimumNodes)
-		}
-
-		if in.NodeVolumeSize > 0 {
-			workerPoolObj["node_volume_size"] = int(in.NodeVolumeSize)
-		}
-
-		if len(in.PlacementGroup) > 0 {
-			workerPoolObj["placement_group"] = in.PlacementGroup
-		}
-
-		if len(in.UserData) > 0 {
-			workerPoolObj["user_data"] = in.UserData
-		}
-
-		if len(in.WorkerSubnets) > 0 {
-			workerPoolObj["subnets"] = toArrayInterface(in.WorkerSubnets)
-		}
-
-		workerPoolObjs = append(workerPoolObjs, workerPoolObj)
-	}
-
 	obj["worker_pools"] = workerPoolObjs
 	return []interface{}{obj}, nil
 }

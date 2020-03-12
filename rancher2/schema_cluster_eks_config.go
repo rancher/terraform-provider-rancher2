@@ -30,20 +30,6 @@ type AmazonElasticContainerServiceConfig struct {
 
 	// list of json objects. Each object matches the schema defined by `AmazonElasticContainerWorkerPool`
 	WorkerPools []string `json:"workerPools,omitempty" yaml:"workerPools,omitempty"`
-
-	// TODO remove fields from here on once all clusters have being migrated to new state (use "workerPools") in rancher
-	AMI                         string   `json:"ami,omitempty" yaml:"ami,omitempty"`
-	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
-	DesiredNodes                int64    `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
-	EBSEncryption               bool     `json:"ebsEncryption,omitempty" yaml:"ebsEncryption,omitempty"`
-	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
-	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
-	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
-	Name                        string   `json:"name,omitempty" yaml:"name,omitempty"`
-	NodeVolumeSize              int64    `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
-	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
-	UserData                    string   `json:"userData,omitempty" yaml:"userData,omitempty"`
-	WorkerSubnets               []string `json:"workerSubnets,omitempty" yaml:"workerSubnets,omitempty"`
 }
 
 type AmazonElasticContainerWorkerPool struct {
