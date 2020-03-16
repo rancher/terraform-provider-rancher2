@@ -26,11 +26,13 @@ resource "rancher2_global_role_binding" "foo" {
 The following arguments are supported:
 
 * `global_role_id` - (Required/ForceNew) The role id from create global role binding (string)
-* `user_id` - (Required/ForceNew) The user ID to assign global role binding (string)
+* `group_principal_id` - (Optional/Computed/ForceNew) The group principal ID to assign global role binding (only works with external auth providers that support groups). Rancher v2.4.0 or higher is required (string)
+* `user_id` - (Optional/Computed/ForceNew) The user ID to assign global role binding (string)
 * `name` - (Optional/Computed/ForceNew) The name of the global role binding (string)
 * `annotations` - (Optional/Computed) Annotations for global role binding (map)
 * `labels` - (Optional/Computed) Labels for global role binding (map)
 
+**Note** user `user_id` OR group `group_principal_id` must be defined
 
 ## Attributes Reference
 
