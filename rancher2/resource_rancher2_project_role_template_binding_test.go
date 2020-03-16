@@ -23,6 +23,11 @@ var (
 
 func init() {
 	testAccRancher2ProjectRoleTemplateBindingProject = `
+resource "rancher2_user" "foo" {
+  name = "Terraform user acceptance test"
+  username = "foo"
+  password = "changeme"
+}
 resource "rancher2_project" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
@@ -34,6 +39,7 @@ resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
   project_id = "${rancher2_project.foo.id}"
   role_template_id = "project-member"
+  user_id = "${rancher2_user.foo.id}"
 }
 `
 
@@ -51,6 +57,7 @@ resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
   project_id = "${rancher2_project.foo.id}"
   role_template_id = "project-member"
+  user_id = "${rancher2_user.foo.id}"
 }
  `
 }

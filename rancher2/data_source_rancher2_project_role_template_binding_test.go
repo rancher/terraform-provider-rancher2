@@ -21,11 +21,16 @@ resource "rancher2_project" "foo" {
   cluster_id = "` + testAccRancher2ClusterID + `"
   description = "Terraform project role template binding acceptance test"
 }
-
+resource "rancher2_user" "foo" {
+  name = "Terraform user acceptance test"
+  username = "foo"
+  password = "changeme"
+}
 resource "rancher2_project_role_template_binding" "foo" {
   name = "foo"
   project_id = "${rancher2_project.foo.id}"
   role_template_id = "project-member"
+  user_id = "${rancher2_user.foo.id}"
 }
 
 data "` + testAccRancher2ProjectRoleTemplateBindingDataSourceType + `" "foo" {

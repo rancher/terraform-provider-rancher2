@@ -15,14 +15,16 @@ var (
 
 func init() {
 	testGlobalRoleBindingConf = &managementClient.GlobalRoleBinding{
-		GlobalRoleID: "global_role_id",
-		UserID:       "user-test",
-		Name:         "test",
+		GlobalRoleID:     "global_role_id",
+		GroupPrincipalID: "group_principal_id",
+		UserID:           "user-test",
+		Name:             "test",
 	}
 	testGlobalRoleBindingInterface = map[string]interface{}{
-		"global_role_id": "global_role_id",
-		"user_id":        "user-test",
-		"name":           "test",
+		"global_role_id":     "global_role_id",
+		"group_principal_id": "group_principal_id",
+		"user_id":            "user-test",
+		"name":               "test",
 	}
 }
 
