@@ -2,6 +2,7 @@ package client
 
 const (
 	ClusterSpecType                                     = "clusterSpec"
+	ClusterSpecFieldAgentImageOverride                  = "agentImageOverride"
 	ClusterSpecFieldAmazonElasticContainerServiceConfig = "amazonElasticContainerServiceConfig"
 	ClusterSpecFieldAzureKubernetesServiceConfig        = "azureKubernetesServiceConfig"
 	ClusterSpecFieldClusterTemplateAnswers              = "answers"
@@ -22,12 +23,15 @@ const (
 	ClusterSpecFieldGoogleKubernetesEngineConfig        = "googleKubernetesEngineConfig"
 	ClusterSpecFieldImportedConfig                      = "importedConfig"
 	ClusterSpecFieldInternal                            = "internal"
+	ClusterSpecFieldK3sConfig                           = "k3sConfig"
 	ClusterSpecFieldLocalClusterAuthEndpoint            = "localClusterAuthEndpoint"
 	ClusterSpecFieldRancherKubernetesEngineConfig       = "rancherKubernetesEngineConfig"
+	ClusterSpecFieldScheduledClusterScan                = "scheduledClusterScan"
 	ClusterSpecFieldWindowsPreferedCluster              = "windowsPreferedCluster"
 )
 
 type ClusterSpec struct {
+	AgentImageOverride                  string                         `json:"agentImageOverride,omitempty" yaml:"agentImageOverride,omitempty"`
 	AmazonElasticContainerServiceConfig map[string]interface{}         `json:"amazonElasticContainerServiceConfig,omitempty" yaml:"amazonElasticContainerServiceConfig,omitempty"`
 	AzureKubernetesServiceConfig        map[string]interface{}         `json:"azureKubernetesServiceConfig,omitempty" yaml:"azureKubernetesServiceConfig,omitempty"`
 	ClusterTemplateAnswers              *Answer                        `json:"answers,omitempty" yaml:"answers,omitempty"`
@@ -48,7 +52,9 @@ type ClusterSpec struct {
 	GoogleKubernetesEngineConfig        map[string]interface{}         `json:"googleKubernetesEngineConfig,omitempty" yaml:"googleKubernetesEngineConfig,omitempty"`
 	ImportedConfig                      *ImportedConfig                `json:"importedConfig,omitempty" yaml:"importedConfig,omitempty"`
 	Internal                            bool                           `json:"internal,omitempty" yaml:"internal,omitempty"`
+	K3sConfig                           *K3sConfig                     `json:"k3sConfig,omitempty" yaml:"k3sConfig,omitempty"`
 	LocalClusterAuthEndpoint            *LocalClusterAuthEndpoint      `json:"localClusterAuthEndpoint,omitempty" yaml:"localClusterAuthEndpoint,omitempty"`
 	RancherKubernetesEngineConfig       *RancherKubernetesEngineConfig `json:"rancherKubernetesEngineConfig,omitempty" yaml:"rancherKubernetesEngineConfig,omitempty"`
+	ScheduledClusterScan                *ScheduledClusterScan          `json:"scheduledClusterScan,omitempty" yaml:"scheduledClusterScan,omitempty"`
 	WindowsPreferedCluster              bool                           `json:"windowsPreferedCluster,omitempty" yaml:"windowsPreferedCluster,omitempty"`
 }
