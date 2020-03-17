@@ -3,10 +3,11 @@ module github.com/terraform-providers/terraform-provider-rancher2
 go 1.12
 
 require (
+	github.com/google/btree v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
 	github.com/rancher/norman v0.0.0-20200206042542-ef3920abad1c
-	github.com/rancher/types v0.0.0-20191126013101-de3dc217d60f
+	github.com/rancher/types v0.0.0-20191220141556-ad31d6815bbd
 	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586
 )
 
