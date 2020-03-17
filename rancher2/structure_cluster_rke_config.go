@@ -146,6 +146,10 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig,
 		obj["ssh_key_path"] = in.SSHKeyPath
 	}
 
+	if in.UpgradeStrategy != nil {
+		obj["upgrade_strategy"] = flattenClusterRKEConfigNodeUpgradeStrategy(in.UpgradeStrategy)
+	}
+
 	return []interface{}{obj}, nil
 }
 
@@ -290,6 +294,10 @@ func expandClusterRKEConfig(p []interface{}, name string) (*managementClient.Ran
 
 	if v, ok := in["ssh_key_path"].(string); ok && len(v) > 0 {
 		obj.SSHKeyPath = v
+	}
+
+	if v, ok := in["upgrade_strategy"].([]interface{}); ok {
+		obj.UpgradeStrategy = expandClusterRKEConfigNodeUpgradeStrategy(v)
 	}
 
 	return obj, nil

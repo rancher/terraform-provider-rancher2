@@ -40,6 +40,10 @@ resource "rancher2_cluster" "foo" {
         }
       }
     }
+    upgrade_strategy {
+      drain = true
+      max_unavailable_worker = "20%"
+    }
   }
 }
 `
@@ -71,6 +75,10 @@ resource "rancher2_cluster" "foo" {
         }
       }
     }
+    upgrade_strategy {
+      drain = true
+      max_unavailable_worker = "10%"
+    }
   }
 }
  `
@@ -101,6 +109,10 @@ resource "rancher2_cluster" "foo" {
           }
         }
       }
+    }
+    upgrade_strategy {
+      drain = true
+      max_unavailable_worker = "20%"
     }
   }
 }
@@ -190,6 +202,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "5"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "20%"),
 				),
 			},
 			resource.TestStep{
@@ -201,6 +215,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "12h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "72h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "7"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "10%"),
 				),
 			},
 			resource.TestStep{
@@ -212,6 +228,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "5"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "20%"),
 				),
 			},
 		},
