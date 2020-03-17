@@ -245,6 +245,7 @@ The following attributes are exported:
 * `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`
 * `ssh_cert_path` - (Optional/Computed) Cluster level SSH certificate path (string)
 * `ssh_key_path` - (Optional/Computed) Cluster level SSH private key path (string)
+* `upgrade_strategy` - (Optional/Computed) RKE upgrade strategy (list maxitems:1)
 
 #### `authentication`
 
@@ -552,7 +553,6 @@ The following attributes are exported:
 * `password` - (Optional/Sensitive) Registry password (string)
 * `user` - (Optional/Sensitive) Registry user (string)
 
-
 #### `services`
 
 ##### Arguments
@@ -697,6 +697,25 @@ The following attributes are exported:
 * `extra_binds` - (Optional) Extra binds for scheduler service (list)
 * `extra_env` - (Optional) Extra environment for scheduler service (list)
 * `image` - (Optional/Computed) Docker image for scheduler service (string)
+
+#### `upgrade_strategy`
+
+##### Arguments
+
+* `drain` - (Optional) RKE drain nodes. Default: `false` (bool)
+* `drain_input` - (Optional/Computed) RKE drain node input (list Maxitems: 1)
+* `max_unavailable_controlplane` - (Optional) RKE max unavailable controlplane nodes. Default: `1` (string)
+* `max_unavailable_worker` - (Optional) RKE max unavailable worker nodes. Default: `10%` (string)
+
+##### `drain_input`
+
+###### Arguments
+
+* `delete_local_data` - Delete RKE node local data. Default: `false` (bool)
+* `force` - Force RKE node drain. Default: `false` (bool)
+* `grace_period` - RKE node drain grace period. Default: `-1` (int)
+* `ignore_daemon_sets` - Ignore RKE daemon sets. Default: `true` (bool)
+* `timeout` - RKE node drain timeout. Default: `60` (int)
 
 ### `k3s_config`
 
