@@ -184,10 +184,11 @@ resource "rancher2_cluster" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
-* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config` and `gke_config` (list maxitems:1)
-* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `gke_config` and `rke_config` (list maxitems:1)
-* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `gke_config` and `rke_config` (list maxitems:1)
-* `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config` and `rke_config` (list maxitems:1)
+* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config` and `k3s_config` (list maxitems:1)
+* `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config` and `rke_config` (list maxitems:1)
+* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `gke_config`, `k3s_config` and `rke_config` (list maxitems:1)
+* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `gke_config`, `k3s_config` and `rke_config` (list maxitems:1)
+* `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `k3s_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_monitoring_input` - (Optional/Computed) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
@@ -611,8 +612,8 @@ The following attributes are exported:
 
 * `admission_configuration` - (Optional) Admission configuration (map)
 * `always_pull_images` - (Optional) Enable [AlwaysPullImages](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#alwayspullimages) Admission controller plugin. [Rancher docs](https://rancher.com/docs/rke/latest/en/config-options/services/#kubernetes-api-server-options) Default: `false` (bool)
-* `audit_log` - (Optional) K8s audit log configuration. (list maxitem: 1)
-* `event_rate_limit` - (Optional) K8s event rate limit configuration. (list maxitem: 1)
+* `audit_log` - (Optional) K8s audit log configuration. (list maxitems: 1)
+* `event_rate_limit` - (Optional) K8s event rate limit configuration. (list maxitems: 1)
 * `extra_args` - (Optional/Computed) Extra arguments for kube API service (map)
 * `extra_binds` - (Optional) Extra binds for kube API service (list)
 * `extra_env` - (Optional) Extra environment for kube API service (list)
@@ -626,7 +627,7 @@ The following attributes are exported:
 
 ###### Arguments
 
-* `configuration` - (Optional/Computed) Audit log configuration. (list maxtiem: 1)
+* `configuration` - (Optional) Audit log configuration. (list maxitems: 1)
 * `enabled` - (Optional) Enable audit log. Default: `false` (bool)
 
 ###### `configuration`
@@ -696,6 +697,24 @@ The following attributes are exported:
 * `extra_binds` - (Optional) Extra binds for scheduler service (list)
 * `extra_env` - (Optional) Extra environment for scheduler service (list)
 * `image` - (Optional/Computed) Docker image for scheduler service (string)
+
+### `k3s_config`
+
+#### Arguments
+
+The following arguments are supported:
+
+* `upgrade_strategy` - (Optional/Computed) K3S upgrade strategy (List maxitems: 1)
+* `version` - (Optional/Computed) K3S kubernetes version (string)
+
+#### `upgrade_strategy`
+
+##### Arguments
+
+* `drain_server_nodes` - (Optional) Drain server nodes. Default: `false` (bool)
+* `drain_worker_nodes` - (Optional) Drain worker nodes. Default: `false` (bool)
+* `server_concurrency` - (Optional) Server concurrency. Default: `1` (int)
+* `worker_concurrency` - (Optional) Worker concurrency. Default: `1` (int)
 
 ### `aks_config`
 
