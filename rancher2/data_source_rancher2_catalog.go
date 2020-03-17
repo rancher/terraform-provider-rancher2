@@ -57,6 +57,10 @@ func dataSourceRancher2Catalog() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"version": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"annotations": &schema.Schema{
 				Type:     schema.TypeMap,
 				Computed: true,

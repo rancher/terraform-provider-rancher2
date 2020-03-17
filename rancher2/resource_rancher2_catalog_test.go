@@ -16,6 +16,7 @@ resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "http://foo.com:8080"
   description= "Terraform catalog acceptance test"
+  version = "helm_v3"
 }
 `
 
@@ -24,6 +25,7 @@ resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "http://foo.updated.com:8080"
   description= "Terraform catalog acceptance test - updated"
+  version = "helm_v3"
 }
  `
 
@@ -32,6 +34,7 @@ resource "rancher2_catalog" "foo" {
   name = "foo"
   url = "http://foo.com:8080"
   description= "Terraform catalog acceptance test"
+  version = "helm_v3"
 }
  `
 )
@@ -145,6 +148,7 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v3"),
 				),
 			},
 			resource.TestStep{
@@ -155,6 +159,7 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.updated.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v3"),
 				),
 			},
 			resource.TestStep{
@@ -165,6 +170,7 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v3"),
 				),
 			},
 		},
@@ -208,6 +214,7 @@ func TestAccRancher2Catalog_basic_Cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "cluster"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
 				),
 			},
 			resource.TestStep{
@@ -219,6 +226,7 @@ func TestAccRancher2Catalog_basic_Cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.updated.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "cluster"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
 				),
 			},
 			resource.TestStep{
@@ -230,6 +238,7 @@ func TestAccRancher2Catalog_basic_Cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "cluster"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
 				),
 			},
 		},
@@ -272,6 +281,7 @@ func TestAccRancher2Catalog_basic_Project(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "project"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
 				),
 			},
 			resource.TestStep{
@@ -282,6 +292,7 @@ func TestAccRancher2Catalog_basic_Project(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.updated.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "project"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
 				),
 			},
 			resource.TestStep{
@@ -292,6 +303,7 @@ func TestAccRancher2Catalog_basic_Project(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "project"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
 				),
 			},
 		},
