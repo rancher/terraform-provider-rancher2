@@ -49,7 +49,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		expectedState = "pending"
 	}
 
-	if cluster.Driver == clusterDriverRKE {
+	if cluster.Driver == clusterDriverRKE || cluster.Driver == clusterDriverK3S {
 		expectedState = "provisioning"
 	}
 
@@ -222,6 +222,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["rancherKubernetesEngineConfig"] = rkeConfig
+	case clusterDriverK3S:
+		update["k3sConfig"] = expandClusterK3SConfig(d.Get("k3s_config").([]interface{}))
 	}
 
 	newCluster := &Cluster{}

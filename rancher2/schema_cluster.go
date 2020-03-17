@@ -12,7 +12,7 @@ const (
 )
 
 var (
-	clusterDrivers = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverRKE}
+	clusterDrivers = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverK3S, clusterDriverRKE}
 )
 
 //Types
@@ -122,16 +122,26 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "gke_config"},
+			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "k3s_config"},
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigFields(),
+			},
+		},
+		"k3s_config": &schema.Schema{
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			Computed:      true,
+			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "rke_config"},
+			Elem: &schema.Resource{
+				Schema: clusterK3SConfigFields(),
 			},
 		},
 		"eks_config": &schema.Schema{
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"aks_config", "gke_config", "rke_config"},
+			ConflictsWith: []string{"aks_config", "gke_config", "k3s_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterEKSConfigFields(),
 			},
@@ -140,7 +150,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"eks_config", "gke_config", "rke_config"},
+			ConflictsWith: []string{"eks_config", "gke_config", "k3s_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterAKSConfigFields(),
 			},
@@ -149,7 +159,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "rke_config"},
+			ConflictsWith: []string{"aks_config", "eks_config", "k3s_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigFields(),
 			},

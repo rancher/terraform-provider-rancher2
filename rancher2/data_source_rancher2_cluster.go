@@ -31,6 +31,14 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterRKEConfigFields(),
 				},
 			},
+			"k3s_config": &schema.Schema{
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: clusterK3SConfigFields(),
+				},
+			},
 			"eks_config": &schema.Schema{
 				Type:     schema.TypeList,
 				MaxItems: 1,

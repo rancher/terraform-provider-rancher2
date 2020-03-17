@@ -177,7 +177,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		}
 	}
 
-	// Setting rke_config always as computed
+	// Setting k3s_config and rke_config always as computed
+	err = d.Set("k3s_config", flattenClusterK3SConfig(in.K3sConfig))
+	if err != nil {
+		return err
+	}
 	v, ok := d.Get("rke_config").([]interface{})
 	if !ok {
 		v = []interface{}{}
@@ -338,6 +342,11 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 		obj.GoogleKubernetesEngineConfig = gkeConfig
 		obj.Driver = clusterDriverGKE
+	}
+
+	if v, ok := in.Get("k3s_config").([]interface{}); ok && len(v) > 0 {
+		obj.K3sConfig = expandClusterK3SConfig(v)
+		obj.Driver = clusterDriverK3S
 	}
 
 	if v, ok := in.Get("rke_config").([]interface{}); ok && len(v) > 0 {
