@@ -8,6 +8,8 @@ ENHANCEMENTS:
 
 * Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
 * Updated multiline arguments to trim spaces by default and avoid false diff
+* Updated `rancher/types` go modules and vendor files
+* Added `mtu` argument to `rke_config.network` argument on `rancher2_cluster` resource
 
 BUG FIXES:
 
