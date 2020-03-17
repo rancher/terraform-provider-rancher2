@@ -47,6 +47,7 @@ The following arguments are supported:
 * `refresh` - (Optional) Catalog will wait for refresh after tf creation and on every tf read. Default `false` (bool)
 * `scope` - (Optional) The scope of the catalog. `cluster`, `global`, and `project` are supported. Default `global` (string)
 * `username` - (Optional/Sensitive) The username to access the catalog if needed (string)
+* `version` - (Optional/ForceNew) Helm version for the catalog. Available options: `helm_v2` (default) and `helm_v3` (string)
 * `annotations` - (Optional/Computed) Annotations for the catalog (map)
 * `labels` - (Optional/Computed) Labels for the catalog (map)
 

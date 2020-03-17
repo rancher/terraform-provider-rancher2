@@ -33,6 +33,7 @@ data "rancher2_catalog" "library" {
 * `password` - (Computed/Sensitive) The password to access the catalog if needed (string)
 * `project_id` - (Computed) The project id of the catalog (string)
 * `username` - (Computed/Sensitive) The username to access the catalog if needed (string)
+* `version` - (Computed) Helm version for the catalog (string)
 * `url` - (Computed) The url of the catalog repo (string)
 * `annotations` - (Computed) Annotations for the catalog (map)
 * `labels` - (Computed) Labels for the catalog (map)
