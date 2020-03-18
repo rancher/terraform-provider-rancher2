@@ -38,6 +38,10 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.VmwarevsphereConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires vsphere_config", in.Driver)
 		}
+	case opennebulaConfigDriver:
+		if in.OpennebulaConfig == nil {
+			return fmt.Errorf("[ERROR] Node template driver %s requires opennebula_config", in.Driver)
+		}
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on node template: %s", in.Driver)
 	}
@@ -197,6 +201,11 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 		obj.Driver = openstackConfigDriver
 	}
 
+	if v, ok := in.Get("opennebula_config").([]interface{}); ok && len(v) > 0 {
+		obj.OpennebulaConfig = expandOpennebulaConfig(v)
+		obj.Driver = opennebulaConfigDriver
+	}
+
 	if v, ok := in.Get("use_internal_ip_address").(bool); ok {
 		obj.UseInternalIPAddress = v
 	}
@@ -212,6 +221,11 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	// Computing driver_id if empty
+	if v, ok := in.Get("driver_id").(string); ok && len(v) == 0 {
+		in.Set("driver_id", obj.Driver)
 	}
 
 	return obj

@@ -49,7 +49,7 @@ resource "rancher2_secret" "foo" {
 
 The following arguments are supported:
 
-* `data` - (Required) Secret key/value data. Base64 encoding required for values (map)
+* `data` - (Required/Sensitive) Secret key/value data. Base64 encoding required for values (map)
 * `project_id` - (Required/ForceNew) The project id where to assign the secret (string)
 * `description` - (Optional) A secret description (string)
 * `name` - (Optional/ForceNew) The name of the secret (string)

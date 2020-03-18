@@ -113,8 +113,9 @@ func clusterFields() map[string]*schema.Schema {
 			ValidateFunc: validation.StringInSlice(clusterDrivers, true),
 		},
 		"kube_config": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"rke_config": &schema.Schema{
 			Type:          schema.TypeList,
@@ -196,6 +197,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			MaxItems:    1,
+			Computed:    true,
 			Description: "Cluster template answers",
 			Elem: &schema.Resource{
 				Schema: answerFields(),
@@ -273,6 +275,13 @@ func clusterFields() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
+		},
+		"windows_prefered_cluster": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Windows preferred cluster",
+			ForceNew:    true,
 		},
 	}
 

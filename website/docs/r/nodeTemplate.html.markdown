@@ -8,9 +8,9 @@ description: |-
 
 # rancher2\_node\_template
 
-Provides a Rancher v2 Node Template resource. This can be used to create Node Template for Rancher v2 and retrieve their information. 
+Provides a Rancher v2 Node Template resource. This can be used to create Node Template for Rancher v2 and retrieve their information.
 
-amazonec2, azure, digitalocean, openstack and vsphere drivers are supported for node templates.
+amazonec2, azure, digitalocean, opennebula, openstack, and vsphere drivers are supported for node templates.
 
 **Note** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
 
@@ -71,6 +71,7 @@ The following arguments are supported:
 * `cloud_credential_id` - (Optional) Cloud credential ID for the Node Template. Required from Rancher v2.2.x (string)
 * `description` - (Optional) Description for the Node Template (string)
 * `digitalocean_config` - (Optional) Digitalocean config for the Node Template (list maxitems:1)
+* `driver_id` - (Optional/Computed) The node driver id used by the node template. It's required if the node driver isn't built in Rancher (string)
 * `engine_env` - (Optional) Engine environment for the node template (string)
 * `engine_insecure_registry` - (Optional) Insecure registry for the node template (list)
 * `engine_install_url` - (Optional) Docker engine install URL for the node template. Default `https://releases.rancher.com/install-docker/18.09.sh`. Available install docker versions at `https://github.com/rancher/install-docker` (string)
@@ -78,6 +79,7 @@ The following arguments are supported:
 * `engine_opt` - (Optional) Engine options for the node template (map)
 * `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
 * `engine_storage_driver` - (Optional) Engine storage driver for the node template (string)
+* `opennebula_config` - (Optional) Opennebula config for the Node Template (list maxitems:1)
 * `openstack_config` - (Optional) Openstack config for the Node Template (list maxitems:1)
 * `use_internal_ip_address` - (Optional) Engine storage driver for the node template (bool)
 * `vsphere_config` - (Optional) vSphere config for the Node Template (list maxitems:1)
@@ -179,6 +181,32 @@ The following attributes are exported:
 * `tags` - (Optional) Comma-separated list of tags to apply to the Droplet (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
 
+### `opennebula_config`
+
+#### Arguments
+
+* `image_id` - (Required*) Image ID to use as the VM OS. Conflicts with `image_name` (string)
+* `image_name` - (Required*) Opennebula image to use as the VM OS. Conflicts with `image_id` (string)
+* `template_id` - (Required*) Opennebula template ID to use. Conflicts with `template_name` (string)
+* `template_name` - (Required*) Name of the Opennbula template to use. Conflicts with `template_id` (string)
+* `password` - (Required/Sensitive) Set the password for the XML-RPC API authentication (string)
+* `user` - (Required) Set the user for the XML-RPC API authentication (string)
+* `xml_rpc_url` - (Required) Set the url for the Opennebula XML-RPC API (string)
+* `b2d_size` - (Optional) Size of the Volatile disk in MB - only for b2d (string)
+* `cpu` - (Optional) CPU value for the VM (string)
+* `dev_prefix` - (Optional) Dev prefix to use for the images. E.g.: 'vd', 'sd', 'hd' (string)
+* `disable_vnc` - (Optional) VNC is enabled by default. Disable it with this flag (bool)
+* `disk_resize` - (Optional) Size of the disk for the VM in MB (string)
+* `image_owner` - (Optional) Owner of the image to use as the VM OS (string)
+* `memory`- (Optional) Size of the memory for the VM in MB (string)
+* `network_id` - (Optional) Opennebula network ID to connect the machine to. Conflicts with `network_name` (string)
+* `network_name` - (Optional) Opennebula network to connect the machine to. Conflicts with `network_id` (string)
+* `network_owner` - (Optional) Opennebula user ID of the Network to connect the machine to (string)
+* `ssh_user` - (Optional) Set the name of the SSH user. Defaults to docker (string)
+* `vcpu` - (Optional) VCPUs for the VM (string)
+
+> **Note**: `Required*` denotes that one of image_name / image_id or template_name / template_id is required but you cannot combine them.
+
 ### `openstack_config`
 
 #### Arguments
@@ -205,7 +233,7 @@ The following attributes are exported:
 * `net_name` - (Required*) OpenStack network name the machine will be connected on. Conflicts with `net_id` (string)
 * `nova_network` - (Optional) Use the nova networking services instead of neutron (string)
 * `password` - (Optional/Sensitive) OpenStack password. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
-* `private_key_file` - (Optional) Private keyfile absolute path to use for SSH (string)
+* `private_key_file` - (Optional/Sensitive) Private key content to use for SSH (string)
 * `sec_groups` - (Optional) OpenStack comma separated security groups for the machine (string)
 * `ssh_port` - (Optional) OpenStack SSH port * Default `22` (string)
 * `ssh_user` - (Optional) OpenStack SSH user * Default: `root` (string)

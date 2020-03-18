@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -27,6 +28,10 @@ const (
 	passDigits                = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 	passDefaultLen            = 20
 )
+
+func AreEqual(o, n interface{}) bool {
+	return reflect.DeepEqual(o, n)
+}
 
 func Base64Encode(s string) string {
 	if len(s) == 0 {
@@ -49,6 +54,10 @@ func Base64Decode(s string) (string, error) {
 func IsBase64(s string) bool {
 	_, err := base64.StdEncoding.DecodeString(s)
 	return err == nil
+}
+
+func TrimSpace(val interface{}) string {
+	return strings.TrimSpace(val.(string))
 }
 
 func GetRandomPass(n int) string {
@@ -283,6 +292,26 @@ func toMapInterface(in map[string]string) map[string]interface{} {
 		out[i] = v
 	}
 	return out
+}
+
+func jsonToMapInterface(in string) (map[string]interface{}, error) {
+	out := make(map[string]interface{})
+	err := json.Unmarshal([]byte(in), &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, err
+}
+
+func mapInterfaceToJson(in map[string]interface{}) (string, error) {
+	if in == nil {
+		return "", nil
+	}
+	out, err := json.Marshal(in)
+	if err != nil {
+		return "", err
+	}
+	return string(out), err
 }
 
 func FileExist(path string) (bool, error) {

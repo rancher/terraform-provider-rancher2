@@ -33,6 +33,21 @@ resource "rancher2_cluster" "foo-custom" {
     network {
       plugin = "canal"
     }
+    services {
+      kube_api {
+        audit_log {
+          enabled = true
+          configuration {
+            max_age = 5
+            max_backup = 5
+            max_size = 100
+            path = "-"
+            format = "json"
+            policy = jsonencode({"rules":[{"level": "Metadata"}]})
+          }
+        }
+      }
+    }
   }
 }
 ```
@@ -150,7 +165,7 @@ resource "rancher2_cluster_template" "foo" {
 resource "rancher2_cluster" "foo" {
   name = "foo"
   cluster_template_id = "${rancher2_cluster_template.foo.id}"
-  cluster_template_revision_id = "${rancher2_cluster_template.foo.default_revision_id}"
+  cluster_template_revision_id = "${rancher2_cluster_template.foo.template_revisions.0.id}"
 }
 ```
 
@@ -166,7 +181,7 @@ The following arguments are supported:
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_monitoring_input` - (Optional/Computed) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
-* `cluster_template_answers` - (Optional) Cluster template answers. Just for Rancher v2.3.x and above (list maxitems:1)
+* `cluster_template_answers` - (Optional/Computed) Cluster template answers. Just for Rancher v2.3.x and above (list maxitems:1)
 * `cluster_template_id` - (Optional) Cluster template ID. Just for Rancher v2.3.x and above (string)
 * `cluster_template_questions` - (Optional) Cluster template questions. Just for Rancher v2.3.x and above (list)
 * `cluster_template_revision_id` - (Optional) Cluster template revision ID. Just for Rancher v2.3.x and above (string)
@@ -180,6 +195,7 @@ The following arguments are supported:
 * `enable_network_policy` - (Optional) Enable project network isolation. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
+* `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
 
 ## Attributes Reference
 
@@ -189,7 +205,7 @@ The following attributes are exported:
 * `cluster_registration_token` - (Computed) Cluster Registration Token generated for the cluster (list maxitems:1)
 * `default_project_id` - (Computed) Default project ID for the cluster (string)
 * `driver` - (Computed) The driver used for the Cluster. `imported`, `azurekubernetesservice`, `amazonelasticcontainerservice`, `googlekubernetesengine` and `rancherKubernetesEngine` are supported (string)
-* `kube_config` - (Computed) Kube Config generated for the cluster (string)
+* `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster (string)
 * `system_project_id` - (Computed) System project ID for the cluster (string)
 
 ## Nested blocks
@@ -450,6 +466,7 @@ The following attributes are exported:
 
 ##### Arguments
 
+* `dns_policy` - (Optional/Computed) Ingress controller DNS policy. `ClusterFirstWithHostNet`, `ClusterFirst`, `Default`, and `None` are supported. [K8S dns Policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy) (string)
 * `extra_args` - (Optional/Computed) Extra arguments for RKE Ingress (map)
 * `node_selector` - (Optional/Computed) Node selector for RKE Ingress (map)
 * `options` - (Optional/Computed) RKE options for Ingress (map)
@@ -471,7 +488,7 @@ The following attributes are exported:
 * `flannel_network_provider` - (Optional/Computed) Flannel provider config for RKE network (list maxitems:1)
 * `weave_network_provider` - (Optional/Computed) Weave provider config for RKE network (list maxitems:1)
 * `options` - (Optional/Computed) RKE options for network (map)
-* `plugin` - (Optional/Computed) Plugin for RKE network. `canal` (default), `flannel`, `calico` and `weave` are supported. (string)
+* `plugin` - (Optional/Computed) Plugin for RKE network. `canal` (default), `flannel`, `calico`, `none` and `weave` are supported. (string)
 
 ##### `calico_network_provider`
 
@@ -610,7 +627,7 @@ The following attributes are exported:
 * `max_backup` - (Optional) Audit log max backup. Default: `10` (int)
 * `max_size` - (Optional) Audit log max size. Default: `100` (int)
 * `path` - (Optional) (Optional) Audit log path. Default: `/var/log/kube-audit/audit-log.json` (string)
-* `policy` - (Optional) Audit log policy (map)
+* `policy` - (Optional) Audit log policy json formated string. `omitStages` and `rules` json fields are supported. Example: `policy = jsonencode({"rules":[{"level": "Metadata"}]})` (string)
 
 ###### `event_rate_limit`
 

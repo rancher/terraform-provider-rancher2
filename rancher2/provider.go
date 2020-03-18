@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	providerDefaulEmptyString = "nil"
+	providerDefaultEmptyString = "nil"
 )
 
 // CLIConfig used to store data from file.
@@ -31,14 +31,14 @@ func Provider() terraform.ResourceProvider {
 			"api_url": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("RANCHER_URL", providerDefaulEmptyString),
+				DefaultFunc: schema.EnvDefaultFunc("RANCHER_URL", providerDefaultEmptyString),
 				Description: descriptions["api_url"],
 			},
 			"access_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("RANCHER_ACCESS_KEY", providerDefaulEmptyString),
+				DefaultFunc: schema.EnvDefaultFunc("RANCHER_ACCESS_KEY", providerDefaultEmptyString),
 				Description: descriptions["access_key"],
 			},
 			"bootstrap": &schema.Schema{
@@ -51,14 +51,14 @@ func Provider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("RANCHER_SECRET_KEY", providerDefaulEmptyString),
+				DefaultFunc: schema.EnvDefaultFunc("RANCHER_SECRET_KEY", providerDefaultEmptyString),
 				Description: descriptions["secret_key"],
 			},
 			"token_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DefaultFunc: schema.EnvDefaultFunc("RANCHER_TOKEN_KEY", providerDefaulEmptyString),
+				DefaultFunc: schema.EnvDefaultFunc("RANCHER_TOKEN_KEY", providerDefaultEmptyString),
 				Description: descriptions["token_key"],
 			},
 			"ca_certs": &schema.Schema{
@@ -185,7 +185,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	bootstrap := d.Get("bootstrap").(bool)
 
 	// Set tokenKey based on accessKey and secretKey if needed
-	if tokenKey == providerDefaulEmptyString && accessKey != providerDefaulEmptyString && secretKey != providerDefaulEmptyString {
+	if tokenKey == providerDefaultEmptyString && accessKey != providerDefaultEmptyString && secretKey != providerDefaultEmptyString {
 		tokenKey = accessKey + ":" + secretKey
 	}
 
@@ -201,7 +201,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 }
 
 func providerValidateConfig(config *Config) (*Config, error) {
-	if config.URL == providerDefaulEmptyString {
+	if config.URL == providerDefaultEmptyString {
 		return &Config{}, fmt.Errorf("[ERROR] No api_url provided")
 	}
 
@@ -209,12 +209,12 @@ func providerValidateConfig(config *Config) (*Config, error) {
 
 	if config.Bootstrap {
 		// If bootstrap tokenkey accesskey nor secretkey can be provided
-		if config.TokenKey != providerDefaulEmptyString {
+		if config.TokenKey != providerDefaultEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] Bootsrap mode activated. Token_key or access_key and secret_key can not be provided")
 		}
 	} else {
 		// Else token or access key and secret key should be provided
-		if config.TokenKey == providerDefaulEmptyString {
+		if config.TokenKey == providerDefaultEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] No token_key nor access_key and secret_key are provided")
 		}
 	}

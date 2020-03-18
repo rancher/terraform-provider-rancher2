@@ -27,7 +27,7 @@ func init() {
 	testAccRancher2ProviderConfig = `
 provider "rancher2" {
   bootstrap = true
-  token_key = "` + providerDefaulEmptyString + `"
+  token_key = "` + providerDefaultEmptyString + `"
 }
 `
 

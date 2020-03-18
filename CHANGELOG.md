@@ -1,4 +1,19 @@
-## 1.7.2 (Unreleased)
+## 1.7.3 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
+* Updated multiline arguments to trim spaces by default and avoid false diff
+
+BUG FIXES:
+
+* Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs 
+
+## 1.7.2 (January 28, 2020)
 
 FEATURES:
 
@@ -15,10 +30,13 @@ ENHANCEMENTS:
 * Added `ssh_cert_path` argument to `rke_config` argument on `rancher2_cluster` resource
 * Added `audit_log`, `event_rate_limit` and `secrets_encryption_config` arguments to `rke_config.services.kube_api` argument on `rancher2_cluster` resource
 * Added `generate_serving_certificate` argument to `rke_config.services.kubelet` argument on `rancher2_cluster` resource
+* Added `driver_id` argument on `rancher2_node_template` resource to reference user created `rancher2_node_driver`
 
 BUG FIXES:
 
-
+* Fix `template_revisions` update on `rancher2_cluster_template` resource
+* Fix `rke_config.services.kube_api.policy` argument on `rancher2_cluster` resource
+* Fix `data` argument set as sensitive on `rancher2_secret` resource
 
 ## 1.7.1 (December 04, 2019)
 
