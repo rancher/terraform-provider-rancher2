@@ -43,24 +43,24 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
-		"allowed_csi_drivers": {
-			Type:        schema.TypeList,
+		"allowed_csi_driver": {
+			Type:        schema.TypeSet,
 			Description: "AllowedCSIDrivers is a whitelist of inline CSI drivers that must be explicitly set to be embedded within a pod spec. An empty value indicates that any CSI driver can be used for inline ephemeral volumes. This is an alpha field, and is only honored if the API server enables the CSIInlineVolume feature gate.",
 			Optional:    true,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicyAllowedCSIDriverFields(),
 			},
 		},
-		"allowed_flex_volumes": {
-			Type:        schema.TypeList,
+		"allowed_flex_volume": {
+			Type:        schema.TypeSet,
 			Description: "allowedFlexVolumes is a whitelist of allowed Flexvolumes.  Empty or nil indicates that all Flexvolumes may be used.  This parameter is effective only when the usage of the Flexvolumes is allowed in the \"volumes\" field.",
 			Optional:    true,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicyAllowedFlexVolumesFields(),
 			},
 		},
-		"allowed_host_paths": {
-			Type:        schema.TypeList,
+		"allowed_host_path": {
+			Type:        schema.TypeSet,
 			Description: "allowedHostPaths is a white list of allowed host paths. Empty indicates that all host paths may be used.",
 			Optional:    true,
 			Elem: &schema.Resource{
@@ -68,7 +68,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			},
 		},
 		"allowed_proc_mount_types": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Description: "AllowedProcMountTypes is a whitelist of allowed ProcMountTypes. Empty or nil indicates that only the DefaultProcMountType may be used. This requires the ProcMountType feature flag to be enabled.",
 			Optional:    true,
 			Elem:        podSecurityPolicyProcMountTypeFields(),
@@ -124,7 +124,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 		},
-		"host_ports": {
+		"host_port": {
 			Type:        schema.TypeList,
 			Description: "hostPorts determines which host port ranges are allowed to be exposed.",
 			Optional:    true,
@@ -146,13 +146,13 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Computed:    true,
 		},
 		"required_drop_capabilities": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Description: "requiredDropCapabilities are the capabilities that will be dropped from the container.  These are required to be dropped and cannot be added.",
 			Optional:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
 		"run_as_user": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Description: "runAsUser is the strategy that will dictate the allowable RunAsUser values that may be set.",
 			Optional:    true,
 			Computed:    true,
@@ -162,7 +162,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			},
 		},
 		"run_as_group": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Description: "RunAsGroup is the strategy that will dictate the allowable RunAsGroup values that may be set. If this field is omitted, the pod's RunAsGroup can take any value. This field requires the RunAsGroup feature gate to be enabled.",
 			Optional:    true,
 			MaxItems:    1,
@@ -171,7 +171,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			},
 		},
 		"runtime_class": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Description: "runtimeClass is the strategy that will dictate the allowable RuntimeClasses for a pod. If this field is omitted, the pod's runtimeClassName field is unrestricted. Enforcement of this field depends on the RuntimeClass feature gate being enabled.",
 			Optional:    true,
 			MaxItems:    1,
@@ -180,7 +180,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			},
 		},
 		"se_linux": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Description: "seLinux is the strategy that will dictate the allowable labels that may be set.",
 			Optional:    true,
 			Computed:    true,
@@ -189,8 +189,8 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 				Schema: podSecurityPolicySELinuxFields(),
 			},
 		},
-		"supplemental_groups": {
-			Type:        schema.TypeList,
+		"supplemental_group": {
+			Type:        schema.TypeSet,
 			Description: "supplementalGroups is the strategy that will dictate what supplemental groups are used by the SecurityContext.",
 			Optional:    true,
 			Computed:    true,
@@ -200,7 +200,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			},
 		},
 		"volumes": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Description: "volumes is a white list of allowed volume plugins. Empty indicates that no volumes may be used. To allow all volumes you may use '*'",
 			Optional:    true,
 			Computed:    true,

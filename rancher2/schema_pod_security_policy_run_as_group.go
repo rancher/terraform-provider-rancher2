@@ -23,7 +23,7 @@ var (
 
 func podSecurityPolicyRunAsGroupFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"ranges": {
+		"range": {
 			Type:        schema.TypeList,
 			Description: "ranges are the allowed ranges of gids that may be used. If you would like to force a single gid then supply a single range with the same start and end. Required for MustRunAs.",
 			Optional:    true,

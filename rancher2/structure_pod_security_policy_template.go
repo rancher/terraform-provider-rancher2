@@ -40,15 +40,15 @@ func flattenPodSecurityPolicyTemplate(d *schema.ResourceData, in *managementClie
 	}
 
 	if len(in.AllowedCSIDrivers) > 0 {
-		d.Set("allowed_csi_drivers", flattenPodSecurityPolicyAllowedCSIDrivers(in.AllowedCSIDrivers))
+		d.Set("allowed_csi_driver", flattenPodSecurityPolicyAllowedCSIDrivers(in.AllowedCSIDrivers))
 	}
 
 	if len(in.AllowedFlexVolumes) > 0 {
-		d.Set("allowed_flex_volumes", flattenPodSecurityPolicyAllowedFlexVolumes(in.AllowedFlexVolumes))
+		d.Set("allowed_flex_volume", flattenPodSecurityPolicyAllowedFlexVolumes(in.AllowedFlexVolumes))
 	}
 
 	if len(in.AllowedHostPaths) > 0 {
-		d.Set("allowed_host_paths", flattenPodSecurityPolicyAllowedHostPaths(in.AllowedHostPaths))
+		d.Set("allowed_host_path", flattenPodSecurityPolicyAllowedHostPaths(in.AllowedHostPaths))
 	}
 
 	if len(in.AllowedProcMountTypes) > 0 {
@@ -77,7 +77,7 @@ func flattenPodSecurityPolicyTemplate(d *schema.ResourceData, in *managementClie
 	d.Set("host_pid", in.HostPID)
 
 	if len(in.HostPorts) > 0 {
-		d.Set("host_ports", flattenPodSecurityPolicyHostPortRanges(in.HostPorts))
+		d.Set("host_port", flattenPodSecurityPolicyHostPortRanges(in.HostPorts))
 	}
 
 	d.Set("privileged", in.Privileged)
@@ -95,7 +95,7 @@ func flattenPodSecurityPolicyTemplate(d *schema.ResourceData, in *managementClie
 
 	d.Set("runtime_class", flattenPodSecurityPolicyRuntimeClassStrategy(in.RuntimeClass))
 	d.Set("se_linux", flattenPodSecurityPolicySELinuxStrategy(in.SELinux))
-	d.Set("supplemental_groups", flattenPodSecurityPolicySupplementalGroups(in.SupplementalGroups))
+	d.Set("supplemental_group", flattenPodSecurityPolicySupplementalGroups(in.SupplementalGroups))
 	d.Set("volumes", toArrayInterface(in.Volumes))
 
 	return nil
@@ -137,15 +137,15 @@ func expandPodSecurityPolicyTemplate(in *schema.ResourceData) *managementClient.
 		obj.AllowedCapabilities = toArrayString(v)
 	}
 
-	if v, ok := in.Get("allowed_csi_drivers").([]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("allowed_csi_driver").([]interface{}); ok && len(v) > 0 {
 		obj.AllowedCSIDrivers = expandPodSecurityPolicyAllowedCSIDrivers(v)
 	}
 
-	if v, ok := in.Get("allowed_flex_volumes").([]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("allowed_flex_volume").([]interface{}); ok && len(v) > 0 {
 		obj.AllowedFlexVolumes = expandPodSecurityPolicyAllowedFlexVolumes(v)
 	}
 
-	if v, ok := in.Get("allowed_host_paths").([]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("allowed_host_path").([]interface{}); ok && len(v) > 0 {
 		obj.AllowedHostPaths = expandPodSecurityPolicyAllowedHostPaths(v)
 	}
 
@@ -185,7 +185,7 @@ func expandPodSecurityPolicyTemplate(in *schema.ResourceData) *managementClient.
 		obj.HostPID = v
 	}
 
-	if v, ok := in.Get("host_ports").([]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("host_port").([]interface{}); ok && len(v) > 0 {
 		obj.HostPorts = expandPodSecurityPolicyHostPortRanges(v)
 	}
 
@@ -217,7 +217,7 @@ func expandPodSecurityPolicyTemplate(in *schema.ResourceData) *managementClient.
 		obj.SELinux = expandPodSecurityPolicySELinuxStrategy(v)
 	}
 
-	if v, ok := in.Get("supplemental_groups").([]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("supplemental_group").([]interface{}); ok && len(v) > 0 {
 		obj.SupplementalGroups = expandPodSecurityPolicySupplementalGroups(v)
 	}
 

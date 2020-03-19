@@ -18,7 +18,7 @@ func flattenPodSecurityPolicySupplementalGroups(in *managementClient.Supplementa
 		obj["rule"] = in.Rule
 	}
 	if len(in.Ranges) > 0 {
-		obj["ranges"] = flattenPodSecurityPolicyIDRanges(in.Ranges)
+		obj["range"] = flattenPodSecurityPolicyIDRanges(in.Ranges)
 	}
 
 	return []interface{}{obj}
@@ -40,7 +40,7 @@ func expandPodSecurityPolicySupplementalGroups(in []interface{}) *managementClie
 		obj.Rule = v
 	}
 
-	if v, ok := m["ranges"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["range"].([]interface{}); ok && len(v) > 0 {
 		obj.Ranges = expandPodSecurityPolicyIDRanges(v)
 	}
 

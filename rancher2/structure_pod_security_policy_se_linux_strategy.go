@@ -18,7 +18,7 @@ func flattenPodSecurityPolicySELinuxStrategy(in *managementClient.SELinuxStrateg
 		obj["rule"] = in.Rule
 	}
 	if in.SELinuxOptions != nil {
-		obj["se_linux_options"] = flattenPodSecurityPolicySELinuxOptions(in.SELinuxOptions)
+		obj["se_linux_option"] = flattenPodSecurityPolicySELinuxOptions(in.SELinuxOptions)
 	}
 
 	return []interface{}{obj}
@@ -40,7 +40,7 @@ func expandPodSecurityPolicySELinuxStrategy(in []interface{}) *managementClient.
 		obj.Rule = v
 	}
 
-	if v, ok := m["se_linux_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["se_linux_option"].([]interface{}); ok && len(v) > 0 {
 		obj.SELinuxOptions = expandPodSecurityPolicySELinuxOptions(v)
 	}
 

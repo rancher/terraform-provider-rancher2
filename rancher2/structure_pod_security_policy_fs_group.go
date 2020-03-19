@@ -40,7 +40,7 @@ func expandPodSecurityPolicyFSGroup(in []interface{}) *managementClient.FSGroupS
 		obj.Rule = v
 	}
 
-	if v, ok := m["ranges"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["range"].([]interface{}); ok && len(v) > 0 {
 		obj.Ranges = expandPodSecurityPolicyIDRanges(v)
 	}
 

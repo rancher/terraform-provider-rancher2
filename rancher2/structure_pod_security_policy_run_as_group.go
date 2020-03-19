@@ -40,7 +40,7 @@ func expandPodSecurityPolicyRunAsGroup(in []interface{}) *managementClient.RunAs
 		obj.Rule = v
 	}
 
-	if v, ok := m["ranges"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["range"].([]interface{}); ok && len(v) > 0 {
 		obj.Ranges = expandPodSecurityPolicyIDRanges(v)
 	}
 
