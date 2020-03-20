@@ -1,0 +1,278 @@
+package rancher2
+
+import (
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	managementClient "github.com/rancher/types/client/management/v3"
+	"testing"
+)
+
+const testAccRancher2PSPTType = "rancher2_pod_security_policy_template"
+
+var (
+	testPspTemplate = `
+resource "rancher2_pod_security_policy_template" "foo" {
+  name = "foo"
+  description = "Terraform PodSecurityPolicyTemplate acceptance test"
+  allow_privilege_escalation = false
+  allowed_csi_driver {
+    name = "something"
+  }
+  allowed_csi_driver {
+    name = "something-else"
+  }
+  allowed_flex_volume {
+    driver = "something"
+  }
+  allowed_flex_volume {
+    driver = "something-else"
+  }
+  allowed_host_path {
+    path_prefix = "/"
+    read_only = true
+  }
+  allowed_host_path {
+    path_prefix = "//"
+    read_only = false
+  }
+  allowed_proc_mount_types = ["Default"]
+  default_allow_privilege_escalation = false
+  fs_group {
+    rule = "MustRunAs"
+    range {
+      min = 0
+      max = 100
+    }
+    range {
+      min = 0
+      max = 100
+    }
+  }
+  host_ipc = false
+  host_network = false
+  host_pid = false
+  host_port {
+    min = 0
+    max = 65535
+  }
+  host_port {
+    min = 1024
+    max = 8080
+  }
+  privileged = false
+  read_only_root_filesystem = false
+  required_drop_capabilities = ["something"]
+
+  run_as_user {
+    rule = "MustRunAs"
+    range {
+      min = 1
+      max = 100
+    }
+    range {
+      min = 2
+      max = 1024
+    }
+  }
+  run_as_group {
+    rule = "MustRunAs"
+    range {
+      min = 1
+      max = 100
+    }
+    range {
+      min = 2
+      max = 1024
+    }
+  }
+  runtime_class {
+    default_runtime_class_name = "something"
+    allowed_runtime_class_names  = ["something"]
+  }
+  se_linux {
+    rule = "RunAsAny"
+  }
+  supplemental_group {
+    rule = "RunAsAny"
+  }
+  volumes = ["azureFile"]
+}
+`
+	testPspTemplateUpdate = `
+resource "rancher2_pod_security_policy_template" "foo" {
+  name = "foo"
+  description = "Terraform PodSecurityPolicyTemplate acceptance test - updated"
+  allow_privilege_escalation = false
+  allowed_csi_driver {
+    name = "something"
+  }
+  allowed_csi_driver {
+    name = "something-else"
+  }
+  allowed_flex_volume {
+    driver = "something"
+  }
+  allowed_flex_volume {
+    driver = "something-else"
+  }
+  allowed_host_path {
+    path_prefix = "/"
+    read_only = true
+  }
+  allowed_host_path {
+    path_prefix = "//"
+    read_only = false
+  }
+  allowed_proc_mount_types = ["Default"]
+  default_allow_privilege_escalation = false
+  fs_group {
+    rule = "MustRunAs"
+    range {
+      min = 0
+      max = 100
+    }
+    range {
+      min = 0
+      max = 100
+    }
+  }
+  host_ipc = false
+  host_network = false
+  host_pid = false
+  host_port {
+    min = 0
+    max = 65535
+  }
+  host_port {
+    min = 1024
+    max = 8080
+  }
+  privileged = false
+  read_only_root_filesystem = false
+  required_drop_capabilities = ["something"]
+
+  run_as_user {
+    rule = "MustRunAs"
+    range {
+      min = 1
+      max = 100
+    }
+    range {
+      min = 2
+      max = 1024
+    }
+  }
+  run_as_group {
+    rule = "MustRunAs"
+    range {
+      min = 1
+      max = 100
+    }
+    range {
+      min = 2
+      max = 1024
+    }
+  }
+  runtime_class {
+    default_runtime_class_name = "something"
+    allowed_runtime_class_names  = ["something"]
+  }
+  se_linux {
+    rule = "RunAsAny"
+  }
+  supplemental_group {
+    rule = "RunAsAny"
+  }
+  volumes = ["azureFile"]
+}
+`
+)
+
+func init() {}
+
+func TestPspTemplateCreate(t *testing.T) {
+	var pspTemplate *managementClient.PodSecurityPolicyTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2PodSecurityPolicyTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testPspTemplate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NPodSecurityPolicyTemplateExists(testAccRancher2PSPTType+".foo", pspTemplate),
+					resource.TestCheckResourceAttr(testAccRancher2PSPTType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2PSPTType+".foo", "description", "Terraform PodSecurityPolicyTemplate acceptance test"),
+				),
+			},
+			resource.TestStep{
+				Config: testPspTemplateUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NPodSecurityPolicyTemplateExists(testAccRancher2PSPTType+".foo", pspTemplate),
+					resource.TestCheckResourceAttr(testAccRancher2PSPTType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2PSPTType+".foo", "description", "Terraform PodSecurityPolicyTemplate acceptance test - updated"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckRancher2NPodSecurityPolicyTemplateExists(n string, notifier *managementClient.PodSecurityPolicyTemplate) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No PodSecurityPolicyTemplate ID is set")
+		}
+
+		client, err := testAccProvider.Meta().(*Config).ManagementClient()
+		if err != nil {
+			return err
+		}
+
+		foundNot, err := client.PodSecurityPolicyTemplate.ByID(rs.Primary.ID)
+		if err != nil {
+			if IsNotFound(err) {
+				return fmt.Errorf("PodSecurityPolicyTemplate not found")
+			}
+			return err
+		}
+
+		notifier = foundNot
+
+		return nil
+	}
+}
+
+func testAccCheckRancher2PodSecurityPolicyTemplateDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "rancher2_pod_security_policy_template" {
+			continue
+		}
+		client, err := testAccProvider.Meta().(*Config).ManagementClient()
+		if err != nil {
+			return err
+		}
+
+		obj, err := client.PodSecurityPolicyTemplate.ByID(rs.Primary.ID)
+		if err != nil {
+			if IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+		if obj.Removed != "" {
+			return nil
+		}
+
+		return fmt.Errorf("PodSecurityPolicyTemplate still exists")
+	}
+	return nil
+}
