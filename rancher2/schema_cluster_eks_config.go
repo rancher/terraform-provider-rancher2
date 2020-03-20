@@ -17,6 +17,7 @@ type AmazonElasticContainerServiceConfig struct {
 	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
 	DesiredNodes                int64    `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
 	DisplayName                 string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	DriverName                  string   `json:"driverName,omitempty" yaml:"driverName,omitempty"`
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
 	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`

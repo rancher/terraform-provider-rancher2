@@ -18,6 +18,7 @@ func init() {
 		AssociateWorkerNodePublicIP: newTrue(),
 		DesiredNodes:                4,
 		DisplayName:                 "test",
+		DriverName:                  clusterDriverEKS,
 		InstanceType:                "instance",
 		KeyPairName:                 "key_pair_name",
 		KubernetesVersion:           "1.11",
@@ -69,7 +70,7 @@ func TestFlattenClusterEKSConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterEKSConfig(tc.Input)
+		output, err := flattenClusterEKSConfig(tc.Input, testClusterEKSConfigInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

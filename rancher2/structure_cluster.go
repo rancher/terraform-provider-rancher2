@@ -135,9 +135,13 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	d.Set("system_project_id", systemProjectID)
 	d.Set("driver", in.Driver)
 
-	switch in.Driver {
+	switch driver := ToLower(in.Driver); driver {
 	case clusterDriverAKS:
-		aksConfig, err := flattenClusterAKSConfig(in.AzureKubernetesServiceConfig)
+		v, ok := d.Get("aks_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		aksConfig, err := flattenClusterAKSConfig(in.AzureKubernetesServiceConfig, v)
 		if err != nil {
 			return err
 		}
@@ -146,7 +150,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 			return err
 		}
 	case clusterDriverEKS:
-		eksConfig, err := flattenClusterEKSConfig(in.AmazonElasticContainerServiceConfig)
+		v, ok := d.Get("eks_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		eksConfig, err := flattenClusterEKSConfig(in.AmazonElasticContainerServiceConfig, v)
 		if err != nil {
 			return err
 		}
@@ -155,7 +163,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 			return err
 		}
 	case clusterDriverGKE:
-		gkeConfig, err := flattenClusterGKEConfig(in.GoogleKubernetesEngineConfig)
+		v, ok := d.Get("gke_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		gkeConfig, err := flattenClusterGKEConfig(in.GoogleKubernetesEngineConfig, v)
 		if err != nil {
 			return err
 		}

@@ -27,6 +27,7 @@ func init() {
 		ClientSecret:                       "client_secret",
 		Count:                              3,
 		DisplayName:                        "test",
+		DriverName:                         clusterDriverAKS,
 		DNSServiceIP:                       "dns_ip",
 		DockerBridgeCIDR:                   "192.168.1.0/16",
 		EnableHTTPApplicationRouting:       true,
@@ -114,7 +115,7 @@ func TestFlattenClusterAKSConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterAKSConfig(tc.Input)
+		output, err := flattenClusterAKSConfig(tc.Input, testClusterAKSConfigInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

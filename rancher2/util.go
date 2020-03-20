@@ -62,6 +62,10 @@ func TrimSpace(val interface{}) string {
 	return strings.TrimSpace(val.(string))
 }
 
+func ToLower(s string) string {
+	return strings.ToLower(s)
+}
+
 func GetRandomPass(n int) string {
 	rand.Seed(time.Now().Unix())
 	b := make([]byte, n)
