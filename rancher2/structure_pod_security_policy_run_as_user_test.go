@@ -45,7 +45,6 @@ func TestFlattenPodSecurityPolicyRunAsUser(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		t.Logf("Expected: %#v\nGiven:    %#v", tc.Input, tc.ExpectedOutput)
 		output := flattenPodSecurityPolicyRunAsUser(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",

@@ -4,4 +4,3 @@ bin/
 build/
 dist/
 */*.swp
-vendor/
