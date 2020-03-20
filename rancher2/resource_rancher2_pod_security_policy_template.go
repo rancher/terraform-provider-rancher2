@@ -41,7 +41,6 @@ func resourceRancher2PodSecurityPolicyTemplateCreate(d *schema.ResourceData, met
 		return err
 	}
 
-
 	err = flattenPodSecurityPolicyTemplate(d, newPodSecurityPolicyTemplate)
 	if err != nil {
 		return err
