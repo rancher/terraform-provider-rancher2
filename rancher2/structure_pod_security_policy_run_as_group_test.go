@@ -21,8 +21,8 @@ func init() {
 	}
 	testPodSecurityPolicyRunAsGroupInterface = []interface{}{
 		map[string]interface{}{
-			"rule":   "RunAsAny",
-			"ranges": testPodSecurityPolicyIDRangesInterface,
+			"rule":  "RunAsAny",
+			"range": testPodSecurityPolicyIDRangesInterface,
 		},
 	}
 	testEmptyPodSecurityPolicyRunAsGroupInterface = []interface{}{}

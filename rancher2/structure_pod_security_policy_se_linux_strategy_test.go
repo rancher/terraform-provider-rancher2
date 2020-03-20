@@ -21,8 +21,8 @@ func init() {
 	}
 	testPodSecurityPolicySELinuxStrategyInterface = []interface{}{
 		map[string]interface{}{
-			"rule":             "RunAsAny",
-			"se_linux_options": testPodSecurityPolicySELinuxOptionsInterface,
+			"rule":            "RunAsAny",
+			"se_linux_option": testPodSecurityPolicySELinuxOptionsInterface,
 		},
 	}
 	testEmptyPodSecurityPolicySELinuxStrategyInterface = []interface{}{}

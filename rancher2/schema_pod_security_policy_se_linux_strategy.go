@@ -22,9 +22,10 @@ var (
 func podSecurityPolicySELinuxFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"se_linux_option": {
-			Type:        schema.TypeSet,
+			Type:        schema.TypeList,
 			Description: "seLinuxOptions required to run as; required for MustRunAs. More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
 			Optional:    true,
+			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicySELinuxOptionsFields(),
 			},
