@@ -285,7 +285,7 @@ The following attributes are exported:
 
 ###### Arguments
 
-* `global` - (Optional) (list maxitems:1)
+* `global` - (Optional/Computed) (list maxitems:1)
 * `service_override` - (Optional) (list)
 
 ###### `global`

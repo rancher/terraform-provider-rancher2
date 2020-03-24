@@ -8,6 +8,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * Updated `rancher/norman` go modules and vendor files
+* Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
+* Updated multiline arguments to trim spaces by default and avoid false diff
+* Added `custom_target_config` argument to `rancher2_cluster_logging` and `rancher2_project_logging` resources
 
 BUG FIXES:
 
@@ -15,6 +18,8 @@ BUG FIXES:
 * Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
 * Updated multiline arguments to trim spaces by default and avoid false diff
 * Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs 
+* Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs
+* Fixed `rke_config.cloud_provider.aws_cloud_provider.global` argument as computed to avoid false diff
 
 ## 1.7.2 (January 28, 2020)
 

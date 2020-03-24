@@ -121,6 +121,12 @@ func resourceRancher2ProjectLoggingUpdate(d *schema.ResourceData, meta interface
 	}
 
 	switch kind := d.Get("kind").(string); kind {
+	case loggingCustomTargetKind:
+		customConfig, err := expandLoggingCustomTargetConfig(d.Get("custom_target_config").([]interface{}))
+		if err != nil {
+			return err
+		}
+		update["customTargetConfig"] = customConfig
 	case loggingElasticsearchKind:
 		elkConfig, err := expandLoggingElasticsearchConfig(d.Get("elasticsearch_config").([]interface{}))
 		if err != nil {
