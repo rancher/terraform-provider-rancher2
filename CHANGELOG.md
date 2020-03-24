@@ -2,10 +2,12 @@
 
 FEATURES:
 
-
+* **New Data Source:** `rancher2_pod_security_policy_template`
+* **New Resource:** `rancher2_pod_security_policy_template`
 
 ENHANCEMENTS:
 
+* Updated `rancher/norman` go modules and vendor files
 * Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
 * Updated multiline arguments to trim spaces by default and avoid false diff
 * Updated `rancher/types` go modules and vendor files
@@ -14,6 +16,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* Fix `audit_log.configuration.policy` argument to `rke_config.services.kube_api` argument on `rancher2_cluster` resource
+* Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
+* Updated multiline arguments to trim spaces by default and avoid false diff
+* Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs 
 * Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs
 * Fixed `rke_config.cloud_provider.aws_cloud_provider.global` argument as computed to avoid false diff
 

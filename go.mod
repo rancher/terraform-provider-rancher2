@@ -3,12 +3,15 @@ module github.com/terraform-providers/terraform-provider-rancher2
 go 1.12
 
 require (
+	github.com/ghodss/yaml v1.0.0
 	github.com/google/btree v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
 	github.com/rancher/norman v0.0.0-20200206042542-ef3920abad1c
 	github.com/rancher/types v0.0.0-20191220141556-ad31d6815bbd
 	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586
+	gopkg.in/yaml.v2 v2.2.5
+	k8s.io/apiserver v0.0.0
 )
 
 replace (

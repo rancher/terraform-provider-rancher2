@@ -28,8 +28,8 @@ func init() {
 		MaxSize:   100,
 		Path:      "path",
 		Policy: map[string]interface{}{
-			"omitStages": "conf1",
-			"rules":      "conf2",
+			"apiVersion": "audit.k8s.io/v1",
+			"kind":       "Policy",
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIAuditLogConfigInterface = []interface{}{
@@ -39,7 +39,7 @@ func init() {
 			"max_backup": 10,
 			"max_size":   100,
 			"path":       "path",
-			"policy":     `{"omitStages":"conf1","rules":"conf2"}`,
+			"policy":     "apiVersion: audit.k8s.io/v1\nkind: Policy\n",
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIAuditLogConf = &managementClient.AuditLog{

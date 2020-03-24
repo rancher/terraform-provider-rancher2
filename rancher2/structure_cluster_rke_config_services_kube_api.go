@@ -19,18 +19,11 @@ func flattenClusterRKEConfigServicesKubeAPIAuditLogConfig(in *managementClient.A
 	obj["path"] = in.Path
 
 	if len(in.Policy) > 0 {
-		policy := map[string]interface{}{}
-
-		for _, field := range servicesKubeAPIAuditLogPolicy {
-			if in.Policy[field] != nil {
-				policy[field] = in.Policy[field]
-			}
-		}
-		policyMap, err := mapInterfaceToJson(policy)
+		policyStr, err := mapInterfaceToYAML(in.Policy)
 		if err != nil {
 			return nil, err
 		}
-		obj["policy"] = policyMap
+		obj["policy"] = policyStr
 	}
 
 	return []interface{}{obj}, nil
@@ -170,19 +163,12 @@ func expandClusterRKEConfigServicesKubeAPIAuditLogConfig(p []interface{}) (*mana
 	}
 
 	if v, ok := in["policy"].(string); ok && len(v) > 0 {
-		policyMap, err := jsonToMapInterface(v)
+		policyMap, err := ghodssyamlToMapInterface(v)
 		if err != nil {
 			return nil, err
 		}
-		policy := map[string]interface{}{}
 
-		for _, field := range servicesKubeAPIAuditLogPolicy {
-			if policyMap[field] != nil {
-				policy[field] = policyMap[field]
-			}
-		}
-
-		obj.Policy = policy
+		obj.Policy = policyMap
 	}
 
 	return obj, nil
