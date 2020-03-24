@@ -35,6 +35,7 @@ type AzureKubernetesServiceConfig struct {
 	ClientSecret                       string            `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
 	Count                              int64             `json:"count,omitempty" yaml:"count,omitempty"`
 	DisplayName                        string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	DriverName                         string            `json:"driverName,omitempty" yaml:"driverName,omitempty"`
 	DNSServiceIP                       string            `json:"dnsServiceIp,omitempty" yaml:"dnsServiceIp,omitempty"`
 	DockerBridgeCIDR                   string            `json:"dockerBridgeCidr,omitempty" yaml:"dockerBridgeCidr,omitempty"`
 	EnableHTTPApplicationRouting       bool              `json:"enableHttpApplicationRouting,omitempty" yaml:"enableHttpApplicationRouting,omitempty"`

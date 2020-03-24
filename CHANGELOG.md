@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * Updated `rancher/types` go modules and vendor files
 * Added `mtu` argument to `rke_config.network` argument on `rancher2_cluster` resource
 * Added `custom_target_config` argument to `rancher2_cluster_logging` and `rancher2_project_logging` resources
+* Updated `aks_config`, `eks_config` and `gke_config` arguments ti proper updte `rancher2_cluster` resource
 
 BUG FIXES:
 

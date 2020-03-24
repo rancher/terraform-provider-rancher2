@@ -2,8 +2,14 @@ package rancher2
 
 // Flatteners
 
-func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
@@ -195,6 +201,7 @@ func expandClusterGKEConfig(p []interface{}, name string) (*GoogleKubernetesEngi
 
 	obj.DisplayName = name
 	obj.Name = name
+	obj.DriverName = clusterDriverGKE
 
 	if v, ok := in["cluster_ipv4_cidr"].(string); ok && len(v) > 0 {
 		obj.ClusterIpv4Cidr = v

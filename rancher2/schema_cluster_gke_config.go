@@ -18,6 +18,7 @@ type GoogleKubernetesEngineConfig struct {
 	DiskSizeGb                         int64             `json:"diskSizeGb,omitempty" yaml:"diskSizeGb,omitempty"`
 	DiskType                           string            `json:"diskType,omitempty" yaml:"diskType,omitempty"`
 	DisplayName                        string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	DriverName                         string            `json:"driverName,omitempty" yaml:"driverName,omitempty"`
 	EnableAlphaFeature                 bool              `json:"enableAlphaFeature,omitempty" yaml:"enableAlphaFeature,omitempty"`
 	EnableAutoRepair                   bool              `json:"enableAutoRepair,omitempty" yaml:"enableAutoRepair,omitempty"`
 	EnableAutoUpgrade                  bool              `json:"enableAutoUpgrade,omitempty" yaml:"enableAutoUpgrade,omitempty"`

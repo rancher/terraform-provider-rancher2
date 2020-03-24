@@ -197,7 +197,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	switch driver := d.Get("driver").(string); driver {
+	switch driver := ToLower(d.Get("driver").(string)); driver {
 	case clusterDriverAKS:
 		aksConfig, err := expandClusterAKSConfig(d.Get("aks_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
@@ -216,7 +216,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["googleKubernetesEngineConfig"] = gkeConfig
-	case clusterDriverRKE:
+	case ToLower(clusterDriverRKE):
 		rkeConfig, err := expandClusterRKEConfig(d.Get("rke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
 			return err

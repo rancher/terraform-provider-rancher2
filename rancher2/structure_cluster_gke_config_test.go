@@ -18,6 +18,7 @@ func init() {
 		DiskType:                           "disk_type",
 		DiskSizeGb:                         16,
 		DisplayName:                        "test",
+		DriverName:                         clusterDriverGKE,
 		EnableAlphaFeature:                 true,
 		EnableAutoRepair:                   true,
 		EnableAutoUpgrade:                  true,
@@ -150,7 +151,7 @@ func TestFlattenClusterGKEConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterGKEConfig(tc.Input)
+		output, err := flattenClusterGKEConfig(tc.Input, testClusterGKEConfigInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

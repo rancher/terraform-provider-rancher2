@@ -2,8 +2,14 @@ package rancher2
 
 // Flatteners
 
-func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
@@ -91,6 +97,7 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 	in := p[0].(map[string]interface{})
 
 	obj.DisplayName = name
+	obj.DriverName = clusterDriverEKS
 
 	if v, ok := in["access_key"].(string); ok && len(v) > 0 {
 		obj.AccessKey = v

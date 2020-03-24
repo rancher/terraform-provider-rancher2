@@ -2,8 +2,14 @@ package rancher2
 
 // Flatteners
 
-func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+
 	if in == nil {
 		return []interface{}{}, nil
 	}
@@ -165,6 +171,7 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 
 	obj.Name = name
 	obj.DisplayName = name
+	obj.DriverName = clusterDriverAKS
 
 	if v, ok := in["add_client_app_id"].(string); ok && len(v) > 0 {
 		obj.AADClientAppID = v
