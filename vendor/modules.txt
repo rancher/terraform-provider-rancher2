@@ -230,7 +230,7 @@ github.com/rancher/norman/types/convert
 github.com/rancher/norman/types/definition
 github.com/rancher/norman/types/slice
 github.com/rancher/norman/types/values
-# github.com/rancher/types v0.0.0-20191126013101-de3dc217d60f
+# github.com/rancher/types v0.0.0-20191220141556-ad31d6815bbd
 github.com/rancher/types/client/cluster/v3
 github.com/rancher/types/client/management/v3
 github.com/rancher/types/client/project/v3

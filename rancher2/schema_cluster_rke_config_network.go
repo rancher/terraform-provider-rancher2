@@ -103,6 +103,12 @@ func clusterRKEConfigNetworkFields() map[string]*schema.Schema {
 				Schema: clusterRKEConfigNetworkWeaveFields(),
 			},
 		},
+		"mtu": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      0,
+			ValidateFunc: validation.IntBetween(0, 9000),
+		},
 		"options": {
 			Type:     schema.TypeMap,
 			Optional: true,

@@ -10,6 +10,8 @@ ENHANCEMENTS:
 * Updated `rancher/norman` go modules and vendor files
 * Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
 * Updated multiline arguments to trim spaces by default and avoid false diff
+* Updated `rancher/types` go modules and vendor files
+* Added `mtu` argument to `rke_config.network` argument on `rancher2_cluster` resource
 * Added `custom_target_config` argument to `rancher2_cluster_logging` and `rancher2_project_logging` resources
 
 BUG FIXES:
