@@ -61,6 +61,7 @@ func init() {
 	}
 	testClusterRKEConfigNetworkConfCalico = &managementClient.NetworkConfig{
 		CalicoNetworkProvider: testClusterRKEConfigNetworkCalicoConf,
+		MTU:                   1500,
 		Options: map[string]string{
 			"option1": "value1",
 			"option2": "value2",
@@ -70,6 +71,7 @@ func init() {
 	testClusterRKEConfigNetworkInterfaceCalico = []interface{}{
 		map[string]interface{}{
 			"calico_network_provider": testClusterRKEConfigNetworkCalicoInterface,
+			"mtu":                     1500,
 			"options": map[string]interface{}{
 				"option1": "value1",
 				"option2": "value2",
@@ -79,6 +81,7 @@ func init() {
 	}
 	testClusterRKEConfigNetworkConfCanal = &managementClient.NetworkConfig{
 		CanalNetworkProvider: testClusterRKEConfigNetworkCanalConf,
+		MTU:                  1500,
 		Options: map[string]string{
 			"option1": "value1",
 			"option2": "value2",
@@ -88,6 +91,7 @@ func init() {
 	testClusterRKEConfigNetworkInterfaceCanal = []interface{}{
 		map[string]interface{}{
 			"canal_network_provider": testClusterRKEConfigNetworkCanalInterface,
+			"mtu":                    1500,
 			"options": map[string]interface{}{
 				"option1": "value1",
 				"option2": "value2",
@@ -97,6 +101,7 @@ func init() {
 	}
 	testClusterRKEConfigNetworkConfFlannel = &managementClient.NetworkConfig{
 		FlannelNetworkProvider: testClusterRKEConfigNetworkFlannelConf,
+		MTU:                    1500,
 		Options: map[string]string{
 			"option1": "value1",
 			"option2": "value2",
@@ -106,6 +111,7 @@ func init() {
 	testClusterRKEConfigNetworkInterfaceFlannel = []interface{}{
 		map[string]interface{}{
 			"flannel_network_provider": testClusterRKEConfigNetworkFlannelInterface,
+			"mtu":                      1500,
 			"options": map[string]interface{}{
 				"option1": "value1",
 				"option2": "value2",
@@ -115,6 +121,7 @@ func init() {
 	}
 	testClusterRKEConfigNetworkConfWeave = &managementClient.NetworkConfig{
 		WeaveNetworkProvider: testClusterRKEConfigNetworkWeaveConf,
+		MTU:                  1500,
 		Options: map[string]string{
 			"option1": "value1",
 			"option2": "value2",
@@ -124,6 +131,7 @@ func init() {
 	testClusterRKEConfigNetworkInterfaceWeave = []interface{}{
 		map[string]interface{}{
 			"weave_network_provider": testClusterRKEConfigNetworkWeaveInterface,
+			"mtu":                    1500,
 			"options": map[string]interface{}{
 				"option1": "value1",
 				"option2": "value2",

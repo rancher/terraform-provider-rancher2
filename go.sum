@@ -635,6 +635,8 @@ github.com/rancher/types v0.0.0-20191023170600-1563e7864c02 h1:KUkhl//mPmHN0wYGH
 github.com/rancher/types v0.0.0-20191023170600-1563e7864c02/go.mod h1:3k1KigFfdRBJhiE8EXTpoM0aPXAFuYuGxKtU93oNxAY=
 github.com/rancher/types v0.0.0-20191126013101-de3dc217d60f h1:Zt90hloFDzE9sK/eiNCDuJOinGUraZqZXMj+y/l7pOM=
 github.com/rancher/types v0.0.0-20191126013101-de3dc217d60f/go.mod h1:yYtjxRexsviS9aPO0qp1gqnMSLRRoe0JW6Mqu1EbJZM=
+github.com/rancher/types v0.0.0-20191220141556-ad31d6815bbd h1:7wlqMFfCZKvcsC7CMF1u0+3Lo7S5VE/SfN3k8CcLi8I=
+github.com/rancher/types v0.0.0-20191220141556-ad31d6815bbd/go.mod h1:yYtjxRexsviS9aPO0qp1gqnMSLRRoe0JW6Mqu1EbJZM=
 github.com/rancher/wrangler v0.1.5 h1:HiXOeP6Kci2DK+e04D1g6INT77xAYpAr54zmTTe0Spk=
 github.com/rancher/wrangler v0.1.5/go.mod h1:EYP7cqpg42YqElaCm+U9ieSrGQKAXxUH5xsr+XGpWyE=
 github.com/rancher/wrangler v0.4.1 h1:kQLE6syPbX4ciwU4OF+EHIPT9zj6r6pyN83u9Gsv5eg=
@@ -884,6 +886,7 @@ golang.org/x/tools v0.0.0-20190920225731-5eefd052ad72/go.mod h1:b+2E5dAYhXwXZwtn
 golang.org/x/tools v0.0.0-20190926165942-a8d5d34286bd/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191029041327-9cc4af7d6b2c/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 gonum.org/v1/gonum v0.0.0-20190331200053-3d26580ed485/go.mod h1:2ltnJ7xHfj0zHS40VVPYEAAMTa3ZGguvHGBSJeRWqE0=
 gonum.org/v1/netlib v0.0.0-20190313105609-8cb42192e0e0/go.mod h1:wa6Ws7BG/ESfp6dHfk7C6KdzKA7wR7u/rKwOGE66zvw=

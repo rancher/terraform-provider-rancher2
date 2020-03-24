@@ -96,6 +96,10 @@ func flattenClusterRKEConfigNetwork(in *managementClient.NetworkConfig) ([]inter
 		obj["weave_network_provider"] = weaveNetwork
 	}
 
+	if in.MTU > 0 {
+		obj["mtu"] = int(in.MTU)
+	}
+
 	if len(in.Options) > 0 {
 		obj["options"] = toMapInterface(in.Options)
 	}
@@ -203,6 +207,10 @@ func expandClusterRKEConfigNetwork(p []interface{}) (*managementClient.NetworkCo
 			return obj, err
 		}
 		obj.WeaveNetworkProvider = weaveNetwork
+	}
+
+	if v, ok := in["mtu"].(int); ok && v > 0 {
+		obj.MTU = int64(v)
 	}
 
 	if v, ok := in["options"].(map[string]interface{}); ok && len(v) > 0 {

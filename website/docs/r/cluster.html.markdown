@@ -487,6 +487,7 @@ The following attributes are exported:
 * `canal_network_provider` - (Optional/Computed) Canal provider config for RKE network (list maxitems:1)
 * `flannel_network_provider` - (Optional/Computed) Flannel provider config for RKE network (list maxitems:1)
 * `weave_network_provider` - (Optional/Computed) Weave provider config for RKE network (list maxitems:1)
+* `mtu` - (Optional) Network provider MTU. Default `0` (int)
 * `options` - (Optional/Computed) RKE options for network (map)
 * `plugin` - (Optional/Computed) Plugin for RKE network. `canal` (default), `flannel`, `calico`, `none` and `weave` are supported. (string)
 
