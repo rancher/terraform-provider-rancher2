@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
 * Updated multiline arguments to trim spaces by default and avoid false diff
+* Added `custom_target_config` argument to `rancher2_cluster_logging` and `rancher2_project_logging` resources
 
 BUG FIXES:
 

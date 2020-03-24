@@ -34,14 +34,15 @@ The following arguments are supported:
 * `cluster_id` - (Required) The cluster id to configure logging (string)
 * `name` - (Required) The name of the cluster logging config (string)
 * `kind` - (Required) The kind of the Cluster Logging. `elasticsearch`, `fluentd`, `kafka`, `splunk` and `syslog` are supported (string)
-* `elasticsearch_config` - (Optional) The elasticsearch config for Cluster Logging. For `kind = elasticsearch`. Conflicts with `fluentd_config`, `kafka_config`, `splunk_config` and `syslog_config` (list maxitems:1)
-* `fluentd_config` - (Optional) The fluentd config for Cluster Logging. For `kind = fluentd`. Conflicts with `elasticsearch_config`, `kafka_config`, `splunk_config` and `syslog_config` (list maxitems:1)
-* `kafka_config` - (Optional) The kafka config for Cluster Logging. For `kind = kafka`. Conflicts with `elasticsearch_config`, `fluentd_config`, `splunk_config` and `syslog_config` (list maxitems:1)
+* `custom_target_config` - (Optional) The custom target config for Cluster Logging. For `kind = custom`. Conflicts with `elasticsearch_config`, `fluentd_config`, `kafka_config`, `splunk_config` and `syslog_config` (list maxitems:1)
+* `elasticsearch_config` - (Optional) The elasticsearch config for Cluster Logging. For `kind = elasticsearch`. Conflicts with `custom_target_config`, `fluentd_config`, `kafka_config`, `splunk_config` and `syslog_config` (list maxitems:1)
+* `fluentd_config` - (Optional) The fluentd config for Cluster Logging. For `kind = fluentd`. Conflicts with `custom_target_config`, `elasticsearch_config`, `kafka_config`, `splunk_config` and `syslog_config` (list maxitems:1)
+* `kafka_config` - (Optional) The kafka config for Cluster Logging. For `kind = kafka`. Conflicts with `custom_target_config`, `elasticsearch_config`, `fluentd_config`, `splunk_config` and `syslog_config` (list maxitems:1)
 * `namespace_id` - (Optional) The namespace id from cluster logging (string)
 * `output_flush_interval` - (Optional) How often buffered logs would be flushed. Default: `3` seconds (int)
 * `output_tags` - (Optional/computed) The output tags for Cluster Logging (map)
-* `splunk_config` - (Optional) The splunk config for Cluster Logging. For `kind = splunk`. Conflicts with `elasticsearch_config`, `fluentd_config`, `kafka_config`, and `syslog_config` (list maxitems:1)
-* `syslog_config` - (Optional) The syslog config for Cluster Logging. For `kind = syslog`. Conflicts with `elasticsearch_config`, `fluentd_config`, `kafka_config`, and `splunk_config` (list maxitems:1)
+* `splunk_config` - (Optional) The splunk config for Cluster Logging. For `kind = splunk`. Conflicts with `custom_target_config`, `elasticsearch_config`, `fluentd_config`, `kafka_config`, and `syslog_config` (list maxitems:1)
+* `syslog_config` - (Optional) The syslog config for Cluster Logging. For `kind = syslog`. Conflicts with `custom_target_config`, `elasticsearch_config`, `fluentd_config`, `kafka_config`, and `splunk_config` (list maxitems:1)
 * `annotations` - (Optional/Computed) Annotations for Cluster Logging object (map)
 * `labels` - (Optional/Computed) Labels for Cluster Logging object (map)
 
@@ -52,6 +53,15 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource (string)
 
 ## Nested blocks
+
+### `custom_target_config`
+
+#### Arguments
+
+* `content` - (Required) Custom target config content (string)
+* `certificate` - (Required/Sensitive) SSL CA certificate for the custom target service (string)
+* `client_cert` - (Optional/Sensitive) SSL client certificate for the custom target service (string)
+* `client_key` - (Optional/Sensitive) SSL client key for the custom target service (string)
 
 ### `elasticsearch_config`
 

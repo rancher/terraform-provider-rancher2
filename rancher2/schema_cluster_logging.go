@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	clusterLoggingKinds = []string{loggingElasticsearchKind, loggingFluentdKind, loggingKafkaKind, loggingSplunkKind, loggingSyslogKind}
+	clusterLoggingKinds = []string{loggingCustomTargetKind, loggingElasticsearchKind, loggingFluentdKind, loggingKafkaKind, loggingSplunkKind, loggingSyslogKind}
 )
 
 // Shemas
@@ -28,11 +28,20 @@ func clusterLoggingFields() map[string]*schema.Schema {
 			ForceNew:     true,
 			ValidateFunc: validation.StringInSlice(clusterLoggingKinds, true),
 		},
+		"custom_target_config": &schema.Schema{
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"elasticsearch_config", "fluentd_config", "kafka_config", "splunk_config", "syslog_config"},
+			Elem: &schema.Resource{
+				Schema: loggingCustomTargetConfigFields(),
+			},
+		},
 		"elasticsearch_config": &schema.Schema{
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"fluentd_config", "kafka_config", "splunk_config", "syslog_config"},
+			ConflictsWith: []string{"custom_target_config", "fluentd_config", "kafka_config", "splunk_config", "syslog_config"},
 			Elem: &schema.Resource{
 				Schema: loggingElasticsearchConfigFields(),
 			},
@@ -41,7 +50,7 @@ func clusterLoggingFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"elasticsearch_config", "kafka_config", "splunk_config", "syslog_config"},
+			ConflictsWith: []string{"custom_target_config", "elasticsearch_config", "kafka_config", "splunk_config", "syslog_config"},
 			Elem: &schema.Resource{
 				Schema: loggingFluentdConfigFields(),
 			},
@@ -50,7 +59,7 @@ func clusterLoggingFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"elasticsearch_config", "fluentd_config", "splunk_config", "syslog_config"},
+			ConflictsWith: []string{"custom_target_config", "elasticsearch_config", "fluentd_config", "splunk_config", "syslog_config"},
 			Elem: &schema.Resource{
 				Schema: loggingKafkaConfigFields(),
 			},
@@ -73,7 +82,7 @@ func clusterLoggingFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"elasticsearch_config", "fluentd_config", "kafka_config", "syslog_config"},
+			ConflictsWith: []string{"custom_target_config", "elasticsearch_config", "fluentd_config", "kafka_config", "syslog_config"},
 			Elem: &schema.Resource{
 				Schema: loggingSplunkConfigFields(),
 			},
@@ -82,7 +91,7 @@ func clusterLoggingFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"elasticsearch_config", "fluentd_config", "kafka_config", "splunk_config"},
+			ConflictsWith: []string{"custom_target_config", "elasticsearch_config", "fluentd_config", "kafka_config", "splunk_config"},
 			Elem: &schema.Resource{
 				Schema: loggingSyslogConfigFields(),
 			},

@@ -20,6 +20,9 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 
 	kind := d.Get("kind").(string)
 	if kind == "" {
+		if in.CustomTargetConfig != nil {
+			kind = loggingCustomTargetKind
+		}
 		if in.ElasticsearchConfig != nil {
 			kind = loggingElasticsearchKind
 		}
@@ -40,6 +43,19 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 	}
 
 	switch kind {
+	case loggingCustomTargetKind:
+		v, ok := d.Get("custom_target_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		customConfig, err := flattenLoggingCustomTargetConfig(in.CustomTargetConfig, v)
+		if err != nil {
+			return err
+		}
+		err = d.Set("custom_target_config", customConfig)
+		if err != nil {
+			return err
+		}
 	case loggingElasticsearchKind:
 		v, ok := d.Get("elasticsearch_config").([]interface{})
 		if !ok {
@@ -147,6 +163,12 @@ func expandProjectLogging(in *schema.ResourceData) (*managementClient.ProjectLog
 	obj.Name = in.Get("name").(string)
 
 	switch kind := in.Get("kind").(string); kind {
+	case loggingCustomTargetKind:
+		customConfig, err := expandLoggingCustomTargetConfig(in.Get("custom_target_config").([]interface{}))
+		if err != nil {
+			return obj, err
+		}
+		obj.CustomTargetConfig = customConfig
 	case loggingElasticsearchKind:
 		elkConfig, err := expandLoggingElasticsearchConfig(in.Get("elasticsearch_config").([]interface{}))
 		if err != nil {
