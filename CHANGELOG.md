@@ -11,7 +11,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs 
+* Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs
+* Fixed `rke_config.cloud_provider.aws_cloud_provider.global` argument as computed to avoid false diff
 
 ## 1.7.2 (January 28, 2020)
 
