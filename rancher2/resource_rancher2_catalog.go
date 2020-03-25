@@ -215,22 +215,15 @@ func catalogStateRefreshFunc(meta interface{}, catalogID, scope string) resource
 			return nil, "", err
 		}
 
-		var removed, state string
+		var state string
 
 		switch scope {
 		case catalogScopeCluster:
-			removed = obj.(*managementClient.ClusterCatalog).Removed
 			state = obj.(*managementClient.ClusterCatalog).State
 		case catalogScopeGlobal:
-			removed = obj.(*managementClient.Catalog).Removed
 			state = obj.(*managementClient.Catalog).State
 		case catalogScopeProject:
-			removed = obj.(*managementClient.ProjectCatalog).Removed
 			state = obj.(*managementClient.ProjectCatalog).State
-		}
-
-		if removed != "" {
-			return obj, "removed", nil
 		}
 
 		return obj, state, nil

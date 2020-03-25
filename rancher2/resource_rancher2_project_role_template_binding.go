@@ -199,11 +199,6 @@ func projectRoleTemplateBindingStateRefreshFunc(client *managementClient.Client,
 			}
 			return nil, "", err
 		}
-
-		if obj.Removed != "" {
-			return obj, "removed", nil
-		}
-
 		return obj, "active", nil
 	}
 }

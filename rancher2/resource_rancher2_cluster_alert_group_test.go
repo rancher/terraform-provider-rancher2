@@ -198,15 +198,12 @@ func testAccCheckRancher2ClusterAlertGroupDestroy(s *terraform.State) error {
 			return err
 		}
 
-		obj, err := client.ClusterAlertGroup.ByID(rs.Primary.ID)
+		_, err = client.ClusterAlertGroup.ByID(rs.Primary.ID)
 		if err != nil {
 			if IsNotFound(err) {
 				return nil
 			}
 			return err
-		}
-		if obj.Removed != "" {
-			return nil
 		}
 		return fmt.Errorf("Cluster Alert Group still exists")
 	}

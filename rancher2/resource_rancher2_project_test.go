@@ -244,19 +244,13 @@ func testAccCheckRancher2ProjectDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-
-		obj, err := client.Project.ByID(rs.Primary.ID)
+		_, err = client.Project.ByID(rs.Primary.ID)
 		if err != nil {
 			if IsNotFound(err) {
 				return nil
 			}
 			return err
 		}
-
-		if obj.Removed != "" {
-			return nil
-		}
-
 		return fmt.Errorf("Project still exists")
 	}
 	return nil
