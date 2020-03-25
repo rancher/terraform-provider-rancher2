@@ -19,6 +19,19 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"custom_target_config": &schema.Schema{
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: loggingCustomTargetConfigFields(),
+				},
+			},
+			"enable_json_parsing": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Optional enable json log parsing",
+			},
 			"elasticsearch_config": &schema.Schema{
 				Type:     schema.TypeList,
 				MaxItems: 1,

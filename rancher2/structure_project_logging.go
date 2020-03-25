@@ -16,6 +16,7 @@ func flattenProjectLogging(d *schema.ResourceData, in *managementClient.ProjectL
 
 	d.SetId(in.ID)
 	d.Set("project_id", in.ProjectID)
+	d.Set("enable_json_parsing", in.EnableJSONParsing)
 	d.Set("name", in.Name)
 
 	kind := d.Get("kind").(string)
@@ -160,6 +161,7 @@ func expandProjectLogging(in *schema.ResourceData) (*managementClient.ProjectLog
 	}
 
 	obj.ProjectID = in.Get("project_id").(string)
+	obj.EnableJSONParsing = in.Get("enable_json_parsing").(bool)
 	obj.Name = in.Get("name").(string)
 
 	switch kind := in.Get("kind").(string); kind {

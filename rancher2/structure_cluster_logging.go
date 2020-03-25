@@ -16,6 +16,7 @@ func flattenClusterLogging(d *schema.ResourceData, in *managementClient.ClusterL
 
 	d.SetId(in.ID)
 	d.Set("cluster_id", in.ClusterID)
+	d.Set("enable_json_parsing", in.EnableJSONParsing)
 	d.Set("name", in.Name)
 
 	kind := d.Get("kind").(string)
@@ -160,6 +161,7 @@ func expandClusterLogging(in *schema.ResourceData) (*managementClient.ClusterLog
 	}
 
 	obj.ClusterID = in.Get("cluster_id").(string)
+	obj.EnableJSONParsing = in.Get("enable_json_parsing").(bool)
 	obj.Name = in.Get("name").(string)
 
 	switch kind := in.Get("kind").(string); kind {
