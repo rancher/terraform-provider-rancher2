@@ -1,4 +1,17 @@
 ## 1.8.0 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Added `enable_json_parsing` argument to cluster and project logging
+
 ## 1.7.3 (March 24, 2020)
 
 FEATURES:
