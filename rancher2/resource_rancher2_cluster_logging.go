@@ -236,10 +236,6 @@ func clusterLoggingStateRefreshFunc(client *managementClient.Client, clusterLogg
 			return nil, "", err
 		}
 
-		if obj.Removed != "" {
-			return obj, "removed", nil
-		}
-
 		return obj, "active", nil
 	}
 }

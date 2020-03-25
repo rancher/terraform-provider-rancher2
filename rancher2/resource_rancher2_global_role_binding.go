@@ -190,10 +190,6 @@ func globalRoleBindingStateRefreshFunc(client *managementClient.Client, globalRo
 			return nil, "", err
 		}
 
-		if obj.Removed != "" {
-			return obj, "removed", nil
-		}
-
 		return obj, "active", nil
 	}
 }

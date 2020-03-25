@@ -192,11 +192,6 @@ func userStateRefreshFunc(client *managementClient.Client, userID string) resour
 			}
 			return nil, "", err
 		}
-
-		if obj.Removed != "" {
-			return obj, "removed", nil
-		}
-
 		return obj, obj.State, nil
 	}
 }

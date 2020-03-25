@@ -14,6 +14,12 @@ func clusterSyncFields() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Cluster id to sync",
 		},
+		"wait_monitoring": &schema.Schema{
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Wait until monitoring is up and running",
+		},
 		"node_pool_ids": {
 			Type:        schema.TypeList,
 			Optional:    true,
@@ -32,8 +38,9 @@ func clusterSyncFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"kube_config": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
 		},
 		"system_project_id": &schema.Schema{
 			Type:     schema.TypeString,
