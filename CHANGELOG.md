@@ -7,11 +7,13 @@ FEATURES:
 ENHANCEMENTS:
 
 * Added `wait_monitoring` argument to `rancher2_cluster_sync` resource
+* Added `retries` config argument and `isRancherActive()` function
 
 BUG FIXES:
 
 * Added `enable_json_parsing` argument to cluster and project logging
 * Sync resource delete with rancher API
+* Fix recipient update on cluster and project alert groups
 
 ## 1.7.3 (March 24, 2020)
 
