@@ -3,6 +3,7 @@ package rancher2
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
@@ -10,6 +11,11 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 	projectClient "github.com/rancher/types/client/project/v3"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	rancher2ReadyAnswer = "pong"
+	rancher2RetriesWait = 5
 )
 
 // Client are the client kind for a Rancher v3 API
@@ -28,6 +34,7 @@ type Config struct {
 	Bootstrap bool   `json:"bootstrap"`
 	ClusterID string `json:"clusterId"`
 	ProjectID string `json:"projectId"`
+	Retries   int
 	Version   string
 	Sync      sync.Mutex
 	Client    Client
@@ -51,6 +58,19 @@ func (c *Config) GetRancherVersion() (string, error) {
 	c.Version = version.Value
 
 	return c.Version, nil
+}
+
+func (c *Config) isRancherReady() error {
+	var err error
+	url := RootURL(c.URL) + "/ping"
+	for i := 0; i <= c.Retries; i++ {
+		resp, err := DoGet(url, "", "", c.CACerts, c.Insecure)
+		if err == nil && rancher2ReadyAnswer == string(resp) {
+			return nil
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
+	}
+	return fmt.Errorf("Timeout, Rancher is not ready: %v", err)
 }
 
 // UpdateToken update tokenkey and restart client connections
@@ -97,9 +117,8 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 		return c.Client.Management, nil
 	}
 
-	options := c.CreateClientOpts()
-
 	// Setup the management client
+	options := c.CreateClientOpts()
 	mClient, err := managementClient.NewClient(options)
 	if err != nil {
 		return nil, err
@@ -128,10 +147,9 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 		return c.Client.Cluster, nil
 	}
 
+	// Setup the cluster client
 	options := c.CreateClientOpts()
 	options.URL = options.URL + "/clusters/" + id
-
-	// Setup the cluster client
 	cClient, err := clusterClient.NewClient(options)
 	if err != nil {
 		return nil, err
@@ -155,10 +173,9 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 		return c.Client.Project, nil
 	}
 
+	// Setup the project client
 	options := c.CreateClientOpts()
 	options.URL = options.URL + "/projects/" + id
-
-	// Setup the project client
 	pClient, err := projectClient.NewClient(options)
 	if err != nil {
 		return nil, err

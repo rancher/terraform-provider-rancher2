@@ -29,6 +29,7 @@ const (
 	clusterProjectIDSeparator = ":"
 	passDigits                = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 	passDefaultLen            = 20
+	maxHTTPRedirect           = 5
 )
 
 func AreEqual(o, n interface{}) bool {
@@ -78,7 +79,7 @@ func GetRandomPass(n int) string {
 func HashPasswordString(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", fmt.Errorf("[ERROR] problem encrypting password: %v", err)
+		return "", fmt.Errorf("Problem encrypting password: %v", err)
 	}
 	return string(hash), nil
 }
@@ -117,7 +118,7 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 	response := make(map[string]interface{})
 
 	if url == "" {
-		return response, fmt.Errorf("[ERROR] Doing post: URL is nil")
+		return response, fmt.Errorf("Doing post: URL is nil")
 	}
 
 	jsonBytes := []byte(data)
@@ -168,6 +169,67 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 	return response, nil
 }
 
+func DoGet(url, username, password, cacert string, insecure bool) ([]byte, error) {
+	start := time.Now()
+
+	if url == "" {
+		return nil, fmt.Errorf("Doing get: URL is nil")
+	}
+	log.Println("Getting from ", url)
+
+	client := &http.Client{
+		Timeout: time.Duration(10 * time.Second),
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= maxHTTPRedirect {
+				return fmt.Errorf("Stopped after %d redirects", maxHTTPRedirect)
+			}
+			if len(username) > 0 && len(password) > 0 {
+				req.SetBasicAuth(username, password)
+			}
+			return nil
+		},
+	}
+
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		Proxy:           http.ProxyFromEnvironment,
+	}
+
+	if cacert != "" {
+		// Get the SystemCertPool, continue with an empty pool on error
+		rootCAs, _ := x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+
+		// Append our cert to the system pool
+		if ok := rootCAs.AppendCertsFromPEM([]byte(cacert)); !ok {
+			log.Println("No certs appended, using system certs only")
+		}
+		transport.TLSClientConfig.RootCAs = rootCAs
+	}
+	client.Transport = transport
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Doing get: %v", err)
+	}
+	if len(username) > 0 && len(password) > 0 {
+		req.SetBasicAuth(username, password)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Doing get: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Timings recorded as part of internal metrics
+	log.Println("Time to get req: ", float64((time.Since(start))/time.Millisecond), " ms")
+
+	return ioutil.ReadAll(resp.Body)
+
+}
+
 func NormalizeURL(url string) string {
 	if url == "" {
 		return ""
@@ -178,6 +240,14 @@ func NormalizeURL(url string) string {
 	if !strings.HasSuffix(url, "/v3") {
 		url = url + "/v3"
 	}
+
+	return url
+}
+
+func RootURL(url string) string {
+	NormalizeURL(url)
+
+	url = strings.TrimSuffix(url, "/v3")
 
 	return url
 }
