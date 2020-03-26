@@ -199,7 +199,9 @@ func resourceRancher2ClusterAlertGroupRecients(d *schema.ResourceData, meta inte
 			}
 
 			in["notifier_type"] = recipient.NotifierType
-			in["recipient"] = recipient.Recipient
+			if v, ok := in["default_recipient"].(bool); ok && v {
+				in["recipient"] = recipient.Recipient
+			}
 
 			recipients[i] = in
 		}
