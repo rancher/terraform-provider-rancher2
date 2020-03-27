@@ -298,13 +298,7 @@ $ terraform import rancher2_node_template.foo <node_template_id>
 
 ## Upgrading to Rancher v2.3.3
 
-Due to [this feature](https://github.com/rancher/rancher/pull/23718) included on Rancher v2.3.3, `rancher2_node_template` are now global scope objects with RBAC around them, instead of user scope objects as they were. This means that existing node templates `id` field is changing on upgrade. Because the Terraform provider can not find the old `id`, it will try to recreate them.
+**Important** This process could update `rancher2_node_template` data on tfstate file. Be sure to save a copy of tfstate file before proceed
 
-As a workaround, if you are upgrading Rancher from previous releases to v2.3.3, you need to get node templates new id from Rancher API, refresh tfstate and import `rancher2_node_template` resources with new id.
-
-```
-$ curl -sk -X GET -H "Authorization: Bearer ${RANCHER_TOKEN_KEY}" ${RANCHER_URL}/v3/nodeTemplates | jq .data
-$ terraform refresh
-$ terraform import rancher2_node_template.<name> <new_id>
-$ terraform apply
+Due to [this feature](https://github.com/rancher/rancher/pull/23718) included on Rancher v2.3.3, `rancher2_node_template` are now global scoped objects with RBAC around them, instead of user scoped objects as they were. This means that existing node templates `id` field is changing on upgrade. Provider implements `fixNodeTempateID()` that will update tfstate with proper id.
 ```

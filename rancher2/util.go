@@ -498,6 +498,30 @@ func newFalse() *bool {
 	return &b
 }
 
+func IsVersionLessThanl(ver1, ver2 string) (bool, error) {
+	v1, err := gover.NewVersion(ver1)
+	if err != nil {
+		return false, err
+	}
+	v2, err := gover.NewVersion(ver2)
+	if err != nil {
+		return false, err
+	}
+	return v1.LessThan(v2), nil
+}
+
+func IsVersionGreaterThanOrEqual(ver1, ver2 string) (bool, error) {
+	v1, err := gover.NewVersion(ver1)
+	if err != nil {
+		return false, err
+	}
+	v2, err := gover.NewVersion(ver2)
+	if err != nil {
+		return false, err
+	}
+	return v1.GreaterThanOrEqual(v2), nil
+}
+
 func sortVersions(list map[string]string) ([]*gover.Version, error) {
 	var versions []*gover.Version
 	for key := range list {

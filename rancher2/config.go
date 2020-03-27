@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,8 +15,10 @@ import (
 )
 
 const (
-	rancher2ReadyAnswer = "pong"
-	rancher2RetriesWait = 5
+	rancher2ReadyAnswer               = "pong"
+	rancher2RetriesWait               = 5
+	rancher2NodeTemplateChangeVersion = "2.3.3"
+	rancher2NodeTemplateNewPrefix     = "cattle-global-nt:nt-"
 )
 
 // Client are the client kind for a Rancher v3 API
@@ -74,7 +77,6 @@ func (c *Config) isRancherReady() error {
 	return fmt.Errorf("Timeout, Rancher is not ready: %v", err)
 }
 
-// GetRancherVersion get Rancher server version
 func (c *Config) getK8SVersion() (string, error) {
 	if len(c.K8SVer) > 0 {
 		return c.K8SVer, nil
@@ -86,6 +88,39 @@ func (c *Config) getK8SVersion() (string, error) {
 	}
 	c.K8SVer = k8sVer
 	return c.K8SVer, nil
+}
+
+// Fix breaking API change https://github.com/rancher/rancher/pull/23718
+func (c *Config) fixNodeTempateID(id string) string {
+	if ok, _ := c.IsRancherVersionGreaterThanOrEqual(rancher2NodeTemplateChangeVersion); ok && len(id) > 0 {
+		if !strings.HasPrefix(id, rancher2NodeTemplateNewPrefix) {
+			id = strings.Replace(id, ":", "-", -1)
+			id = rancher2NodeTemplateNewPrefix + id
+		}
+	}
+	return id
+}
+
+func (c *Config) IsRancherVersionLessThan(ver string) (bool, error) {
+	if len(ver) == 0 {
+		return false, fmt.Errorf("[ERROR] version is nil")
+	}
+	_, err := c.GetRancherVersion()
+	if err != nil {
+		return false, fmt.Errorf("[ERROR] getting rancher server version")
+	}
+	return IsVersionLessThanl(c.Version, ver)
+}
+
+func (c *Config) IsRancherVersionGreaterThanOrEqual(ver string) (bool, error) {
+	if len(ver) == 0 {
+		return false, fmt.Errorf("[ERROR] version is nil")
+	}
+	_, err := c.GetRancherVersion()
+	if err != nil {
+		return false, fmt.Errorf("[ERROR] getting rancher server version")
+	}
+	return IsVersionGreaterThanOrEqual(c.Version, ver)
 }
 
 // UpdateToken update tokenkey and restart client connections
