@@ -1,4 +1,17 @@
-## 1.9.0 (Unreleased)
+## 1.8.2 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added `fixNodeTempateID` to fix `rancher2_node_template` ID upgrading up to v2.3.3. Issue [#195](https://github.com/terraform-providers/terraform-provider-rancher2/issues/195)
+
+BUG FIXES:
+
+
+
 ## 1.8.1 (March 31, 2020)
 
 FEATURES:
@@ -32,6 +45,7 @@ ENHANCEMENTS:
   * Added `upgrade_strategy` argument to `rke_config` on `rancher2_cluster` resource
   * Added `scheduled_cluster_scan` argument on `rancher2_cluster` and `rancher2_cluster_template` resources
   * Added `rancher2_cluster_scan` datasource
+* Added `fixNodeTempateID` to fix `rancher2_node_template` ID upgrading up to v2.3.3. Issue [#195](https://github.com/terraform-providers/terraform-provider-rancher2/issues/195)
 
 BUG FIXES:
 
