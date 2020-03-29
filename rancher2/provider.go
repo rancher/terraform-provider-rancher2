@@ -12,6 +12,11 @@ const (
 	providerDefaultEmptyString = "nil"
 )
 
+var (
+	descriptions                        map[string]string
+	rancher2ClusterRKEK8SDefaultVersion string
+)
+
 // CLIConfig used to store data from file.
 type CLIConfig struct {
 	AdminPass string `json:"adminpass"`
@@ -139,6 +144,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_cluster_driver":                dataSourceRancher2ClusterDriver(),
 			"rancher2_cluster_logging":               dataSourceRancher2ClusterLogging(),
 			"rancher2_cluster_role_template_binding": dataSourceRancher2ClusterRoleTemplateBinding(),
+			"rancher2_cluster_scan":                  dataSourceRancher2ClusterScan(),
 			"rancher2_cluster_template":              dataSourceRancher2ClusterTemplate(),
 			"rancher2_etcd_backup":                   dataSourceRancher2EtcdBackup(),
 			"rancher2_global_role_binding":           dataSourceRancher2GlobalRoleBinding(),
@@ -164,8 +170,6 @@ func Provider() terraform.ResourceProvider {
 		ConfigureFunc: providerConfigure,
 	}
 }
-
-var descriptions map[string]string
 
 func init() {
 	descriptions = map[string]string{
@@ -223,6 +227,11 @@ func providerValidateConfig(config *Config) (*Config, error) {
 		if config.TokenKey == providerDefaultEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] No token_key nor access_key and secret_key are provided")
 		}
+		k8sVer, err := config.getK8SVersion()
+		if err != nil {
+			return &Config{}, fmt.Errorf("[ERROR] Getting default RKE K8S version: %v", err)
+		}
+		rancher2ClusterRKEK8SDefaultVersion = k8sVer
 	}
 
 	err := config.isRancherReady()

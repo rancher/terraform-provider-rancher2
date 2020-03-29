@@ -276,6 +276,15 @@ func clusterFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable project network isolation",
 		},
+		"scheduled_cluster_scan": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Description: "Cluster scheduled scan",
+			Elem: &schema.Resource{
+				Schema: scheduledClusterScanFields(),
+			},
+		},
 		"annotations": &schema.Schema{
 			Type:     schema.TypeMap,
 			Optional: true,

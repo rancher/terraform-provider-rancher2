@@ -195,6 +195,10 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 
+	if in.ScheduledClusterScan != nil {
+		d.Set("scheduled_cluster_scan", flattenScheduledClusterScan(in.ScheduledClusterScan))
+	}
+
 	d.Set("windows_prefered_cluster", in.WindowsPreferedCluster)
 
 	return nil
@@ -360,6 +364,10 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if len(obj.Driver) == 0 {
 		obj.Driver = clusterDriverImported
+	}
+
+	if v, ok := in.Get("scheduled_cluster_scan").([]interface{}); ok && len(v) > 0 {
+		obj.ScheduledClusterScan = expandScheduledClusterScan(v)
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {

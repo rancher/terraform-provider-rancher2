@@ -45,6 +45,19 @@ resource "rancher2_cluster" "foo" {
       max_unavailable_worker = "20%"
     }
   }
+  scheduled_cluster_scan {
+    enabled = true
+    scan_config {
+      cis_scan_config {
+        debug_master = true
+        debug_worker = true
+      }
+    }
+    schedule_config {
+      cron_schedule = "30 * * * *"
+      retention = 5
+    }
+  }
 }
 `
 
@@ -80,6 +93,19 @@ resource "rancher2_cluster" "foo" {
       max_unavailable_worker = "10%"
     }
   }
+  scheduled_cluster_scan {
+    enabled = true
+    scan_config {
+      cis_scan_config {
+        debug_master = true
+        debug_worker = true
+      }
+    }
+    schedule_config {
+      cron_schedule = "30 10 * * *"
+      retention = 5
+    }
+  }
 }
  `
 
@@ -113,6 +139,19 @@ resource "rancher2_cluster" "foo" {
     upgrade_strategy {
       drain = true
       max_unavailable_worker = "20%"
+    }
+  }
+  scheduled_cluster_scan {
+    enabled = true
+    scan_config {
+      cis_scan_config {
+        debug_master = true
+        debug_worker = true
+      }
+    }
+    schedule_config {
+      cron_schedule = "30 * * * *"
+      retention = 5
     }
   }
 }
@@ -204,6 +243,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "5"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "20%"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 			resource.TestStep{
@@ -217,6 +258,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "7"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "10%"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 10 * * *"),
 				),
 			},
 			resource.TestStep{
@@ -230,6 +273,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "5"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "20%"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 		},

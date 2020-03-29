@@ -81,6 +81,10 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 		obj["rke_config"] = rkeConfig
 	}
 
+	if in.ScheduledClusterScan != nil {
+		obj["scheduled_cluster_scan"] = flattenScheduledClusterScan(in.ScheduledClusterScan)
+	}
+
 	obj["windows_prefered_cluster"] = in.WindowsPreferedCluster
 
 	return []interface{}{obj}, nil
@@ -270,6 +274,10 @@ func expandClusterSpecBase(p []interface{}) *managementClient.ClusterSpecBase {
 			return &managementClient.ClusterSpecBase{}
 		}
 		obj.RancherKubernetesEngineConfig = rkeConfig
+	}
+
+	if v, ok := in["scheduled_cluster_scan"].([]interface{}); ok && len(v) > 0 {
+		obj.ScheduledClusterScan = expandScheduledClusterScan(v)
 	}
 
 	if v, ok := in["windows_prefered_cluster"].(bool); ok {

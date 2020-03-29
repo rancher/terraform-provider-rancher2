@@ -36,6 +36,7 @@ type Config struct {
 	ProjectID string `json:"projectId"`
 	Retries   int
 	Version   string
+	K8SVer    string
 	Sync      sync.Mutex
 	Client    Client
 }
@@ -71,6 +72,20 @@ func (c *Config) isRancherReady() error {
 		time.Sleep(rancher2RetriesWait * time.Second)
 	}
 	return fmt.Errorf("Timeout, Rancher is not ready: %v", err)
+}
+
+// GetRancherVersion get Rancher server version
+func (c *Config) getK8SVersion() (string, error) {
+	if len(c.K8SVer) > 0 {
+		return c.K8SVer, nil
+	}
+
+	k8sVer, err := c.GetSettingValue("k8s-version")
+	if err != nil {
+		return "", err
+	}
+	c.K8SVer = k8sVer
+	return c.K8SVer, nil
 }
 
 // UpdateToken update tokenkey and restart client connections

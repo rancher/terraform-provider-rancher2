@@ -32,6 +32,19 @@ resource "rancher2_cluster_template" "foo" {
           }
         }
       }
+      scheduled_cluster_scan {
+	    enabled = true
+	    scan_config {
+	      cis_scan_config {
+	        debug_master = true
+	        debug_worker = true
+	      }
+	    }
+	    schedule_config {
+	      cron_schedule = "30 * * * *"
+	      retention = 5
+	    }
+	  }
     }
     default = true
   }
@@ -55,10 +68,23 @@ resource "rancher2_cluster_template" "foo" {
         services {
           etcd {
             creation = "6h"
-            retention = "24h"
+            retention = "48h"
           }
         }
       }
+      scheduled_cluster_scan {
+	    enabled = true
+	    scan_config {
+	      cis_scan_config {
+	        debug_master = true
+	        debug_worker = true
+	      }
+	    }
+	    schedule_config {
+	      cron_schedule = "30 10 * * *"
+	      retention = 5
+	    }
+	  }
     }
     default = true
   }
@@ -86,6 +112,19 @@ resource "rancher2_cluster_template" "foo" {
           }
         }
       }
+      scheduled_cluster_scan {
+	    enabled = true
+	    scan_config {
+	      cis_scan_config {
+	        debug_master = true
+	        debug_worker = true
+	      }
+	    }
+	    schedule_config {
+	      cron_schedule = "30 * * * *"
+	      retention = 5
+	    }
+	  }
     }
     default = true
   }
@@ -111,6 +150,10 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.name", "V1"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.default", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "members.0.access_type", "owner"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.network.0.plugin", "canal"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.services.0.etcd.0.retention", "24h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 			resource.TestStep{
@@ -122,6 +165,10 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.name", "V2"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.default", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "members.0.access_type", "read-only"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.network.0.plugin", "canal"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.services.0.etcd.0.retention", "48h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 10 * * *"),
 				),
 			},
 			resource.TestStep{
@@ -133,6 +180,10 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.name", "V1"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.default", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "members.0.access_type", "owner"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.network.0.plugin", "canal"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.services.0.etcd.0.retention", "24h"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 		},

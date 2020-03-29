@@ -147,6 +147,14 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed:    true,
 				Description: "Enable project network isolation",
 			},
+			"scheduled_cluster_scan": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Cluster scheduled scan",
+				Elem: &schema.Resource{
+					Schema: scheduledClusterScanFields(),
+				},
+			},
 			"annotations": &schema.Schema{
 				Type:     schema.TypeMap,
 				Computed: true,
