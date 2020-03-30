@@ -235,10 +235,6 @@ func nodeTemplateStateRefreshFunc(client *managementClient.Client, nodePoolID st
 			return nil, "", err
 		}
 
-		if obj.Removed != "" {
-			return obj, "removed", nil
-		}
-
 		return obj, obj.State, nil
 	}
 }

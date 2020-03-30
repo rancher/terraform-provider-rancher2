@@ -90,6 +90,7 @@ The following arguments are supported:
 
 * `cluster_id` - (Required/ForceNew) The cluster ID that is syncing (string)
 * `node_pool_ids` - (Optional) The node pool IDs used by the cluster id (list)
+* `wait_monitoring` - (Optional) Wait until monitoring is up and running. Default: `false` (bool)
 
 
 ## Attributes Reference
@@ -98,7 +99,7 @@ The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource. Same as `cluster_id` (string)
 * `default_project_id` - (Computed) Default project ID for the cluster sync (string)
-* `kube_config` - (Computed) Kube Config generated for the cluster sync (string)
+* `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster sync (string)
 * `system_project_id` - (Computed) System project ID for the cluster sync (string)
 
 ## Timeouts

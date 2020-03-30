@@ -212,10 +212,6 @@ func notifierStateRefreshFunc(client *managementClient.Client, notifierID string
 			return nil, "", err
 		}
 
-		if obj.Removed != "" {
-			return obj, "removed", nil
-		}
-
 		return obj, obj.State, nil
 	}
 }

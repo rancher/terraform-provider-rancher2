@@ -238,6 +238,16 @@ func clusterIDFromProjectID(projectID string) (string, error) {
 	return projectID[0:strings.Index(projectID, clusterProjectIDSeparator)], nil
 }
 
+func splitProjectIDPart(id string) (projectID string) {
+	id = strings.TrimSuffix(id, clusterProjectIDSeparator)
+
+	if strings.Contains(id, clusterProjectIDSeparator) {
+		return id[strings.Index(id, clusterProjectIDSeparator)+1:]
+	}
+
+	return ""
+}
+
 func splitProjectID(id string) (clusterID, projectID string) {
 	id = strings.TrimSuffix(id, clusterProjectIDSeparator)
 

@@ -260,16 +260,12 @@ func testAccCheckRancher2PodSecurityPolicyTemplateDestroy(s *terraform.State) er
 			return err
 		}
 
-		obj, err := client.PodSecurityPolicyTemplate.ByID(rs.Primary.ID)
+		_, err = client.PodSecurityPolicyTemplate.ByID(rs.Primary.ID)
 		if err != nil {
 			if IsNotFound(err) {
 				return nil
 			}
 			return err
-		}
-
-		if obj.Removed != "" {
-			return nil
 		}
 
 		return fmt.Errorf("PodSecurityPolicyTemplate still exists")
