@@ -32,6 +32,12 @@ func recipientFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Recipient",
 		},
+		"default_recipient": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Use notifier default recipient",
+		},
 	}
 	return s
 }

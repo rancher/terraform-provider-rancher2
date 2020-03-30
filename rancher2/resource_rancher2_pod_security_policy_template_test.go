@@ -2,10 +2,11 @@ package rancher2
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	managementClient "github.com/rancher/types/client/management/v3"
-	"testing"
 )
 
 const testAccRancher2PSPTType = "rancher2_pod_security_policy_template"
@@ -191,7 +192,7 @@ resource "rancher2_pod_security_policy_template" "foo" {
 
 func init() {}
 
-func TestPspTemplateCreate(t *testing.T) {
+func TestAccRancher2PodSecurityPolicyTemplate_Basic(t *testing.T) {
 	var pspTemplate *managementClient.PodSecurityPolicyTemplate
 
 	resource.Test(t, resource.TestCase{
@@ -219,7 +220,7 @@ func TestPspTemplateCreate(t *testing.T) {
 	})
 }
 
-func testAccCheckRancher2NPodSecurityPolicyTemplateExists(n string, notifier *managementClient.PodSecurityPolicyTemplate) resource.TestCheckFunc {
+func testAccCheckRancher2NPodSecurityPolicyTemplateExists(n string, pspTemplate *managementClient.PodSecurityPolicyTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -236,7 +237,7 @@ func testAccCheckRancher2NPodSecurityPolicyTemplateExists(n string, notifier *ma
 			return err
 		}
 
-		foundNot, err := client.PodSecurityPolicyTemplate.ByID(rs.Primary.ID)
+		foundPSP, err := client.PodSecurityPolicyTemplate.ByID(rs.Primary.ID)
 		if err != nil {
 			if IsNotFound(err) {
 				return fmt.Errorf("PodSecurityPolicyTemplate not found")
@@ -244,7 +245,7 @@ func testAccCheckRancher2NPodSecurityPolicyTemplateExists(n string, notifier *ma
 			return err
 		}
 
-		notifier = foundNot
+		pspTemplate = foundPSP
 
 		return nil
 	}

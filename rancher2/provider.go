@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -72,6 +73,13 @@ func Provider() terraform.ResourceProvider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_INSECURE", false),
 				Description: descriptions["insecure"],
+			},
+			"retries": &schema.Schema{
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      5,
+				Description:  descriptions["retries"],
+				ValidateFunc: validation.IntBetween(1, 100),
 			},
 		},
 
@@ -162,18 +170,13 @@ var descriptions map[string]string
 func init() {
 	descriptions = map[string]string{
 		"access_key": "API Key used to authenticate with the rancher server",
-
 		"secret_key": "API secret used to authenticate with the rancher server",
-
-		"token_key": "API token used to authenticate with the rancher server",
-
-		"ca_certs": "CA certificates used to sign rancher server tls certificates. Mandatory if self signed tls and insecure option false",
-
-		"insecure": "Allow insecure connections to Rancher. Mandatory if self signed tls and not ca_certs provided",
-
-		"api_url": "The URL to the rancher API",
-
-		"bootstrap": "Bootstrap rancher server",
+		"token_key":  "API token used to authenticate with the rancher server",
+		"ca_certs":   "CA certificates used to sign rancher server tls certificates. Mandatory if self signed tls and insecure option false",
+		"insecure":   "Allow insecure connections to Rancher. Mandatory if self signed tls and not ca_certs provided",
+		"api_url":    "The URL to the rancher API",
+		"bootstrap":  "Bootstrap rancher server",
+		"retries":    "Rancher connection retries",
 	}
 }
 
@@ -185,6 +188,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	caCerts := d.Get("ca_certs").(string)
 	insecure := d.Get("insecure").(bool)
 	bootstrap := d.Get("bootstrap").(bool)
+	retries := d.Get("retries").(int)
 
 	// Set tokenKey based on accessKey and secretKey if needed
 	if tokenKey == providerDefaultEmptyString && accessKey != providerDefaultEmptyString && secretKey != providerDefaultEmptyString {
@@ -197,6 +201,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		CACerts:   caCerts,
 		Insecure:  insecure,
 		Bootstrap: bootstrap,
+		Retries:   retries,
 	}
 
 	return providerValidateConfig(config)
@@ -208,7 +213,6 @@ func providerValidateConfig(config *Config) (*Config, error) {
 	}
 
 	config.URL = NormalizeURL(config.URL)
-
 	if config.Bootstrap {
 		// If bootstrap tokenkey accesskey nor secretkey can be provided
 		if config.TokenKey != providerDefaultEmptyString {
@@ -219,6 +223,11 @@ func providerValidateConfig(config *Config) (*Config, error) {
 		if config.TokenKey == providerDefaultEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] No token_key nor access_key and secret_key are provided")
 		}
+	}
+
+	err := config.isRancherReady()
+	if err != nil {
+		return &Config{}, err
 	}
 
 	return config, nil

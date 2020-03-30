@@ -25,9 +25,10 @@ func init() {
 	}
 	testClusterAlertGroupRecipientsInterface = []interface{}{
 		map[string]interface{}{
-			"notifier_id":   "notifier_id",
-			"notifier_type": "webhook",
-			"recipient":     "recipient",
+			"notifier_id":       "notifier_id",
+			"notifier_type":     "webhook",
+			"recipient":         "recipient",
+			"default_recipient": false,
 		},
 	}
 	testClusterAlertGroupConf = &managementClient.ClusterAlertGroup{

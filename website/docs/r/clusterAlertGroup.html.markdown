@@ -52,6 +52,7 @@ The following attributes are exported:
 
 * `notifier_id` - (Required) Recipient notifier ID (string)
 * `recipient` - (Optional/Computed) Recipient (string)
+* `default_recipient` - (Optional) Use notifier default recipient, overriding `recipient` argument if set.  Default: `false` (bool)
 
 #### Attributes
 
