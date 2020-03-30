@@ -179,6 +179,76 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
+Creating Rancher v2 RKE cluster with upgrade strategy. For Rancher v2.4.x or above.
+
+```hcl
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform custom cluster"
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+    services {
+      etcd {
+        creation = "6h"
+        retention = "24h"
+      }
+      kube_api {
+        audit_log {
+          enabled = true
+          configuration {
+            max_age = 5
+            max_backup = 5
+            max_size = 100
+            path = "-"
+            format = "json"
+            policy = "apiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n  creationTimestamp: null\nomitStages:\n- RequestReceived\nrules:\n- level: RequestResponse\n  resources:\n  - resources:\n    - pods\n"
+          }
+        }
+      }
+    }
+    upgrade_strategy {
+      drain = true
+      max_unavailable_worker = "20%"
+    }
+  }
+}
+```
+
+Creating Rancher v2 RKE cluster with scheduled cluster scan. For Rancher v2.4.x or above.
+
+```hcl
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform custom cluster"
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+    services {
+      etcd {
+        creation = "6h"
+        retention = "24h"
+      }
+    }
+  }
+  scheduled_cluster_scan {
+    enabled = true
+    scan_config {
+      cis_scan_config {
+        debug_master = true
+        debug_worker = true
+      }
+    }
+    schedule_config {
+      cron_schedule = "30 * * * *"
+      retention = 5
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -204,9 +274,19 @@ The following arguments are supported:
 * `enable_cluster_monitoring` - (Optional) Enable built-in cluster monitoring. Default `false` (bool)
 * `enable_cluster_istio` - (Optional) Enable built-in cluster istio. Default `false`. Just for Rancher v2.3.x and above (bool)
 * `enable_network_policy` - (Optional) Enable project network isolation. Default `false` (bool)
+* `scheduled_cluster_scan`- (Optional) Cluster scheduled cis scan. For Rancher v2.4.0 or above (List maxitems:1)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
 * `labels` - (Optional/Computed) Labels for Node Pool object (map)
 * `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
+
+
+#### `schedule_config`
+
+##### Arguments
+
+* `cron_schedule` - (Required) Crontab schedule. It should contains 5 fields `"<min> <hour> <month_day> <month> <week_day>"` (string)
+* `retention` - (Optional/Computed) Cluster scan retention (int)
+
 
 ## Attributes Reference
 
@@ -875,7 +955,7 @@ The following arguments are supported:
 #### Arguments
 
 * `answers` - (Optional/Computed) Key/value answers for monitor input (map)
-=======
+
 ### `cluster_template_answers`
 
 #### Arguments
@@ -892,7 +972,6 @@ The following arguments are supported:
 * `required` - (Optional) Required variable. Default `false` (bool)
 * `type` - (Optional) Variable type. `boolean`, `int` and `string` are allowed. Default `string` (string)
 * `variable` - (Optional) Variable name (string)
->>>>>>> c6a2cbc... Feat: added rancher2_cluster_template datasource and resource. For rancher V2.3.x. Doc files
 
 ### `cluster_registration_token`
 
@@ -908,6 +987,30 @@ The following arguments are supported:
 * `windows_node_command` - (Computed) Node command to execute in windows nodes for custom k8s cluster (string)
 * `annotations` - (Computed) Annotations for cluster registration token object (map)
 * `labels` - (Computed) Labels for cluster registration token object (map)
+
+### `scheduled_cluster_scan`
+
+#### Arguments
+
+* `scan_config` - (Required) Cluster scan config (List maxitems:1)
+* `schedule_config` - (Required) Cluster scan schedule config (list maxitems:1)
+* `enabled` - (Optional) Enable scheduled cluster scan. Default: `false` (bool)
+
+#### `scan_config`
+
+##### Arguments
+
+* `cis_scan_config` - (Optional/computed) Cluster Cis Scan config (List maxitems:1)
+
+##### `cis_scan_config`
+
+###### Arguments
+
+* `debug_master` - (Optional) Debug master. Default: `false` (bool)
+* `debug_worker` - (Optional) Debug worker. Default: `false` (bool)
+* `override_benchmark_version` - (Optional) Override benchmark version (string)
+* `override_skip` - (Optional) Override skip (string)
+* `profile` - (Optional) Cis scan profile. Allowed values: `"permissive" (default) || "hardened"` (string)
 
 ## Timeouts
 
