@@ -37,6 +37,12 @@ func projectLoggingFields() map[string]*schema.Schema {
 				Schema: loggingCustomTargetConfigFields(),
 			},
 		},
+		"enable_json_parsing": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Optional enable json log parsing",
+		},
 		"elasticsearch_config": &schema.Schema{
 			Type:          schema.TypeList,
 			MaxItems:      1,

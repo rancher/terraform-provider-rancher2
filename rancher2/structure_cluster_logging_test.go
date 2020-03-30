@@ -171,6 +171,7 @@ func init() {
 	testClusterLoggingConfCustomTarget = &managementClient.ClusterLogging{
 		ClusterID:           "cluster-test",
 		Name:                "test",
+		EnableJSONParsing:   true,
 		CustomTargetConfig:  testLoggingCustomTargetConf,
 		NamespaceId:         "namespace-test",
 		OutputFlushInterval: 10,
@@ -184,6 +185,7 @@ func init() {
 		"name":                  "test",
 		"kind":                  loggingCustomTargetKind,
 		"custom_target_config":  testLoggingCustomTargetInterface,
+		"enable_json_parsing":   true,
 		"namespace_id":          "namespace-test",
 		"output_flush_interval": 10,
 		"output_tags": map[string]interface{}{
@@ -194,6 +196,7 @@ func init() {
 	testClusterLoggingConfElasticSearch = &managementClient.ClusterLogging{
 		ClusterID:           "cluster-test",
 		Name:                "test",
+		EnableJSONParsing:   true,
 		ElasticsearchConfig: testLoggingElasticsearchConf,
 		NamespaceId:         "namespace-test",
 		OutputFlushInterval: 10,
@@ -206,6 +209,7 @@ func init() {
 		"cluster_id":            "cluster-test",
 		"name":                  "test",
 		"kind":                  loggingElasticsearchKind,
+		"enable_json_parsing":   true,
 		"elasticsearch_config":  testLoggingElasticsearchInterface,
 		"namespace_id":          "namespace-test",
 		"output_flush_interval": 10,
@@ -217,6 +221,7 @@ func init() {
 	testClusterLoggingConfFluentd = &managementClient.ClusterLogging{
 		ClusterID:             "cluster-test",
 		Name:                  "test",
+		EnableJSONParsing:     true,
 		FluentForwarderConfig: testLoggingFluentdConf,
 		NamespaceId:           "namespace-test",
 		OutputFlushInterval:   10,
@@ -229,6 +234,7 @@ func init() {
 		"cluster_id":            "cluster-test",
 		"name":                  "test",
 		"kind":                  loggingFluentdKind,
+		"enable_json_parsing":   true,
 		"fluentd_config":        testLoggingFluentdInterface,
 		"namespace_id":          "namespace-test",
 		"output_flush_interval": 10,
@@ -240,6 +246,7 @@ func init() {
 	testClusterLoggingConfKafka = &managementClient.ClusterLogging{
 		ClusterID:           "cluster-test",
 		Name:                "test",
+		EnableJSONParsing:   true,
 		KafkaConfig:         testLoggingKafkaConf,
 		NamespaceId:         "namespace-test",
 		OutputFlushInterval: 10,
@@ -252,6 +259,7 @@ func init() {
 		"cluster_id":            "cluster-test",
 		"name":                  "test",
 		"kind":                  loggingKafkaKind,
+		"enable_json_parsing":   true,
 		"kafka_config":          testLoggingKafkaInterface,
 		"namespace_id":          "namespace-test",
 		"output_flush_interval": 10,
@@ -263,6 +271,7 @@ func init() {
 	testClusterLoggingConfSplunk = &managementClient.ClusterLogging{
 		ClusterID:           "cluster-test",
 		Name:                "test",
+		EnableJSONParsing:   true,
 		SplunkConfig:        testLoggingSplunkConf,
 		NamespaceId:         "namespace-test",
 		OutputFlushInterval: 10,
@@ -275,6 +284,7 @@ func init() {
 		"cluster_id":            "cluster-test",
 		"name":                  "test",
 		"kind":                  loggingSplunkKind,
+		"enable_json_parsing":   true,
 		"splunk_config":         testLoggingSplunkInterface,
 		"namespace_id":          "namespace-test",
 		"output_flush_interval": 10,
@@ -286,6 +296,7 @@ func init() {
 	testClusterLoggingConfSyslog = &managementClient.ClusterLogging{
 		ClusterID:           "cluster-test",
 		Name:                "test",
+		EnableJSONParsing:   true,
 		SyslogConfig:        testLoggingSyslogConf,
 		NamespaceId:         "namespace-test",
 		OutputFlushInterval: 10,
@@ -298,6 +309,7 @@ func init() {
 		"cluster_id":            "cluster-test",
 		"name":                  "test",
 		"kind":                  loggingSyslogKind,
+		"enable_json_parsing":   true,
 		"syslog_config":         testLoggingSyslogInterface,
 		"namespace_id":          "namespace-test",
 		"output_flush_interval": 10,
