@@ -67,45 +67,7 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 			return nil, err
 		}
 
-		workerPoolObj := make(map[string]interface{})
-
-		workerPoolObj["add_default_label"] = workerPool.AddDefaultLabel
-		workerPoolObj["add_default_taint"] = workerPool.AddDefaultTaint
-
-		if len(workerPool.AdditionalLabels) > 0 {
-			additionalLabelsObj := make(map[string]interface{})
-			for key, value := range workerPool.AdditionalLabels {
-				additionalLabelsObj[key] = value
-			}
-			workerPoolObj["additional_labels"] = additionalLabelsObj
-		}
-
-		if len(workerPool.AdditionalTaints) > 0 {
-			additionalTaintObjs := make([]interface{}, 0, len(workerPool.AdditionalTaints))
-			for _, taint := range workerPool.AdditionalTaints {
-				additionalTaintObj := make(map[string]interface{})
-
-				if len(taint.Effect) > 0 {
-					additionalTaintObj["effect"] = taint.Effect
-				}
-
-				if len(taint.Key) > 0 {
-					additionalTaintObj["key"] = taint.Key
-				}
-
-				if len(taint.Operator) > 0 {
-					additionalTaintObj["operator"] = taint.Operator
-				}
-
-				if len(taint.Value) > 0 {
-					additionalTaintObj["value"] = taint.Value
-				}
-
-				additionalTaintObjs = append(additionalTaintObjs, additionalTaintObj)
-			}
-
-			workerPoolObj["additional_taints"] = additionalTaintObjs
-		}
+		workerPoolObj := flattenClusterBaseNodePool(workerPool.BaseNodePool)
 
 		if len(workerPool.AMI) > 0 {
 			workerPoolObj["ami"] = workerPool.AMI
@@ -121,10 +83,6 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig) ([]interfa
 
 		if len(workerPool.InstanceType) > 0 {
 			workerPoolObj["instance_type"] = workerPool.InstanceType
-		}
-
-		if len(workerPool.Name) > 0 {
-			workerPoolObj["name"] = workerPool.Name
 		}
 
 		if workerPool.MaximumNodes > 0 {
@@ -224,7 +182,7 @@ func expandClusterEKSConfig(obj *AmazonElasticContainerServiceConfig, p []interf
 		} else if len(workerPoolIns) > 0 {
 			for index, v := range workerPoolIns {
 				if workerPoolIn, ok := v.(map[string]interface{}); ok {
-					workerPoolObj, err := expandWorkerPool(workerPoolIn)
+					workerPoolObj, err := expandClusterEKSWorkerPool(workerPoolIn)
 					if err != nil {
 						return nil, err
 					}
@@ -241,8 +199,15 @@ func expandClusterEKSConfig(obj *AmazonElasticContainerServiceConfig, p []interf
 	return obj, nil
 }
 
-func expandWorkerPool(workerPoolIn map[string]interface{}) (string, error) {
-	var workerPoolObj AmazonElasticContainerWorkerPool
+func expandClusterEKSWorkerPool(workerPoolIn map[string]interface{}) (string, error) {
+	bnp, err := expandClusterBaseNodePool(workerPoolIn)
+	if err != nil {
+		return "", err
+	}
+
+	workerPoolObj := AmazonElasticContainerWorkerPool{
+		BaseNodePool: bnp,
+	}
 
 	if v, ok := workerPoolIn["ami"].(string); ok && len(v) > 0 {
 		workerPoolObj.AMI = v
@@ -288,31 +253,6 @@ func expandWorkerPool(workerPoolIn map[string]interface{}) (string, error) {
 		workerPoolObj.DesiredNodes = workerPoolObj.MinimumNodes
 	}
 
-	if v, ok := workerPoolIn["name"].(string); ok && len(v) > 0 {
-		workerPoolObj.Name = v
-	}
-
-	if v, ok := workerPoolIn["add_default_label"].(bool); ok {
-		workerPoolObj.AddDefaultLabel = v
-	}
-
-	if v, ok := workerPoolIn["add_default_taint"].(bool); ok {
-		workerPoolObj.AddDefaultTaint = v
-	}
-
-	if v, ok := workerPoolIn["additional_labels"].(map[string]interface{}); ok && len(v) > 0 {
-		workerPoolObj.AdditionalLabels = toMapString(v)
-	}
-
-	if v, ok := workerPoolIn["additional_taints"].([]interface{}); ok && len(v) > 0 {
-		additionalTaintsObjs, err := expandWorkerPoolAdditionalTaints(v, workerPoolObj.Name)
-		if err != nil {
-			return "", err
-		}
-
-		workerPoolObj.AdditionalTaints = additionalTaintsObjs
-	}
-
 	if v, ok := workerPoolIn["subnets"].([]interface{}); ok && len(v) > 0 {
 		workerPoolObj.Subnets = toArrayString(v)
 	}
@@ -323,35 +263,4 @@ func expandWorkerPool(workerPoolIn map[string]interface{}) (string, error) {
 	}
 
 	return string(bs), nil
-}
-
-func expandWorkerPoolAdditionalTaints(additionalTaintsIn []interface{}, poolName string) ([]K8sTaint, error) {
-	additionalTaintsObjs := make([]K8sTaint, 0, len(additionalTaintsIn))
-	for index, additionalTaintIn := range additionalTaintsIn {
-		if t, ok := additionalTaintIn.(map[string]interface{}); ok {
-			taint := toMapString(t)
-			additionalTaintsObj := K8sTaint{}
-
-			if effect, ok := taint["effect"]; ok && len(effect) > 0 {
-				additionalTaintsObj.Effect = effect
-			}
-
-			if operator, ok := taint["operator"]; ok && len(operator) > 0 {
-				additionalTaintsObj.Operator = operator
-			}
-
-			if key, ok := taint["key"]; ok && len(key) > 0 {
-				additionalTaintsObj.Key = key
-			}
-
-			if value, ok := taint["value"]; ok && len(value) > 0 {
-				additionalTaintsObj.Value = value
-			}
-
-			additionalTaintsObjs = append(additionalTaintsObjs, additionalTaintsObj)
-		} else {
-			return nil, fmt.Errorf("taint in index %d for worker pool %s contains unexpected content", index, poolName)
-		}
-	}
-	return additionalTaintsObjs, nil
 }
