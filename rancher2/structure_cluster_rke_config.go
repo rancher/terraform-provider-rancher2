@@ -236,7 +236,6 @@ func expandClusterRKEConfig(p []interface{}, name string) (*managementClient.Ran
 		obj.Ingress = ingress
 	}
 
-	obj.Version = rancher2ClusterRKEK8SDefaultVersion
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
 		obj.Version = v
 	}
