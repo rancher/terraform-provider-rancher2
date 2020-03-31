@@ -28,6 +28,10 @@ func flattenClusterCatalog(d *schema.ResourceData, in *managementClient.ClusterC
 	d.Set("username", in.Username)
 	d.Set("cluster_id", in.ClusterID)
 
+	if len(in.HelmVersion) > 0 {
+		d.Set("version", in.HelmVersion)
+	}
+
 	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -58,6 +62,10 @@ func flattenGlobalCatalog(d *schema.ResourceData, in *managementClient.Catalog) 
 	}
 
 	d.Set("username", in.Username)
+
+	if len(in.HelmVersion) > 0 {
+		d.Set("version", in.HelmVersion)
+	}
 
 	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -90,6 +98,10 @@ func flattenProjectCatalog(d *schema.ResourceData, in *managementClient.ProjectC
 
 	d.Set("username", in.Username)
 	d.Set("project_id", in.ProjectID)
+
+	if len(in.HelmVersion) > 0 {
+		d.Set("version", in.HelmVersion)
+	}
 
 	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -149,6 +161,8 @@ func expandClusterCatalog(in *schema.ResourceData) *managementClient.ClusterCata
 		obj.Username = v
 	}
 
+	obj.HelmVersion = in.Get("version").(string)
+
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
 	}
@@ -183,6 +197,8 @@ func expandGlobalCatalog(in *schema.ResourceData) *managementClient.Catalog {
 	if v, ok := in.Get("username").(string); ok && len(v) > 0 {
 		obj.Username = v
 	}
+
+	obj.HelmVersion = in.Get("version").(string)
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
@@ -219,6 +235,8 @@ func expandProjectCatalog(in *schema.ResourceData) *managementClient.ProjectCata
 	if v, ok := in.Get("username").(string); ok && len(v) > 0 {
 		obj.Username = v
 	}
+
+	obj.HelmVersion = in.Get("version").(string)
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)

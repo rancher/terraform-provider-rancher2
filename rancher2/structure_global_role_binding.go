@@ -17,6 +17,10 @@ func flattenGlobalRoleBinding(d *schema.ResourceData, in *managementClient.Globa
 	d.Set("user_id", in.UserID)
 	d.Set("name", in.Name)
 
+	if len(in.GroupPrincipalID) > 0 {
+		d.Set("group_principal_id", in.GroupPrincipalID)
+	}
+
 	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -46,6 +50,10 @@ func expandGlobalRoleBinding(in *schema.ResourceData) *managementClient.GlobalRo
 	obj.GlobalRoleID = in.Get("global_role_id").(string)
 	obj.UserID = in.Get("user_id").(string)
 	obj.Name = in.Get("name").(string)
+
+	if v, ok := in.Get("group_principal_id").(string); ok && len(v) > 0 {
+		obj.GroupPrincipalID = v
+	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)

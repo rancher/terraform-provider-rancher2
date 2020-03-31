@@ -16,10 +16,16 @@ var (
 
 func init() {
 	testAccCheckRancher2ClusterRoleTemplateBindingDataSourceConfig = `
+resource "rancher2_user" "foo" {
+  name = "Terraform user acceptance test"
+  username = "foo"
+  password = "changeme"
+}
 resource "rancher2_cluster_role_template_binding" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
   role_template_id = "cluster-member"
+  user_id = "${rancher2_user.foo.id}"
 }
 
 data "` + testAccRancher2ClusterRoleTemplateBindingDataSourceType + `" "foo" {

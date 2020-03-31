@@ -15,10 +15,17 @@ func globalRoleBindingFields() map[string]*schema.Schema {
 		},
 		"user_id": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
+			Computed: true,
 			ForceNew: true,
 		},
 		"name": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+			ForceNew: true,
+		},
+		"group_principal_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,

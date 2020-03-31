@@ -173,6 +173,16 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Optional cluster level SSH private key path",
 		},
+		"upgrade_strategy": {
+			Type:        schema.TypeList,
+			Description: "RKE upgrade strategy",
+			MaxItems:    1,
+			Optional:    true,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigNodeUpgradeStrategyFields(),
+			},
+		},
 	}
 
 	return s

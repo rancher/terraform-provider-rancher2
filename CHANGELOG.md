@@ -2,12 +2,21 @@
 
 FEATURES:
 
-
+* **New Data Source:** `rancher2_cluster_scan`
 
 ENHANCEMENTS:
 
 * Added `wait_monitoring` argument to `rancher2_cluster_sync` resource
 * Added `retries` config argument and `isRancherActive()` function
+* Updated go modules and vendor files to rancher v2.4.0
+* Updated rancher to v2.4.0 and k3s to v1.17.4-k3s1 on acceptance tests
+* New rancher v2.4.0 features:
+  * Added `group_principal_id` argument to `rancher2_global_role_binding` resource
+  * Added `k3s_config` argument to `rancher2_cluster` datasource and resource
+  * Added `version` argument to `rancher2_catalog` datasource and resource
+  * Added `upgrade_strategy` argument to `rke_config` on `rancher2_cluster` resource
+  * Added `scheduled_cluster_scan` argument on `rancher2_cluster` and `rancher2_cluster_template` resources
+  * Added `rancher2_cluster_scan` datasource
 
 BUG FIXES:
 

@@ -33,6 +33,7 @@ func init() {
 		Services:            testClusterRKEConfigServicesConf,
 		SSHAgentAuth:        true,
 		SSHKeyPath:          "/home/user/.ssh",
+		UpgradeStrategy:     testClusterRKEConfigNodeUpgradeStrategyConf,
 	}
 	testClusterRKEConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -54,6 +55,7 @@ func init() {
 			"services":              testClusterRKEConfigServicesInterface,
 			"ssh_agent_auth":        true,
 			"ssh_key_path":          "/home/user/.ssh",
+			"upgrade_strategy":      testClusterRKEConfigNodeUpgradeStrategyInterface,
 		},
 	}
 }

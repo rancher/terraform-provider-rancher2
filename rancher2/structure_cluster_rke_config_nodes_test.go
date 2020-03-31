@@ -8,11 +8,45 @@ import (
 )
 
 var (
-	testClusterRKEConfigNodesConf      []managementClient.RKEConfigNode
-	testClusterRKEConfigNodesInterface []interface{}
+	testClusterRKEConfigNodeDrainInputConf           *managementClient.NodeDrainInput
+	testClusterRKEConfigNodeDrainInputInterface      []interface{}
+	testClusterRKEConfigNodeUpgradeStrategyConf      *managementClient.NodeUpgradeStrategy
+	testClusterRKEConfigNodeUpgradeStrategyInterface []interface{}
+	testClusterRKEConfigNodesConf                    []managementClient.RKEConfigNode
+	testClusterRKEConfigNodesInterface               []interface{}
 )
 
 func init() {
+	testClusterRKEConfigNodeDrainInputConf = &managementClient.NodeDrainInput{
+		DeleteLocalData:  false,
+		Force:            false,
+		GracePeriod:      -1,
+		IgnoreDaemonSets: true,
+		Timeout:          60,
+	}
+	testClusterRKEConfigNodeDrainInputInterface = []interface{}{
+		map[string]interface{}{
+			"delete_local_data":  false,
+			"force":              false,
+			"grace_period":       -1,
+			"ignore_daemon_sets": true,
+			"timeout":            60,
+		},
+	}
+	testClusterRKEConfigNodeUpgradeStrategyConf = &managementClient.NodeUpgradeStrategy{
+		Drain:                      false,
+		DrainInput:                 testClusterRKEConfigNodeDrainInputConf,
+		MaxUnavailableControlplane: "2",
+		MaxUnavailableWorker:       "20%",
+	}
+	testClusterRKEConfigNodeUpgradeStrategyInterface = []interface{}{
+		map[string]interface{}{
+			"drain":                        false,
+			"drain_input":                  testClusterRKEConfigNodeDrainInputInterface,
+			"max_unavailable_controlplane": "2",
+			"max_unavailable_worker":       "20%",
+		},
+	}
 	testClusterRKEConfigNodesConf = []managementClient.RKEConfigNode{
 		managementClient.RKEConfigNode{
 			Address:          "url.terraform.test",
@@ -53,6 +87,48 @@ func init() {
 	}
 }
 
+func TestFlattenClusterRKEConfigNodeDrainInput(t *testing.T) {
+
+	cases := []struct {
+		Input          *managementClient.NodeDrainInput
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterRKEConfigNodeDrainInputConf,
+			testClusterRKEConfigNodeDrainInputInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenClusterRKEConfigNodeDrainInput(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestFlattenClusterRKEConfigNodeUpgradeStrategy(t *testing.T) {
+
+	cases := []struct {
+		Input          *managementClient.NodeUpgradeStrategy
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterRKEConfigNodeUpgradeStrategyConf,
+			testClusterRKEConfigNodeUpgradeStrategyInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenClusterRKEConfigNodeUpgradeStrategy(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
 func TestFlattenClusterRKEConfigNodes(t *testing.T) {
 
 	cases := []struct {
@@ -72,6 +148,48 @@ func TestFlattenClusterRKEConfigNodes(t *testing.T) {
 		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestExpandClusterRKEConfigNodeDrainInput(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput *managementClient.NodeDrainInput
+	}{
+		{
+			testClusterRKEConfigNodeDrainInputInterface,
+			testClusterRKEConfigNodeDrainInputConf,
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandClusterRKEConfigNodeDrainInput(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestExpandClusterRKEConfigNodeUpgradeStrategy(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput *managementClient.NodeUpgradeStrategy
+	}{
+		{
+			testClusterRKEConfigNodeUpgradeStrategyInterface,
+			testClusterRKEConfigNodeUpgradeStrategyConf,
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandClusterRKEConfigNodeUpgradeStrategy(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
 		}
 	}

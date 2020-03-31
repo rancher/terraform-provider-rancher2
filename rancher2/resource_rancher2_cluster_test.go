@@ -40,6 +40,23 @@ resource "rancher2_cluster" "foo" {
         }
       }
     }
+    upgrade_strategy {
+      drain = true
+      max_unavailable_worker = "20%"
+    }
+  }
+  scheduled_cluster_scan {
+    enabled = true
+    scan_config {
+      cis_scan_config {
+        debug_master = true
+        debug_worker = true
+      }
+    }
+    schedule_config {
+      cron_schedule = "30 * * * *"
+      retention = 5
+    }
   }
 }
 `
@@ -70,6 +87,23 @@ resource "rancher2_cluster" "foo" {
           }
         }
       }
+    }
+    upgrade_strategy {
+      drain = true
+      max_unavailable_worker = "10%"
+    }
+  }
+  scheduled_cluster_scan {
+    enabled = true
+    scan_config {
+      cis_scan_config {
+        debug_master = true
+        debug_worker = true
+      }
+    }
+    schedule_config {
+      cron_schedule = "30 10 * * *"
+      retention = 5
     }
   }
 }
@@ -102,6 +136,23 @@ resource "rancher2_cluster" "foo" {
         }
       }
     }
+    upgrade_strategy {
+      drain = true
+      max_unavailable_worker = "20%"
+    }
+  }
+  scheduled_cluster_scan {
+    enabled = true
+    scan_config {
+      cis_scan_config {
+        debug_master = true
+        debug_worker = true
+      }
+    }
+    schedule_config {
+      cron_schedule = "30 * * * *"
+      retention = 5
+    }
   }
 }
  `
@@ -126,6 +177,51 @@ resource "rancher2_cluster" "foo" {
   description = "Terraform imported cluster acceptance test"
 }
  `
+
+	testAccRancher2ClusterConfigK3S = `
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform k3s cluster acceptance test"
+  k3s_config {
+    upgrade_strategy {
+      drain_server_nodes = false
+      drain_worker_nodes = false
+      server_concurrency = 1
+      worker_concurrency = 2
+    }
+  }
+}
+`
+
+	testAccRancher2ClusterUpdateConfigK3S = `
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform k3s cluster acceptance test - updated"
+  k3s_config {
+    upgrade_strategy {
+      drain_server_nodes = false
+      drain_worker_nodes = false
+      server_concurrency = 1
+      worker_concurrency = 2
+    }
+  }
+}
+ `
+
+	testAccRancher2ClusterRecreateConfigK3S = `
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform k3s cluster acceptance test"
+  k3s_config {
+    upgrade_strategy {
+      drain_server_nodes = false
+      drain_worker_nodes = false
+      server_concurrency = 1
+      worker_concurrency = 2
+    }
+  }
+}
+ `
 )
 
 func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
@@ -145,6 +241,10 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "5"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "20%"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 			resource.TestStep{
@@ -156,6 +256,10 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "12h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "72h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "7"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "10%"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 10 * * *"),
 				),
 			},
 			resource.TestStep{
@@ -167,6 +271,10 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "24h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "5"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "20%"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 		},
@@ -242,6 +350,68 @@ func TestAccRancher2Cluster_disappears_Imported(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRancher2ClusterConfigImported,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
+					testAccRancher2ClusterDisappears(cluster),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2Cluster_basic_K3S(t *testing.T) {
+	var cluster *Cluster
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2ClusterDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2ClusterConfigK3S,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform k3s cluster acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "driver", ""),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "k3s_config.0.upgrade_strategy.0.drain_server_nodes", "false"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2ClusterUpdateConfigK3S,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform k3s cluster acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "driver", ""),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "k3s_config.0.upgrade_strategy.0.drain_server_nodes", "false"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2ClusterRecreateConfigK3S,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "description", "Terraform k3s cluster acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "driver", ""),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "k3s_config.0.upgrade_strategy.0.drain_server_nodes", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2Cluster_disappears_K3S(t *testing.T) {
+	var cluster *Cluster
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2ClusterDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2ClusterConfigK3S,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					testAccRancher2ClusterDisappears(cluster),

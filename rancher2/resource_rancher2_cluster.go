@@ -49,7 +49,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		expectedState = "pending"
 	}
 
-	if cluster.Driver == clusterDriverRKE {
+	if cluster.Driver == clusterDriverRKE || cluster.Driver == clusterDriverK3S {
 		expectedState = "provisioning"
 	}
 
@@ -180,6 +180,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"enableNetworkPolicy":                &enableNetworkPolicy,
 		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
 		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
+		"scheduledClusterScan":               expandScheduledClusterScan(d.Get("scheduled_cluster_scan").([]interface{})),
 		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
 	}
@@ -222,6 +223,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["rancherKubernetesEngineConfig"] = rkeConfig
+	case clusterDriverK3S:
+		update["k3sConfig"] = expandClusterK3SConfig(d.Get("k3s_config").([]interface{}))
 	}
 
 	newCluster := &Cluster{}

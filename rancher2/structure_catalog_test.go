@@ -24,6 +24,7 @@ func init() {
 		Description: "description",
 		Kind:        "kind",
 		Branch:      "branch",
+		HelmVersion: "helm_v3",
 	}
 	testCatalogGlobalInterface = map[string]interface{}{
 		"name":        "catalog-test",
@@ -32,6 +33,7 @@ func init() {
 		"kind":        "kind",
 		"branch":      "branch",
 		"scope":       "global",
+		"version":     "helm_v3",
 	}
 	testCatalogClusterConf = &managementClient.ClusterCatalog{
 		Name:        "catalog-test",
@@ -40,6 +42,7 @@ func init() {
 		Kind:        "kind",
 		Branch:      "branch",
 		ClusterID:   "cluster_id",
+		HelmVersion: "helm_v3",
 	}
 	testCatalogClusterInterface = map[string]interface{}{
 		"name":        "catalog-test",
@@ -49,6 +52,7 @@ func init() {
 		"branch":      "branch",
 		"scope":       "cluster",
 		"cluster_id":  "cluster_id",
+		"version":     "helm_v3",
 	}
 	testCatalogProjectConf = &managementClient.ProjectCatalog{
 		Name:        "catalog-test",
@@ -57,6 +61,7 @@ func init() {
 		Kind:        "kind",
 		Branch:      "branch",
 		ProjectID:   "project_id",
+		HelmVersion: "helm_v3",
 	}
 	testCatalogProjectInterface = map[string]interface{}{
 		"name":        "catalog-test",
@@ -66,6 +71,7 @@ func init() {
 		"branch":      "branch",
 		"scope":       "project",
 		"project_id":  "project_id",
+		"version":     "helm_v3",
 	}
 }
 

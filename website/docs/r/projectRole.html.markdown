@@ -36,6 +36,8 @@ The following arguments are supported:
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
 
+**Note** user `user_id | user_principal_id` OR group `group_id | group_principal_id` must be defined
+
 ## Attributes Reference
 
 The following attributes are exported:

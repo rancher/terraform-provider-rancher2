@@ -22,26 +22,44 @@ var (
 
 func init() {
 	testAccRancher2ClusterRoleTemplateBindingConfig = `
+resource "rancher2_user" "foo" {
+  name = "Terraform user acceptance test"
+  username = "foo"
+  password = "changeme"
+}
 resource "rancher2_cluster_role_template_binding" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
   role_template_id = "cluster-admin"
+  user_id = "${rancher2_user.foo.id}"
 }
 `
 
 	testAccRancher2ClusterRoleTemplateBindingUpdateConfig = `
+resource "rancher2_user" "foo" {
+  name = "Terraform user acceptance test"
+  username = "foo"
+  password = "changeme"
+}
 resource "rancher2_cluster_role_template_binding" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
   role_template_id = "projects-create"
+  user_id = "${rancher2_user.foo.id}"
 }
  `
 
 	testAccRancher2ClusterRoleTemplateBindingRecreateConfig = `
+resource "rancher2_user" "foo" {
+  name = "Terraform user acceptance test"
+  username = "foo"
+  password = "changeme"
+}
 resource "rancher2_cluster_role_template_binding" "foo" {
   name = "foo"
   cluster_id = "` + testAccRancher2ClusterID + `"
   role_template_id = "cluster-admin"
+  user_id = "${rancher2_user.foo.id}"
 }
  `
 }

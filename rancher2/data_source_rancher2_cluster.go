@@ -31,6 +31,14 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterRKEConfigFields(),
 				},
 			},
+			"k3s_config": &schema.Schema{
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: clusterK3SConfigFields(),
+				},
+			},
 			"eks_config": &schema.Schema{
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -138,6 +146,14 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "Enable project network isolation",
+			},
+			"scheduled_cluster_scan": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Cluster scheduled scan",
+				Elem: &schema.Resource{
+					Schema: scheduledClusterScanFields(),
+				},
 			},
 			"annotations": &schema.Schema{
 				Type:     schema.TypeMap,

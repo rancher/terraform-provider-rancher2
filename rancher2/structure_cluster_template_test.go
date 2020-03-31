@@ -9,20 +9,24 @@ import (
 )
 
 var (
-	testClusterTemplateQuestionsConf                        []managementClient.Question
-	testClusterTemplateQuestionsInterface                   []interface{}
-	testClusterTemplateRevisionsConfigRKEConf               *managementClient.RancherKubernetesEngineConfig
-	testClusterTemplateRevisionsConfigAuthEndpointConf      *managementClient.LocalClusterAuthEndpoint
-	testClusterTemplateRevisionsConfigRKEInterface          []interface{}
-	testClusterTemplateRevisionsConfigAuthEndpointInterface []interface{}
-	testClusterTemplateRevisionsConfigConf                  *managementClient.ClusterSpecBase
-	testClusterTemplateRevisionsConfigInterface             []interface{}
-	testClusterTemplateRevisionsConf                        []managementClient.ClusterTemplateRevision
-	testClusterTemplateRevisionsInterface                   []interface{}
-	testClusterTemplateMembersConf                          []managementClient.Member
-	testClusterTemplateMembersInterface                     []interface{}
-	testClusterTemplateConf                                 *managementClient.ClusterTemplate
-	testClusterTemplateInterface                            map[string]interface{}
+	testClusterTemplateQuestionsConf                                []managementClient.Question
+	testClusterTemplateQuestionsInterface                           []interface{}
+	testClusterTemplateRevisionsConfigRKEConf                       *managementClient.RancherKubernetesEngineConfig
+	testClusterTemplateRevisionsConfigAuthEndpointConf              *managementClient.LocalClusterAuthEndpoint
+	testClusterTemplateRevisionsConfigRKEInterface                  []interface{}
+	testClusterTemplateRevisionsConfigAuthEndpointInterface         []interface{}
+	testClusterTemplateRevisionsScheduledClusterScanConfigConf      *managementClient.ScheduledClusterScanConfig
+	testClusterTemplateRevisionsScheduledClusterScanConfigInterface []interface{}
+	testClusterTemplateRevisionsScheduledClusterScanConf            *managementClient.ScheduledClusterScan
+	testClusterTemplateRevisionsScheduledClusterScanInterface       []interface{}
+	testClusterTemplateRevisionsConfigConf                          *managementClient.ClusterSpecBase
+	testClusterTemplateRevisionsConfigInterface                     []interface{}
+	testClusterTemplateRevisionsConf                                []managementClient.ClusterTemplateRevision
+	testClusterTemplateRevisionsInterface                           []interface{}
+	testClusterTemplateMembersConf                                  []managementClient.Member
+	testClusterTemplateMembersInterface                             []interface{}
+	testClusterTemplateConf                                         *managementClient.ClusterTemplate
+	testClusterTemplateInterface                                    map[string]interface{}
 )
 
 func init() {
@@ -96,6 +100,28 @@ func init() {
 			"fqdn":     "fqdn",
 		},
 	}
+	testClusterTemplateRevisionsScheduledClusterScanConfigConf = &managementClient.ScheduledClusterScanConfig{
+		CronSchedule: "cron_schedule",
+		Retention:    5,
+	}
+	testClusterTemplateRevisionsScheduledClusterScanConfigInterface = []interface{}{
+		map[string]interface{}{
+			"cron_schedule": "cron_schedule",
+			"retention":     5,
+		},
+	}
+	testClusterTemplateRevisionsScheduledClusterScanConf = &managementClient.ScheduledClusterScan{
+		Enabled:        true,
+		ScanConfig:     testClusterScanConfigConf,
+		ScheduleConfig: testClusterTemplateRevisionsScheduledClusterScanConfigConf,
+	}
+	testClusterTemplateRevisionsScheduledClusterScanInterface = []interface{}{
+		map[string]interface{}{
+			"enabled":         true,
+			"scan_config":     testClusterScanConfigInterface,
+			"schedule_config": testClusterTemplateRevisionsScheduledClusterScanConfigInterface,
+		},
+	}
 	testClusterTemplateRevisionsConfigConf = &managementClient.ClusterSpecBase{
 		DefaultClusterRoleForProjectMembers: "default_cluster_role_for_project_members",
 		DefaultPodSecurityPolicyTemplateID:  "default_pod_security_policy_template_id",
@@ -107,6 +133,7 @@ func init() {
 		EnableNetworkPolicy:                 newTrue(),
 		LocalClusterAuthEndpoint:            testClusterTemplateRevisionsConfigAuthEndpointConf,
 		RancherKubernetesEngineConfig:       testClusterTemplateRevisionsConfigRKEConf,
+		ScheduledClusterScan:                testClusterTemplateRevisionsScheduledClusterScanConf,
 		WindowsPreferedCluster:              true,
 	}
 	testClusterTemplateRevisionsConfigInterface = []interface{}{
@@ -121,6 +148,7 @@ func init() {
 			"enable_cluster_monitoring":                true,
 			"enable_network_policy":                    true,
 			"rke_config":                               testClusterTemplateRevisionsConfigRKEInterface,
+			"scheduled_cluster_scan":                   testClusterTemplateRevisionsScheduledClusterScanInterface,
 			"windows_prefered_cluster":                 true,
 		},
 	}

@@ -43,6 +43,86 @@ resource "rancher2_cluster_template" "foo" {
 }
 ```
 
+Creating Rancher v2 RKE cluster template with upgrade strategy. For Rancher v2.4.x or above.
+
+```hcl
+# Create a new rancher2 Cluster Template
+resource "rancher2_cluster_template" "foo" {
+  name = "foo"
+  members {
+    access_type = "owner"
+    user_principal_id = "local://user-XXXXX"
+  }
+  template_revisions {
+    name = "V1"
+    cluster_config {
+      rke_config {
+        network {
+          plugin = "canal"
+        }
+        services {
+          etcd {
+            creation = "6h"
+            retention = "24h"
+          }
+        }
+        upgrade_strategy {
+          drain = true
+          max_unavailable_worker = "20%"
+        }
+      }
+    }
+    default = true
+  }
+  description = "Terraform cluster template foo"
+}
+```
+
+Creating Rancher v2 RKE cluster template with scheduled cluster scan. For Rancher v2.4.x or above.
+
+```hcl
+# Create a new rancher2 Cluster Template
+resource "rancher2_cluster_template" "foo" {
+  name = "foo"
+  members {
+    access_type = "owner"
+    user_principal_id = "local://user-XXXXX"
+  }
+  template_revisions {
+    name = "V1"
+    cluster_config {
+      rke_config {
+        network {
+          plugin = "canal"
+        }
+        services {
+          etcd {
+            creation = "6h"
+            retention = "24h"
+          }
+        }
+      }
+      scheduled_cluster_scan {
+        enabled = true
+        scan_config {
+          cis_scan_config {
+            debug_master = true
+            debug_worker = true
+          }
+        }
+        schedule_config {
+          cron_schedule = "30 * * * *"
+          retention = 5
+        }
+      }
+    }
+    default = true
+  }
+  description = "Terraform cluster template foo"
+}
+```
+
+
 ## Argument Reference
 
 * `name` - (Required) The cluster template name (string)
@@ -98,6 +178,7 @@ resource "rancher2_cluster_template" "foo" {
 * `enable_cluster_monitoring` - (Optional) Enable built-in cluster monitoring. Default: `false` (bool)
 * `enable_network_policy` - (Optional) Enable project network isolation. Default: `false` (bool)
 * `rke_config` - (Optional/Computed) Rancher Kubernetes Engine Config (list maxitems: 1)
+* `scheduled_cluster_scan`- (Optional) Cluster scheduled cis scan. For Rancher v2.4.0 or above (List MaxItem:1)
 * `windows_prefered_cluster` - (Optional) Windows prefered cluster. Default: `false` (bool)
 
 #### `questions`

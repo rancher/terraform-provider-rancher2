@@ -24,6 +24,10 @@ func dataSourceRancher2GlobalRoleBinding() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"group_principal_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"annotations": &schema.Schema{
 				Type:     schema.TypeMap,
 				Computed: true,

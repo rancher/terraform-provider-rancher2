@@ -177,7 +177,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		}
 	}
 
-	// Setting rke_config always as computed
+	// Setting k3s_config and rke_config always as computed
+	err = d.Set("k3s_config", flattenClusterK3SConfig(in.K3sConfig))
+	if err != nil {
+		return err
+	}
 	v, ok := d.Get("rke_config").([]interface{})
 	if !ok {
 		v = []interface{}{}
@@ -189,6 +193,10 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	err = d.Set("rke_config", rkeConfig)
 	if err != nil {
 		return err
+	}
+
+	if in.ScheduledClusterScan != nil {
+		d.Set("scheduled_cluster_scan", flattenScheduledClusterScan(in.ScheduledClusterScan))
 	}
 
 	d.Set("windows_prefered_cluster", in.WindowsPreferedCluster)
@@ -340,6 +348,11 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		obj.Driver = clusterDriverGKE
 	}
 
+	if v, ok := in.Get("k3s_config").([]interface{}); ok && len(v) > 0 {
+		obj.K3sConfig = expandClusterK3SConfig(v)
+		obj.Driver = clusterDriverK3S
+	}
+
 	if v, ok := in.Get("rke_config").([]interface{}); ok && len(v) > 0 {
 		rkeConfig, err := expandClusterRKEConfig(v, obj.Name)
 		if err != nil {
@@ -351,6 +364,10 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if len(obj.Driver) == 0 {
 		obj.Driver = clusterDriverImported
+	}
+
+	if v, ok := in.Get("scheduled_cluster_scan").([]interface{}); ok && len(v) > 0 {
+		obj.ScheduledClusterScan = expandScheduledClusterScan(v)
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
