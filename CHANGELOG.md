@@ -1,4 +1,17 @@
-## 1.9.0 (Unreleased)
+## 1.8.1 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix init provider if api_url is dependent of infra that is not yet deployed
+
 ## 1.8.0 (March 31, 2020)
 
 FEATURES:

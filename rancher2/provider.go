@@ -13,8 +13,7 @@ const (
 )
 
 var (
-	descriptions                        map[string]string
-	rancher2ClusterRKEK8SDefaultVersion string
+	descriptions map[string]string
 )
 
 // CLIConfig used to store data from file.
@@ -227,16 +226,6 @@ func providerValidateConfig(config *Config) (*Config, error) {
 		if config.TokenKey == providerDefaultEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] No token_key nor access_key and secret_key are provided")
 		}
-		k8sVer, err := config.getK8SVersion()
-		if err != nil {
-			return &Config{}, fmt.Errorf("[ERROR] Getting default RKE K8S version: %v", err)
-		}
-		rancher2ClusterRKEK8SDefaultVersion = k8sVer
-	}
-
-	err := config.isRancherReady()
-	if err != nil {
-		return &Config{}, err
 	}
 
 	return config, nil

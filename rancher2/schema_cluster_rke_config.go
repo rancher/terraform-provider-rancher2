@@ -1,7 +1,13 @@
 package rancher2
 
 import (
+	"context"
+	"sort"
+
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/rancher/rke/metadata"
 )
 
 const (
@@ -102,6 +108,24 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Optional kubernetes version to deploy",
+			ValidateFunc: validation.StringInSlice(func() []string {
+				metadata.InitMetadata(context.Background())
+				versions := make([]*version.Version, 0, len(metadata.K8sVersionToRKESystemImages))
+				for k := range metadata.K8sVersionToRKESystemImages {
+					v, _ := version.NewVersion(k)
+					versions = append(versions, v)
+				}
+				sort.Sort(sort.Reverse(version.Collection(versions)))
+				keys := make([]string, len(versions))
+				for i := range versions {
+					keys[i] = "v" + versions[i].String()
+				}
+				return keys
+			}(), false),
+			DefaultFunc: func() (interface{}, error) {
+				metadata.InitMetadata(context.Background())
+				return metadata.DefaultK8sVersion, nil
+			},
 		},
 		"monitoring": {
 			Type:        schema.TypeList,

@@ -132,6 +132,11 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 		return c.Client.Management, nil
 	}
 
+	err := c.isRancherReady()
+	if err != nil {
+		return nil, err
+	}
+
 	// Setup the management client
 	options := c.CreateClientOpts()
 	mClient, err := managementClient.NewClient(options)
@@ -162,6 +167,11 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 		return c.Client.Cluster, nil
 	}
 
+	err := c.isRancherReady()
+	if err != nil {
+		return nil, err
+	}
+
 	// Setup the cluster client
 	options := c.CreateClientOpts()
 	options.URL = options.URL + "/clusters/" + id
@@ -186,6 +196,11 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 
 	if c.Client.Project != nil && id == c.ProjectID {
 		return c.Client.Project, nil
+	}
+
+	err := c.isRancherReady()
+	if err != nil {
+		return nil, err
 	}
 
 	// Setup the project client
