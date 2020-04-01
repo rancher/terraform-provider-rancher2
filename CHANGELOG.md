@@ -10,7 +10,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-
+* Fix `upgrading` state on resourceRancher2ClusterUpdate() function
 
 ## 1.8.1 (March 31, 2020)
 
