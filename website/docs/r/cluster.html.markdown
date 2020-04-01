@@ -315,7 +315,7 @@ The following attributes are exported:
 * `dns` - (Optional/Computed) RKE dns add-on. Just for Rancher v2.2.x (list maxitems:1)
 * `ignore_docker_version` - (Optional) Ignore docker version. Default `true` (bool)
 * `ingress` - (Optional/Computed) Kubernetes ingress configuration (list maxitems:1)
-* `kubernetes_version` - (Optional) K8s version to deploy. Default: `rke default` (string)
+* `kubernetes_version` - (Optional/Computed) K8s version to deploy. Default: `Rancher default` (string)
 * `monitoring` - (Optional/Computed) Kubernetes cluster monitoring (list maxitems:1)
 * `network` - (Optional/Computed) Kubernetes cluster networking (list maxitems:1)
 * `nodes` - (Optional) RKE cluster nodes (list)

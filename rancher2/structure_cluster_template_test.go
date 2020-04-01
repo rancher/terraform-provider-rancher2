@@ -30,6 +30,10 @@ var (
 )
 
 func init() {
+	k8sVersion = testAccRancher2ClusterRKEK8SDefaultVersion
+	if len(testAccRancher2ClusterRKEK8SDefaultVersion) == 0 {
+		k8sVersion = "test"
+	}
 	testClusterTemplateRevisionsConfigRKEConf = &managementClient.RancherKubernetesEngineConfig{
 		AddonJobTimeout:     30,
 		Addons:              "addons",
@@ -40,7 +44,6 @@ func init() {
 		CloudProvider:       testClusterRKEConfigCloudProviderConf,
 		IgnoreDockerVersion: true,
 		Ingress:             testClusterRKEConfigIngressConf,
-		Version:             "test",
 		Monitoring:          testClusterRKEConfigMonitoringConf,
 		Network:             testClusterRKEConfigNetworkConfCanal,
 		Nodes:               testClusterRKEConfigNodesConf,
@@ -49,6 +52,7 @@ func init() {
 		Services:            testClusterRKEConfigServicesConf,
 		SSHAgentAuth:        true,
 		SSHKeyPath:          "/home/user/.ssh",
+		Version:             k8sVersion,
 	}
 	testClusterTemplateRevisionsConfigRKEInterface = []interface{}{
 		map[string]interface{}{
@@ -61,7 +65,6 @@ func init() {
 			"cloud_provider":        testClusterRKEConfigCloudProviderInterface,
 			"ignore_docker_version": true,
 			"ingress":               testClusterRKEConfigIngressInterface,
-			"kubernetes_version":    "test",
 			"monitoring":            testClusterRKEConfigMonitoringInterface,
 			"network":               testClusterRKEConfigNetworkInterfaceCanal,
 			"nodes":                 testClusterRKEConfigNodesInterface,
@@ -70,6 +73,7 @@ func init() {
 			"services":              testClusterRKEConfigServicesInterface,
 			"ssh_agent_auth":        true,
 			"ssh_key_path":          "/home/user/.ssh",
+			"kubernetes_version":    k8sVersion,
 		},
 	}
 	testClusterTemplateQuestionsConf = []managementClient.Question{
@@ -338,7 +342,10 @@ func TestExpandClusterSpecBase(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := expandClusterSpecBase(tc.Input)
+		output, err := expandClusterSpecBase(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
