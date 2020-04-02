@@ -93,7 +93,7 @@ func resourceRancher2NodeTemplateRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	// Normalize node-template ID due to API change
-	d.SetId(meta.(*Config).fixNodeTempateID(d.Id()))
+	d.SetId(meta.(*Config).fixNodeTemplateID(d.Id()))
 
 	nodeTemplate := &NodeTemplate{}
 

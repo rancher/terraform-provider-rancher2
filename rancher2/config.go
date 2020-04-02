@@ -91,7 +91,7 @@ func (c *Config) getK8SVersion() (string, error) {
 }
 
 // Fix breaking API change https://github.com/rancher/rancher/pull/23718
-func (c *Config) fixNodeTempateID(id string) string {
+func (c *Config) fixNodeTemplateID(id string) string {
 	if ok, _ := c.IsRancherVersionGreaterThanOrEqual(rancher2NodeTemplateChangeVersion); ok && len(id) > 0 {
 		if !strings.HasPrefix(id, rancher2NodeTemplateNewPrefix) {
 			id = strings.Replace(id, ":", "-", -1)
@@ -627,7 +627,6 @@ func (c *Config) CheckAuthConfigEnabled(id string) error {
 	}
 
 	return nil
-
 }
 
 func (c *Config) GetAuthConfig(in *managementClient.AuthConfig) (interface{}, error) {
@@ -847,7 +846,6 @@ func (c *Config) GetSetting(name string) (*managementClient.Setting, error) {
 	}
 
 	return client.Setting.ByID(name)
-
 }
 
 func (c *Config) SetSetting(name, value string) error {

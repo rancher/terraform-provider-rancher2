@@ -6,7 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* Added `fixNodeTempateID` to fix `rancher2_node_template` ID upgrading up to v2.3.3. Issue [#195](https://github.com/terraform-providers/terraform-provider-rancher2/issues/195)
+* Added `fixNodeTemplateID` to fix `rancher2_node_template` ID upgrading up to v2.3.3. Issue [#195](https://github.com/terraform-providers/terraform-provider-rancher2/issues/195)
 
 BUG FIXES:
 
@@ -45,7 +45,7 @@ ENHANCEMENTS:
   * Added `upgrade_strategy` argument to `rke_config` on `rancher2_cluster` resource
   * Added `scheduled_cluster_scan` argument on `rancher2_cluster` and `rancher2_cluster_template` resources
   * Added `rancher2_cluster_scan` datasource
-* Added `fixNodeTempateID` to fix `rancher2_node_template` ID upgrading up to v2.3.3. Issue [#195](https://github.com/terraform-providers/terraform-provider-rancher2/issues/195)
+* Added `fixNodeTemplateID` to fix `rancher2_node_template` ID upgrading up to v2.3.3. Issue [#195](https://github.com/terraform-providers/terraform-provider-rancher2/issues/195)
 
 BUG FIXES:
 
@@ -75,7 +75,7 @@ BUG FIXES:
 * Fix `audit_log.configuration.policy` argument to `rke_config.services.kube_api` argument on `rancher2_cluster` resource
 * Added `plugin` optional value `none` to `rke_config` argument on `rancher2_cluster` resource
 * Updated multiline arguments to trim spaces by default and avoid false diff
-* Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs 
+* Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs
 * Updated `private_key_file` definition for openstack driver on `rancher2_node_template` docs
 * Fixed `rke_config.cloud_provider.aws_cloud_provider.global` argument as computed to avoid false diff
 
@@ -92,7 +92,7 @@ ENHANCEMENTS:
 * Added `delete_not_ready_after_secs` and `node_taints` arguments to `node_pool` resource
 * Added `delete_not_ready_after_secs` and `node_taints` arguments to `rancher2_node_pool` resource
 * Updated `github.com/rancher/types` and `github.com/rancher/norman` go modules and vendor files to support rancher v2.3.3
-* Splitted schema, structure and test `cluster_rke_config_services` files for every rke service 
+* Splitted schema, structure and test `cluster_rke_config_services` files for every rke service
 * Added `ssh_cert_path` argument to `rke_config` argument on `rancher2_cluster` resource
 * Added `audit_log`, `event_rate_limit` and `secrets_encryption_config` arguments to `rke_config.services.kube_api` argument on `rancher2_cluster` resource
 * Added `generate_serving_certificate` argument to `rke_config.services.kubelet` argument on `rancher2_cluster` resource
@@ -141,7 +141,7 @@ BUG FIXES:
 
 * Fix `password` argument update for `rancher2_catalog` resource
 * Fix `rancher2_app` update issue on Rancher v2.3.2
-* Fix: set `key` argument as sensitive on `rancher2_certificate` resource. 
+* Fix: set `key` argument as sensitive on `rancher2_certificate` resource.
 * Fix continuous diff issues on `rancher2_project` resource
 * Fix `pod_security_policy_template_id` update on `rancher2_project` resource
 * Fix continuous diff issues on `rancher2_namespace` resource
@@ -202,7 +202,7 @@ ENHANCEMENTS:
 * Updated rancher to v2.2.8 and k3s to v0.8.0 on acceptance tests
 * Added `key_pair_name` argument on `eks_config` argument on `rancher2_cluster` resource
 * Set `kubernetes_version` argument as required on `eks_config` argument on `rancher2_cluster` resource
-* Set `quantity` argument as optional with default value `1` on `rancher2_node_pool` resource. Added validation that value >= 1 
+* Set `quantity` argument as optional with default value `1` on `rancher2_node_pool` resource. Added validation that value >= 1
 
 BUG FIXES:
 
@@ -280,7 +280,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* Fix: index out of range issue on `vsphere_cloud_provider`-`cloud_provider`-`rke_config` argument on `rancher2_cluster` resource 
+* Fix: index out of range issue on `vsphere_cloud_provider`-`cloud_provider`-`rke_config` argument on `rancher2_cluster` resource
 
 ## 1.2.0 (June 12, 2019)
 
