@@ -4,13 +4,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-//Types
+// Types
 
 type linodeCredentialConfig struct {
 	Token string `json:"token,omitempty" yaml:"token,omitempty"`
 }
 
-//Schemas
+// Schemas
 
 func cloudCredentialLinodeFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
