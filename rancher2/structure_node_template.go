@@ -107,18 +107,14 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 
 	d.Set("use_internal_ip_address", in.UseInternalIPAddress)
 
-	if len(in.Annotations) > 0 {
-		err := d.Set("annotations", toMapInterface(in.Annotations))
-		if err != nil {
-			return err
-		}
+	err := d.Set("annotations", toMapInterface(in.Annotations))
+	if err != nil {
+		return err
 	}
 
-	if len(in.Labels) > 0 {
-		err := d.Set("labels", toMapInterface(in.Labels))
-		if err != nil {
-			return err
-		}
+	err = d.Set("labels", toMapInterface(in.Labels))
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -92,6 +92,9 @@ func resourceRancher2NodeTemplateRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
+	// Normalize node-template ID due to API change
+	d.SetId(meta.(*Config).fixNodeTempateID(d.Id()))
+
 	nodeTemplate := &NodeTemplate{}
 
 	err = client.APIBaseClient.ByID(managementClient.NodeTemplateType, d.Id(), nodeTemplate)
@@ -104,12 +107,7 @@ func resourceRancher2NodeTemplateRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	err = flattenNodeTemplate(d, nodeTemplate)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenNodeTemplate(d, nodeTemplate)
 }
 
 func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
