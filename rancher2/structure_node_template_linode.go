@@ -9,13 +9,13 @@ func flattenLinodeConfig(in *linodeConfig) []interface{} {
 	}
 
 	if len(in.AuthorizedUsers) > 0 {
-		obj["authorizedUsers"] = in.AuthorizedUsers
+		obj["authorized_users"] = in.AuthorizedUsers
 	}
 
-	obj["createPrivateIp"] = in.CreatePrivateIp
+	obj["create_private_ip"] = in.CreatePrivateIp
 
 	if len(in.DockerPort) > 0 {
-		obj["dockerPort"] = in.DockerPort
+		obj["docker_port"] = in.DockerPort
 	}
 
 	if len(in.Image) > 0 {
@@ -23,7 +23,7 @@ func flattenLinodeConfig(in *linodeConfig) []interface{} {
 	}
 
 	if len(in.InstanceType) > 0 {
-		obj["instanceType"] = in.InstanceType
+		obj["instance_type"] = in.InstanceType
 	}
 
 	if len(in.Label) > 0 {
@@ -35,15 +35,15 @@ func flattenLinodeConfig(in *linodeConfig) []interface{} {
 	}
 
 	if len(in.RootPass) > 0 {
-		obj["rootPass"] = in.RootPass
+		obj["root_pass"] = in.RootPass
 	}
 
 	if len(in.SSHPort) > 0 {
-		obj["sshPort"] = in.SSHPort
+		obj["ssh_port"] = in.SSHPort
 	}
 
 	if len(in.SSHUser) > 0 {
-		obj["sshUser"] = in.SSHUser
+		obj["ssh_user"] = in.SSHUser
 	}
 
 	if len(in.StackScript) > 0 {
@@ -51,11 +51,11 @@ func flattenLinodeConfig(in *linodeConfig) []interface{} {
 	}
 
 	if len(in.StackscriptData) > 0 {
-		obj["stackscriptData"] = in.StackscriptData
+		obj["stackscript_data"] = in.StackscriptData
 	}
 
 	if len(in.SwapSize) > 0 {
-		obj["swapSize"] = in.SwapSize
+		obj["swap_size"] = in.SwapSize
 	}
 
 	if len(in.Tags) > 0 {
@@ -67,7 +67,7 @@ func flattenLinodeConfig(in *linodeConfig) []interface{} {
 	}
 
 	if len(in.UAPrefix) > 0 {
-		obj["uaPrefix"] = in.UAPrefix
+		obj["ua_prefix"] = in.UAPrefix
 	}
 
 	return []interface{}{obj}
@@ -82,15 +82,15 @@ func expandLinodeConfig(p []interface{}) *linodeConfig {
 	}
 	in := p[0].(map[string]interface{})
 
-	if v, ok := in["authorizedUsers"].(string); ok && len(v) > 0 {
+	if v, ok := in["authorized_users"].(string); ok && len(v) > 0 {
 		obj.AuthorizedUsers = v
 	}
 
-	if v, ok := in["createPrivateIp"].(bool); ok {
+	if v, ok := in["create_private_ip"].(bool); ok {
 		obj.CreatePrivateIp = v
 	}
 
-	if v, ok := in["dockerPort"].(string); ok && len(v) > 0 {
+	if v, ok := in["docker_port"].(string); ok && len(v) > 0 {
 		obj.DockerPort = v
 	}
 
@@ -98,7 +98,7 @@ func expandLinodeConfig(p []interface{}) *linodeConfig {
 		obj.Image = v
 	}
 
-	if v, ok := in["instanceType"].(string); ok && len(v) > 0 {
+	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
 		obj.InstanceType = v
 	}
 
@@ -110,15 +110,15 @@ func expandLinodeConfig(p []interface{}) *linodeConfig {
 		obj.Region = v
 	}
 
-	if v, ok := in["rootPass"].(string); ok && len(v) > 0 {
+	if v, ok := in["root_pass"].(string); ok && len(v) > 0 {
 		obj.RootPass = v
 	}
 
-	if v, ok := in["sshPort"].(string); ok && len(v) > 0 {
+	if v, ok := in["ssh_port"].(string); ok && len(v) > 0 {
 		obj.SSHPort = v
 	}
 
-	if v, ok := in["sshUser"].(string); ok && len(v) > 0 {
+	if v, ok := in["ssh_user"].(string); ok && len(v) > 0 {
 		obj.SSHUser = v
 	}
 
@@ -126,11 +126,11 @@ func expandLinodeConfig(p []interface{}) *linodeConfig {
 		obj.StackScript = v
 	}
 
-	if v, ok := in["stackscriptData"].(string); ok && len(v) > 0 {
+	if v, ok := in["stackscript_data"].(string); ok && len(v) > 0 {
 		obj.StackscriptData = v
 	}
 
-	if v, ok := in["swapSize"].(string); ok && len(v) > 0 {
+	if v, ok := in["swap_size"].(string); ok && len(v) > 0 {
 		obj.SwapSize = v
 	}
 
@@ -142,7 +142,7 @@ func expandLinodeConfig(p []interface{}) *linodeConfig {
 		obj.Token = v
 	}
 
-	if v, ok := in["uaPrefix"].(string); ok && len(v) > 0 {
+	if v, ok := in["ua_prefix"].(string); ok && len(v) > 0 {
 		obj.UAPrefix = v
 	}
 

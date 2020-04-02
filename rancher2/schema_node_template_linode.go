@@ -11,41 +11,41 @@ const (
 //Types
 
 type linodeConfig struct {
-	AuthorizedUsers string `json:"authorizedUsers,omitempty" yaml:"authorizedUsers,omitempty"`
-	CreatePrivateIp bool   `json:"createPrivateIp,omitempty" yaml:"createPrivateIp,omitempty"`
-	DockerPort      string `json:"dockerPort,omitempty" yaml:"dockerPort,omitempty"`
+	AuthorizedUsers string `json:"authorized_users,omitempty" yaml:"authorized_users,omitempty"`
+	CreatePrivateIp bool   `json:"create_private_ip,omitempty" yaml:"create_private_ip,omitempty"`
+	DockerPort      string `json:"docker_port,omitempty" yaml:"docker_port,omitempty"`
 	Image           string `json:"image,omitempty" yaml:"image,omitempty"`
-	InstanceType    string `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
+	InstanceType    string `json:"instance_type,omitempty" yaml:"instance_type,omitempty"`
 	Label           string `json:"label,omitempty" yaml:"label,omitempty"`
 	Region          string `json:"region,omitempty" yaml:"region,omitempty"`
-	RootPass        string `json:"rootPass,omitempty" yaml:"rootPass,omitempty"`
-	SSHPort         string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
-	SSHUser         string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	RootPass        string `json:"root_pass,omitempty" yaml:"root_pass,omitempty"`
+	SSHPort         string `json:"ssh_port,omitempty" yaml:"ssh_port,omitempty"`
+	SSHUser         string `json:"ssh_user,omitempty" yaml:"ssh_user,omitempty"`
 	StackScript     string `json:"stackscript,omitempty" yaml:"stackscript,omitempty"`
-	StackscriptData string `json:"stackscriptData,omitempty" yaml:"stackscriptData,omitempty"`
-	SwapSize        string `json:"swapSize,omitempty" yaml:"swapSize,omitempty"`
+	StackscriptData string `json:"stackscript_data,omitempty" yaml:"stackscript_data,omitempty"`
+	SwapSize        string `json:"swap_size,omitempty" yaml:"swap_size,omitempty"`
 	Tags            string `json:"tags,omitempty" yaml:"tags,omitempty"`
 	Token           string `json:"token,omitempty" yaml:"token,omitempty"`
-	UAPrefix        string `json:"uaPrefix,omitempty" yaml:"uaPrefix,omitempty"`
+	UAPrefix        string `json:"ua_prefix,omitempty" yaml:"ua_prefix,omitempty"`
 }
 
 //Schemas
 
 func linodeConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"authorizedUsers": {
+		"authorized_users": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Sensitive:   false,
 			Description: "Linode user accounts (seperated by commas) whose Linode SSH keys will be permitted root access to the created node",
 		},
-		"createPrivateIp": {
+		"create_private_ip": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
 			Description: "Create private IP for the instance",
 		},
-		"dockerPort": {
+		"docker_port": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "2376",
@@ -57,7 +57,7 @@ func linodeConfigFields() map[string]*schema.Schema {
 			Default:     "linode/ubuntu18.04",
 			Description: "Specifies the Linode Instance image which determines the OS distribution and base files",
 		},
-		"instanceType": {
+		"instance_type": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "g6-standard-4",
@@ -75,19 +75,19 @@ func linodeConfigFields() map[string]*schema.Schema {
 			Default:     "us-east",
 			Description: "Specifies the region (location) of the Linode instance",
 		},
-		"rootPass": {
+		"root_pass": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Sensitive:   true,
 			Description: "Root Password",
 		},
-		"sshPort": {
+		"ssh_port": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "22",
 			Description: "Linode Instance SSH Port",
 		},
-		"sshUser": {
+		"ssh_user": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Specifies the user as which docker-machine should log in to the Linode instance to install Docker.",
@@ -97,12 +97,12 @@ func linodeConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Specifies the Linode StackScript to use to create the instance",
 		},
-		"stackscriptData": {
+		"stackscript_data": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "A JSON string specifying data for the selected StackScript",
 		},
-		"swapSize": {
+		"swap_size": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "512",
@@ -119,7 +119,7 @@ func linodeConfigFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			Description: "Linode API Token",
 		},
-		"uaPrefix": {
+		"ua_prefix": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Prefix the User-Agent in Linode API calls with some 'product/version'",
