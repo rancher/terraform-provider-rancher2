@@ -161,7 +161,9 @@ func expandClusterCatalog(in *schema.ResourceData) *managementClient.ClusterCata
 		obj.Username = v
 	}
 
-	obj.HelmVersion = in.Get("version").(string)
+	if v, ok := in.Get("version").(string); ok && len(v) > 0 {
+		obj.HelmVersion = v
+	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
@@ -198,7 +200,9 @@ func expandGlobalCatalog(in *schema.ResourceData) *managementClient.Catalog {
 		obj.Username = v
 	}
 
-	obj.HelmVersion = in.Get("version").(string)
+	if v, ok := in.Get("version").(string); ok && len(v) > 0 {
+		obj.HelmVersion = v
+	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
@@ -236,7 +240,9 @@ func expandProjectCatalog(in *schema.ResourceData) *managementClient.ProjectCata
 		obj.Username = v
 	}
 
-	obj.HelmVersion = in.Get("version").(string)
+	if v, ok := in.Get("version").(string); ok && len(v) > 0 {
+		obj.HelmVersion = v
+	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)

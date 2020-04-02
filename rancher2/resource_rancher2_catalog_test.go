@@ -57,6 +57,7 @@ resource "rancher2_catalog" "foo" {
   description= "Terraform catalog acceptance test"
   cluster_id = "` + testAccRancher2ClusterID + `"
   scope = "cluster"
+  version = "helm_v2"
 }
 `
 
@@ -67,6 +68,7 @@ resource "rancher2_catalog" "foo" {
   description= "Terraform catalog acceptance test - updated"
   cluster_id = "` + testAccRancher2ClusterID + `"
   scope = "cluster"
+  version = "helm_v2"
 }
  `
 
@@ -77,6 +79,7 @@ resource "rancher2_catalog" "foo" {
   description= "Terraform catalog acceptance test"
   cluster_id = "` + testAccRancher2ClusterID + `"
   scope = "cluster"
+  version = "helm_v2"
 }
  `
 
@@ -107,6 +110,7 @@ resource "rancher2_catalog" "foo" {
   description= "Terraform catalog acceptance test"
   project_id = "${rancher2_project.foo.id}"
   scope = "project"
+  version = "helm_v2"
 }
 `
 
@@ -117,6 +121,7 @@ resource "rancher2_catalog" "foo" {
   description= "Terraform catalog acceptance test - updated"
   project_id = "${rancher2_project.foo.id}"
   scope = "project"
+  version = "helm_v2"
 }
  `
 
@@ -127,6 +132,7 @@ resource "rancher2_catalog" "foo" {
   description= "Terraform catalog acceptance test"
   project_id = "${rancher2_project.foo.id}"
   scope = "project"
+  version = "helm_v2"
 }
  `
 
