@@ -14,6 +14,8 @@ var (
 	testCloudCredentialInterfaceAzure        map[string]interface{}
 	testCloudCredentialConfDigitalocean      *CloudCredential
 	testCloudCredentialInterfaceDigitalocean map[string]interface{}
+	testCloudCredentialConfLinode            *CloudCredential
+	testCloudCredentialInterfaceLinode       map[string]interface{}
 	testCloudCredentialConfOpenstack         *CloudCredential
 	testCloudCredentialInterfaceOpenstack    map[string]interface{}
 	testCloudCredentialConfVsphere           *CloudCredential
@@ -53,6 +55,17 @@ func init() {
 		"description":                    "description",
 		"digitalocean_credential_config": testCloudCredentialDigitaloceanInterface,
 		"driver":                         digitaloceanConfigDriver,
+	}
+	testCloudCredentialConfLinode = &CloudCredential{
+		LinodeCredentialConfig: testCloudCredentialLinodeConf,
+	}
+	testCloudCredentialConfLinode.Name = "cloudCredential-test"
+	testCloudCredentialConfLinode.Description = "description"
+	testCloudCredentialInterfaceLinode = map[string]interface{}{
+		"name":                     "cloudCredential-test",
+		"description":              "description",
+		"linode_credential_config": testCloudCredentialLinodeInterface,
+		"driver":                   linodeConfigDriver,
 	}
 	testCloudCredentialConfOpenstack = &CloudCredential{
 		OpenstackCredentialConfig: testCloudCredentialOpenstackConf,
@@ -95,6 +108,10 @@ func TestFlattenCloudCredential(t *testing.T) {
 		{
 			testCloudCredentialConfDigitalocean,
 			testCloudCredentialInterfaceDigitalocean,
+		},
+		{
+			testCloudCredentialConfLinode,
+			testCloudCredentialInterfaceLinode,
 		},
 		{
 			testCloudCredentialConfOpenstack,
@@ -140,6 +157,10 @@ func TestExpandCloudCredential(t *testing.T) {
 		{
 			testCloudCredentialInterfaceDigitalocean,
 			testCloudCredentialConfDigitalocean,
+		},
+		{
+			testCloudCredentialInterfaceLinode,
+			testCloudCredentialConfLinode,
 		},
 		{
 			testCloudCredentialInterfaceOpenstack,

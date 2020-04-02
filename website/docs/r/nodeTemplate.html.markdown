@@ -10,7 +10,7 @@ description: |-
 
 Provides a Rancher v2 Node Template resource. This can be used to create Node Template for Rancher v2 and retrieve their information.
 
-amazonec2, azure, digitalocean, opennebula, openstack, and vsphere drivers are supported for node templates.
+amazonec2, azure, digitalocean, linode, opennebula, openstack, and vsphere drivers are supported for node templates.
 
 **Note** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
 
@@ -71,6 +71,7 @@ The following arguments are supported:
 * `cloud_credential_id` - (Optional) Cloud credential ID for the Node Template. Required from Rancher v2.2.x (string)
 * `description` - (Optional) Description for the Node Template (string)
 * `digitalocean_config` - (Optional) Digitalocean config for the Node Template (list maxitems:1)
+* `linode_config` - (Optional) Linode config for the Node Template (list maxitems:1)
 * `driver_id` - (Optional/Computed) The node driver id used by the node template. It's required if the node driver isn't built in Rancher (string)
 * `engine_env` - (Optional) Engine environment for the node template (string)
 * `engine_insecure_registry` - (Optional) Insecure registry for the node template (list)
@@ -180,6 +181,27 @@ The following attributes are exported:
 * `ssh_user` - (Optional) SSH username. Default `root` (string)
 * `tags` - (Optional) Comma-separated list of tags to apply to the Droplet (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
+
+### `linode_config`
+
+#### Arguments
+
+* `authorizedUsers` - (Optional) Linode user accounts (seperated by commas) whose Linode SSH keys will be permitted root access to the created node. (string)
+* `createPrivateIp` - (Optional) Create private IP for the instance. Default `false` (bool)
+* `dockerPort` - (Optional) Docker Port. Default `2376` (string)
+* `image` - (Optional) Specifies the Linode Instance image which determines the OS distribution and base files. Default `linode/ubuntu18.04` (string)
+* `instanceType` - (Optional) Specifies the Linode Instance type which determines CPU, memory, disk size, etc. Default `g6-standard-4` (string)
+* `label` - (Optional) Linode Instance Label. (string)
+* `region` - (Optional) Specifies the region (location) of the Linode instance. Default `us-east` (string)
+* `rootPass` - (Optional/Sensitive) Root Password (string)
+* `ssh_port` - (Optional) SSH port. Default `22` (string)
+* `ssh_user` - (Optional) SSH username. Default `root` (string)
+* `stackscript` - (Optional) Specifies the Linode StackScript to use to create the instance. (string)
+* `stackscriptData` - (Optional) A JSON string specifying data for the selected StackScript. (string)
+* `swapSize` - (Optional) Linode Instance Swap Size (MB). Default `512` (string)
+* `tags` - (Optional) A comma separated list of tags to apply to the the Linode resource (string)
+* `token` - (Optional/Sensitive) Linode API token. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
+* `uaPrefix` - (Optional) Prefix the User-Agent in Linode API calls with some 'product/version' (string)
 
 ### `opennebula_config`
 

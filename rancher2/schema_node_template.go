@@ -12,6 +12,7 @@ type NodeTemplate struct {
 	Amazonec2Config     *amazonec2Config     `json:"amazonec2Config,omitempty" yaml:"amazonec2Config,omitempty"`
 	AzureConfig         *azureConfig         `json:"azureConfig,omitempty" yaml:"azureConfig,omitempty"`
 	DigitaloceanConfig  *digitaloceanConfig  `json:"digitaloceanConfig,omitempty" yaml:"digitaloceanConfig,omitempty"`
+	LinodeConfig        *linodeConfig        `json:"linodeConfig,omitempty" yaml:"linodeConfig,omitempty"`
 	OpenstackConfig     *openstackConfig     `json:"openstackConfig,omitempty" yaml:"openstackConfig,omitempty"`
 	VmwarevsphereConfig *vmwarevsphereConfig `json:"vmwarevsphereConfig,omitempty" yaml:"vmwarevsphereConfig,omitempty"`
 	OpennebulaConfig    *opennebulaConfig    `json:"opennebulaConfig,omitempty" yaml:"opennebulaConfig,omitempty"`
@@ -113,6 +114,15 @@ func nodeTemplateFields() map[string]*schema.Schema {
 		"engine_storage_driver": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
+		},
+		"linode_config": &schema.Schema{
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "opennebula_config", "openstack_config", "vsphere_config"},
+			Elem: &schema.Resource{
+				Schema: linodeConfigFields(),
+			},
 		},
 		"openstack_config": &schema.Schema{
 			Type:          schema.TypeList,
