@@ -8,11 +8,16 @@ import (
 )
 
 var (
+	k8sVersion                    string
 	testClusterRKEConfigConf      *managementClient.RancherKubernetesEngineConfig
 	testClusterRKEConfigInterface []interface{}
 )
 
 func init() {
+	k8sVersion = testAccRancher2ClusterRKEK8SDefaultVersion
+	if len(testAccRancher2ClusterRKEK8SDefaultVersion) == 0 {
+		k8sVersion = "test"
+	}
 	testClusterRKEConfigConf = &managementClient.RancherKubernetesEngineConfig{
 		AddonJobTimeout:     30,
 		Addons:              "addons",
@@ -24,7 +29,6 @@ func init() {
 		ClusterName:         "test",
 		IgnoreDockerVersion: true,
 		Ingress:             testClusterRKEConfigIngressConf,
-		Version:             "test",
 		Monitoring:          testClusterRKEConfigMonitoringConf,
 		Network:             testClusterRKEConfigNetworkConfCanal,
 		Nodes:               testClusterRKEConfigNodesConf,
@@ -34,6 +38,7 @@ func init() {
 		SSHAgentAuth:        true,
 		SSHKeyPath:          "/home/user/.ssh",
 		UpgradeStrategy:     testClusterRKEConfigNodeUpgradeStrategyConf,
+		Version:             k8sVersion,
 	}
 	testClusterRKEConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -46,7 +51,6 @@ func init() {
 			"cloud_provider":        testClusterRKEConfigCloudProviderInterface,
 			"ignore_docker_version": true,
 			"ingress":               testClusterRKEConfigIngressInterface,
-			"kubernetes_version":    "test",
 			"monitoring":            testClusterRKEConfigMonitoringInterface,
 			"network":               testClusterRKEConfigNetworkInterfaceCanal,
 			"nodes":                 testClusterRKEConfigNodesInterface,
@@ -56,6 +60,7 @@ func init() {
 			"ssh_agent_auth":        true,
 			"ssh_key_path":          "/home/user/.ssh",
 			"upgrade_strategy":      testClusterRKEConfigNodeUpgradeStrategyInterface,
+			"kubernetes_version":    k8sVersion,
 		},
 	}
 }

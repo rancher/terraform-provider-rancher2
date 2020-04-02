@@ -225,10 +225,10 @@ func expandQuestions(p []interface{}) []managementClient.Question {
 	return obj
 }
 
-func expandClusterSpecBase(p []interface{}) *managementClient.ClusterSpecBase {
+func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, error) {
 	obj := &managementClient.ClusterSpecBase{}
 	if len(p) == 0 || p[0] == nil {
-		return obj
+		return obj, nil
 	}
 	in := p[0].(map[string]interface{})
 
@@ -271,7 +271,7 @@ func expandClusterSpecBase(p []interface{}) *managementClient.ClusterSpecBase {
 	if v, ok := in["rke_config"].([]interface{}); ok && len(v) > 0 {
 		rkeConfig, err := expandClusterRKEConfig(v, "")
 		if err != nil {
-			return &managementClient.ClusterSpecBase{}
+			return nil, err
 		}
 		obj.RancherKubernetesEngineConfig = rkeConfig
 	}
@@ -284,7 +284,7 @@ func expandClusterSpecBase(p []interface{}) *managementClient.ClusterSpecBase {
 		obj.WindowsPreferedCluster = v
 	}
 
-	return obj
+	return obj, nil
 }
 
 func expandClusterTemplateRevisions(p []interface{}) ([]managementClient.ClusterTemplateRevision, error) {
@@ -304,7 +304,11 @@ func expandClusterTemplateRevisions(p []interface{}) ([]managementClient.Cluster
 		}
 
 		if v, ok := in["cluster_config"].([]interface{}); ok && len(v) > 0 {
-			obj[i].ClusterConfig = expandClusterSpecBase(v)
+			var err error
+			obj[i].ClusterConfig, err = expandClusterSpecBase(v)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		if v, ok := in["cluster_template_id"].(string); ok && len(v) > 0 {

@@ -83,7 +83,7 @@ func catalogFields() map[string]*schema.Schema {
 			Type:         schema.TypeString,
 			Optional:     true,
 			ForceNew:     true,
-			Default:      catalogHelmV2,
+			Computed:     true,
 			ValidateFunc: validation.StringInSlice(catalogHelmVersions, true),
 		},
 		"annotations": &schema.Schema{

@@ -29,6 +29,7 @@ resource "rancher2_catalog" "foo" {
   description= "Terraform catalog acceptance test"
   cluster_id = "` + testAccRancher2ClusterID + `"
   scope = "cluster"
+  version = "helm_v2"
 }
 data "` + testAccRancher2CatalogDataSourceType + `" "library" {
   name = "${rancher2_catalog.foo.name}"
@@ -59,6 +60,7 @@ resource "rancher2_catalog" "foo" {
   description= "Terraform catalog acceptance test"
   project_id = "${rancher2_project.foo.id}"
   scope = "project"
+  version = "helm_v3"
 }
 data "` + testAccRancher2CatalogDataSourceType + `" "library" {
   name = "${rancher2_catalog.foo.name}"
@@ -113,7 +115,7 @@ func TestAccRancher2CatalogDataSource_Project(t *testing.T) {
 					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "name", "foo"),
 					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "url", "http://foo.com:8080"),
 					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "scope", "project"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "version", "helm_v2"),
+					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "version", "helm_v3"),
 				),
 			},
 		},

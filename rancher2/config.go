@@ -2,10 +2,12 @@ package rancher2
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/hashicorp/go-version"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 	clusterClient "github.com/rancher/types/client/cluster/v3"
@@ -30,24 +32,25 @@ type Client struct {
 
 // Config is the configuration parameters for a Rancher v3 API
 type Config struct {
-	TokenKey  string `json:"tokenKey"`
-	URL       string `json:"url"`
-	CACerts   string `json:"cacert"`
-	Insecure  bool   `json:"insecure"`
-	Bootstrap bool   `json:"bootstrap"`
-	ClusterID string `json:"clusterId"`
-	ProjectID string `json:"projectId"`
-	Retries   int
-	Version   string
-	K8SVer    string
-	Sync      sync.Mutex
-	Client    Client
+	TokenKey             string `json:"tokenKey"`
+	URL                  string `json:"url"`
+	CACerts              string `json:"cacert"`
+	Insecure             bool   `json:"insecure"`
+	Bootstrap            bool   `json:"bootstrap"`
+	ClusterID            string `json:"clusterId"`
+	ProjectID            string `json:"projectId"`
+	Retries              int
+	RancherVersion       string
+	K8SDefaultVersion    string
+	K8SSupportedVersions []string
+	Sync                 sync.Mutex
+	Client               Client
 }
 
 // GetRancherVersion get Rancher server version
 func (c *Config) GetRancherVersion() (string, error) {
-	if len(c.Version) > 0 {
-		return c.Version, nil
+	if len(c.RancherVersion) > 0 {
+		return c.RancherVersion, nil
 	}
 
 	client, err := c.ManagementClient()
@@ -59,9 +62,9 @@ func (c *Config) GetRancherVersion() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("[ERROR] Getting Rancher version: %s", err)
 	}
-	c.Version = version.Value
+	c.RancherVersion = version.Value
 
-	return c.Version, nil
+	return c.RancherVersion, nil
 }
 
 func (c *Config) isRancherReady() error {
@@ -77,17 +80,44 @@ func (c *Config) isRancherReady() error {
 	return fmt.Errorf("Timeout, Rancher is not ready: %v", err)
 }
 
-func (c *Config) getK8SVersion() (string, error) {
-	if len(c.K8SVer) > 0 {
-		return c.K8SVer, nil
+func (c *Config) getK8SDefaultVersion() (string, error) {
+	if len(c.K8SDefaultVersion) > 0 {
+		return c.K8SDefaultVersion, nil
 	}
 
 	k8sVer, err := c.GetSettingValue("k8s-version")
 	if err != nil {
 		return "", err
 	}
-	c.K8SVer = k8sVer
-	return c.K8SVer, nil
+	c.K8SDefaultVersion = k8sVer
+	return c.K8SDefaultVersion, nil
+}
+
+func (c *Config) getK8SVersions() ([]string, error) {
+	if len(c.K8SSupportedVersions) > 0 {
+		return c.K8SSupportedVersions, nil
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, fmt.Errorf("[ERROR] Getting K8s versions: %s", err)
+	}
+
+	RKEK8sSystemImageCollection, err := client.RKEK8sSystemImage.ListAll(NewListOpts(nil))
+	if err != nil {
+		return nil, fmt.Errorf("[ERROR] Listing RKE K8s System Images: %s", err)
+	}
+	versions := make([]*version.Version, 0, len(RKEK8sSystemImageCollection.Data))
+	for _, RKEK8sSystem := range RKEK8sSystemImageCollection.Data {
+		v, _ := version.NewVersion(RKEK8sSystem.Name)
+		versions = append(versions, v)
+
+	}
+	sort.Sort(sort.Reverse(version.Collection(versions)))
+	for i := range versions {
+		c.K8SSupportedVersions = append(c.K8SSupportedVersions, "v"+versions[i].String())
+	}
+	return c.K8SSupportedVersions, nil
 }
 
 // Fix breaking API change https://github.com/rancher/rancher/pull/23718
@@ -109,7 +139,7 @@ func (c *Config) IsRancherVersionLessThan(ver string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("[ERROR] getting rancher server version")
 	}
-	return IsVersionLessThanl(c.Version, ver)
+	return IsVersionLessThanl(c.RancherVersion, ver)
 }
 
 func (c *Config) IsRancherVersionGreaterThanOrEqual(ver string) (bool, error) {
@@ -120,7 +150,7 @@ func (c *Config) IsRancherVersionGreaterThanOrEqual(ver string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("[ERROR] getting rancher server version")
 	}
-	return IsVersionGreaterThanOrEqual(c.Version, ver)
+	return IsVersionGreaterThanOrEqual(c.RancherVersion, ver)
 }
 
 // UpdateToken update tokenkey and restart client connections
@@ -167,11 +197,6 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 		return c.Client.Management, nil
 	}
 
-	err := c.isRancherReady()
-	if err != nil {
-		return nil, err
-	}
-
 	// Setup the management client
 	options := c.CreateClientOpts()
 	mClient, err := managementClient.NewClient(options)
@@ -179,12 +204,6 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 		return nil, err
 	}
 	c.Client.Management = mClient
-
-	version, err := mClient.Setting.ByID("server-version")
-	if err != nil {
-		return nil, err
-	}
-	c.Version = version.Value
 
 	return c.Client.Management, nil
 }
@@ -200,11 +219,6 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 
 	if c.Client.Cluster != nil && id == c.ClusterID {
 		return c.Client.Cluster, nil
-	}
-
-	err := c.isRancherReady()
-	if err != nil {
-		return nil, err
 	}
 
 	// Setup the cluster client
@@ -231,11 +245,6 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 
 	if c.Client.Project != nil && id == c.ProjectID {
 		return c.Client.Project, nil
-	}
-
-	err := c.isRancherReady()
-	if err != nil {
-		return nil, err
 	}
 
 	// Setup the project client

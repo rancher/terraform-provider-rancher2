@@ -231,7 +231,7 @@ func DoGet(url, username, password, cacert string, insecure bool) ([]byte, error
 }
 
 func NormalizeURL(url string) string {
-	if url == "" {
+	if url == "" || url == "https://" || url == "http://" {
 		return ""
 	}
 

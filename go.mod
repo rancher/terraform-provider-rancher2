@@ -10,7 +10,6 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
 	github.com/rancher/norman v0.0.0-20200321231028-b5f2e33b54fa
-	github.com/rancher/rke v1.1.0
 	github.com/rancher/types v0.0.0-20200326224903-b4612bd96d9b
 	golang.org/x/crypto v0.0.0-20191112222119-e1110fd1c708
 	gopkg.in/yaml.v2 v2.2.5

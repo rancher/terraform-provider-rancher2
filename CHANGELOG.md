@@ -7,10 +7,13 @@ FEATURES:
 ENHANCEMENTS:
 
 * Added `fixNodeTemplateID` to fix `rancher2_node_template` ID upgrading up to v2.3.3. Issue [#195](https://github.com/terraform-providers/terraform-provider-rancher2/issues/195)
+* Updated rnacher to v2.4.2 on acceptance test
 
 BUG FIXES:
 
-
+* Fix `upgrading` state on resourceRancher2ClusterUpdate() function
+* Updated process for getting rke supported kubernetes version
+* Set `version` argument on `rancher2_catalog` as computed
 
 ## 1.8.1 (March 31, 2020)
 

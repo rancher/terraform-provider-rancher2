@@ -15,9 +15,10 @@ const (
 )
 
 var (
-	testAccProviders         map[string]terraform.ResourceProvider
-	testAccProvider          *schema.Provider
-	testAccRancher2ClusterID string
+	testAccProviders                           map[string]terraform.ResourceProvider
+	testAccProvider                            *schema.Provider
+	testAccRancher2ClusterID                   string
+	testAccRancher2ClusterRKEK8SDefaultVersion string
 )
 
 func init() {
@@ -89,7 +90,12 @@ func testAccCheck() error {
 
 		err := testAccClusterDefaultName(config)
 		if err != nil {
-			return fmt.Errorf("%v", err)
+			return err
+		}
+
+		testAccRancher2ClusterRKEK8SDefaultVersion, err = config.getK8SDefaultVersion()
+		if err != nil {
+			return err
 		}
 	}
 

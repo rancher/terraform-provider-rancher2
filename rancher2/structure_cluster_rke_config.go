@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"fmt"
+
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
@@ -236,8 +238,22 @@ func expandClusterRKEConfig(p []interface{}, name string) (*managementClient.Ran
 		obj.Ingress = ingress
 	}
 
+	if len(rancher2ClusterRKEK8SDefaultVersion) > 0 {
+		obj.Version = rancher2ClusterRKEK8SDefaultVersion
+	}
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
 		obj.Version = v
+		found := false
+		if len(rancher2ClusterRKEK8SVersions) > 0 {
+			for _, v := range rancher2ClusterRKEK8SVersions {
+				if obj.Version == v {
+					found = true
+				}
+			}
+			if !found {
+				return obj, fmt.Errorf("RKE version is not supported %s got %s", rancher2ClusterRKEK8SVersions, obj.Version)
+			}
+		}
 	}
 
 	if v, ok := in["monitoring"].([]interface{}); ok && len(v) > 0 {

@@ -312,9 +312,14 @@ func clusterTemplateRevisionsUpdate(client *managementClient.Client, ctID string
 			return "", nil, err
 		}
 
+		clusterConfig, err := expandClusterSpecBase(in["cluster_config"].([]interface{}))
+		if err != nil {
+			return "", nil, err
+		}
+
 		enabled := in["enabled"].(bool)
 		update := map[string]interface{}{
-			"clusterConfig": expandClusterSpecBase(in["cluster_config"].([]interface{})),
+			"clusterConfig": clusterConfig,
 			"enabled":       &enabled,
 			"name":          in["name"].(string),
 			"questions":     expandQuestions(in["questions"].([]interface{})),
