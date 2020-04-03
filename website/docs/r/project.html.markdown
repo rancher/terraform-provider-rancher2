@@ -125,6 +125,7 @@ The following attributes are exported:
 #### Arguments
 
 * `answers` - (Optional/Computed) Key/value answers for monitor input (map)
+* `version` - (Optional) rancher-monitoring chart version (string)
 
 ### `resource_quota`
 

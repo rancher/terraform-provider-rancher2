@@ -45,7 +45,6 @@ func scheduledClusterScanFields() map[string]*schema.Schema {
 		"enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
 			Description: "Enable scheduled cluster scan",
 		},
 		"scan_config": {
