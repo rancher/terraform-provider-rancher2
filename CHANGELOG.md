@@ -1,4 +1,17 @@
-## 1.9.0 (Unreleased)
+## 1.8.3 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added `version` argument to `cluster_monitoring_input` argument on `rancher2_cluster` and `rancher2_project` resources
+
+BUG FIXES:
+
+* Fixed rancher timeout on bootstrapping
+
 ## 1.8.2 (April 02, 2020)
 
 FEATURES:
