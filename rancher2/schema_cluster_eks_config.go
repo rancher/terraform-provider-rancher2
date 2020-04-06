@@ -33,29 +33,19 @@ type AmazonElasticContainerServiceConfig struct {
 }
 
 type AmazonElasticContainerWorkerPool struct {
-	AddDefaultLabel             bool              `json:"addDefaultLabel,omitempty" yaml:"addDefaultLabel,omitempty"`
-	AddDefaultTaint             bool              `json:"addDefaultTaint,omitempty" yaml:"addDefaultTaint,omitempty"`
-	AdditionalLabels            map[string]string `json:"additionalLabels,omitempty" yaml:"additionalLabels,omitempty"`
-	AdditionalTaints            []K8sTaint        `json:"additionalTaints,omitempty" yaml:"additionalTaints,omitempty"`
-	AMI                         string            `json:"ami,omitempty" yaml:"ami,omitempty"`
-	AssociateWorkerNodePublicIP *bool             `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
-	DesiredNodes                int64             `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
-	EBSEncryption               bool              `json:"ebsEncryption,omitempty" yaml:"ebsEncryption,omitempty"`
-	InstanceType                string            `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
-	MaximumNodes                int64             `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
-	MinimumNodes                int64             `json:"minimumNodes" yaml:"minimumNodes"`
-	Name                        string            `json:"name,omitempty" yaml:"name,omitempty"`
-	NodeVolumeSize              int64             `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
-	PlacementGroup              string            `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
-	UserData                    string            `json:"userData,omitempty" yaml:"userData,omitempty"`
-	Subnets                     []string          `json:"subnets,omitempty" yaml:"subnets,omitempty"`
-}
+	BaseNodePool `json:",inline" yaml:",inline"`
 
-type K8sTaint struct {
-	Effect   string `json:"effect,omitempty" yaml:"effect,omitempty"`
-	Operator string `json:"operator,omitempty" yaml:"operator,omitempty"`
-	Key      string `json:"key,omitempty" yaml:"key,omitempty"`
-	Value    string `json:"value,omitempty" yaml:"value,omitempty"`
+	AMI                         string   `json:"ami,omitempty" yaml:"ami,omitempty"`
+	AssociateWorkerNodePublicIP *bool    `json:"associateWorkerNodePublicIp,omitempty" yaml:"associateWorkerNodePublicIp,omitempty"`
+	DesiredNodes                int64    `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
+	EBSEncryption               bool     `json:"ebsEncryption,omitempty" yaml:"ebsEncryption,omitempty"`
+	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
+	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
+	MinimumNodes                int64    `json:"minimumNodes" yaml:"minimumNodes"`
+	NodeVolumeSize              int64    `json:"nodeVolumeSize,omitempty" yaml:"nodeVolumeSize,omitempty"`
+	PlacementGroup              string   `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
+	UserData                    string   `json:"userData,omitempty" yaml:"userData,omitempty"`
+	Subnets                     []string `json:"subnets,omitempty" yaml:"subnets,omitempty"`
 }
 
 //Schemas
@@ -142,56 +132,7 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Description: "List of worker pools",
 			MinItems:    1,
 			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"add_default_label": {
-						Type:        schema.TypeBool,
-						Optional:    true,
-						Default:     false,
-						Description: "Adds default label for EKS worker nodes",
-					},
-					"add_default_taint": {
-						Type:        schema.TypeBool,
-						Optional:    true,
-						Default:     false,
-						Description: "Adds default taint for EKS worker nodes",
-					},
-					"additional_labels": {
-						Type:        schema.TypeMap,
-						Optional:    true,
-						Description: "Additional labels for EKS worker nodes",
-						Elem: &schema.Schema{
-							Type: schema.TypeString,
-						},
-					},
-					"additional_taints": {
-						Type:        schema.TypeList,
-						Optional:    true,
-						Description: "List of additional taints",
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"effect": {
-									Type:     schema.TypeString,
-									Optional: true,
-									Default:  "",
-								},
-								"key": {
-									Type:     schema.TypeString,
-									Optional: true,
-									Default:  "",
-								},
-								"operator": {
-									Type:     schema.TypeString,
-									Optional: true,
-									Default:  "",
-								},
-								"value": {
-									Type:     schema.TypeString,
-									Optional: true,
-									Default:  "",
-								},
-							},
-						},
-					},
+				Schema: newNodePoolSchema(map[string]*schema.Schema{
 					"ami": {
 						Type:        schema.TypeString,
 						Optional:    true,
@@ -239,11 +180,6 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 						Default:     1,
 						Description: "The minimum number of worker nodes",
 					},
-					"name": {
-						Type:        schema.TypeString,
-						Required:    true,
-						Description: "Name of the worker pool",
-					},
 					"node_volume_size": {
 						Type:        schema.TypeInt,
 						Optional:    true,
@@ -264,7 +200,7 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 							Type: schema.TypeString,
 						},
 					},
-				},
+				}),
 			},
 		},
 	}

@@ -1,5 +1,12 @@
 package rancher2
 
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
+)
+
 // Flatteners
 
 func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, error) {
@@ -20,17 +27,7 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 		obj["description"] = in.Description
 	}
 
-	if in.DiskSizeGb > 0 {
-		obj["disk_size_gb"] = int(in.DiskSizeGb)
-	}
-
-	if len(in.DiskType) > 0 {
-		obj["disk_type"] = in.DiskType
-	}
-
 	obj["enable_alpha_feature"] = in.EnableAlphaFeature
-	obj["enable_auto_repair"] = in.EnableAutoRepair
-	obj["enable_auto_upgrade"] = in.EnableAutoUpgrade
 
 	if in.EnableHTTPLoadBalancing != nil {
 		obj["enable_http_load_balancing"] = *in.EnableHTTPLoadBalancing
@@ -58,10 +55,6 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 
 	if in.EnableHorizontalPodAutoscaling != nil {
 		obj["enable_stackdriver_monitoring"] = *in.EnableStackdriverMonitoring
-	}
-
-	if len(in.ImageType) > 0 {
-		obj["image_type"] = in.ImageType
 	}
 
 	if len(in.IPPolicyClusterIpv4CidrBlock) > 0 {
@@ -93,20 +86,8 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 	obj["issue_client_certificate"] = in.IssueClientCertificate
 	obj["kubernetes_dashboard"] = in.KubernetesDashboard
 
-	if len(in.Labels) > 0 {
-		obj["labels"] = toMapInterface(in.Labels)
-	}
-
-	if in.LocalSsdCount > 0 {
-		obj["local_ssd_count"] = int(in.LocalSsdCount)
-	}
-
 	if len(in.Locations) > 0 {
 		obj["locations"] = toArrayInterface(in.Locations)
-	}
-
-	if len(in.MachineType) > 0 {
-		obj["machine_type"] = in.MachineType
 	}
 
 	if len(in.MaintenanceWindow) > 0 {
@@ -125,39 +106,9 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 		obj["master_version"] = in.MasterVersion
 	}
 
-	if in.MaxNodeCount > 0 {
-		obj["max_node_count"] = int(in.MaxNodeCount)
-	}
-
-	if in.MinNodeCount > 0 {
-		obj["min_node_count"] = int(in.MinNodeCount)
-	}
-
-	if len(in.MinCpuPlatform) > 0 {
-		obj["min_cpu_platform"] = in.MinCpuPlatform
-	}
-
 	if len(in.Network) > 0 {
 		obj["network"] = in.Network
 	}
-
-	if in.NodeCount > 0 {
-		obj["node_count"] = int(in.NodeCount)
-	}
-
-	if len(in.NodePool) > 0 {
-		obj["node_pool"] = in.NodePool
-	}
-
-	if len(in.NodeVersion) > 0 {
-		obj["node_version"] = in.NodeVersion
-	}
-
-	if len(in.OauthScopes) > 0 {
-		obj["oauth_scopes"] = toArrayInterface(in.OauthScopes)
-	}
-
-	obj["preemptible"] = in.Preemptible
 
 	if len(in.ProjectID) > 0 {
 		obj["project_id"] = in.ProjectID
@@ -167,19 +118,11 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 		obj["resource_labels"] = toMapInterface(in.ResourceLabels)
 	}
 
-	if len(in.ServiceAccount) > 0 {
-		obj["service_account"] = in.ServiceAccount
-	}
-
 	if len(in.SubNetwork) > 0 {
 		obj["sub_network"] = in.SubNetwork
 	}
 
 	obj["use_ip_aliases"] = in.UseIPAliases
-
-	if len(in.Taints) > 0 {
-		obj["taints"] = toArrayInterface(in.Taints)
-	}
 
 	if len(in.Zone) > 0 {
 		obj["zone"] = in.Zone
@@ -193,7 +136,163 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 		obj["default_max_pods_constraint"] = int(in.DefaultMaxPodsConstraint)
 	}
 
+	var nodePoolObjs []interface{}
+
+	for _, nodePoolIn := range in.NodePools {
+		var nodePool GoogleKubernetesEngineNodePool
+		if err := json.Unmarshal([]byte(nodePoolIn), &nodePool); err != nil {
+			return nil, err
+		}
+
+		nodePoolObj := flattenClusterBaseNodePool(nodePool.BaseNodePool)
+
+		if nodePool.DiskSizeGb > 0 {
+			nodePoolObj["disk_size_gb"] = int(nodePool.DiskSizeGb)
+		}
+
+		if len(nodePool.DiskType) > 0 {
+			nodePoolObj["disk_type"] = nodePool.DiskType
+		}
+
+		nodePoolObj["enable_auto_repair"] = nodePool.EnableAutoRepair
+		nodePoolObj["enable_auto_upgrade"] = nodePool.EnableAutoUpgrade
+
+		if len(nodePool.ImageType) > 0 {
+			nodePoolObj["image_type"] = nodePool.ImageType
+		}
+
+		if nodePool.LocalSsdCount > 0 {
+			nodePoolObj["local_ssd_count"] = int(nodePool.LocalSsdCount)
+		}
+
+		if len(nodePool.MachineType) > 0 {
+			nodePoolObj["machine_type"] = nodePool.MachineType
+		}
+
+		if nodePool.MaximumNodeCount > 0 {
+			nodePoolObj["max_node_count"] = int(nodePool.MaximumNodeCount)
+		}
+
+		if nodePool.MinimumNodeCount > 0 {
+			nodePoolObj["min_node_count"] = int(nodePool.MinimumNodeCount)
+		}
+
+		if len(nodePool.MinimumCpuPlatform) > 0 {
+			nodePoolObj["min_cpu_platform"] = nodePool.MinimumCpuPlatform
+		}
+
+		if len(nodePool.OauthScopes) > 0 {
+			nodePoolObj["oauth_scopes"] = toArrayInterface(nodePool.OauthScopes)
+		}
+
+		nodePoolObj["preemptible"] = nodePool.Preemptible
+
+		if len(nodePool.ServiceAccount) > 0 {
+			nodePoolObj["service_account"] = nodePool.ServiceAccount
+		}
+
+		if len(nodePool.Version) > 0 {
+			nodePoolObj["version"] = nodePool.Version
+		}
+
+		nodePoolObjs = append(nodePoolObjs, nodePoolObj)
+	}
+
+	// when rancher returns details of a cluster that hasn't been migrated to new state model, we fallback to old
+	// fields to extract existing node pool details
+	if len(nodePoolObjs) == 0 {
+		nodePoolObj := make(map[string]interface{})
+
+		nodePoolObj["add_default_label"] = false
+		nodePoolObj["add_default_taint"] = false
+
+		if len(in.Labels) > 0 {
+			nodePoolObj["additional_labels"] = toMapInterface(in.Labels)
+		}
+
+		if len(in.Taints) > 0 {
+			nodePoolObj["additional_taints"] = flattenClusterGKENodePoolLegacyTaints(in.Taints)
+		}
+
+		if in.DiskSizeGb > 0 {
+			nodePoolObj["disk_size_gb"] = int(in.DiskSizeGb)
+		}
+
+		if len(in.DiskType) > 0 {
+			nodePoolObj["disk_type"] = in.DiskType
+		}
+
+		nodePoolObj["enable_auto_repair"] = in.EnableAutoRepair
+		nodePoolObj["enable_auto_upgrade"] = in.EnableAutoUpgrade
+
+		if len(in.ImageType) > 0 {
+			nodePoolObj["image_type"] = in.ImageType
+		}
+
+		if in.LocalSsdCount > 0 {
+			nodePoolObj["local_ssd_count"] = int(in.LocalSsdCount)
+		}
+
+		if len(in.MachineType) > 0 {
+			nodePoolObj["machine_type"] = in.MachineType
+		}
+
+		if in.MaxNodeCount > 0 {
+			nodePoolObj["max_node_count"] = int(in.MaxNodeCount)
+		}
+
+		if in.MinNodeCount > 0 {
+			nodePoolObj["min_node_count"] = int(in.MinNodeCount)
+		}
+
+		if len(in.MinCpuPlatform) > 0 {
+			nodePoolObj["min_cpu_platform"] = in.MinCpuPlatform
+		}
+
+		if len(in.NodePool) > 0 {
+			nodePoolObj["name"] = in.NodePool
+		}
+
+		if len(in.NodeVersion) > 0 {
+			nodePoolObj["version"] = in.NodeVersion
+		}
+
+		if len(in.OauthScopes) > 0 {
+			nodePoolObj["oauth_scopes"] = toArrayInterface(in.OauthScopes)
+		}
+
+		nodePoolObj["preemptible"] = in.Preemptible
+
+		if len(in.ServiceAccount) > 0 {
+			nodePoolObj["service_account"] = in.ServiceAccount
+		}
+
+		nodePoolObjs = append(nodePoolObjs, nodePoolObj)
+	}
+
+	obj["node_pools"] = nodePoolObjs
 	return []interface{}{obj}, nil
+}
+
+func flattenClusterGKENodePoolLegacyTaints(in []string) []interface{} {
+	var taints []interface{}
+
+	for _, part := range in {
+		taint := make(map[string]interface{})
+		ekv := strings.Split(part, ":")
+		if len(ekv) == 2 {
+			taint["effect"] = ekv[0]
+			kv := strings.Split(ekv[1], "=")
+			if len(kv) == 2 {
+				taint["key"] = kv[0]
+				taint["value"] = kv[1]
+			}
+		}
+
+		taints = append(taints, taint)
+	}
+
+	return taints
 }
 
 // Expanders
@@ -219,24 +318,8 @@ func expandClusterGKEConfig(obj *GoogleKubernetesEngineConfig, p []interface{}, 
 		obj.Description = v
 	}
 
-	if v, ok := in["disk_size_gb"].(int); ok && v > 0 {
-		obj.DiskSizeGb = int64(v)
-	}
-
-	if v, ok := in["disk_type"].(string); ok && len(v) > 0 {
-		obj.DiskType = v
-	}
-
 	if v, ok := in["enable_alpha_feature"].(bool); ok {
 		obj.EnableAlphaFeature = v
-	}
-
-	if v, ok := in["enable_auto_repair"].(bool); ok {
-		obj.EnableAutoRepair = v
-	}
-
-	if v, ok := in["enable_auto_upgrade"].(bool); ok {
-		obj.EnableAutoUpgrade = v
 	}
 
 	if v, ok := in["enable_http_load_balancing"].(bool); ok {
@@ -283,10 +366,6 @@ func expandClusterGKEConfig(obj *GoogleKubernetesEngineConfig, p []interface{}, 
 		obj.EnableStackdriverMonitoring = &v
 	}
 
-	if v, ok := in["image_type"].(string); ok && len(v) > 0 {
-		obj.ImageType = v
-	}
-
 	if v, ok := in["ip_policy_cluster_ipv4_cidr_block"].(string); ok && len(v) > 0 {
 		obj.IPPolicyClusterIpv4CidrBlock = v
 	}
@@ -323,20 +402,8 @@ func expandClusterGKEConfig(obj *GoogleKubernetesEngineConfig, p []interface{}, 
 		obj.KubernetesDashboard = v
 	}
 
-	if v, ok := in["labels"].(map[string]interface{}); ok && len(v) > 0 {
-		obj.Labels = toMapString(v)
-	}
-
-	if v, ok := in["local_ssd_count"].(int); ok && v > 0 {
-		obj.LocalSsdCount = int64(v)
-	}
-
 	if v, ok := in["locations"].([]interface{}); ok && len(v) > 0 {
 		obj.Locations = toArrayString(v)
-	}
-
-	if v, ok := in["machine_type"].(string); ok && len(v) > 0 {
-		obj.MachineType = v
 	}
 
 	if v, ok := in["maintenance_window"].(string); ok && len(v) > 0 {
@@ -355,40 +422,12 @@ func expandClusterGKEConfig(obj *GoogleKubernetesEngineConfig, p []interface{}, 
 		obj.MasterVersion = v
 	}
 
-	if v, ok := in["max_node_count"].(int); ok && v > 0 {
-		obj.MaxNodeCount = int64(v)
-	}
-
-	if v, ok := in["min_node_count"].(int); ok && v > 0 {
-		obj.MinNodeCount = int64(v)
-	}
-
-	if v, ok := in["min_cpu_platform"].(string); ok && len(v) > 0 {
-		obj.MinCpuPlatform = v
-	}
-
 	if v, ok := in["network"].(string); ok && len(v) > 0 {
 		obj.Network = v
 	}
 
 	if v, ok := in["node_count"].(int); ok && v > 0 {
 		obj.NodeCount = int64(v)
-	}
-
-	if v, ok := in["node_pool"].(string); ok && len(v) > 0 {
-		obj.NodePool = v
-	}
-
-	if v, ok := in["node_version"].(string); ok && len(v) > 0 {
-		obj.NodeVersion = v
-	}
-
-	if v, ok := in["oauth_scopes"].([]interface{}); ok && len(v) > 0 {
-		obj.OauthScopes = toArrayString(v)
-	}
-
-	if v, ok := in["preemptible"].(bool); ok {
-		obj.Preemptible = v
 	}
 
 	if v, ok := in["project_id"].(string); ok && len(v) > 0 {
@@ -399,20 +438,12 @@ func expandClusterGKEConfig(obj *GoogleKubernetesEngineConfig, p []interface{}, 
 		obj.ResourceLabels = toMapString(v)
 	}
 
-	if v, ok := in["service_account"].(string); ok && len(v) > 0 {
-		obj.ServiceAccount = v
-	}
-
 	if v, ok := in["sub_network"].(string); ok && len(v) > 0 {
 		obj.SubNetwork = v
 	}
 
 	if v, ok := in["use_ip_aliases"].(bool); ok {
 		obj.UseIPAliases = v
-	}
-
-	if v, ok := in["taints"].([]interface{}); ok && len(v) > 0 {
-		obj.Taints = toArrayString(v)
 	}
 
 	if v, ok := in["zone"].(string); ok && len(v) > 0 {
@@ -427,5 +458,162 @@ func expandClusterGKEConfig(obj *GoogleKubernetesEngineConfig, p []interface{}, 
 		obj.DefaultMaxPodsConstraint = int64(v)
 	}
 
+	var nodePoolObjs []string
+
+	if vs, ok := in["node_pools"]; ok {
+		if nodePoolIns, ok := vs.([]interface{}); !ok {
+			return nil, errors.New("unexpected content in 'node_pools'")
+		} else if len(nodePoolIns) > 0 {
+			for index, v := range nodePoolIns {
+				if nodePoolIn, ok := v.(map[string]interface{}); ok {
+					nodePoolObj, err := expandClusterGKENodePool(nodePoolIn, false)
+					if err != nil {
+						return nil, err
+					}
+
+					nodePoolObjs = append(nodePoolObjs, nodePoolObj)
+				} else {
+					return nil, fmt.Errorf("unexpected content in node pool with index %d", index)
+				}
+			}
+		}
+	}
+
+	if len(nodePoolObjs) == 0 {
+		if nodePoolObj, err := expandClusterGKENodePool(in, true); err == nil {
+			nodePoolObjs = append(nodePoolObjs, nodePoolObj)
+		} else {
+			return nil, err
+		}
+
+	}
+
+	obj.NodePools = nodePoolObjs
+
 	return obj, nil
+}
+
+func expandClusterGKENodePool(in map[string]interface{}, legacy bool) (string, error) {
+	var versionField string
+	var bnp BaseNodePool
+
+	if legacy {
+		versionField = "node_version"
+
+		bnp = BaseNodePool{}
+
+		if v, ok := in["node_pool"].(string); ok && len(v) > 0 {
+			bnp.Name = v
+		} else {
+			bnp.Name = "default-0"
+		}
+
+		if v, ok := in["labels"].(map[string]interface{}); ok && len(v) > 0 {
+			bnp.AdditionalLabels = toMapString(v)
+		}
+
+		bnp.AdditionalTaints = expandClusterGKENodePoolLegacyTaints(in)
+
+	} else {
+		versionField = "version"
+
+		var err error
+		bnp, err = expandClusterBaseNodePool(in)
+		if err != nil {
+			return "", err
+		}
+
+	}
+
+	nodePoolObj := GoogleKubernetesEngineNodePool{
+		BaseNodePool: bnp,
+	}
+
+	if v, ok := in["disk_size_gb"].(int); ok && v > 0 {
+		nodePoolObj.DiskSizeGb = int64(v)
+	}
+
+	if v, ok := in["disk_type"].(string); ok && len(v) > 0 {
+		nodePoolObj.DiskType = v
+	}
+
+	if v, ok := in["enable_auto_repair"].(bool); ok {
+		nodePoolObj.EnableAutoRepair = v
+	}
+
+	if v, ok := in["enable_auto_upgrade"].(bool); ok {
+		nodePoolObj.EnableAutoUpgrade = v
+	}
+
+	if v, ok := in["image_type"].(string); ok && len(v) > 0 {
+		nodePoolObj.ImageType = v
+	}
+
+	if v, ok := in["local_ssd_count"].(int); ok && v > 0 {
+		nodePoolObj.LocalSsdCount = int64(v)
+	}
+
+	if v, ok := in["machine_type"].(string); ok && len(v) > 0 {
+		nodePoolObj.MachineType = v
+	}
+
+	if v, ok := in["max_node_count"].(int); ok && v > 0 {
+		nodePoolObj.MaximumNodeCount = int64(v)
+	}
+
+	if v, ok := in["min_node_count"].(int); ok && v > 0 {
+		nodePoolObj.MinimumNodeCount = int64(v)
+	}
+
+	if v, ok := in["min_cpu_platform"].(string); ok && len(v) > 0 {
+		nodePoolObj.MinimumCpuPlatform = v
+	}
+
+	if v, ok := in[versionField].(string); ok && len(v) > 0 {
+		nodePoolObj.Version = v
+	}
+
+	if v, ok := in["oauth_scopes"].([]interface{}); ok && len(v) > 0 {
+		nodePoolObj.OauthScopes = toArrayString(v)
+	}
+
+	if v, ok := in["preemptible"].(bool); ok {
+		nodePoolObj.Preemptible = v
+	}
+
+	if v, ok := in["service_account"].(string); ok && len(v) > 0 {
+		nodePoolObj.ServiceAccount = v
+	}
+
+	bs, err := json.Marshal(nodePoolObj)
+	if err != nil {
+		return "", err
+	}
+
+	return string(bs), nil
+}
+
+func expandClusterGKENodePoolLegacyTaints(in map[string]interface{}) []K8sTaint {
+	var taints []K8sTaint
+
+	if v, ok := in["taints"].([]interface{}); ok && len(v) > 0 {
+		legacyTaints := toArrayString(v)
+
+		for _, part := range legacyTaints {
+			taint := K8sTaint{}
+			ekv := strings.Split(part, ":")
+			if len(ekv) == 2 {
+				taint.Effect = ekv[0]
+				kv := strings.Split(ekv[1], "=")
+				if len(kv) == 2 {
+					taint.Key = kv[0]
+					taint.Value = kv[1]
+				}
+			}
+
+			taints = append(taints, taint)
+		}
+	}
+
+	return taints
 }
