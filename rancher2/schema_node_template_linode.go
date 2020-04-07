@@ -11,22 +11,22 @@ const (
 //Types
 
 type linodeConfig struct {
-	AuthorizedUsers string `json:"authorized_users,omitempty" yaml:"authorized_users,omitempty"`
-	CreatePrivateIp bool   `json:"create_private_ip,omitempty" yaml:"create_private_ip,omitempty"`
-	DockerPort      string `json:"docker_port,omitempty" yaml:"docker_port,omitempty"`
+	AuthorizedUsers string `json:"authorizedUsers,omitempty" yaml:"authorizedUsers,omitempty"`
+	CreatePrivateIp bool   `json:"createPrivateIp,omitempty" yaml:"createPrivateIp,omitempty"`
+	DockerPort      string `json:"dockerPort,omitempty" yaml:"dockerPort,omitempty"`
 	Image           string `json:"image,omitempty" yaml:"image,omitempty"`
-	InstanceType    string `json:"instance_type,omitempty" yaml:"instance_type,omitempty"`
+	InstanceType    string `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	Label           string `json:"label,omitempty" yaml:"label,omitempty"`
 	Region          string `json:"region,omitempty" yaml:"region,omitempty"`
-	RootPass        string `json:"root_pass,omitempty" yaml:"root_pass,omitempty"`
-	SSHPort         string `json:"ssh_port,omitempty" yaml:"ssh_port,omitempty"`
-	SSHUser         string `json:"ssh_user,omitempty" yaml:"ssh_user,omitempty"`
+	RootPass        string `json:"rootPass,omitempty" yaml:"rootPass,omitempty"`
+	SSHPort         string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
+	SSHUser         string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
 	StackScript     string `json:"stackscript,omitempty" yaml:"stackscript,omitempty"`
-	StackscriptData string `json:"stackscript_data,omitempty" yaml:"stackscript_data,omitempty"`
-	SwapSize        string `json:"swap_size,omitempty" yaml:"swap_size,omitempty"`
+	StackscriptData string `json:"stackscriptData,omitempty" yaml:"stackscriptData,omitempty"`
+	SwapSize        string `json:"swapSize,omitempty" yaml:"swapSize,omitempty"`
 	Tags            string `json:"tags,omitempty" yaml:"tags,omitempty"`
 	Token           string `json:"token,omitempty" yaml:"token,omitempty"`
-	UAPrefix        string `json:"ua_prefix,omitempty" yaml:"ua_prefix,omitempty"`
+	UAPrefix        string `json:"uaPrefix,omitempty" yaml:"uaPrefix,omitempty"`
 }
 
 //Schemas
