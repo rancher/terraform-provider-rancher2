@@ -1,4 +1,17 @@
 ## 1.9.0 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix project alert group and alert rule datasource and resoruce documentation
+
 ## 1.8.2 (April 02, 2020)
 
 FEATURES:
