@@ -48,6 +48,15 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		if err != nil {
 			return err
 		}
+	case linodeConfigDriver:
+		v, ok := d.Get("linode_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err := d.Set("linode_credential_config", flattenCloudCredentialLinode(in.LinodeCredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	case openstackConfigDriver:
 		v, ok := d.Get("openstack_credential_config").([]interface{})
 		if !ok {
@@ -117,6 +126,11 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	if v, ok := in.Get("digitalocean_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.DigitaloceanCredentialConfig = expandCloudCredentialDigitalocean(v)
 		in.Set("driver", digitaloceanConfigDriver)
+	}
+
+	if v, ok := in.Get("linode_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.LinodeCredentialConfig = expandCloudCredentialLinode(v)
+		in.Set("driver", linodeConfigDriver)
 	}
 
 	if v, ok := in.Get("openstack_credential_config").([]interface{}); ok && len(v) > 0 {

@@ -124,6 +124,39 @@ resource "rancher2_node_template" "foo" {
   }
 }
 `
+	testAccRancher2NodeTemplateConfigLinode = testAccRancher2CloudCredentialConfigLinode + `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver linode acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  linode_config {
+	image =  "image-XXXXXXXX"
+	region =  "region-XXXXXXXX"
+  }
+}
+`
+	testAccRancher2NodeTemplateUpdateConfigLinode = testAccRancher2CloudCredentialConfigLinode + `
+resource "rancher2_node_template" "foo" {
+  name = "foo2"
+  description = "Terraform node driver linode acceptance test - updated"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  linode_config {
+	image =  "image-YYYYYYYY"
+	region =  "region-YYYYYYYY"
+  }
+}
+ `
+	testAccRancher2NodeTemplateRecreateConfigLinode = testAccRancher2CloudCredentialConfigLinode + `
+resource "rancher2_node_template" "foo" {
+  name = "foo"
+  description = "Terraform node driver linode acceptance test"
+  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  linode_config {
+	image =  "image-XXXXXXXX"
+	region =  "region-XXXXXXXX"
+  }
+}
+`
 	testAccRancher2NodeTemplateConfigOpennebulaDriver = `
 resource "rancher2_node_driver" "opennebula" {
     active = true
@@ -446,6 +479,72 @@ func TestAccRancher2NodeTemplate_disappears_Digitalocean(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRancher2NodeTemplateConfigDigitalocean,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo", nodeTemplate),
+					testAccRancher2NodeTemplateDisappears(nodeTemplate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_basic_Linode(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	name := testAccRancher2NodeTemplateType + ".foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigLinode,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver linode acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", linodeConfigDriver),
+					resource.TestCheckResourceAttr(name, "linode_config.0.image", "image-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "linode_config.0.region", "region-XXXXXXXX"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateUpdateConfigLinode,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo2"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver linode acceptance test - updated"),
+					resource.TestCheckResourceAttr(name, "driver", linodeConfigDriver),
+					resource.TestCheckResourceAttr(name, "linode_config.0.image", "image-YYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "linode_config.0.region", "region-YYYYYYYY"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateRecreateConfigLinode,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver linode acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", linodeConfigDriver),
+					resource.TestCheckResourceAttr(name, "linode_config.0.image", "image-XXXXXXXX"),
+					resource.TestCheckResourceAttr(name, "linode_config.0.region", "region-XXXXXXXX"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_disappears_Linode(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2NodeTemplateConfigLinode,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo", nodeTemplate),
 					testAccRancher2NodeTemplateDisappears(nodeTemplate),

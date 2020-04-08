@@ -10,7 +10,7 @@ description: |-
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2.x and retrieve their information.
 
-amazonec2, azure, digitalocean, openstack and vsphere credentials config are supported for Cloud Credential.
+amazonec2, azure, digitalocean, linode, openstack and vsphere credentials config are supported for Cloud Credential.
 
 ## Example Usage
 
@@ -35,6 +35,7 @@ The following arguments are supported:
 * `azure_credential_config` - (Optional) Azure config for the Cloud Credential (list maxitems:1)
 * `description` - (Optional) Description for the Cloud Credential (string)
 * `digitalocean_credential_config` - (Optional) DigitalOcean config for the Cloud Credential (list maxitems:1)
+* `linode_credential_config` - (Optional) Linode config for the Cloud Credential (list maxitems:1)
 * `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
 * `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
 * `annotations` - (Optional) Annotations for Cloud Credential object (map)
@@ -69,6 +70,12 @@ The following attributes are exported:
 #### Arguments
 
 * `access_token` - (Required/Sensitive) DigitalOcean access token (string)
+
+### `linode_credential_config`
+
+#### Arguments
+
+* `token` - (Required/Sensitive) Linode API token (string)
 
 ### `openstack_credential_config`
 
