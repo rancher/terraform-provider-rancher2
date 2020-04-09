@@ -6,6 +6,11 @@ FEATURES:
 
 ENHANCEMENTS:
 
+
+
+BUG FIXES:
+
+* Fix project alert group and alert rule datasource and resoruce documentation
 * Added `version` argument to `cluster_monitoring_input` argument on `rancher2_cluster` and `rancher2_project` resources
 
 BUG FIXES:
