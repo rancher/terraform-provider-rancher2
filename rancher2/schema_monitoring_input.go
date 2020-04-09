@@ -13,6 +13,11 @@ func monitoringInputFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Answers for monitor input",
 		},
+		"version": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Monitoring version",
+		},
 	}
 
 	return s

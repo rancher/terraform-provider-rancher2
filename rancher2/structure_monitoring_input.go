@@ -17,6 +17,10 @@ func flattenMonitoringInput(in *managementClient.MonitoringInput) []interface{} 
 		obj["answers"] = toMapInterface(in.Answers)
 	}
 
+	if len(in.Version) > 0 {
+		obj["version"] = in.Version
+	}
+
 	return []interface{}{obj}
 }
 
@@ -31,6 +35,10 @@ func expandMonitoringInput(p []interface{}) *managementClient.MonitoringInput {
 
 	if v, ok := in["answers"].(map[string]interface{}); ok && len(v) > 0 {
 		obj.Answers = toMapString(v)
+	}
+
+	if v, ok := in["version"].(string); ok && len(v) > 0 {
+		obj.Version = v
 	}
 
 	return obj

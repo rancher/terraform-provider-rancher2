@@ -21,8 +21,8 @@ The provider can be configured in 2 modes:
 # Configure the Rancher2 provider to admin
 provider "rancher2" {
   api_url    = "https://rancher.my-domain.com"
-  access_key = "${var.rancher2_access_key}"
-  secret_key = "${var.rancher2_secret_key}"
+  access_key = var.rancher2_access_key
+  secret_key = var.rancher2_secret_key
 }
 ```
 
@@ -56,8 +56,8 @@ resource "rancher2_bootstrap" "admin" {
 provider "rancher2" {
   alias = "admin"
 
-  api_url = "${rancher2_bootstrap.admin.url}"
-  token_key = "${rancher2_bootstrap.admin.token}"
+  api_url = rancher2_bootstrap.admin.url
+  token_key = rancher2_bootstrap.admin.token
   insecure = true
 }
 
