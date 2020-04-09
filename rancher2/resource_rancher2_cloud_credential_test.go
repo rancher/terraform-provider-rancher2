@@ -109,6 +109,35 @@ resource "rancher2_cloud_credential" "foo" {
   }
 }
  `
+	testAccRancher2CloudCredentialConfigLinode = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  linode_credential_config {
+	token = "XXXXXXXXXXXXXXXXXXXX"
+  }
+}
+`
+
+	testAccRancher2CloudCredentialUpdateConfigLinode = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test - updated"
+  linode_credential_config {
+	token = "YYYYYYYYYYYYYYYYYYYY"
+  }
+}
+ `
+
+	testAccRancher2CloudCredentialRecreateConfigLinode = `
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test"
+  linode_credential_config {
+	token = "XXXXXXXXXXXXXXXXXXXX"
+  }
+}
+ `
 	testAccRancher2CloudCredentialConfigOpenstack = `
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
@@ -351,6 +380,68 @@ func TestAccRancher2CloudCredential_disappears_Digitalocean(t *testing.T) {
 		Steps: []resource.TestStep{
 			resource.TestStep{
 				Config: testAccRancher2CloudCredentialConfigDigitalocean,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					testAccRancher2CloudCredentialDisappears(cloudCredential),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_basic_Linode(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialConfigLinode,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", linodeConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "linode_credential_config.0.token", "XXXXXXXXXXXXXXXXXXXX"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialUpdateConfigLinode,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", linodeConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "linode_credential_config.0.token", "YYYYYYYYYYYYYYYYYYYY"),
+				),
+			},
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialRecreateConfigLinode,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "driver", linodeConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo", "linode_credential_config.0.token", "XXXXXXXXXXXXXXXXXXXX"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_disappears_Linode(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: testAccRancher2CloudCredentialConfigLinode,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo", cloudCredential),
 					testAccRancher2CloudCredentialDisappears(cloudCredential),

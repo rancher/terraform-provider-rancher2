@@ -142,6 +142,7 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 
 		if monitoringOutput != nil && len(monitoringOutput.Answers) > 0 {
 			monitoringInput.Answers = monitoringOutput.Answers
+			monitoringInput.Version = monitoringOutput.Version
 		}
 	}
 

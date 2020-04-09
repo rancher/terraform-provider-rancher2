@@ -19,6 +19,7 @@ import (
 const (
 	rancher2ReadyAnswer               = "pong"
 	rancher2RetriesWait               = 5
+	rancher2RKEK8sSystemImageVersion  = "2.3.0"
 	rancher2NodeTemplateChangeVersion = "2.3.3"
 	rancher2NodeTemplateNewPrefix     = "cattle-global-nt:nt-"
 )
@@ -53,12 +54,14 @@ func (c *Config) GetRancherVersion() (string, error) {
 		return c.RancherVersion, nil
 	}
 
-	client, err := c.ManagementClient()
-	if err != nil {
-		return "", fmt.Errorf("[ERROR] Getting Rancher version: %s", err)
+	if c.Client.Management == nil {
+		_, err := c.ManagementClient()
+		if err != nil {
+			return "", err
+		}
 	}
 
-	version, err := client.Setting.ByID("server-version")
+	version, err := c.Client.Management.Setting.ByID("server-version")
 	if err != nil {
 		return "", fmt.Errorf("[ERROR] Getting Rancher version: %s", err)
 	}
@@ -69,15 +72,16 @@ func (c *Config) GetRancherVersion() (string, error) {
 
 func (c *Config) isRancherReady() error {
 	var err error
+	var resp []byte
 	url := RootURL(c.URL) + "/ping"
 	for i := 0; i <= c.Retries; i++ {
-		resp, err := DoGet(url, "", "", c.CACerts, c.Insecure)
+		resp, err = DoGet(url, "", "", c.CACerts, c.Insecure)
 		if err == nil && rancher2ReadyAnswer == string(resp) {
 			return nil
 		}
 		time.Sleep(rancher2RetriesWait * time.Second)
 	}
-	return fmt.Errorf("Timeout, Rancher is not ready: %v", err)
+	return fmt.Errorf("Rancher is not ready: %v", err)
 }
 
 func (c *Config) getK8SDefaultVersion() (string, error) {
@@ -85,11 +89,18 @@ func (c *Config) getK8SDefaultVersion() (string, error) {
 		return c.K8SDefaultVersion, nil
 	}
 
-	k8sVer, err := c.GetSettingValue("k8s-version")
+	if c.Client.Management == nil {
+		_, err := c.ManagementClient()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	k8sVer, err := c.Client.Management.Setting.ByID("k8s-version")
 	if err != nil {
 		return "", err
 	}
-	c.K8SDefaultVersion = k8sVer
+	c.K8SDefaultVersion = k8sVer.Value
 	return c.K8SDefaultVersion, nil
 }
 
@@ -98,12 +109,18 @@ func (c *Config) getK8SVersions() ([]string, error) {
 		return c.K8SSupportedVersions, nil
 	}
 
-	client, err := c.ManagementClient()
-	if err != nil {
-		return nil, fmt.Errorf("[ERROR] Getting K8s versions: %s", err)
+	if c.Client.Management == nil {
+		_, err := c.ManagementClient()
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	RKEK8sSystemImageCollection, err := client.RKEK8sSystemImage.ListAll(NewListOpts(nil))
+	if ok, _ := c.IsRancherVersionLessThan(rancher2RKEK8sSystemImageVersion); ok {
+		return nil, nil
+	}
+
+	RKEK8sSystemImageCollection, err := c.Client.Management.RKEK8sSystemImage.ListAll(NewListOpts(nil))
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] Listing RKE K8s System Images: %s", err)
 	}
@@ -197,6 +214,11 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 		return c.Client.Management, nil
 	}
 
+	err := c.isRancherReady()
+	if err != nil {
+		return nil, err
+	}
+
 	// Setup the management client
 	options := c.CreateClientOpts()
 	mClient, err := managementClient.NewClient(options)
@@ -204,6 +226,15 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 		return nil, err
 	}
 	c.Client.Management = mClient
+
+	rancher2ClusterRKEK8SDefaultVersion, err = c.getK8SDefaultVersion()
+	if err != nil {
+		return nil, err
+	}
+	rancher2ClusterRKEK8SVersions, err = c.getK8SVersions()
+	if err != nil {
+		return nil, err
+	}
 
 	return c.Client.Management, nil
 }
@@ -219,6 +250,11 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 
 	if c.Client.Cluster != nil && id == c.ClusterID {
 		return c.Client.Cluster, nil
+	}
+
+	err := c.isRancherReady()
+	if err != nil {
+		return nil, err
 	}
 
 	// Setup the cluster client
@@ -245,6 +281,11 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 
 	if c.Client.Project != nil && id == c.ProjectID {
 		return c.Client.Project, nil
+	}
+
+	err := c.isRancherReady()
+	if err != nil {
+		return nil, err
 	}
 
 	// Setup the project client

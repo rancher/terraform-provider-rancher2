@@ -96,6 +96,7 @@ resource "rancher2_cluster" "foo-custom" {
       "prometheus.resources.core.requests.memory" = "750Mi"
       "prometheus.retention" = "12h"
     }
+    version = "0.1.0"
   }
 }
 ```
@@ -955,6 +956,7 @@ The following arguments are supported:
 #### Arguments
 
 * `answers` - (Optional/Computed) Key/value answers for monitor input (map)
+* `version` - (Optional) rancher-monitoring chart version (string)
 
 ### `cluster_template_answers`
 
