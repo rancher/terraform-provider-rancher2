@@ -315,7 +315,7 @@ func TestFlattenCluster(t *testing.T) {
 			testClusterConfGKE,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceGKE,
+			withDefaultForDeprecatedFields(testClusterInterfaceGKE),
 		},
 		{
 			testClusterConfRKE,
@@ -352,6 +352,45 @@ func TestFlattenCluster(t *testing.T) {
 				tc.ExpectedOutput, expectedOutput)
 		}
 	}
+}
+
+func withDefaultForDeprecatedFields(original map[string]interface{}) map[string]interface{} {
+	cp := copyMap(original)
+
+	config := cp["gke_config"].([]interface{})[0].(map[string]interface{})
+	config["disk_size_gb"] = 0
+	config["disk_type"] = ""
+	config["enable_auto_repair"] = false
+	config["enable_auto_upgrade"] = false
+	config["image_type"] = ""
+	config["local_ssd_count"] = 0
+	config["machine_type"] = ""
+	config["max_node_count"] = 0
+	config["min_cpu_platform"] = ""
+	config["min_node_count"] = 0
+	config["node_count"] = 0
+	config["node_pool"] = ""
+	config["node_version"] = ""
+	config["oauth_scopes"] = []interface{}{}
+	config["preemptible"] = false
+	config["service_account"] = ""
+
+	cp["gke_config"] = []interface{}{config}
+	return cp
+}
+
+func copyMap(m map[string]interface{}) map[string]interface{} {
+	cp := make(map[string]interface{})
+	for k, v := range m {
+		vm, ok := v.(map[string]interface{})
+		if ok {
+			cp[k] = copyMap(vm)
+		} else {
+			cp[k] = v
+		}
+	}
+
+	return cp
 }
 
 func TestExpandClusterRegistationToken(t *testing.T) {
