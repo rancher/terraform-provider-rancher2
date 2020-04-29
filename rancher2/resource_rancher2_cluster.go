@@ -208,7 +208,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 	switch driver := d.Get("driver").(string); driver {
 	case clusterDriverAKS:
-		aksConfig, err := expandClusterAKSConfig(d.Get("aks_config").([]interface{}), d.Get("name").(string))
+		aksConfig, err := expandClusterAKSConfig(cluster.AzureKubernetesServiceConfig, d.Get("aks_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
 			return err
 		}

@@ -191,8 +191,7 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 
 // Expanders
 
-func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServiceConfig, error) {
-	obj := &AzureKubernetesServiceConfig{}
+func expandClusterAKSConfig(obj *AzureKubernetesServiceConfig, p []interface{}, name string) (*AzureKubernetesServiceConfig, error) {
 	if len(p) == 0 || p[0] == nil {
 		return obj, nil
 	}

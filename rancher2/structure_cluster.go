@@ -300,7 +300,7 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 	}
 
 	if v, ok := in.Get("aks_config").([]interface{}); ok && len(v) > 0 {
-		aksConfig, err := expandClusterAKSConfig(v, obj.Name)
+		aksConfig, err := expandClusterAKSConfig(&AzureKubernetesServiceConfig{}, v, obj.Name)
 		if err != nil {
 			return nil, err
 		}

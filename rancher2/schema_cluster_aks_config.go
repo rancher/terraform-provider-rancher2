@@ -7,7 +7,7 @@ import (
 
 const (
 	clusterAKSKind   = "aks"
-	clusterDriverAKS = "azurekubernetesservice"
+	clusterDriverAKS = "azureKubernetesService"
 )
 
 var (
@@ -40,6 +40,7 @@ type AzureKubernetesServiceConfig struct {
 	DisplayName                        string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	DNSServiceIP                       string            `json:"dnsServiceIp,omitempty" yaml:"dnsServiceIp,omitempty"`
 	DockerBridgeCIDR                   string            `json:"dockerBridgeCidr,omitempty" yaml:"dockerBridgeCidr,omitempty"`
+	DriverName                         string            `json:"driverName" yaml:"driverName"`
 	EnableAutoScaling                  *bool             `json:"enableAutoScaling,omitempty" yaml:"enableAutoScaling,omitempty"`
 	EnableHTTPApplicationRouting       bool              `json:"enableHttpApplicationRouting,omitempty" yaml:"enableHttpApplicationRouting,omitempty"`
 	EnableMonitoring                   *bool             `json:"enableMonitoring,omitempty" yaml:"enableMonitoring,omitempty"`

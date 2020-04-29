@@ -150,7 +150,7 @@ func TestExpandClusterAKSConfig(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := expandClusterAKSConfig(tc.Input, "test")
+		output, err := expandClusterAKSConfig(&AzureKubernetesServiceConfig{}, tc.Input, "test")
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
