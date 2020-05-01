@@ -25,23 +25,15 @@ type AzureKubernetesServiceConfig struct {
 	AADServerAppSecret                 string            `json:"addServerAppSecret,omitempty" yaml:"addServerAppSecret,omitempty"`
 	AADTenantID                        string            `json:"addTenantId,omitempty" yaml:"addTenantId,omitempty"`
 	AdminUsername                      string            `json:"adminUsername,omitempty" yaml:"adminUsername,omitempty"`
-	AgentDNSPrefix                     string            `json:"agentDnsPrefix,omitempty" yaml:"agentDnsPrefix,omitempty"`
-	AgentOsdiskSizeGB                  int64             `json:"agentOsdiskSize,omitempty" yaml:"agentOsdiskSize,omitempty"`
-	AgentPoolName                      string            `json:"agentPoolName,omitempty" yaml:"agentPoolName,omitempty"`
-	AgentPoolType                      string            `json:"agentPoolType,omitempty" yaml:"agentPoolType,omitempty"`
 	AgentStorageProfile                string            `json:"agentStorageProfile,omitempty" yaml:"agentStorageProfile,omitempty"`
-	AgentVMSize                        string            `json:"agentVmSize,omitempty" yaml:"agentVmSize,omitempty"`
 	AuthBaseURL                        string            `json:"authBaseUrl" yaml:"authBaseUrl"`
-	AvailabilityZones                  []string          `json:"availabilityZones,omitempty" yaml:"availabilityZones,omitempty"`
 	BaseURL                            string            `json:"baseUrl,omitempty" yaml:"baseUrl,omitempty"`
 	ClientID                           string            `json:"clientId,omitempty" yaml:"clientId,omitempty"`
 	ClientSecret                       string            `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
-	Count                              int64             `json:"count,omitempty" yaml:"count,omitempty"`
 	DisplayName                        string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	DNSServiceIP                       string            `json:"dnsServiceIp,omitempty" yaml:"dnsServiceIp,omitempty"`
 	DockerBridgeCIDR                   string            `json:"dockerBridgeCidr,omitempty" yaml:"dockerBridgeCidr,omitempty"`
 	DriverName                         string            `json:"driverName" yaml:"driverName"`
-	EnableAutoScaling                  *bool             `json:"enableAutoScaling,omitempty" yaml:"enableAutoScaling,omitempty"`
 	EnableHTTPApplicationRouting       bool              `json:"enableHttpApplicationRouting,omitempty" yaml:"enableHttpApplicationRouting,omitempty"`
 	EnableMonitoring                   *bool             `json:"enableMonitoring,omitempty" yaml:"enableMonitoring,omitempty"`
 	KubernetesVersion                  string            `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
@@ -50,9 +42,6 @@ type AzureKubernetesServiceConfig struct {
 	LogAnalyticsWorkspace              string            `json:"logAnalyticsWorkspace,omitempty" yaml:"logAnalyticsWorkspace,omitempty"`
 	LogAnalyticsWorkspaceResourceGroup string            `json:"logAnalyticsWorkspaceResourceGroup,omitempty" yaml:"logAnalyticsWorkspaceResourceGroup,omitempty"`
 	MasterDNSPrefix                    string            `json:"masterDnsPrefix,omitempty" yaml:"masterDnsPrefix,omitempty"`
-	MaxPods                            int64             `json:"maxPods,omitempty" yaml:"maxPods,omitempty"`
-	MaxCount                           int64             `json:"maxCount,omitempty" yaml:"maxCount,omitempty"`
-	MinCount                           int64             `json:"minCount,omitempty" yaml:"minCount,omitempty"`
 	Name                               string            `json:"name,omitempty" yaml:"name,omitempty"`
 	NetworkPlugin                      string            `json:"networkPlugin,omitempty" yaml:"networkPlugin,omitempty"`
 	NetworkPolicy                      string            `json:"networkPolicy,omitempty" yaml:"networkPolicy,omitempty"`
@@ -66,6 +55,39 @@ type AzureKubernetesServiceConfig struct {
 	TenantID                           string            `json:"tenantId,omitempty" yaml:"tenantId,omitempty"`
 	VirtualNetwork                     string            `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
 	VirtualNetworkResourceGroup        string            `json:"virtualNetworkResourceGroup,omitempty" yaml:"virtualNetworkResourceGroup,omitempty"`
+
+	// list of json objects. Each object matches the schema defined by `AzureKubernetesServiceNodePool`
+	NodePools []string `json:"nodePools,omitempty" yaml:"nodePools,omitempty"`
+
+	// TODO remove fields from here on once all clusters have being migrated to new state (use "nodePools") in rancher
+	AgentOsdiskSizeGB int64    `json:"agentOsdiskSize,omitempty" yaml:"agentOsdiskSize,omitempty"`
+	AgentPoolName     string   `json:"agentPoolName,omitempty" yaml:"agentPoolName,omitempty"`
+	AgentPoolType     string   `json:"agentPoolType,omitempty" yaml:"agentPoolType,omitempty"`
+	AgentVMSize       string   `json:"agentVmSize,omitempty" yaml:"agentVmSize,omitempty"`
+	AvailabilityZones []string `json:"availabilityZones,omitempty" yaml:"availabilityZones,omitempty"`
+	EnableAutoScaling *bool    `json:"enableAutoScaling,omitempty" yaml:"enableAutoScaling,omitempty"`
+	MaxPods           int64    `json:"maxPods,omitempty" yaml:"maxPods,omitempty"`
+	MaxCount          int64    `json:"maxCount,omitempty" yaml:"maxCount,omitempty"`
+	MinCount          int64    `json:"minCount,omitempty" yaml:"minCount,omitempty"`
+
+	// TODO remove fields when migrated to a terraform module that does not require them any more
+	AgentDNSPrefix string `json:"agentDnsPrefix,omitempty" yaml:"agentDnsPrefix,omitempty"`
+	Count          int64  `json:"count,omitempty" yaml:"count,omitempty"`
+}
+
+type AzureKubernetesServiceNodePool struct {
+	BaseNodePool `json:",inline" yaml:",inline"`
+
+	AvailabilityZones []string `json:"availabilityZones,omitempty" yaml:"availabilityZones,omitempty"`
+	CreatePoolPerZone bool     `json:"createPoolPerZone" yaml:"createPoolPerZone"`
+	EnableAutoScaling *bool    `json:"enableAutoScaling,omitempty" yaml:"enableAutoScaling,omitempty"`
+	MaxCount          int64    `json:"maxCount,omitempty" yaml:"maxCount,omitempty"`
+	MaxPods           int64    `json:"maxPods,omitempty" yaml:"maxPods,omitempty"`
+	MinCount          int64    `json:"minCount,omitempty" yaml:"minCount,omitempty"`
+	OsDiskSizeGB      int64    `json:"osDiskSize,omitempty" yaml:"osDiskSize,omitempty"`
+	Type              string   `json:"type,omitempty" yaml:"type,omitempty"`
+	Version           string   `json:"version,omitempty" yaml:"version,omitempty"`
+	VMSize            string   `json:"vmSize,omitempty" yaml:"vmSize,omitempty"`
 }
 
 //Schemas
@@ -164,29 +186,11 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Default:     "azureuser",
 			Description: "The administrator username to use for Linux hosts",
 		},
-		"agent_os_disk_size": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     0,
-			Description: "GB size to be used to specify the disk for every machine in the agent pool. If you specify 0, it will apply the default according to the \"agent vm size\" specified",
-		},
-		"agent_pool_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "agentpool0",
-			Description: "Name for the agent pool, upto 12 alphanumeric characters",
-		},
 		"agent_storage_profile": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "ManagedDisks",
 			Description: "Storage profile specifies what kind of storage used on machine in the agent pool. Chooses from [ManagedDisks StorageAccount]",
-		},
-		"agent_vm_size": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "Standard_D1_v2",
-			Description: "Size of machine in the agent pool",
 		},
 		"auth_base_url": {
 			Type:        schema.TypeString,
@@ -199,12 +203,6 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "https://management.azure.com/",
 			Description: "Different resource management API url to use",
-		},
-		"count": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     1,
-			Description: "Number of machines (VMs) in the agent pool. Allowed values must be in the range of 1 to 100 (inclusive)",
 		},
 		"dns_service_ip": {
 			Type:        schema.TypeString,
@@ -246,12 +244,6 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "The resource group of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses the 'Cluster' resource group",
 		},
-		"max_pods": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     110,
-			Description: "Maximum number of pods that can run on a node",
-		},
 		"network_plugin": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -283,43 +275,146 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Tags for Kubernetes cluster. For example, foo=bar",
 		},
-		"enable_auto_scaling": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable auto-scaling of worker nodes",
-		},
-		"min_count": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     1,
-			Description: "Minimum number of worker nodes in the auto-scaling cluster",
-		},
-		"max_count": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     10,
-			Description: "Maximum number of worker nodes in the auto-scaling cluster",
-		},
-		"agent_pool_type": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "AvailabilitySet",
-			Description: "Agent pool type (VirtualMachineScaleSets or AvailabilitySet).",
-		},
-		"availability_zones": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "List of availability zones to use for the cluster",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
 		"load_balancer_sku": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "Basic",
 			Description: "Load balancer type (must be standard for auto-scaling)",
+		},
+		"node_pools": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of node pools",
+			MinItems:    1,
+			Elem: &schema.Resource{
+				Schema: newNodePoolSchema(map[string]*schema.Schema{
+					"os_disk_size": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Default:     0,
+						Description: `GB size to be used to specify the disk for every node in pool. If you specify 0, it will apply the default according to the "vm size" specified`,
+					},
+					"vm_size": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Default:     "Standard_D1_v2",
+						Description: "Size of machine in the node pool",
+					},
+					"max_pods": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Default:     110,
+						Description: "Maximum number of pods that can run on a node",
+					},
+					"enable_auto_scaling": {
+						Type:        schema.TypeBool,
+						Optional:    true,
+						Default:     false,
+						Description: "Enable auto-scaling of nodes in pool",
+					},
+					"min_count": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Default:     1,
+						Description: "Minimum number of nodes in pool",
+					},
+					"max_count": {
+						Type:        schema.TypeInt,
+						Optional:    true,
+						Default:     10,
+						Description: "Maximum number of nodes in pool",
+					},
+					"type": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Default:     "AvailabilitySet",
+						Description: "Node pool type (VirtualMachineScaleSets or AvailabilitySet).",
+					},
+					"availability_zones": {
+						Type:        schema.TypeList,
+						Optional:    true,
+						Description: "List of availability zones to use for the pool",
+						Elem: &schema.Schema{
+							Type: schema.TypeString,
+						},
+					},
+					"version": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "Kubernetes version for the pool",
+					},
+					"create_pool_per_zone": {
+						Type:        schema.TypeBool,
+						Optional:    true,
+						Default:     true,
+						Description: "Whether it should create one pool per zone or not",
+					},
+				}),
+			},
+		},
+
+		// Deprecated fields
+		"agent_os_disk_size": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "GB size to be used to specify the disk for every machine in the agent pool. If you specify 0, it will apply the default according to the \"agent vm size\" specified",
+			Deprecated:  "Use 'node_pools' field instead",
+		},
+		"agent_pool_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Name for the agent pool, upto 12 alphanumeric characters",
+			Deprecated:  "Use 'node_pools' field instead",
+		},
+		"agent_vm_size": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Size of machine in the agent pool",
+			Deprecated:  "Use 'node_pools' field instead",
+		},
+		"count": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Number of machines (VMs) in the agent pool. Allowed values must be in the range of 1 to 100 (inclusive)",
+			Deprecated:  "This field is not longer supported",
+		},
+		"max_pods": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Maximum number of pods that can run on a node",
+			Deprecated:  "Use 'node_pools' field instead",
+		},
+		"enable_auto_scaling": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Enable auto-scaling of nodes",
+			Deprecated:  "Use 'node_pools' field instead",
+		},
+		"min_count": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Minimum number of nodes in pool",
+			Deprecated:  "Use 'node_pools' field instead",
+		},
+		"max_count": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Maximum number of nodes in pool",
+			Deprecated:  "Use 'node_pools' field instead",
+		},
+		"agent_pool_type": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Node pool type (VirtualMachineScaleSets or AvailabilitySet).",
+			Deprecated:  "Use 'node_pools' field instead",
+		},
+		"availability_zones": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "List of availability zones to use for the pool",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 	}
 

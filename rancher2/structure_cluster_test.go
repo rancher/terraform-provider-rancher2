@@ -293,37 +293,37 @@ func TestFlattenClusterRegistationToken(t *testing.T) {
 
 func TestFlattenCluster(t *testing.T) {
 
-	cases := []struct {
+	cases := map[string]struct {
 		Input          *Cluster
 		InputToken     *managementClient.ClusterRegistrationToken
 		InputKube      *managementClient.GenerateKubeConfigOutput
 		ExpectedOutput map[string]interface{}
 	}{
-		{
+		"AKS": {
 			testClusterConfAKS,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceAKS,
+			withAKSDefaultsForDeprecatedFields(testClusterInterfaceAKS),
 		},
-		{
+		"EKS": {
 			testClusterConfEKS,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
 			testClusterInterfaceEKS,
 		},
-		{
+		"GKE": {
 			testClusterConfGKE,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
-			withDefaultForDeprecatedFields(testClusterInterfaceGKE),
+			withGKEDefaultsForDeprecatedFields(testClusterInterfaceGKE),
 		},
-		{
+		"RKE": {
 			testClusterConfRKE,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
 			testClusterInterfaceRKE,
 		},
-		{
+		"Template": {
 			testClusterConfTemplate,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
@@ -331,30 +331,32 @@ func TestFlattenCluster(t *testing.T) {
 		},
 	}
 
-	for _, tc := range cases {
-		output := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{})
-		tc.InputToken.ID = "id"
-		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
-		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
-		}
-		expectedOutput := map[string]interface{}{}
-		for k := range tc.ExpectedOutput {
-			expectedOutput[k] = output.Get(k)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			output := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{})
+			tc.InputToken.ID = "id"
+			err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
+			if err != nil {
+				t.Fatalf("[ERROR] on flattener: %#v", err)
+			}
+			expectedOutput := map[string]interface{}{}
+			for k := range tc.ExpectedOutput {
+				expectedOutput[k] = output.Get(k)
 
-		}
-		if tc.ExpectedOutput["driver"] == clusterDriverRKE {
-			expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig, []interface{}{})
-		}
-		expectedOutput["id"] = "id"
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, expectedOutput)
-		}
+			}
+			if tc.ExpectedOutput["driver"] == clusterDriverRKE {
+				expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig, []interface{}{})
+			}
+			expectedOutput["id"] = "id"
+			if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
+				t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+					tc.ExpectedOutput, expectedOutput)
+			}
+		})
 	}
 }
 
-func withDefaultForDeprecatedFields(original map[string]interface{}) map[string]interface{} {
+func withGKEDefaultsForDeprecatedFields(original map[string]interface{}) map[string]interface{} {
 	cp := copyMap(original)
 
 	config := cp["gke_config"].([]interface{})[0].(map[string]interface{})
@@ -375,7 +377,23 @@ func withDefaultForDeprecatedFields(original map[string]interface{}) map[string]
 	config["preemptible"] = false
 	config["service_account"] = ""
 
-	cp["gke_config"] = []interface{}{config}
+	return cp
+}
+
+func withAKSDefaultsForDeprecatedFields(original map[string]interface{}) map[string]interface{} {
+	cp := copyMap(original)
+
+	config := cp["aks_config"].([]interface{})[0].(map[string]interface{})
+	config["agent_os_disk_size"] = 0
+	config["agent_pool_name"] = ""
+	config["agent_pool_type"] = ""
+	config["agent_vm_size"] = ""
+	config["availability_zones"] = []interface{}{}
+	config["enable_auto_scaling"] = false
+	config["max_count"] = 0
+	config["max_pods"] = 0
+	config["min_count"] = 0
+
 	return cp
 }
 

@@ -1,5 +1,11 @@
 package rancher2
 
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+)
+
 // Flatteners
 
 func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, error) {
@@ -28,36 +34,12 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 		obj["admin_username"] = in.AdminUsername
 	}
 
-	if len(in.AgentDNSPrefix) > 0 {
-		obj["agent_dns_prefix"] = in.AgentDNSPrefix
-	}
-
-	if in.AgentOsdiskSizeGB > 0 {
-		obj["agent_os_disk_size"] = int(in.AgentOsdiskSizeGB)
-	}
-
-	if len(in.AgentPoolName) > 0 {
-		obj["agent_pool_name"] = in.AgentPoolName
-	}
-
-	if len(in.AgentPoolType) > 0 {
-		obj["agent_pool_type"] = in.AgentPoolType
-	}
-
 	if len(in.AgentStorageProfile) > 0 {
 		obj["agent_storage_profile"] = in.AgentStorageProfile
 	}
 
-	if len(in.AgentVMSize) > 0 {
-		obj["agent_vm_size"] = in.AgentVMSize
-	}
-
 	if len(in.AuthBaseURL) > 0 {
 		obj["auth_base_url"] = in.AuthBaseURL
-	}
-
-	if len(in.AvailabilityZones) > 0 {
-		obj["availability_zones"] = toArrayInterface(in.AvailabilityZones)
 	}
 
 	if len(in.BaseURL) > 0 {
@@ -72,10 +54,6 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 		obj["client_secret"] = in.ClientSecret
 	}
 
-	if in.Count > 0 {
-		obj["count"] = int(in.Count)
-	}
-
 	if len(in.DNSServiceIP) > 0 {
 		obj["dns_service_ip"] = in.DNSServiceIP
 	}
@@ -84,7 +62,6 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 		obj["docker_bridge_cidr"] = in.DockerBridgeCIDR
 	}
 
-	obj["enable_auto_scaling"] = in.EnableAutoScaling
 	obj["enable_http_application_routing"] = in.EnableHTTPApplicationRouting
 	obj["enable_monitoring"] = *in.EnableMonitoring
 
@@ -110,18 +87,6 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 
 	if len(in.MasterDNSPrefix) > 0 {
 		obj["master_dns_prefix"] = in.MasterDNSPrefix
-	}
-
-	if in.MaxCount > 0 {
-		obj["max_count"] = int(in.MaxCount)
-	}
-
-	if in.MaxPods > 0 {
-		obj["max_pods"] = int(in.MaxPods)
-	}
-
-	if in.MinCount > 0 {
-		obj["min_count"] = int(in.MinCount)
 	}
 
 	if len(in.NetworkPlugin) > 0 {
@@ -172,18 +137,112 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 		obj["virtual_network_resource_group"] = in.VirtualNetworkResourceGroup
 	}
 
-	obj["enable_auto_scaling"] = *in.EnableAutoScaling
-
-	if len(in.AgentPoolType) > 0 {
-		obj["agent_pool_type"] = in.AgentPoolType
-	}
-
-	if len(in.AvailabilityZones) > 0 {
-		obj["availability_zones"] = toArrayInterface(in.AvailabilityZones)
-	}
-
 	if len(in.LoadBalancerSku) > 0 {
 		obj["load_balancer_sku"] = in.LoadBalancerSku
+	}
+
+	var nodePoolObjs []interface{}
+	for _, nodePoolIn := range in.NodePools {
+		var nodePool AzureKubernetesServiceNodePool
+		if err := json.Unmarshal([]byte(nodePoolIn), &nodePool); err != nil {
+			return nil, err
+		}
+
+		nodePoolObj := flattenClusterBaseNodePool(nodePool.BaseNodePool)
+
+		if nodePool.OsDiskSizeGB > 0 {
+			nodePoolObj["os_disk_size"] = int(nodePool.OsDiskSizeGB)
+		}
+
+		if len(nodePool.Type) > 0 {
+			nodePoolObj["type"] = nodePool.Type
+		}
+
+		if len(nodePool.Version) > 0 {
+			nodePoolObj["version"] = nodePool.Version
+		}
+
+		if len(nodePool.VMSize) > 0 {
+			nodePoolObj["vm_size"] = nodePool.VMSize
+		}
+
+		if len(nodePool.AvailabilityZones) > 0 {
+			nodePoolObj["availability_zones"] = toArrayInterface(nodePool.AvailabilityZones)
+		}
+
+		if nodePool.MaxCount > 0 {
+			nodePoolObj["max_count"] = int(nodePool.MaxCount)
+		}
+
+		if nodePool.MaxPods > 0 {
+			nodePoolObj["max_pods"] = int(nodePool.MaxPods)
+		}
+
+		if nodePool.MinCount > 0 {
+			nodePoolObj["min_count"] = int(nodePool.MinCount)
+		}
+
+		nodePoolObj["enable_auto_scaling"] = *nodePool.EnableAutoScaling
+		nodePoolObj["create_pool_per_zone"] = nodePool.CreatePoolPerZone
+
+		nodePoolObjs = append(nodePoolObjs, nodePoolObj)
+	}
+
+	if len(nodePoolObjs) == 0 {
+		nodePoolObj := make(map[string]interface{})
+
+		nodePoolObj["add_default_label"] = false
+		nodePoolObj["add_default_taint"] = false
+
+		if len(in.AgentPoolName) > 0 {
+			nodePoolObj["name"] = in.AgentPoolName
+		} else {
+			nodePoolObj["name"] = "agentpool0"
+		}
+
+		if in.AgentOsdiskSizeGB > 0 {
+			nodePoolObj["os_disk_size"] = int(in.AgentOsdiskSizeGB)
+		}
+
+		if len(in.AgentPoolType) > 0 {
+			nodePoolObj["type"] = in.AgentPoolType
+		}
+
+		if len(in.AgentVMSize) > 0 {
+			nodePoolObj["vm_size"] = in.AgentVMSize
+		}
+
+		if len(in.AvailabilityZones) > 0 {
+			nodePoolObj["availability_zones"] = toArrayInterface(in.AvailabilityZones)
+		}
+
+		if in.MaxCount > 0 {
+			nodePoolObj["max_count"] = int(in.MaxCount)
+		}
+
+		if in.MaxPods > 0 {
+			nodePoolObj["max_pods"] = int(in.MaxPods)
+		}
+
+		if in.MinCount > 0 {
+			nodePoolObj["min_count"] = int(in.MinCount)
+		}
+
+		nodePoolObj["enable_auto_scaling"] = *in.EnableAutoScaling
+		nodePoolObj["create_pool_per_zone"] = true
+
+		nodePoolObjs = append(nodePoolObjs, nodePoolObj)
+	}
+
+	obj["node_pools"] = nodePoolObjs
+
+	// Removed fields in rancher from here on
+	if len(in.AgentDNSPrefix) > 0 {
+		obj["agent_dns_prefix"] = in.AgentDNSPrefix
+	}
+
+	if in.Count > 0 {
+		obj["count"] = int(in.Count)
 	}
 
 	return []interface{}{obj}, nil
@@ -220,36 +279,12 @@ func expandClusterAKSConfig(obj *AzureKubernetesServiceConfig, p []interface{}, 
 		obj.AdminUsername = v
 	}
 
-	if v, ok := in["agent_dns_prefix"].(string); ok && len(v) > 0 {
-		obj.AgentDNSPrefix = v
-	}
-
-	if v, ok := in["agent_os_disk_size"].(int); ok && v > 0 {
-		obj.AgentOsdiskSizeGB = int64(v)
-	}
-
-	if v, ok := in["agent_pool_name"].(string); ok && len(v) > 0 {
-		obj.AgentPoolName = v
-	}
-
-	if v, ok := in["agent_pool_type"].(string); ok && len(v) > 0 {
-		obj.AgentPoolType = v
-	}
-
 	if v, ok := in["agent_storage_profile"].(string); ok && len(v) > 0 {
 		obj.AgentStorageProfile = v
 	}
 
-	if v, ok := in["agent_vm_size"].(string); ok && len(v) > 0 {
-		obj.AgentVMSize = v
-	}
-
 	if v, ok := in["auth_base_url"].(string); ok && len(v) > 0 {
 		obj.AuthBaseURL = v
-	}
-
-	if v, ok := in["availability_zones"].([]interface{}); ok && len(v) > 0 {
-		obj.AvailabilityZones = toArrayString(v)
 	}
 
 	if v, ok := in["base_url"].(string); ok && len(v) > 0 {
@@ -264,20 +299,12 @@ func expandClusterAKSConfig(obj *AzureKubernetesServiceConfig, p []interface{}, 
 		obj.ClientSecret = v
 	}
 
-	if v, ok := in["count"].(int); ok && v > 0 {
-		obj.Count = int64(v)
-	}
-
 	if v, ok := in["dns_service_ip"].(string); ok && len(v) > 0 {
 		obj.DNSServiceIP = v
 	}
 
 	if v, ok := in["docker_bridge_cidr"].(string); ok && len(v) > 0 {
 		obj.DockerBridgeCIDR = v
-	}
-
-	if v, ok := in["enable_auto_scaling"].(bool); ok {
-		obj.EnableAutoScaling = &v
 	}
 
 	if v, ok := in["enable_http_application_routing"].(bool); ok {
@@ -310,18 +337,6 @@ func expandClusterAKSConfig(obj *AzureKubernetesServiceConfig, p []interface{}, 
 
 	if v, ok := in["master_dns_prefix"].(string); ok && len(v) > 0 {
 		obj.MasterDNSPrefix = v
-	}
-
-	if v, ok := in["max_count"].(int); ok && v > 0 {
-		obj.MaxCount = int64(v)
-	}
-
-	if v, ok := in["max_pods"].(int); ok && v > 0 {
-		obj.MaxPods = int64(v)
-	}
-
-	if v, ok := in["min_count"].(int); ok && v > 0 {
-		obj.MinCount = int64(v)
 	}
 
 	if v, ok := in["network_plugin"].(string); ok && len(v) > 0 {
@@ -372,21 +387,122 @@ func expandClusterAKSConfig(obj *AzureKubernetesServiceConfig, p []interface{}, 
 		obj.VirtualNetworkResourceGroup = v
 	}
 
-	if v, ok := in["enable_auto_scaling"].(bool); ok {
-		obj.EnableAutoScaling = &v
-	}
-
-	if v, ok := in["agent_pool_type"].(string); ok && len(v) > 0 {
-		obj.AgentPoolType = v
-	}
-
 	if v, ok := in["load_balancer_sku"].(string); ok && len(v) > 0 {
 		obj.LoadBalancerSku = v
 	}
 
-	if v, ok := in["availability_zones"].([]interface{}); ok && len(v) > 0 {
-		obj.AvailabilityZones = toArrayString(v)
+	var nodePoolObjs []string
+
+	if vs, ok := in["node_pools"]; ok {
+		if nodePoolIns, ok := vs.([]interface{}); !ok {
+			return nil, errors.New("unexpected content in 'node_pools'")
+		} else if len(nodePoolIns) > 0 {
+			for index, v := range nodePoolIns {
+				if nodePoolIn, ok := v.(map[string]interface{}); ok {
+					nodePoolObj, err := expandClusterAKSNodePool(nodePoolIn, false)
+					if err != nil {
+						return nil, err
+					}
+
+					nodePoolObjs = append(nodePoolObjs, nodePoolObj)
+				} else {
+					return nil, fmt.Errorf("unexpected content in node pool with index %d", index)
+				}
+			}
+		}
+	}
+
+	if len(nodePoolObjs) == 0 {
+		if nodePoolObj, err := expandClusterAKSNodePool(in, true); err == nil {
+			nodePoolObjs = append(nodePoolObjs, nodePoolObj)
+		} else {
+			return nil, err
+		}
+	}
+
+	obj.NodePools = nodePoolObjs
+
+	// Removed fields in rancher from here on
+	if v, ok := in["agent_dns_prefix"].(string); ok && len(v) > 0 {
+		obj.AgentDNSPrefix = v
+	}
+	if v, ok := in["count"].(int); ok && v > 0 {
+		obj.Count = int64(v)
 	}
 
 	return obj, nil
+}
+
+func expandClusterAKSNodePool(in map[string]interface{}, legacy bool) (string, error) {
+	var bnp BaseNodePool
+	var fieldPrefix string
+	var poolTypeField string
+
+	if legacy {
+		fieldPrefix = "agent_"
+		poolTypeField = "agent_pool_type"
+	} else {
+		fieldPrefix = ""
+		poolTypeField = "type"
+
+		var err error
+		bnp, err = expandClusterBaseNodePool(in)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	nodePool := AzureKubernetesServiceNodePool{
+		BaseNodePool: bnp,
+	}
+
+	if v, ok := in[fieldPrefix+"os_disk_size"].(int); ok && v > 0 {
+		nodePool.OsDiskSizeGB = int64(v)
+	}
+
+	if v, ok := in[poolTypeField].(string); ok && len(v) > 0 {
+		nodePool.Type = v
+	}
+
+	if v, ok := in[fieldPrefix+"vm_size"].(string); ok && len(v) > 0 {
+		nodePool.VMSize = v
+	}
+
+	if v, ok := in["availability_zones"].([]interface{}); ok && len(v) > 0 {
+		nodePool.AvailabilityZones = toArrayString(v)
+	}
+
+	if v, ok := in["enable_auto_scaling"].(bool); ok {
+		nodePool.EnableAutoScaling = &v
+	}
+
+	if v, ok := in["max_count"].(int); ok && v > 0 {
+		nodePool.MaxCount = int64(v)
+	}
+
+	if v, ok := in["max_pods"].(int); ok && v > 0 {
+		nodePool.MaxPods = int64(v)
+	}
+
+	if v, ok := in["min_count"].(int); ok && v > 0 {
+		nodePool.MinCount = int64(v)
+	}
+
+	if legacy {
+		nodePool.CreatePoolPerZone = true
+	} else {
+		if v, ok := in["version"].(string); ok && len(v) > 0 {
+			nodePool.Version = v
+		}
+		if v, ok := in["create_pool_per_zone"].(bool); ok {
+			nodePool.CreatePoolPerZone = v
+		}
+	}
+
+	nodePoolObj, err := json.Marshal(nodePool)
+	if err != nil {
+		return "", err
+	}
+
+	return string(nodePoolObj), nil
 }
