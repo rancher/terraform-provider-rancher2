@@ -25,6 +25,12 @@ test: fmtcheck
 testacc: 
 	@sh -c "'$(CURDIR)/scripts/gotestacc.sh'"
 
+docker-testacc: 
+	@sh -c "'$(CURDIR)/scripts/gotestacc_docker.sh'"
+
+upgrade-rancher: 
+	@sh -c "'$(CURDIR)/scripts/start_rancher.sh'"
+
 vet:
 	@echo "==> Checking that code complies with go vet requirements..."
 	@go vet $$(go list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
