@@ -15,37 +15,15 @@ const (
 )
 
 var (
-	testAccRancher2EtcdBackupConfigCluster  string
-	testAccRancher2EtcdBackupConfig         string
-	testAccRancher2EtcdBackupUpdateConfig   string
-	testAccRancher2EtcdBackupRecreateConfig string
+	testAccRancher2EtcdBackup             string
+	testAccRancher2EtcdBackupUpdate       string
+	testAccRancher2EtcdBackupConfig       string
+	testAccRancher2EtcdBackupUpdateConfig string
 )
 
 func init() {
-	testAccRancher2EtcdBackupConfigCluster = `
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform custom cluster acceptance test"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-    services {
-      etcd {
-        creation = "6h"
-        retention = "24h"
-        backup_config {
-          enabled = true
-          interval_hours = 20
-          retention = 10
-        }
-      }
-    }
-  }
-}
-`
-	testAccRancher2EtcdBackupConfig = testAccRancher2EtcdBackupConfigCluster + `
-resource "rancher2_etcd_backup" "foo" {
+	testAccRancher2EtcdBackup = `
+resource "` + testAccRancher2EtcdBackupType + `" "foo" {
   backup_config {
     enabled = true
     interval_hours = 20
@@ -59,14 +37,13 @@ resource "rancher2_etcd_backup" "foo" {
       secret_key = "secret_key"
     }
   }
-  cluster_id = "${rancher2_cluster.foo.id}"
+  cluster_id = rancher2_cluster.foo.id
   manual = true
   name = "foo"
 }
 `
-
-	testAccRancher2EtcdBackupUpdateConfig = testAccRancher2EtcdBackupConfigCluster + `
-resource "rancher2_etcd_backup" "foo" {
+	testAccRancher2EtcdBackupUpdate = `
+resource "` + testAccRancher2EtcdBackupType + `" "foo" {
   backup_config {
     enabled = true
     interval_hours = 20
@@ -80,32 +57,13 @@ resource "rancher2_etcd_backup" "foo" {
       secret_key = "secret_key2"
     }
   }
-  cluster_id = "${rancher2_cluster.foo.id}"
+  cluster_id = rancher2_cluster.foo.id
   manual = true
   name = "foo"
 }
 `
-
-	testAccRancher2EtcdBackupRecreateConfig = testAccRancher2EtcdBackupConfigCluster + `
-resource "rancher2_etcd_backup" "foo" {
-  backup_config {
-    enabled = true
-    interval_hours = 20
-    retention = 10
-    s3_backup_config {
-      access_key = "access_key"
-      bucket_name = "bucket_name"
-      endpoint = "endpoint"
-      folder = "/folder"
-      region = "region"
-      secret_key = "secret_key"
-    }
-  }
-  cluster_id = "${rancher2_cluster.foo.id}"
-  manual = true
-  name = "foo"
-}
-`
+	testAccRancher2EtcdBackupConfig = testAccRancher2ClusterConfigRKE + testAccRancher2EtcdBackup
+	testAccRancher2EtcdBackupUpdateConfig = testAccRancher2ClusterConfigRKE + testAccRancher2EtcdBackupUpdate
 }
 
 func TestAccRancher2EtcdBackup_basic(t *testing.T) {
@@ -134,7 +92,7 @@ func TestAccRancher2EtcdBackup_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2EtcdBackupRecreateConfig,
+				Config: testAccRancher2EtcdBackupConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2EtcdBackupExists(testAccRancher2EtcdBackupType+".foo", etcdBackup),
 					resource.TestCheckResourceAttr(testAccRancher2EtcdBackupType+".foo", "name", "foo"),

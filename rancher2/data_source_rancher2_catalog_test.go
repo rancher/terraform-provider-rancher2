@@ -6,70 +6,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-const (
-	testAccRancher2CatalogDataSourceType = "rancher2_catalog"
-)
-
-var (
-	testAccCheckRancher2CatalogGlobalDataSourceConfig  string
-	testAccCheckRancher2CatalogClusterDataSourceConfig string
-	testAccCheckRancher2CatalogProjectDataSourceConfig string
-)
-
-func init() {
-	testAccCheckRancher2CatalogGlobalDataSourceConfig = `
-data "` + testAccRancher2CatalogDataSourceType + `" "library" {
-  name = "library"
-}
-`
-	testAccCheckRancher2CatalogClusterDataSourceConfig = `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
-  url = "http://foo.com:8080"
-  description= "Terraform catalog acceptance test"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  scope = "cluster"
-  version = "helm_v2"
-}
-data "` + testAccRancher2CatalogDataSourceType + `" "library" {
-  name = "${rancher2_catalog.foo.name}"
-  scope = "cluster"
-}
-`
-	testAccCheckRancher2CatalogProjectDataSourceConfig = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform project acceptance test"
-  resource_quota {
-    project_limit {
-      limits_cpu = "2000m"
-      limits_memory = "2000Mi"
-      requests_storage = "2Gi"
-    }
-    namespace_default_limit {
-      limits_cpu = "500m"
-      limits_memory = "500Mi"
-      requests_storage = "1Gi"
-    }
-  }
-}
-resource "rancher2_catalog" "foo" {
-  name = "foo"
-  url = "http://foo.com:8080"
-  description= "Terraform catalog acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  scope = "project"
-  version = "helm_v3"
-}
-data "` + testAccRancher2CatalogDataSourceType + `" "library" {
-  name = "${rancher2_catalog.foo.name}"
-  scope = "project"
-}
-`
-}
-
 func TestAccRancher2CatalogDataSource_Cluster(t *testing.T) {
+	testAccCheckRancher2CatalogClusterDataSourceConfig := testAccCheckRancher2ClusterSyncTestacc + testAccRancher2CatalogCluster + `
+data "` + testAccRancher2CatalogType + `" "library" {
+  name = rancher2_catalog.foo-cluster.name
+  scope = rancher2_catalog.foo-cluster.scope
+}
+`
+	name := "data." + testAccRancher2CatalogType + ".library"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -77,10 +21,10 @@ func TestAccRancher2CatalogDataSource_Cluster(t *testing.T) {
 			{
 				Config: testAccCheckRancher2CatalogClusterDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "name", "foo"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "scope", "cluster"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "version", "helm_v2"),
+					resource.TestCheckResourceAttr(name, "name", "foo-cluster"),
+					resource.TestCheckResourceAttr(name, "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(name, "scope", "cluster"),
+					resource.TestCheckResourceAttr(name, "version", "helm_v2"),
 				),
 			},
 		},
@@ -88,6 +32,12 @@ func TestAccRancher2CatalogDataSource_Cluster(t *testing.T) {
 }
 
 func TestAccRancher2CatalogDataSource_Global(t *testing.T) {
+	testAccCheckRancher2CatalogGlobalDataSourceConfig := testAccRancher2CatalogGlobal + `
+data "` + testAccRancher2CatalogType + `" "library" {
+  name = "library"
+}
+`
+	name := "data." + testAccRancher2CatalogType + ".library"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -95,9 +45,9 @@ func TestAccRancher2CatalogDataSource_Global(t *testing.T) {
 			{
 				Config: testAccCheckRancher2CatalogGlobalDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "name", "library"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "url", "https://git.rancher.io/charts"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "scope", "global"),
+					resource.TestCheckResourceAttr(name, "name", "library"),
+					resource.TestCheckResourceAttr(name, "url", "https://git.rancher.io/charts"),
+					resource.TestCheckResourceAttr(name, "scope", "global"),
 				),
 			},
 		},
@@ -105,6 +55,13 @@ func TestAccRancher2CatalogDataSource_Global(t *testing.T) {
 }
 
 func TestAccRancher2CatalogDataSource_Project(t *testing.T) {
+	testAccCheckRancher2CatalogProjectDataSourceConfig := testAccCheckRancher2ClusterSyncTestacc + testAccRancher2CatalogProject + `
+data "` + testAccRancher2CatalogType + `" "library" {
+  name = rancher2_catalog.foo-project.name
+  scope = rancher2_catalog.foo-project.scope
+}
+`
+	name := "data." + testAccRancher2CatalogType + ".library"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -112,10 +69,10 @@ func TestAccRancher2CatalogDataSource_Project(t *testing.T) {
 			{
 				Config: testAccCheckRancher2CatalogProjectDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "name", "foo"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "scope", "project"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CatalogDataSourceType+".library", "version", "helm_v3"),
+					resource.TestCheckResourceAttr(name, "name", "foo-project"),
+					resource.TestCheckResourceAttr(name, "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(name, "scope", "project"),
+					resource.TestCheckResourceAttr(name, "version", "helm_v2"),
 				),
 			},
 		},

@@ -12,7 +12,7 @@ import (
 const (
 	testAccRancher2AuthConfigOpenLdapType   = "rancher2_auth_config_openldap"
 	testAccRancher2AuthConfigOpenLdapConfig = `
-resource "rancher2_auth_config_openldap" "openldap" {
+resource "` + testAccRancher2AuthConfigOpenLdapType + `" "openldap" {
   servers = ["openldap.test.local"]
   service_account_distinguished_name = "uid=admin,dc=test,dc=local"
   service_account_password = "XXXXXXXX"
@@ -25,9 +25,8 @@ resource "rancher2_auth_config_openldap" "openldap" {
   user_name_attribute = "givenName"
 }
 `
-
 	testAccRancher2AuthConfigOpenLdapUpdateConfig = `
-resource "rancher2_auth_config_openldap" "openldap" {
+resource "` + testAccRancher2AuthConfigOpenLdapType + `" "openldap" {
   servers = ["openldap.test.local"]
   service_account_distinguished_name = "uid=admin,cn=users,dc=test,dc=local"
   service_account_password = "YYYYYYYY"
@@ -38,21 +37,6 @@ resource "rancher2_auth_config_openldap" "openldap" {
   group_member_user_attribute = "entrydn"
   group_object_class = "groupOfNames"
   user_name_attribute = "givenName-updated"
-}
- `
-
-	testAccRancher2AuthConfigOpenLdapRecreateConfig = `
-resource "rancher2_auth_config_openldap" "openldap" {
-  servers = ["openldap.test.local"]
-  service_account_distinguished_name = "uid=admin,dc=test,dc=local"
-  service_account_password = "XXXXXXXX"
-  user_search_base = "dc=test,dc=local"
-  port = 389
-  group_dn_attribute = "entrydn"
-  group_member_mapping_attribute = "member"
-  group_member_user_attribute = "entrydn"
-  group_object_class = "groupOfNames"
-  user_name_attribute = "givenName"
 }
  `
 )
@@ -88,7 +72,7 @@ func TestAccRancher2AuthConfigOpenLdap_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AuthConfigOpenLdapRecreateConfig,
+				Config: testAccRancher2AuthConfigOpenLdapConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOpenLdapType+"."+AuthConfigOpenLdapName, authConfig),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigOpenLdapType+"."+AuthConfigOpenLdapName, "name", AuthConfigOpenLdapName),

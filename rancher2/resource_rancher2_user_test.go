@@ -15,36 +15,25 @@ const (
 )
 
 var (
-	testAccRancher2UserConfig         string
-	testAccRancher2UserUpdateConfig   string
-	testAccRancher2UserRecreateConfig string
+	testAccRancher2User       string
+	testAccRancher2UserUpdate string
 )
 
 func init() {
-	testAccRancher2UserConfig = `
-resource "rancher2_user" "foo" {
+	testAccRancher2User = `
+resource "` + testAccRancher2UserType + `" "foo" {
   name = "Terraform user acceptance test"
   username = "foo"
   password = "changeme"
   enabled = true
 }
 `
-
-	testAccRancher2UserUpdateConfig = `
-resource "rancher2_user" "foo" {
+	testAccRancher2UserUpdate = `
+resource "` + testAccRancher2UserType + `" "foo" {
   name = "Terraform user acceptance test - Updated"
   username = "foo"
   password = "changeme2"
   enabled = false
-}
- `
-
-	testAccRancher2UserRecreateConfig = `
-resource "rancher2_user" "foo" {
-  name = "Terraform user acceptance test"
-  username = "foo"
-  password = "changeme"
-  enabled = true
 }
  `
 }
@@ -57,7 +46,7 @@ func TestAccRancher2User_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2UserDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2UserConfig,
+				Config: testAccRancher2User,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "name", "Terraform user acceptance test"),
@@ -66,7 +55,7 @@ func TestAccRancher2User_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2UserUpdateConfig,
+				Config: testAccRancher2UserUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "name", "Terraform user acceptance test - Updated"),
@@ -75,7 +64,7 @@ func TestAccRancher2User_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2UserRecreateConfig,
+				Config: testAccRancher2User,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "name", "Terraform user acceptance test"),
@@ -95,7 +84,7 @@ func TestAccRancher2User_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2UserDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2UserConfig,
+				Config: testAccRancher2User,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
 					testAccRancher2UserDisappears(user),

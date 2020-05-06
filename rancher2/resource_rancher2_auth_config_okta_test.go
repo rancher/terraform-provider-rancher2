@@ -12,7 +12,7 @@ import (
 const (
 	testAccRancher2AuthConfigOKTAType   = "rancher2_auth_config_okta"
 	testAccRancher2AuthConfigOKTAConfig = `
-resource "rancher2_auth_config_okta" "okta" {
+resource "` + testAccRancher2AuthConfigOKTAType + `" "okta" {
   display_name_field = "displayName"
   groups_field = "memberOf"
   uid_field = "distinguishedName"
@@ -23,9 +23,8 @@ resource "rancher2_auth_config_okta" "okta" {
   sp_key = "XXXXXXXX"
 }
 `
-
 	testAccRancher2AuthConfigOKTAUpdateConfig = `
-resource "rancher2_auth_config_okta" "okta" {
+resource "` + testAccRancher2AuthConfigOKTAType + `" "okta" {
   display_name_field = "displayName"
   groups_field = "memberOf"
   uid_field = "distinguishedName"
@@ -34,19 +33,6 @@ resource "rancher2_auth_config_okta" "okta" {
   rancher_api_host = "https://RANCHER-UPDATED"
   sp_cert = "XXXXXX"
   sp_key = "YYYYYYYY"
-}
- `
-
-	testAccRancher2AuthConfigOKTARecreateConfig = `
-resource "rancher2_auth_config_okta" "okta" {
-  display_name_field = "displayName"
-  groups_field = "memberOf"
-  uid_field = "distinguishedName"
-  user_name_field = "sAMAccountName"
-  idp_metadata_content = "XXXXXXXX"
-  rancher_api_host = "https://RANCHER"
-  sp_cert = "XXXXXX"
-  sp_key = "XXXXXXXX"
 }
  `
 )
@@ -82,7 +68,7 @@ func TestAccRancher2AuthConfigOKTA_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AuthConfigOKTARecreateConfig,
+				Config: testAccRancher2AuthConfigOKTAConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOKTAType+"."+AuthConfigOKTAName, authConfig),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigOKTAType+"."+AuthConfigOKTAName, "name", AuthConfigOKTAName),

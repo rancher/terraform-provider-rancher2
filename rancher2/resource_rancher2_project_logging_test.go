@@ -15,24 +15,17 @@ const (
 )
 
 var (
-	testAccRancher2ProjectLoggingProject              string
-	testAccRancher2ProjectLoggingConfigSyslog         string
-	testAccRancher2ProjectLoggingUpdateConfigSyslog   string
-	testAccRancher2ProjectLoggingRecreateConfigSyslog string
+	testAccRancher2ProjectLoggingSyslog             string
+	testAccRancher2ProjectLoggingSyslogUpdate       string
+	testAccRancher2ProjectLoggingConfigSyslog       string
+	testAccRancher2ProjectLoggingUpdateConfigSyslog string
 )
 
 func init() {
-	testAccRancher2ProjectLoggingProject = `
-resource "rancher2_project" "foo" {
+	testAccRancher2ProjectLoggingSyslog = `
+resource "` + testAccRancher2ProjectLoggingType + `" "foo" {
   name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform Project Logging acceptance test"
-}
-`
-	testAccRancher2ProjectLoggingConfigSyslog = testAccRancher2ProjectLoggingProject + `
-resource "rancher2_project_logging" "foo" {
-  name = "foo"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   kind = "syslog"
   syslog_config {
     endpoint = "192.168.1.1:514"
@@ -42,11 +35,10 @@ resource "rancher2_project_logging" "foo" {
   }
 }
 `
-
-	testAccRancher2ProjectLoggingUpdateConfigSyslog = testAccRancher2ProjectLoggingProject + `
-resource "rancher2_project_logging" "foo" {
+	testAccRancher2ProjectLoggingSyslogUpdate = `
+resource "` + testAccRancher2ProjectLoggingType + `" "foo" {
   name = "foo-updated"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   kind = "syslog"
   syslog_config {
     endpoint = "192.168.1.1:514"
@@ -55,21 +47,10 @@ resource "rancher2_project_logging" "foo" {
     ssl_verify = false
   }
 }
- `
+`
+	testAccRancher2ProjectLoggingConfigSyslog = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ProjectLoggingSyslog
+	testAccRancher2ProjectLoggingUpdateConfigSyslog = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ProjectLoggingSyslogUpdate
 
-	testAccRancher2ProjectLoggingRecreateConfigSyslog = testAccRancher2ProjectLoggingProject + `
-resource "rancher2_project_logging" "foo" {
-  name = "foo"
-  project_id = "${rancher2_project.foo.id}"
-  kind = "syslog"
-  syslog_config {
-    endpoint = "192.168.1.1:514"
-    protocol = "udp"
-    severity = "notice"
-    ssl_verify = false
-  }
-}
- `
 }
 
 func TestAccRancher2ProjectLogging_basic_syslog(t *testing.T) {
@@ -96,7 +77,7 @@ func TestAccRancher2ProjectLogging_basic_syslog(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ProjectLoggingRecreateConfigSyslog,
+				Config: testAccRancher2ProjectLoggingConfigSyslog,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectLoggingExists(testAccRancher2ProjectLoggingType+".foo", project),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectLoggingType+".foo", "name", "foo"),

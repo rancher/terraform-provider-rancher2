@@ -45,7 +45,7 @@ resource "rancher2_cluster" "foo" {
   }
 }
 data "` + testAccRancher2ClusterDataSourceType + `" "foo" {
-  name = "${rancher2_cluster.foo.name}"
+  name = rancher2_cluster.foo.name
 }
 `
 }

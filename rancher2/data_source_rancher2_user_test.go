@@ -6,30 +6,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-const (
-	testAccRancher2UserDataSourceType = "rancher2_user"
-)
-
-var (
-	testAccCheckRancher2UserDataSourceConfig string
-)
-
-func init() {
-	testAccCheckRancher2UserDataSourceConfig = `
-resource "rancher2_user" "foo" {
-  name = "Terraform user acceptance test"
-  username = "foo"
-  password = "changeme"
-  enabled = "true"
-}
-
-data "` + testAccRancher2UserDataSourceType + `" "foo" {
-  username = "${rancher2_user.foo.username}"
+func TestAccRancher2UserDataSource(t *testing.T) {
+	testAccCheckRancher2UserDataSourceConfig := testAccRancher2User + `
+data "` + testAccRancher2UserType + `" "foo" {
+  username = rancher2_user.foo.username
 }
 `
-}
-
-func TestAccRancher2UserDataSource(t *testing.T) {
+	name := "data." + testAccRancher2UserType + ".foo"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -37,9 +20,9 @@ func TestAccRancher2UserDataSource(t *testing.T) {
 			{
 				Config: testAccCheckRancher2UserDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data."+testAccRancher2UserDataSourceType+".foo", "username", "foo"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2UserDataSourceType+".foo", "name", "Terraform user acceptance test"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2UserDataSourceType+".foo", "enabled", "true"),
+					resource.TestCheckResourceAttr(name, "username", "foo"),
+					resource.TestCheckResourceAttr(name, "name", "Terraform user acceptance test"),
+					resource.TestCheckResourceAttr(name, "enabled", "true"),
 				),
 			},
 		},

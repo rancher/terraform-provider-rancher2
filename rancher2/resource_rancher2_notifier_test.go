@@ -15,28 +15,33 @@ const (
 )
 
 var (
-	testAccRancher2NotifierPagerdutyConfig         string
-	testAccRancher2NotifierPagerdutyUpdateConfig   string
-	testAccRancher2NotifierPagerdutyRecreateConfig string
-	testAccRancher2NotifierSlackConfig             string
-	testAccRancher2NotifierSlackUpdateConfig       string
-	testAccRancher2NotifierSlackRecreateConfig     string
-	testAccRancher2NotifierSMTPConfig              string
-	testAccRancher2NotifierSMTPUpdateConfig        string
-	testAccRancher2NotifierSMTPRecreateConfig      string
-	testAccRancher2NotifierWebhookConfig           string
-	testAccRancher2NotifierWebhookUpdateConfig     string
-	testAccRancher2NotifierWebhookRecreateConfig   string
-	testAccRancher2NotifierWechatConfig            string
-	testAccRancher2NotifierWechatUpdateConfig      string
-	testAccRancher2NotifierWechatRecreateConfig    string
+	testAccRancher2NotifierPagerduty             string
+	testAccRancher2NotifierPagerdutyUpdate       string
+	testAccRancher2NotifierPagerdutyConfig       string
+	testAccRancher2NotifierPagerdutyUpdateConfig string
+	testAccRancher2NotifierSlack                 string
+	testAccRancher2NotifierSlackUpdate           string
+	testAccRancher2NotifierSlackConfig           string
+	testAccRancher2NotifierSlackUpdateConfig     string
+	testAccRancher2NotifierSMTP                  string
+	testAccRancher2NotifierSMTPUpdate            string
+	testAccRancher2NotifierSMTPConfig            string
+	testAccRancher2NotifierSMTPUpdateConfig      string
+	testAccRancher2NotifierWebhook               string
+	testAccRancher2NotifierWebhookUpdate         string
+	testAccRancher2NotifierWebhookConfig         string
+	testAccRancher2NotifierWebhookUpdateConfig   string
+	testAccRancher2NotifierWechat                string
+	testAccRancher2NotifierWechatUpdate          string
+	testAccRancher2NotifierWechatConfig          string
+	testAccRancher2NotifierWechatUpdateConfig    string
 )
 
 func init() {
-	testAccRancher2NotifierPagerdutyConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+	testAccRancher2NotifierPagerduty = `
+resource "` + testAccRancher2NotifierType + `" "foo-pagerduty" {
+  name = "foo-pagerduty"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "true"
   description = "Terraform notifier acceptance test"
   pagerduty_config {
@@ -45,11 +50,10 @@ resource "rancher2_notifier" "foo" {
   }
 }
 `
-
-	testAccRancher2NotifierPagerdutyUpdateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+	testAccRancher2NotifierPagerdutyUpdate = `
+resource "` + testAccRancher2NotifierType + `" "foo-pagerduty" {
+  name = "foo-pagerduty"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   pagerduty_config {
@@ -57,25 +61,13 @@ resource "rancher2_notifier" "foo" {
     proxy_url = "http://proxy2.test.io"
   }
 }
- `
-
-	testAccRancher2NotifierPagerdutyRecreateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  send_resolved = "true"
-  description = "Terraform notifier acceptance test"
-  pagerduty_config {
-    service_key = "XXXXXXXX"
-    proxy_url = "http://proxy.test.io"
-  }
-}
- `
-
-	testAccRancher2NotifierSlackConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+`
+	testAccRancher2NotifierPagerdutyConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierPagerduty
+	testAccRancher2NotifierPagerdutyUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierPagerdutyUpdate
+	testAccRancher2NotifierSlack = `
+resource "` + testAccRancher2NotifierType + `" "foo-slack" {
+  name = "foo-slack"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "true"
   description = "Terraform notifier acceptance test"
   slack_config {
@@ -85,11 +77,10 @@ resource "rancher2_notifier" "foo" {
   }
 }
 `
-
-	testAccRancher2NotifierSlackUpdateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+	testAccRancher2NotifierSlackUpdate = `
+resource "` + testAccRancher2NotifierType + `" "foo-slack" {
+  name = "foo-slack"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   slack_config {
@@ -98,26 +89,13 @@ resource "rancher2_notifier" "foo" {
     proxy_url = "http://proxy2.test.io"
   }
 }
- `
-
-	testAccRancher2NotifierSlackRecreateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  send_resolved = "true"
-  description = "Terraform notifier acceptance test"
-  slack_config {
-    default_recipient = "XXXXXXXX"
-    url = "http://url.test.io"
-    proxy_url = "http://proxy.test.io"
-  }
-}
- `
-
-	testAccRancher2NotifierSMTPConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+`
+	testAccRancher2NotifierSlackConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierSlack
+	testAccRancher2NotifierSlackUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierSlackUpdate
+	testAccRancher2NotifierSMTP = `
+resource "` + testAccRancher2NotifierType + `" "foo-smtp" {
+  name = "foo-smtp"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "true"
   description = "Terraform notifier acceptance test"
   smtp_config {
@@ -129,11 +107,10 @@ resource "rancher2_notifier" "foo" {
   }
 }
 `
-
-	testAccRancher2NotifierSMTPUpdateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+	testAccRancher2NotifierSMTPUpdate = `
+resource "` + testAccRancher2NotifierType + `" "foo-smtp" {
+  name = "foo-smtp"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   smtp_config {
@@ -144,28 +121,13 @@ resource "rancher2_notifier" "foo" {
     tls = "true"
   }
 }
- `
-
-	testAccRancher2NotifierSMTPRecreateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  send_resolved = "true"
-  description = "Terraform notifier acceptance test"
-  smtp_config {
-    default_recipient = "XXXXXXXX"
-    host = "host.test.io"
-    port = 25
-    sender = "sender@test.io"
-    tls = "true"
-  }
-}
- `
-
-	testAccRancher2NotifierWebhookConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+`
+	testAccRancher2NotifierSMTPConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierSMTP
+	testAccRancher2NotifierSMTPUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierSMTPUpdate
+	testAccRancher2NotifierWebhook = `
+resource "` + testAccRancher2NotifierType + `" "foo-webhook" {
+  name = "foo-webhook"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "true"
   description = "Terraform notifier acceptance test"
   webhook_config {
@@ -174,11 +136,10 @@ resource "rancher2_notifier" "foo" {
   }
 }
 `
-
-	testAccRancher2NotifierWebhookUpdateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+	testAccRancher2NotifierWebhookUpdate = `
+resource "` + testAccRancher2NotifierType + `" "foo-webhook" {
+  name = "foo-webhook"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   webhook_config {
@@ -186,25 +147,13 @@ resource "rancher2_notifier" "foo" {
     proxy_url = "http://proxy2.test.io"
   }
 }
- `
-
-	testAccRancher2NotifierWebhookRecreateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  send_resolved = "true"
-  description = "Terraform notifier acceptance test"
-  webhook_config {
-    url = "http://url.test.io"
-    proxy_url = "http://proxy.test.io"
-  }
-}
- `
-
-	testAccRancher2NotifierWechatConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+`
+	testAccRancher2NotifierWebhookConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierWebhook
+	testAccRancher2NotifierWebhookUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierWebhookUpdate
+	testAccRancher2NotifierWechat = `
+resource "` + testAccRancher2NotifierType + `" "foo-wechat" {
+  name = "foo-wechat"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "true"
   description = "Terraform notifier acceptance test"
   wechat_config {
@@ -216,11 +165,10 @@ resource "rancher2_notifier" "foo" {
   }
 }
 `
-
-	testAccRancher2NotifierWechatUpdateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+	testAccRancher2NotifierWechatUpdate = `
+resource "` + testAccRancher2NotifierType + `" "foo-wechat" {
+  name = "foo-wechat"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   send_resolved = "false"
   description = "Terraform notifier acceptance test - updated"
   wechat_config {
@@ -231,24 +179,9 @@ resource "rancher2_notifier" "foo" {
     proxy_url = "http://proxy2.test.io"
   }
 }
- `
-
-	testAccRancher2NotifierWechatRecreateConfig = `
-resource "rancher2_notifier" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  send_resolved = "true"
-  description = "Terraform notifier acceptance test"
-  wechat_config {
-    agent = "agent_id"
-    corp = "corp_id"
-    default_recipient = "XXXXXXXX"
-    secret = "XXXXXXXX"
-    proxy_url = "http://proxy.test.io"
-  }
-}
- `
-
+`
+	testAccRancher2NotifierWechatConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierWechat
+	testAccRancher2NotifierWechatUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierWechatUpdate
 }
 
 func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {
@@ -262,33 +195,33 @@ func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierPagerdutyConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.service_key", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.proxy_url", "http://proxy.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-pagerduty", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "name", "foo-pagerduty"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "pagerduty_config.0.service_key", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "pagerduty_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2NotifierPagerdutyUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "false"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.proxy_url", "http://proxy2.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-pagerduty", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "name", "foo-pagerduty"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "description", "Terraform notifier acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "send_resolved", "false"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "pagerduty_config.0.proxy_url", "http://proxy2.test.io"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2NotifierPagerdutyRecreateConfig,
+				Config: testAccRancher2NotifierPagerdutyConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.service_key", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "pagerduty_config.0.proxy_url", "http://proxy.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-pagerduty", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "name", "foo-pagerduty"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "pagerduty_config.0.service_key", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "pagerduty_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
 		},
@@ -306,7 +239,7 @@ func TestAccRancher2Notifier_disappears_Pagerduty(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierPagerdutyConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-pagerduty", notifier),
 					testAccRancher2NotifierDisappears(notifier),
 				),
 				ExpectNonEmptyPlan: true,
@@ -326,35 +259,35 @@ func TestAccRancher2Notifier_basic_Slack(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierSlackConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.default_recipient", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.url", "http://url.test.io"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.proxy_url", "http://proxy.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-slack", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "name", "foo-slack"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.default_recipient", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.url", "http://url.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2NotifierSlackUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.default_recipient", "YYYYYYYY"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.url", "http://url2.test.io"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.proxy_url", "http://proxy2.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-slack", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "name", "foo-slack"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.default_recipient", "YYYYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.url", "http://url2.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.proxy_url", "http://proxy2.test.io"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2NotifierSlackRecreateConfig,
+				Config: testAccRancher2NotifierSlackConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.default_recipient", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.url", "http://url.test.io"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "slack_config.0.proxy_url", "http://proxy.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-slack", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "name", "foo-slack"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.default_recipient", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.url", "http://url.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
 		},
@@ -372,7 +305,7 @@ func TestAccRancher2Notifier_disappears_Slack(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierSlackConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-slack", notifier),
 					testAccRancher2NotifierDisappears(notifier),
 				),
 				ExpectNonEmptyPlan: true,
@@ -392,35 +325,35 @@ func TestAccRancher2Notifier_basic_SMTP(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierSMTPConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.default_recipient", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.host", "host.test.io"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.sender", "sender@test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-smtp", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "name", "foo-smtp"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.default_recipient", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.host", "host.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.sender", "sender@test.io"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2NotifierSMTPUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.default_recipient", "YYYYYYYY"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.host", "host2.test.io"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.sender", "sender2@test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-smtp", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "name", "foo-smtp"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.default_recipient", "YYYYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.host", "host2.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.sender", "sender2@test.io"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2NotifierSMTPRecreateConfig,
+				Config: testAccRancher2NotifierSMTPConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.default_recipient", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.host", "host.test.io"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "smtp_config.0.sender", "sender@test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-smtp", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "name", "foo-smtp"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.default_recipient", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.host", "host.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.sender", "sender@test.io"),
 				),
 			},
 		},
@@ -438,7 +371,7 @@ func TestAccRancher2Notifier_disappears_SMTP(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierSMTPConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-smtp", notifier),
 					testAccRancher2NotifierDisappears(notifier),
 				),
 				ExpectNonEmptyPlan: true,
@@ -458,32 +391,32 @@ func TestAccRancher2Notifier_basic_Webhook(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierWebhookConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.url", "http://url.test.io"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.proxy_url", "http://proxy.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-webhook", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "name", "foo-webhook"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "webhook_config.0.url", "http://url.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "webhook_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2NotifierWebhookUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.url", "http://url2.test.io"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.proxy_url", "http://proxy2.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-webhook", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "name", "foo-webhook"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "webhook_config.0.url", "http://url2.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "webhook_config.0.proxy_url", "http://proxy2.test.io"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2NotifierWebhookRecreateConfig,
+				Config: testAccRancher2NotifierWebhookConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.url", "http://url.test.io"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "webhook_config.0.proxy_url", "http://proxy.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-webhook", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "name", "foo-webhook"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "webhook_config.0.url", "http://url.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "webhook_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
 		},
@@ -501,7 +434,7 @@ func TestAccRancher2Notifier_disappears_Webhook(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierWebhookConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-webhook", notifier),
 					testAccRancher2NotifierDisappears(notifier),
 				),
 				ExpectNonEmptyPlan: true,
@@ -521,35 +454,35 @@ func TestAccRancher2Notifier_basic_Wechat(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierWechatConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.default_recipient", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.secret", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.proxy_url", "http://proxy.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-wechat", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "name", "foo-wechat"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.default_recipient", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.secret", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2NotifierWechatUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.default_recipient", "YYYYYYYY"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.secret", "YYYYYYYY"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.proxy_url", "http://proxy2.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-wechat", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "name", "foo-wechat"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.default_recipient", "YYYYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.secret", "YYYYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.proxy_url", "http://proxy2.test.io"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2NotifierWechatRecreateConfig,
+				Config: testAccRancher2NotifierWechatConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "description", "Terraform notifier acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "send_resolved", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.default_recipient", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.secret", "XXXXXXXX"),
-					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo", "wechat_config.0.proxy_url", "http://proxy.test.io"),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-wechat", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "name", "foo-wechat"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.default_recipient", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.secret", "XXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
 		},
@@ -567,7 +500,7 @@ func TestAccRancher2Notifier_disappears_Wechat(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2NotifierWechatConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo", notifier),
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-wechat", notifier),
 					testAccRancher2NotifierDisappears(notifier),
 				),
 				ExpectNonEmptyPlan: true,

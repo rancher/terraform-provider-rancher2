@@ -6,32 +6,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-const (
-	testAccRancher2CloudCredentialDataSourceType = "rancher2_cloud_credential"
-)
-
-var (
-	testAccCheckRancher2CloudCredentialDataSourceConfig string
-)
-
-func init() {
-	testAccCheckRancher2CloudCredentialDataSourceConfig = `
-resource "rancher2_cloud_credential" "foo" {
-  name = "foo"
-  description = "Terraform cloudCredential acceptance test"
-  amazonec2_credential_config {
-	access_key = "XXXXXXXXXXXXXXXXXXXX"
-	secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  }
-}
-
-data "` + testAccRancher2CloudCredentialDataSourceType + `" "foo" {
-  name = "${rancher2_cloud_credential.foo.name}"
+func TestAccRancher2CloudCredentialDataSource(t *testing.T) {
+	testAccCheckRancher2CloudCredentialDataSourceConfig := testAccRancher2CloudCredentialConfigAmazonec2 + `
+data "` + testAccRancher2CloudCredentialType + `" "foo-aws" {
+  name = rancher2_cloud_credential.foo-aws.name
 }
 `
-}
-
-func TestAccRancher2CloudCredentialDataSource(t *testing.T) {
+	name := "data." + testAccRancher2CloudCredentialType + ".foo-aws"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -39,8 +20,8 @@ func TestAccRancher2CloudCredentialDataSource(t *testing.T) {
 			{
 				Config: testAccCheckRancher2CloudCredentialDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data."+testAccRancher2CloudCredentialDataSourceType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2CloudCredentialDataSourceType+".foo", "labels.cattle.io/creator", "norman"),
+					resource.TestCheckResourceAttr(name, "name", "foo-aws"),
+					resource.TestCheckResourceAttr(name, "labels.cattle.io/creator", "norman"),
 				),
 			},
 		},

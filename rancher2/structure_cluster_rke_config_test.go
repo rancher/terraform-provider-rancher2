@@ -13,7 +13,7 @@ var (
 	testClusterRKEConfigInterface []interface{}
 )
 
-func init() {
+func testClusterRKEConfig() {
 	k8sVersion = testAccRancher2ClusterRKEK8SDefaultVersion
 	if len(testAccRancher2ClusterRKEK8SDefaultVersion) == 0 {
 		k8sVersion = "test"
@@ -66,7 +66,7 @@ func init() {
 }
 
 func TestFlattenClusterRKEConfig(t *testing.T) {
-
+	testClusterRKEConfig()
 	cases := []struct {
 		Input          *managementClient.RancherKubernetesEngineConfig
 		ExpectedOutput []interface{}

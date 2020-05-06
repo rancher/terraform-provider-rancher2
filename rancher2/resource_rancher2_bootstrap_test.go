@@ -2,7 +2,6 @@ package rancher2
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -11,19 +10,17 @@ import (
 
 const (
 	testAccRancher2BootstrapType = "rancher2_bootstrap"
+	testAccRancher2BootstrapPass = "TestACC1234"
 )
 
 var (
 	testAccRancher2BootstrapConfig         string
-	testAccRancher2BootstrapPass           string
 	testAccRancher2BootstrapUpdateConfig   string
 	testAccRancher2BootstrapRecreateConfig string
 	testAccRancher2ProviderConfig          string
 )
 
 func init() {
-	testAccRancher2BootstrapPass = os.Getenv("RANCHER_ADMIN_PASS")
-
 	testAccRancher2ProviderConfig = `
 provider "rancher2" {
   bootstrap = true
@@ -32,23 +29,15 @@ provider "rancher2" {
 `
 
 	testAccRancher2BootstrapConfig = testAccRancher2ProviderConfig + `
-resource "rancher2_bootstrap" "foo" {
-  current_password = "` + testAccRancher2BootstrapPass + `"
-  password = "TestACC1234"
+resource "` + testAccRancher2BootstrapType + `" "foo" {
+  password = "` + testAccRancher2BootstrapPass + `"
   telemetry = true
 }
 `
 
 	testAccRancher2BootstrapUpdateConfig = testAccRancher2ProviderConfig + `
-resource "rancher2_bootstrap" "foo" {
-  password = "TestACC12345"
-}
- `
-
-	testAccRancher2BootstrapRecreateConfig = testAccRancher2ProviderConfig + `
-resource "rancher2_bootstrap" "foo" {
-  password = "TestACC1234"
-  telemetry = true
+resource "` + testAccRancher2BootstrapType + `" "foo" {
+  password = "` + testAccRancher2BootstrapPass + `"
 }
  `
 }
@@ -62,28 +51,27 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 				Config: testAccRancher2BootstrapConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", "TestACC1234"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2BootstrapPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", "TestACC1234"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			resource.TestStep{
 				Config: testAccRancher2BootstrapUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", "TestACC12345"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2BootstrapPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "false"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", "TestACC12345"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2BootstrapRecreateConfig,
+				Config: testAccRancher2BootstrapConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", "TestACC1234"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2BootstrapPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", "TestACC1234"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
 				),
 			},
 		},

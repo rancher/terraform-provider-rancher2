@@ -15,93 +15,43 @@ const (
 )
 
 var (
-	testAccRancher2AppProject        string
-	testAccRancher2AppNamespace      string
-	testAccRancher2AppConfig         string
-	testAccRancher2AppUpdateConfig   string
-	testAccRancher2AppRecreateConfig string
+	testAccRancher2App             string
+	testAccRancher2AppUpdate       string
+	testAccRancher2AppConfig       string
+	testAccRancher2AppUpdateConfig string
 )
 
 func init() {
-	testAccRancher2AppProject = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform app acceptance test"
-  resource_quota {
-    project_limit {
-      limits_cpu = "2000m"
-      limits_memory = "2000Mi"
-      requests_storage = "2Gi"
-    }
-    namespace_default_limit {
-      limits_cpu = "500m"
-      limits_memory = "500Mi"
-      requests_storage = "1Gi"
-    }
-  }
-}
-`
-
-	testAccRancher2AppNamespace = `
-resource "rancher2_namespace" "foo" {
-  name = "foo"
-  description = "Terraform app acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  resource_quota {
-    limit {
-      limits_cpu = "100m"
-      limits_memory = "100Mi"
-      requests_storage = "1Gi"
-    }
-  }
-}
-`
-
-	testAccRancher2AppConfig = testAccRancher2AppProject + testAccRancher2AppNamespace + `
+	testAccRancher2App = `
 resource "rancher2_app" "foo" {
   catalog_name = "library"
   name = "foo"
   description = "Terraform app acceptance test"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   template_name = "docker-registry"
   template_version = "1.8.1"
-  target_namespace = "${rancher2_namespace.foo.name}"
+  target_namespace = rancher2_namespace.testacc.name
   answers = {
     "ingress_host" = "test.xip.io"
   }
 }
 `
-
-	testAccRancher2AppUpdateConfig = testAccRancher2AppProject + testAccRancher2AppNamespace + `
+	testAccRancher2AppUpdate = `
 resource "rancher2_app" "foo" {
   catalog_name = "library"
   name = "foo"
   description = "Terraform app acceptance test - updated"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   template_name = "docker-registry"
   template_version = "1.8.1"
-  target_namespace = "${rancher2_namespace.foo.name}"
+  target_namespace = rancher2_namespace.testacc.name
   answers = {
     "ingress_host" = "test2.xip.io"
   }
 }
 `
-
-	testAccRancher2AppRecreateConfig = testAccRancher2AppProject + testAccRancher2AppNamespace + `
-resource "rancher2_app" "foo" {
-  catalog_name = "library"
-  name = "foo"
-  description = "Terraform app acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  template_name = "docker-registry"
-  template_version = "1.8.1"
-  target_namespace = "${rancher2_namespace.foo.name}"
-  answers = {
-    "ingress_host" = "test.xip.io"
-  }
-}
-`
+	testAccRancher2AppConfig = testAccCheckRancher2ClusterSyncTestacc + testAccCheckRancher2NamespaceTestacc + testAccRancher2App
+	testAccRancher2AppUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccCheckRancher2NamespaceTestacc + testAccRancher2AppUpdate
 }
 
 func TestAccRancher2App_basic(t *testing.T) {
@@ -117,7 +67,7 @@ func TestAccRancher2App_basic(t *testing.T) {
 					testAccCheckRancher2AppExists(testAccRancher2AppType+".foo", app),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "description", "Terraform app acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "testacc"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test.xip.io"),
 				),
@@ -128,18 +78,18 @@ func TestAccRancher2App_basic(t *testing.T) {
 					testAccCheckRancher2AppExists(testAccRancher2AppType+".foo", app),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "description", "Terraform app acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "testacc"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test2.xip.io"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AppRecreateConfig,
+				Config: testAccRancher2AppConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AppExists(testAccRancher2AppType+".foo", app),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "description", "Terraform app acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "testacc"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test.xip.io"),
 				),

@@ -14,59 +14,42 @@ const (
 )
 
 var (
-	testAccRancher2TokenUserConfig            string
-	testAccRancher2TokenConfig                string
-	testAccRancher2TokenUpdateConfig          string
-	testAccRancher2TokenRecreateConfig        string
-	testAccRancher2TokenClusterConfig         string
-	testAccRancher2TokenClusterUpdateConfig   string
-	testAccRancher2TokenClusterRecreateConfig string
+	testAccRancher2Token                    string
+	testAccRancher2TokenUpdate              string
+	testAccRancher2TokenCluster             string
+	testAccRancher2TokenClusterUpdate       string
+	testAccRancher2TokenClusterConfig       string
+	testAccRancher2TokenClusterUpdateConfig string
 )
 
 func init() {
-	testAccRancher2TokenConfig = `
-resource "rancher2_token" "foo" {
+	testAccRancher2Token = `
+resource "` + testAccRancher2TokenType + `" "foo" {
   description = "Terraform token acceptance test"
   ttl = 120
 }
 `
-
-	testAccRancher2TokenUpdateConfig = `
-resource "rancher2_token" "foo" {
+	testAccRancher2TokenUpdate = `
+resource "` + testAccRancher2TokenType + `" "foo" {
+  description = "Terraform token acceptance test - Updated"
+  ttl = 120
+}
+ `
+	testAccRancher2TokenCluster = `
+resource "` + testAccRancher2TokenType + `" "foo-cluster" {
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
+  description = "Terraform token acceptance test"
+  ttl = 120
+}
+`
+	testAccRancher2TokenClusterUpdate = `
+resource "` + testAccRancher2TokenType + `" "foo-cluster" {
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   description = "Terraform token acceptance test - Updated"
   ttl = 120
 }
  `
 
-	testAccRancher2TokenRecreateConfig = `
-resource "rancher2_token" "foo" {
-  description = "Terraform token acceptance test"
-  ttl = 120
-}
- `
-	testAccRancher2TokenClusterConfig = `
-resource "rancher2_token" "foo" {
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform token acceptance test"
-  ttl = 120
-}
-`
-
-	testAccRancher2TokenClusterUpdateConfig = `
-resource "rancher2_token" "foo" {
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform token acceptance test - Updated"
-  ttl = 120
-}
- `
-
-	testAccRancher2TokenClusterRecreateConfig = `
-resource "rancher2_token" "foo" {
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform token acceptance test"
-  ttl = 120
-}
- `
 }
 
 func TestAccRancher2Token_basic(t *testing.T) {
@@ -77,7 +60,7 @@ func TestAccRancher2Token_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2TokenDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2TokenConfig,
+				Config: testAccRancher2Token,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
 					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "description", "Terraform token acceptance test"),
@@ -86,7 +69,7 @@ func TestAccRancher2Token_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2TokenUpdateConfig,
+				Config: testAccRancher2TokenUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
 					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "description", "Terraform token acceptance test - Updated"),
@@ -95,7 +78,7 @@ func TestAccRancher2Token_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2TokenRecreateConfig,
+				Config: testAccRancher2Token,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
 					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "description", "Terraform token acceptance test"),
@@ -115,7 +98,7 @@ func TestAccRancher2Token_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2TokenDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2TokenConfig,
+				Config: testAccRancher2Token,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
 					testAccRancher2TokenDisappears(token),
@@ -129,6 +112,9 @@ func TestAccRancher2Token_disappears(t *testing.T) {
 func TestAccRancher2TokenScoped_basic(t *testing.T) {
 	var token *managementClient.Token
 
+	testAccRancher2TokenClusterConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2TokenCluster
+	testAccRancher2TokenClusterUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2TokenClusterUpdate
+
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2TokenDestroy,
@@ -136,31 +122,31 @@ func TestAccRancher2TokenScoped_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2TokenClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "description", "Terraform token acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "ttl", "120"),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "enabled", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "cluster_id", testAccRancher2ClusterID),
+					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo-cluster", token),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "description", "Terraform token acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "ttl", "120"),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "enabled", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2TokenClusterUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "description", "Terraform token acceptance test - Updated"),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "ttl", "120"),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "enabled", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "cluster_id", testAccRancher2ClusterID),
+					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo-cluster", token),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "description", "Terraform token acceptance test - Updated"),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "ttl", "120"),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "enabled", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2TokenClusterRecreateConfig,
+				Config: testAccRancher2TokenClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "description", "Terraform token acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "ttl", "120"),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "enabled", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "cluster_id", testAccRancher2ClusterID),
+					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo-cluster", token),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "description", "Terraform token acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "ttl", "120"),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "enabled", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 		},
@@ -177,7 +163,7 @@ func TestAccRancher2TokenScoped_disappears(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2TokenClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
+					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo-cluster", token),
 					testAccRancher2TokenDisappears(token),
 				),
 				ExpectNonEmptyPlan: true,

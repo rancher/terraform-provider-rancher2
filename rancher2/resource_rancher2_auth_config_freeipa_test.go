@@ -12,7 +12,7 @@ import (
 const (
 	testAccRancher2AuthConfigFreeIpaType   = "rancher2_auth_config_freeipa"
 	testAccRancher2AuthConfigFreeIpaConfig = `
-resource "rancher2_auth_config_freeipa" "freeipa" {
+resource "` + testAccRancher2AuthConfigFreeIpaType + `" "freeipa" {
   servers = ["freeipa.test.local"]
   service_account_distinguished_name = "uid=admin,dc=test,dc=local"
   service_account_password = "XXXXXXXX"
@@ -25,9 +25,8 @@ resource "rancher2_auth_config_freeipa" "freeipa" {
   user_name_attribute = "givenName"
 }
 `
-
 	testAccRancher2AuthConfigFreeIpaUpdateConfig = `
-resource "rancher2_auth_config_freeipa" "freeipa" {
+resource "` + testAccRancher2AuthConfigFreeIpaType + `" "freeipa" {
   servers = ["freeipa.test.local"]
   service_account_distinguished_name = "uid=admin,cn=users,dc=test,dc=local"
   service_account_password = "YYYYYYYY"
@@ -38,21 +37,6 @@ resource "rancher2_auth_config_freeipa" "freeipa" {
   group_member_user_attribute = "entrydn"
   group_object_class = "groupOfNames"
   user_name_attribute = "givenName-updated"
-}
- `
-
-	testAccRancher2AuthConfigFreeIpaRecreateConfig = `
-resource "rancher2_auth_config_freeipa" "freeipa" {
-  servers = ["freeipa.test.local"]
-  service_account_distinguished_name = "uid=admin,dc=test,dc=local"
-  service_account_password = "XXXXXXXX"
-  user_search_base = "dc=test,dc=local"
-  port = 389
-  group_dn_attribute = "entrydn"
-  group_member_mapping_attribute = "member"
-  group_member_user_attribute = "entrydn"
-  group_object_class = "groupOfNames"
-  user_name_attribute = "givenName"
 }
  `
 )
@@ -88,7 +72,7 @@ func TestAccRancher2AuthConfigFreeIpa_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AuthConfigFreeIpaRecreateConfig,
+				Config: testAccRancher2AuthConfigFreeIpaConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigFreeIpaType+"."+AuthConfigFreeIpaName, authConfig),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigFreeIpaType+"."+AuthConfigFreeIpaName, "name", AuthConfigFreeIpaName),

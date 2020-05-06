@@ -12,7 +12,7 @@ import (
 const (
 	testAccRancher2AuthConfigADFSType   = "rancher2_auth_config_adfs"
 	testAccRancher2AuthConfigADFSConfig = `
-resource "rancher2_auth_config_adfs" "adfs" {
+resource "` + testAccRancher2AuthConfigADFSType + `" "adfs" {
   display_name_field = "givenname"
   groups_field = "Group"
   uid_field = "upn"
@@ -25,7 +25,7 @@ resource "rancher2_auth_config_adfs" "adfs" {
 `
 
 	testAccRancher2AuthConfigADFSUpdateConfig = `
-resource "rancher2_auth_config_adfs" "adfs" {
+resource "` + testAccRancher2AuthConfigADFSType + `" "adfs" {
   display_name_field = "givenname"
   groups_field = "Group"
   uid_field = "upn"
@@ -34,19 +34,6 @@ resource "rancher2_auth_config_adfs" "adfs" {
   rancher_api_host = "https://RANCHER-UPDATED"
   sp_cert = "XXXXXX"
   sp_key = "YYYYYYYY"
-}
- `
-
-	testAccRancher2AuthConfigADFSRecreateConfig = `
-resource "rancher2_auth_config_adfs" "adfs" {
-  display_name_field = "givenname"
-  groups_field = "Group"
-  uid_field = "upn"
-  user_name_field = "name"
-  idp_metadata_content = "XXXXXXXX"
-  rancher_api_host = "https://RANCHER"
-  sp_cert = "XXXXXX"
-  sp_key = "XXXXXXXX"
 }
  `
 )
@@ -82,7 +69,7 @@ func TestAccRancher2AuthConfigADFS_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AuthConfigADFSRecreateConfig,
+				Config: testAccRancher2AuthConfigADFSConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigADFSType+"."+AuthConfigADFSName, authConfig),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigADFSType+"."+AuthConfigADFSName, "name", AuthConfigADFSName),

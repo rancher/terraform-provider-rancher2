@@ -15,76 +15,33 @@ const (
 )
 
 var (
-	testAccRancher2ProjectAlertRuleGroup          string
-	testAccRancher2ProjectAlertRuleConfig         string
-	testAccRancher2ProjectAlertRuleUpdateConfig   string
-	testAccRancher2ProjectAlertRuleRecreateConfig string
+	testAccRancher2ProjectAlertRule             string
+	testAccRancher2ProjectAlertRuleUpdate       string
+	testAccRancher2ProjectAlertRuleConfig       string
+	testAccRancher2ProjectAlertRuleUpdateConfig string
 )
 
 func init() {
-	testAccRancher2ProjectAlertRuleGroup = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform project alert rule acceptance test"
-  resource_quota {
-    project_limit {
-      limits_cpu = "2000m"
-      limits_memory = "2000Mi"
-      requests_storage = "2Gi"
-    }
-    namespace_default_limit {
-      limits_cpu = "500m"
-      limits_memory = "500Mi"
-      requests_storage = "1Gi"
-    }
-  }
-  container_resource_limit {
-    limits_cpu = "20m"
-    limits_memory = "20Mi"
-    requests_cpu = "1m"
-    requests_memory = "1Mi"
-  }
-}
-
-resource "rancher2_project_alert_group" "foo" {
-  name = "foo"
-  description = "Terraform project alert rule acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  group_interval_seconds = 300
-  repeat_interval_seconds = 3600
-}
-`
-
-	testAccRancher2ProjectAlertRuleConfig = testAccRancher2ProjectAlertRuleGroup + `
-resource "rancher2_project_alert_rule" "foo" {
-  project_id = "${rancher2_project_alert_group.foo.project_id}"
-  group_id = "${rancher2_project_alert_group.foo.id}"
+	testAccRancher2ProjectAlertRule = `
+resource "` + testAccRancher2ProjectAlertRuleType + `" "foo" {
+  project_id = rancher2_cluster_sync.testacc.default_project_id
+  group_id = rancher2_project_alert_group.foo.id
   name = "foo"
   group_interval_seconds = 300
   repeat_interval_seconds = 3600
 }
 `
-
-	testAccRancher2ProjectAlertRuleUpdateConfig = testAccRancher2ProjectAlertRuleGroup + `
-resource "rancher2_project_alert_rule" "foo" {
-  project_id = "${rancher2_project_alert_group.foo.project_id}"
-  group_id = "${rancher2_project_alert_group.foo.id}"
+	testAccRancher2ProjectAlertRuleUpdate = `
+resource "` + testAccRancher2ProjectAlertRuleType + `" "foo" {
+  project_id = rancher2_cluster_sync.testacc.default_project_id
+  group_id = rancher2_project_alert_group.foo.id
   name = "foo"
   group_interval_seconds = 600
   repeat_interval_seconds = 6000
 }
- `
-
-	testAccRancher2ProjectAlertRuleRecreateConfig = testAccRancher2ProjectAlertRuleGroup + `
-resource "rancher2_project_alert_rule" "foo" {
-  project_id = "${rancher2_project_alert_group.foo.project_id}"
-  group_id = "${rancher2_project_alert_group.foo.id}"
-  name = "foo"
-  group_interval_seconds = 300
-  repeat_interval_seconds = 3600
-}
- `
+`
+	testAccRancher2ProjectAlertRuleConfig = testAccRancher2ProjectAlertGroupConfig + testAccRancher2ProjectAlertRule
+	testAccRancher2ProjectAlertRuleUpdateConfig = testAccRancher2ProjectAlertGroupConfig + testAccRancher2ProjectAlertRuleUpdate
 }
 
 func TestAccRancher2ProjectAlertRule_basic(t *testing.T) {
@@ -115,7 +72,7 @@ func TestAccRancher2ProjectAlertRule_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ProjectAlertRuleRecreateConfig,
+				Config: testAccRancher2ProjectAlertRuleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectAlertRuleExists(testAccRancher2ProjectAlertRuleType+".foo", ar),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectAlertRuleType+".foo", "name", "foo"),

@@ -15,14 +15,13 @@ const (
 )
 
 var (
-	testAccRancher2RoleTemplateConfig         string
-	testAccRancher2RoleTemplateUpdateConfig   string
-	testAccRancher2RoleTemplateRecreateConfig string
+	testAccRancher2RoleTemplateConfig       string
+	testAccRancher2RoleTemplateUpdateConfig string
 )
 
 func init() {
 	testAccRancher2RoleTemplateConfig = `
-resource "rancher2_role_template" "foo" {
+resource "` + testAccRancher2RoleTemplateType + `" "foo" {
   name = "foo"
   context = "` + roleTemplateContextCluster + `"
   default_role = true
@@ -34,9 +33,8 @@ resource "rancher2_role_template" "foo" {
   }
 }
 `
-
 	testAccRancher2RoleTemplateUpdateConfig = `
-resource "rancher2_role_template" "foo" {
+resource "` + testAccRancher2RoleTemplateType + `" "foo" {
   name = "foo-updated"
   context = "` + roleTemplateContextProject + `"
   default_role = false
@@ -45,20 +43,6 @@ resource "rancher2_role_template" "foo" {
     api_groups = ["*"]
     resources = ["secrets"]
     verbs = ["` + policyRuleVerbCreate + `", "` + policyRuleVerbGet + `"]
-  }
-}
- `
-
-	testAccRancher2RoleTemplateRecreateConfig = `
-resource "rancher2_role_template" "foo" {
-  name = "foo"
-  context = "` + roleTemplateContextCluster + `"
-  default_role = true
-  description = "Terraform role template acceptance test"
-  rules {
-    api_groups = ["*"]
-    resources = ["secrets"]
-    verbs = ["` + policyRuleVerbCreate + `"]
   }
 }
  `
@@ -94,7 +78,7 @@ func TestAccRancher2RoleTemplate_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2RoleTemplateRecreateConfig,
+				Config: testAccRancher2RoleTemplateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RoleTemplateExists(testAccRancher2RoleTemplateType+".foo", roleTemplate),
 					resource.TestCheckResourceAttr(testAccRancher2RoleTemplateType+".foo", "name", "foo"),

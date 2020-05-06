@@ -13,57 +13,22 @@ const (
 )
 
 var (
-	testAccRancher2SecretProject          string
-	testAccRancher2SecretNamespace        string
-	testAccRancher2SecretConfig           string
-	testAccRancher2SecretUpdateConfig     string
-	testAccRancher2SecretRecreateConfig   string
-	testAccRancher2SecretNsConfig         string
-	testAccRancher2SecretNsUpdateConfig   string
-	testAccRancher2SecretNsRecreateConfig string
+	testAccRancher2Secret               string
+	testAccRancher2SecretUpdate         string
+	testAccRancher2SecretConfig         string
+	testAccRancher2SecretUpdateConfig   string
+	testAccRancher2SecretNs             string
+	testAccRancher2SecretNsUpdate       string
+	testAccRancher2SecretNsConfig       string
+	testAccRancher2SecretNsUpdateConfig string
 )
 
 func init() {
-	testAccRancher2SecretProject = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform namespace acceptance test"
-  resource_quota {
-    project_limit {
-      limits_cpu = "2000m"
-      limits_memory = "2000Mi"
-      requests_storage = "2Gi"
-    }
-    namespace_default_limit {
-      limits_cpu = "500m"
-      limits_memory = "500Mi"
-      requests_storage = "1Gi"
-    }
-  }
-}
-`
-
-	testAccRancher2SecretNamespace = `
-resource "rancher2_namespace" "foo" {
-  name = "foo"
-  description = "Terraform namespace acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  resource_quota {
-    limit {
-      limits_cpu = "100m"
-      limits_memory = "100Mi"
-      requests_storage = "1Gi"
-    }
-  }
-}
-`
-
-	testAccRancher2SecretConfig = testAccRancher2SecretProject + `
-resource "rancher2_secret" "foo" {
+	testAccRancher2Secret = `
+resource "` + testAccRancher2SecretType + `" "foo" {
   name = "foo"
   description = "Terraform secret acceptance test"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   data = {
     address = "dGVzdC5pbw=="
     password = "cGFzcw=="
@@ -71,12 +36,11 @@ resource "rancher2_secret" "foo" {
   }
 }
 `
-
-	testAccRancher2SecretUpdateConfig = testAccRancher2SecretProject + `
-resource "rancher2_secret" "foo" {
+	testAccRancher2SecretUpdate = `
+resource "` + testAccRancher2SecretType + `" "foo" {
   name = "foo"
   description = "Terraform secret acceptance test - updated"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   data = {
     address = "dGVzdC5pbw=="
     password = "cGFzcw=="
@@ -84,12 +48,12 @@ resource "rancher2_secret" "foo" {
   }
 }
 `
-
-	testAccRancher2SecretRecreateConfig = testAccRancher2SecretProject + `
-resource "rancher2_secret" "foo" {
-  name = "foo"
+	testAccRancher2SecretNs = `
+resource "` + testAccRancher2SecretType + `" "foo-ns" {
+  name = "foo-ns"
   description = "Terraform secret acceptance test"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
+  namespace_id = rancher2_namespace.testacc.id
   data = {
     address = "dGVzdC5pbw=="
     password = "cGFzcw=="
@@ -97,45 +61,16 @@ resource "rancher2_secret" "foo" {
   }
 }
 `
-
-	testAccRancher2SecretNsConfig = testAccRancher2SecretProject + testAccRancher2SecretNamespace + `
-resource "rancher2_secret" "foo" {
-  name = "foo"
-  description = "Terraform secret acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  namespace_id = "${rancher2_namespace.foo.id}"
-  data = {
-    address = "dGVzdC5pbw=="
-    password = "cGFzcw=="
-    username = "dXNlcg=="
-  }
-}
-`
-
-	testAccRancher2SecretNsUpdateConfig = testAccRancher2SecretProject + testAccRancher2SecretNamespace + `
-resource "rancher2_secret" "foo" {
-  name = "foo"
+	testAccRancher2SecretNsUpdate = `
+resource "` + testAccRancher2SecretType + `" "foo-ns" {
+  name = "foo-ns"
   description = "Terraform secret acceptance test - updated"
-  project_id = "${rancher2_project.foo.id}"
-  namespace_id = "${rancher2_namespace.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
+  namespace_id = rancher2_namespace.testacc.id
   data = {
     address = "dGVzdC5pbw=="
     password = "cGFzcw=="
     username = "dXNlcjI="
-  }
-}
- `
-
-	testAccRancher2SecretNsRecreateConfig = testAccRancher2SecretProject + testAccRancher2SecretNamespace + `
-resource "rancher2_secret" "foo" {
-  name = "foo"
-  description = "Terraform secret acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  namespace_id = "${rancher2_namespace.foo.id}"
-  data = {
-    address = "dGVzdC5pbw=="
-    password = "cGFzcw=="
-    username = "dXNlcg=="
   }
 }
  `
@@ -143,6 +78,9 @@ resource "rancher2_secret" "foo" {
 
 func TestAccRancher2Secret_basic_Project(t *testing.T) {
 	var reg interface{}
+
+	testAccRancher2SecretConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2Secret
+	testAccRancher2SecretUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2SecretUpdate
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -169,7 +107,7 @@ func TestAccRancher2Secret_basic_Project(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2SecretRecreateConfig,
+				Config: testAccRancher2SecretConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo", reg),
 					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "name", "foo"),
@@ -204,6 +142,9 @@ func TestAccRancher2Secret_disappears_Project(t *testing.T) {
 func TestAccRancher2Secret_basic_Namespaced(t *testing.T) {
 	var reg interface{}
 
+	testAccRancher2SecretNsConfig = testAccCheckRancher2ClusterSyncTestacc + testAccCheckRancher2NamespaceTestacc + testAccRancher2SecretNs
+	testAccRancher2SecretNsUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccCheckRancher2NamespaceTestacc + testAccRancher2SecretNsUpdate
+
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2SecretDestroy,
@@ -211,31 +152,31 @@ func TestAccRancher2Secret_basic_Namespaced(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2SecretNsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo", reg),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "description", "Terraform secret acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "data.address", "dGVzdC5pbw=="),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "data.username", "dXNlcg=="),
+					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo-ns", reg),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "name", "foo-ns"),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "description", "Terraform secret acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "data.address", "dGVzdC5pbw=="),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "data.username", "dXNlcg=="),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2SecretNsUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo", reg),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "description", "Terraform secret acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "data.address", "dGVzdC5pbw=="),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "data.username", "dXNlcjI="),
+					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo-ns", reg),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "name", "foo-ns"),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "description", "Terraform secret acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "data.address", "dGVzdC5pbw=="),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "data.username", "dXNlcjI="),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2SecretNsRecreateConfig,
+				Config: testAccRancher2SecretNsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo", reg),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "description", "Terraform secret acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "data.address", "dGVzdC5pbw=="),
-					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "data.username", "dXNlcg=="),
+					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo-ns", reg),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "name", "foo-ns"),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "description", "Terraform secret acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "data.address", "dGVzdC5pbw=="),
+					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "data.username", "dXNlcg=="),
 				),
 			},
 		},
@@ -252,7 +193,7 @@ func TestAccRancher2Secret_disappears_Namespaced(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2SecretNsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo", reg),
+					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo-ns", reg),
 					testAccRancher2SecretDisappears(reg),
 				),
 				ExpectNonEmptyPlan: true,
@@ -334,7 +275,6 @@ func testAccCheckRancher2SecretDestroy(s *terraform.State) error {
 			}
 			return err
 		}
-		return fmt.Errorf("Secret still exists")
 	}
 	return nil
 }

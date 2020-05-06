@@ -9,11 +9,11 @@ import (
 	managementClient "github.com/rancher/types/client/management/v3"
 )
 
-const testAccRancher2PSPTType = "rancher2_pod_security_policy_template"
+const testAccRancher2PodSecurityPolicyTemplateType = "rancher2_pod_security_policy_template"
 
 var (
-	testPspTemplate = `
-resource "rancher2_pod_security_policy_template" "foo" {
+	testAccCheckRancher2PodSecurityPolicyTemplate = `
+resource "` + testAccRancher2PodSecurityPolicyTemplateType + `" "foo" {
   name = "foo"
   description = "Terraform PodSecurityPolicyTemplate acceptance test"
   allow_privilege_escalation = false
@@ -100,8 +100,8 @@ resource "rancher2_pod_security_policy_template" "foo" {
   volumes = ["azureFile"]
 }
 `
-	testPspTemplateUpdate = `
-resource "rancher2_pod_security_policy_template" "foo" {
+	testAccCheckRancher2PodSecurityPolicyTemplateUpdate = `
+resource "` + testAccRancher2PodSecurityPolicyTemplateType + `" "foo" {
   name = "foo"
   description = "Terraform PodSecurityPolicyTemplate acceptance test - updated"
   allow_privilege_escalation = false
@@ -201,19 +201,19 @@ func TestAccRancher2PodSecurityPolicyTemplate_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2PodSecurityPolicyTemplateDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testPspTemplate,
+				Config: testAccCheckRancher2PodSecurityPolicyTemplate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NPodSecurityPolicyTemplateExists(testAccRancher2PSPTType+".foo", pspTemplate),
-					resource.TestCheckResourceAttr(testAccRancher2PSPTType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2PSPTType+".foo", "description", "Terraform PodSecurityPolicyTemplate acceptance test"),
+					testAccCheckRancher2NPodSecurityPolicyTemplateExists(testAccRancher2PodSecurityPolicyTemplateType+".foo", pspTemplate),
+					resource.TestCheckResourceAttr(testAccRancher2PodSecurityPolicyTemplateType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2PodSecurityPolicyTemplateType+".foo", "description", "Terraform PodSecurityPolicyTemplate acceptance test"),
 				),
 			},
 			resource.TestStep{
-				Config: testPspTemplateUpdate,
+				Config: testAccCheckRancher2PodSecurityPolicyTemplateUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2NPodSecurityPolicyTemplateExists(testAccRancher2PSPTType+".foo", pspTemplate),
-					resource.TestCheckResourceAttr(testAccRancher2PSPTType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2PSPTType+".foo", "description", "Terraform PodSecurityPolicyTemplate acceptance test - updated"),
+					testAccCheckRancher2NPodSecurityPolicyTemplateExists(testAccRancher2PodSecurityPolicyTemplateType+".foo", pspTemplate),
+					resource.TestCheckResourceAttr(testAccRancher2PodSecurityPolicyTemplateType+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2PodSecurityPolicyTemplateType+".foo", "description", "Terraform PodSecurityPolicyTemplate acceptance test - updated"),
 				),
 			},
 		},
