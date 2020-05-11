@@ -922,7 +922,7 @@ The following arguments are supported:
 * `enable_http_load_balancing` - (Optional) Enable HTTP load balancing on GKE cluster. Default `true` (bool)
 * `enable_kubernetes_dashboard` - (Optional) Whether to enable the Kubernetes dashboard. Default `false` (bool)
 * `enable_legacy_abac` - (Optional) Whether to enable legacy abac on the cluster. Default `false` (bool)
-* `enable_network_policy_config` - (Optional) Enable stackdriver logging. Default `true` (bool)
+* `enable_network_policy_config` - (Optional) Enable network policy config for the cluster. Default `true` (bool)
 * `enable_nodepool_autoscaling` - (Optional) Enable nodepool autoscaling. Default `false` (bool)
 * `enable_private_endpoint` - (Optional) Whether the master's internal IP address is used as the cluster endpoint. Default `false` (bool)
 * `enable_private_nodes` - (Optional) Whether nodes have internal IP address only. Default `false` (bool)
