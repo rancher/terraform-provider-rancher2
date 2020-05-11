@@ -1,4 +1,17 @@
 ## 1.9.0 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix `nodeTemplateStateRefreshFunc` function on `rancher2_node_template` resource to check if returned error is forbidden
+
 ## 1.8.3 (April 09, 2020)
 
 FEATURES:
@@ -13,9 +26,6 @@ BUG FIXES:
 
 * Fix project alert group and alert rule datasource and resoruce documentation
 * Added `version` argument to `cluster_monitoring_input` argument on `rancher2_cluster` and `rancher2_project` resources
-
-BUG FIXES:
-
 * Fixed rancher timeout on bootstrapping
 
 ## 1.8.2 (April 02, 2020)
