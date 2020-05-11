@@ -15,44 +15,18 @@ const (
 )
 
 var (
-	testAccRancher2NamespaceProject        string
-	testAccRancher2NamespaceConfig         string
-	testAccRancher2NamespaceUpdateConfig   string
-	testAccRancher2NamespaceRecreateConfig string
+	testAccRancher2Namespace             string
+	testAccRancher2NamespaceUpdate       string
+	testAccRancher2NamespaceConfig       string
+	testAccRancher2NamespaceUpdateConfig string
 )
 
 func init() {
-	testAccRancher2NamespaceProject = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform namespace acceptance test"
-  resource_quota {
-    project_limit {
-      limits_cpu = "2000m"
-      limits_memory = "2000Mi"
-      requests_storage = "2Gi"
-    }
-    namespace_default_limit {
-      limits_cpu = "500m"
-      limits_memory = "500Mi"
-      requests_storage = "1Gi"
-    }
-  }
-  container_resource_limit {
-    limits_cpu = "20m"
-    limits_memory = "20Mi"
-    requests_cpu = "1m"
-    requests_memory = "1Mi"
-  }
-}
-`
-
-	testAccRancher2NamespaceConfig = testAccRancher2NamespaceProject + `
-resource "rancher2_namespace" "foo" {
+	testAccRancher2Namespace = `
+resource "` + testAccRancher2NamespaceType + `" "foo" {
   name = "foo"
   description = "Terraform namespace acceptance test"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   resource_quota {
     limit {
       limits_cpu = "100m"
@@ -68,12 +42,11 @@ resource "rancher2_namespace" "foo" {
   }
 }
 `
-
-	testAccRancher2NamespaceUpdateConfig = testAccRancher2NamespaceProject + `
-resource "rancher2_namespace" "foo" {
+	testAccRancher2NamespaceUpdate = `
+resource "` + testAccRancher2NamespaceType + `" "foo" {
   name = "foo"
   description = "Terraform namespace acceptance test - updated"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   resource_quota {
     limit {
       limits_cpu = "100m"
@@ -88,28 +61,9 @@ resource "rancher2_namespace" "foo" {
     requests_memory = "1Mi"
   }
 }
- `
-
-	testAccRancher2NamespaceRecreateConfig = testAccRancher2NamespaceProject + `
-resource "rancher2_namespace" "foo" {
-  name = "foo"
-  description = "Terraform namespace acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  resource_quota {
-    limit {
-      limits_cpu = "100m"
-      limits_memory = "100Mi"
-      requests_storage = "1Gi"
-    }
-  }
-  container_resource_limit {
-    limits_cpu = "20m"
-    limits_memory = "20Mi"
-    requests_cpu = "1m"
-    requests_memory = "1Mi"
-  }
-}
- `
+`
+	testAccRancher2NamespaceConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2Namespace
+	testAccRancher2NamespaceUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NamespaceUpdate
 }
 
 func TestAccRancher2Namespace_basic(t *testing.T) {
@@ -138,7 +92,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2NamespaceRecreateConfig,
+				Config: testAccRancher2NamespaceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "name", "foo"),

@@ -68,7 +68,7 @@ In order to test the provider, you can simply run `make test`.
 $ make test
 ```
 
-In order to run the full suite of Acceptance tests, a running rancher system, a rancher API key and a working k8s cluster imported are needed.
+In order to run the full suite of Acceptance tests, a running rancher system, a rancher API key and a working k8s cluster imported are needed. Also, acceptance tests are covering Rancher server upgrade, v2.3.6 and v2.4.2
 
 To run acceptance tests, you can simply run `make testacc`. `scripts/gotestacc.sh` will be run, deploying all needed requirements, running acceptance tests and cleanup.
 
@@ -76,8 +76,8 @@ To run acceptance tests, you can simply run `make testacc`. `scripts/gotestacc.s
 $ make testacc
 ```
 
-Due to [network limitation](https://docs.docker.com/docker-for-mac/networking/#known-limitations-use-cases-and-workarounds) on docker for osx and/or windows, try to add variable `TESTACC_EXPOSE_HOST_PORTS=true` to run acceptance test ont them.
+Due to [network limitation](https://docs.docker.com/docker-for-mac/networking/#known-limitations-use-cases-and-workarounds) on docker for osx and/or windows, there is a way to run dockerized acceptance test.
 
 ```sh
-$ TESTACC_EXPOSE_HOST_PORTS=true make testacc
+$ EXPOSE_HOST_PORTS=true make docker-testacc
 ```

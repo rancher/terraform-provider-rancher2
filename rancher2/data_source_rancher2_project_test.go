@@ -6,24 +6,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-const (
-	testAccRancher2ProjectDataSourceType = "rancher2_project"
-)
-
-var (
-	testAccCheckRancher2ProjectDataSourceConfig string
-)
-
-func init() {
-	testAccCheckRancher2ProjectDataSourceConfig = `
-data "` + testAccRancher2ProjectDataSourceType + `" "system" {
+func TestAccRancher2ProjectDataSource(t *testing.T) {
+	testAccCheckRancher2ProjectDataSourceConfig := testAccCheckRancher2ClusterSyncTestacc + testAccRancher2Project + `
+data "` + testAccRancher2ProjectType + `" "system" {
   name = "System"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
 }
 `
-}
-
-func TestAccRancher2ProjectDataSource(t *testing.T) {
+	name := "data." + testAccRancher2ProjectType + ".system"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -31,8 +21,8 @@ func TestAccRancher2ProjectDataSource(t *testing.T) {
 			{
 				Config: testAccCheckRancher2ProjectDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data."+testAccRancher2ProjectDataSourceType+".system", "name", "System"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2ProjectDataSourceType+".system", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(name, "name", "System"),
+					resource.TestCheckResourceAttr(name, "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 		},

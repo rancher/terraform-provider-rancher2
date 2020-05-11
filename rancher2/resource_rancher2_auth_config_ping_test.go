@@ -12,7 +12,7 @@ import (
 const (
 	testAccRancher2AuthConfigPingType   = "rancher2_auth_config_ping"
 	testAccRancher2AuthConfigPingConfig = `
-resource "rancher2_auth_config_ping" "ping" {
+resource "` + testAccRancher2AuthConfigPingType + `" "ping" {
   display_name_field = "displayName"
   groups_field = "memberOf"
   uid_field = "distinguishedName"
@@ -23,9 +23,8 @@ resource "rancher2_auth_config_ping" "ping" {
   sp_key = "XXXXXXXX"
 }
 `
-
 	testAccRancher2AuthConfigPingUpdateConfig = `
-resource "rancher2_auth_config_ping" "ping" {
+resource "` + testAccRancher2AuthConfigPingType + `" "ping" {
   display_name_field = "displayName"
   groups_field = "memberOf"
   uid_field = "distinguishedName"
@@ -34,19 +33,6 @@ resource "rancher2_auth_config_ping" "ping" {
   rancher_api_host = "https://RANCHER-UPDATED"
   sp_cert = "XXXXXX"
   sp_key = "YYYYYYYY"
-}
- `
-
-	testAccRancher2AuthConfigPingRecreateConfig = `
-resource "rancher2_auth_config_ping" "ping" {
-  display_name_field = "displayName"
-  groups_field = "memberOf"
-  uid_field = "distinguishedName"
-  user_name_field = "sAMAccountName"
-  idp_metadata_content = "XXXXXXXX"
-  rancher_api_host = "https://RANCHER"
-  sp_cert = "XXXXXX"
-  sp_key = "XXXXXXXX"
 }
  `
 )
@@ -82,7 +68,7 @@ func TestAccRancher2AuthConfigPing_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AuthConfigPingRecreateConfig,
+				Config: testAccRancher2AuthConfigPingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigPingType+"."+AuthConfigPingName, authConfig),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigPingType+"."+AuthConfigPingName, "name", AuthConfigPingName),

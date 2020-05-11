@@ -12,7 +12,7 @@ import (
 const (
 	testAccRancher2AuthConfigAzureADType   = "rancher2_auth_config_azuread"
 	testAccRancher2AuthConfigAzureADConfig = `
-resource "rancher2_auth_config_azuread" "azuread" {
+resource "` + testAccRancher2AuthConfigAzureADType + `" "azuread" {
   application_id = "XXXXXX"
   application_secret = "XXXXXXXX"
   auth_endpoint = "authorize"
@@ -22,27 +22,14 @@ resource "rancher2_auth_config_azuread" "azuread" {
   token_endpoint = "token"
 }
 `
-
 	testAccRancher2AuthConfigAzureADUpdateConfig = `
-resource "rancher2_auth_config_azuread" "azuread" {
+resource "` + testAccRancher2AuthConfigAzureADType + `" "azuread" {
   application_id = "XXXXXX"
   application_secret = "YYYYYYYY"
   auth_endpoint = "authorize-updated"
   graph_endpoint = "graph"
   rancher_url = "https://RANCHER-UPDATED"
   tenant_id = "YYYYYYYY"
-  token_endpoint = "token"
-}
- `
-
-	testAccRancher2AuthConfigAzureADRecreateConfig = `
-resource "rancher2_auth_config_azuread" "azuread" {
-  application_id = "XXXXXX"
-  application_secret = "XXXXXXXX"
-  auth_endpoint = "authorize"
-  graph_endpoint = "graph"
-  rancher_url = "https://RANCHER"
-  tenant_id = "XXXXXXXX"
   token_endpoint = "token"
 }
  `
@@ -79,7 +66,7 @@ func TestAccRancher2AuthConfigAzureAD_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AuthConfigAzureADRecreateConfig,
+				Config: testAccRancher2AuthConfigAzureADConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, authConfig),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, "name", AuthConfigAzureADName),

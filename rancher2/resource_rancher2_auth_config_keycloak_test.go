@@ -12,7 +12,7 @@ import (
 const (
 	testAccRancher2AuthConfigKeyCloakType   = "rancher2_auth_config_keycloak"
 	testAccRancher2AuthConfigKeyCloakConfig = `
-resource "rancher2_auth_config_keycloak" "keycloak" {
+resource "` + testAccRancher2AuthConfigKeyCloakType + `" "keycloak" {
   display_name_field = "displayName"
   groups_field = "memberOf"
   uid_field = "distinguishedName"
@@ -23,9 +23,8 @@ resource "rancher2_auth_config_keycloak" "keycloak" {
   sp_key = "XXXXXXXX"
 }
 `
-
 	testAccRancher2AuthConfigKeyCloakUpdateConfig = `
-resource "rancher2_auth_config_keycloak" "keycloak" {
+resource "` + testAccRancher2AuthConfigKeyCloakType + `" "keycloak" {
   display_name_field = "displayName"
   groups_field = "memberOf"
   uid_field = "distinguishedName"
@@ -34,19 +33,6 @@ resource "rancher2_auth_config_keycloak" "keycloak" {
   rancher_api_host = "https://RANCHER-UPDATED"
   sp_cert = "XXXXXX"
   sp_key = "YYYYYYYY"
-}
- `
-
-	testAccRancher2AuthConfigKeyCloakRecreateConfig = `
-resource "rancher2_auth_config_keycloak" "keycloak" {
-  display_name_field = "displayName"
-  groups_field = "memberOf"
-  uid_field = "distinguishedName"
-  user_name_field = "sAMAccountName"
-  idp_metadata_content = "XXXXXXXX"
-  rancher_api_host = "https://RANCHER"
-  sp_cert = "XXXXXX"
-  sp_key = "XXXXXXXX"
 }
  `
 )
@@ -82,7 +68,7 @@ func TestAccRancher2AuthConfigKeyCloak_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AuthConfigKeyCloakRecreateConfig,
+				Config: testAccRancher2AuthConfigKeyCloakConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigKeyCloakType+"."+AuthConfigKeyCloakName, authConfig),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigKeyCloakType+"."+AuthConfigKeyCloakName, "name", AuthConfigKeyCloakName),

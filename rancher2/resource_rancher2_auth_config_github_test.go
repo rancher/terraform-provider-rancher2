@@ -12,23 +12,15 @@ import (
 const (
 	testAccRancher2AuthConfigGithubType   = "rancher2_auth_config_github"
 	testAccRancher2AuthConfigGithubConfig = `
-resource "rancher2_auth_config_github" "github" {
+resource "` + testAccRancher2AuthConfigGithubType + `" "github" {
   client_id = "XXXXXX"
   client_secret = "XXXXXXXX"
 }
 `
-
 	testAccRancher2AuthConfigGithubUpdateConfig = `
-resource "rancher2_auth_config_github" "github" {
+resource "` + testAccRancher2AuthConfigGithubType + `" "github" {
   client_id = "YYYYYY"
   client_secret = "YYYYYYYY"
-}
- `
-
-	testAccRancher2AuthConfigGithubRecreateConfig = `
-resource "rancher2_auth_config_github" "github" {
-  client_id = "XXXXXX"
-  client_secret = "XXXXXXXX"
 }
  `
 )
@@ -60,7 +52,7 @@ func TestAccRancher2AuthConfigGithub_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AuthConfigGithubRecreateConfig,
+				Config: testAccRancher2AuthConfigGithubConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, authConfig),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "name", AuthConfigGithubName),

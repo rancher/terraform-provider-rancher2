@@ -12,96 +12,49 @@ import (
 
 const (
 	testAccRancher2NodePoolType = "rancher2_node_pool"
-	testAccRancher2Cluster      = `
-resource "rancher2_cluster" "foo" {
-  name = "foo-custom"
-  description = "Terraform node pool cluster acceptance test"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-  }
-}
-`
-	testAccRancher2CloudCredential = `
-resource "rancher2_cloud_credential" "foo" {
-  name = "foo"
-  description= "Terraform cloudCredential acceptance test"
-  amazonec2_credential_config {
-	access_key = "XXXXXXXXXXXXXXXXXXXX"
-	secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  }
-}
-`
-	testAccRancher2NodeTemplate = `
-resource "rancher2_node_template" "foo" {
-  name = "foo"
-  description = "Terraform node pool acceptance test"
-  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
-  amazonec2_config {
-	ami =  "ami-XXXXXXXXXXXXXXX"
-	region = "XX-west-1"
-	security_group = ["XXXXXXXX"]
-	subnet_id = "subnet-XXXXXXXX"
-	vpc_id = "vpc-XXXXXXXX"
-	zone = "a"
-  }
-}
-`
 )
 
 var (
-	testAccRancher2NodePoolConfig         string
-	testAccRancher2NodePoolUpdateConfig   string
-	testAccRancher2NodePoolRecreateConfig string
+	testAccRancher2NodePool             string
+	testAccRancher2NodePoolUpdate       string
+	testAccRancher2NodePoolConfig       string
+	testAccRancher2NodePoolUpdateConfig string
 )
 
 func init() {
-	testAccRancher2NodePoolConfig = testAccRancher2Cluster + testAccRancher2CloudCredential + testAccRancher2NodeTemplate + `
-resource "rancher2_node_pool" "foo" {
-  cluster_id =  "${rancher2_cluster.foo.id}"
+	testAccRancher2NodePool = `
+resource "` + testAccRancher2NodePoolType + `" "foo" {
+  cluster_id =  rancher2_cluster.foo.id
   name = "foo"
   hostname_prefix =  "foo-cluster-0"
   delete_not_ready_after_secs = 120
-  node_template_id = "${rancher2_node_template.foo.id}"
+  node_template_id = rancher2_node_template.foo-aws.id
   quantity = 1
   control_plane = true
   etcd = true
   worker = true
 }
 `
-
-	testAccRancher2NodePoolUpdateConfig = testAccRancher2Cluster + testAccRancher2CloudCredential + testAccRancher2NodeTemplate + `
-resource "rancher2_node_pool" "foo" {
-  cluster_id =  "${rancher2_cluster.foo.id}"
+	testAccRancher2NodePoolUpdate = `
+resource "` + testAccRancher2NodePoolType + `" "foo" {
+  cluster_id =  rancher2_cluster.foo.id
   name = "foo"
   hostname_prefix =  "foo-cluster-0"
   delete_not_ready_after_secs = 60
-  node_template_id = "${rancher2_node_template.foo.id}"
+  node_template_id = rancher2_node_template.foo-aws.id
   quantity = 3
   control_plane = false
   etcd = true
   worker = false
 }
 `
-
-	testAccRancher2NodePoolRecreateConfig = testAccRancher2Cluster + testAccRancher2CloudCredential + testAccRancher2NodeTemplate + `
-resource "rancher2_node_pool" "foo" {
-  cluster_id =  "${rancher2_cluster.foo.id}"
-  name = "foo"
-  hostname_prefix =  "foo-cluster-0"
-  delete_not_ready_after_secs = 120
-  node_template_id = "${rancher2_node_template.foo.id}"
-  quantity = 1
-  control_plane = true
-  etcd = true
-  worker = true
-}
-`
 }
 
 func TestAccRancher2NodePool_basic(t *testing.T) {
 	var nodePool *managementClient.NodePool
+
+	testAccRancher2NodePoolConfig = testAccRancher2ClusterConfigRKE + testAccRancher2CloudCredentialConfigAmazonec2 + testAccRancher2NodeTemplateAmazonec2 + testAccRancher2NodePool
+	testAccRancher2NodePoolUpdateConfig = testAccRancher2ClusterConfigRKE + testAccRancher2CloudCredentialConfigAmazonec2 + testAccRancher2NodeTemplateAmazonec2 + testAccRancher2NodePoolUpdate
 
 	name := testAccRancher2NodePoolType + ".foo"
 	resource.Test(t, resource.TestCase{
@@ -136,7 +89,7 @@ func TestAccRancher2NodePool_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2NodePoolRecreateConfig,
+				Config: testAccRancher2NodePoolConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodePoolExists(name, nodePool),
 					resource.TestCheckResourceAttr(name, "name", "foo"),

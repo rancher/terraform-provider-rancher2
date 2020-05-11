@@ -15,58 +15,36 @@ const (
 )
 
 var (
-	testAccRancher2ClusterRoleTemplateBindingConfig         string
-	testAccRancher2ClusterRoleTemplateBindingUpdateConfig   string
-	testAccRancher2ClusterRoleTemplateBindingRecreateConfig string
+	testAccRancher2ClusterRoleTemplateBinding             string
+	testAccRancher2ClusterRoleTemplateBindingUpdate       string
+	testAccRancher2ClusterRoleTemplateBindingConfig       string
+	testAccRancher2ClusterRoleTemplateBindingUpdateConfig string
 )
 
 func init() {
-	testAccRancher2ClusterRoleTemplateBindingConfig = `
-resource "rancher2_user" "foo" {
-  name = "Terraform user acceptance test"
-  username = "foo"
-  password = "changeme"
-}
-resource "rancher2_cluster_role_template_binding" "foo" {
+	testAccRancher2ClusterRoleTemplateBinding = `
+resource "` + testAccRancher2ClusterRoleTemplateBindingType + `" "foo" {
   name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   role_template_id = "cluster-admin"
-  user_id = "${rancher2_user.foo.id}"
+  user_id = rancher2_user.foo.id
 }
 `
-
-	testAccRancher2ClusterRoleTemplateBindingUpdateConfig = `
-resource "rancher2_user" "foo" {
-  name = "Terraform user acceptance test"
-  username = "foo"
-  password = "changeme"
-}
-resource "rancher2_cluster_role_template_binding" "foo" {
+	testAccRancher2ClusterRoleTemplateBindingUpdate = `
+resource "` + testAccRancher2ClusterRoleTemplateBindingType + `" "foo" {
   name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   role_template_id = "projects-create"
-  user_id = "${rancher2_user.foo.id}"
+  user_id = rancher2_user.foo.id
 }
- `
-
-	testAccRancher2ClusterRoleTemplateBindingRecreateConfig = `
-resource "rancher2_user" "foo" {
-  name = "Terraform user acceptance test"
-  username = "foo"
-  password = "changeme"
-}
-resource "rancher2_cluster_role_template_binding" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  role_template_id = "cluster-admin"
-  user_id = "${rancher2_user.foo.id}"
-}
- `
+`
 }
 
 func TestAccRancher2ClusterRoleTemplateBinding_basic(t *testing.T) {
 	var clusterRole *managementClient.ClusterRoleTemplateBinding
 
+	testAccRancher2ClusterRoleTemplateBindingConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2User + testAccRancher2ClusterRoleTemplateBinding
+	testAccRancher2ClusterRoleTemplateBindingUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2User + testAccRancher2ClusterRoleTemplateBindingUpdate
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterRoleTemplateBindingDestroy,
@@ -90,7 +68,7 @@ func TestAccRancher2ClusterRoleTemplateBinding_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ClusterRoleTemplateBindingRecreateConfig,
+				Config: testAccRancher2ClusterRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterRoleTemplateBindingExists(testAccRancher2ClusterRoleTemplateBindingType+".foo", clusterRole),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "name", "foo"),

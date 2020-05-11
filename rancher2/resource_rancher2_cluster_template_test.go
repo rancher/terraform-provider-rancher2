@@ -12,7 +12,7 @@ import (
 const (
 	testAccRancher2ClusterTemplateType   = "rancher2_cluster_template"
 	testAccRancher2ClusterTemplateConfig = `
-resource "rancher2_cluster_template" "foo" {
+resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
   name = "foo"
   members {
     access_type = "owner"
@@ -52,7 +52,7 @@ resource "rancher2_cluster_template" "foo" {
 }
 `
 	testAccRancher2ClusterTemplateUpdateConfig = `
-resource "rancher2_cluster_template" "foo" {
+resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
   name = "foo"
   members {
     access_type = "read-only"
@@ -91,46 +91,6 @@ resource "rancher2_cluster_template" "foo" {
   description = "Terraform cluster template acceptance test - updated"
 }
  `
-	testAccRancher2ClusterTemplateRecreateConfig = `
-resource "rancher2_cluster_template" "foo" {
-  name = "foo"
-  members {
-    access_type = "owner"
-    user_principal_id = "local://user-XXXXX"
-  }
-  template_revisions {
-    name = "V1"
-    cluster_config {
-      rke_config {
-        network {
-          plugin = "canal"
-        }
-        services {
-          etcd {
-            creation = "6h"
-            retention = "24h"
-          }
-        }
-      }
-      scheduled_cluster_scan {
-	    enabled = true
-	    scan_config {
-	      cis_scan_config {
-	        debug_master = true
-	        debug_worker = true
-	      }
-	    }
-	    schedule_config {
-	      cron_schedule = "30 * * * *"
-	      retention = 5
-	    }
-	  }
-    }
-    default = true
-  }
-  description = "Terraform cluster template acceptance test"
-}
-`
 )
 
 func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
@@ -172,7 +132,7 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ClusterTemplateRecreateConfig,
+				Config: testAccRancher2ClusterTemplateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterTemplateExists(testAccRancher2ClusterTemplateType+".foo", clusterTemplate),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "name", "foo"),

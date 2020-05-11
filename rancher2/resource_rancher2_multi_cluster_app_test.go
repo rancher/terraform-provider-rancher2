@@ -15,40 +15,19 @@ const (
 )
 
 var (
-	testAccRancher2MultiClusterAppProject        string
-	testAccRancher2MultiClusterAppNamespace      string
-	testAccRancher2MultiClusterAppConfig         string
-	testAccRancher2MultiClusterAppUpdateConfig   string
-	testAccRancher2MultiClusterAppRecreateConfig string
+	testAccRancher2MultiClusterApp             string
+	testAccRancher2MultiClusterAppUpdate       string
+	testAccRancher2MultiClusterAppConfig       string
+	testAccRancher2MultiClusterAppUpdateConfig string
 )
 
 func init() {
-	testAccRancher2MultiClusterAppProject = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform app acceptance test"
-  resource_quota {
-    project_limit {
-      limits_cpu = "2000m"
-      limits_memory = "2000Mi"
-      requests_storage = "2Gi"
-    }
-    namespace_default_limit {
-      limits_cpu = "500m"
-      limits_memory = "500Mi"
-      requests_storage = "1Gi"
-    }
-  }
-}
-`
-
-	testAccRancher2MultiClusterAppConfig = testAccRancher2MultiClusterAppProject + `
-resource "rancher2_multi_cluster_app" "foo" {
+	testAccRancher2MultiClusterApp = `
+resource "` + testAccRancher2MultiClusterAppType + `" "foo" {
   catalog_name = "library"
   name = "foo"
   targets {
-    project_id = "${rancher2_project.foo.id}"
+    project_id = rancher2_cluster_sync.testacc.default_project_id
   }
   template_name = "docker-registry"
   template_version = "1.8.1"
@@ -60,13 +39,12 @@ resource "rancher2_multi_cluster_app" "foo" {
   roles = ["project-member"]
 }
 `
-
-	testAccRancher2MultiClusterAppUpdateConfig = testAccRancher2MultiClusterAppProject + `
-resource "rancher2_multi_cluster_app" "foo" {
+	testAccRancher2MultiClusterAppUpdate = `
+resource "` + testAccRancher2MultiClusterAppType + `" "foo" {
   catalog_name = "library"
   name = "foo"
   targets {
-    project_id = "${rancher2_project.foo.id}"
+    project_id = rancher2_cluster_sync.testacc.default_project_id
   }
   template_name = "docker-registry"
   template_version = "1.8.1"
@@ -78,24 +56,8 @@ resource "rancher2_multi_cluster_app" "foo" {
   roles = ["cluster-admin"]
 }
 `
-
-	testAccRancher2MultiClusterAppRecreateConfig = testAccRancher2MultiClusterAppProject + `
-resource "rancher2_multi_cluster_app" "foo" {
-  catalog_name = "library"
-  name = "foo"
-  targets {
-    project_id = "${rancher2_project.foo.id}"
-  }
-  template_name = "docker-registry"
-  template_version = "1.8.1"
-  answers {
-    values = {
-      "ingress_host" = "test.xip.io"
-    }
-  }
-  roles = ["project-member"]
-}
-`
+	testAccRancher2MultiClusterAppConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2MultiClusterApp
+	testAccRancher2MultiClusterAppUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2MultiClusterAppUpdate
 }
 
 func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
@@ -126,7 +88,7 @@ func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2MultiClusterAppRecreateConfig,
+				Config: testAccRancher2MultiClusterAppConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2MultiClusterAppExists(testAccRancher2MultiClusterAppType+".foo", app),
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "name", "foo"),

@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	testAccRancher2NodeDriverType   = "rancher2_node_driver"
-	testAccRancher2NodeDriverConfig = `
-resource "rancher2_node_driver" "foo" {
+	testAccRancher2NodeDriverType = "rancher2_node_driver"
+	testAccRancher2NodeDriver     = `
+resource "` + testAccRancher2NodeDriverType + `" "foo" {
     active = false
     builtin = false
     checksum = "0x0"
@@ -23,16 +23,10 @@ resource "rancher2_node_driver" "foo" {
     ui_url = "local://ui"
     url = "local://"
 	whitelist_domains = ["*.foo.com"]
-	annotations = {
-		foo = "bar"
-	}
-	labels = {
-		foo = "baz"
-	}
 }
 `
-	testAccRancher2NodeDriverUpdateConfig = `
-resource "rancher2_node_driver" "foo" {
+	testAccRancher2NodeDriverUpdate = `
+resource "` + testAccRancher2NodeDriverType + `" "foo" {
     active = false
     builtin = false
     checksum = "0x1"
@@ -42,35 +36,8 @@ resource "rancher2_node_driver" "foo" {
     ui_url = "local://ui/updated"
     url = "local://updated"
     whitelist_domains = ["*.foo.com", "updated.foo.com"]
-	annotations = {
-		foo = "updated"
-		bar = "added"
-	}
-	labels = {
-		foo = "updated"
-		bar = "added"
-	}
 }
  `
-	testAccRancher2NodeDriverRecreateConfig = `
-resource "rancher2_node_driver" "foo" {
-    active = false
-    builtin = false
-    checksum = "0x0"
-    description = "Foo description"
-    external_id = "foo_external"
-    name = "foo"
-    ui_url = "local://ui"
-    url = "local://"
-	whitelist_domains = ["*.foo.com"]
-	annotations = {
-		foo = "bar"
-	}
-	labels = {
-		foo = "baz"
-	}
-}
-`
 )
 
 func TestAccRancher2NodeDriver_basic(t *testing.T) {
@@ -82,10 +49,7 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2NodeDriverDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2NodeDriverConfig,
-				// Some annotation and labels are computed, as such the
-				// subsequent plan would not be empty
-				ExpectNonEmptyPlan: true,
+				Config: testAccRancher2NodeDriver,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeDriverExists(name, nodeDriver),
 					resource.TestCheckResourceAttr(name, "active", "false"),
@@ -97,16 +61,10 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "ui_url", "local://ui"),
 					resource.TestCheckResourceAttr(name, "url", "local://"),
 					resource.TestCheckResourceAttr(name, "whitelist_domains.0", "*.foo.com"),
-					resource.TestCheckResourceAttr(name, "annotations.foo", "bar"),
-					resource.TestCheckResourceAttr(name, "labels.foo", "baz"),
-					resource.TestCheckResourceAttr(name, "labels.cattle.io/creator", "norman"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2NodeDriverUpdateConfig,
-				// Some annotation and labels are computed, as such the
-				// subsequent plan would not be empty
-				ExpectNonEmptyPlan: true,
+				Config: testAccRancher2NodeDriverUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeDriverExists(name, nodeDriver),
 					resource.TestCheckResourceAttr(name, "active", "false"),
@@ -119,19 +77,10 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "url", "local://updated"),
 					resource.TestCheckResourceAttr(name, "whitelist_domains.0", "*.foo.com"),
 					resource.TestCheckResourceAttr(name, "whitelist_domains.1", "updated.foo.com"),
-					resource.TestCheckResourceAttr(name, "annotations.foo", "updated"),
-					resource.TestCheckResourceAttr(name, "annotations.bar", "added"),
-					resource.TestCheckResourceAttr(name, "annotations.lifecycle.cattle.io/create.node-driver-controller", "true"),
-					resource.TestCheckResourceAttr(name, "labels.foo", "updated"),
-					resource.TestCheckResourceAttr(name, "labels.bar", "added"),
-					resource.TestCheckResourceAttr(name, "labels.cattle.io/creator", "norman"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2NodeDriverRecreateConfig,
-				// Some annotation and labels are computed, as such the
-				// subsequent plan would not be empty
-				ExpectNonEmptyPlan: true,
+				Config: testAccRancher2NodeDriver,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeDriverExists(name, nodeDriver),
 					resource.TestCheckResourceAttr(name, "active", "false"),
@@ -143,9 +92,6 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "ui_url", "local://ui"),
 					resource.TestCheckResourceAttr(name, "url", "local://"),
 					resource.TestCheckResourceAttr(name, "whitelist_domains.0", "*.foo.com"),
-					resource.TestCheckResourceAttr(name, "annotations.foo", "bar"),
-					resource.TestCheckResourceAttr(name, "labels.foo", "baz"),
-					resource.TestCheckResourceAttr(name, "labels.cattle.io/creator", "norman"),
 				),
 			},
 		},
@@ -161,7 +107,7 @@ func TestAccRancher2NodeDriver_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2NodeDriverDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2NodeDriverConfig,
+				Config: testAccRancher2NodeDriver,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeDriverExists(testAccRancher2NodeDriverType+".foo", nodeDriver),
 					testAccRancher2NodeDriverDisappears(nodeDriver),

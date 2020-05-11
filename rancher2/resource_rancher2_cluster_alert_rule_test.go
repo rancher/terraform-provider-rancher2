@@ -15,52 +15,34 @@ const (
 )
 
 var (
-	testAccRancher2ClusterAlertRuleGroup          string
-	testAccRancher2ClusterAlertRuleConfig         string
-	testAccRancher2ClusterAlertRuleUpdateConfig   string
-	testAccRancher2ClusterAlertRuleRecreateConfig string
+	testAccRancher2ClusterAlertRuleGroup        string
+	testAccRancher2ClusterAlertRule             string
+	testAccRancher2ClusterAlertRuleUpdate       string
+	testAccRancher2ClusterAlertRuleConfig       string
+	testAccRancher2ClusterAlertRuleUpdateConfig string
 )
 
 func init() {
-	testAccRancher2ClusterAlertRuleGroup = `
-resource "rancher2_cluster_alert_group" "foo" {
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  name = "foo"
-  description = "Terraform cluster alert rule acceptance test"
-  group_interval_seconds = 300
-  repeat_interval_seconds = 3600
-}
-`
-
-	testAccRancher2ClusterAlertRuleConfig = testAccRancher2ClusterAlertRuleGroup + `
-resource "rancher2_cluster_alert_rule" "foo" {
-  cluster_id = "${rancher2_cluster_alert_group.foo.cluster_id}"
-  group_id = "${rancher2_cluster_alert_group.foo.id}"
+	testAccRancher2ClusterAlertRule = `
+resource "` + testAccRancher2ClusterAlertRuleType + `" "foo" {
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
+  group_id = rancher2_cluster_alert_group.foo.id
   name = "foo"
   group_interval_seconds = 300
   repeat_interval_seconds = 3600
 }
 `
-
-	testAccRancher2ClusterAlertRuleUpdateConfig = testAccRancher2ClusterAlertRuleGroup + `
-resource "rancher2_cluster_alert_rule" "foo" {
-  cluster_id = "${rancher2_cluster_alert_group.foo.cluster_id}"
-  group_id = "${rancher2_cluster_alert_group.foo.id}"
+	testAccRancher2ClusterAlertRuleUpdate = `
+resource "` + testAccRancher2ClusterAlertRuleType + `" "foo" {
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
+  group_id = rancher2_cluster_alert_group.foo.id
   name = "foo"
   group_interval_seconds = 600
   repeat_interval_seconds = 6000
 }
- `
-
-	testAccRancher2ClusterAlertRuleRecreateConfig = testAccRancher2ClusterAlertRuleGroup + `
-resource "rancher2_cluster_alert_rule" "foo" {
-  cluster_id = "${rancher2_cluster_alert_group.foo.cluster_id}"
-  group_id = "${rancher2_cluster_alert_group.foo.id}"
-  name = "foo"
-  group_interval_seconds = 300
-  repeat_interval_seconds = 3600
-}
- `
+`
+	testAccRancher2ClusterAlertRuleConfig = testAccRancher2ClusterAlertGroupConfig + testAccRancher2ClusterAlertRule
+	testAccRancher2ClusterAlertRuleUpdateConfig = testAccRancher2ClusterAlertGroupConfig + testAccRancher2ClusterAlertRuleUpdate
 }
 
 func TestAccRancher2ClusterAlertRule_basic(t *testing.T) {
@@ -91,7 +73,7 @@ func TestAccRancher2ClusterAlertRule_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ClusterAlertRuleRecreateConfig,
+				Config: testAccRancher2ClusterAlertRuleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterAlertRuleExists(testAccRancher2ClusterAlertRuleType+".foo", ar),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterAlertRuleType+".foo", "name", "foo"),

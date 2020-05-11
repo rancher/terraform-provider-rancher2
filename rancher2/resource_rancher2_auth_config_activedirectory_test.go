@@ -12,7 +12,7 @@ import (
 const (
 	testAccRancher2AuthConfigActiveDirectoryType   = "rancher2_auth_config_activedirectory"
 	testAccRancher2AuthConfigActiveDirectoryConfig = `
-resource "rancher2_auth_config_activedirectory" "activedirectory" {
+resource "` + testAccRancher2AuthConfigActiveDirectoryType + `" "activedirectory" {
   servers = ["ad.test.local"]
   service_account_username = "XXXXXX"
   service_account_password = "XXXXXXXXX"
@@ -23,24 +23,13 @@ resource "rancher2_auth_config_activedirectory" "activedirectory" {
 `
 
 	testAccRancher2AuthConfigActiveDirectoryUpdateConfig = `
-resource "rancher2_auth_config_activedirectory" "activedirectory" {
+resource "` + testAccRancher2AuthConfigActiveDirectoryType + `" "activedirectory" {
   servers = ["ad.test.local"]
   service_account_username = "XXXXXX"
   service_account_password = "XXXXXXXXX"
   user_search_base = "dc=users,dc=test,dc=local"
   port = 389
   default_login_domain = "test-updated"
-}
- `
-
-	testAccRancher2AuthConfigActiveDirectoryRecreateConfig = `
-resource "rancher2_auth_config_activedirectory" "activedirectory" {
-  servers = ["ad.test.local"]
-  service_account_username = "XXXXXX"
-  service_account_password = "XXXXXXXXX"
-  user_search_base = "dc=test,dc=local"
-  port = 389
-  default_login_domain = "test"
 }
  `
 )
@@ -72,7 +61,7 @@ func TestAccRancher2AuthConfigActiveDirectory_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2AuthConfigActiveDirectoryRecreateConfig,
+				Config: testAccRancher2AuthConfigActiveDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "name", AuthConfigActiveDirectoryName),
