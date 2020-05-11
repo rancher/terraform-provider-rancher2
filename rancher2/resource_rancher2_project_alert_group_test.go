@@ -15,68 +15,33 @@ const (
 )
 
 var (
-	testAccRancher2ProjectAlertGroupProject        string
-	testAccRancher2ProjectAlertGroupConfig         string
-	testAccRancher2ProjectAlertGroupUpdateConfig   string
-	testAccRancher2ProjectAlertGroupRecreateConfig string
+	testAccRancher2ProjectAlertGroup             string
+	testAccRancher2ProjectAlertGroupUpdate       string
+	testAccRancher2ProjectAlertGroupConfig       string
+	testAccRancher2ProjectAlertGroupUpdateConfig string
 )
 
 func init() {
-	testAccRancher2ProjectAlertGroupProject = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform project alert group acceptance test"
-  resource_quota {
-    project_limit {
-      limits_cpu = "2000m"
-      limits_memory = "2000Mi"
-      requests_storage = "2Gi"
-    }
-    namespace_default_limit {
-      limits_cpu = "500m"
-      limits_memory = "500Mi"
-      requests_storage = "1Gi"
-    }
-  }
-  container_resource_limit {
-    limits_cpu = "20m"
-    limits_memory = "20Mi"
-    requests_cpu = "1m"
-    requests_memory = "1Mi"
-  }
-}
-`
-
-	testAccRancher2ProjectAlertGroupConfig = testAccRancher2ProjectAlertGroupProject + `
-resource "rancher2_project_alert_group" "foo" {
+	testAccRancher2ProjectAlertGroup = `
+resource "` + testAccRancher2ProjectAlertGroupType + `" "foo" {
   name = "foo"
   description = "Terraform project alert group acceptance test"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   group_interval_seconds = 300
   repeat_interval_seconds = 3600
 }
 `
-
-	testAccRancher2ProjectAlertGroupUpdateConfig = testAccRancher2ProjectAlertGroupProject + `
-resource "rancher2_project_alert_group" "foo" {
+	testAccRancher2ProjectAlertGroupUpdate = `
+resource "` + testAccRancher2ProjectAlertGroupType + `" "foo" {
   name = "foo"
   description = "Terraform project alert group acceptance test - updated"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   group_interval_seconds = 600
   repeat_interval_seconds = 6000
 }
- `
-
-	testAccRancher2ProjectAlertGroupRecreateConfig = testAccRancher2ProjectAlertGroupProject + `
-resource "rancher2_project_alert_group" "foo" {
-  name = "foo"
-  description = "Terraform project alert group acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  group_interval_seconds = 300
-  repeat_interval_seconds = 3600
-}
- `
+`
+	testAccRancher2ProjectAlertGroupConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ProjectAlertGroup
+	testAccRancher2ProjectAlertGroupUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ProjectAlertGroupUpdate
 }
 
 func TestAccRancher2ProjectAlertGroup_basic(t *testing.T) {
@@ -107,7 +72,7 @@ func TestAccRancher2ProjectAlertGroup_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ProjectAlertGroupRecreateConfig,
+				Config: testAccRancher2ProjectAlertGroupConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectAlertGroupExists(testAccRancher2ProjectAlertGroupType+".foo", ag),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectAlertGroupType+".foo", "name", "foo"),

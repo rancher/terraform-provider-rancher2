@@ -10,132 +10,81 @@ import (
 )
 
 const (
-	testAccRancher2CatalogType         = "rancher2_catalog"
-	testAccRancher2CatalogGlobalConfig = `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
+	testAccRancher2CatalogType   = "rancher2_catalog"
+	testAccRancher2CatalogGlobal = `
+resource "` + testAccRancher2CatalogType + `" "foo-global" {
+  name = "foo-global"
   url = "http://foo.com:8080"
   description= "Terraform catalog acceptance test"
   version = "helm_v3"
 }
 `
-
-	testAccRancher2CatalogGlobalUpdateConfig = `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
+	testAccRancher2CatalogGlobalUpdate = `
+resource "` + testAccRancher2CatalogType + `" "foo-global" {
+  name = "foo-global"
   url = "http://foo.updated.com:8080"
   description= "Terraform catalog acceptance test - updated"
-  version = "helm_v3"
-}
- `
-
-	testAccRancher2CatalogGlobalRecreateConfig = `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
-  url = "http://foo.com:8080"
-  description= "Terraform catalog acceptance test"
   version = "helm_v3"
 }
  `
 )
 
 var (
-	testAccRancher2CatalogClusterConfig         string
-	testAccRancher2CatalogClusterUpdateConfig   string
-	testAccRancher2CatalogClusterRecreateConfig string
-	testAccRancher2CatalogProject               string
-	testAccRancher2CatalogProjectConfig         string
-	testAccRancher2CatalogProjectUpdateConfig   string
-	testAccRancher2CatalogProjectRecreateConfig string
+	testAccRancher2CatalogCluster             string
+	testAccRancher2CatalogClusterUpdate       string
+	testAccRancher2CatalogClusterConfig       string
+	testAccRancher2CatalogClusterUpdateConfig string
+	testAccRancher2CatalogProject             string
+	testAccRancher2CatalogProjectUpdate       string
+	testAccRancher2CatalogProjectConfig       string
+	testAccRancher2CatalogProjectUpdateConfig string
 )
 
 func init() {
-	testAccRancher2CatalogClusterConfig = `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
+	testAccRancher2CatalogCluster = `
+resource "` + testAccRancher2CatalogType + `" "foo-cluster" {
+  name = "foo-cluster"
   url = "http://foo.com:8080"
   description= "Terraform catalog acceptance test"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   scope = "cluster"
   version = "helm_v2"
 }
 `
-
-	testAccRancher2CatalogClusterUpdateConfig = `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
+	testAccRancher2CatalogClusterUpdate = `
+resource "` + testAccRancher2CatalogType + `" "foo-cluster" {
+  name = "foo-cluster"
   url = "http://foo.updated.com:8080"
   description= "Terraform catalog acceptance test - updated"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   scope = "cluster"
   version = "helm_v2"
 }
  `
-
-	testAccRancher2CatalogClusterRecreateConfig = `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
-  url = "http://foo.com:8080"
-  description= "Terraform catalog acceptance test"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  scope = "cluster"
-  version = "helm_v2"
-}
- `
-
+	testAccRancher2CatalogClusterConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2CatalogCluster
+	testAccRancher2CatalogClusterUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2CatalogClusterUpdate
 	testAccRancher2CatalogProject = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform project acceptance test"
-  resource_quota {
-    project_limit {
-      limits_cpu = "2000m"
-      limits_memory = "2000Mi"
-      requests_storage = "2Gi"
-    }
-    namespace_default_limit {
-      limits_cpu = "500m"
-      limits_memory = "500Mi"
-      requests_storage = "1Gi"
-    }
-  }
-}
-`
-
-	testAccRancher2CatalogProjectConfig = testAccRancher2CatalogProject + `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
+resource "` + testAccRancher2CatalogType + `" "foo-project" {
+  name = "foo-project"
   url = "http://foo.com:8080"
   description= "Terraform catalog acceptance test"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   scope = "project"
   version = "helm_v2"
 }
 `
-
-	testAccRancher2CatalogProjectUpdateConfig = testAccRancher2CatalogProject + `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
+	testAccRancher2CatalogProjectUpdate = `
+resource "` + testAccRancher2CatalogType + `" "foo-project" {
+  name = "foo-project"
   url = "http://foo.updated.com:8080"
   description= "Terraform catalog acceptance test - updated"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   scope = "project"
   version = "helm_v2"
 }
- `
-
-	testAccRancher2CatalogProjectRecreateConfig = testAccRancher2CatalogProject + `
-resource "rancher2_catalog" "foo" {
-  name = "foo"
-  url = "http://foo.com:8080"
-  description= "Terraform catalog acceptance test"
-  project_id = "${rancher2_project.foo.id}"
-  scope = "project"
-  version = "helm_v2"
-}
- `
-
+`
+	testAccRancher2CatalogProjectConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2CatalogProject
+	testAccRancher2CatalogProjectUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2CatalogProjectUpdate
 }
 
 func TestAccRancher2Catalog_basic_Global(t *testing.T) {
@@ -147,36 +96,36 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2CatalogGlobalConfig,
+				Config: testAccRancher2CatalogGlobal,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v3"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-global", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2CatalogGlobalUpdateConfig,
+				Config: testAccRancher2CatalogGlobalUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.updated.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v3"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-global", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.updated.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2CatalogGlobalRecreateConfig,
+				Config: testAccRancher2CatalogGlobal,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v3"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-global", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 				),
 			},
 		},
@@ -192,9 +141,9 @@ func TestAccRancher2Catalog_disappears_Global(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2CatalogGlobalConfig,
+				Config: testAccRancher2CatalogGlobal,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-global", catalog),
 					testAccRancher2CatalogDisappears(catalog),
 				),
 				ExpectNonEmptyPlan: true,
@@ -214,37 +163,37 @@ func TestAccRancher2Catalog_basic_Cluster(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2CatalogClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "cluster"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "cluster_id", testAccRancher2ClusterID),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-cluster", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "name", "foo-cluster"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "description", "Terraform catalog acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "scope", "cluster"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "version", "helm_v2"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2CatalogClusterUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.updated.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "cluster"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "cluster_id", testAccRancher2ClusterID),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-cluster", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "name", "foo-cluster"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "description", "Terraform catalog acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "url", "http://foo.updated.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "scope", "cluster"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "version", "helm_v2"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2CatalogClusterRecreateConfig,
+				Config: testAccRancher2CatalogClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "cluster"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "cluster_id", testAccRancher2ClusterID),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-cluster", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "name", "foo-cluster"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "description", "Terraform catalog acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "scope", "cluster"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "cluster_id", testAccRancher2ClusterID),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "version", "helm_v2"),
 				),
 			},
 		},
@@ -262,7 +211,7 @@ func TestAccRancher2Catalog_disappears_Cluster(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2CatalogClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-cluster", catalog),
 					testAccRancher2CatalogDisappears(catalog),
 				),
 				ExpectNonEmptyPlan: true,
@@ -282,34 +231,34 @@ func TestAccRancher2Catalog_basic_Project(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2CatalogProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "project"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-project", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "name", "foo-project"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "description", "Terraform catalog acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "scope", "project"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "version", "helm_v2"),
 				),
 			},
 			resource.TestStep{
 				Config: testAccRancher2CatalogProjectUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.updated.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "project"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-project", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "name", "foo-project"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "description", "Terraform catalog acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "url", "http://foo.updated.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "scope", "project"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "version", "helm_v2"),
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2CatalogProjectRecreateConfig,
+				Config: testAccRancher2CatalogProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "scope", "project"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo", "version", "helm_v2"),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-project", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "name", "foo-project"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "description", "Terraform catalog acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "scope", "project"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "version", "helm_v2"),
 				),
 			},
 		},
@@ -327,7 +276,7 @@ func TestAccRancher2Catalog_disappears_Project(t *testing.T) {
 			resource.TestStep{
 				Config: testAccRancher2CatalogProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo", catalog),
+					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-project", catalog),
 					testAccRancher2CatalogDisappears(catalog),
 				),
 				ExpectNonEmptyPlan: true,

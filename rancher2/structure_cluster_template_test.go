@@ -29,7 +29,7 @@ var (
 	testClusterTemplateInterface                                    map[string]interface{}
 )
 
-func init() {
+func testClusterTemplate() {
 	k8sVersion = testAccRancher2ClusterRKEK8SDefaultVersion
 	if len(testAccRancher2ClusterRKEK8SDefaultVersion) == 0 {
 		k8sVersion = "test"
@@ -207,7 +207,7 @@ func init() {
 }
 
 func TestFlattenQuestions(t *testing.T) {
-
+	testClusterTemplate()
 	cases := []struct {
 		Input          []managementClient.Question
 		ExpectedOutput []interface{}

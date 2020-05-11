@@ -69,12 +69,30 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return fmt.Errorf("[ERROR] Updating Admin password: %s", err)
 	}
-
 	d.Set("password", newPass)
 	d.Set("current_password", newPass)
 
 	// Set resource ID
 	d.SetId(adminUser.ID)
+
+	// Updating local cluster due to issue https://github.com/rancher/rancher/issues/16213
+	client, err := meta.(*Config).ManagementClient()
+	if err != nil {
+		return err
+	}
+	clusterLocal, _ := client.Cluster.ByID("local")
+	if clusterLocal != nil && clusterLocal.State == "provisioning" {
+		annotations := clusterLocal.Annotations
+		annotations["rancher2.terraform.io/bootstrap"] = "true"
+		update := map[string]interface{}{
+			"name":        "local",
+			"annotations": annotations,
+		}
+		_, err := client.Cluster.Update(clusterLocal, update)
+		if err != nil {
+			return err
+		}
+	}
 
 	return resourceRancher2BootstrapRead(d, meta)
 }
@@ -223,6 +241,10 @@ func bootstrapDoLogin(d *schema.ResourceData, meta interface{}) error {
 	currentPass := d.Get("current_password").(string)
 	if len(currentPass) == 0 {
 		currentPass = bootstrapDefaultPassword
+	}
+	err = meta.(*Config).isRancherReady()
+	if err != nil {
+		return err
 	}
 	tokenID, token, err := DoUserLogin(meta.(*Config).URL, bootstrapDefaultUser, currentPass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
 	if err != nil {

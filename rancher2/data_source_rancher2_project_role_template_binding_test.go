@@ -6,41 +6,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-const (
-	testAccRancher2ProjectRoleTemplateBindingDataSourceType = "rancher2_project_role_template_binding"
-)
-
-var (
-	testAccCheckRancher2ProjectRoleTemplateBindingDataSourceConfig string
-)
-
-func init() {
-	testAccCheckRancher2ProjectRoleTemplateBindingDataSourceConfig = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform project role template binding acceptance test"
-}
-resource "rancher2_user" "foo" {
-  name = "Terraform user acceptance test"
-  username = "foo"
-  password = "changeme"
-}
-resource "rancher2_project_role_template_binding" "foo" {
-  name = "foo"
-  project_id = "${rancher2_project.foo.id}"
-  role_template_id = "project-member"
-  user_id = "${rancher2_user.foo.id}"
-}
-
-data "` + testAccRancher2ProjectRoleTemplateBindingDataSourceType + `" "foo" {
-  name = "${rancher2_project_role_template_binding.foo.name}"
-  project_id = "${rancher2_project_role_template_binding.foo.project_id}"
+func TestAccRancher2ProjectRoleTemplateBindingDataSource(t *testing.T) {
+	testAccCheckRancher2ProjectRoleTemplateBindingDataSourceConfig := testAccCheckRancher2ClusterSyncTestacc + testAccRancher2User + testAccRancher2ProjectRoleTemplateBinding + `
+data "` + testAccRancher2ProjectRoleTemplateBindingType + `" "foo" {
+  name = rancher2_project_role_template_binding.foo.name
+  project_id = rancher2_project_role_template_binding.foo.project_id
 }
 `
-}
-
-func TestAccRancher2ProjectRoleTemplateBindingDataSource(t *testing.T) {
+	name := "data." + testAccRancher2ProjectRoleTemplateBindingType + ".foo"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -48,9 +21,9 @@ func TestAccRancher2ProjectRoleTemplateBindingDataSource(t *testing.T) {
 			{
 				Config: testAccCheckRancher2ProjectRoleTemplateBindingDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data."+testAccRancher2ProjectRoleTemplateBindingDataSourceType+".foo", "name", "foo"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2ProjectRoleTemplateBindingDataSourceType+".foo", "role_template_id", "project-member"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2ProjectRoleTemplateBindingDataSourceType+".foo", "labels.cattle.io/creator", "norman"),
+					resource.TestCheckResourceAttr(name, "name", "foo"),
+					resource.TestCheckResourceAttr(name, "role_template_id", "project-member"),
+					resource.TestCheckResourceAttr(name, "labels.cattle.io/creator", "norman"),
 				),
 			},
 		},

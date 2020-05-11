@@ -15,41 +15,33 @@ const (
 )
 
 var (
-	testAccRancher2ClusterAlertGroupConfig         string
-	testAccRancher2ClusterAlertGroupUpdateConfig   string
-	testAccRancher2ClusterAlertGroupRecreateConfig string
+	testAccRancher2ClusterAlertGroup             string
+	testAccRancher2ClusterAlertGroupUpdate       string
+	testAccRancher2ClusterAlertGroupConfig       string
+	testAccRancher2ClusterAlertGroupUpdateConfig string
 )
 
 func init() {
-	testAccRancher2ClusterAlertGroupConfig = `
-resource "rancher2_cluster_alert_group" "foo" {
+	testAccRancher2ClusterAlertGroup = `
+resource "` + testAccRancher2ClusterAlertGroupType + `" "foo" {
   name = "foo"
   description = "Terraform cluster alert group acceptance test"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   group_interval_seconds = 300
   repeat_interval_seconds = 3600
 }
 `
-
-	testAccRancher2ClusterAlertGroupUpdateConfig = `
-resource "rancher2_cluster_alert_group" "foo" {
+	testAccRancher2ClusterAlertGroupUpdate = `
+resource "` + testAccRancher2ClusterAlertGroupType + `" "foo" {
   name = "foo"
   description = "Terraform cluster alert group acceptance test - updated"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   group_interval_seconds = 600
   repeat_interval_seconds = 6000
 }
  `
-
-	testAccRancher2ClusterAlertGroupRecreateConfig = `
-resource "rancher2_cluster_alert_group" "foo" {
-  name = "foo"
-  description = "Terraform cluster alert group acceptance test"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  group_interval_seconds = 300
-  repeat_interval_seconds = 3600
-}
- `
+	testAccRancher2ClusterAlertGroupConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ClusterAlertGroup
+	testAccRancher2ClusterAlertGroupUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ClusterAlertGroupUpdate
 }
 
 func TestAccRancher2ClusterAlertGroup_basic(t *testing.T) {
@@ -80,7 +72,7 @@ func TestAccRancher2ClusterAlertGroup_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ClusterAlertGroupRecreateConfig,
+				Config: testAccRancher2ClusterAlertGroupConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterAlertGroupExists(testAccRancher2ClusterAlertGroupType+".foo", ag),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterAlertGroupType+".foo", "name", "foo"),

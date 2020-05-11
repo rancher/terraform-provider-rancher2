@@ -15,55 +15,36 @@ const (
 )
 
 var (
-	testAccRancher2ProjectRoleTemplateBindingProject        string
-	testAccRancher2ProjectRoleTemplateBindingConfig         string
-	testAccRancher2ProjectRoleTemplateBindingUpdateConfig   string
-	testAccRancher2ProjectRoleTemplateBindingRecreateConfig string
+	testAccRancher2ProjectRoleTemplateBinding             string
+	testAccRancher2ProjectRoleTemplateBindingUpdate       string
+	testAccRancher2ProjectRoleTemplateBindingConfig       string
+	testAccRancher2ProjectRoleTemplateBindingUpdateConfig string
 )
 
 func init() {
-	testAccRancher2ProjectRoleTemplateBindingProject = `
-resource "rancher2_user" "foo" {
-  name = "Terraform user acceptance test"
-  username = "foo"
-  password = "changeme"
-}
-resource "rancher2_project" "foo" {
+	testAccRancher2ProjectRoleTemplateBinding = `
+resource "` + testAccRancher2ProjectRoleTemplateBindingType + `" "foo" {
   name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform project role template binding acceptance test"
-}
-`
-	testAccRancher2ProjectRoleTemplateBindingConfig = testAccRancher2ProjectRoleTemplateBindingProject + `
-resource "rancher2_project_role_template_binding" "foo" {
-  name = "foo"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   role_template_id = "project-member"
-  user_id = "${rancher2_user.foo.id}"
+  user_id = rancher2_user.foo.id
 }
 `
-
-	testAccRancher2ProjectRoleTemplateBindingUpdateConfig = testAccRancher2ProjectRoleTemplateBindingProject + `
-resource "rancher2_project_role_template_binding" "foo" {
+	testAccRancher2ProjectRoleTemplateBindingUpdate = `
+resource "` + testAccRancher2ProjectRoleTemplateBindingType + `" "foo" {
   name = "foo"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_cluster_sync.testacc.default_project_id
   role_template_id = "project-owner"
   user_id = "u-q2wg7"
-}
- `
-
-	testAccRancher2ProjectRoleTemplateBindingRecreateConfig = testAccRancher2ProjectRoleTemplateBindingProject + `
-resource "rancher2_project_role_template_binding" "foo" {
-  name = "foo"
-  project_id = "${rancher2_project.foo.id}"
-  role_template_id = "project-member"
-  user_id = "${rancher2_user.foo.id}"
 }
  `
 }
 
 func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 	var projectRole *managementClient.ProjectRoleTemplateBinding
+
+	testAccRancher2ProjectRoleTemplateBindingConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2User + testAccRancher2ProjectRoleTemplateBinding
+	testAccRancher2ProjectRoleTemplateBindingUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2User + testAccRancher2ProjectRoleTemplateBindingUpdate
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -87,7 +68,7 @@ func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ProjectRoleTemplateBindingRecreateConfig,
+				Config: testAccRancher2ProjectRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "name", "foo"),

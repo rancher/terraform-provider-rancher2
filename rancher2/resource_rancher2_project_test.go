@@ -15,16 +15,18 @@ const (
 )
 
 var (
-	testAccRancher2ProjectConfig         string
-	testAccRancher2ProjectUpdateConfig   string
-	testAccRancher2ProjectRecreateConfig string
+	testAccRancher2ProjectConfig       string
+	testAccRancher2ProjectUpdateConfig string
+	testAccRancher2Project             string
+	testAccRancher2ProjectUpdate       string
 )
 
 func init() {
-	testAccRancher2ProjectConfig = `
-resource "rancher2_project" "foo" {
+
+	testAccRancher2Project = `
+resource "` + testAccRancher2ProjectType + `" "foo" {
   name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   description = "Terraform project acceptance test"
   resource_quota {
     project_limit {
@@ -46,11 +48,10 @@ resource "rancher2_project" "foo" {
   }
 }
 `
-
-	testAccRancher2ProjectUpdateConfig = `
-resource "rancher2_project" "foo" {
+	testAccRancher2ProjectUpdate = `
+resource "` + testAccRancher2ProjectType + `" "foo" {
   name = "foo-updated"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   description = "Terraform project acceptance test - updated"
   resource_quota {
     project_limit {
@@ -72,36 +73,13 @@ resource "rancher2_project" "foo" {
   }
 }
  `
-
-	testAccRancher2ProjectRecreateConfig = `
-resource "rancher2_project" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  description = "Terraform project acceptance test"
-  resource_quota {
-    project_limit {
-      limits_cpu = "2000m"
-      limits_memory = "2000Mi"
-      requests_storage = "2Gi"
-    }
-    namespace_default_limit {
-      limits_cpu = "500m"
-      limits_memory = "500Mi"
-      requests_storage = "1Gi"
-    }
-  }
-  container_resource_limit {
-    limits_cpu = "20m"
-    limits_memory = "20Mi"
-    requests_cpu = "1m"
-    requests_memory = "1Mi"
-  }
-}
- `
 }
 
 func TestAccRancher2Project_basic(t *testing.T) {
 	var project *managementClient.Project
+
+	testAccRancher2ProjectConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2Project
+	testAccRancher2ProjectUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ProjectUpdate
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
@@ -128,7 +106,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ProjectRecreateConfig,
+				Config: testAccRancher2ProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "name", "foo"),

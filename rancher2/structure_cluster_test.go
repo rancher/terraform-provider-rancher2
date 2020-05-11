@@ -35,7 +35,7 @@ var (
 	testClusterInterfaceTemplate                   map[string]interface{}
 )
 
-func init() {
+func testCluster() {
 	testClusterAnswersConf = &managementClient.Answer{
 		ClusterID: "cluster_id",
 		ProjectID: "project_id",
@@ -299,7 +299,7 @@ func init() {
 }
 
 func TestFlattenClusterRegistationToken(t *testing.T) {
-
+	testCluster()
 	cases := []struct {
 		Input          *managementClient.ClusterRegistrationToken
 		ExpectedOutput []interface{}

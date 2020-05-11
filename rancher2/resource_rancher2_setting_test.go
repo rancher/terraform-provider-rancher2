@@ -13,23 +13,15 @@ import (
 const (
 	testAccRancher2SettingType   = "rancher2_setting"
 	testAccRancher2SettingConfig = `
-resource "rancher2_setting" "foo" {
+resource "` + testAccRancher2SettingType + `" "foo" {
 	name = "foo"
 	value = "Terraform setting acceptance test"
 }
 `
-
 	testAccRancher2SettingUpdateConfig = `
-resource "rancher2_setting" "foo" {
+resource "` + testAccRancher2SettingType + `" "foo" {
 	name = "foo"
 	value = "Terraform setting acceptance test - updated"
-}
- `
-
-	testAccRancher2SettingRecreateConfig = `
-resource "rancher2_setting" "foo" {
-	name = "foo"
-	value = "Terraform setting acceptance test"
 }
  `
 )
@@ -59,7 +51,7 @@ func TestAccRancher2Setting_basic(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2SettingRecreateConfig,
+				Config: testAccRancher2SettingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SettingExists(testAccRancher2SettingType+".foo", setting),
 					resource.TestCheckResourceAttr(testAccRancher2SettingType+".foo", "name", "foo"),

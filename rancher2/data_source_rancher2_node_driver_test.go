@@ -6,23 +6,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-const (
-	testAccRancher2NodeDriverDataSourceType = "rancher2_node_driver"
-)
-
-var (
-	testAccCheckRancher2NodeDriverDataSourceConfig string
-)
-
-func init() {
-	testAccCheckRancher2NodeDriverDataSourceConfig = `
-data "` + testAccRancher2NodeDriverDataSourceType + `" "foo" {
+func TestAccRancher2NodeDriverDataSource(t *testing.T) {
+	testAccCheckRancher2NodeDriverDataSourceConfig := `
+data "` + testAccRancher2NodeDriverType + `" "foo" {
   name = "amazonec2"
 }
 `
-}
-
-func TestAccRancher2NodeDriverDataSource(t *testing.T) {
+	name := "data." + testAccRancher2NodeDriverType + ".foo"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -30,9 +20,9 @@ func TestAccRancher2NodeDriverDataSource(t *testing.T) {
 			{
 				Config: testAccCheckRancher2NodeDriverDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data."+testAccRancher2NodeDriverDataSourceType+".foo", "name", "amazonec2"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2NodeDriverDataSourceType+".foo", "id", "amazonec2"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2NodeDriverDataSourceType+".foo", "labels.cattle.io/creator", "norman"),
+					resource.TestCheckResourceAttr(name, "name", "amazonec2"),
+					resource.TestCheckResourceAttr(name, "id", "amazonec2"),
+					resource.TestCheckResourceAttr(name, "labels.cattle.io/creator", "norman"),
 				),
 			},
 		},

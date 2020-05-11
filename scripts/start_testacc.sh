@@ -78,7 +78,7 @@ export RANCHER_URL=https://${rancher_server_ip}:${TESTACC_RANCHER_PORT}
 export RANCHER_INSECURE=true
 
 # Starting k3s cluster
-k3s_server=$(${DOCKER_BIN} run -d \
+k3s_imported_server=$(${DOCKER_BIN} run -d \
   ${k3s_exposed_port} \
   --privileged \
   --tmpfs /run \
@@ -88,15 +88,15 @@ k3s_server=$(${DOCKER_BIN} run -d \
   -e K3S_KUBECONFIG_MODE=666 \
   rancher/k3s:${TESTACC_K3S_VERSION} server --https-listen-port ${TESTACC_K3S_PORT})
 echo ${k3s_server} >> ${TESTACC_DOCKER_LIST}
-k3s_server_ip=$(${DOCKER_BIN} inspect ${k3s_server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
-k3s_node=$(${DOCKER_BIN} run -d \
+k3s_imported_server_ip=$(${DOCKER_BIN} inspect ${k3s_server} -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+k3s_imported_node=$(${DOCKER_BIN} run -d \
   --privileged \
   --tmpfs /run \
   --tmpfs /var/run \
   -e K3S_URL=https://${k3s_server_ip}:${TESTACC_K3S_PORT} \
   -e K3S_CLUSTER_SECRET=${TESTACC_K3S_SECRET} \
   rancher/k3s:${TESTACC_K3S_VERSION})
-echo ${k3s_node} >> ${TESTACC_DOCKER_LIST}
+echo ${k3s_imported_node} >> ${TESTACC_DOCKER_LIST}
 
 export RANCHER_ACC_CLUSTER_NAME=bootstrap-imported-k3s-cluster
 

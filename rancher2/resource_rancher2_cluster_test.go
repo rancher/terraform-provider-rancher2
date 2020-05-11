@@ -14,7 +14,7 @@ import (
 const (
 	testAccRancher2ClusterType      = "rancher2_cluster"
 	testAccRancher2ClusterConfigRKE = `
-resource "rancher2_cluster" "foo" {
+resource "` + testAccRancher2ClusterType + `" "foo" {
   name = "foo"
   description = "Terraform custom cluster acceptance test"
   rke_config {
@@ -25,6 +25,11 @@ resource "rancher2_cluster" "foo" {
       etcd {
         creation = "6h"
         retention = "24h"
+        backup_config {
+          enabled = true
+          interval_hours = 20
+          retention = 10
+        }
       }
       kube_api {
         audit_log {
@@ -60,9 +65,8 @@ resource "rancher2_cluster" "foo" {
   }
 }
 `
-
 	testAccRancher2ClusterUpdateConfigRKE = `
-resource "rancher2_cluster" "foo" {
+resource "` + testAccRancher2ClusterType + `" "foo" {
   name = "foo"
   description = "Terraform custom cluster acceptance test - updated"
   rke_config {
@@ -108,78 +112,21 @@ resource "rancher2_cluster" "foo" {
   }
 }
  `
-
-	testAccRancher2ClusterRecreateConfigRKE = `
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform custom cluster acceptance test"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-    services {
-      etcd {
-        creation = "6h"
-        retention = "24h"
-      }
-      kube_api {
-        audit_log {
-          enabled = true
-          configuration {
-            max_age = 5
-            max_backup = 5
-            max_size = 100
-            path = "-"
-            format = "json"
-            policy = "apiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n  creationTimestamp: null\nomitStages:\n- RequestReceived\nrules:\n- level: RequestResponse\n  resources:\n  - resources:\n    - pods\n"
-          }
-        }
-      }
-    }
-    upgrade_strategy {
-      drain = true
-      max_unavailable_worker = "20%"
-    }
-  }
-  scheduled_cluster_scan {
-    enabled = true
-    scan_config {
-      cis_scan_config {
-        debug_master = true
-        debug_worker = true
-      }
-    }
-    schedule_config {
-      cron_schedule = "30 * * * *"
-      retention = 5
-    }
-  }
-}
- `
-
 	testAccRancher2ClusterConfigImported = `
-resource "rancher2_cluster" "foo" {
+resource "` + testAccRancher2ClusterType + `" "foo" {
   name = "foo"
   description = "Terraform imported cluster acceptance test"
 }
 `
 
 	testAccRancher2ClusterUpdateConfigImported = `
-resource "rancher2_cluster" "foo" {
+resource "` + testAccRancher2ClusterType + `" "foo" {
   name = "foo"
   description = "Terraform imported cluster acceptance test - updated"
 }
  `
-
-	testAccRancher2ClusterRecreateConfigImported = `
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform imported cluster acceptance test"
-}
- `
-
 	testAccRancher2ClusterConfigK3S = `
-resource "rancher2_cluster" "foo" {
+resource "` + testAccRancher2ClusterType + `" "foo" {
   name = "foo"
   description = "Terraform k3s cluster acceptance test"
   k3s_config {
@@ -192,26 +139,10 @@ resource "rancher2_cluster" "foo" {
   }
 }
 `
-
 	testAccRancher2ClusterUpdateConfigK3S = `
-resource "rancher2_cluster" "foo" {
+resource "` + testAccRancher2ClusterType + `" "foo" {
   name = "foo"
   description = "Terraform k3s cluster acceptance test - updated"
-  k3s_config {
-    upgrade_strategy {
-      drain_server_nodes = false
-      drain_worker_nodes = false
-      server_concurrency = 1
-      worker_concurrency = 2
-    }
-  }
-}
- `
-
-	testAccRancher2ClusterRecreateConfigK3S = `
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform k3s cluster acceptance test"
   k3s_config {
     upgrade_strategy {
       drain_server_nodes = false
@@ -263,7 +194,7 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ClusterRecreateConfigRKE,
+				Config: testAccRancher2ClusterConfigRKE,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
@@ -328,7 +259,7 @@ func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ClusterRecreateConfigImported,
+				Config: testAccRancher2ClusterConfigImported,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),
@@ -389,7 +320,7 @@ func TestAccRancher2Cluster_basic_K3S(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ClusterRecreateConfigK3S,
+				Config: testAccRancher2ClusterConfigK3S,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "name", "foo"),

@@ -15,16 +15,17 @@ const (
 )
 
 var (
-	testAccRancher2ClusterLoggingConfigSyslog         string
-	testAccRancher2ClusterLoggingUpdateConfigSyslog   string
-	testAccRancher2ClusterLoggingRecreateConfigSyslog string
+	testAccRancher2ClusterLoggingSyslog             string
+	testAccRancher2ClusterLoggingSyslogUpdate       string
+	testAccRancher2ClusterLoggingSyslogConfig       string
+	testAccRancher2ClusterLoggingSyslogUpdateConfig string
 )
 
 func init() {
-	testAccRancher2ClusterLoggingConfigSyslog = `
-resource "rancher2_cluster_logging" "foo" {
+	testAccRancher2ClusterLoggingSyslog = `
+resource "` + testAccRancher2ClusterLoggingType + `" "foo" {
   name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   kind = "syslog"
   syslog_config {
     endpoint = "192.168.1.1:514"
@@ -34,11 +35,10 @@ resource "rancher2_cluster_logging" "foo" {
   }
 }
 `
-
-	testAccRancher2ClusterLoggingUpdateConfigSyslog = `
-resource "rancher2_cluster_logging" "foo" {
+	testAccRancher2ClusterLoggingSyslogUpdate = `
+resource "` + testAccRancher2ClusterLoggingType + `" "foo" {
   name = "foo-updated"
-  cluster_id = "` + testAccRancher2ClusterID + `"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
   kind = "syslog"
   syslog_config {
     endpoint = "192.168.1.1:514"
@@ -47,21 +47,9 @@ resource "rancher2_cluster_logging" "foo" {
     ssl_verify = false
   }
 }
- `
-
-	testAccRancher2ClusterLoggingRecreateConfigSyslog = `
-resource "rancher2_cluster_logging" "foo" {
-  name = "foo"
-  cluster_id = "` + testAccRancher2ClusterID + `"
-  kind = "syslog"
-  syslog_config {
-    endpoint = "192.168.1.1:514"
-    protocol = "udp"
-    severity = "notice"
-    ssl_verify = false
-  }
-}
- `
+`
+	testAccRancher2ClusterLoggingSyslogConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ClusterLoggingSyslog
+	testAccRancher2ClusterLoggingSyslogUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ClusterLoggingSyslogUpdate
 }
 
 func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
@@ -72,7 +60,7 @@ func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2ClusterLoggingDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2ClusterLoggingConfigSyslog,
+				Config: testAccRancher2ClusterLoggingSyslogConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "name", "foo"),
@@ -80,7 +68,7 @@ func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ClusterLoggingUpdateConfigSyslog,
+				Config: testAccRancher2ClusterLoggingSyslogUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "name", "foo-updated"),
@@ -88,7 +76,7 @@ func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: testAccRancher2ClusterLoggingRecreateConfigSyslog,
+				Config: testAccRancher2ClusterLoggingSyslogConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "name", "foo"),
@@ -107,7 +95,7 @@ func TestAccRancher2ClusterLogging_disappears_syslog(t *testing.T) {
 		CheckDestroy: testAccCheckRancher2ClusterLoggingDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccRancher2ClusterLoggingConfigSyslog,
+				Config: testAccRancher2ClusterLoggingSyslogConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
 					testAccRancher2ClusterLoggingDisappears(cluster),
