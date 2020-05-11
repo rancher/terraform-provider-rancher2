@@ -24,6 +24,8 @@ func flattenAmazonec2Config(in *amazonec2Config) []interface{} {
 		obj["device_name"] = in.DeviceName
 	}
 
+	obj["encrypt_ebs_volume"] = in.EncryptEbsVolume
+
 	if len(in.Endpoint) > 0 {
 		obj["endpoint"] = in.Endpoint
 	}
@@ -144,6 +146,10 @@ func expandAmazonec2Config(p []interface{}) *amazonec2Config {
 
 	if v, ok := in["device_name"].(string); ok && len(v) > 0 {
 		obj.DeviceName = v
+	}
+
+	if v, ok := in["encrypt_ebs_volume"].(bool); ok {
+		obj.EncryptEbsVolume = v
 	}
 
 	if v, ok := in["endpoint"].(string); ok && len(v) > 0 {

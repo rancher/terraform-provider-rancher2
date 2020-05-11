@@ -109,6 +109,7 @@ The following attributes are exported:
 * `access_key` - (Optional/Sensitive) AWS access key. Required on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `block_duration_minutes` - (Optional) AWS spot instance duration in minutes (60, 120, 180, 240, 300, or 360). Default `0` (string)
 * `device_name` - (Optional) AWS root device name. Default `/dev/sda1` (string)
+* `encrypt_ebs_volume` - (Optional) Encrypt EBS volume. Default `false` (bool)
 * `endpoint` - (Optional) Optional endpoint URL (hostname only or fully qualified URI) (string)
 * `iam_instance_profile` - (Optional) AWS IAM Instance Profile (string)
 * `insecure_transport` - (Optional) Disable SSL when sending requests (bool)
