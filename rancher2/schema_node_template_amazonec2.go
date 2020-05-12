@@ -15,6 +15,7 @@ type amazonec2Config struct {
 	Ami                     string   `json:"ami,omitempty" yaml:"ami,omitempty"`
 	BlockDurationMinutes    string   `json:"blockDurationMinutes,omitempty" yaml:"blockDurationMinutes,omitempty"`
 	DeviceName              string   `json:"deviceName,omitempty" yaml:"deviceName,omitempty"`
+	EncryptEbsVolume        bool     `json:"encryptEbsVolume,omitempty" yaml:"encryptEbsVolume,omitempty"`
 	Endpoint                string   `json:"endpoint,omitempty" yaml:"endpoint,omitempty"`
 	IamInstanceProfile      string   `json:"iamInstanceProfile,omitempty" yaml:"iamInstanceProfile,omitempty"`
 	InsecureTransport       bool     `json:"insecureTransport,omitempty" yaml:"insecureTransport,omitempty"`
@@ -98,6 +99,12 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "/dev/sda1",
 			Description: "AWS root device name",
+		},
+		"encrypt_ebs_volume": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Encrypt EBS volume",
 		},
 		"endpoint": {
 			Type:        schema.TypeString,

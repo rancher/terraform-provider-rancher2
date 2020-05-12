@@ -229,7 +229,7 @@ func nodeTemplateStateRefreshFunc(client *managementClient.Client, nodePoolID st
 		obj := &NodeTemplate{}
 		err := client.APIBaseClient.ByID(managementClient.NodeTemplateType, nodePoolID, obj)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

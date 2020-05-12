@@ -11,6 +11,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* Fix `nodeTemplateStateRefreshFunc` function on `rancher2_node_template` resource to check if returned error is forbidden
 
 ## 1.8.3 (April 09, 2020)
 
