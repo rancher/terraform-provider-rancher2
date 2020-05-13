@@ -9,12 +9,14 @@ import (
 )
 
 var (
-	testAppConfGlobal       *projectClient.App
-	testAppInterfaceGlobal  map[string]interface{}
-	testAppConfCluster      *projectClient.App
-	testAppInterfaceCluster map[string]interface{}
-	testAppConfProject      *projectClient.App
-	testAppInterfaceProject map[string]interface{}
+	testAppConfGlobal            *projectClient.App
+	testAppInterfaceGlobal       map[string]interface{}
+	testAppConfClusterLocal      *projectClient.App
+	testAppInterfaceClusterLocal map[string]interface{}
+	testAppConfCluster           *projectClient.App
+	testAppInterfaceCluster      map[string]interface{}
+	testAppConfProject           *projectClient.App
+	testAppInterfaceProject      map[string]interface{}
 )
 
 func init() {
@@ -42,6 +44,50 @@ func init() {
 	testAppInterfaceGlobal = map[string]interface{}{
 		"catalog_name": "test",
 		//"external_id":      "catalog://?catalog=test&template=test&version=1.23.0",
+		"name":             "name",
+		"project_id":       "project:test",
+		"target_namespace": "target_namespace",
+		"template_name":    "test",
+		"answers": map[string]interface{}{
+			"answers1": "one",
+			"answers2": "two",
+		},
+		"description":      "description",
+		"revision_id":      "revision_id",
+		"template_version": "1.23.0",
+		"values_yaml":      Base64Encode("values_yaml"),
+		"annotations": map[string]interface{}{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		"labels": map[string]interface{}{
+			"option1": "value1",
+			"option2": "value2",
+		},
+	}
+	testAppConfClusterLocal = &projectClient.App{
+		ExternalID:      "catalog://?catalog=local/test&type=clusterCatalog&template=test&version=1.23.0",
+		Name:            "name",
+		ProjectID:       "project:test",
+		TargetNamespace: "target_namespace",
+		Answers: map[string]string{
+			"answers1": "one",
+			"answers2": "two",
+		},
+		Description:   "description",
+		AppRevisionID: "revision_id",
+		ValuesYaml:    "values_yaml",
+		Annotations: map[string]string{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		Labels: map[string]string{
+			"option1": "value1",
+			"option2": "value2",
+		},
+	}
+	testAppInterfaceClusterLocal = map[string]interface{}{
+		"catalog_name":     "local:test",
 		"name":             "name",
 		"project_id":       "project:test",
 		"target_namespace": "target_namespace",
@@ -164,6 +210,10 @@ func TestFlattenApp(t *testing.T) {
 			testAppInterfaceGlobal,
 		},
 		{
+			testAppConfClusterLocal,
+			testAppInterfaceClusterLocal,
+		},
+		{
 			testAppConfCluster,
 			testAppInterfaceCluster,
 		},
@@ -199,6 +249,10 @@ func TestExpandApp(t *testing.T) {
 		{
 			testAppInterfaceGlobal,
 			testAppConfGlobal,
+		},
+		{
+			testAppInterfaceClusterLocal,
+			testAppConfClusterLocal,
 		},
 		{
 			testAppInterfaceCluster,
