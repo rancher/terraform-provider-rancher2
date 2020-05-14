@@ -184,6 +184,7 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 
 		nodePoolObj["enable_auto_scaling"] = *nodePool.EnableAutoScaling
 		nodePoolObj["create_pool_per_zone"] = nodePool.CreatePoolPerZone
+		nodePoolObj["system_pool"] = nodePool.SystemPool
 
 		nodePoolObjs = append(nodePoolObjs, nodePoolObj)
 	}
@@ -230,6 +231,7 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig) ([]interface{}, e
 
 		nodePoolObj["enable_auto_scaling"] = *in.EnableAutoScaling
 		nodePoolObj["create_pool_per_zone"] = true
+		nodePoolObj["system_pool"] = false
 
 		nodePoolObjs = append(nodePoolObjs, nodePoolObj)
 	}
@@ -496,6 +498,10 @@ func expandClusterAKSNodePool(in map[string]interface{}, legacy bool) (string, e
 		}
 		if v, ok := in["create_pool_per_zone"].(bool); ok {
 			nodePool.CreatePoolPerZone = v
+		}
+
+		if v, ok := in["system_pool"].(bool); ok {
+			nodePool.SystemPool = v
 		}
 	}
 

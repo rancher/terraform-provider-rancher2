@@ -85,6 +85,7 @@ type AzureKubernetesServiceNodePool struct {
 	MaxPods           int64    `json:"maxPods,omitempty" yaml:"maxPods,omitempty"`
 	MinCount          int64    `json:"minCount,omitempty" yaml:"minCount,omitempty"`
 	OsDiskSizeGB      int64    `json:"osDiskSize,omitempty" yaml:"osDiskSize,omitempty"`
+	SystemPool        bool     `json:"systemPool,omitempty" yaml:"systemPool,omitempty"`
 	Type              string   `json:"type,omitempty" yaml:"type,omitempty"`
 	Version           string   `json:"version,omitempty" yaml:"version,omitempty"`
 	VMSize            string   `json:"vmSize,omitempty" yaml:"vmSize,omitempty"`
@@ -348,6 +349,12 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 						Optional:    true,
 						Default:     true,
 						Description: "Whether it should create one pool per zone or not",
+					},
+					"system_pool": {
+						Type:        schema.TypeBool,
+						Optional:    true,
+						Default:     true,
+						Description: "Whether it should set up the pool as 'system' pool or 'user' pool",
 					},
 				}),
 			},
