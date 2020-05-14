@@ -416,6 +416,7 @@ The following attributes are exported:
 * `cloud_provider_rate_limit` - (Optional/Computed) (bool)
 * `cloud_provider_rate_limit_bucket` - (Optional/Computed) (int)
 * `cloud_provider_rate_limit_qps` - (Optional/Computed) (int)
+* `load_balancer_sku` - (Optional) Allowed values: `basic` (default) `standard` (string)
 * `location` - (Optional/Computed) (string)
 * `maximum_load_balancer_rule_count` - (Optional/Computed) (int)
 * `primary_availability_set_name` - (Optional/Computed) (string)
