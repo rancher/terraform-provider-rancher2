@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * Updated acceptance tests to run rancher HA on k3s
 * Updating local cluster on `rancher2_bootstrap` resource, due to issue https://github.com/rancher/rancher/issues/16213
+* Added `load_balancer_sku` argument to `azure_cloud_provider` configuration
 
 BUG FIXES:
 
