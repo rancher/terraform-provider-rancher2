@@ -23,5 +23,5 @@ RANCHER_BOOTSTRAP=${RANCHER_BOOTSTRAP:-false}
 
 echo Running acceptance tests
 
-PACKAGES="$(find . -name '*.go' | xargs -I{} dirname {} |  cut -f2 -d/ | sort -u | grep -Ev '(^\.$|.git|vendor|bin)' | sed -e 's!^!./!' -e 's!$!/...!')"
+PACKAGES="$(find . -name '*.go' | xargs -I{} dirname {} |  cut -f2 -d/ | sort -u | grep -Ev '(^\.$|.git|bin)' | sed -e 's!^!./!' -e 's!$!/...!')"
 TF_ACC=1 go test -cover -tags=test ${PACKAGES} -v -timeout 120m

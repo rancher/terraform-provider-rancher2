@@ -19,8 +19,8 @@ blocks:
             - export VERSION_STRING="$(git tag -l|tail -n1|cut -c2-999)-${SHORT_GIT}"
             - echo "Looking to build ${VERSION_STRING}"
               # Intentionally using go build rather than make as this is a public repo and we don't want to run arbitrary code on creation of a PR
-            - env GOOS=linux  GOARCH=amd64 go build -mod=vendor -o terraform-provider-rancher2_v${VERSION_STRING}-linux-amd64
-            - env GOOS=darwin GOARCH=amd64 go build -mod=vendor -o terraform-provider-rancher2_v${VERSION_STRING}-darwin-amd64
+            - env GOOS=linux  GOARCH=amd64 go build -o terraform-provider-rancher2_v${VERSION_STRING}-linux-amd64
+            - env GOOS=darwin GOARCH=amd64 go build -o terraform-provider-rancher2_v${VERSION_STRING}-darwin-amd64
             - make test
               # Install aws CLI deps
             - sudo apt-get update
