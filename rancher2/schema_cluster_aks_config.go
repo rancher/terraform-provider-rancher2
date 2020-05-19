@@ -95,11 +95,6 @@ type AzureKubernetesServiceNodePool struct {
 
 func clusterAKSConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"agent_dns_prefix": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "DNS prefix to be used to create the FQDN for the agent pool",
-		},
 		"client_id": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -361,6 +356,13 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 		},
 
 		// Deprecated fields
+		"agent_dns_prefix": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Deprecated:       "This field is no longer supported",
+			Description:      "DNS prefix to be used to create the FQDN for the agent pool",
+			DiffSuppressFunc: alwaysSuppressDiff,
+		},
 		"agent_os_disk_size": {
 			Type:        schema.TypeInt,
 			Optional:    true,
@@ -380,10 +382,11 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Deprecated:  "Use 'node_pools' field instead",
 		},
 		"count": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Description: "Number of machines (VMs) in the agent pool. Allowed values must be in the range of 1 to 100 (inclusive)",
-			Deprecated:  "This field is not longer supported",
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Description:      "Number of machines (VMs) in the agent pool. Allowed values must be in the range of 1 to 100 (inclusive)",
+			Deprecated:       "This field is not longer supported",
+			DiffSuppressFunc: alwaysSuppressDiff,
 		},
 		"max_pods": {
 			Type:        schema.TypeInt,
@@ -426,4 +429,8 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 	}
 
 	return s
+}
+
+func alwaysSuppressDiff(_, _, _ string, _ *schema.ResourceData) bool {
+	return true
 }
