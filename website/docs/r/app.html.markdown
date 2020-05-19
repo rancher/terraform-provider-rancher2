@@ -73,7 +73,7 @@ resource "rancher2_app" "foo" {
 The following arguments are supported:
 
 * `catalog_name` - (Required) Catalog name of the app. If modified, app will be upgraded. For use scoped catalogs:
-  * add cluster ID before name, `c-XXXXX:<name>`
+  * add cluster ID before name, `local:<name>` or `c-XXXXX:<name>`
   * add project ID before name, `p-XXXXX:<name>`
 * `name` - (Required/ForceNew) The name of the app (string)
 * `project_id` - (Required/ForceNew) The project id where the app will be installed (string)

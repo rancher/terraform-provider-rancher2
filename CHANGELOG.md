@@ -12,6 +12,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix `nodeTemplateStateRefreshFunc` function on `rancher2_node_template` resource to check if returned error is forbidden
+* Updated `rancher2_app` resource to fix local cluster scoped catalogs
 
 ## 1.8.3 (April 09, 2020)
 

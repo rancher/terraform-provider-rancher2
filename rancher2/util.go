@@ -542,5 +542,5 @@ func getLatestVersion(list map[string]string) (string, error) {
 		return "", err
 	}
 
-	return sorted[len(sorted)-1].String(), nil
+	return sorted[len(sorted)-1].Original(), nil
 }

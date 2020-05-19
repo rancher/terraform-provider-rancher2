@@ -9,7 +9,10 @@ import (
 )
 
 const (
-	AppTemplateExternalIDPrefix = "catalog://?"
+	AppTemplateExternalIDPrefix  = "catalog://?"
+	AppCatalogClusterLocalPrefix = "local"
+	AppCatalogClusterPrefix      = "c-"
+	AppCatalogProjectPrefix      = "p-"
 )
 
 // Flatteners
@@ -27,7 +30,7 @@ func flattenAppExternalID(d *schema.ResourceData, in string) {
 		if len(pair) != 2 {
 			continue
 		}
-		if pair[0] == "catalog" && (strings.HasPrefix(pair[1], "c-") || strings.HasPrefix(pair[1], "p-")) {
+		if pair[0] == "catalog" && (strings.HasPrefix(pair[1], AppCatalogClusterLocalPrefix) || strings.HasPrefix(pair[1], AppCatalogClusterPrefix) || strings.HasPrefix(pair[1], AppCatalogProjectPrefix)) {
 			pair[1] = strings.Replace(pair[1], "/", ":", -1)
 		}
 		out[pair[0]] = pair[1]
@@ -96,11 +99,11 @@ func expandAppExternalID(in *schema.ResourceData) string {
 	appName := in.Get("template_name").(string)
 	appVersion := in.Get("template_version").(string)
 
-	if strings.HasPrefix(catalogName, "c-") {
+	if strings.HasPrefix(catalogName, AppCatalogClusterLocalPrefix) || strings.HasPrefix(catalogName, AppCatalogClusterPrefix) {
 		catalogName = strings.Replace(catalogName, ":", "/", -1)
 		catalogName = catalogName + "&type=clusterCatalog"
 	}
-	if strings.HasPrefix(catalogName, "p-") {
+	if strings.HasPrefix(catalogName, AppCatalogProjectPrefix) {
 		catalogName = strings.Replace(catalogName, ":", "/", -1)
 		catalogName = catalogName + "&type=projectCatalog"
 	}
