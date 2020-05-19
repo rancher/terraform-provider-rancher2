@@ -2,10 +2,20 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const (
-	cloudProviderAzureName = "azure"
+	cloudProviderAzureName                    = "azure"
+	cloudProviderAzureLoadBalancerSkuBasic    = "basic"
+	cloudProviderAzureLoadBalancerSkuStandard = "standard"
+)
+
+var (
+	cloudProviderAzureLoadBalancerSkuList = []string{
+		cloudProviderAzureLoadBalancerSkuBasic,
+		cloudProviderAzureLoadBalancerSkuStandard,
+	}
 )
 
 //Schemas
@@ -87,6 +97,13 @@ func clusterRKEConfigCloudProviderAzureFields() map[string]*schema.Schema {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Computed: true,
+		},
+		"load_balancer_sku": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      cloudProviderAzureLoadBalancerSkuBasic,
+			Description:  "Load balancer type (basic | standard). Must be standard for auto-scaling",
+			ValidateFunc: validation.StringInSlice(cloudProviderAzureLoadBalancerSkuList, true),
 		},
 		"location": {
 			Type:     schema.TypeString,

@@ -74,6 +74,10 @@ func flattenClusterRKEConfigCloudProviderAzure(in *managementClient.AzureCloudPr
 		obj["cloud_provider_rate_limit_qps"] = int(in.CloudProviderRateLimitQPS)
 	}
 
+	if len(in.LoadBalancerSku) > 0 {
+		obj["load_balancer_sku"] = in.LoadBalancerSku
+	}
+
 	if len(in.Location) > 0 {
 		obj["location"] = in.Location
 	}
@@ -191,6 +195,10 @@ func expandClusterRKEConfigCloudProviderAzure(p []interface{}) (*managementClien
 
 	if v, ok := in["cloud_provider_rate_limit_qps"].(int); ok && v > 0 {
 		obj.CloudProviderRateLimitQPS = int64(v)
+	}
+
+	if v, ok := in["load_balancer_sku"].(string); ok && len(v) > 0 {
+		obj.LoadBalancerSku = v
 	}
 
 	if v, ok := in["location"].(string); ok && len(v) > 0 {
