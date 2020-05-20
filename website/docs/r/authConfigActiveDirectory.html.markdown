@@ -37,7 +37,7 @@ The following arguments are supported:
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `activedirectory_user://<DN>`  `activedirectory_group://<DN>` (list)
 * `certificate` - (Optional/Sensitive) CA certificate for TLS if selfsigned (string)
 * `connection_timeout` - (Optional) ActiveDirectory connection timeout. Default `5000` (int)
-* `default_login_domain` - (Optional) ActiveDirectory defult lgoin domain (string)
+* `default_login_domain` - (Optional) ActiveDirectory defult login domain (string)
 * `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
 * `group_dn_attribute` - (Optional/Computed) Group DN attribute. Default `distinguishedName` (string)
 * `group_member_mapping_attribute` - (Optional/Computed) Group member mapping attribute. Default `member` (string)
