@@ -309,7 +309,7 @@ func TestFlattenCluster(t *testing.T) {
 			testClusterConfEKS,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceEKS,
+			withBaseNodePoolDefaultsForDeprecatedFields(testClusterInterfaceEKS, "eks_config", "worker_pools"),
 		},
 		"GKE": {
 			testClusterConfGKE,
@@ -357,7 +357,7 @@ func TestFlattenCluster(t *testing.T) {
 }
 
 func withGKEDefaultsForDeprecatedFields(original map[string]interface{}) map[string]interface{} {
-	cp := copyMap(original)
+	cp := withBaseNodePoolDefaultsForDeprecatedFields(original, "gke_config", "node_pools")
 
 	config := cp["gke_config"].([]interface{})[0].(map[string]interface{})
 	config["disk_size_gb"] = 0
@@ -381,7 +381,7 @@ func withGKEDefaultsForDeprecatedFields(original map[string]interface{}) map[str
 }
 
 func withAKSDefaultsForDeprecatedFields(original map[string]interface{}) map[string]interface{} {
-	cp := copyMap(original)
+	cp := withBaseNodePoolDefaultsForDeprecatedFields(original, "aks_config", "node_pools")
 
 	config := cp["aks_config"].([]interface{})[0].(map[string]interface{})
 	config["agent_os_disk_size"] = 0
@@ -396,6 +396,21 @@ func withAKSDefaultsForDeprecatedFields(original map[string]interface{}) map[str
 
 	config["agent_dns_prefix"] = ""
 	config["count"] = 0
+
+	return cp
+}
+
+func withBaseNodePoolDefaultsForDeprecatedFields(original map[string]interface{}, cloudConfigField, nodePoolsField string) map[string]interface{} {
+	cp := copyMap(original)
+
+	config := cp[cloudConfigField].([]interface{})[0].(map[string]interface{})
+
+	nodePools := config[nodePoolsField].([]interface{})
+	for _, nodePoolIface := range nodePools {
+		nodePool := nodePoolIface.(map[string]interface{})
+		nodePool["additional_labels"] = map[string]interface{}{}
+		nodePool["additional_taints"] = []interface{}{}
+	}
 
 	return cp
 }
@@ -449,22 +464,22 @@ func TestExpandCluster(t *testing.T) {
 			testClusterInterfaceAKS,
 			testClusterConfAKS,
 		},
-		//{
-		//	testClusterInterfaceEKS,
-		//	testClusterConfEKS,
-		//},
-		//{
-		//	testClusterInterfaceGKE,
-		//	testClusterConfGKE,
-		//},
-		//{
-		//	testClusterInterfaceRKE,
-		//	testClusterConfRKE,
-		//},
-		//{
-		//	testClusterInterfaceTemplate,
-		//	testClusterConfTemplate,
-		//},
+		{
+			testClusterInterfaceEKS,
+			testClusterConfEKS,
+		},
+		{
+			testClusterInterfaceGKE,
+			testClusterConfGKE,
+		},
+		{
+			testClusterInterfaceRKE,
+			testClusterConfRKE,
+		},
+		{
+			testClusterInterfaceTemplate,
+			testClusterConfTemplate,
+		},
 	}
 
 	for _, tc := range cases {

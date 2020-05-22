@@ -7,21 +7,18 @@ import (
 )
 
 var (
-	testClusterGKEConfigConf       *GoogleKubernetesEngineConfig
-	testClusterGKEConfigLegacyConf *GoogleKubernetesEngineConfig
-	testClusterGKEConfigInterface  []interface{}
+	testClusterGKEConfigConf      *GoogleKubernetesEngineConfig
+	testClusterGKEConfigInterface []interface{}
 )
 
 func init() {
 	nodePool := GoogleKubernetesEngineNodePool{
 		BaseNodePool: BaseNodePool{
-			AddDefaultLabel: false,
-			AddDefaultTaint: false,
-			AdditionalLabels: map[string]string{
+			Labels: map[string]string{
 				"label1": "value1",
 				"label2": "value2",
 			},
-			AdditionalTaints: []K8sTaint{
+			Taints: []K8sTaint{
 				{Effect: "NoSchedule", Key: "taint", Value: "value"},
 			},
 			Name: "node_pool",
@@ -90,70 +87,6 @@ func init() {
 		Region:                   "region",
 	}
 
-	testClusterGKEConfigLegacyConf = &GoogleKubernetesEngineConfig{
-		ClusterIpv4Cidr:                    "192.168.1.0/16",
-		Credential:                         "credential",
-		Description:                        "description",
-		DiskType:                           "disk_type",
-		DiskSizeGb:                         16,
-		DisplayName:                        "test",
-		EnableAlphaFeature:                 true,
-		EnableAutoRepair:                   true,
-		EnableAutoUpgrade:                  true,
-		EnableHTTPLoadBalancing:            newTrue(),
-		EnableHorizontalPodAutoscaling:     newTrue(),
-		EnableKubernetesDashboard:          true,
-		EnableLegacyAbac:                   true,
-		EnableMasterAuthorizedNetwork:      true,
-		EnableNetworkPolicyConfig:          newTrue(),
-		EnableNodepoolAutoscaling:          true,
-		EnablePrivateEndpoint:              true,
-		EnablePrivateNodes:                 true,
-		EnableStackdriverLogging:           newTrue(),
-		EnableStackdriverMonitoring:        newTrue(),
-		ImageType:                          "image",
-		IPPolicyClusterIpv4CidrBlock:       "ip_policy_cluster_ipv4_cidr_block",
-		IPPolicyClusterSecondaryRangeName:  "ip_policy_cluster_secondary_range_name",
-		IPPolicyCreateSubnetwork:           true,
-		IPPolicyNodeIpv4CidrBlock:          "ip_policy_node_ipv4_cidr_block",
-		IPPolicyServicesIpv4CidrBlock:      "ip_policy_services_ipv4_cidr_block",
-		IPPolicyServicesSecondaryRangeName: "ip_policy_services_secondary_range_name",
-		IPPolicySubnetworkName:             "ip_policy_subnetwork_name",
-		IssueClientCertificate:             true,
-		KubernetesDashboard:                true,
-		Labels: map[string]string{
-			"label1": "value1",
-			"label2": "value2",
-		},
-		LocalSsdCount:                     1,
-		Locations:                         []string{"location1", "location2"},
-		MachineType:                       "machine",
-		MaintenanceWindow:                 "maintenance",
-		MasterAuthorizedNetworkCidrBlocks: []string{"master1", "master2"},
-		MasterIpv4CidrBlock:               "master_ipv4_cidr_block",
-		MasterVersion:                     "version",
-		MaxNodeCount:                      3,
-		MinNodeCount:                      1,
-		MinCpuPlatform:                    "Intel Skylake",
-		Name:                              "test",
-		Network:                           "network",
-		NodePool:                          "node_pool",
-		NodeVersion:                       "node_version",
-		OauthScopes:                       []string{"scope1", "scope2"},
-		Preemptible:                       true,
-		ProjectID:                         "project-test",
-		ResourceLabels: map[string]string{
-			"Rlabel1": "value1",
-			"Rlabel2": "value2",
-		},
-		ServiceAccount:           "service_account",
-		SubNetwork:               "subnetwork",
-		UseIPAliases:             true,
-		Taints:                   []string{"NoSchedule:taint=value"},
-		Zone:                     "zone",
-		DefaultMaxPodsConstraint: 32,
-		Region:                   "region",
-	}
 	testClusterGKEConfigInterface = []interface{}{
 		map[string]interface{}{
 			"cluster_ipv4_cidr":                       "192.168.1.0/16",
@@ -190,11 +123,11 @@ func init() {
 				map[string]interface{}{
 					"add_default_label": false,
 					"add_default_taint": false,
-					"additional_labels": map[string]interface{}{
+					"labels": map[string]interface{}{
 						"label1": "value1",
 						"label2": "value2",
 					},
-					"additional_taints": []interface{}{
+					"taints": []interface{}{
 						map[string]interface{}{"effect": "NoSchedule", "key": "taint", "value": "value"},
 					},
 					"disk_size_gb":        16,
@@ -236,10 +169,6 @@ func TestFlattenClusterGKEConfig(t *testing.T) {
 	}{
 		"GKECluster": {
 			testClusterGKEConfigConf,
-			testClusterGKEConfigInterface,
-		},
-		"LegacyGKECluster": {
-			testClusterGKEConfigLegacyConf,
 			testClusterGKEConfigInterface,
 		},
 	}

@@ -7,34 +7,44 @@ import (
 
 func flattenClusterBaseNodePool(in BaseNodePool) map[string]interface{} {
 	obj := make(map[string]interface{})
-	obj["add_default_label"] = in.AddDefaultLabel
-	obj["add_default_taint"] = in.AddDefaultTaint
 
-	if len(in.AdditionalLabels) > 0 {
-		obj["additional_labels"] = flattenClusterBaseNodePoolAdditionalLabels(in)
+	if len(in.Labels) > 0 {
+		obj["labels"] = flattenClusterBaseNodePoolLabels(in.Labels)
 	}
 
-	if len(in.AdditionalTaints) > 0 {
-		obj["additional_taints"] = flattenClusterBaseNodePoolAdditionalTaints(in)
+	if len(in.Taints) > 0 {
+		obj["taints"] = flattenClusterBaseNodePoolTaints(in.Taints)
 	}
 
 	obj["name"] = in.Name
 
+	// legacy fields
+	obj["add_default_label"] = in.AddDefaultLabel
+	obj["add_default_taint"] = in.AddDefaultTaint
+
+	if len(in.AdditionalLabels) > 0 {
+		obj["additional_labels"] = flattenClusterBaseNodePoolLabels(in.AdditionalLabels)
+	}
+
+	if len(in.AdditionalTaints) > 0 {
+		obj["additional_taints"] = flattenClusterBaseNodePoolTaints(in.AdditionalTaints)
+	}
+
 	return obj
 }
 
-func flattenClusterBaseNodePoolAdditionalLabels(in BaseNodePool) map[string]interface{} {
+func flattenClusterBaseNodePoolLabels(labels map[string]string) map[string]interface{} {
 	additionalLabelsObj := make(map[string]interface{})
-	for key, value := range in.AdditionalLabels {
+	for key, value := range labels {
 		additionalLabelsObj[key] = value
 	}
 
 	return additionalLabelsObj
 }
 
-func flattenClusterBaseNodePoolAdditionalTaints(in BaseNodePool) []interface{} {
-	additionalTaintObjs := make([]interface{}, 0, len(in.AdditionalTaints))
-	for _, taint := range in.AdditionalTaints {
+func flattenClusterBaseNodePoolTaints(taints []K8sTaint) []interface{} {
+	additionalTaintObjs := make([]interface{}, 0, len(taints))
+	for _, taint := range taints {
 		additionalTaintObj := make(map[string]interface{})
 
 		if len(taint.Effect) > 0 {
@@ -71,12 +81,25 @@ func expandClusterBaseNodePool(in map[string]interface{}) (BaseNodePool, error) 
 		obj.AddDefaultTaint = v
 	}
 
+	if v, ok := in["labels"].(map[string]interface{}); ok && len(v) > 0 {
+		obj.Labels = toMapString(v)
+	}
+
 	if v, ok := in["additional_labels"].(map[string]interface{}); ok && len(v) > 0 {
 		obj.AdditionalLabels = toMapString(v)
 	}
 
+	if v, ok := in["taints"].([]interface{}); ok && len(v) > 0 {
+		taintsObjs, err := expandClusterBaseNodePoolTaints(v, obj.Name)
+		if err != nil {
+			return obj, err
+		}
+
+		obj.Taints = taintsObjs
+	}
+
 	if v, ok := in["additional_taints"].([]interface{}); ok && len(v) > 0 {
-		additionalTaintsObjs, err := expandClusterBaseNodePoolAdditionalTaints(v, obj.Name)
+		additionalTaintsObjs, err := expandClusterBaseNodePoolTaints(v, obj.Name)
 		if err != nil {
 			return obj, err
 		}
@@ -87,7 +110,7 @@ func expandClusterBaseNodePool(in map[string]interface{}) (BaseNodePool, error) 
 	return obj, nil
 }
 
-func expandClusterBaseNodePoolAdditionalTaints(additionalTaintsIn []interface{}, poolName string) ([]K8sTaint, error) {
+func expandClusterBaseNodePoolTaints(additionalTaintsIn []interface{}, poolName string) ([]K8sTaint, error) {
 	additionalTaintsObjs := make([]K8sTaint, 0, len(additionalTaintsIn))
 	for index, additionalTaintIn := range additionalTaintsIn {
 		if t, ok := additionalTaintIn.(map[string]interface{}); ok {

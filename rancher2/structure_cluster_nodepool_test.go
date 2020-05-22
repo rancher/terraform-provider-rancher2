@@ -19,7 +19,43 @@ func TestFlattenClusterBaseNodePool(t *testing.T) {
 				"name":              "pool-1",
 			},
 		},
-		"AddDefaultLabelTrue": {
+		"LabelsSet": {
+			nodePool: BaseNodePool{
+				Labels: map[string]string{
+					"label-1": "value-1",
+					"label-2": "value-2",
+				},
+				Name: "pool-1",
+			},
+			expected: map[string]interface{}{
+				"add_default_label": false,
+				"add_default_taint": false,
+				"labels": map[string]interface{}{
+					"label-1": "value-1",
+					"label-2": "value-2",
+				},
+				"name": "pool-1",
+			},
+		},
+		"TaintsSet": {
+			nodePool: BaseNodePool{
+				Taints: []K8sTaint{
+					{Effect: "NoSchedule", Key: "taint-1", Value: "value-1"},
+					{Effect: "NoExecute", Key: "taint-2", Value: "value-2"},
+				},
+				Name: "pool-1",
+			},
+			expected: map[string]interface{}{
+				"add_default_label": false,
+				"add_default_taint": false,
+				"taints": []interface{}{
+					map[string]interface{}{"effect": "NoSchedule", "key": "taint-1", "value": "value-1"},
+					map[string]interface{}{"effect": "NoExecute", "key": "taint-2", "value": "value-2"},
+				},
+				"name": "pool-1",
+			},
+		},
+		"LegacyAddDefaultLabelTrue": {
 			nodePool: BaseNodePool{
 				AddDefaultLabel: true,
 				Name:            "pool-1",
@@ -30,7 +66,7 @@ func TestFlattenClusterBaseNodePool(t *testing.T) {
 				"name":              "pool-1",
 			},
 		},
-		"AddDefaultTaintTrue": {
+		"LegacyAddDefaultTaintTrue": {
 			nodePool: BaseNodePool{
 				AddDefaultTaint: true,
 				Name:            "pool-1",
@@ -41,7 +77,7 @@ func TestFlattenClusterBaseNodePool(t *testing.T) {
 				"name":              "pool-1",
 			},
 		},
-		"AdditionalLabelsSet": {
+		"LegacyAdditionalLabelsSet": {
 			nodePool: BaseNodePool{
 				AdditionalLabels: map[string]string{
 					"label-1": "value-1",
@@ -59,7 +95,7 @@ func TestFlattenClusterBaseNodePool(t *testing.T) {
 				"name": "pool-1",
 			},
 		},
-		"AdditionalTaintsSet": {
+		"LegacyAdditionalTaintsSet": {
 			nodePool: BaseNodePool{
 				AdditionalTaints: []K8sTaint{
 					{Effect: "NoSchedule", Key: "taint-1", Value: "value-1"},
@@ -106,7 +142,39 @@ func TestExpandClusterBaseNodePool(t *testing.T) {
 				Name: "a-name",
 			},
 		},
-		"DefaultLabelEnabled": {
+		"LabelsSet": {
+			nodePool: map[string]interface{}{
+				"name": "a-name",
+				"labels": map[string]interface{}{
+					"label-1": "value-1",
+					"label-2": "value-2",
+				},
+			},
+			successfulResult: BaseNodePool{
+				Name: "a-name",
+				Labels: map[string]string{
+					"label-1": "value-1",
+					"label-2": "value-2",
+				},
+			},
+		},
+		"TaintsSet": {
+			nodePool: map[string]interface{}{
+				"name": "a-name",
+				"taints": []interface{}{
+					map[string]interface{}{"effect": "NoSchedule", "key": "taint-1", "value": "value-1"},
+					map[string]interface{}{"effect": "NoExecute", "key": "taint-2", "value": "value-2"},
+				},
+			},
+			successfulResult: BaseNodePool{
+				Name: "a-name",
+				Taints: []K8sTaint{
+					{Effect: "NoSchedule", Key: "taint-1", Value: "value-1"},
+					{Effect: "NoExecute", Key: "taint-2", Value: "value-2"},
+				},
+			},
+		},
+		"LegacyDefaultLabelEnabled": {
 			nodePool: map[string]interface{}{
 				"name":              "a-name",
 				"add_default_label": true,
@@ -116,7 +184,7 @@ func TestExpandClusterBaseNodePool(t *testing.T) {
 				AddDefaultLabel: true,
 			},
 		},
-		"DefaultTaintEnabled": {
+		"LegacyDefaultTaintEnabled": {
 			nodePool: map[string]interface{}{
 				"name":              "a-name",
 				"add_default_taint": true,
@@ -126,7 +194,7 @@ func TestExpandClusterBaseNodePool(t *testing.T) {
 				AddDefaultTaint: true,
 			},
 		},
-		"AdditionalLabelsSet": {
+		"LegacyAdditionalLabelsSet": {
 			nodePool: map[string]interface{}{
 				"name": "a-name",
 				"additional_labels": map[string]interface{}{
@@ -142,7 +210,7 @@ func TestExpandClusterBaseNodePool(t *testing.T) {
 				},
 			},
 		},
-		"AdditionalTaintsSet": {
+		"LegacyAdditionalTaintsSet": {
 			nodePool: map[string]interface{}{
 				"name": "a-name",
 				"additional_taints": []interface{}{

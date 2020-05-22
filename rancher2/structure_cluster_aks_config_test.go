@@ -17,9 +17,9 @@ var (
 func init() {
 	nodePool := AzureKubernetesServiceNodePool{
 		BaseNodePool: BaseNodePool{
-			Name:             "agent",
-			AdditionalLabels: map[string]string{"label": "value"},
-			AdditionalTaints: []K8sTaint{
+			Name:   "agent",
+			Labels: map[string]string{"label": "value"},
+			Taints: []K8sTaint{
 				{Effect: "NoSchedule", Key: "taint_key", Value: "taint_value"},
 			},
 		},
@@ -157,8 +157,8 @@ func init() {
 				map[string]interface{}{
 					"add_default_label": false,
 					"add_default_taint": false,
-					"additional_labels": map[string]interface{}{"label": "value"},
-					"additional_taints": []interface{}{
+					"labels":            map[string]interface{}{"label": "value"},
+					"taints": []interface{}{
 						map[string]interface{}{
 							"effect": "NoSchedule",
 							"key":    "taint_key",

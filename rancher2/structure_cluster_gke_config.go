@@ -206,14 +206,6 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig) ([]interface{}, e
 		nodePoolObj["add_default_label"] = false
 		nodePoolObj["add_default_taint"] = false
 
-		if len(in.Labels) > 0 {
-			nodePoolObj["additional_labels"] = toMapInterface(in.Labels)
-		}
-
-		if len(in.Taints) > 0 {
-			nodePoolObj["additional_taints"] = flattenClusterGKENodePoolLegacyTaints(in.Taints)
-		}
-
 		if in.DiskSizeGb > 0 {
 			nodePoolObj["disk_size_gb"] = int(in.DiskSizeGb)
 		}
@@ -509,10 +501,10 @@ func expandClusterGKENodePool(in map[string]interface{}, legacy bool) (string, e
 		}
 
 		if v, ok := in["labels"].(map[string]interface{}); ok && len(v) > 0 {
-			bnp.AdditionalLabels = toMapString(v)
+			bnp.Labels = toMapString(v)
 		}
 
-		bnp.AdditionalTaints = expandClusterGKENodePoolLegacyTaints(in)
+		bnp.Taints = expandClusterGKENodePoolLegacyTaints(in)
 
 	} else {
 		versionField = "version"

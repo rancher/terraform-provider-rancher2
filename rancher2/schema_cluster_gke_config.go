@@ -57,24 +57,22 @@ type GoogleKubernetesEngineConfig struct {
 	NodePools []string `json:"nodePools,omitempty" yaml:"nodePools,omitempty"`
 
 	// TODO remove fields from here on once all clusters have being migrated to new state (use "nodePools") in rancher
-	DiskSizeGb        int64             `json:"diskSizeGb,omitempty" yaml:"diskSizeGb,omitempty"`
-	DiskType          string            `json:"diskType,omitempty" yaml:"diskType,omitempty"`
-	EnableAutoRepair  bool              `json:"enableAutoRepair,omitempty" yaml:"enableAutoRepair,omitempty"`
-	EnableAutoUpgrade bool              `json:"enableAutoUpgrade,omitempty" yaml:"enableAutoUpgrade,omitempty"`
-	ImageType         string            `json:"imageType,omitempty" yaml:"imageType,omitempty"`
-	Labels            map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
-	LocalSsdCount     int64             `json:"localSsdCount,omitempty" yaml:"localSsdCount,omitempty"`
-	MachineType       string            `json:"machineType,omitempty" yaml:"machineType,omitempty"`
-	MaxNodeCount      int64             `json:"maxNodeCount,omitempty" yaml:"maxNodeCount,omitempty"`
-	MinNodeCount      int64             `json:"minNodeCount,omitempty" yaml:"minNodeCount,omitempty"`
-	MinCpuPlatform    string            `json:"minCpuPlatform,omitempty" yaml:"minCpuPlatform,omitempty"`
-	NodeCount         int64             `json:"nodeCount,omitempty" yaml:"nodeCount,omitempty"`
-	NodePool          string            `json:"nodePool,omitempty" yaml:"nodePool,omitempty"`
-	NodeVersion       string            `json:"nodeVersion,omitempty" yaml:"nodeVersion,omitempty"`
-	OauthScopes       []string          `json:"oauthScopes,omitempty" yaml:"oauthScopes,omitempty"`
-	Preemptible       bool              `json:"preemptible,omitempty" yaml:"preemptible,omitempty"`
-	ServiceAccount    string            `json:"serviceAccount,omitempty" yaml:"serviceAccount,omitempty"`
-	Taints            []string          `json:"taints,omitempty" yaml:"taints,omitempty"`
+	DiskSizeGb        int64    `json:"diskSizeGb,omitempty" yaml:"diskSizeGb,omitempty"`
+	DiskType          string   `json:"diskType,omitempty" yaml:"diskType,omitempty"`
+	EnableAutoRepair  bool     `json:"enableAutoRepair,omitempty" yaml:"enableAutoRepair,omitempty"`
+	EnableAutoUpgrade bool     `json:"enableAutoUpgrade,omitempty" yaml:"enableAutoUpgrade,omitempty"`
+	ImageType         string   `json:"imageType,omitempty" yaml:"imageType,omitempty"`
+	LocalSsdCount     int64    `json:"localSsdCount,omitempty" yaml:"localSsdCount,omitempty"`
+	MachineType       string   `json:"machineType,omitempty" yaml:"machineType,omitempty"`
+	MaxNodeCount      int64    `json:"maxNodeCount,omitempty" yaml:"maxNodeCount,omitempty"`
+	MinNodeCount      int64    `json:"minNodeCount,omitempty" yaml:"minNodeCount,omitempty"`
+	MinCpuPlatform    string   `json:"minCpuPlatform,omitempty" yaml:"minCpuPlatform,omitempty"`
+	NodeCount         int64    `json:"nodeCount,omitempty" yaml:"nodeCount,omitempty"`
+	NodePool          string   `json:"nodePool,omitempty" yaml:"nodePool,omitempty"`
+	NodeVersion       string   `json:"nodeVersion,omitempty" yaml:"nodeVersion,omitempty"`
+	OauthScopes       []string `json:"oauthScopes,omitempty" yaml:"oauthScopes,omitempty"`
+	Preemptible       bool     `json:"preemptible,omitempty" yaml:"preemptible,omitempty"`
+	ServiceAccount    string   `json:"serviceAccount,omitempty" yaml:"serviceAccount,omitempty"`
 }
 
 type GoogleKubernetesEngineNodePool struct {

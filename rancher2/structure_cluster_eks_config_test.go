@@ -15,12 +15,10 @@ func init() {
 	workerPoolBytes, _ := json.Marshal(
 		AmazonElasticContainerWorkerPool{
 			BaseNodePool: BaseNodePool{
-				AddDefaultLabel: false,
-				AddDefaultTaint: false,
-				AdditionalLabels: map[string]string{
+				Labels: map[string]string{
 					"pool-name": "main-pool",
 				},
-				AdditionalTaints: []K8sTaint{
+				Taints: []K8sTaint{
 					{
 						Key:    "pool-name",
 						Value:  "main-pool",
@@ -78,10 +76,10 @@ func init() {
 				map[string]interface{}{
 					"add_default_label": false,
 					"add_default_taint": false,
-					"additional_labels": map[string]interface{}{
+					"labels": map[string]interface{}{
 						"pool-name": "main-pool",
 					},
-					"additional_taints": []interface{}{
+					"taints": []interface{}{
 						map[string]interface{}{
 							"key":    "pool-name",
 							"value":  "main-pool",
