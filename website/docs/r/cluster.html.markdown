@@ -551,10 +551,18 @@ The following attributes are exported:
 
 ##### Arguments
 
+* `nodelocal` - (Optional) Nodelocal dns config  (list Maxitem: 1)
 * `node_selector` - (Optional/Computed) DNS add-on node selector (map)
 * `provider` - (Optional) DNS add-on provider. `kube-dns`, `coredns` (default), and `none` are supported (string)
 * `reverse_cidrs` - (Optional/Computed) DNS add-on reverse cidr  (list)
 * `upstream_nameservers` - (Optional/Computed) DNS add-on upstream nameservers  (list)
+
+##### `nodelocal`
+
+###### Arguments
+
+* `ip_address` - (required) Nodelocal dns ip address (string)
+* `node_selector` - (Optional) Node selector key pair (map)
 
 #### `ingress`
 
