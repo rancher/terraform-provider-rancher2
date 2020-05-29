@@ -6,9 +6,11 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* Updated acceptance tests to run rancher HA on k3s
+* Updated acceptance tests to run rancher HA on k3s v1.18.2-k3s1
 * Updating local cluster on `rancher2_bootstrap` resource, due to issue https://github.com/rancher/rancher/issues/16213
 * Added `load_balancer_sku` argument to `azure_cloud_provider` configuration
+* Add `nodelocal` argument to `rke_config.dns` argument on `rancher2_cluster` resource
+* Update golang to 1.13
 
 BUG FIXES:
 
