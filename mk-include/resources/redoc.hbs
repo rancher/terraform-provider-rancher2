@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf8" />
+  <title>{{title}}</title>
+  <!-- needed for adaptive design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{#if templateOptions.segmentWriteKey~}}
+  <script>
+    !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t,e){var n=document.createElement("script");n.type="text/javascript";n.async=!0;n.src="https://cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(n,a);analytics._loadOptions=e};analytics.SNIPPET_VERSION="4.1.0";
+    analytics.load("{{templateOptions.segmentWriteKey}}");
+    analytics.page();
+    }}();
+  </script>
+  {{~/if}}
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    .banner {
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      background: #0074A2;
+      color: white;
+      font-family: 'Montserrat';
+    }
+
+    .banner h1 {
+      font-size: 2.8em;
+      font-weight: 300;
+    }
+
+    .banner p {
+      font-size: 1.1em;
+      font-weight: 100;
+      vertical-align: middle;
+    }
+
+    .btn-bgstroke {
+      font-size: 20px;
+      border: 1px solid white;
+      padding: 0 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      height: 50px;
+      width: 300px;
+      margin: auto;
+      margin-top: 30px;
+      margin-bottom: 30px;
+      line-height: 47px;
+      cursor: pointer;
+      font-weight: 300;
+      color: white;
+    }
+
+    .btn-bgstroke:hover {
+      border: 1px solid white;
+      background-color: white;
+      color: #0074A2;
+    }
+  </style>
+  {{{redocHead}}}
+  {{#unless disableGoogleFont}}<link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">{{/unless}}
+</head>
+
+<body>
+  {{#if templateOptions.banner~}}{{{templateOptions.banner}}}{{~/if~}}
+  {{{redocHTML}}}
+</body>
+
+</html>
