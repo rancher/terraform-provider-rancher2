@@ -4,6 +4,11 @@ PKG_NAME=rancher2
 TEST?="./${PKG_NAME}"
 PROVIDER_NAME=terraform-provider-rancher2
 
+include mk-include/cc-begin.mk
+include mk-include/cc-vault.mk
+include mk-include/cc-semver.mk
+include mk-include/cc-end.mk
+
 default: build
 
 build: fmtcheck

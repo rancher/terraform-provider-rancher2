@@ -4,6 +4,18 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
+global_job_config:
+  secrets:
+    - name: vault_sem2_approle_prod
+  prologue:
+    commands:
+      - checkout
+      - make install-vault
+      - . mk-include/bin/vault-setup
+      - . vault-sem-get-secret aws_credentials
+      - . vault-sem-get-secret ssh_id_rsa
+      - . vault-sem-get-secret ssh_config
+      - . vault-sem-get-secret gitconfig
 blocks:
   - name: Build
     task:
@@ -11,10 +23,7 @@ blocks:
         - name: Build it
           commands:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-            - chmod 400 ~/.ssh/id_rsa
-              # Setup
             - sem-version go 1.12
-            - checkout
             - export SHORT_GIT=$(echo ${SEMAPHORE_GIT_SHA} | cut -c1-6)
             - export VERSION_STRING="$(git tag -l|tail -n1|cut -c2-999)-${SHORT_GIT}"
             - echo "Looking to build ${VERSION_STRING}"
@@ -27,8 +36,3 @@ blocks:
             - sudo apt-get -y install python3-pip
             - pip3 install awscli --upgrade --user
             - if [ "$SEMAPHORE_GIT_BRANCH" == "confluent-master" ]; then aws s3 cp --acl public-read terraform-provider-rancher2_v${VERSION_STRING}-linux-amd64 s3://cloud.confluent.terraform-artifacts/ && aws s3 cp --acl public-read terraform-provider-rancher2_v${VERSION_STRING}-darwin-amd64 s3://cloud.confluent.terraform-artifacts/ && git clone --depth 1 git@github.com:confluentinc/cc-terraform.git && cd cc-terraform && sed -i -e "s/terraform-provider-rancher2 .*/terraform-provider-rancher2 ${VERSION_STRING}/" CUSTOM_PROVIDERS && sed -i -e "s/  version = \"= .*\"/  version = \"= ${VERSION_STRING}\"/" variables-rancher.tf && git add CUSTOM_PROVIDERS variables-rancher.tf && git commit -m "Auto-version bump terraform-provider-rancher2 ${VERSION_STRING}" && git push origin master; fi
-      secrets:
-        - name: aws_credentials
-        - name: ssh_id_rsa
-        - name: ssh_config
-        - name: gitconfig
