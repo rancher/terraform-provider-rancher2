@@ -8,39 +8,39 @@ import (
 
 func notifierSMTPConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"default_recipient": &schema.Schema{
+		"default_recipient": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "SMTP default recipient address",
 		},
-		"host": &schema.Schema{
+		"host": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "SMTP host",
 		},
-		"port": &schema.Schema{
+		"port": {
 			Type:        schema.TypeInt,
 			Required:    true,
 			Description: "SMTP port",
 		},
-		"sender": &schema.Schema{
+		"sender": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "SMTP sender",
 		},
-		"password": &schema.Schema{
+		"password": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Sensitive:   true,
 			Description: "SMTP password",
 		},
-		"tls": &schema.Schema{
+		"tls": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
 			Description: "SMTP TLS",
 		},
-		"username": &schema.Schema{
+		"username": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "SMTP username",

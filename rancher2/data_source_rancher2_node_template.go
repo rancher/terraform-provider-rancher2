@@ -12,7 +12,7 @@ func dataSourceRancher2NodeTemplate() *schema.Resource {
 		Read: dataSourceRancher2NodeTemplateRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -20,58 +20,58 @@ func dataSourceRancher2NodeTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"driver": &schema.Schema{
+			"driver": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_env": &schema.Schema{
+			"engine_env": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"engine_insecure_registry": &schema.Schema{
+			"engine_insecure_registry": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"engine_install_url": &schema.Schema{
+			"engine_install_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_label": &schema.Schema{
+			"engine_label": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"engine_opt": &schema.Schema{
+			"engine_opt": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"engine_registry_mirror": &schema.Schema{
+			"engine_registry_mirror": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"engine_storage_driver": &schema.Schema{
+			"engine_storage_driver": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"use_internal_ip_address": &schema.Schema{
+			"use_internal_ip_address": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

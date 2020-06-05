@@ -123,7 +123,7 @@ func TestAccRancher2CloudCredential_basic_Amazonec2(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigAmazonec2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-aws", cloudCredential),
@@ -133,7 +133,7 @@ func TestAccRancher2CloudCredential_basic_Amazonec2(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-aws", "amazonec2_credential_config.0.access_key", "XXXXXXXXXXXXXXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialUpdateConfigAmazonec2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-aws", cloudCredential),
@@ -143,7 +143,7 @@ func TestAccRancher2CloudCredential_basic_Amazonec2(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-aws", "amazonec2_credential_config.0.access_key", "YYYYYYYYYYYYYYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigAmazonec2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-aws", cloudCredential),
@@ -165,7 +165,7 @@ func TestAccRancher2CloudCredential_disappears_Amazonec2(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigAmazonec2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-aws", cloudCredential),
@@ -185,7 +185,7 @@ func TestAccRancher2CloudCredential_basic_Azure(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigAzure,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-azure", cloudCredential),
@@ -195,7 +195,7 @@ func TestAccRancher2CloudCredential_basic_Azure(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-azure", "azure_credential_config.0.client_id", "XXXXXXXXXXXXXXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialUpdateConfigAzure,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-azure", cloudCredential),
@@ -205,7 +205,7 @@ func TestAccRancher2CloudCredential_basic_Azure(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-azure", "azure_credential_config.0.client_id", "YYYYYYYYYYYYYYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigAzure,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-azure", cloudCredential),
@@ -227,7 +227,7 @@ func TestAccRancher2CloudCredential_disappears_Azure(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigAzure,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-azure", cloudCredential),
@@ -247,7 +247,7 @@ func TestAccRancher2CloudCredential_basic_Digitalocean(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigDigitalocean,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-do", cloudCredential),
@@ -257,7 +257,7 @@ func TestAccRancher2CloudCredential_basic_Digitalocean(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-do", "digitalocean_credential_config.0.access_token", "XXXXXXXXXXXXXXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialUpdateConfigDigitalocean,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-do", cloudCredential),
@@ -267,7 +267,7 @@ func TestAccRancher2CloudCredential_basic_Digitalocean(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-do", "digitalocean_credential_config.0.access_token", "YYYYYYYYYYYYYYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigDigitalocean,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-do", cloudCredential),
@@ -289,7 +289,7 @@ func TestAccRancher2CloudCredential_disappears_Digitalocean(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigDigitalocean,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-do", cloudCredential),
@@ -309,7 +309,7 @@ func TestAccRancher2CloudCredential_basic_Openstack(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigOpenstack,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-openstack", cloudCredential),
@@ -319,7 +319,7 @@ func TestAccRancher2CloudCredential_basic_Openstack(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-openstack", "openstack_credential_config.0.password", "XXXXXXXXXXXXXXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialUpdateConfigOpenstack,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-openstack", cloudCredential),
@@ -329,7 +329,7 @@ func TestAccRancher2CloudCredential_basic_Openstack(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-openstack", "openstack_credential_config.0.password", "YYYYYYYYYYYYYYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigOpenstack,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-openstack", cloudCredential),
@@ -351,7 +351,7 @@ func TestAccRancher2CloudCredential_disappears_Openstack(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigOpenstack,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-openstack", cloudCredential),
@@ -371,7 +371,7 @@ func TestAccRancher2CloudCredential_basic_Vsphere(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigVsphere,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-vsphere", cloudCredential),
@@ -382,7 +382,7 @@ func TestAccRancher2CloudCredential_basic_Vsphere(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-vsphere", "vsphere_credential_config.0.vcenter", "vcenter"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialUpdateConfigVsphere,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-vsphere", cloudCredential),
@@ -393,7 +393,7 @@ func TestAccRancher2CloudCredential_basic_Vsphere(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-vsphere", "vsphere_credential_config.0.vcenter", "vcenter2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigVsphere,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-vsphere", cloudCredential),
@@ -416,7 +416,7 @@ func TestAccRancher2CloudCredential_disappears_Vsphere(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CloudCredentialConfigVsphere,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-vsphere", cloudCredential),

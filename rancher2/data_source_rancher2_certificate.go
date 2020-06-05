@@ -12,37 +12,37 @@ func dataSourceRancher2Certificate() *schema.Resource {
 		Read: dataSourceRancher2CertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Project ID to add certificate",
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the certificate",
 			},
-			"certs": &schema.Schema{
+			"certs": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Certificate certs base64 encoded",
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Description of the certificate",
 			},
-			"namespace_id": &schema.Schema{
+			"namespace_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Namespace ID to add certificate",
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Annotations of the certificate",
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Labels of the certificate",

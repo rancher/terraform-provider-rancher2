@@ -47,7 +47,7 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2BootstrapDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2BootstrapConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
@@ -56,7 +56,7 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2BootstrapUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
@@ -65,7 +65,7 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2BootstrapConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),

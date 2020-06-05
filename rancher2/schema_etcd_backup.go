@@ -8,7 +8,7 @@ import (
 
 func etcdBackupFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
@@ -22,35 +22,35 @@ func etcdBackupFields() map[string]*schema.Schema {
 				Schema: clusterRKEConfigServicesEtcdBackupConfigFields(),
 			},
 		},
-		"filename": &schema.Schema{
+		"filename": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"manual": &schema.Schema{
+		"manual": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 			ForceNew: true,
 		},
-		"namespace_id": &schema.Schema{
+		"namespace_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 			ForceNew: true,
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
 			Description: descriptions["annotations"],
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

@@ -49,7 +49,7 @@ func TestAccRancher2ClusterRoleTemplateBinding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterRoleTemplateBindingExists(testAccRancher2ClusterRoleTemplateBindingType+".foo", clusterRole),
@@ -58,7 +58,7 @@ func TestAccRancher2ClusterRoleTemplateBinding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "cluster-admin"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterRoleTemplateBindingUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterRoleTemplateBindingExists(testAccRancher2ClusterRoleTemplateBindingType+".foo", clusterRole),
@@ -67,7 +67,7 @@ func TestAccRancher2ClusterRoleTemplateBinding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterRoleTemplateBindingType+".foo", "role_template_id", "projects-create"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterRoleTemplateBindingExists(testAccRancher2ClusterRoleTemplateBindingType+".foo", clusterRole),
@@ -87,7 +87,7 @@ func TestAccRancher2ClusterRoleTemplateBinding_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterRoleTemplateBindingExists(testAccRancher2ClusterRoleTemplateBindingType+".foo", clusterRole),

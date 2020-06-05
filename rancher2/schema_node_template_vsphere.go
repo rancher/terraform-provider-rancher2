@@ -57,13 +57,13 @@ type vmwarevsphereConfig struct {
 
 func vsphereConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"boot2docker_url": &schema.Schema{
+		"boot2docker_url": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "https://releases.rancher.com/os/latest/rancheros-vmware.iso",
 			Description: "vSphere URL for boot2docker image",
 		},
-		"cfgparam": &schema.Schema{
+		"cfgparam": {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Description: "vSphere vm configuration parameters (used for guestinfo)",
@@ -71,40 +71,40 @@ func vsphereConfigFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"clone_from": &schema.Schema{
+		"clone_from": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "If you choose creation type clone a name of what you want to clone is required",
 		},
-		"cloud_config": &schema.Schema{
+		"cloud_config": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Filepath to a cloud-config yaml file to put into the ISO user-data",
 		},
-		"cloudinit": &schema.Schema{
+		"cloudinit": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "vSphere cloud-init filepath or url to add to guestinfo",
 		},
-		"content_library": &schema.Schema{
+		"content_library": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "If you choose to clone from a content library template specify the name of the library",
 		},
-		"cpu_count": &schema.Schema{
+		"cpu_count": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "2",
 			Description: "vSphere CPU number for docker VM",
 		},
-		"creation_type": &schema.Schema{
+		"creation_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      vmwarevsphereConfigCreationTypeDefault,
 			ValidateFunc: validation.StringInSlice(vmwarevsphereConfigCreationType, true),
 			Description:  "Creation type when creating a new virtual machine. Supported values: vm, template, library, legacy",
 		},
-		"custom_attributes": &schema.Schema{
+		"custom_attributes": {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Description: "vSphere custom attributes, format key/value e.g. '200=my custom value'",
@@ -112,44 +112,44 @@ func vsphereConfigFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"datacenter": &schema.Schema{
+		"datacenter": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "vSphere datacenter for virtual machine",
 		},
-		"datastore": &schema.Schema{
+		"datastore": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "vSphere datastore for virtual machine",
 		},
-		"datastore_cluster": &schema.Schema{
+		"datastore_cluster": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "vSphere datastore cluster for virtual machine",
 		},
-		"disk_size": &schema.Schema{
+		"disk_size": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "20480",
 			Description: "vSphere size of disk for docker VM (in MB)",
 		},
-		"folder": &schema.Schema{
+		"folder": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "vSphere folder for the docker VM. This folder must already exist in the datacenter",
 		},
-		"hostsystem": &schema.Schema{
+		"hostsystem": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "vSphere compute resource where the docker VM will be instantiated. This can be omitted if using a cluster with DRS",
 		},
-		"memory_size": &schema.Schema{
+		"memory_size": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "2048",
 			Description: "vSphere size of memory for docker VM (in MB)",
 		},
-		"network": &schema.Schema{
+		"network": {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Description: "vSphere network where the virtual machine will be attached",
@@ -163,7 +163,7 @@ func vsphereConfigFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			Description: "vSphere password",
 		},
-		"pool": &schema.Schema{
+		"pool": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "vSphere resource pool for docker VM",
@@ -193,7 +193,7 @@ func vsphereConfigFields() map[string]*schema.Schema {
 			Default:     "staff",
 			Description: "If using a non-B2D image the uploaded keys will need chown'ed, defaults to staff e.g. docker:staff",
 		},
-		"tags": &schema.Schema{
+		"tags": {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Description: "vSphere tags id e.g. urn:xxx",
@@ -206,19 +206,19 @@ func vsphereConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "vSphere username",
 		},
-		"vapp_ip_allocation_policy": &schema.Schema{
+		"vapp_ip_allocation_policy": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Description:  "vSphere vApp IP allocation policy. Supported values are: dhcp, fixed, transient and fixedAllocated",
 			ValidateFunc: validation.StringInSlice(vmwarevsphereConfigVappIpallocationpolicies, true),
 		},
-		"vapp_ip_protocol": &schema.Schema{
+		"vapp_ip_protocol": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Description:  "vSphere vApp IP protocol for this deployment. Supported values are: IPv4 and IPv6",
 			ValidateFunc: validation.StringInSlice(vmwarevsphereConfigVappIpprotocols, true),
 		},
-		"vapp_property": &schema.Schema{
+		"vapp_property": {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Description: "vSphere vApp properties",
@@ -226,7 +226,7 @@ func vsphereConfigFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"vapp_transport": &schema.Schema{
+		"vapp_transport": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Description:  "vSphere OVF environment transports to use for properties. Supported values are: iso and com.vmware.guestInfo",

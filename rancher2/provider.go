@@ -35,52 +35,52 @@ type CLIConfig struct {
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"api_url": &schema.Schema{
+			"api_url": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_URL", providerDefaultEmptyString),
 				Description: descriptions["api_url"],
 			},
-			"access_key": &schema.Schema{
+			"access_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_ACCESS_KEY", providerDefaultEmptyString),
 				Description: descriptions["access_key"],
 			},
-			"bootstrap": &schema.Schema{
+			"bootstrap": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_BOOTSTRAP", false),
 				Description: descriptions["bootstrap"],
 			},
-			"secret_key": &schema.Schema{
+			"secret_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_SECRET_KEY", providerDefaultEmptyString),
 				Description: descriptions["secret_key"],
 			},
-			"token_key": &schema.Schema{
+			"token_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_TOKEN_KEY", providerDefaultEmptyString),
 				Description: descriptions["token_key"],
 			},
-			"ca_certs": &schema.Schema{
+			"ca_certs": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_CA_CERTS", ""),
 				Description: descriptions["ca_certs"],
 			},
-			"insecure": &schema.Schema{
+			"insecure": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_INSECURE", false),
 				Description: descriptions["insecure"],
 			},
-			"retries": &schema.Schema{
+			"retries": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      5,

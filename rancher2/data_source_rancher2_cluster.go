@@ -11,19 +11,19 @@ func dataSourceRancher2Cluster() *schema.Resource {
 		Read: dataSourceRancher2ClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"driver": &schema.Schema{
+			"driver": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kube_config": &schema.Schema{
+			"kube_config": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"rke_config": &schema.Schema{
+			"rke_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -31,7 +31,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterRKEConfigFields(),
 				},
 			},
-			"k3s_config": &schema.Schema{
+			"k3s_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -39,7 +39,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterK3SConfigFields(),
 				},
 			},
-			"eks_config": &schema.Schema{
+			"eks_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -47,7 +47,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterEKSConfigFields(),
 				},
 			},
-			"aks_config": &schema.Schema{
+			"aks_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -55,7 +55,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterAKSConfigFields(),
 				},
 			},
-			"gke_config": &schema.Schema{
+			"gke_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -63,19 +63,19 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterGKEConfigFields(),
 				},
 			},
-			"default_project_id": &schema.Schema{
+			"default_project_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"system_project_id": &schema.Schema{
+			"system_project_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_auth_endpoint": &schema.Schema{
+			"cluster_auth_endpoint": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -83,7 +83,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterAuthEndpoint(),
 				},
 			},
-			"cluster_monitoring_input": &schema.Schema{
+			"cluster_monitoring_input": {
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Computed:    true,
@@ -92,7 +92,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: monitoringInputFields(),
 				},
 			},
-			"cluster_registration_token": &schema.Schema{
+			"cluster_registration_token": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -109,7 +109,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: answerFields(),
 				},
 			},
-			"cluster_template_id": &schema.Schema{
+			"cluster_template_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Cluster template ID",
@@ -122,7 +122,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: questionFields(),
 				},
 			},
-			"cluster_template_revision_id": &schema.Schema{
+			"cluster_template_revision_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Cluster template revision ID",
@@ -155,11 +155,11 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: scheduledClusterScanFields(),
 				},
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

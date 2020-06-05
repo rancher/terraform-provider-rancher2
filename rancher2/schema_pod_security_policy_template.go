@@ -8,25 +8,25 @@ import (
 
 func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Pod Security Policy template policy name",
 			ForceNew:    true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
 			Description: "Pod Security Policy template policy description",
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
 			Description: "Annotations of the Pod Security Policy template",
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

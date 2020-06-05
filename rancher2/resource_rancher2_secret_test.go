@@ -86,7 +86,7 @@ func TestAccRancher2Secret_basic_Project(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2SecretDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2SecretConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo", reg),
@@ -96,7 +96,7 @@ func TestAccRancher2Secret_basic_Project(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "data.username", "dXNlcg=="),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2SecretUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo", reg),
@@ -106,7 +106,7 @@ func TestAccRancher2Secret_basic_Project(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo", "data.username", "dXNlcjI="),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2SecretConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo", reg),
@@ -127,7 +127,7 @@ func TestAccRancher2Secret_disappears_Project(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2SecretDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2SecretConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo", reg),
@@ -149,7 +149,7 @@ func TestAccRancher2Secret_basic_Namespaced(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2SecretDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2SecretNsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo-ns", reg),
@@ -159,7 +159,7 @@ func TestAccRancher2Secret_basic_Namespaced(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "data.username", "dXNlcg=="),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2SecretNsUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo-ns", reg),
@@ -169,7 +169,7 @@ func TestAccRancher2Secret_basic_Namespaced(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2SecretType+".foo-ns", "data.username", "dXNlcjI="),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2SecretNsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo-ns", reg),
@@ -190,7 +190,7 @@ func TestAccRancher2Secret_disappears_Namespaced(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2SecretDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2SecretNsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SecretExists(testAccRancher2SecretType+".foo-ns", reg),

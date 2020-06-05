@@ -11,55 +11,55 @@ func dataSourceRancher2NodePool() *schema.Resource {
 		Read: dataSourceRancher2NodePoolRead,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"node_template_id": &schema.Schema{
+			"node_template_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"delete_not_ready_after_secs": &schema.Schema{
+			"delete_not_ready_after_secs": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"hostname_prefix": &schema.Schema{
+			"hostname_prefix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"node_taints": &schema.Schema{
+			"node_taints": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: taintFields(),
 				},
 			},
-			"quantity": &schema.Schema{
+			"quantity": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"control_plane": &schema.Schema{
+			"control_plane": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"etcd": &schema.Schema{
+			"etcd": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"worker": &schema.Schema{
+			"worker": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

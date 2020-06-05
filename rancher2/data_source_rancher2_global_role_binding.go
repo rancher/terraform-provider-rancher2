@@ -28,11 +28,11 @@ func dataSourceRancher2GlobalRoleBinding() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

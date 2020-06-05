@@ -9,12 +9,12 @@ import (
 func clusterAlertRuleFields() map[string]*schema.Schema {
 	r := alertRuleFields()
 	s := map[string]*schema.Schema{
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Alert rule cluster ID",
 		},
-		"event_rule": &schema.Schema{
+		"event_rule": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -24,7 +24,7 @@ func clusterAlertRuleFields() map[string]*schema.Schema {
 			},
 			Description: "Alert event rule",
 		},
-		"metric_rule": &schema.Schema{
+		"metric_rule": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -34,7 +34,7 @@ func clusterAlertRuleFields() map[string]*schema.Schema {
 			},
 			Description: "Alert metric rule",
 		},
-		"node_rule": &schema.Schema{
+		"node_rule": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -44,7 +44,7 @@ func clusterAlertRuleFields() map[string]*schema.Schema {
 			},
 			Description: "Alert node rule",
 		},
-		"system_service_rule": &schema.Schema{
+		"system_service_rule": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,

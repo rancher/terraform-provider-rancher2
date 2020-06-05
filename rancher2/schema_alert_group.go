@@ -8,29 +8,29 @@ import (
 
 func alertGroupFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Alert group name",
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Alert group description",
 		},
-		"group_interval_seconds": &schema.Schema{
+		"group_interval_seconds": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     180,
 			Description: "Alert group interval seconds",
 		},
-		"group_wait_seconds": &schema.Schema{
+		"group_wait_seconds": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     180,
 			Description: "Alert group wait seconds",
 		},
-		"recipients": &schema.Schema{
+		"recipients": {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Description: "Alert group recipients",
@@ -38,18 +38,18 @@ func alertGroupFields() map[string]*schema.Schema {
 				Schema: recipientFields(),
 			},
 		},
-		"repeat_interval_seconds": &schema.Schema{
+		"repeat_interval_seconds": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
 			Description: "Alert group repeat interval seconds",
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

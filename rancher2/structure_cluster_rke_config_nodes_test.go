@@ -48,7 +48,7 @@ func init() {
 		},
 	}
 	testClusterRKEConfigNodesConf = []managementClient.RKEConfigNode{
-		managementClient.RKEConfigNode{
+		{
 			Address:          "url.terraform.test",
 			DockerSocket:     "docker.sock",
 			HostnameOverride: "terra-test",

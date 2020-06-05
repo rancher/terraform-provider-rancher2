@@ -270,7 +270,7 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Default:     "10.0.0.0/16",
 			Description: "A CIDR notation IP range from which to assign Kubernetes Service cluster IPs. It must not overlap with any Subnet IP ranges",
 		},
-		"tag": &schema.Schema{
+		"tag": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

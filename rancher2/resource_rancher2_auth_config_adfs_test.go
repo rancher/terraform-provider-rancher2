@@ -46,7 +46,7 @@ func TestAccRancher2AuthConfigADFS_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigADFSDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigADFSConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigADFSType+"."+AuthConfigADFSName, authConfig),
@@ -57,7 +57,7 @@ func TestAccRancher2AuthConfigADFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigADFSType+"."+AuthConfigADFSName, "idp_metadata_content", "XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigADFSUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigADFSType+"."+AuthConfigADFSName, authConfig),
@@ -68,7 +68,7 @@ func TestAccRancher2AuthConfigADFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigADFSType+"."+AuthConfigADFSName, "idp_metadata_content", "YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigADFSConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigADFSType+"."+AuthConfigADFSName, authConfig),
@@ -91,7 +91,7 @@ func TestAccRancher2AuthConfigADFS_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigADFSDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigADFSConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigADFSType+"."+AuthConfigADFSName, authConfig),

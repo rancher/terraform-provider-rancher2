@@ -110,12 +110,12 @@ func clusterScanFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "The cluster scan status",
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

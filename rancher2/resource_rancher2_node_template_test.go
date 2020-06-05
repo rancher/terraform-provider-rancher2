@@ -200,7 +200,7 @@ func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateAmazonec2Config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -211,7 +211,7 @@ func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "amazonec2_config.0.subnet_id", "subnet-XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateAmazonec2UpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -222,7 +222,7 @@ func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "amazonec2_config.0.subnet_id", "subnet-YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateAmazonec2Config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -245,7 +245,7 @@ func TestAccRancher2NodeTemplate_disappears_Amazonec2(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateAmazonec2Config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-aws", nodeTemplate),
@@ -266,7 +266,7 @@ func TestAccRancher2NodeTemplate_basic_Azure(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateAzureConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -277,7 +277,7 @@ func TestAccRancher2NodeTemplate_basic_Azure(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "azure_config.0.location", "location-XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateAzureUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -288,7 +288,7 @@ func TestAccRancher2NodeTemplate_basic_Azure(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "azure_config.0.location", "location-YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateAzureConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -311,7 +311,7 @@ func TestAccRancher2NodeTemplate_disappears_Azure(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateAzureConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-azure", nodeTemplate),
@@ -332,7 +332,7 @@ func TestAccRancher2NodeTemplate_basic_Digitalocean(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateDigitaloceanConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -343,7 +343,7 @@ func TestAccRancher2NodeTemplate_basic_Digitalocean(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "digitalocean_config.0.region", "region-XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateDigitaloceanUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -354,7 +354,7 @@ func TestAccRancher2NodeTemplate_basic_Digitalocean(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "digitalocean_config.0.region", "region-YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateDigitaloceanConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -377,7 +377,7 @@ func TestAccRancher2NodeTemplate_disappears_Digitalocean(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateDigitaloceanConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-do", nodeTemplate),
@@ -398,7 +398,7 @@ func TestAccRancher2NodeTemplate_basic_Opennebula(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateOpennebulaConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -409,7 +409,7 @@ func TestAccRancher2NodeTemplate_basic_Opennebula(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "opennebula_config.0.ssh_user", "rancher"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateOpennebulaUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -420,7 +420,7 @@ func TestAccRancher2NodeTemplate_basic_Opennebula(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "opennebula_config.0.ssh_user", "rancher2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateOpennebulaConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -443,7 +443,7 @@ func TestAccRancher2NodeTemplate_disappears_Opennebula(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateOpennebulaConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-opennebula", nodeTemplate),
@@ -464,7 +464,7 @@ func TestAccRancher2NodeTemplate_basic_Openstack(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateOpenstackConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -475,7 +475,7 @@ func TestAccRancher2NodeTemplate_basic_Openstack(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "openstack_config.0.flavor_name", "flavor-XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateOpenstackUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -486,7 +486,7 @@ func TestAccRancher2NodeTemplate_basic_Openstack(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "openstack_config.0.flavor_name", "flavor-YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateOpenstackConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -509,7 +509,7 @@ func TestAccRancher2NodeTemplate_disappears_Openstack(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateOpenstackConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-openstack", nodeTemplate),
@@ -530,7 +530,7 @@ func TestAccRancher2NodeTemplate_basic_Vsphere(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateVsphereConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -542,7 +542,7 @@ func TestAccRancher2NodeTemplate_basic_Vsphere(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "vsphere_config.0.pool", "pool-XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateVsphereUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -554,7 +554,7 @@ func TestAccRancher2NodeTemplate_basic_Vsphere(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "vsphere_config.0.pool", "pool-YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateVsphereConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
@@ -578,7 +578,7 @@ func TestAccRancher2NodeTemplate_disappears_Vsphere(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeTemplateVsphereConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-vsphere", nodeTemplate),

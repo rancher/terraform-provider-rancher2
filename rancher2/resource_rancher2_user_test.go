@@ -45,7 +45,7 @@ func TestAccRancher2User_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2UserDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2User,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
@@ -54,7 +54,7 @@ func TestAccRancher2User_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "enabled", "true"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2UserUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
@@ -63,7 +63,7 @@ func TestAccRancher2User_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "enabled", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2User,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
@@ -83,7 +83,7 @@ func TestAccRancher2User_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2UserDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2User,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),

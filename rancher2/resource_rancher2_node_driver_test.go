@@ -48,7 +48,7 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeDriverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeDriver,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeDriverExists(name, nodeDriver),
@@ -63,7 +63,7 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "whitelist_domains.0", "*.foo.com"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeDriverUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeDriverExists(name, nodeDriver),
@@ -79,7 +79,7 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "whitelist_domains.1", "updated.foo.com"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeDriver,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeDriverExists(name, nodeDriver),
@@ -106,7 +106,7 @@ func TestAccRancher2NodeDriver_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodeDriverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodeDriver,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeDriverExists(testAccRancher2NodeDriverType+".foo", nodeDriver),

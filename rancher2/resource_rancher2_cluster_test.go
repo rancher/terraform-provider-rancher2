@@ -163,7 +163,7 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterConfigRKE,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -178,7 +178,7 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterUpdateConfigRKE,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -193,7 +193,7 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 10 * * *"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterConfigRKE,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -220,7 +220,7 @@ func TestAccRancher2Cluster_disappears_RKE(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterConfigRKE,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -240,7 +240,7 @@ func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterConfigImported,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -249,7 +249,7 @@ func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "driver", ""),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterUpdateConfigImported,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -258,7 +258,7 @@ func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "driver", ""),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterConfigImported,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -279,7 +279,7 @@ func TestAccRancher2Cluster_disappears_Imported(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterConfigImported,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -299,7 +299,7 @@ func TestAccRancher2Cluster_basic_K3S(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterConfigK3S,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -309,7 +309,7 @@ func TestAccRancher2Cluster_basic_K3S(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "k3s_config.0.upgrade_strategy.0.drain_server_nodes", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterUpdateConfigK3S,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -319,7 +319,7 @@ func TestAccRancher2Cluster_basic_K3S(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "k3s_config.0.upgrade_strategy.0.drain_server_nodes", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterConfigK3S,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),
@@ -341,7 +341,7 @@ func TestAccRancher2Cluster_disappears_K3S(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterConfigK3S,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterExists(testAccRancher2ClusterType+".foo", cluster),

@@ -9,7 +9,7 @@ import (
 func clusterAlertGroupFields() map[string]*schema.Schema {
 	r := alertGroupFields()
 	s := map[string]*schema.Schema{
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Alert group Cluster ID",

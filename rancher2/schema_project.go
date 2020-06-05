@@ -95,11 +95,11 @@ func projectResourceQuotaFields() map[string]*schema.Schema {
 
 func projectFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
@@ -112,7 +112,7 @@ func projectFields() map[string]*schema.Schema {
 				Schema: containerResourceLimitFields(),
 			},
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -122,11 +122,11 @@ func projectFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable built-in project monitoring",
 		},
-		"pod_security_policy_template_id": &schema.Schema{
+		"pod_security_policy_template_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"project_monitoring_input": &schema.Schema{
+		"project_monitoring_input": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Optional:    true,
@@ -144,19 +144,19 @@ func projectFields() map[string]*schema.Schema {
 				Schema: projectResourceQuotaFields(),
 			},
 		},
-		"wait_for_cluster": &schema.Schema{
+		"wait_for_cluster": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
 			Description: "Wait for cluster becomes active",
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
 			Description: descriptions["annotations"],
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

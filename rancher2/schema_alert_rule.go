@@ -74,53 +74,53 @@ var (
 
 func alertRuleFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"group_id": &schema.Schema{
+		"group_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Alert rule group ID",
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Alert rule name",
 		},
-		"group_interval_seconds": &schema.Schema{
+		"group_interval_seconds": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     180,
 			Description: "Alert rule interval seconds",
 		},
-		"group_wait_seconds": &schema.Schema{
+		"group_wait_seconds": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     180,
 			Description: "Alert rule wait seconds",
 		},
-		"inherited": &schema.Schema{
+		"inherited": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     true,
 			Description: "Alert rule inherited",
 		},
-		"repeat_interval_seconds": &schema.Schema{
+		"repeat_interval_seconds": {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Default:     3600,
 			Description: "Alert rule repeat interval seconds",
 		},
-		"severity": &schema.Schema{
+		"severity": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      alertRuleSeverityCritical,
 			Description:  "Alert rule severity",
 			ValidateFunc: validation.StringInSlice(alertRuleSeverityTypes, true),
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
@@ -131,14 +131,14 @@ func alertRuleFields() map[string]*schema.Schema {
 
 func eventRuleFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"event_type": &schema.Schema{
+		"event_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      eventRuleTypeWarning,
 			Description:  "Event type",
 			ValidateFunc: validation.StringInSlice(eventRuleTypes, true),
 		},
-		"resource_kind": &schema.Schema{
+		"resource_kind": {
 			Type:         schema.TypeString,
 			Required:     true,
 			Description:  "Resource kind",
@@ -150,29 +150,29 @@ func eventRuleFields() map[string]*schema.Schema {
 
 func metricRuleFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"comparison": &schema.Schema{
+		"comparison": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      metricRuleComparisonEqual,
 			Description:  "Metric rule comparison",
 			ValidateFunc: validation.StringInSlice(metricRuleComparisons, true),
 		},
-		"duration": &schema.Schema{
+		"duration": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Metric rule duration",
 		},
-		"expression": &schema.Schema{
+		"expression": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Metric rule expression",
 		},
-		"threshold_value": &schema.Schema{
+		"threshold_value": {
 			Type:        schema.TypeFloat,
 			Required:    true,
 			Description: "Metric rule threshold value",
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Metric rule description",
@@ -183,33 +183,33 @@ func metricRuleFields() map[string]*schema.Schema {
 
 func nodeRuleFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"cpu_threshold": &schema.Schema{
+		"cpu_threshold": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      70,
 			Description:  "Node rule cpu threshold",
 			ValidateFunc: validation.IntBetween(1, 100),
 		},
-		"condition": &schema.Schema{
+		"condition": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      nodeRuleConditionNotReady,
 			Description:  "Node rule condition",
 			ValidateFunc: validation.StringInSlice(nodeRuleConditions, true),
 		},
-		"mem_threshold": &schema.Schema{
+		"mem_threshold": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      70,
 			Description:  "Node rule mem threshold",
 			ValidateFunc: validation.IntBetween(1, 100),
 		},
-		"node_id": &schema.Schema{
+		"node_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Node ID",
 		},
-		"selector": &schema.Schema{
+		"selector": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Description: "Node rule selector",
@@ -220,26 +220,26 @@ func nodeRuleFields() map[string]*schema.Schema {
 
 func podRuleFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"pod_id": &schema.Schema{
+		"pod_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Pod ID",
 		},
-		"condition": &schema.Schema{
+		"condition": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      podRuleConditionNotRunning,
 			Description:  "Pod rule condition",
 			ValidateFunc: validation.StringInSlice(podRuleConditions, true),
 		},
-		"restart_interval_seconds": &schema.Schema{
+		"restart_interval_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      300,
 			Description:  "Pod rule restart interval seconds",
 			ValidateFunc: validation.IntAtLeast(1),
 		},
-		"restart_times": &schema.Schema{
+		"restart_times": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      3,
@@ -252,7 +252,7 @@ func podRuleFields() map[string]*schema.Schema {
 
 func systemServiceRuleFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"condition": &schema.Schema{
+		"condition": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      systemServiceRuleConditionScheduler,
@@ -265,19 +265,19 @@ func systemServiceRuleFields() map[string]*schema.Schema {
 
 func workloadRuleFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"available_percentage": &schema.Schema{
+		"available_percentage": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      70,
 			Description:  "Workload rule available percentage",
 			ValidateFunc: validation.IntBetween(1, 100),
 		},
-		"selector": &schema.Schema{
+		"selector": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Description: "Workload rule selector",
 		},
-		"workload_id": &schema.Schema{
+		"workload_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Workload ID",

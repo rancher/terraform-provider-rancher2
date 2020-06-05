@@ -33,7 +33,7 @@ func TestAccRancher2AuthConfigGithub_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigGithubDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigGithubConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, authConfig),
@@ -42,7 +42,7 @@ func TestAccRancher2AuthConfigGithub_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "client_secret", "XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigGithubUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, authConfig),
@@ -51,7 +51,7 @@ func TestAccRancher2AuthConfigGithub_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, "client_secret", "YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigGithubConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, authConfig),
@@ -72,7 +72,7 @@ func TestAccRancher2AuthConfigGithub_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigGithubDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigGithubConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigGithubType+"."+AuthConfigGithubName, authConfig),

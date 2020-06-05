@@ -9,59 +9,59 @@ import (
 
 func nodePoolFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"hostname_prefix": &schema.Schema{
+		"hostname_prefix": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"node_template_id": &schema.Schema{
+		"node_template_id": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"node_taints": &schema.Schema{
+		"node_taints": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: taintFields(),
 			},
 		},
-		"delete_not_ready_after_secs": &schema.Schema{
+		"delete_not_ready_after_secs": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      0,
 			ValidateFunc: validation.IntAtLeast(0),
 		},
-		"control_plane": &schema.Schema{
+		"control_plane": {
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
-		"etcd": &schema.Schema{
+		"etcd": {
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
-		"quantity": &schema.Schema{
+		"quantity": {
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      1,
 			ValidateFunc: validation.IntAtLeast(1),
 		},
-		"worker": &schema.Schema{
+		"worker": {
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

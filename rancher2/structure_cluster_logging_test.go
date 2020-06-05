@@ -67,7 +67,7 @@ func init() {
 		},
 	}
 	testLoggingFluentdConfigFluentServerConf = []managementClient.FluentServer{
-		managementClient.FluentServer{
+		{
 			Endpoint:  "host.terraform.test",
 			Hostname:  "hostname",
 			Password:  "YYYYYYYY",

@@ -19,21 +19,21 @@ var (
 
 func taintFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"key": &schema.Schema{
+		"key": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"value": &schema.Schema{
+		"value": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"effect": &schema.Schema{
+		"effect": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      taintEffectNoSchedule,
 			ValidateFunc: validation.StringInSlice(taintEffectTypes, true),
 		},
-		"time_added": &schema.Schema{
+		"time_added": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,

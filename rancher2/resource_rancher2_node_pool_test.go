@@ -62,7 +62,7 @@ func TestAccRancher2NodePool_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodePoolDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodePoolConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodePoolExists(name, nodePool),
@@ -75,7 +75,7 @@ func TestAccRancher2NodePool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "quantity", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodePoolUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodePoolExists(name, nodePool),
@@ -88,7 +88,7 @@ func TestAccRancher2NodePool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "quantity", "3"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodePoolConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodePoolExists(name, nodePool),
@@ -113,7 +113,7 @@ func TestAccRancher2NodePool_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NodePoolDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NodePoolConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodePoolExists(testAccRancher2NodePoolType+".foo", nodePool),

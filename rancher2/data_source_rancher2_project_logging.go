@@ -15,11 +15,11 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kind": &schema.Schema{
+			"kind": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"custom_target_config": &schema.Schema{
+			"custom_target_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -32,7 +32,7 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 				Computed:    true,
 				Description: "Optional enable json log parsing",
 			},
-			"elasticsearch_config": &schema.Schema{
+			"elasticsearch_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -40,7 +40,7 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 					Schema: loggingElasticsearchConfigFields(),
 				},
 			},
-			"fluentd_config": &schema.Schema{
+			"fluentd_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -48,7 +48,7 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 					Schema: loggingFluentdConfigFields(),
 				},
 			},
-			"kafka_config": &schema.Schema{
+			"kafka_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -68,11 +68,11 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"output_tags": &schema.Schema{
+			"output_tags": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"splunk_config": &schema.Schema{
+			"splunk_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -80,7 +80,7 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 					Schema: loggingSplunkConfigFields(),
 				},
 			},
-			"syslog_config": &schema.Schema{
+			"syslog_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -88,11 +88,11 @@ func dataSourceRancher2ProjectLogging() *schema.Resource {
 					Schema: loggingSyslogConfigFields(),
 				},
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

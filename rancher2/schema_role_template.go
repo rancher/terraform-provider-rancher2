@@ -18,7 +18,7 @@ var (
 
 func roleTemplateFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Role template policy name",
@@ -47,7 +47,7 @@ func roleTemplateFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Default role template for new created cluster or project",
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
@@ -89,13 +89,13 @@ func roleTemplateFields() map[string]*schema.Schema {
 				Schema: policyRuleFields(),
 			},
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
 			Description: "Annotations of the role template",
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

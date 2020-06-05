@@ -95,7 +95,7 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogGlobal,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-global", catalog),
@@ -106,7 +106,7 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogGlobalUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-global", catalog),
@@ -117,7 +117,7 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogGlobal,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-global", catalog),
@@ -140,7 +140,7 @@ func TestAccRancher2Catalog_disappears_Global(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogGlobal,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-global", catalog),
@@ -160,7 +160,7 @@ func TestAccRancher2Catalog_basic_Cluster(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-cluster", catalog),
@@ -172,7 +172,7 @@ func TestAccRancher2Catalog_basic_Cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "version", "helm_v2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogClusterUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-cluster", catalog),
@@ -184,7 +184,7 @@ func TestAccRancher2Catalog_basic_Cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-cluster", "version", "helm_v2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-cluster", catalog),
@@ -208,7 +208,7 @@ func TestAccRancher2Catalog_disappears_Cluster(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-cluster", catalog),
@@ -228,7 +228,7 @@ func TestAccRancher2Catalog_basic_Project(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-project", catalog),
@@ -239,7 +239,7 @@ func TestAccRancher2Catalog_basic_Project(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "version", "helm_v2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogProjectUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-project", catalog),
@@ -250,7 +250,7 @@ func TestAccRancher2Catalog_basic_Project(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-project", "version", "helm_v2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-project", catalog),
@@ -273,7 +273,7 @@ func TestAccRancher2Catalog_disappears_Project(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2CatalogProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CatalogExists(testAccRancher2CatalogType+".foo-project", catalog),

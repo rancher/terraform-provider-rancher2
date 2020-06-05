@@ -42,7 +42,7 @@ func TestAccRancher2AuthConfigActiveDirectory_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigActiveDirectoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigActiveDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),
@@ -51,7 +51,7 @@ func TestAccRancher2AuthConfigActiveDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "default_login_domain", "test"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigActiveDirectoryUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),
@@ -60,7 +60,7 @@ func TestAccRancher2AuthConfigActiveDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, "default_login_domain", "test-updated"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigActiveDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),
@@ -81,7 +81,7 @@ func TestAccRancher2AuthConfigActiveDirectory_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigActiveDirectoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigActiveDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),

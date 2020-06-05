@@ -11,47 +11,47 @@ func dataSourceRancher2ClusterDriver() *schema.Resource {
 		Read: dataSourceRancher2ClusterDriverRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"active": &schema.Schema{
+			"active": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"builtin": &schema.Schema{
+			"builtin": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"actual_url": &schema.Schema{
+			"actual_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"checksum": &schema.Schema{
+			"checksum": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ui_url": &schema.Schema{
+			"ui_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"whitelist_domains": &schema.Schema{
+			"whitelist_domains": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

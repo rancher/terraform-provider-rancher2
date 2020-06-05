@@ -46,128 +46,128 @@ type openstackConfig struct {
 
 func openstackConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"auth_url": &schema.Schema{
+		"auth_url": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"availability_zone": &schema.Schema{
+		"availability_zone": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"region": &schema.Schema{
+		"region": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"username": &schema.Schema{
+		"username": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"active_timeout": &schema.Schema{
+		"active_timeout": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "200",
 		},
-		"cacert": &schema.Schema{
+		"cacert": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"config_drive": &schema.Schema{
+		"config_drive": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-		"domain_id": &schema.Schema{
+		"domain_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"domain_name": &schema.Schema{
+		"domain_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"endpoint_type": &schema.Schema{
+		"endpoint_type": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"flavor_id": &schema.Schema{
+		"flavor_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"flavor_name": &schema.Schema{
+		"flavor_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"floating_ip_pool": &schema.Schema{
+		"floating_ip_pool": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"image_id": &schema.Schema{
+		"image_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"image_name": &schema.Schema{
+		"image_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"insecure": &schema.Schema{
+		"insecure": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-		"ip_version": &schema.Schema{
+		"ip_version": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "4",
 		},
-		"keypair_name": &schema.Schema{
+		"keypair_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"net_id": &schema.Schema{
+		"net_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"net_name": &schema.Schema{
+		"net_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"nova_network": &schema.Schema{
+		"nova_network": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-		"password": &schema.Schema{
+		"password": {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Sensitive: true,
 		},
-		"private_key_file": &schema.Schema{
+		"private_key_file": {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Sensitive: true,
 		},
-		"sec_groups": &schema.Schema{
+		"sec_groups": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"ssh_port": &schema.Schema{
+		"ssh_port": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "22",
 		},
-		"ssh_user": &schema.Schema{
+		"ssh_user": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "root",
 		},
-		"tenant_id": &schema.Schema{
+		"tenant_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"tenant_name": &schema.Schema{
+		"tenant_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"user_data_file": &schema.Schema{
+		"user_data_file": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},

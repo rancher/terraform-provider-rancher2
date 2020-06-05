@@ -73,7 +73,7 @@ func TestAccRancher2EtcdBackup_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2EtcdBackupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2EtcdBackupConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2EtcdBackupExists(testAccRancher2EtcdBackupType+".foo", etcdBackup),
@@ -82,7 +82,7 @@ func TestAccRancher2EtcdBackup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2EtcdBackupType+".foo", "backup_config.0.s3_backup_config.0.folder", "/folder"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2EtcdBackupUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2EtcdBackupExists(testAccRancher2EtcdBackupType+".foo", etcdBackup),
@@ -91,7 +91,7 @@ func TestAccRancher2EtcdBackup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2EtcdBackupType+".foo", "backup_config.0.s3_backup_config.0.folder", "/folder2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2EtcdBackupConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2EtcdBackupExists(testAccRancher2EtcdBackupType+".foo", etcdBackup),
@@ -111,7 +111,7 @@ func TestAccRancher2EtcdBackup_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2EtcdBackupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2EtcdBackupConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2EtcdBackupExists(testAccRancher2EtcdBackupType+".foo", etcdBackup),

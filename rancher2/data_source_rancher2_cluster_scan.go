@@ -46,11 +46,11 @@ func dataSourceRancher2ClusterScan() *schema.Resource {
 				Computed:    true,
 				Description: "The cluster scan status",
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

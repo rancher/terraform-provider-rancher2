@@ -8,12 +8,12 @@ import (
 
 func notifierWebhookConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"url": &schema.Schema{
+		"url": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Webhook URL",
 		},
-		"proxy_url": &schema.Schema{
+		"proxy_url": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Webhook proxy URL",

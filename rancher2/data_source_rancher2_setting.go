@@ -11,11 +11,11 @@ func dataSourceRancher2Setting() *schema.Resource {
 		Read: dataSourceRancher2SettingRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"value": &schema.Schema{
+			"value": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

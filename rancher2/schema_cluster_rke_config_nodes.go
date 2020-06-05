@@ -39,7 +39,7 @@ func clusterRKEConfigNodesFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 		},

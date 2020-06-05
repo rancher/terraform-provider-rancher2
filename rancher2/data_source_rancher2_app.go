@@ -11,68 +11,68 @@ func dataSourceRancher2App() *schema.Resource {
 		Read: dataSourceRancher2AppRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the app",
 			},
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Project ID to add app",
 			},
-			"target_namespace": &schema.Schema{
+			"target_namespace": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 				Description: "Namespace name to add app",
 			},
-			"answers": &schema.Schema{
+			"answers": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Answers of the app",
 			},
-			"catalog_name": &schema.Schema{
+			"catalog_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Catalog name of the app",
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"external_id": &schema.Schema{
+			"external_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "External ID of the app",
 			},
-			"revision_id": &schema.Schema{
+			"revision_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "App revision id",
 			},
-			"template_name": &schema.Schema{
+			"template_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Template name of the app",
 			},
-			"template_version": &schema.Schema{
+			"template_version": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Template version of the app",
 			},
-			"values_yaml": &schema.Schema{
+			"values_yaml": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "values.yaml file content of the app",
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeMap,
 				Optional:    true,
 				Computed:    true,
 				Description: "Annotations of the app",
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Labels of the app",

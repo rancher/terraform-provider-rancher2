@@ -14,7 +14,7 @@ var (
 
 func init() {
 	testClusterRKEConfigPrivateRegistriesConf = []managementClient.PrivateRegistry{
-		managementClient.PrivateRegistry{
+		{
 			IsDefault: true,
 			Password:  "XXXXXXXX",
 			URL:       "url.terraform.test",

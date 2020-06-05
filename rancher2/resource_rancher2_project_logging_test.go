@@ -60,7 +60,7 @@ func TestAccRancher2ProjectLogging_basic_syslog(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectLoggingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectLoggingConfigSyslog,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectLoggingExists(testAccRancher2ProjectLoggingType+".foo", project),
@@ -68,7 +68,7 @@ func TestAccRancher2ProjectLogging_basic_syslog(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectLoggingType+".foo", "kind", "syslog"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectLoggingUpdateConfigSyslog,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectLoggingExists(testAccRancher2ProjectLoggingType+".foo", project),
@@ -76,7 +76,7 @@ func TestAccRancher2ProjectLogging_basic_syslog(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectLoggingType+".foo", "kind", "syslog"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectLoggingConfigSyslog,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectLoggingExists(testAccRancher2ProjectLoggingType+".foo", project),
@@ -95,7 +95,7 @@ func TestAccRancher2ProjectLogging_disappears_syslog(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectLoggingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectLoggingConfigSyslog,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectLoggingExists(testAccRancher2ProjectLoggingType+".foo", project),

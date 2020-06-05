@@ -8,7 +8,7 @@ import (
 
 func monitoringInputFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"answers": &schema.Schema{
+		"answers": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Description: "Answers for monitor input",

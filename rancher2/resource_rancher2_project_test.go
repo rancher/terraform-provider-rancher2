@@ -85,7 +85,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
@@ -95,7 +95,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "wait_for_cluster", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
@@ -105,7 +105,7 @@ func TestAccRancher2Project_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectType+".foo", "wait_for_cluster", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),
@@ -126,7 +126,7 @@ func TestAccRancher2Project_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectExists(testAccRancher2ProjectType+".foo", project),

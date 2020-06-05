@@ -8,19 +8,19 @@ import (
 
 func containerResourceLimitFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"limits_cpu": &schema.Schema{
+		"limits_cpu": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"limits_memory": &schema.Schema{
+		"limits_memory": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"requests_cpu": &schema.Schema{
+		"requests_cpu": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"requests_memory": &schema.Schema{
+		"requests_memory": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
