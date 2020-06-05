@@ -109,7 +109,7 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		d.Set("engine_storage_driver", in.EngineStorageDriver)
 	}
 
-	d.Set("use_internal_ip_address", in.UseInternalIPAddress)
+	d.Set("use_internal_ip_address", *in.UseInternalIPAddress)
 
 	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -212,7 +212,7 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 	}
 
 	if v, ok := in.Get("use_internal_ip_address").(bool); ok {
-		obj.UseInternalIPAddress = v
+		obj.UseInternalIPAddress = &v
 	}
 
 	if v, ok := in.Get("vsphere_config").([]interface{}); ok && len(v) > 0 {

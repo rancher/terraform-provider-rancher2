@@ -42,7 +42,7 @@ func testClusterTemplate() {
 		Authorization:       testClusterRKEConfigAuthorizationConf,
 		BastionHost:         testClusterRKEConfigBastionHostConf,
 		CloudProvider:       testClusterRKEConfigCloudProviderConf,
-		IgnoreDockerVersion: true,
+		IgnoreDockerVersion: newTrue(),
 		Ingress:             testClusterRKEConfigIngressConf,
 		Monitoring:          testClusterRKEConfigMonitoringConf,
 		Network:             testClusterRKEConfigNetworkConfCanal,

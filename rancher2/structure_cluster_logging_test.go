@@ -91,7 +91,7 @@ func init() {
 	testLoggingFluentdConf = &managementClient.FluentForwarderConfig{
 		FluentServers: testLoggingFluentdConfigFluentServerConf,
 		Certificate:   "XXXXXXXX",
-		Compress:      true,
+		Compress:      newTrue(),
 		EnableTLS:     true,
 	}
 	testLoggingFluentdInterface = []interface{}{

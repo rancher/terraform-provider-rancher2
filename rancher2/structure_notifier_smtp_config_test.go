@@ -19,7 +19,7 @@ func init() {
 		Port:             int64(25),
 		Sender:           "sender",
 		Password:         "password",
-		TLS:              true,
+		TLS:              newTrue(),
 		Username:         "username",
 	}
 	testNotifierSMTPConfigInterface = []interface{}{
@@ -29,7 +29,7 @@ func init() {
 			"port":              25,
 			"sender":            "sender",
 			"password":          "password",
-			"tls":               true,
+			"tls":               newTrue(),
 			"username":          "username",
 		},
 	}

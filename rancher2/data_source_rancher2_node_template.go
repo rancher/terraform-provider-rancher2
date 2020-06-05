@@ -176,7 +176,7 @@ func flattenDataSourceNodeTemplate(d *schema.ResourceData, in *managementClient.
 		d.Set("engine_storage_driver", in.EngineStorageDriver)
 	}
 
-	d.Set("use_internal_ip_address", in.UseInternalIPAddress)
+	d.Set("use_internal_ip_address", *in.UseInternalIPAddress)
 
 	if len(in.Annotations) > 0 {
 		err := d.Set("annotations", toMapInterface(in.Annotations))

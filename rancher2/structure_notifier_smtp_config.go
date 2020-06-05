@@ -27,7 +27,7 @@ func flattenNotifierSMTPConfig(in *managementClient.SMTPConfig, p []interface{})
 		obj["password"] = in.Password
 	}
 
-	obj["tls"] = in.TLS
+	obj["tls"] = *in.TLS
 
 	if len(in.Username) > 0 {
 		obj["username"] = in.Username
@@ -56,7 +56,9 @@ func expandNotifierSMTPConfig(p []interface{}) *managementClient.SMTPConfig {
 		obj.Password = v
 	}
 
-	obj.TLS = in["tls"].(bool)
+	if v, ok := in["tls"].(bool); ok {
+		obj.TLS = &v
+	}
 
 	if v, ok := in["username"].(string); ok && len(v) > 0 {
 		obj.Username = v

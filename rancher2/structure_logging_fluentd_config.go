@@ -79,7 +79,7 @@ func flattenLoggingFluentdConfig(in *managementClient.FluentForwarderConfig, p [
 		obj["certificate"] = in.Certificate
 	}
 
-	obj["compress"] = in.Compress
+	obj["compress"] = *in.Compress
 
 	obj["enable_tls"] = in.EnableTLS
 
@@ -153,7 +153,7 @@ func expandLoggingFluentdConfig(p []interface{}) (*managementClient.FluentForwar
 	}
 
 	if v, ok := in["compress"].(bool); ok {
-		obj.Compress = v
+		obj.Compress = &v
 	}
 
 	if v, ok := in["enable_tls"].(bool); ok {
