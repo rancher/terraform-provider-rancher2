@@ -17,12 +17,36 @@ var (
 
 //Schemas
 
+func clusterRKEConfigDNSNodelocalFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"ip_address": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"node_selector": {
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Description: "Node selector key pair",
+		},
+	}
+	return s
+}
+
 func clusterRKEConfigDNSFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"node_selector": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
+		},
+		"nodelocal": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Description: "Nodelocal dns",
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigDNSNodelocalFields(),
+			},
 		},
 		"provider": {
 			Type:         schema.TypeString,

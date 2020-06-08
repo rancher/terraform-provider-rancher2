@@ -6,6 +6,23 @@ import (
 
 // Flatteners
 
+func flattenClusterRKEConfigDNSNodelocal(in *managementClient.Nodelocal) []interface{} {
+	obj := make(map[string]interface{})
+	if in == nil {
+		return nil
+	}
+
+	if len(in.IPAddress) > 0 {
+		obj["ip_address"] = in.IPAddress
+	}
+
+	if len(in.NodeSelector) > 0 {
+		obj["node_selector"] = toMapInterface(in.NodeSelector)
+	}
+
+	return []interface{}{obj}
+}
+
 func flattenClusterRKEConfigDNS(in *managementClient.DNSConfig) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
@@ -14,6 +31,10 @@ func flattenClusterRKEConfigDNS(in *managementClient.DNSConfig) ([]interface{}, 
 
 	if len(in.NodeSelector) > 0 {
 		obj["node_selector"] = toMapInterface(in.NodeSelector)
+	}
+
+	if in.Nodelocal != nil {
+		obj["nodelocal"] = flattenClusterRKEConfigDNSNodelocal(in.Nodelocal)
 	}
 
 	if len(in.Provider) > 0 {
@@ -33,6 +54,24 @@ func flattenClusterRKEConfigDNS(in *managementClient.DNSConfig) ([]interface{}, 
 
 // Expanders
 
+func expandClusterRKEConfigDNSNodelocal(p []interface{}) *managementClient.Nodelocal {
+	obj := &managementClient.Nodelocal{}
+	if len(p) == 0 || p[0] == nil {
+		return nil
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["ip_address"].(string); ok && len(v) > 0 {
+		obj.IPAddress = v
+	}
+
+	if v, ok := in["node_selector"].(map[string]interface{}); ok && len(v) > 0 {
+		obj.NodeSelector = toMapString(v)
+	}
+
+	return obj
+}
+
 func expandClusterRKEConfigDNS(p []interface{}) (*managementClient.DNSConfig, error) {
 	obj := &managementClient.DNSConfig{}
 	if len(p) == 0 || p[0] == nil {
@@ -42,6 +81,10 @@ func expandClusterRKEConfigDNS(p []interface{}) (*managementClient.DNSConfig, er
 
 	if v, ok := in["node_selector"].(map[string]interface{}); ok && len(v) > 0 {
 		obj.NodeSelector = toMapString(v)
+	}
+
+	if v, ok := in["nodelocal"].([]interface{}); ok && len(v) > 0 {
+		obj.Nodelocal = expandClusterRKEConfigDNSNodelocal(v)
 	}
 
 	if v, ok := in["provider"].(string); ok && len(v) > 0 {

@@ -1,12 +1,9 @@
 module github.com/terraform-providers/terraform-provider-rancher2
 
-go 1.12
+go 1.13
 
 require (
-	github.com/aws/aws-sdk-go v1.25.48 // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/google/pprof v0.0.0-20190723021845-34ac40c74b70 // indirect
-	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
 	github.com/rancher/norman v0.0.0-20200321231028-b5f2e33b54fa
