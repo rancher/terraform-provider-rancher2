@@ -73,7 +73,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NamespaceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NamespaceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
@@ -82,7 +82,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "wait_for_cluster", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NamespaceUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
@@ -91,7 +91,7 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NamespaceType+".foo", "wait_for_cluster", "false"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NamespaceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),
@@ -111,7 +111,7 @@ func TestAccRancher2Namespace_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NamespaceDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NamespaceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NamespaceExists(testAccRancher2NamespaceType+".foo", ns),

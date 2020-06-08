@@ -82,7 +82,7 @@ func namespaceResourceQuotaFields() map[string]*schema.Schema {
 
 func namespaceFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"project_id": &schema.Schema{
+		"project_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Project ID where k8s namespace belongs",
@@ -99,7 +99,7 @@ func namespaceFields() map[string]*schema.Schema {
 				return true
 			},
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
@@ -113,7 +113,7 @@ func namespaceFields() map[string]*schema.Schema {
 				Schema: containerResourceLimitFields(),
 			},
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Description of the k8s namespace managed by rancher v2",
@@ -126,19 +126,19 @@ func namespaceFields() map[string]*schema.Schema {
 				Schema: namespaceResourceQuotaFields(),
 			},
 		},
-		"wait_for_cluster": &schema.Schema{
+		"wait_for_cluster": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
 			Description: "Wait for cluster becomes active",
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
 			Description: "Annotations of the k8s namespace managed by rancher v2",
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

@@ -11,11 +11,11 @@ func dataSourceRancher2EtcdBackup() *schema.Resource {
 		Read: dataSourceRancher2EtcdBackupRead,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -27,24 +27,24 @@ func dataSourceRancher2EtcdBackup() *schema.Resource {
 					Schema: clusterRKEConfigServicesEtcdBackupConfigFields(),
 				},
 			},
-			"filename": &schema.Schema{
+			"filename": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"manual": &schema.Schema{
+			"manual": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"namespace_id": &schema.Schema{
+			"namespace_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: descriptions["annotations"],
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: descriptions["labels"],

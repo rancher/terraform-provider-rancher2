@@ -24,74 +24,74 @@ var (
 
 func catalogFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
 		},
-		"url": &schema.Schema{
+		"url": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"branch": &schema.Schema{
+		"branch": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "master",
 		},
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"kind": &schema.Schema{
+		"kind": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      catalogKindHelm,
 			ValidateFunc: validation.StringInSlice(catalogKinds, true),
 		},
-		"password": &schema.Schema{
+		"password": {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Sensitive: true,
 		},
-		"project_id": &schema.Schema{
+		"project_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 		},
-		"refresh": &schema.Schema{
+		"refresh": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-		"scope": &schema.Schema{
+		"scope": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      catalogScopeGlobal,
 			ValidateFunc: validation.StringInSlice(catalogScopes, true),
 		},
-		"username": &schema.Schema{
+		"username": {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Sensitive: true,
 		},
-		"version": &schema.Schema{
+		"version": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			ForceNew:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(catalogHelmVersions, true),
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

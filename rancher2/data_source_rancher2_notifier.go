@@ -11,22 +11,22 @@ func dataSourceRancher2Notifier() *schema.Resource {
 		Read: dataSourceRancher2NotifierRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Notifier name",
 			},
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Notifier cluster ID",
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Notifier description",
 			},
-			"pagerduty_config": &schema.Schema{
+			"pagerduty_config": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
@@ -35,7 +35,7 @@ func dataSourceRancher2Notifier() *schema.Resource {
 					Schema: notifierPagerdutyConfigFields(),
 				},
 			},
-			"slack_config": &schema.Schema{
+			"slack_config": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
@@ -44,7 +44,7 @@ func dataSourceRancher2Notifier() *schema.Resource {
 					Schema: notifierSlackConfigFields(),
 				},
 			},
-			"smtp_config": &schema.Schema{
+			"smtp_config": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
@@ -53,7 +53,7 @@ func dataSourceRancher2Notifier() *schema.Resource {
 					Schema: notifierSMTPConfigFields(),
 				},
 			},
-			"webhook_config": &schema.Schema{
+			"webhook_config": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
@@ -62,7 +62,7 @@ func dataSourceRancher2Notifier() *schema.Resource {
 					Schema: notifierWebhookConfigFields(),
 				},
 			},
-			"wechat_config": &schema.Schema{
+			"wechat_config": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
@@ -71,11 +71,11 @@ func dataSourceRancher2Notifier() *schema.Resource {
 					Schema: notifierWechatConfigFields(),
 				},
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

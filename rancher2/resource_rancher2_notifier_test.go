@@ -192,7 +192,7 @@ func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierPagerdutyConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-pagerduty", notifier),
@@ -203,7 +203,7 @@ func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "pagerduty_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierPagerdutyUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-pagerduty", notifier),
@@ -213,7 +213,7 @@ func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-pagerduty", "pagerduty_config.0.proxy_url", "http://proxy2.test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierPagerdutyConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-pagerduty", notifier),
@@ -236,7 +236,7 @@ func TestAccRancher2Notifier_disappears_Pagerduty(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierPagerdutyConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-pagerduty", notifier),
@@ -256,7 +256,7 @@ func TestAccRancher2Notifier_basic_Slack(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierSlackConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-slack", notifier),
@@ -268,7 +268,7 @@ func TestAccRancher2Notifier_basic_Slack(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierSlackUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-slack", notifier),
@@ -278,7 +278,7 @@ func TestAccRancher2Notifier_basic_Slack(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-slack", "slack_config.0.proxy_url", "http://proxy2.test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierSlackConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-slack", notifier),
@@ -302,7 +302,7 @@ func TestAccRancher2Notifier_disappears_Slack(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierSlackConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-slack", notifier),
@@ -322,7 +322,7 @@ func TestAccRancher2Notifier_basic_SMTP(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierSMTPConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-smtp", notifier),
@@ -334,7 +334,7 @@ func TestAccRancher2Notifier_basic_SMTP(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.sender", "sender@test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierSMTPUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-smtp", notifier),
@@ -344,7 +344,7 @@ func TestAccRancher2Notifier_basic_SMTP(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-smtp", "smtp_config.0.sender", "sender2@test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierSMTPConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-smtp", notifier),
@@ -368,7 +368,7 @@ func TestAccRancher2Notifier_disappears_SMTP(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierSMTPConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-smtp", notifier),
@@ -388,7 +388,7 @@ func TestAccRancher2Notifier_basic_Webhook(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierWebhookConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-webhook", notifier),
@@ -399,7 +399,7 @@ func TestAccRancher2Notifier_basic_Webhook(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "webhook_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierWebhookUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-webhook", notifier),
@@ -408,7 +408,7 @@ func TestAccRancher2Notifier_basic_Webhook(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-webhook", "webhook_config.0.proxy_url", "http://proxy2.test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierWebhookConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-webhook", notifier),
@@ -431,7 +431,7 @@ func TestAccRancher2Notifier_disappears_Webhook(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierWebhookConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-webhook", notifier),
@@ -451,7 +451,7 @@ func TestAccRancher2Notifier_basic_Wechat(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierWechatConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-wechat", notifier),
@@ -463,7 +463,7 @@ func TestAccRancher2Notifier_basic_Wechat(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.proxy_url", "http://proxy.test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierWechatUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-wechat", notifier),
@@ -473,7 +473,7 @@ func TestAccRancher2Notifier_basic_Wechat(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-wechat", "wechat_config.0.proxy_url", "http://proxy2.test.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierWechatConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-wechat", notifier),
@@ -497,7 +497,7 @@ func TestAccRancher2Notifier_disappears_Wechat(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2NotifierWechatConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-wechat", notifier),

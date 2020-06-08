@@ -8,12 +8,12 @@ import (
 
 func notifierPagerdutyConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"service_key": &schema.Schema{
+		"service_key": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Pagerduty service key",
 		},
-		"proxy_url": &schema.Schema{
+		"proxy_url": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Pagerduty proxy URL",

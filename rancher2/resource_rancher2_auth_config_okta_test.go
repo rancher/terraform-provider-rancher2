@@ -45,7 +45,7 @@ func TestAccRancher2AuthConfigOKTA_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigOKTADestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigOKTAConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOKTAType+"."+AuthConfigOKTAName, authConfig),
@@ -56,7 +56,7 @@ func TestAccRancher2AuthConfigOKTA_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigOKTAType+"."+AuthConfigOKTAName, "idp_metadata_content", "XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigOKTAUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOKTAType+"."+AuthConfigOKTAName, authConfig),
@@ -67,7 +67,7 @@ func TestAccRancher2AuthConfigOKTA_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigOKTAType+"."+AuthConfigOKTAName, "idp_metadata_content", "YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigOKTAConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOKTAType+"."+AuthConfigOKTAName, authConfig),
@@ -90,7 +90,7 @@ func TestAccRancher2AuthConfigOKTA_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigOKTADestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigOKTAConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOKTAType+"."+AuthConfigOKTAName, authConfig),

@@ -42,7 +42,7 @@ func dataSourceRancher2Project() *schema.Resource {
 				Computed:    true,
 				Description: "Enable built-in project monitoring",
 			},
-			"pod_security_policy_template_id": &schema.Schema{
+			"pod_security_policy_template_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,12 +59,12 @@ func dataSourceRancher2Project() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: descriptions["annotations"],
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: descriptions["labels"],

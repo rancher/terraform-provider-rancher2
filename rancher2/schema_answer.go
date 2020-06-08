@@ -20,7 +20,7 @@ func answerFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Project ID for answer",
 		},
-		"values": &schema.Schema{
+		"values": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

@@ -51,7 +51,7 @@ func TestAccRancher2ProjectAlertRule_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectAlertRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectAlertRuleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectAlertRuleExists(testAccRancher2ProjectAlertRuleType+".foo", ar),
@@ -61,7 +61,7 @@ func TestAccRancher2ProjectAlertRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectAlertRuleType+".foo", "repeat_interval_seconds", "3600"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectAlertRuleUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectAlertRuleExists(testAccRancher2ProjectAlertRuleType+".foo", ar),
@@ -71,7 +71,7 @@ func TestAccRancher2ProjectAlertRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectAlertRuleType+".foo", "repeat_interval_seconds", "6000"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectAlertRuleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectAlertRuleExists(testAccRancher2ProjectAlertRuleType+".foo", ar),
@@ -92,7 +92,7 @@ func TestAccRancher2ProjectAlertRule_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectAlertRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectAlertRuleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectAlertRuleExists(testAccRancher2ProjectAlertRuleType+".foo", ar),

@@ -67,7 +67,7 @@ func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2MultiClusterAppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2MultiClusterAppConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2MultiClusterAppExists(testAccRancher2MultiClusterAppType+".foo", app),
@@ -77,7 +77,7 @@ func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "roles.0", "project-member"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2MultiClusterAppUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2MultiClusterAppExists(testAccRancher2MultiClusterAppType+".foo", app),
@@ -87,7 +87,7 @@ func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2MultiClusterAppType+".foo", "roles.0", "cluster-admin"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2MultiClusterAppConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2MultiClusterAppExists(testAccRancher2MultiClusterAppType+".foo", app),
@@ -108,7 +108,7 @@ func TestAccRancher2MultiClusterApp_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2MultiClusterAppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2MultiClusterAppConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2MultiClusterAppExists(testAccRancher2MultiClusterAppType+".foo", app),

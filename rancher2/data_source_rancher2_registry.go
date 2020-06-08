@@ -12,12 +12,12 @@ func dataSourceRancher2Registry() *schema.Resource {
 		Read: dataSourceRancher2RegistryRead,
 
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Project ID to add docker registry",
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the docker registry",
@@ -29,22 +29,22 @@ func dataSourceRancher2Registry() *schema.Resource {
 					Schema: registryCredentialFields(),
 				},
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Description of the docker registry",
 			},
-			"namespace_id": &schema.Schema{
+			"namespace_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Namespace ID to add docker registry",
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Annotations of the docker registry",
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Labels of the docker registry",

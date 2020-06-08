@@ -44,7 +44,7 @@ func init() {
 		},
 	}
 	testClusterRKEConfigCloudProviderAwsServiceOverrideConf = map[string]managementClient.ServiceOverride{
-		"service": managementClient.ServiceOverride{
+		"service": {
 			Region:        "region",
 			Service:       "service",
 			SigningMethod: "signing_method",

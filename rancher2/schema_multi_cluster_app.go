@@ -8,7 +8,7 @@ import (
 
 func multiClusterAppFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"catalog_name": &schema.Schema{
+		"catalog_name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Multi cluster app catalog name",
@@ -35,7 +35,7 @@ func multiClusterAppFields() map[string]*schema.Schema {
 				Schema: targetFields(),
 			},
 		},
-		"template_name": &schema.Schema{
+		"template_name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Multi cluster app template name",
@@ -69,7 +69,7 @@ func multiClusterAppFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Multi cluster app revision name",
 		},
-		"template_version": &schema.Schema{
+		"template_version": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
@@ -96,12 +96,12 @@ func multiClusterAppFields() map[string]*schema.Schema {
 			Default:     true,
 			Description: "Wait until multi cluster app is active",
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

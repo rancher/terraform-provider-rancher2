@@ -44,7 +44,7 @@ func TestAccRancher2ClusterDriver_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterDriverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterDriver,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterDriverExists(name, clusterDriver),
@@ -57,7 +57,7 @@ func TestAccRancher2ClusterDriver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "whitelist_domains.0", "*.foo.com"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterDriverUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterDriverExists(name, clusterDriver),
@@ -71,7 +71,7 @@ func TestAccRancher2ClusterDriver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "whitelist_domains.1", "updated.foo.com"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterDriver,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterDriverExists(name, clusterDriver),
@@ -96,7 +96,7 @@ func TestAccRancher2ClusterDriver_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterDriverDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterDriver,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterDriverExists(testAccRancher2ClusterDriverType+".foo", clusterDriver),

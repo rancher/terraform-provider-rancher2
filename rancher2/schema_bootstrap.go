@@ -18,56 +18,56 @@ const (
 
 func bootstrapFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"current_password": &schema.Schema{
+		"current_password": {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Computed:  true,
 			Sensitive: true,
 		},
-		"password": &schema.Schema{
+		"password": {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Computed:  true,
 			Sensitive: true,
 		},
-		"token_ttl": &schema.Schema{
+		"token_ttl": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Default:  0,
 		},
-		"token": &schema.Schema{
+		"token": {
 			Type:      schema.TypeString,
 			Computed:  true,
 			Sensitive: true,
 		},
-		"token_id": &schema.Schema{
+		"token_id": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"token_update": &schema.Schema{
+		"token_update": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-		"telemetry": &schema.Schema{
+		"telemetry": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
 		},
-		"temp_token": &schema.Schema{
+		"temp_token": {
 			Type:      schema.TypeString,
 			Computed:  true,
 			Sensitive: true,
 		},
-		"temp_token_id": &schema.Schema{
+		"temp_token_id": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"url": &schema.Schema{
+		"url": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"user": &schema.Schema{
+		"user": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},

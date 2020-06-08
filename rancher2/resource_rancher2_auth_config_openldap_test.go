@@ -49,7 +49,7 @@ func TestAccRancher2AuthConfigOpenLdap_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigOpenLdapDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigOpenLdapConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOpenLdapType+"."+AuthConfigOpenLdapName, authConfig),
@@ -60,7 +60,7 @@ func TestAccRancher2AuthConfigOpenLdap_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigOpenLdapType+"."+AuthConfigOpenLdapName, "service_account_password", "XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigOpenLdapUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOpenLdapType+"."+AuthConfigOpenLdapName, authConfig),
@@ -71,7 +71,7 @@ func TestAccRancher2AuthConfigOpenLdap_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigOpenLdapType+"."+AuthConfigOpenLdapName, "service_account_password", "YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigOpenLdapConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOpenLdapType+"."+AuthConfigOpenLdapName, authConfig),
@@ -94,7 +94,7 @@ func TestAccRancher2AuthConfigOpenLdap_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigOpenLdapDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigOpenLdapConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigOpenLdapType+"."+AuthConfigOpenLdapName, authConfig),

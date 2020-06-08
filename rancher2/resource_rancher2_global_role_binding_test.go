@@ -47,7 +47,7 @@ func TestAccRancher2GlobalRoleBinding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2GlobalRoleBindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2GlobalRoleBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2GlobalRoleBindingExists(testAccRancher2GlobalRoleBindingType+".foo", globalRole),
@@ -55,7 +55,7 @@ func TestAccRancher2GlobalRoleBinding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleBindingType+".foo", "global_role_id", "user-base"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2GlobalRoleBindingUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2GlobalRoleBindingExists(testAccRancher2GlobalRoleBindingType+".foo", globalRole),
@@ -63,7 +63,7 @@ func TestAccRancher2GlobalRoleBinding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleBindingType+".foo", "global_role_id", "user-base"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2GlobalRoleBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2GlobalRoleBindingExists(testAccRancher2GlobalRoleBindingType+".foo", globalRole),
@@ -82,7 +82,7 @@ func TestAccRancher2GlobalRoleBinding_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2GlobalRoleBindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2GlobalRoleBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2GlobalRoleBindingExists(testAccRancher2GlobalRoleBindingType+".foo", globalRole),

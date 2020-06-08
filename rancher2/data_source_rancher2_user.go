@@ -12,21 +12,21 @@ func dataSourceRancher2User() *schema.Resource {
 		Read: dataSourceRancher2UserRead,
 
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"enabled": &schema.Schema{
+			"enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"is_external": &schema.Schema{
+			"is_external": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -38,11 +38,11 @@ func dataSourceRancher2User() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

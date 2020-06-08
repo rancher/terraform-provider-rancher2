@@ -40,12 +40,12 @@ func projectRoleTemplateBindingFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

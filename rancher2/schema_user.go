@@ -8,22 +8,22 @@ import (
 
 func userFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"password": &schema.Schema{
+		"password": {
 			Type:      schema.TypeString,
 			Required:  true,
 			Sensitive: true,
 		},
-		"username": &schema.Schema{
+		"username": {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
 		},
-		"enabled": &schema.Schema{
+		"enabled": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  true,
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -34,12 +34,12 @@ func userFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

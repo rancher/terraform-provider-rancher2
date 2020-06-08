@@ -22,11 +22,11 @@ type NodeTemplate struct {
 
 func nodeTemplateFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"amazonec2_config": &schema.Schema{
+		"amazonec2_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -35,17 +35,17 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: amazonec2ConfigFields(),
 			},
 		},
-		"auth_certificate_authority": &schema.Schema{
+		"auth_certificate_authority": {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Sensitive: true,
 		},
-		"auth_key": &schema.Schema{
+		"auth_key": {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Sensitive: true,
 		},
-		"azure_config": &schema.Schema{
+		"azure_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -58,11 +58,11 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"digitalocean_config": &schema.Schema{
+		"digitalocean_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -71,51 +71,51 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: digitaloceanConfigFields(),
 			},
 		},
-		"driver": &schema.Schema{
+		"driver": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"driver_id": &schema.Schema{
+		"driver_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"engine_env": &schema.Schema{
+		"engine_env": {
 			Type:     schema.TypeMap,
 			Optional: true,
 		},
-		"engine_insecure_registry": &schema.Schema{
+		"engine_insecure_registry": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 		},
-		"engine_install_url": &schema.Schema{
+		"engine_install_url": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "https://releases.rancher.com/install-docker/18.09.sh",
 		},
-		"engine_label": &schema.Schema{
+		"engine_label": {
 			Type:     schema.TypeMap,
 			Optional: true,
 		},
-		"engine_opt": &schema.Schema{
+		"engine_opt": {
 			Type:     schema.TypeMap,
 			Optional: true,
 		},
-		"engine_registry_mirror": &schema.Schema{
+		"engine_registry_mirror": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 		},
-		"engine_storage_driver": &schema.Schema{
+		"engine_storage_driver": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"linode_config": &schema.Schema{
+		"linode_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -124,7 +124,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: linodeConfigFields(),
 			},
 		},
-		"openstack_config": &schema.Schema{
+		"openstack_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -133,12 +133,12 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: openstackConfigFields(),
 			},
 		},
-		"use_internal_ip_address": &schema.Schema{
+		"use_internal_ip_address": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  true,
 		},
-		"vsphere_config": &schema.Schema{
+		"vsphere_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -147,7 +147,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: vsphereConfigFields(),
 			},
 		},
-		"opennebula_config": &schema.Schema{
+		"opennebula_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -156,12 +156,12 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: opennebulaConfigFields(),
 			},
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

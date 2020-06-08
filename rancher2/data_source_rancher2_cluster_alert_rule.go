@@ -11,17 +11,17 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 		Read: dataSourceRancher2ClusterAlertRuleRead,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Alert rule cluster ID",
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Alert rule name",
 			},
-			"event_rule": &schema.Schema{
+			"event_rule": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -30,7 +30,7 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 				},
 				Description: "Alert event rule",
 			},
-			"metric_rule": &schema.Schema{
+			"metric_rule": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -39,7 +39,7 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 				},
 				Description: "Alert metric rule",
 			},
-			"node_rule": &schema.Schema{
+			"node_rule": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -48,7 +48,7 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 				},
 				Description: "Alert node rule",
 			},
-			"system_service_rule": &schema.Schema{
+			"system_service_rule": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
@@ -57,41 +57,41 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 				},
 				Description: "Alert system service rule",
 			},
-			"group_id": &schema.Schema{
+			"group_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Alert rule group ID",
 			},
-			"group_interval_seconds": &schema.Schema{
+			"group_interval_seconds": {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "Alert rule interval seconds",
 			},
-			"group_wait_seconds": &schema.Schema{
+			"group_wait_seconds": {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "Alert rule wait seconds",
 			},
-			"inherited": &schema.Schema{
+			"inherited": {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "Alert rule inherited",
 			},
-			"repeat_interval_seconds": &schema.Schema{
+			"repeat_interval_seconds": {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "Alert rule repeat interval seconds",
 			},
-			"severity": &schema.Schema{
+			"severity": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Alert rule severity",
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Optional: true,
 			},

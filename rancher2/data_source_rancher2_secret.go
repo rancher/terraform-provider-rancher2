@@ -12,37 +12,37 @@ func dataSourceRancher2Secret() *schema.Resource {
 		Read: dataSourceRancher2SecretRead,
 
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Project ID to add secret",
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the secret",
 			},
-			"data": &schema.Schema{
+			"data": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Secret data base64 encoded",
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Description of the secret",
 			},
-			"namespace_id": &schema.Schema{
+			"namespace_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Namespace ID to add secret",
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Annotations of the secret",
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Labels of the secret",

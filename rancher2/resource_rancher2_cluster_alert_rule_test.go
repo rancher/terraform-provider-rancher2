@@ -52,7 +52,7 @@ func TestAccRancher2ClusterAlertRule_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterAlertRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterAlertRuleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterAlertRuleExists(testAccRancher2ClusterAlertRuleType+".foo", ar),
@@ -62,7 +62,7 @@ func TestAccRancher2ClusterAlertRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterAlertRuleType+".foo", "repeat_interval_seconds", "3600"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterAlertRuleUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterAlertRuleExists(testAccRancher2ClusterAlertRuleType+".foo", ar),
@@ -72,7 +72,7 @@ func TestAccRancher2ClusterAlertRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterAlertRuleType+".foo", "repeat_interval_seconds", "6000"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterAlertRuleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterAlertRuleExists(testAccRancher2ClusterAlertRuleType+".foo", ar),
@@ -93,7 +93,7 @@ func TestAccRancher2ClusterAlertRule_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterAlertRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterAlertRuleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterAlertRuleExists(testAccRancher2ClusterAlertRuleType+".foo", ar),

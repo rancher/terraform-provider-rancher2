@@ -50,7 +50,7 @@ func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
@@ -58,7 +58,7 @@ func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "role_template_id", "project-member"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectRoleTemplateBindingUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
@@ -67,7 +67,7 @@ func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ProjectRoleTemplateBindingType+".foo", "user_id", "u-q2wg7"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),
@@ -86,7 +86,7 @@ func TestAccRancher2ProjectRoleTemplateBinding_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ProjectRoleTemplateBindingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ProjectRoleTemplateBindingExists(testAccRancher2ProjectRoleTemplateBindingType+".foo", projectRole),

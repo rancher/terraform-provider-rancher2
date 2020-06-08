@@ -34,7 +34,7 @@ func TestAccRancher2Setting_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2SettingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2SettingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SettingExists(testAccRancher2SettingType+".foo", setting),
@@ -42,7 +42,7 @@ func TestAccRancher2Setting_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2SettingType+".foo", "value", "Terraform setting acceptance test"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2SettingUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SettingExists(testAccRancher2SettingType+".foo", setting),
@@ -50,7 +50,7 @@ func TestAccRancher2Setting_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2SettingType+".foo", "value", "Terraform setting acceptance test - updated"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2SettingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SettingExists(testAccRancher2SettingType+".foo", setting),
@@ -70,7 +70,7 @@ func TestAccRancher2Setting_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2SettingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2SettingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2SettingExists(testAccRancher2SettingType+".foo", setting),

@@ -303,7 +303,7 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable the kubernetes dashboard",
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
@@ -347,7 +347,7 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Whether the nodes are created as preemptible VM instances",
 		},
-		"resource_labels": &schema.Schema{
+		"resource_labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

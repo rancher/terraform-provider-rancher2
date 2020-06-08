@@ -45,7 +45,7 @@ func TestAccRancher2AuthConfigPing_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigPingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigPingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigPingType+"."+AuthConfigPingName, authConfig),
@@ -56,7 +56,7 @@ func TestAccRancher2AuthConfigPing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigPingType+"."+AuthConfigPingName, "idp_metadata_content", "XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigPingUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigPingType+"."+AuthConfigPingName, authConfig),
@@ -67,7 +67,7 @@ func TestAccRancher2AuthConfigPing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigPingType+"."+AuthConfigPingName, "idp_metadata_content", "YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigPingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigPingType+"."+AuthConfigPingName, authConfig),
@@ -90,7 +90,7 @@ func TestAccRancher2AuthConfigPing_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigPingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigPingConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigPingType+"."+AuthConfigPingName, authConfig),

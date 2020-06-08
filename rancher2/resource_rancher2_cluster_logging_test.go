@@ -59,7 +59,7 @@ func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterLoggingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterLoggingSyslogConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
@@ -67,7 +67,7 @@ func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterLoggingSyslogUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
@@ -75,7 +75,7 @@ func TestAccRancher2ClusterLogging_basic_syslog(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterLoggingType+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterLoggingSyslogConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),
@@ -94,7 +94,7 @@ func TestAccRancher2ClusterLogging_disappears_syslog(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterLoggingDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterLoggingSyslogConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterLoggingExists(testAccRancher2ClusterLoggingType+".foo", cluster),

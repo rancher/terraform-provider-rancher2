@@ -28,13 +28,13 @@ func registryCredentialFields() map[string]*schema.Schema {
 
 func registryFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"project_id": &schema.Schema{
+		"project_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
 			Description: "Project ID to add docker registry",
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
@@ -47,24 +47,24 @@ func registryFields() map[string]*schema.Schema {
 				Schema: registryCredentialFields(),
 			},
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Description of the docker registry",
 		},
-		"namespace_id": &schema.Schema{
+		"namespace_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			ForceNew:    true,
 			Description: "Namespace ID to add docker registry",
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
 			Description: "Annotations of the docker registry",
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

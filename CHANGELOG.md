@@ -12,11 +12,13 @@ ENHANCEMENTS:
 * Add `nodelocal` argument to `rke_config.dns` argument on `rancher2_cluster` resource
 * Update golang to 1.13
 * Added `view` verb to `rules` argument for `rancher2_node_template` resource
+* Updated golang to v1.13, modules and vendor files
 
 BUG FIXES:
 
 * Fix `nodeTemplateStateRefreshFunc` function on `rancher2_node_template` resource to check if returned error is forbidden
 * Updated `rancher2_app` resource to fix local cluster scoped catalogs
+* Updated api bool fields with default=true to *bool. Related to https://github.com/rancher/types/pull/1083
 
 ## 1.8.3 (April 09, 2020)
 

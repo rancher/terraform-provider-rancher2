@@ -28,49 +28,49 @@ type Cluster struct {
 
 func clusterRegistationTokenFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"id": &schema.Schema{
+		"id": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"command": &schema.Schema{
+		"command": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"insecure_command": &schema.Schema{
+		"insecure_command": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"manifest_url": &schema.Schema{
+		"manifest_url": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"node_command": &schema.Schema{
+		"node_command": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"token": &schema.Schema{
+		"token": {
 			Type:      schema.TypeString,
 			Computed:  true,
 			Sensitive: true,
 		},
-		"windows_node_command": &schema.Schema{
+		"windows_node_command": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
@@ -82,16 +82,16 @@ func clusterRegistationTokenFields() map[string]*schema.Schema {
 
 func clusterAuthEndpoint() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"ca_certs": &schema.Schema{
+		"ca_certs": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"enabled": &schema.Schema{
+		"enabled": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  true,
 		},
-		"fqdn": &schema.Schema{
+		"fqdn": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -102,22 +102,22 @@ func clusterAuthEndpoint() map[string]*schema.Schema {
 
 func clusterFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"driver": &schema.Schema{
+		"driver": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(clusterDrivers, true),
 		},
-		"kube_config": &schema.Schema{
+		"kube_config": {
 			Type:      schema.TypeString,
 			Computed:  true,
 			Sensitive: true,
 		},
-		"rke_config": &schema.Schema{
+		"rke_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -127,7 +127,7 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterRKEConfigFields(),
 			},
 		},
-		"k3s_config": &schema.Schema{
+		"k3s_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -137,7 +137,7 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterK3SConfigFields(),
 			},
 		},
-		"eks_config": &schema.Schema{
+		"eks_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -146,7 +146,7 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterEKSConfigFields(),
 			},
 		},
-		"aks_config": &schema.Schema{
+		"aks_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -155,7 +155,7 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterAKSConfigFields(),
 			},
 		},
-		"gke_config": &schema.Schema{
+		"gke_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -164,19 +164,19 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterGKEConfigFields(),
 			},
 		},
-		"default_project_id": &schema.Schema{
+		"default_project_id": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"system_project_id": &schema.Schema{
+		"system_project_id": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"cluster_auth_endpoint": &schema.Schema{
+		"cluster_auth_endpoint": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
@@ -185,7 +185,7 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterAuthEndpoint(),
 			},
 		},
-		"cluster_monitoring_input": &schema.Schema{
+		"cluster_monitoring_input": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Optional:    true,
@@ -195,7 +195,7 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: monitoringInputFields(),
 			},
 		},
-		"cluster_registration_token": &schema.Schema{
+		"cluster_registration_token": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Computed: true,
@@ -213,7 +213,7 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: answerFields(),
 			},
 		},
-		"cluster_template_id": &schema.Schema{
+		"cluster_template_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Cluster template ID",
@@ -226,7 +226,7 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: questionFields(),
 			},
 		},
-		"cluster_template_revision_id": &schema.Schema{
+		"cluster_template_revision_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Cluster template revision ID",
@@ -237,17 +237,17 @@ func clusterFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Default pod security policy template id",
 		},
-		"desired_agent_image": &schema.Schema{
+		"desired_agent_image": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"desired_auth_image": &schema.Schema{
+		"desired_auth_image": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"docker_root_dir": &schema.Schema{
+		"docker_root_dir": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
@@ -285,12 +285,12 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: scheduledClusterScanFields(),
 			},
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

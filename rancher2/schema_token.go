@@ -76,13 +76,13 @@ func tokenFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Token user ID",
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,
 			Description: "Annotations of the token",
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Computed:    true,

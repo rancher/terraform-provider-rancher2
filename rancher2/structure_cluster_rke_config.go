@@ -76,7 +76,7 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig,
 		obj["dns"] = dns
 	}
 
-	obj["ignore_docker_version"] = in.IgnoreDockerVersion
+	obj["ignore_docker_version"] = *in.IgnoreDockerVersion
 
 	if in.Ingress != nil {
 		ingress, err := flattenClusterRKEConfigIngress(in.Ingress)
@@ -227,7 +227,7 @@ func expandClusterRKEConfig(p []interface{}, name string) (*managementClient.Ran
 	}
 
 	if v, ok := in["ignore_docker_version"].(bool); ok {
-		obj.IgnoreDockerVersion = v
+		obj.IgnoreDockerVersion = &v
 	}
 
 	if v, ok := in["ingress"].([]interface{}); ok && len(v) > 0 {

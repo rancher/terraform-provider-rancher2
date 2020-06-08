@@ -59,7 +59,7 @@ func TestAccRancher2Token_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2TokenDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2Token,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
@@ -68,7 +68,7 @@ func TestAccRancher2Token_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "enabled", "true"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2TokenUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
@@ -77,7 +77,7 @@ func TestAccRancher2Token_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo", "enabled", "true"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2Token,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
@@ -97,7 +97,7 @@ func TestAccRancher2Token_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2TokenDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2Token,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo", token),
@@ -119,7 +119,7 @@ func TestAccRancher2TokenScoped_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2TokenDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2TokenClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo-cluster", token),
@@ -129,7 +129,7 @@ func TestAccRancher2TokenScoped_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2TokenClusterUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo-cluster", token),
@@ -139,7 +139,7 @@ func TestAccRancher2TokenScoped_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2TokenType+".foo-cluster", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2TokenClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo-cluster", token),
@@ -160,7 +160,7 @@ func TestAccRancher2TokenScoped_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2TokenDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2TokenClusterConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2TokenExists(testAccRancher2TokenType+".foo-cluster", token),

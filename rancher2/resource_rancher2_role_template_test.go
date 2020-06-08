@@ -55,7 +55,7 @@ func TestAccRancher2RoleTemplate_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2RoleTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2RoleTemplateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RoleTemplateExists(testAccRancher2RoleTemplateType+".foo", roleTemplate),
@@ -66,7 +66,7 @@ func TestAccRancher2RoleTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2RoleTemplateType+".foo", "rules.0.verbs.0", policyRuleVerbCreate),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2RoleTemplateUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RoleTemplateExists(testAccRancher2RoleTemplateType+".foo", roleTemplate),
@@ -77,7 +77,7 @@ func TestAccRancher2RoleTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2RoleTemplateType+".foo", "rules.0.verbs.1", policyRuleVerbGet),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2RoleTemplateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RoleTemplateExists(testAccRancher2RoleTemplateType+".foo", roleTemplate),
@@ -99,7 +99,7 @@ func TestAccRancher2RoleTemplate_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2RoleTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2RoleTemplateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RoleTemplateExists(testAccRancher2RoleTemplateType+".foo", roleTemplate),

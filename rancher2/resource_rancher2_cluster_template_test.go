@@ -101,7 +101,7 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterTemplateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterTemplateExists(testAccRancher2ClusterTemplateType+".foo", clusterTemplate),
@@ -116,7 +116,7 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterTemplateUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterTemplateExists(testAccRancher2ClusterTemplateType+".foo", clusterTemplate),
@@ -131,7 +131,7 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 10 * * *"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterTemplateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterTemplateExists(testAccRancher2ClusterTemplateType+".foo", clusterTemplate),
@@ -158,7 +158,7 @@ func TestAccRancher2ClusterTemplate_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2ClusterTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2ClusterTemplateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2ClusterTemplateExists(testAccRancher2ClusterTemplateType+".foo", clusterTemplate),

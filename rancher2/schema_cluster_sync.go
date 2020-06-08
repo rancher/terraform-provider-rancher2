@@ -8,13 +8,13 @@ import (
 
 func clusterSyncFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
 			Description: "Cluster id to sync",
 		},
-		"wait_monitoring": &schema.Schema{
+		"wait_monitoring": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
@@ -28,21 +28,21 @@ func clusterSyncFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"synced": &schema.Schema{
+		"synced": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  true,
 		},
-		"default_project_id": &schema.Schema{
+		"default_project_id": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"kube_config": &schema.Schema{
+		"kube_config": {
 			Type:      schema.TypeString,
 			Computed:  true,
 			Sensitive: true,
 		},
-		"system_project_id": &schema.Schema{
+		"system_project_id": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},

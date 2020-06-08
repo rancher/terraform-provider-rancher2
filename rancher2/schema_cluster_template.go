@@ -49,7 +49,7 @@ func questionFields() map[string]*schema.Schema {
 
 func clusterSpecBaseFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"cluster_auth_endpoint": &schema.Schema{
+		"cluster_auth_endpoint": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Optional:    true,
@@ -107,7 +107,7 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable project network isolation",
 		},
-		"rke_config": &schema.Schema{
+		"rke_config": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Required:    true,
@@ -182,12 +182,12 @@ func clusterTemplateRevisionFields() map[string]*schema.Schema {
 				Schema: questionFields(),
 			},
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
@@ -231,12 +231,12 @@ func clusterTemplateFields() map[string]*schema.Schema {
 				Schema: clusterTemplateRevisionFields(),
 			},
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

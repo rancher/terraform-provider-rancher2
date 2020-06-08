@@ -19,33 +19,33 @@ var (
 
 func notifierWechatConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"agent": &schema.Schema{
+		"agent": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Wechat application agent ID",
 		},
-		"corp": &schema.Schema{
+		"corp": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Wechat corporation ID",
 		},
-		"default_recipient": &schema.Schema{
+		"default_recipient": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Wechat default channel",
 		},
-		"secret": &schema.Schema{
+		"secret": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
 			Description: "Wechat application secret",
 		},
-		"proxy_url": &schema.Schema{
+		"proxy_url": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Wechat proxy URL",
 		},
-		"recipient_type": &schema.Schema{
+		"recipient_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      notifierWechatRecipientTypeParty,

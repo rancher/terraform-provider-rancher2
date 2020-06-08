@@ -12,7 +12,7 @@ func dataSourceRancher2RoleTemplate() *schema.Resource {
 		Read: dataSourceRancher2RoleTemplateRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Role template policy name",
@@ -39,7 +39,7 @@ func dataSourceRancher2RoleTemplate() *schema.Resource {
 				Computed:    true,
 				Description: "Default role template for new created cluster or project",
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Role template policy description",
@@ -75,12 +75,12 @@ func dataSourceRancher2RoleTemplate() *schema.Resource {
 					Schema: policyRuleFields(),
 				},
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Annotations of the role template",
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Labels of the role template",

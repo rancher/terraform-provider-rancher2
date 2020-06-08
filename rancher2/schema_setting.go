@@ -8,21 +8,21 @@ import (
 
 func settingFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
 		},
-		"value": &schema.Schema{
+		"value": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

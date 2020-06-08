@@ -8,29 +8,29 @@ import (
 
 func notifierFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Notifier name",
 		},
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
 			Description: "Notifier cluster ID",
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Notifier description",
 		},
-		"send_resolved": &schema.Schema{
+		"send_resolved": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Description: "Notifier send resolved",
 			Default:     false,
 		},
-		"pagerduty_config": &schema.Schema{
+		"pagerduty_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -39,7 +39,7 @@ func notifierFields() map[string]*schema.Schema {
 				Schema: notifierPagerdutyConfigFields(),
 			},
 		},
-		"slack_config": &schema.Schema{
+		"slack_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -48,7 +48,7 @@ func notifierFields() map[string]*schema.Schema {
 				Schema: notifierSlackConfigFields(),
 			},
 		},
-		"smtp_config": &schema.Schema{
+		"smtp_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -57,7 +57,7 @@ func notifierFields() map[string]*schema.Schema {
 				Schema: notifierSMTPConfigFields(),
 			},
 		},
-		"webhook_config": &schema.Schema{
+		"webhook_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -66,7 +66,7 @@ func notifierFields() map[string]*schema.Schema {
 				Schema: notifierWebhookConfigFields(),
 			},
 		},
-		"wechat_config": &schema.Schema{
+		"wechat_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -75,12 +75,12 @@ func notifierFields() map[string]*schema.Schema {
 				Schema: notifierWechatConfigFields(),
 			},
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

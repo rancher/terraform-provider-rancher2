@@ -61,7 +61,7 @@ func TestAccRancher2App_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AppConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AppExists(testAccRancher2AppType+".foo", app),
@@ -72,7 +72,7 @@ func TestAccRancher2App_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test.xip.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AppUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AppExists(testAccRancher2AppType+".foo", app),
@@ -83,7 +83,7 @@ func TestAccRancher2App_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test2.xip.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AppConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AppExists(testAccRancher2AppType+".foo", app),
@@ -105,7 +105,7 @@ func TestAccRancher2App_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AppDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AppConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AppExists(testAccRancher2AppType+".foo", app),

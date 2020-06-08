@@ -49,7 +49,7 @@ func TestAccRancher2AuthConfigFreeIpa_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigFreeIpaDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigFreeIpaConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigFreeIpaType+"."+AuthConfigFreeIpaName, authConfig),
@@ -60,7 +60,7 @@ func TestAccRancher2AuthConfigFreeIpa_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigFreeIpaType+"."+AuthConfigFreeIpaName, "service_account_password", "XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigFreeIpaUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigFreeIpaType+"."+AuthConfigFreeIpaName, authConfig),
@@ -71,7 +71,7 @@ func TestAccRancher2AuthConfigFreeIpa_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigFreeIpaType+"."+AuthConfigFreeIpaName, "service_account_password", "YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigFreeIpaConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigFreeIpaType+"."+AuthConfigFreeIpaName, authConfig),
@@ -94,7 +94,7 @@ func TestAccRancher2AuthConfigFreeIpa_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigFreeIpaDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigFreeIpaConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigFreeIpaType+"."+AuthConfigFreeIpaName, authConfig),

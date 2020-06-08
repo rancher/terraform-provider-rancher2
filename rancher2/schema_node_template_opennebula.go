@@ -36,81 +36,81 @@ type opennebulaConfig struct {
 
 func opennebulaConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"password": &schema.Schema{
+		"password": {
 			Type:      schema.TypeString,
 			Required:  true,
 			Sensitive: true,
 		},
-		"user": &schema.Schema{
+		"user": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"xml_rpc_url": &schema.Schema{
+		"xml_rpc_url": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"b2d_size": &schema.Schema{
+		"b2d_size": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"cpu": &schema.Schema{
+		"cpu": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"dev_prefix": &schema.Schema{
+		"dev_prefix": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"disable_vnc": &schema.Schema{
+		"disable_vnc": {
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
-		"disk_resize": &schema.Schema{
+		"disk_resize": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"image_id": &schema.Schema{
+		"image_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"image_name": &schema.Schema{
+		"image_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"image_owner": &schema.Schema{
+		"image_owner": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"memory": &schema.Schema{
+		"memory": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"network_name": &schema.Schema{
+		"network_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"network_id": &schema.Schema{
+		"network_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"network_owner": &schema.Schema{
+		"network_owner": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"template_id": &schema.Schema{
+		"template_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"template_name": &schema.Schema{
+		"template_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"ssh_user": &schema.Schema{
+		"ssh_user": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Default:  "docker",
 		},
-		"vcpu": &schema.Schema{
+		"vcpu": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},

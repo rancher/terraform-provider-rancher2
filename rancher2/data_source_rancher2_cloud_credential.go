@@ -11,15 +11,15 @@ func dataSourceRancher2CloudCredential() *schema.Resource {
 		Read: dataSourceRancher2CloudCredentialRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

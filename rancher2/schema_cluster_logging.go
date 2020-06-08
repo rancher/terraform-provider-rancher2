@@ -22,13 +22,13 @@ func clusterLoggingFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"kind": &schema.Schema{
+		"kind": {
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
 			ValidateFunc: validation.StringInSlice(clusterLoggingKinds, true),
 		},
-		"custom_target_config": &schema.Schema{
+		"custom_target_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -43,7 +43,7 @@ func clusterLoggingFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Optional enable json log parsing",
 		},
-		"elasticsearch_config": &schema.Schema{
+		"elasticsearch_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -52,7 +52,7 @@ func clusterLoggingFields() map[string]*schema.Schema {
 				Schema: loggingElasticsearchConfigFields(),
 			},
 		},
-		"fluentd_config": &schema.Schema{
+		"fluentd_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -61,7 +61,7 @@ func clusterLoggingFields() map[string]*schema.Schema {
 				Schema: loggingFluentdConfigFields(),
 			},
 		},
-		"kafka_config": &schema.Schema{
+		"kafka_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -79,12 +79,12 @@ func clusterLoggingFields() map[string]*schema.Schema {
 			Optional: true,
 			Default:  3,
 		},
-		"output_tags": &schema.Schema{
+		"output_tags": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"splunk_config": &schema.Schema{
+		"splunk_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -93,7 +93,7 @@ func clusterLoggingFields() map[string]*schema.Schema {
 				Schema: loggingSplunkConfigFields(),
 			},
 		},
-		"syslog_config": &schema.Schema{
+		"syslog_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -102,12 +102,12 @@ func clusterLoggingFields() map[string]*schema.Schema {
 				Schema: loggingSyslogConfigFields(),
 			},
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

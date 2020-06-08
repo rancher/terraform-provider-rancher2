@@ -21,7 +21,7 @@ func init() {
 		DeleteLocalData:  false,
 		Force:            false,
 		GracePeriod:      -1,
-		IgnoreDaemonSets: true,
+		IgnoreDaemonSets: newTrue(),
 		Timeout:          60,
 	}
 	testClusterRKEConfigNodeDrainInputInterface = []interface{}{
@@ -48,7 +48,7 @@ func init() {
 		},
 	}
 	testClusterRKEConfigNodesConf = []managementClient.RKEConfigNode{
-		managementClient.RKEConfigNode{
+		{
 			Address:          "url.terraform.test",
 			DockerSocket:     "docker.sock",
 			HostnameOverride: "terra-test",

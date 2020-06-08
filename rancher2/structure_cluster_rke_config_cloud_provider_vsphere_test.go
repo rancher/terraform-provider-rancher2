@@ -58,7 +58,7 @@ func init() {
 		},
 	}
 	testClusterRKEConfigCloudProviderVsphereVirtualCenterConf = map[string]managementClient.VirtualCenterConfig{
-		"test": managementClient.VirtualCenterConfig{
+		"test": {
 			Datacenters:       "auth.terraform.test",
 			Password:          "YYYYYYYY",
 			VCenterPort:       "123",

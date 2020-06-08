@@ -11,12 +11,12 @@ func dataSourceRancher2Namespace() *schema.Resource {
 		Read: dataSourceRancher2NamespaceRead,
 
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Project ID where k8s namespace belongs",
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the k8s namespace managed by rancher v2",
@@ -29,7 +29,7 @@ func dataSourceRancher2Namespace() *schema.Resource {
 					Schema: containerResourceLimitFields(),
 				},
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Description of the k8s namespace managed by rancher v2",
@@ -42,12 +42,12 @@ func dataSourceRancher2Namespace() *schema.Resource {
 					Schema: namespaceResourceQuotaFields(),
 				},
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Annotations of the k8s namespace managed by rancher v2",
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				Description: "Labels of the k8s namespace managed by rancher v2",

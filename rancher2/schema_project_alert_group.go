@@ -9,7 +9,7 @@ import (
 func projectAlertGroupFields() map[string]*schema.Schema {
 	r := alertGroupFields()
 	s := map[string]*schema.Schema{
-		"project_id": &schema.Schema{
+		"project_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Alert group Project ID",

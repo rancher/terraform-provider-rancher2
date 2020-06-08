@@ -21,11 +21,11 @@ type CloudCredential struct {
 
 func cloudCredentialFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"amazonec2_credential_config": &schema.Schema{
+		"amazonec2_credential_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -34,7 +34,7 @@ func cloudCredentialFields() map[string]*schema.Schema {
 				Schema: cloudCredentialAmazonec2Fields(),
 			},
 		},
-		"azure_credential_config": &schema.Schema{
+		"azure_credential_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -43,11 +43,11 @@ func cloudCredentialFields() map[string]*schema.Schema {
 				Schema: cloudCredentialAzureFields(),
 			},
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"digitalocean_credential_config": &schema.Schema{
+		"digitalocean_credential_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -56,11 +56,11 @@ func cloudCredentialFields() map[string]*schema.Schema {
 				Schema: cloudCredentialDigitaloceanFields(),
 			},
 		},
-		"driver": &schema.Schema{
+		"driver": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"linode_credential_config": &schema.Schema{
+		"linode_credential_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -69,7 +69,7 @@ func cloudCredentialFields() map[string]*schema.Schema {
 				Schema: cloudCredentialLinodeFields(),
 			},
 		},
-		"openstack_credential_config": &schema.Schema{
+		"openstack_credential_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -78,7 +78,7 @@ func cloudCredentialFields() map[string]*schema.Schema {
 				Schema: cloudCredentialOpenstackFields(),
 			},
 		},
-		"vsphere_credential_config": &schema.Schema{
+		"vsphere_credential_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -87,11 +87,11 @@ func cloudCredentialFields() map[string]*schema.Schema {
 				Schema: cloudCredentialVsphereFields(),
 			},
 		},
-		"annotations": &schema.Schema{
+		"annotations": {
 			Type:     schema.TypeMap,
 			Optional: true,
 		},
-		"labels": &schema.Schema{
+		"labels": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,

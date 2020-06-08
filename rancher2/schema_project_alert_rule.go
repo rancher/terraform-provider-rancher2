@@ -9,12 +9,12 @@ import (
 func projectAlertRuleFields() map[string]*schema.Schema {
 	r := alertRuleFields()
 	s := map[string]*schema.Schema{
-		"project_id": &schema.Schema{
+		"project_id": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Alert rule Project ID",
 		},
-		"metric_rule": &schema.Schema{
+		"metric_rule": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -24,7 +24,7 @@ func projectAlertRuleFields() map[string]*schema.Schema {
 			},
 			Description: "Alert metric rule",
 		},
-		"pod_rule": &schema.Schema{
+		"pod_rule": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
@@ -34,7 +34,7 @@ func projectAlertRuleFields() map[string]*schema.Schema {
 			},
 			Description: "Alert pod rule",
 		},
-		"workload_rule": &schema.Schema{
+		"workload_rule": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,

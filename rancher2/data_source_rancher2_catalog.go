@@ -13,59 +13,59 @@ func dataSourceRancher2Catalog() *schema.Resource {
 		Read: dataSourceRancher2CatalogRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"scope": &schema.Schema{
+			"scope": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      catalogScopeGlobal,
 				ValidateFunc: validation.StringInSlice(catalogScopes, true),
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_id": &schema.Schema{
+			"cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kind": &schema.Schema{
+			"kind": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"branch": &schema.Schema{
+			"branch": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"version": &schema.Schema{
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

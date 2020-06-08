@@ -24,7 +24,7 @@ func dataSourceRancher2MultiClusterApp() *schema.Resource {
 					Schema: targetFields(),
 				},
 			},
-			"catalog_name": &schema.Schema{
+			"catalog_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Multi cluster app catalog name",
@@ -50,7 +50,7 @@ func dataSourceRancher2MultiClusterApp() *schema.Resource {
 				Computed:    true,
 				Description: "Multi cluster app revision history limit",
 			},
-			"revision_id": &schema.Schema{
+			"revision_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Multi cluster app revision id",
@@ -63,7 +63,7 @@ func dataSourceRancher2MultiClusterApp() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"template_version": &schema.Schema{
+			"template_version": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Multi cluster app template version",
@@ -73,7 +73,7 @@ func dataSourceRancher2MultiClusterApp() *schema.Resource {
 				Computed:    true,
 				Description: "Multi cluster app template version ID",
 			},
-			"template_name": &schema.Schema{
+			"template_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Multi cluster app template name",
@@ -86,11 +86,11 @@ func dataSourceRancher2MultiClusterApp() *schema.Resource {
 					Schema: upgradeStrategyFields(),
 				},
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

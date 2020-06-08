@@ -54,7 +54,7 @@ bin:
 	go build -o $(PROVIDER_NAME)
 
 fmt:
-	gofmt -w $(GOFMT_FILES)
+	gofmt -s -w $(GOFMT_FILES)
 
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"

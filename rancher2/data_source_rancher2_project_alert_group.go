@@ -11,32 +11,32 @@ func dataSourceRancher2ProjectAlertGroup() *schema.Resource {
 		Read: dataSourceRancher2ProjectAlertGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Alert group name",
 			},
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Alert group project ID",
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Alert group description",
 			},
-			"group_interval_seconds": &schema.Schema{
+			"group_interval_seconds": {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "Alert group interval seconds",
 			},
-			"group_wait_seconds": &schema.Schema{
+			"group_wait_seconds": {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "Alert group wait seconds",
 			},
-			"recipients": &schema.Schema{
+			"recipients": {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "Alert group recipients",
@@ -44,16 +44,16 @@ func dataSourceRancher2ProjectAlertGroup() *schema.Resource {
 					Schema: recipientFields(),
 				},
 			},
-			"repeat_interval_seconds": &schema.Schema{
+			"repeat_interval_seconds": {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "Alert group repeat interval seconds",
 			},
-			"annotations": &schema.Schema{
+			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
-			"labels": &schema.Schema{
+			"labels": {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},

@@ -86,7 +86,7 @@ func TestAccRancher2Registry_basic_Project(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2RegistryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2RegistryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RegistryExists(testAccRancher2RegistryType+".foo", reg),
@@ -95,7 +95,7 @@ func TestAccRancher2Registry_basic_Project(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2RegistryType+".foo", "registries.0.username", "user"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2RegistryUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RegistryExists(testAccRancher2RegistryType+".foo", reg),
@@ -104,7 +104,7 @@ func TestAccRancher2Registry_basic_Project(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2RegistryType+".foo", "registries.0.username", "user2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2RegistryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RegistryExists(testAccRancher2RegistryType+".foo", reg),
@@ -124,7 +124,7 @@ func TestAccRancher2Registry_disappears_Project(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2RegistryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2RegistryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RegistryExists(testAccRancher2RegistryType+".foo", reg),
@@ -146,7 +146,7 @@ func TestAccRancher2Registry_basic_Namespaced(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2RegistryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2RegistryNsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RegistryExists(testAccRancher2RegistryType+".foo-ns", reg),
@@ -155,7 +155,7 @@ func TestAccRancher2Registry_basic_Namespaced(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2RegistryType+".foo-ns", "registries.0.username", "user"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2RegistryNsUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RegistryExists(testAccRancher2RegistryType+".foo-ns", reg),
@@ -164,7 +164,7 @@ func TestAccRancher2Registry_basic_Namespaced(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2RegistryType+".foo-ns", "registries.0.username", "user2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2RegistryNsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RegistryExists(testAccRancher2RegistryType+".foo-ns", reg),
@@ -184,7 +184,7 @@ func TestAccRancher2Registry_disappears_Namespaced(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2RegistryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2RegistryNsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2RegistryExists(testAccRancher2RegistryType+".foo-ns", reg),

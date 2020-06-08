@@ -45,7 +45,7 @@ func TestAccRancher2AuthConfigKeyCloak_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigKeyCloakDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigKeyCloakConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigKeyCloakType+"."+AuthConfigKeyCloakName, authConfig),
@@ -56,7 +56,7 @@ func TestAccRancher2AuthConfigKeyCloak_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigKeyCloakType+"."+AuthConfigKeyCloakName, "idp_metadata_content", "XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigKeyCloakUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigKeyCloakType+"."+AuthConfigKeyCloakName, authConfig),
@@ -67,7 +67,7 @@ func TestAccRancher2AuthConfigKeyCloak_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigKeyCloakType+"."+AuthConfigKeyCloakName, "idp_metadata_content", "YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigKeyCloakConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigKeyCloakType+"."+AuthConfigKeyCloakName, authConfig),
@@ -90,7 +90,7 @@ func TestAccRancher2AuthConfigKeyCloak_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigKeyCloakDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigKeyCloakConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigKeyCloakType+"."+AuthConfigKeyCloakName, authConfig),

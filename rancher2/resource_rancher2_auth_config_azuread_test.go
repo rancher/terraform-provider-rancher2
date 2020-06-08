@@ -43,7 +43,7 @@ func TestAccRancher2AuthConfigAzureAD_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigAzureADDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigAzureADConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, authConfig),
@@ -54,7 +54,7 @@ func TestAccRancher2AuthConfigAzureAD_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, "tenant_id", "XXXXXXXX"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigAzureADUpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, authConfig),
@@ -65,7 +65,7 @@ func TestAccRancher2AuthConfigAzureAD_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, "tenant_id", "YYYYYYYY"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigAzureADConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, authConfig),
@@ -88,7 +88,7 @@ func TestAccRancher2AuthConfigAzureAD_disappears(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2AuthConfigAzureADDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRancher2AuthConfigAzureADConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, authConfig),

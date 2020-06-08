@@ -8,17 +8,17 @@ import (
 
 func notifierSlackConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
-		"default_recipient": &schema.Schema{
+		"default_recipient": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Slack default channel",
 		},
-		"url": &schema.Schema{
+		"url": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Slack URL",
 		},
-		"proxy_url": &schema.Schema{
+		"proxy_url": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Slack proxy URL",

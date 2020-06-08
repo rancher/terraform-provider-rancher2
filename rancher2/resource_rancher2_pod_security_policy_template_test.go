@@ -200,7 +200,7 @@ func TestAccRancher2PodSecurityPolicyTemplate_Basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2PodSecurityPolicyTemplateDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckRancher2PodSecurityPolicyTemplate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NPodSecurityPolicyTemplateExists(testAccRancher2PodSecurityPolicyTemplateType+".foo", pspTemplate),
@@ -208,7 +208,7 @@ func TestAccRancher2PodSecurityPolicyTemplate_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2PodSecurityPolicyTemplateType+".foo", "description", "Terraform PodSecurityPolicyTemplate acceptance test"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckRancher2PodSecurityPolicyTemplateUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NPodSecurityPolicyTemplateExists(testAccRancher2PodSecurityPolicyTemplateType+".foo", pspTemplate),
