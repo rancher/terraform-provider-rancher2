@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * Added `load_balancer_sku` argument to `azure_cloud_provider` configuration
 * Add `nodelocal` argument to `rke_config.dns` argument on `rancher2_cluster` resource
 * Update golang to 1.13
+* Added `view` verb to `rules` argument for `rancher2_node_template` resource
 
 BUG FIXES:
 

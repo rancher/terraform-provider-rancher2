@@ -13,6 +13,7 @@ const (
 	policyRuleVerbList   = "list"
 	policyRuleVerbPatch  = "patch"
 	policyRuleVerbUpdate = "update"
+	policyRuleVerbView   = "view"
 	policyRuleVerbWatch  = "watch"
 )
 
@@ -25,6 +26,7 @@ var (
 		policyRuleVerbList,
 		policyRuleVerbPatch,
 		policyRuleVerbUpdate,
+		policyRuleVerbView,
 		policyRuleVerbWatch,
 	}
 )
