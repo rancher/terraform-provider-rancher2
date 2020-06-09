@@ -165,6 +165,10 @@ func flattenClusterGKEConfig(in *GoogleKubernetesEngineConfig, p []interface{}) 
 		obj["project_id"] = in.ProjectID
 	}
 
+	if len(in.Region) > 0 {
+		obj["region"] = in.Region
+	}
+
 	if len(in.ResourceLabels) > 0 {
 		obj["resource_labels"] = toMapInterface(in.ResourceLabels)
 	}
@@ -385,6 +389,10 @@ func expandClusterGKEConfig(p []interface{}, name string) (*GoogleKubernetesEngi
 
 	if v, ok := in["project_id"].(string); ok && len(v) > 0 {
 		obj.ProjectID = v
+	}
+
+	if v, ok := in["region"].(string); ok && len(v) > 0 {
+		obj.Region = v
 	}
 
 	if v, ok := in["resource_labels"].(map[string]interface{}); ok && len(v) > 0 {

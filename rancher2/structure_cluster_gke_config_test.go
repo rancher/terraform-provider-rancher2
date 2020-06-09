@@ -64,6 +64,7 @@ func init() {
 		OauthScopes:                       []string{"scope1", "scope2"},
 		Preemptible:                       true,
 		ProjectID:                         "project-test",
+		Region:                            "region",
 		ResourceLabels: map[string]string{
 			"Rlabel1": "value1",
 			"Rlabel2": "value2",
@@ -125,6 +126,7 @@ func init() {
 			"oauth_scopes":                          []interface{}{"scope1", "scope2"},
 			"preemptible":                           true,
 			"project_id":                            "project-test",
+			"region":                                "region",
 			"resource_labels": map[string]interface{}{
 				"Rlabel1": "value1",
 				"Rlabel2": "value2",
