@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * Update golang to 1.13
 * Added `view` verb to `rules` argument for `rancher2_node_template` resource
 * Updated golang to v1.13, modules and vendor files
+* Added `external` as allowed value on `rke_config.cloud_provider` argument on `rancher2_cluster` resource
 
 BUG FIXES:
 
