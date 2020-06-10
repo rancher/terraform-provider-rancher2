@@ -10,6 +10,7 @@ require (
 	github.com/rancher/types v0.0.0-20200529180016-a8a73960f6b9
 	golang.org/x/crypto v0.0.0-20191112222119-e1110fd1c708
 	gopkg.in/yaml.v2 v2.2.5
+	k8s.io/apimachinery v0.18.0
 	k8s.io/apiserver v0.18.0
 )
 
