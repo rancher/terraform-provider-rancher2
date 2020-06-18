@@ -25,6 +25,38 @@ func rollingUpdateFields() map[string]*schema.Schema {
 	return s
 }
 
+func rollingUpdateDaemonSetFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"max_unavailable": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1,
+			Description: "Rolling update max unavailable",
+		},
+	}
+
+	return s
+}
+
+func rollingUpdateDeploymentFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"max_surge": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1,
+			Description: "Rolling update max surge",
+		},
+		"max_unavailable": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1,
+			Description: "Rolling update max unavailable",
+		},
+	}
+
+	return s
+}
+
 func upgradeStrategyFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"rolling_update": {
@@ -35,6 +67,27 @@ func upgradeStrategyFields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: rollingUpdateFields(),
 			},
+		},
+	}
+
+	return s
+}
+
+func deploymentStrategyFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"rolling_update": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Description: "Rolling update for update strategy",
+			Elem: &schema.Resource{
+				Schema: rollingUpdateDeploymentFields(),
+			},
+		},
+		"strategy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Strategy",
 		},
 	}
 

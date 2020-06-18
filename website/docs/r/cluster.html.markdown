@@ -578,8 +578,25 @@ The following attributes are exported:
 
 ##### Arguments
 
+* `node_selector` - (Optional) RKE monitoring node selector (map)
 * `options` - (Optional/Computed) RKE options for monitoring (map)
-* `provider` - (Optional/Computed) Provider for RKE monitoring (string)
+* `provider` - (Optional/Computed) RKE monitoring provider (string)
+* `replicas` - (Optional/Computed) RKE monitoring replicas (int)
+* `update_strategy` - (Optional) RKE monitoring update strategy (list Maxitems: 1)
+
+##### `update_strategy`
+
+###### Arguments
+
+* `rolling_update` - (Optional) Monitoring deployment rolling update (list Maxitems: 1)
+* `strategy` - (Optional) Monitoring deployment update strategy (string)
+
+###### `rolling_update`
+
+###### Arguments
+
+* `max_surge` - (Optional) Monitoring deployment rolling update max surge. Default: `1` (int)
+* `max_unavailable` - (Optional) Monitoring deployment rolling update max unavailable. Default: `1` (int)
 
 #### `network`
 

@@ -10,23 +10,35 @@ import (
 var (
 	testClusterRKEConfigMonitoringConf      *managementClient.MonitoringConfig
 	testClusterRKEConfigMonitoringInterface []interface{}
+	testClusterRKEConfigMonitoringReplicas  int64
 )
 
 func init() {
+	testClusterRKEConfigMonitoringReplicas = int64(2)
 	testClusterRKEConfigMonitoringConf = &managementClient.MonitoringConfig{
+		NodeSelector: map[string]string{
+			"selector1": "value1",
+			"selector2": "value2",
+		},
 		Options: map[string]string{
 			"option1": "value1",
 			"option2": "value2",
 		},
 		Provider: "test",
+		Replicas: &testClusterRKEConfigMonitoringReplicas,
 	}
 	testClusterRKEConfigMonitoringInterface = []interface{}{
 		map[string]interface{}{
+			"node_selector": map[string]interface{}{
+				"selector1": "value1",
+				"selector2": "value2",
+			},
 			"options": map[string]interface{}{
 				"option1": "value1",
 				"option2": "value2",
 			},
 			"provider": "test",
+			"replicas": 2,
 		},
 	}
 }
