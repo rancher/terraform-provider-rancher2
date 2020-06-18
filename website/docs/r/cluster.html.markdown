@@ -964,10 +964,11 @@ The following arguments are supported:
 * `min_node_count` - (Optional) Minimmum number of nodes in the NodePool. Must be >= 1 and <= maxNodeCount. Default `0` (int)
 * `node_count` - (Optional) Node count for GKE cluster. Default `3` (int)
 * `preemptible` - (Optional) Whether the nodes are created as preemptible VM instances. Default `false` (bool)
+* `region` - (Optional) GKE cluster region. Conflicts with `zone` (string)
 * `resource_labels` - (Optional/Computed) The map of Kubernetes labels to be applied to each cluster (map)
 * `use_ip_aliases` - (Optional) Whether alias IPs will be used for pod IPs in the cluster. Default `false` (bool)
 * `taints` - (Required) List of Kubernetes taints to be applied to each node (list)
-* `zone` - (Required) Zone GKE cluster (string)
+* `zone` - (Optional) GKE cluster zone. Conflicts with `region` (string)
 
 ### `cluster_auth_endpoint`
 

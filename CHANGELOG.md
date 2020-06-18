@@ -14,6 +14,8 @@ ENHANCEMENTS:
 * Added `view` verb to `rules` argument for `rancher2_node_template` resource
 * Updated golang to v1.13, modules and vendor files
 * Added full feature to `rke_config.monitoring` argument
+* Added `external` as allowed value on `rke_config.cloud_provider` argument on `rancher2_cluster` resource
+* Added `region` argument on `gke_config` for `rancher2_cluster` resource
 
 BUG FIXES:
 
