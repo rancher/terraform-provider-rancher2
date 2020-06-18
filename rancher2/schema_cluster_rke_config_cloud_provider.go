@@ -6,11 +6,12 @@ import (
 )
 
 const (
-	cloudProviderCustomName = "custom"
+	cloudProviderCustomName   = "custom"
+	cloudProviderExternalName = "external"
 )
 
 var (
-	cloudProviderList = []string{cloudProviderAwsName, cloudProviderAzureName, cloudProviderCustomName, cloudProviderOpenstackName, cloudProviderVsphereName}
+	cloudProviderList = []string{cloudProviderAwsName, cloudProviderAzureName, cloudProviderCustomName, cloudProviderExternalName, cloudProviderOpenstackName, cloudProviderVsphereName}
 )
 
 //Schemas
