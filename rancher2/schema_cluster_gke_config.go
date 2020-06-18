@@ -61,6 +61,7 @@ type GoogleKubernetesEngineConfig struct {
 	OauthScopes                        []string          `json:"oauthScopes,omitempty" yaml:"oauthScopes,omitempty"`
 	Preemptible                        bool              `json:"preemptible,omitempty" yaml:"preemptible,omitempty"`
 	ProjectID                          string            `json:"projectId,omitempty" yaml:"projectId,omitempty"`
+	Region                             string            `json:"region,omitempty" yaml:"region,omitempty"`
 	ResourceLabels                     map[string]string `json:"resourceLabels,omitempty" yaml:"resourceLabels,omitempty"`
 	ServiceAccount                     string            `json:"serviceAccount,omitempty" yaml:"serviceAccount,omitempty"`
 	SubNetwork                         string            `json:"subNetwork,omitempty" yaml:"subNetwork,omitempty"`
@@ -347,6 +348,11 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Whether the nodes are created as preemptible VM instances",
 		},
+		"region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The region to launch the cluster. Region or zone should be used",
+		},
 		"resource_labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
@@ -370,8 +376,7 @@ func clusterGKEConfigFields() map[string]*schema.Schema {
 		"zone": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "us-central1-a",
-			Description: "The zone to launch the cluster",
+			Description: "The zone to launch the cluster. Zone or region should be used",
 		},
 	}
 
