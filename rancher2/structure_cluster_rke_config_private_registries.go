@@ -6,11 +6,16 @@ import (
 
 // Flatteners
 
-func flattenClusterRKEConfigPrivateRegistries(p []managementClient.PrivateRegistry) ([]interface{}, error) {
-	out := []interface{}{}
-
-	for _, in := range p {
-		obj := make(map[string]interface{})
+func flattenClusterRKEConfigPrivateRegistries(p []managementClient.PrivateRegistry, v []interface{}) ([]interface{}, error) {
+	out := make([]interface{}, len(p))
+	lenV := len(v)
+	for i, in := range p {
+		var obj map[string]interface{}
+		if lenV <= i {
+			obj = make(map[string]interface{})
+		} else {
+			obj = v[i].(map[string]interface{})
+		}
 		obj["is_default"] = in.IsDefault
 
 		if len(in.Password) > 0 {
@@ -25,7 +30,7 @@ func flattenClusterRKEConfigPrivateRegistries(p []managementClient.PrivateRegist
 			obj["user"] = in.User
 		}
 
-		out = append(out, obj)
+		out[i] = obj
 	}
 
 	return out, nil
@@ -34,10 +39,7 @@ func flattenClusterRKEConfigPrivateRegistries(p []managementClient.PrivateRegist
 // Expanders
 
 func expandClusterRKEConfigPrivateRegistries(p []interface{}) ([]managementClient.PrivateRegistry, error) {
-	out := []managementClient.PrivateRegistry{}
-	if len(p) == 0 || p[0] == nil {
-		return out, nil
-	}
+	out := make([]managementClient.PrivateRegistry, len(p))
 
 	for i := range p {
 		in := p[i].(map[string]interface{})
@@ -58,7 +60,7 @@ func expandClusterRKEConfigPrivateRegistries(p []interface{}) ([]managementClien
 		if v, ok := in["user"].(string); ok && len(v) > 0 {
 			obj.User = v
 		}
-		out = append(out, obj)
+		out[i] = obj
 	}
 
 	return out, nil

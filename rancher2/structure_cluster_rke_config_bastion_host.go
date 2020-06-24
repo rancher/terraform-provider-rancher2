@@ -6,8 +6,13 @@ import (
 
 // Flatteners
 
-func flattenClusterRKEConfigBastionHost(in *managementClient.BastionHost) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenClusterRKEConfigBastionHost(in *managementClient.BastionHost, p []interface{}) ([]interface{}, error) {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
 	if in == nil {
 		return []interface{}{}, nil
 	}

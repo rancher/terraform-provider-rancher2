@@ -44,7 +44,7 @@ func TestFlattenPrivateRegistries(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigPrivateRegistries(tc.Input)
+		output, err := flattenClusterRKEConfigPrivateRegistries(tc.Input, tc.ExpectedOutput)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

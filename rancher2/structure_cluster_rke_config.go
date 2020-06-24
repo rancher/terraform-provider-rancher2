@@ -49,7 +49,11 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig,
 	}
 
 	if in.BastionHost != nil {
-		bastion, err := flattenClusterRKEConfigBastionHost(in.BastionHost)
+		v, ok := obj["bastion_host"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		bastion, err := flattenClusterRKEConfigBastionHost(in.BastionHost, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}
@@ -119,7 +123,11 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig,
 	}
 
 	if in.PrivateRegistries != nil {
-		privReg, err := flattenClusterRKEConfigPrivateRegistries(in.PrivateRegistries)
+		v, ok := obj["private_registries"].([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		privReg, err := flattenClusterRKEConfigPrivateRegistries(in.PrivateRegistries, v)
 		if err != nil {
 			return []interface{}{obj}, err
 		}
