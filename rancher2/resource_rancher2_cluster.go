@@ -31,17 +31,17 @@ func resourceRancher2Cluster() *schema.Resource {
 }
 
 func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) error {
+	client, err := meta.(*Config).ManagementClient()
+	if err != nil {
+		return err
+	}
+
 	cluster, err := expandCluster(d)
 	if err != nil {
 		return err
 	}
 
 	log.Printf("[INFO] Creating Cluster %s", cluster.Name)
-
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return err
-	}
 
 	expectedState := "active"
 

@@ -9,7 +9,6 @@ const AuthConfigAzureADName = "azuread"
 //Schemas
 
 func authConfigAzureADFields() map[string]*schema.Schema {
-	r := authConfigFields()
 	s := map[string]*schema.Schema{
 		"application_id": {
 			Type:      schema.TypeString,
@@ -48,7 +47,7 @@ func authConfigAzureADFields() map[string]*schema.Schema {
 		},
 	}
 
-	for k, v := range r {
+	for k, v := range authConfigFields() {
 		s[k] = v
 	}
 

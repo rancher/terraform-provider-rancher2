@@ -96,16 +96,10 @@ func multiClusterAppFields() map[string]*schema.Schema {
 			Default:     true,
 			Description: "Wait until multi cluster app is active",
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

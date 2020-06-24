@@ -37,18 +37,10 @@ func secretFields() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Namespace ID to add secret",
 		},
-		"annotations": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Annotations of the secret",
-		},
-		"labels": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Labels of the secret",
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

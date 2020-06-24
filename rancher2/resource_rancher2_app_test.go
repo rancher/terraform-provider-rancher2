@@ -34,6 +34,12 @@ resource "rancher2_app" "foo" {
   answers = {
     "ingress_host" = "test.xip.io"
   }
+  annotations = {
+    "testacc.terraform.io/test" = "true"
+  }
+  labels = {
+    "testacc.terraform.io/test" = "true"
+  }
 }
 `
 	testAccRancher2AppUpdate = `
@@ -47,6 +53,12 @@ resource "rancher2_app" "foo" {
   target_namespace = rancher2_namespace.testacc.name
   answers = {
     "ingress_host" = "test2.xip.io"
+  }
+  annotations = {
+    "testacc.terraform.io/test" = "false"
+  }
+  labels = {
+    "testacc.terraform.io/test" = "false"
   }
 }
 `
@@ -70,6 +82,8 @@ func TestAccRancher2App_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "testacc"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test.xip.io"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "annotations.testacc.terraform.io/test", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "labels.testacc.terraform.io/test", "true"),
 				),
 			},
 			{
@@ -81,6 +95,8 @@ func TestAccRancher2App_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "testacc"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test2.xip.io"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "annotations.testacc.terraform.io/test", "false"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "labels.testacc.terraform.io/test", "false"),
 				),
 			},
 			{
@@ -92,6 +108,8 @@ func TestAccRancher2App_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "target_namespace", "testacc"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "external_id", "catalog://?catalog=library&template=docker-registry&version=1.8.1"),
 					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "answers.ingress_host", "test.xip.io"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "annotations.testacc.terraform.io/test", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2AppType+".foo", "labels.testacc.terraform.io/test", "true"),
 				),
 			},
 		},

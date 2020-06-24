@@ -34,16 +34,10 @@ func userFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

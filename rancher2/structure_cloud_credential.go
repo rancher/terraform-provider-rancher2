@@ -79,7 +79,7 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		return fmt.Errorf("[ERROR] Unsupported driver on cloud credential: %s", driver)
 	}
 
-	if len(in.Annotations) > 0 {
+	if in.Annotations != nil {
 		err := d.Set("annotations", toMapInterface(in.Annotations))
 		if err != nil {
 			return err

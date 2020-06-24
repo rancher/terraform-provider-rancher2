@@ -53,18 +53,10 @@ func certificateFields() map[string]*schema.Schema {
 			ForceNew:    true,
 			Description: "Namespace ID to add certificate",
 		},
-		"annotations": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Annotations of the certificate",
-		},
-		"labels": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Labels of the certificate",
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

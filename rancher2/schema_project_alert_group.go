@@ -7,7 +7,6 @@ import (
 //Schemas
 
 func projectAlertGroupFields() map[string]*schema.Schema {
-	r := alertGroupFields()
 	s := map[string]*schema.Schema{
 		"project_id": {
 			Type:        schema.TypeString,
@@ -16,7 +15,7 @@ func projectAlertGroupFields() map[string]*schema.Schema {
 		},
 	}
 
-	for k, v := range r {
+	for k, v := range alertGroupFields() {
 		s[k] = v
 	}
 

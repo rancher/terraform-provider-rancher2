@@ -17,6 +17,12 @@ resource "` + testAccRancher2CatalogType + `" "foo-global" {
   url = "http://foo.com:8080"
   description= "Terraform catalog acceptance test"
   version = "helm_v3"
+  annotations = {
+    "testacc.terraform.io/test" = "true"
+  }
+  labels = {
+    "testacc.terraform.io/test" = "true"
+  }
 }
 `
 	testAccRancher2CatalogGlobalUpdate = `
@@ -25,6 +31,12 @@ resource "` + testAccRancher2CatalogType + `" "foo-global" {
   url = "http://foo.updated.com:8080"
   description= "Terraform catalog acceptance test - updated"
   version = "helm_v3"
+  annotations = {
+    "testacc.terraform.io/test" = "false"
+  }
+  labels = {
+    "testacc.terraform.io/test" = "false"
+  }
 }
  `
 )
@@ -104,6 +116,8 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "annotations.testacc.terraform.io/test", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "labels.testacc.terraform.io/test", "true"),
 				),
 			},
 			{
@@ -115,6 +129,8 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.updated.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "annotations.testacc.terraform.io/test", "false"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "labels.testacc.terraform.io/test", "false"),
 				),
 			},
 			{
@@ -126,6 +142,8 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "annotations.testacc.terraform.io/test", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "labels.testacc.terraform.io/test", "true"),
 				),
 			},
 		},

@@ -110,16 +110,10 @@ func clusterScanFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "The cluster scan status",
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

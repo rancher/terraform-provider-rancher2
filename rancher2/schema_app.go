@@ -80,18 +80,10 @@ func appFields() map[string]*schema.Schema {
 				return Base64Encode(TrimSpace(s))
 			},
 		},
-		"annotations": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Annotations of the app",
-		},
-		"labels": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Labels of the app",
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

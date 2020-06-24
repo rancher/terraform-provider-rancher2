@@ -76,18 +76,10 @@ func tokenFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Token user ID",
 		},
-		"annotations": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Annotations of the token",
-		},
-		"labels": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Labels of the token",
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

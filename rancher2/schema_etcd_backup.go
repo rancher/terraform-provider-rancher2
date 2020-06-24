@@ -44,18 +44,10 @@ func etcdBackupFields() map[string]*schema.Schema {
 			Computed: true,
 			ForceNew: true,
 		},
-		"annotations": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: descriptions["annotations"],
-		},
-		"labels": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: descriptions["labels"],
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

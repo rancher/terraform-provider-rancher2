@@ -40,16 +40,10 @@ func projectRoleTemplateBindingFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

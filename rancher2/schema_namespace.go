@@ -132,18 +132,10 @@ func namespaceFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Wait for cluster becomes active",
 		},
-		"annotations": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Annotations of the k8s namespace managed by rancher v2",
-		},
-		"labels": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Labels of the k8s namespace managed by rancher v2",
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s
