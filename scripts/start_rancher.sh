@@ -20,7 +20,7 @@ CERTMANAGER_CRD=${CERTMANAGER_CRD:-"https://github.com/jetstack/cert-manager/rel
 CERTMANAGER_NS=${CERTMANAGER_NS:-"cert-manager"}
 
 ## rancher
-RANCHER_VERSION=${RANCHER_VERSION:-"v2.4.2"}
+RANCHER_VERSION=${RANCHER_VERSION:-"v2.4.5"}
 RANCHER_NS=${RANCHER_NS:-"cattle-system"}
 RANCHER_HOSTNAME="rancher.${K3S_SERVER_IP}.xip.io"
 
