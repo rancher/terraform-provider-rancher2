@@ -6,23 +6,26 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* Updated acceptance tests to run rancher HA on k3s v1.18.2-k3s1
-* Updating local cluster on `rancher2_bootstrap` resource, due to issue https://github.com/rancher/rancher/issues/16213
+* Updated acceptance tests: 
+  * run rancher HA environment on k3s v1.18.2-k3s1 
+  * integrated rancher update scenario from v2.3.6 to v2.4.5
+* Updated local cluster on `rancher2_bootstrap` resource, due to issue https://github.com/rancher/rancher/issues/16213
 * Added `load_balancer_sku` argument to `azure_cloud_provider` configuration
-* Add `nodelocal` argument to `rke_config.dns` argument on `rancher2_cluster` resource
-* Update golang to 1.13
+* Added `nodelocal` argument to `rke_config.dns` argument on `rancher2_cluster` resource
 * Added `view` verb to `rules` argument for `rancher2_node_template` resource
 * Updated golang to v1.13, modules and vendor files
+* Updated Rancher support to v2.4.5
 * Added full feature to `rke_config.monitoring` argument
 * Added `external` as allowed value on `rke_config.cloud_provider` argument on `rancher2_cluster` resource
 * Added `region` argument on `gke_config` for `rancher2_cluster` resource
+* Updated `annotations` and `labels` arguments to supress diff when name contains `cattle.io/` or `rancher.io/`
 
 BUG FIXES:
 
-* Fix `nodeTemplateStateRefreshFunc` function on `rancher2_node_template` resource to check if returned error is forbidden
+* Fixed `nodeTemplateStateRefreshFunc` function on `rancher2_node_template` resource to check if returned error is forbidden
 * Updated `rancher2_app` resource to fix local cluster scoped catalogs
-* Updated api bool fields with default=true to *bool. Related to https://github.com/rancher/types/pull/1083
-* Fix update on `rancher2_cluster_template` resource. Related to https://github.com/terraform-providers/terraform-provider-rancher2/issues/365
+* Updated api bool fields with default=true to `*bool`. Related to https://github.com/rancher/types/pull/1083
+* Fixed update on `rancher2_cluster_template` resource. Related to https://github.com/terraform-providers/terraform-provider-rancher2/issues/365
 
 ## 1.8.3 (April 09, 2020)
 
