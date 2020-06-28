@@ -87,15 +87,10 @@ func cloudCredentialFields() map[string]*schema.Schema {
 				Schema: cloudCredentialVsphereFields(),
 			},
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

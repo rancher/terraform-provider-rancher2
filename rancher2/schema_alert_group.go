@@ -44,16 +44,11 @@ func alertGroupFields() map[string]*schema.Schema {
 			Default:     3600,
 			Description: "Alert group repeat interval seconds",
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
 	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
+	}
+
 	return s
 }

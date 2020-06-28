@@ -6,8 +6,8 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
-	github.com/rancher/norman v0.0.0-20200520181341-ab75acb55410
-	github.com/rancher/types v0.0.0-20200529180016-a8a73960f6b9
+	github.com/rancher/norman v0.0.0-20200609224801-7afd2e9bf37f
+	github.com/rancher/types v0.0.0-20200609171948-b18f4c194419
 	golang.org/x/crypto v0.0.0-20191112222119-e1110fd1c708
 	gopkg.in/yaml.v2 v2.2.5
 	k8s.io/apimachinery v0.18.0

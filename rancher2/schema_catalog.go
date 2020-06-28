@@ -86,16 +86,10 @@ func catalogFields() map[string]*schema.Schema {
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(catalogHelmVersions, true),
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

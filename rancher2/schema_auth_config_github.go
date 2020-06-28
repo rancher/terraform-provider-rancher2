@@ -9,7 +9,6 @@ const AuthConfigGithubName = "github"
 //Schemas
 
 func authConfigGithubFields() map[string]*schema.Schema {
-	r := authConfigFields()
 	s := map[string]*schema.Schema{
 		"client_id": {
 			Type:      schema.TypeString,
@@ -33,7 +32,7 @@ func authConfigGithubFields() map[string]*schema.Schema {
 		},
 	}
 
-	for k, v := range r {
+	for k, v := range authConfigFields() {
 		s[k] = v
 	}
 

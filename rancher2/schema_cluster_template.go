@@ -182,16 +182,10 @@ func clusterTemplateRevisionFields() map[string]*schema.Schema {
 				Schema: questionFields(),
 			},
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s
@@ -231,16 +225,10 @@ func clusterTemplateFields() map[string]*schema.Schema {
 				Schema: clusterTemplateRevisionFields(),
 			},
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

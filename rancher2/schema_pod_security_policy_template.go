@@ -20,18 +20,6 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Pod Security Policy template policy description",
 		},
-		"annotations": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Annotations of the Pod Security Policy template",
-		},
-		"labels": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: "Labels of the Pod Security Policy template",
-		},
 		"allow_privilege_escalation": {
 			Type:        schema.TypeBool,
 			Description: "allowPrivilegeEscalation determines if a pod can request to allow privilege escalation. If unspecified, defaults to true.",
@@ -207,6 +195,10 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Computed:    true,
 			Elem:        podSecurityPolicyVolumesFields(),
 		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

@@ -150,18 +150,10 @@ func projectFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Wait for cluster becomes active",
 		},
-		"annotations": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: descriptions["annotations"],
-		},
-		"labels": {
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Computed:    true,
-			Description: descriptions["labels"],
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

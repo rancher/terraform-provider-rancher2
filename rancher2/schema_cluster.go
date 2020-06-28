@@ -65,16 +65,10 @@ func clusterRegistationTokenFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s
@@ -286,16 +280,6 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: scheduledClusterScanFields(),
 			},
 		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
 		"windows_prefered_cluster": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -303,6 +287,10 @@ func clusterFields() map[string]*schema.Schema {
 			Description: "Windows preferred cluster",
 			ForceNew:    true,
 		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

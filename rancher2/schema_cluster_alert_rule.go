@@ -7,7 +7,6 @@ import (
 //Schemas
 
 func clusterAlertRuleFields() map[string]*schema.Schema {
-	r := alertRuleFields()
 	s := map[string]*schema.Schema{
 		"cluster_id": {
 			Type:        schema.TypeString,
@@ -56,7 +55,7 @@ func clusterAlertRuleFields() map[string]*schema.Schema {
 		},
 	}
 
-	for k, v := range r {
+	for k, v := range alertRuleFields() {
 		s[k] = v
 	}
 

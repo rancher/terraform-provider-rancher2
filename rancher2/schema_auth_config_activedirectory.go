@@ -9,7 +9,6 @@ const AuthConfigActiveDirectoryName = "activedirectory"
 //Schemas
 
 func authConfigActiveDirectoryFields() map[string]*schema.Schema {
-	r := authConfigFields()
 	s := map[string]*schema.Schema{
 		"servers": {
 			Type:     schema.TypeList,
@@ -139,7 +138,7 @@ func authConfigActiveDirectoryFields() map[string]*schema.Schema {
 		},
 	}
 
-	for k, v := range r {
+	for k, v := range authConfigFields() {
 		s[k] = v
 	}
 

@@ -63,6 +63,12 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
       retention = 5
     }
   }
+  annotations = {
+    "testacc.terraform.io/test" = "true"
+  }
+  labels = {
+    "testacc.terraform.io/test" = "true"
+  }
 }
 `
 	testAccRancher2ClusterUpdateConfigRKE = `
@@ -109,6 +115,12 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
       cron_schedule = "30 10 * * *"
       retention = 5
     }
+  }
+  annotations = {
+    "testacc.terraform.io/test" = "false"
+  }
+  labels = {
+    "testacc.terraform.io/test" = "false"
   }
 }
  `
@@ -176,6 +188,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "20%"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "annotations.testacc.terraform.io/test", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "labels.testacc.terraform.io/test", "true"),
 				),
 			},
 			{
@@ -191,6 +205,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "10%"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 10 * * *"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "annotations.testacc.terraform.io/test", "false"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "labels.testacc.terraform.io/test", "false"),
 				),
 			},
 			{
@@ -206,6 +222,8 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "20%"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "annotations.testacc.terraform.io/test", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "labels.testacc.terraform.io/test", "true"),
 				),
 			},
 		},
