@@ -46,7 +46,7 @@ func TestFlattenClusterRKEConfigBastionHost(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := flattenClusterRKEConfigBastionHost(tc.Input)
+		output, err := flattenClusterRKEConfigBastionHost(tc.Input, tc.ExpectedOutput)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}

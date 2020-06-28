@@ -255,30 +255,31 @@ func clusterFields() map[string]*schema.Schema {
 		"enable_cluster_alerting": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Computed:    true,
 			Description: "Enable built-in cluster alerting",
 		},
 		"enable_cluster_monitoring": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Computed:    true,
 			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_cluster_istio": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Computed:    true,
 			Description: "Enable built-in cluster istio",
 		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Computed:    true,
 			Description: "Enable project network isolation",
 		},
 		"scheduled_cluster_scan": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			MaxItems:    1,
 			Description: "Cluster scheduled scan",
 			Elem: &schema.Resource{
