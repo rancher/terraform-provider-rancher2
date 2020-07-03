@@ -28,11 +28,11 @@ The following arguments are supported:
 
 * `project_id` - (Required/ForceNew) The project id where bind project role template (string)
 * `role_template_id` - (Required/ForceNew) The role template id from create project role template binding (string)
-* `name` - (Required) The name of the project role template binding (string)
-* `group_id` - (Optional) The group ID to assign project role template binding (string)
-* `group_principal_id` - (Optional/Computed) The group_principal ID to assign project role template binding (string)
-* `user_id` - (Optional) The user ID to assign project role template binding (string)
-* `user_principal_id` - (Optional/Computed) The user_principal ID to assign project role template binding (string)
+* `name` - (Required/ForceNew) The name of the project role template binding (string)
+* `group_id` - (Optional/ForceNew) The group ID to assign project role template binding (string)
+* `group_principal_id` - (Optional/Computed/ForceNew) The group_principal ID to assign project role template binding (string)
+* `user_id` - (Optional/ForceNew) The user ID to assign project role template binding (string)
+* `user_principal_id` - (Optional/Computed/ForceNew) The user_principal ID to assign project role template binding (string)
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
 
