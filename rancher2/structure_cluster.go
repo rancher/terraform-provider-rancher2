@@ -102,7 +102,7 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 
 	d.Set("enable_cluster_alerting", in.EnableClusterAlerting)
 	d.Set("enable_cluster_monitoring", in.EnableClusterMonitoring)
-	d.Set("enable_cluster_istio", in.IstioEnabled)
+	d.Set("istio_enabled", in.IstioEnabled)
 
 	if in.EnableNetworkPolicy != nil {
 		d.Set("enable_network_policy", *in.EnableNetworkPolicy)
@@ -311,10 +311,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if v, ok := in.Get("enable_cluster_monitoring").(bool); ok {
 		obj.EnableClusterMonitoring = v
-	}
-
-	if v, ok := in.Get("enable_cluster_istio").(bool); ok {
-		obj.IstioEnabled = v
 	}
 
 	if v, ok := in.Get("enable_network_policy").(bool); ok {

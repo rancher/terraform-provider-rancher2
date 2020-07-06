@@ -260,9 +260,14 @@ func clusterFields() map[string]*schema.Schema {
 		},
 		"enable_cluster_istio": {
 			Type:        schema.TypeBool,
-			Optional:    true,
 			Computed:    true,
 			Description: "Enable built-in cluster istio",
+			Deprecated:  "Deploy istio using rancher2_app resource instead",
+		},
+		"istio_enabled": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "Is istio enabled at cluster?",
 		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,

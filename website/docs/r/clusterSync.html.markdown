@@ -44,10 +44,10 @@ resource "rancher2_node_template" "foo" {
 }
 # Create a new rancher2 Node Pool
 resource "rancher2_node_pool" "foo" {
-  cluster_id =  "${rancher2_cluster.foo-custom.id}"
+  cluster_id =  rancher2_cluster.foo-custom.id
   name = "foo"
   hostname_prefix =  "foo-cluster-0"
-  node_template_id = "${rancher2_node_template.foo.id}"
+  node_template_id = rancher2_node_template.foo.id
   quantity = 3
   control_plane = true
   etcd = true
@@ -55,13 +55,13 @@ resource "rancher2_node_pool" "foo" {
 }
 # Create a new rancher2 Cluster Sync
 resource "rancher2_cluster_sync" "foo-custom" {
-  cluster_id =  "${rancher2_cluster.foo-custom.id}"
-  node_pool_ids = ["${rancher2_node_pool.foo.id}"]
+  cluster_id =  rancher2_cluster.foo-custom.id
+  node_pool_ids = [rancher2_node_pool.foo.id]
 }
 # Create a new rancher2 Project
 resource "rancher2_project" "foo" {
   name = "foo"
-  cluster_id = "${rancher2_cluster_sync.foo-custom.id}"
+  cluster_id = rancher2_cluster_sync.foo-custom.id
   description = "Terraform namespace acceptance test"
   resource_quota {
     project_limit {
