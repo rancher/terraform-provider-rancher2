@@ -85,6 +85,7 @@ The following arguments are supported:
 * `revision_id` - (Optional/Computed) Current revision id for the app. If modified, If this argument is provided or modified, app will be rollbacked to `revision_id` (string)
 * `template_version` - (Optional/Computed) Template version of the app. If modified, app will be upgraded. Default: `latest` (string)
 * `values_yaml` - (Optional) values.yaml base64 encoded file content for the app template. If modified, app will be upgraded (string)
+* `wait` - (Optional) Wait until app is deployed and active. Default: `true` (bool)
 * `annotations` - (Optional/Computed) Annotations for App object (map)
 * `labels` - (Optional/Computed) Labels for App object (map)
 
