@@ -23,7 +23,7 @@ resource "rancher2_cluster_role_template_binding" "foo" {
 The following arguments are supported:
 
 * `cluster_id` - (Required/ForceNew) The cluster id where bind cluster role template binding (string)
-* `role_template_id` - (Required/ForceNew) The role template id from create cluster role template binding (string)
+* `role_template_id` - (Required) The role template id from create cluster role template binding (string)
 * `name` - (Required/ForceNew) The name of the cluster role template binding (string)
 * `group_id` - (Optional/ForceNew) The group ID to assign cluster role template binding (string)
 * `group_principal_id` - (Optional/Computed/ForceNew) The group_principal ID to assign cluster role template binding (string)
