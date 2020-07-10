@@ -266,6 +266,16 @@ func IsForbidden(err error) bool {
 	return apiError.StatusCode == http.StatusForbidden
 }
 
+// IsNotAllowed checks if the given APIError is a Method Not Allowed HTTP statuscode
+func IsNotAllowed(err error) bool {
+	apiError, ok := err.(*clientbase.APIError)
+	if !ok {
+		return false
+	}
+
+	return apiError.StatusCode == http.StatusMethodNotAllowed
+}
+
 func splitTokenID(token string) string {
 	separator := ":"
 
