@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	//managementClient "github.com/rancher/types/client/management/v3"
 	projectClient "github.com/rancher/types/client/project/v3"
 )
 
@@ -62,20 +61,22 @@ func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{},
-		Target:     []string{"active"},
-		Refresh:    appStateRefreshFunc(client, newApp.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      1 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, waitErr := stateConf.WaitForState()
-	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for app (%s) to be created: %s", newApp.ID, waitErr)
-	}
-
 	d.SetId(newApp.ID)
+
+	if d.Get("wait").(bool) {
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{},
+			Target:     []string{"active"},
+			Refresh:    appStateRefreshFunc(client, newApp.ID),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return fmt.Errorf("[ERROR] waiting for app (%s) to be created: %s", newApp.ID, waitErr)
+		}
+	}
 
 	return resourceRancher2AppRead(d, meta)
 }
@@ -164,18 +165,20 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{},
-		Target:     []string{"active"},
-		Refresh:    appStateRefreshFunc(client, id),
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
-		Delay:      1 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, waitErr := stateConf.WaitForState()
-	if waitErr != nil {
-		return fmt.Errorf(
-			"[ERROR] waiting for app (%s) to be updated: %s", id, waitErr)
+	if d.Get("wait").(bool) {
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{},
+			Target:     []string{"active"},
+			Refresh:    appStateRefreshFunc(client, id),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return fmt.Errorf(
+				"[ERROR] waiting for app (%s) to be updated: %s", id, waitErr)
+		}
 	}
 
 	return resourceRancher2AppRead(d, meta)

@@ -1,4 +1,18 @@
 ## 1.10.0 (Unreleased)
+
+FEATURES:
+
+* **Deprecated Argument:** `rancher2_cluster.enable_cluster_istio` - Deploy istio using `rancher2_app` resource instead
+* **New Argument:** `rancher2_cluster.istio_enabled` - (Computed) Is istio enabled at cluster?
+
+ENHANCEMENTS:
+
+* Added `wait` argument to rancher2_app
+
+BUG FIXES:
+
+
+
 ## 1.9.0 (June 29, 2020)
 
 FEATURES:

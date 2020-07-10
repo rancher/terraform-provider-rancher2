@@ -80,6 +80,12 @@ func appFields() map[string]*schema.Schema {
 				return Base64Encode(TrimSpace(s))
 			},
 		},
+		"wait": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "Wait until app is deployed and active",
+		},
 	}
 
 	for k, v := range commonAnnotationLabelFields() {
