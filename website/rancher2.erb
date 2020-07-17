@@ -1,0 +1,251 @@
+<% wrap_layout :inner do %>
+  <% content_for :sidebar do %>
+    <div class="docs-sidebar hidden-print affix-top" role="complementary">
+      <ul class="nav docs-sidenav">
+        <li<%= sidebar_current("docs-home") %>>
+          <a href="/docs/providers/index.html">All Providers</a>
+        </li>
+
+        <li<%= sidebar_current("docs-rancher2-index") %>>
+          <a href="/docs/providers/rancher2/index.html">Rancher2 Provider</a>
+        </li>
+
+        <li<%= sidebar_current("docs-rancher2-datasource") %>>
+          <a href="#">Data Sources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-rancher2-datasource-app") %>>
+              <a href="/docs/providers/rancher2/d/app.html">rancher2_app</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-catalog") %>>
+              <a href="/docs/providers/rancher2/d/catalog.html">rancher2_catalog</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-certificate") %>>
+              <a href="/docs/providers/rancher2/d/certificate.html">rancher2_certificate</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-cloud_credential") %>>
+              <a href="/docs/providers/rancher2/d/cloudCredential.html">rancher2_cloud_credential</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-cluster") %>>
+              <a href="/docs/providers/rancher2/d/cluster.html">rancher2_cluster</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-cluster_alert_group") %>>
+              <a href="/docs/providers/rancher2/d/clusterAlertGroup.html">rancher2_cluster_alert_group</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-cluster_alert_rule") %>>
+              <a href="/docs/providers/rancher2/d/clusterAlertRule.html">rancher2_cluster_alert_rule</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-cluster_driver") %>>
+              <a href="/docs/providers/rancher2/d/clusterDriver.html">rancher2_cluster_driver</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-cluster_logging") %>>
+              <a href="/docs/providers/rancher2/d/clusterLogging.html">rancher2_cluster_logging</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-cluster_role_template_binding") %>>
+              <a href="/docs/providers/rancher2/d/clusterRole.html">rancher2_cluster_role_template_binding</a>
+            </li>
+             <li<%= sidebar_current("docs-rancher2-datasource-cluster_scan") %>>
+              <a href="/docs/providers/rancher2/d/clusterScan.html">rancher2_cluster_scan</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-cluster_template") %>>
+              <a href="/docs/providers/rancher2/d/clusterTemplate.html">rancher2_cluster_template</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-etcd_backup") %>>
+              <a href="/docs/providers/rancher2/d/etcdBackup.html">rancher2_etcd_backup</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-global_role_binding") %>>
+              <a href="/docs/providers/rancher2/d/globalRole.html">rancher2_global_role_binding</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-global_dns_provider") %>>
+              <a href="/docs/providers/rancher2/d/globalDNSProvider.html">rancher2_global_dns_provider</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-multi_cluster_app") %>>
+              <a href="/docs/providers/rancher2/d/multiClusterApp.html">rancher2_multi_cluster_app</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-namespace") %>>
+              <a href="/docs/providers/rancher2/d/namespace.html">rancher2_namespace</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-node_driver") %>>
+              <a href="/docs/providers/rancher2/d/nodeDriver.html">rancher2_node_driver</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-node_pool") %>>
+              <a href="/docs/providers/rancher2/d/nodePool.html">rancher2_node_pool</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-node_template") %>>
+              <a href="/docs/providers/rancher2/d/nodeTemplate.html">rancher2_node_template</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-notifier") %>>
+              <a href="/docs/providers/rancher2/d/notifier.html">rancher2_notifier</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-project") %>>
+              <a href="/docs/providers/rancher2/d/project.html">rancher2_project</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-project_alert_group") %>>
+              <a href="/docs/providers/rancher2/d/projectAlertGroup.html">rancher2_project_alert_group</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-project_alert_rule") %>>
+              <a href="/docs/providers/rancher2/d/projectAlertRule.html">rancher2_project_alert_rule</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-project_logging") %>>
+              <a href="/docs/providers/rancher2/d/projectLogging.html">rancher2_project_logging</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-project_role_template_binding") %>>
+              <a href="/docs/providers/rancher2/d/projectRole.html">rancher2_project_role_template_binding</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-registry") %>>
+              <a href="/docs/providers/rancher2/d/registry.html">rancher2_registry</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-role_template") %>>
+              <a href="/docs/providers/rancher2/d/roleTemplate.html">rancher2_role_template</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-secret") %>>
+              <a href="/docs/providers/rancher2/d/secret.html">rancher2_secret</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-setting") %>>
+              <a href="/docs/providers/rancher2/d/setting.html">rancher2_setting</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-datasource-user") %>>
+              <a href="/docs/providers/rancher2/d/user.html">rancher2_user</a>
+            </li>
+          </ul>
+        </li>
+
+        <li<%= sidebar_current("docs-rancher2-resource") %>>
+          <a href="#">Resources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-rancher2-resource-app") %>>
+              <a href="/docs/providers/rancher2/r/app.html">rancher2_app</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-auth-config-activedirectory") %>>
+              <a href="/docs/providers/rancher2/r/authConfigActiveDirectory.html">rancher2_auth_config_activedirectory</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-auth-config-adfs") %>>
+              <a href="/docs/providers/rancher2/r/authConfigADFS.html">rancher2_auth_config_adfs</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-auth-config-azuread") %>>
+              <a href="/docs/providers/rancher2/r/authConfigAzureAD.html">rancher2_auth_config_azuread</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-auth-config-freeipa") %>>
+              <a href="/docs/providers/rancher2/r/authConfigFreeIpa.html">rancher2_auth_config_freeipa</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-auth-config-github") %>>
+              <a href="/docs/providers/rancher2/r/authConfigGithub.html">rancher2_auth_config_github</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-auth-config-keycloak") %>>
+              <a href="/docs/providers/rancher2/r/authConfigKeyCloak.html">rancher2_auth_config_keycloak</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-auth-config-okta") %>>
+              <a href="/docs/providers/rancher2/r/authConfigOKTA.html">rancher2_auth_config_okta</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-auth-config-openldap") %>>
+              <a href="/docs/providers/rancher2/r/authConfigOpenLdap.html">rancher2_auth_config_openldap</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-auth-config-ping") %>>
+              <a href="/docs/providers/rancher2/r/authConfigPing.html">rancher2_auth_config_ping</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-bootstrap") %>>
+              <a href="/docs/providers/rancher2/r/bootstrap.html">rancher2_bootstrap</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-catalog") %>>
+              <a href="/docs/providers/rancher2/r/catalog.html">rancher2_catalog</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-certificate") %>>
+              <a href="/docs/providers/rancher2/r/certificate.html">rancher2_certificate</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-cloud_credential") %>>
+              <a href="/docs/providers/rancher2/r/cloudCredential.html">rancher2_cloud_credential</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-cluster") %>>
+              <a href="/docs/providers/rancher2/r/cluster.html">rancher2_cluster</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-cluster_alert_group") %>>
+              <a href="/docs/providers/rancher2/r/clusterAlertGroup.html">rancher2_cluster_alert_group</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-cluster_alert_rule") %>>
+              <a href="/docs/providers/rancher2/r/clusterAlertRule.html">rancher2_cluster_alert_rule</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-cluster_driver") %>>
+              <a href="/docs/providers/rancher2/r/clusterDriver.html">rancher2_cluster_driver</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-cluster_logging") %>>
+              <a href="/docs/providers/rancher2/r/clusterLogging.html">rancher2_cluster_logging</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-cluster_role_template_binding") %>>
+              <a href="/docs/providers/rancher2/r/clusterRole.html">rancher2_cluster_role_template_binding</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-cluster_sync") %>>
+              <a href="/docs/providers/rancher2/r/clusterSync.html">rancher2_cluster_sync</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-cluster_template") %>>
+              <a href="/docs/providers/rancher2/r/clusterTemplate.html">rancher2_cluster_template</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-etcd_backup") %>>
+              <a href="/docs/providers/rancher2/r/etcdBackup.html">rancher2_etcd_backup</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-global_dns_entry") %>>
+              <a href="/docs/providers/rancher2/r/globalDNSEntry.html">rancher2_global_dns_entry</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-global_dns_provider") %>>
+              <a href="/docs/providers/rancher2/r/globalDNSProvider.html">rancher2_global_dns_provider</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-global_role_binding") %>>
+              <a href="/docs/providers/rancher2/r/globalRole.html">rancher2_global_role_binding</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-multi_cluster_app") %>>
+              <a href="/docs/providers/rancher2/r/multiClusterApp.html">rancher2_multi_cluster_app</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-namespace") %>>
+              <a href="/docs/providers/rancher2/r/namespace.html">rancher2_namespace</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-node_driver") %>>
+              <a href="/docs/providers/rancher2/r/nodeDriver.html">rancher2_node_driver</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-node_pool") %>>
+              <a href="/docs/providers/rancher2/r/nodePool.html">rancher2_node_pool</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-node_template") %>>
+              <a href="/docs/providers/rancher2/r/nodeTemplate.html">rancher2_node_template</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-notifier") %>>
+              <a href="/docs/providers/rancher2/r/notifier.html">rancher2_notifier</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-project") %>>
+              <a href="/docs/providers/rancher2/r/project.html">rancher2_project</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-project_alert_group") %>>
+              <a href="/docs/providers/rancher2/r/projectAlertGroup.html">rancher2_project_alert_group</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-project_alert_rule") %>>
+              <a href="/docs/providers/rancher2/r/projectAlertRule.html">rancher2_project_alert_rule</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-project_logging") %>>
+              <a href="/docs/providers/rancher2/r/projectLogging.html">rancher2_project_logging</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-project_role_template_binding") %>>
+              <a href="/docs/providers/rancher2/r/projectRole.html">rancher2_project_role_template_binding</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-registry") %>>
+              <a href="/docs/providers/rancher2/r/registry.html">rancher2_registry</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-role_template") %>>
+              <a href="/docs/providers/rancher2/r/roleTemplate.html">rancher2_role_template</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-secret") %>>
+              <a href="/docs/providers/rancher2/r/secret.html">rancher2_secret</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-setting") %>>
+              <a href="/docs/providers/rancher2/r/setting.html">rancher2_setting</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-token") %>>
+              <a href="/docs/providers/rancher2/r/token.html">rancher2_token</a>
+            </li>
+            <li<%= sidebar_current("docs-rancher2-resource-user") %>>
+              <a href="/docs/providers/rancher2/r/user.html">rancher2_user</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= yield %>
+<% end %>
