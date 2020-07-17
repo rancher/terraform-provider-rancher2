@@ -34,25 +34,25 @@ func dataSourceRancher2GlobalDNSProvider() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"route53", "cloudflare", "alidns"}, true),
 			},
 			"route53_config": {
-				Type:          schema.TypeSet,
-				MaxItems:      1,
-				Optional:      true,
+				Type:     schema.TypeSet,
+				MaxItems: 1,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderRoute53ConfigSchema(),
 				},
 			},
 			"alidns_config": {
-				Type:          schema.TypeSet,
-				MaxItems:      1,
-				Optional:      true,
+				Type:     schema.TypeSet,
+				MaxItems: 1,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderAliConfigSchema(),
 				},
 			},
 			"cloudflare_config": {
-				Type:          schema.TypeSet,
-				MaxItems:      1,
-				Optional:      true,
+				Type:     schema.TypeSet,
+				MaxItems: 1,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderCloudFareConfigSchema(),
 				},
