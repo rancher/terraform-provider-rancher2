@@ -83,7 +83,7 @@ func Provider() terraform.ResourceProvider {
 			"retries": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      5,
+				Default:      10,
 				Description:  descriptions["retries"],
 				ValidateFunc: validation.IntBetween(1, 1000),
 			},

@@ -199,6 +199,10 @@ func resourceRancher2NodeTemplateDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	err = client.APIBaseClient.Delete(nodeTemplate)
+	for i := 0; i <= meta.(*Config).Retries && IsNotAllowed(err); err = client.APIBaseClient.Delete(nodeTemplate) {
+		time.Sleep(30 * time.Second)
+		i++
+	}
 	if err != nil {
 		return fmt.Errorf("Error removing Node Template: %s", err)
 	}
