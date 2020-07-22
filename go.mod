@@ -5,10 +5,12 @@ go 1.13
 require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-version v1.2.0
-	github.com/hashicorp/terraform-plugin-sdk v1.7.0
+	github.com/hashicorp/terraform-plugin-sdk v1.14.0
 	github.com/rancher/norman v0.0.0-20200609224801-7afd2e9bf37f
 	github.com/rancher/types v0.0.0-20200609171948-b18f4c194419
-	golang.org/x/crypto v0.0.0-20191112222119-e1110fd1c708
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
+	golang.org/x/tools v0.0.0-20200724022722-7017fd6b1305 // indirect
 	gopkg.in/yaml.v2 v2.2.5
 	k8s.io/apimachinery v0.18.0
 	k8s.io/apiserver v0.18.0
