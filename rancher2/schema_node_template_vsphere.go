@@ -39,10 +39,10 @@ type vmwarevsphereConfig struct {
 	Network                []string `json:"network,omitempty" yaml:"network,omitempty"`
 	Password               string   `json:"password,omitempty" yaml:"password,omitempty"`
 	Pool                   string   `json:"pool,omitempty" yaml:"pool,omitempty"`
-	SshPassword            string   `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
-	SshPort                string   `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
-	SshUser                string   `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	SshUserGroup           string   `json:"sshUserGroup,omitempty" yaml:"sshUserGroup,omitempty"`
+	SSHPassword            string   `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
+	SSHPort                string   `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
+	SSHUser                string   `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	SSHUserGroup           string   `json:"sshUserGroup,omitempty" yaml:"sshUserGroup,omitempty"`
 	Tags                   []string `json:"tag,omitempty" yaml:"tag,omitempty"`
 	Username               string   `json:"username,omitempty" yaml:"username,omitempty"`
 	VappIpallocationpolicy string   `json:"vappIpallocationpolicy,omitempty" yaml:"vappIpallocationpolicy,omitempty"`
