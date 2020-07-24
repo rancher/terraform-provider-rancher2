@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 * Added `wait` argument to rancher2_app
 * Added configurable retry logic when Rancher responds with "405 method not allowed" for `rancher2_node_template` resource
+* Added drone pipeline definition to publish provider at terraform registry
 
 BUG FIXES:
 

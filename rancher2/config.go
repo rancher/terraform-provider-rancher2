@@ -529,11 +529,11 @@ func (c *Config) GetClusterSpecialProjectsID(id string) (string, string, error) 
 	systemProjectID := ""
 	for _, project := range projects {
 		if c.IsProjectDefault(&project) {
-			found += 1
+			found++
 			defaultProjectID = project.ID
 		}
 		if c.IsProjectSystem(&project) {
-			found += 1
+			found++
 			systemProjectID = project.ID
 		}
 		if found == 2 {
@@ -1109,17 +1109,17 @@ func (c *Config) GetRegistryByFilters(filters map[string]interface{}) (interface
 	return client.DockerCredential.List(listOpts)
 }
 
-func (c *Config) GetRegistry(id, project_id, namespace_id string) (interface{}, error) {
-	if len(id) == 0 || len(project_id) == 0 {
-		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+func (c *Config) GetRegistry(id, projectID, namespaceID string) (interface{}, error) {
+	if len(id) == 0 || len(projectID) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project id can't be nil")
 	}
 
-	client, err := c.ProjectClient(project_id)
+	client, err := c.ProjectClient(projectID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(namespace_id) > 0 {
+	if len(namespaceID) > 0 {
 		return client.NamespacedDockerCredential.ByID(id)
 	}
 
@@ -1238,17 +1238,17 @@ func (c *Config) GetSecretByFilters(filters map[string]interface{}) (interface{}
 	return client.Secret.List(listOpts)
 }
 
-func (c *Config) GetSecret(id, project_id, namespace_id string) (interface{}, error) {
-	if len(id) == 0 || len(project_id) == 0 {
-		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+func (c *Config) GetSecret(id, projectID, namespaceID string) (interface{}, error) {
+	if len(id) == 0 || len(projectID) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project id can't be nil")
 	}
 
-	client, err := c.ProjectClient(project_id)
+	client, err := c.ProjectClient(projectID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(namespace_id) > 0 {
+	if len(namespaceID) > 0 {
 		return client.NamespacedSecret.ByID(id)
 	}
 
@@ -1367,17 +1367,17 @@ func (c *Config) GetCertificateByFilters(filters map[string]interface{}) (interf
 	return client.Certificate.List(listOpts)
 }
 
-func (c *Config) GetCertificate(id, project_id, namespace_id string) (interface{}, error) {
-	if len(id) == 0 || len(project_id) == 0 {
-		return nil, fmt.Errorf("[ERROR] Id nor project_id can't be nil")
+func (c *Config) GetCertificate(id, projectID, namespaceID string) (interface{}, error) {
+	if len(id) == 0 || len(projectID) == 0 {
+		return nil, fmt.Errorf("[ERROR] Id nor project id can't be nil")
 	}
 
-	client, err := c.ProjectClient(project_id)
+	client, err := c.ProjectClient(projectID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(namespace_id) > 0 {
+	if len(namespaceID) > 0 {
 		return client.NamespacedCertificate.ByID(id)
 	}
 

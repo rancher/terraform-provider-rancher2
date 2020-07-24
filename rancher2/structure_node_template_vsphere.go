@@ -65,17 +65,17 @@ func flattenVsphereConfig(in *vmwarevsphereConfig) []interface{} {
 	if len(in.Pool) > 0 {
 		obj["pool"] = in.Pool
 	}
-	if len(in.SshPassword) > 0 {
-		obj["ssh_password"] = in.SshPassword
+	if len(in.SSHPassword) > 0 {
+		obj["ssh_password"] = in.SSHPassword
 	}
-	if len(in.SshPort) > 0 {
-		obj["ssh_port"] = in.SshPort
+	if len(in.SSHPort) > 0 {
+		obj["ssh_port"] = in.SSHPort
 	}
-	if len(in.SshUser) > 0 {
-		obj["ssh_user"] = in.SshUser
+	if len(in.SSHUser) > 0 {
+		obj["ssh_user"] = in.SSHUser
 	}
-	if len(in.SshUserGroup) > 0 {
-		obj["ssh_user_group"] = in.SshUserGroup
+	if len(in.SSHUserGroup) > 0 {
+		obj["ssh_user_group"] = in.SSHUserGroup
 	}
 	if len(in.Tags) > 0 {
 		obj["tags"] = toArrayInterface(in.Tags)
@@ -172,16 +172,16 @@ func expandVsphereConfig(p []interface{}) *vmwarevsphereConfig {
 		obj.Pool = v
 	}
 	if v, ok := in["ssh_password"].(string); ok && len(v) > 0 {
-		obj.SshPassword = v
+		obj.SSHPassword = v
 	}
 	if v, ok := in["ssh_port"].(string); ok && len(v) > 0 {
-		obj.SshPort = v
+		obj.SSHPort = v
 	}
 	if v, ok := in["ssh_user"].(string); ok && len(v) > 0 {
-		obj.SshUser = v
+		obj.SSHUser = v
 	}
 	if v, ok := in["ssh_user_group"].(string); ok && len(v) > 0 {
-		obj.SshUserGroup = v
+		obj.SSHUserGroup = v
 	}
 	if v, ok := in["tags"].([]interface{}); ok && len(v) > 0 {
 		obj.Tags = toArrayString(v)

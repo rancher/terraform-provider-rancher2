@@ -36,7 +36,7 @@ data "` + testAccRancher2AppType + `" "foo" {
 
 func testAccRancher2CheckClusterID() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return fmt.Errorf("testAccRancher2ClusterID %s\n", testAccRancher2ClusterID)
+		return fmt.Errorf("testAccRancher2ClusterID %s", testAccRancher2ClusterID)
 
 	}
 }

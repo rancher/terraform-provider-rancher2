@@ -12,7 +12,7 @@ const (
 
 type linodeConfig struct {
 	AuthorizedUsers string `json:"authorizedUsers,omitempty" yaml:"authorizedUsers,omitempty"`
-	CreatePrivateIp bool   `json:"createPrivateIp,omitempty" yaml:"createPrivateIp,omitempty"`
+	CreatePrivateIP bool   `json:"createPrivateIp,omitempty" yaml:"createPrivateIp,omitempty"`
 	DockerPort      string `json:"dockerPort,omitempty" yaml:"dockerPort,omitempty"`
 	Image           string `json:"image,omitempty" yaml:"image,omitempty"`
 	InstanceType    string `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`

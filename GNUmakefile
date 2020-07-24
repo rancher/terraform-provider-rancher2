@@ -12,12 +12,13 @@ build: fmtcheck
 build-rancher: validate-rancher
 	@sh -c "'$(CURDIR)/scripts/gobuild.sh'"
 
-validate-rancher: vet lint fmtcheck
+validate-rancher: vet lint test
 
 package-rancher:
 	@sh -c "'$(CURDIR)/scripts/gopackage.sh'"
 
 test: fmtcheck
+	@echo "==> Running testing..."
 	go test $(TEST) || exit 1
 	echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4

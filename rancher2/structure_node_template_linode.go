@@ -12,7 +12,7 @@ func flattenLinodeConfig(in *linodeConfig) []interface{} {
 		obj["authorized_users"] = in.AuthorizedUsers
 	}
 
-	obj["create_private_ip"] = in.CreatePrivateIp
+	obj["create_private_ip"] = in.CreatePrivateIP
 
 	if len(in.DockerPort) > 0 {
 		obj["docker_port"] = in.DockerPort
@@ -87,7 +87,7 @@ func expandLinodeConfig(p []interface{}) *linodeConfig {
 	}
 
 	if v, ok := in["create_private_ip"].(bool); ok {
-		obj.CreatePrivateIp = v
+		obj.CreatePrivateIP = v
 	}
 
 	if v, ok := in["docker_port"].(string); ok && len(v) > 0 {
