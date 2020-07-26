@@ -1,4 +1,4 @@
-## 1.10.0 (Unreleased)
+## 1.10.0 (July 29, 2020)
 
 FEATURES:
 
@@ -10,10 +10,16 @@ ENHANCEMENTS:
 * Added `wait` argument to rancher2_app
 * Added configurable retry logic when Rancher responds with "405 method not allowed" for `rancher2_node_template` resource
 * Added drone pipeline definition to publish provider at terraform registry
+* Updated docs to terraform registry format
 
 BUG FIXES:
 
-
+* Fixes on `rancher2_cluster_template` resource:
+  * Update default revision. Related to https://github.com/rancher/terraform-provider-rancher2/issues/393
+  * Import. Related to https://github.com/rancher/terraform-provider-rancher2/issues/386
+  * Delete old template revisions. Related to https://github.com/rancher/terraform-provider-rancher2/issues/397
+* Fixed import resource description on doc files
+* Fixed bootstrap link on doc website
 
 ## 1.9.0 (June 29, 2020)
 
