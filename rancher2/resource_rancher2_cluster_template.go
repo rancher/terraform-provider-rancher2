@@ -88,7 +88,7 @@ func resourceRancher2ClusterTemplate() *schema.Resource {
 }
 
 func resourceRancher2ClusterTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	clusterTemplate, clusterTemplateRevisions, err := expandClusterTemplate(d)
+	ctrIndex, clusterTemplate, clusterTemplateRevisions, err := expandClusterTemplate(d)
 	if err != nil {
 		return err
 	}
@@ -110,15 +110,10 @@ func resourceRancher2ClusterTemplateCreate(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	err = flattenClusterTemplate(d, newClusterTemplate, newClusterTemplateRevisions)
-	if err != nil {
-		return err
-	}
-
 	// Update defaultRevisionId if needed
-	if len(newClusterTemplateRevisions) > 1 {
+	if len(newClusterTemplateRevisions) > 0 {
 		update := map[string]interface{}{
-			"defaultRevisionId": d.Get("default_revision_id").(string),
+			"defaultRevisionId": newClusterTemplateRevisions[ctrIndex].ID,
 		}
 
 		_, err = client.ClusterTemplate.Update(newClusterTemplate, update)
@@ -126,6 +121,8 @@ func resourceRancher2ClusterTemplateCreate(d *schema.ResourceData, meta interfac
 			return err
 		}
 	}
+
+	d.SetId(newClusterTemplate.ID)
 
 	return resourceRancher2ClusterTemplateRead(d, meta)
 }
@@ -237,6 +234,10 @@ func resourceRancher2ClusterTemplateDelete(d *schema.ResourceData, meta interfac
 }
 
 func clusterTemplateRevisionsCreate(client *managementClient.Client, ctID string, ctrs []managementClient.ClusterTemplateRevision) ([]managementClient.ClusterTemplateRevision, error) {
+	if len(ctID) == 0 {
+		return nil, fmt.Errorf("Cluster Template ID can't be empty")
+	}
+
 	clusterTemplateRevisions := make([]managementClient.ClusterTemplateRevision, len(ctrs))
 
 	for i := range ctrs {
@@ -252,6 +253,9 @@ func clusterTemplateRevisionsCreate(client *managementClient.Client, ctID string
 }
 
 func clusterTemplateRevisionsRead(client *managementClient.Client, ctID string, data []interface{}) ([]managementClient.ClusterTemplateRevision, error) {
+	if len(ctID) == 0 {
+		return nil, fmt.Errorf("Cluster Template ID can't be empty")
+	}
 	filters := map[string]interface{}{}
 	filters["clusterTemplateId"] = ctID
 
@@ -288,10 +292,14 @@ func clusterTemplateRevisionsRead(client *managementClient.Client, ctID string, 
 }
 
 func clusterTemplateRevisionsUpdate(client *managementClient.Client, ctID string, d *schema.ResourceData) (string, []managementClient.ClusterTemplateRevision, error) {
+	if len(ctID) == 0 {
+		return "", nil, fmt.Errorf("Cluster Template ID can't be empty")
+	}
+
 	old, new := d.GetChange("template_revisions")
 	oldData, _ := old.([]interface{})
 	data, _ := new.([]interface{})
-	ctrs, err := expandClusterTemplateRevisions(data)
+	indexDefault, ctrs, err := expandClusterTemplateRevisions(data)
 	if err != nil {
 		return "", nil, err
 	}
@@ -311,7 +319,9 @@ func clusterTemplateRevisionsUpdate(client *managementClient.Client, ctID string
 			continue
 		}
 		// Update existing clusterTemplateRevisions if changed
-		if lenOldData > i && !AreEqual(oldData[i], in) {
+		oldDataCtr := oldData[i].(map[string]interface{})
+		oldDataCtr["default"] = in["default"]
+		if lenOldData > i && !AreEqual(oldDataCtr, in) {
 			clusterConfig, err := expandClusterSpecBase(in["cluster_config"].([]interface{}))
 			if err != nil {
 				return "", nil, err
@@ -339,12 +349,7 @@ func clusterTemplateRevisionsUpdate(client *managementClient.Client, ctID string
 		clusterTemplateRevisions[i] = ctrs[i]
 	}
 
-	ctrID, _, err := flattenClusterTemplateRevisions(clusterTemplateRevisions, "", data)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return ctrID, clusterTemplateRevisions, nil
+	return clusterTemplateRevisions[indexDefault].ID, clusterTemplateRevisions, nil
 }
 
 func clusterTemplateRevisionsDelete(client *managementClient.Client, ctID string, ctrs []managementClient.ClusterTemplateRevision, data []interface{}) error {

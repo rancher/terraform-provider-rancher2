@@ -264,7 +264,7 @@ func TestFlattenClusterTemplateRevisions(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, output, err := flattenClusterTemplateRevisions(tc.Input, "default_revision_id", tc.ExpectedOutput)
+		output, err := flattenClusterTemplateRevisions(tc.Input, "default_revision_id", tc.ExpectedOutput)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
@@ -366,7 +366,7 @@ func TestExpandClusterTemplateRevisions(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := expandClusterTemplateRevisions(tc.Input)
+		_, output, err := expandClusterTemplateRevisions(tc.Input)
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
@@ -391,7 +391,7 @@ func TestExpandClusterTemplate(t *testing.T) {
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, clusterTemplateFields(), tc.Input)
-		output, _, err := expandClusterTemplate(inputResourceData)
+		_, output, _, err := expandClusterTemplate(inputResourceData)
 		if err != nil {
 			t.Fatalf("[ERROR] on expnader: %#v", err)
 		}
