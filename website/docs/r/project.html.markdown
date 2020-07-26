@@ -169,6 +169,6 @@ More info at [resource-quotas](https://rancher.com/docs/rancher/v2.x/en/k8s-in-r
 Projects can be imported using the Rancher Project ID
 
 ```
-$ terraform import rancher2_project.foo <project_id>
+$ terraform import rancher2_project.foo &lt;project_id&gt;
 ```
 

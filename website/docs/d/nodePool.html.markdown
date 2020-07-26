@@ -14,7 +14,7 @@ Use this data source to retrieve information about a Rancher v2 Node Pool resour
 
 ```hcl
 data "rancher2_node_pool" "foo" {
-  cluster_id =  "${rancher2_cluster.foo-custom.id}"
+  cluster_id =  rancher2_cluster.foo-custom.id
   name = "foo"
 }
 ```

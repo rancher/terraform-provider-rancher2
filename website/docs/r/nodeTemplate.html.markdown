@@ -47,7 +47,7 @@ resource "rancher2_cloud_credential" "foo" {
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "foo test"
-  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  cloud_credential_id = rancher2_cloud_credential.foo.id
   amazonec2_config {
     ami =  "<AMI_ID>"
     region = "<REGION>"
@@ -272,7 +272,7 @@ The following attributes are exported:
 
 * `boot2docker_url` - (Optional) vSphere URL for boot2docker iso image. Default `https://releases.rancher.com/os/latest/rancheros-vmware.iso` (string)
 * `cfgparam` - (Optional) vSphere vm configuration parameters (used for guestinfo) (list)
-* `clone_from` - (Optional) If you choose creation type clone a name of what you want to clone is required. From Rancher v2.3.3 (string)
+* `clone_from` - (Optional) If you choose creation type vm (clone vm) a name of what vm you want to clone is required. From Rancher v2.3.3 (string)
 * `cloud_config` - (Optional) Filepath to a cloud-config yaml file to put into the ISO user-data. From Rancher v2.3.3 (string)
 * `cloudinit` - (Optional) vSphere cloud-init file or url to set in the guestinfo (string)
 * `content_library` - (Optional) If you choose to clone from a content library template specify the name of the library. From Rancher v2.3.3 (string)
@@ -316,7 +316,7 @@ The following attributes are exported:
 Node Template can be imported using the Rancher Node Template ID
 
 ```
-$ terraform import rancher2_node_template.foo <node_template_id>
+$ terraform import rancher2_node_template.foo &lt;node_template_id&gt;
 ```
 
 ## Upgrading to Rancher v2.3.3

@@ -58,5 +58,5 @@ The following attributes are exported:
 Cluster Role Template Bindings can be imported using the Rancher cluster Role Template Binding ID
 
 ```
-$ terraform import rancher2_cluster_role_template_binding.foo <cluster_role_template_binding_id>
+$ terraform import rancher2_cluster_role_template_binding.foo &lt;CLUSTER_ROLE_TEMPLATE_BINDING_ID&gt;
 ```

@@ -60,6 +60,6 @@ The following attributes are exported:
 Global Role Bindings can be imported using the Rancher Global Role Binding ID
 
 ```
-$ terraform import rancher2_global_role_binding.foo <global_role_binding_id>
+$ terraform import rancher2_global_role_binding.foo &lt;GLOBAL_ROLE_BINDING_ID&gt;
 ```
 

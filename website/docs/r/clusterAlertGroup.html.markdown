@@ -72,5 +72,5 @@ The following attributes are exported:
 Cluster Alert Group can be imported using the Rancher cluster alert group ID
 
 ```
-$ terraform import rancher2_cluster_alert_group.foo <rancher2_cluster_alert_group_id>
+$ terraform import rancher2_cluster_alert_group.foo &lt;CLUSTER_ALERT_GROUP_ID&gt;
 ```

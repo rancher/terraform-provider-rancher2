@@ -41,14 +41,14 @@ resource "rancher2_project" "foo" {
 resource "rancher2_project_alert_group" "foo" {
   name = "foo"
   description = "Terraform project alert group"
-  project_id = "${rancher2_project.foo.id}"
+  project_id = rancher2_project.foo.id
   group_interval_seconds = 300
   repeat_interval_seconds = 3600
 }
 # Create a new Rancher2 Project Alert Rule
 resource "rancher2_project_alert_rule" "foo" {
-  project_id = "${rancher2_project_alert_group.foo.project_id}"
-  group_id = "${rancher2_project_alert_group.foo.id}"
+  project_id = rancher2_project_alert_group.foo.project_id
+  group_id = rancher2_project_alert_group.foo.id
   name = "foo"
   group_interval_seconds = 600
   repeat_interval_seconds = 6000
@@ -123,5 +123,5 @@ The following attributes are exported:
 Project Alert Rule can be imported using the Rancher project alert rule ID
 
 ```
-$ terraform import rancher2_project_alert_rule.foo <rancher2_project_alert_rule_id>
+$ terraform import rancher2_project_alert_rule.foo &lt;project_alert_rule_id&gt;
 ```

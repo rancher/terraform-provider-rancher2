@@ -32,7 +32,7 @@ resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "foo test"
   amazonec2_config {
-    access_key = "AWS_ACCESS_KEY"
+    access_key = "<AWS_ACCESS_KEY>"
     secret_key = "<AWS_SECRET_KEY>"
     ami =  "<AMI_ID>"
     region = "<REGION>"

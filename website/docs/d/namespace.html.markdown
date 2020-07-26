@@ -15,7 +15,7 @@ Use this data source to retrieve information about a Rancher v2 namespace.
 ```hcl
 data "rancher2_namespace" "foo" {
   name = "foo"
-  project_id = "${rancher2_cluster.foo-custom.default_project_id}"
+  project_id = rancher2_cluster.foo-custom.default_project_id
 }
 ```
 

@@ -58,6 +58,6 @@ The following attributes are exported:
 Project Role Template Bindings can be imported using the Rancher Project Role Template Binding ID
 
 ```
-$ terraform import rancher2_project_role_template_binding.foo <project_role_template_binding_id>
+$ terraform import rancher2_project_role_template_binding.foo &lt;project_role_template_binding_id&gt;
 ```
 

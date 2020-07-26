@@ -230,6 +230,6 @@ not implement timeouts, only direct API calls (without retry on failure).
 PodSecurityPolicyTemplate can be imported using the Rancher PodSecurityPolicyTemplate Name
 
 ```
-$ terraform import rancher2_pod_security_policy_template.foo <pod_security_policy_name>
+$ terraform import rancher2_pod_security_policy_template.foo &lt;pod_security_policy_name&gt;
 ```
 

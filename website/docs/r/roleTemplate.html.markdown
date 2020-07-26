@@ -94,5 +94,5 @@ The following attributes are exported:
 Role Template can be imported using the Rancher Role Template ID
 
 ```
-$ terraform import rancher2_role_template.foo <role_template_id>
+$ terraform import rancher2_role_template.foo &lt;role_template_id&gt;
 ```

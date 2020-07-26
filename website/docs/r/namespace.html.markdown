@@ -48,7 +48,7 @@ resource "rancher2_cluster" "foo-custom" {
 # Create a new rancher2 Namespace assigned to default cluster project
 resource "rancher2_namespace" "foo" {
   name = "foo"
-  project_id = "${rancher2_cluster.foo-custom.default_project_id}"
+  project_id = rancher2_cluster.foo-custom.default_project_id
   description = "foo namespace"
   resource_quota {
     limit {
@@ -135,7 +135,7 @@ More info at [resource-quotas](https://rancher.com/docs/rancher/v2.x/en/k8s-in-r
 Namespaces can be imported using the namespace ID in the format `<project_id>.<namespace_id>`
 
 ```
-$ terraform import rancher2_namespace.foo <project_id>.<namespace_id>
+$ terraform import rancher2_namespace.foo &lt;project_id&gt;.&lt;namespaces_id&gt;
 ```
 
 `<project_id>` is in the format `<cluster_id>:<id>`, but <id> part is optional: 

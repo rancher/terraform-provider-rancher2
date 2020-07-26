@@ -154,5 +154,5 @@ The following attributes are exported:
 Cluster Logging can be imported using the Rancher Cluster Logging ID
 
 ```
-$ terraform import rancher2_cluster_logging.foo <cluster_logging_id>
+$ terraform import rancher2_cluster_logging.foo &lt;CLUSTER_LOGGING_ID&gt;
 ```

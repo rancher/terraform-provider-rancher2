@@ -17,14 +17,14 @@ to associate Namespaces with projects.
 
 ```
 data "rancher2_project" "system" {
-    cluster_id = "${var.my_cluster_id}"
+    cluster_id = var.my_cluster_id
     name = "System"
 }
 
 resource "kubernetes_namespace" "my_namespace" {
   metadata {
     annotations {
-      "field.cattle.io/projectId" = "${data.rancher2_project.system.id}"
+      "field.cattle.io/projectId" = data.rancher2_project.system.id
     }
     name = "my-namespace"
   }

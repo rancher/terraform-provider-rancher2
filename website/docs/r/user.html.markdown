@@ -26,7 +26,7 @@ resource "rancher2_user" "foo" {
 resource "rancher2_global_role_binding" "foo" {
   name = "foo"
   global_role_id = "user-base"
-  user_id = "${rancher2_user.foo.id}"
+  user_id = rancher2_user.foo.id
 }
 ```
 
@@ -62,5 +62,5 @@ The following attributes are exported:
 Users can be imported using the Rancher User ID
 
 ```
-$ terraform import rancher2_user.foo <user_id>
+$ terraform import rancher2_user.foo &lt;user_id&gt;
 ```

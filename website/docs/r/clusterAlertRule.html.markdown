@@ -23,8 +23,8 @@ resource "rancher2_cluster_alert_group" "foo" {
 }
 # Create a new Rancher2 Cluster Alert Rule
 resource "rancher2_cluster_alert_rule" "foo" {
-  cluster_id = "${rancher2_cluster_alert_group.foo.cluster_id}"
-  group_id = "${rancher2_cluster_alert_group.foo.id}"
+  cluster_id = rancher2_cluster_alert_group.foo.cluster_id
+  group_id = rancher2_cluster_alert_group.foo.id
   name = "foo"
   group_interval_seconds = 600
   repeat_interval_seconds = 6000
@@ -46,7 +46,7 @@ The following arguments are supported:
 * `node_rule` - (Optional) The cluster alert rule node rule. ConflictsWith: `"event_rule", "metric_rule", "system_service_rule"`` (list Maxitems:1)
 * `repeat_interval_seconds` - (Optional) The cluster alert rule wait seconds. Default: `3600` (int)
 * `severity` - (Optional) The cluster alert rule severity. Supported values : `"critical" | "info" | "warning"`. Default: `critical` (string)
-* `system_service_rule` - (Optional) The cluster alert rule system service rule. ConflictsWith: `"event_rule", "metric_rule", "node_rule"`` (list Maxitems:1)
+* `system_service_rule` - (Optional) The cluster alert rule system service rule. ConflictsWith: `"event_rule", "metric_rule", "node_rule"` (list Maxitems:1)
 * `annotations` - (Optional/Computed) The cluster alert rule annotations (map)
 * `labels` - (Optional/Computed) The cluster alert rule labels (map)
 
@@ -106,5 +106,5 @@ The following attributes are exported:
 Cluster Alert Rule can be imported using the Rancher cluster alert rule ID
 
 ```
-$ terraform import rancher2_cluster_alert_rule.foo <rancher2_cluster_alert_rule_id>
+$ terraform import rancher2_cluster_alert_rule.foo &lt;CLUSTER_ALERT_RULE_ID&gt;
 ```

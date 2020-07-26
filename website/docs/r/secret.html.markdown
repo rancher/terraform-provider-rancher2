@@ -77,7 +77,7 @@ The following attributes are exported:
 Secrets can be imported using the secret ID in the format `<namespace_id>.<project_id>.<secret_id>`
 
 ```
-$ terraform import rancher2_secret.foo <namespace_id>.<project_id>.<secret_id>
+$ terraform import rancher2_secret.foo &lt;namespace_id&gt;.&lt;project_id&gt;.&lt;secret_id&gt;
 ```
 
 `<namespace_id>` is optional, just needed for namespaced secret.

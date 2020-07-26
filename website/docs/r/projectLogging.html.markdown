@@ -154,6 +154,6 @@ The following attributes are exported:
 Project Logging can be imported using the Rancher Project Logging ID
 
 ```
-$ terraform import rancher2_project_logging.foo <project_logging_id>
+$ terraform import rancher2_project_logging.foo &lt;project_logging_id&gt;
 ```
 

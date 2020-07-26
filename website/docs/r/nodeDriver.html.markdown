@@ -63,5 +63,5 @@ The following attributes are exported:
 Node Driver can be imported using the Rancher Node Driver ID
 
 ```
-$ terraform import rancher2_node_driver.foo <node_driver_id>
+$ terraform import rancher2_node_driver.foo &lt;node_driver_id&gt;
 ```

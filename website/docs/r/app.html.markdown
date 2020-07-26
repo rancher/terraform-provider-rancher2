@@ -59,7 +59,7 @@ resource "rancher2_app" "foo" {
   project_id = "<project_id>"
   template_name = "<template_name>"
   template_version = "<template_version>"
-  target_namespace = "${rancher2_namespace.foo.name}"
+  target_namespace = rancher2_namespace.foo.name
   answers = {
     "ingress_host" = "test.xip.io"
     "foo" = "bar"
@@ -110,5 +110,5 @@ The following attributes are exported:
 Apps can be imported using the app ID in the format `<project_id>:<app_name>`
 
 ```
-$ terraform import rancher2_app.foo <project_id>:<app_name>
+$ terraform import rancher2_app.foo &lt;PROJECT_ID_ID&gt;:&lt;APP_NAME&gt;
 ```

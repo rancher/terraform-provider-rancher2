@@ -44,6 +44,6 @@ The following attributes are exported:
 Setting can be imported using the Rancher setting ID.
 
 ```
-$ terraform import rancher2_setting.foo <setting_id>
+$ terraform import rancher2_setting.foo &lt;setting_id&gt;
 ```
 

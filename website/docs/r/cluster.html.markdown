@@ -220,7 +220,7 @@ resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "foo test"
   amazonec2_config {
-    access_key = "AWS_ACCESS_KEY"
+    access_key = "<AWS_ACCESS_KEY>"
     secret_key = "<AWS_SECRET_KEY>"
     ami =  "<AMI_ID>"
     region = "<REGION>"
@@ -232,10 +232,10 @@ resource "rancher2_node_template" "foo" {
 }
 # Create a new rancher2 Node Pool
 resource "rancher2_node_pool" "foo" {
-  cluster_id =  "${rancher2_cluster.foo-custom.id}"
+  cluster_id =  rancher2_cluster.foo-custom.id
   name = "foo"
   hostname_prefix =  "foo-cluster-0"
-  node_template_id = "${rancher2_node_template.foo.id}"
+  node_template_id = rancher2_node_template.foo.id
   quantity = 3
   control_plane = true
   etcd = true
@@ -275,8 +275,8 @@ resource "rancher2_cluster_template" "foo" {
 # Create a new rancher2 RKE Cluster from template
 resource "rancher2_cluster" "foo" {
   name = "foo"
-  cluster_template_id = "${rancher2_cluster_template.foo.id}"
-  cluster_template_revision_id = "${rancher2_cluster_template.foo.template_revisions.0.id}"
+  cluster_template_id = rancher2_cluster_template.foo.id
+  cluster_template_revision_id = rancher2_cluster_template.foo.template_revisions.0.id
 }
 ```
 
@@ -1156,5 +1156,5 @@ The following arguments are supported:
 Clusters can be imported using the Rancher Cluster ID
 
 ```
-$ terraform import rancher2_cluster.foo <cluster>
+$ terraform import rancher2_cluster.foo &lt;CLUSTER_ID&gt;
 ```

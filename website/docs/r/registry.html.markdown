@@ -87,7 +87,7 @@ The following attributes are exported:
 Registries can be imported using the registry ID in the format `<namespace_id>.<project_id>.<registry_id>`
 
 ```
-$ terraform import rancher2_registry.foo <namespace_id>.<project_id>.<registry_id>
+$ terraform import rancher2_registry.foo &lt;namespace_id&gt;.&lt;project_id&gt;.&lt;registry_id&gt;
 ```
 
 `<namespace_id>` is optional, just needed for namespaced registry.

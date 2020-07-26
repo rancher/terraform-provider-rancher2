@@ -146,5 +146,5 @@ The following attributes are exported:
 Multi cluster app can be imported using the multi cluster app ID in the format `<multi_cluster_app_name>`
 
 ```
-$ terraform import rancher2_multi_cluster_app.foo <multi_cluster_app_name>
+$ terraform import rancher2_multi_cluster_app.foo &lt;MULTI_CLUSTER_APP_ID&gt;
 ```

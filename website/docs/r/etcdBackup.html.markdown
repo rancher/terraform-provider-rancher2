@@ -92,5 +92,5 @@ The following attributes are exported:
 Etcd Backup can be imported using the Rancher etcd backup ID
 
 ```
-$ terraform import rancher2_etcd_backup.foo <etcd_backup_id>
+$ terraform import rancher2_etcd_backup.foo &lt;ETCD_BACKUP_ID&gt;
 ```

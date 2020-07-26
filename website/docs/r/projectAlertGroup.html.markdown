@@ -71,5 +71,5 @@ The following attributes are exported:
 Project Alert Group can be imported using the Rancher project alert group ID
 
 ```
-$ terraform import rancher2_project_alert_group.foo <rancher2_project_alert_group_id>
+$ terraform import rancher2_project_alert_group.foo &lt;project_alert_group_id&gt;
 ```

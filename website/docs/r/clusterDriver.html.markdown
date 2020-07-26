@@ -62,5 +62,5 @@ The following attributes are exported:
 Cluster Driver can be imported using the Rancher Cluster Driver ID
 
 ```
-$ terraform import rancher2_cluster_driver.foo <cluster_driver_id>
+$ terraform import rancher2_cluster_driver.foo &lt;CLUSTER_DRIVER_ID&gt;
 ```

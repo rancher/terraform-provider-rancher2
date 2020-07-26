@@ -71,5 +71,5 @@ The following attributes are exported:
 Catalogs can be imported using the Rancher Catalog ID and its scope.
 
 ```
-$ terraform import rancher2_catalog.foo <scope>.<catalog_id>
+$ terraform import rancher2_catalog.foo &lt;SCOPE&gt;.&lt;CATALOG_ID_ID&gt;
 ```

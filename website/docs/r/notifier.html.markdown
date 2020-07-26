@@ -109,6 +109,6 @@ The following attributes are exported:
 Notifiers can be imported using the Rancher nNtifier ID
 
 ```
-$ terraform import rancher2_notifier.foo <notifier_id>
+$ terraform import rancher2_notifier.foo &lt;notifier_id&gt;
 ```
 

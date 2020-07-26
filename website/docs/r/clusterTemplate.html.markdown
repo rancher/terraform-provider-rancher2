@@ -204,5 +204,5 @@ resource "rancher2_cluster_template" "foo" {
 Cluster Template can be imported using the rancher Cluster Template ID
 
 ```
-$ terraform import rancher2_cluster_template.foo <cluster_template_id>
+$ terraform import rancher2_cluster_template.foo &lt;CLUSTER_TEMPLATE_ID&gt;
 ```

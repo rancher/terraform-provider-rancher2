@@ -37,7 +37,7 @@ resource "rancher2_cloud_credential" "foo" {
 resource "rancher2_node_template" "foo" {
   name = "foo"
   description = "foo test"
-  cloud_credential_id = "${rancher2_cloud_credential.foo.id}"
+  cloud_credential_id = rancher2_cloud_credential.foo.id
   amazonec2_config {
     ami =  "<AMI_ID>"
     region = "<REGION>"
@@ -49,10 +49,10 @@ resource "rancher2_node_template" "foo" {
 }
 # Create a new rancher2 Node Pool
 resource "rancher2_node_pool" "foo" {
-  cluster_id =  "${rancher2_cluster.foo-custom.id}"
+  cluster_id =  rancher2_cluster.foo-custom.id
   name = "foo"
   hostname_prefix =  "foo-cluster-0"
-  node_template_id = "${rancher2_node_template.foo.id}"
+  node_template_id = rancher2_node_template.foo.id
   quantity = 1
   control_plane = true
   etcd = true
@@ -108,6 +108,6 @@ The following attributes are exported:
 Node Pool can be imported using the Rancher Node Pool ID
 
 ```
-$ terraform import rancher2_node_pool.foo <node_pool_id>
+$ terraform import rancher2_node_pool.foo &lt;node_pool_id&gt;
 ```
 
