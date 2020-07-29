@@ -32,6 +32,13 @@ const (
 	maxHTTPRedirect           = 5
 )
 
+func getMax(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 func AreEqual(o, n interface{}) bool {
 	return reflect.DeepEqual(o, n)
 }

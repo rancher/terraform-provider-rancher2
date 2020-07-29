@@ -2,10 +2,21 @@ package rancher2
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
+
+// Sorters
+
+type ByNameClusterTemplateRevisions []managementClient.ClusterTemplateRevision
+
+func (a ByNameClusterTemplateRevisions) Len() int { return len(a) }
+func (a ByNameClusterTemplateRevisions) Less(i, j int) bool {
+	return strings.Compare(a[i].Name, a[j].Name) == -1
+}
+func (a ByNameClusterTemplateRevisions) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 // Flatteners
 
@@ -99,14 +110,50 @@ func flattenClusterTemplateRevisions(input []managementClient.ClusterTemplateRev
 		return []interface{}{}, fmt.Errorf("Default Cluster Template Revision ID can't be empty")
 	}
 
-	out := make([]interface{}, len(input))
-	lenP := len(p)
-	for i, in := range input {
+	// Sorting input array by data interface
+	pIndexID := map[string]int{}
+	pIndexName := map[string]int{}
+	for i := range p {
+		if row, ok := p[i].(map[string]interface{}); ok {
+			if v, ok := row["id"].(string); ok && len(v) > 0 {
+				pIndexID[v] = i
+			}
+			if v, ok := row["name"].(string); ok {
+				pIndexName[v] = i
+			}
+		}
+	}
+	sortedInput := make([]managementClient.ClusterTemplateRevision, len(input))
+	newCTR := []managementClient.ClusterTemplateRevision{}
+	lastIndex := 0
+	for i := range sortedInput {
+		if v, ok := pIndexID[input[i].ID]; ok {
+			sortedInput[v] = input[i]
+			lastIndex++
+			continue
+		}
+		if v, ok := pIndexName[input[i].Name]; ok {
+			sortedInput[v] = input[i]
+			lastIndex++
+			continue
+		}
+		newCTR = append(newCTR, input[i])
+	}
+
+	for i := range newCTR {
+		sortedInput[lastIndex+i] = newCTR[i]
+	}
+
+	out := make([]interface{}, len(sortedInput))
+	for i, in := range sortedInput {
 		var obj map[string]interface{}
-		if lenP <= i {
+		if v, ok := pIndexName[in.Name]; ok {
+			if row, ok := p[v].(map[string]interface{}); ok {
+				obj = row
+			}
+		}
+		if obj == nil {
 			obj = make(map[string]interface{})
-		} else {
-			obj = p[i].(map[string]interface{})
 		}
 
 		obj["default"] = false
@@ -133,7 +180,9 @@ func flattenClusterTemplateRevisions(input []managementClient.ClusterTemplateRev
 			obj["cluster_template_id"] = in.ClusterTemplateID
 		}
 
-		obj["enabled"] = *in.Enabled
+		if in.Enabled != nil {
+			obj["enabled"] = *in.Enabled
+		}
 
 		if len(in.Name) > 0 {
 			obj["name"] = in.Name

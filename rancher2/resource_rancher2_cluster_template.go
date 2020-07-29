@@ -28,53 +28,72 @@ func resourceRancher2ClusterTemplate() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.IfValueChange("template_revisions",
 				func(old, new, meta interface{}) bool {
-					return len(new.([]interface{})) < len(old.([]interface{}))
+					return true
 				},
 				func(d *schema.ResourceDiff, meta interface{}) error {
+					if !d.HasChange("template_revisions") {
+						return nil
+					}
 					old, new := d.GetChange("template_revisions")
 					oldInput := old.([]interface{})
+					oldInputLen := len(oldInput)
 					newInput := new.([]interface{})
-					// Setting template_revisions order if is removed
-					if len(newInput) != len(oldInput) {
-						for i := range newInput {
-							oldObj := oldInput[i].(map[string]interface{})
-							newObj := newInput[i].(map[string]interface{})
-							oldName := oldObj["name"].(string)
-							newName := newObj["name"].(string)
-							if oldName != newName {
-								for j := range oldInput {
-									oldObj = oldInput[j].(map[string]interface{})
-									oldName = oldObj["name"].(string)
-									if oldName == newName {
-										newInput[i] = oldInput[j]
-										break
-									}
-								}
+					newInputLen := len(newInput)
+					// Indexing old and new inout by ID
+					oldInputIndexName := map[string]int{}
+					for i := range oldInput {
+						if row, ok := oldInput[i].(map[string]interface{}); ok {
+							if v, ok := row["name"].(string); ok {
+								oldInputIndexName[v] = i
 							}
 						}
-						err := d.SetNew("template_revisions", newInput)
-						if err != nil {
-							return err
+					}
+					// Sorting new input
+					sortedNewInput := make([]interface{}, len(newInput))
+					newRows := []interface{}{}
+					lastIndex := 0
+					for i := range newInput {
+						if row, ok := newInput[i].(map[string]interface{}); ok {
+							if name, ok := row["name"].(string); ok {
+								if v, ok := oldInputIndexName[name]; ok {
+									if oldRow, ok := oldInput[v].(map[string]interface{}); ok {
+										oldRow["default"] = row["default"]
+										row = oldRow
+									}
+									if v > i && oldInputLen > newInputLen {
+										v = v - (v - i)
+									}
+									sortedNewInput[v] = row
+									lastIndex++
+									continue
+								}
+							}
+							row["id"] = ""
+							newRows = append(newRows, row)
 						}
 					}
-					return nil
+					for i := range newRows {
+						sortedNewInput[lastIndex+i] = newRows[i]
+					}
+					return d.SetNew("template_revisions", sortedNewInput)
 				}),
 			customdiff.ValidateValue("template_revisions", func(val, meta interface{}) error {
 				hasDefault := false
 				names := map[string]int{}
 				input := val.([]interface{})
 				for i := range input {
-					obj := input[i].(map[string]interface{})
-					if v, ok := obj["default"].(bool); ok && v {
-						if hasDefault {
-							return fmt.Errorf("[ERROR] Validating cluster template revisions: more than one default defined")
+					if obj, ok := input[i].(map[string]interface{}); ok {
+						if v, ok := obj["default"].(bool); ok && v {
+							if hasDefault {
+								return fmt.Errorf("[ERROR] Validating cluster template revisions: more than one default defined")
+							}
+							hasDefault = true
 						}
-						hasDefault = true
-					}
-					if v, ok := obj["name"].(string); ok && len(v) > 0 {
-						names[v]++
-						if names[v] > 1 {
-							return fmt.Errorf("[ERROR] Validating cluster template revisions: name \"%s\" is repeated", v)
+						if v, ok := obj["name"].(string); ok && len(v) > 0 {
+							names[v]++
+							if names[v] > 1 {
+								return fmt.Errorf("[ERROR] Validating cluster template revisions: name \"%s\" is repeated", v)
+							}
 						}
 					}
 				}
@@ -146,7 +165,7 @@ func resourceRancher2ClusterTemplateRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	clusterTemplateRevisions, err := clusterTemplateRevisionsRead(client, clusterTemplate.ID, d.Get("template_revisions").([]interface{}))
+	clusterTemplateRevisions, err := clusterTemplateRevisionsRead(client, id)
 	if err != nil {
 		return err
 	}
@@ -168,17 +187,18 @@ func resourceRancher2ClusterTemplateUpdate(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	defaultRevisionID := d.Get("default_revision_id").(string)
 	clusterTemplateRevisions := []managementClient.ClusterTemplateRevision{}
 	if d.HasChange("template_revisions") {
-		defaultRevisionID, clusterTemplateRevisions, err = clusterTemplateRevisionsUpdate(client, id, d)
+		defaultRevisionID, templateRevisions, err := clusterTemplateRevisionsUpdate(client, id, d)
 		if err != nil {
 			return err
 		}
+		clusterTemplateRevisions = templateRevisions
+		d.Set("default_revision_id", defaultRevisionID)
 	}
 
 	update := map[string]interface{}{
-		"defaultRevisionId": defaultRevisionID,
+		"defaultRevisionId": d.Get("default_revision_id").(string),
 		"description":       d.Get("description").(string),
 		"members":           expandMembers(d.Get("members").([]interface{})),
 		"name":              d.Get("name").(string),
@@ -186,18 +206,18 @@ func resourceRancher2ClusterTemplateUpdate(d *schema.ResourceData, meta interfac
 		"labels":            toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
-	_, err = client.ClusterTemplate.Update(clusterTemplate, update)
+	newClusterTemplate, err := client.ClusterTemplate.Update(clusterTemplate, update)
 	if err != nil {
 		return err
 	}
 
 	if len(clusterTemplateRevisions) > 0 {
-		err = flattenClusterTemplate(d, clusterTemplate, clusterTemplateRevisions)
+		err = flattenClusterTemplate(d, newClusterTemplate, clusterTemplateRevisions)
 		if err != nil {
 			return err
 		}
 		// Delete removed clusterTemplateRevisions
-		err = clusterTemplateRevisionsDelete(client, id, clusterTemplateRevisions, d.Get("template_revisions").([]interface{}))
+		err = clusterTemplateRevisionsDelete(client, id, clusterTemplateRevisions)
 		if err != nil {
 			return err
 		}
@@ -235,7 +255,7 @@ func resourceRancher2ClusterTemplateDelete(d *schema.ResourceData, meta interfac
 
 func clusterTemplateRevisionsCreate(client *managementClient.Client, ctID string, ctrs []managementClient.ClusterTemplateRevision) ([]managementClient.ClusterTemplateRevision, error) {
 	if len(ctID) == 0 {
-		return nil, fmt.Errorf("Cluster Template ID can't be empty")
+		return nil, fmt.Errorf("Creating revision: cluster Template ID can't be empty")
 	}
 
 	clusterTemplateRevisions := make([]managementClient.ClusterTemplateRevision, len(ctrs))
@@ -252,48 +272,20 @@ func clusterTemplateRevisionsCreate(client *managementClient.Client, ctID string
 	return clusterTemplateRevisions, nil
 }
 
-func clusterTemplateRevisionsRead(client *managementClient.Client, ctID string, data []interface{}) ([]managementClient.ClusterTemplateRevision, error) {
+func clusterTemplateRevisionsRead(client *managementClient.Client, ctID string) ([]managementClient.ClusterTemplateRevision, error) {
 	if len(ctID) == 0 {
-		return nil, fmt.Errorf("Cluster Template ID can't be empty")
+		return nil, fmt.Errorf("Reading revision: Cluster Template ID can't be empty")
 	}
 	filters := map[string]interface{}{}
 	filters["clusterTemplateId"] = ctID
 
 	clusterTemplateRevisions, err := client.ClusterTemplateRevision.List(NewListOpts(filters))
-	if err != nil {
-		return nil, err
-	}
-
-	// Sorting clusterTemplateRevisions.Data array by data interface
-	sorted := make([]managementClient.ClusterTemplateRevision, len(clusterTemplateRevisions.Data))
-	newCTR := []managementClient.ClusterTemplateRevision{}
-	lastIndex := 0
-	for i := range sorted {
-		found := false
-		for j := range data {
-			row := data[j].(map[string]interface{})
-			if (row["id"] != "" && clusterTemplateRevisions.Data[i].ID == row["id"]) || (row["id"] == "" && clusterTemplateRevisions.Data[i].Name == row["name"]) {
-				sorted[j] = clusterTemplateRevisions.Data[i]
-				found = true
-				lastIndex++
-				break
-			}
-		}
-		if !found {
-			newCTR = append(newCTR, clusterTemplateRevisions.Data[i])
-		}
-	}
-
-	for i := range newCTR {
-		sorted[lastIndex+i] = newCTR[i]
-	}
-
-	return sorted, nil
+	return clusterTemplateRevisions.Data, err
 }
 
 func clusterTemplateRevisionsUpdate(client *managementClient.Client, ctID string, d *schema.ResourceData) (string, []managementClient.ClusterTemplateRevision, error) {
 	if len(ctID) == 0 {
-		return "", nil, fmt.Errorf("Cluster Template ID can't be empty")
+		return "", nil, fmt.Errorf("Updating reviison: Cluster Template ID can't be empty")
 	}
 
 	old, new := d.GetChange("template_revisions")
@@ -303,11 +295,24 @@ func clusterTemplateRevisionsUpdate(client *managementClient.Client, ctID string
 	if err != nil {
 		return "", nil, err
 	}
-
 	clusterTemplateRevisions := make([]managementClient.ClusterTemplateRevision, len(data))
-	lenOldData := len(oldData)
+	oldDataIndexName := map[string]int{}
+	for i := range oldData {
+		if row, ok := oldData[i].(map[string]interface{}); ok {
+			if v, ok := row["name"].(string); ok {
+				oldDataIndexName[v] = i
+			}
+		}
+	}
+	dataIndexName := map[string]int{}
 	for i := range data {
-		in := data[i].(map[string]interface{})
+		if row, ok := data[i].(map[string]interface{}); ok {
+			if v, ok := row["name"].(string); ok {
+				dataIndexName[v] = i
+			}
+		}
+	}
+	for i := range data {
 		// Create new clusterTemplateRevisions
 		if len(ctrs[i].ID) == 0 {
 			ctrs[i].ClusterTemplateID = ctID
@@ -319,41 +324,47 @@ func clusterTemplateRevisionsUpdate(client *managementClient.Client, ctID string
 			continue
 		}
 		// Update existing clusterTemplateRevisions if changed
-		oldDataCtr := oldData[i].(map[string]interface{})
-		oldDataCtr["default"] = in["default"]
-		if lenOldData > i && !AreEqual(oldDataCtr, in) {
-			clusterConfig, err := expandClusterSpecBase(in["cluster_config"].([]interface{}))
-			if err != nil {
-				return "", nil, err
+		oldIndex, oldOK := oldDataIndexName[ctrs[i].Name]
+		newIndex, newOK := dataIndexName[ctrs[i].Name]
+		if oldOK && newOK {
+			oldRow, oldOK := oldData[oldIndex].(map[string]interface{})
+			in, oldOK := data[newIndex].(map[string]interface{})
+			if oldOK && newOK {
+				oldRow["default"] = in["default"]
+				if !AreEqual(oldRow, in) {
+					clusterConfig, err := expandClusterSpecBase(in["cluster_config"].([]interface{}))
+					if err != nil {
+						return "", nil, err
+					}
+					enabled := in["enabled"].(bool)
+					update := map[string]interface{}{
+						"clusterConfig": clusterConfig,
+						"enabled":       &enabled,
+						"name":          in["name"].(string),
+						"questions":     expandQuestions(in["questions"].([]interface{})),
+						"annotations":   toMapString(in["annotations"].(map[string]interface{})),
+						"labels":        toMapString(in["labels"].(map[string]interface{})),
+					}
+					ctr, err := client.ClusterTemplateRevision.ByID(ctrs[i].ID)
+					if err != nil {
+						return "", nil, fmt.Errorf("Getting ClusterTemplateRevision %s: %v", ctrs[i].ID, err)
+					}
+					newCtr, err := client.ClusterTemplateRevision.Update(ctr, update)
+					if err != nil {
+						return "", nil, fmt.Errorf("Updating ClusterTemplateRevision %s: %v", ctr.ID, err)
+					}
+					clusterTemplateRevisions[i] = *newCtr
+					continue
+				}
 			}
-			enabled := in["enabled"].(bool)
-			update := map[string]interface{}{
-				"clusterConfig": clusterConfig,
-				"enabled":       &enabled,
-				"name":          in["name"].(string),
-				"questions":     expandQuestions(in["questions"].([]interface{})),
-				"annotations":   toMapString(in["annotations"].(map[string]interface{})),
-				"labels":        toMapString(in["labels"].(map[string]interface{})),
-			}
-			ctr, err := client.ClusterTemplateRevision.ByID(ctrs[i].ID)
-			if err != nil {
-				return "", nil, fmt.Errorf("Getting ClusterTemplateRevision %s: %v", ctrs[i].ID, err)
-			}
-			newCtr, err := client.ClusterTemplateRevision.Update(ctr, update)
-			if err != nil {
-				return "", nil, fmt.Errorf("Updating ClusterTemplateRevision %s: %v", ctr.ID, err)
-			}
-			clusterTemplateRevisions[i] = *newCtr
-			continue
 		}
 		clusterTemplateRevisions[i] = ctrs[i]
 	}
-
-	return clusterTemplateRevisions[indexDefault].ID, clusterTemplateRevisions, nil
+	return clusterTemplateRevisions[indexDefault].ID, clusterTemplateRevisions, err
 }
 
-func clusterTemplateRevisionsDelete(client *managementClient.Client, ctID string, ctrs []managementClient.ClusterTemplateRevision, data []interface{}) error {
-	readClusterTemplateRevisions, err := clusterTemplateRevisionsRead(client, ctID, data)
+func clusterTemplateRevisionsDelete(client *managementClient.Client, ctID string, ctrs []managementClient.ClusterTemplateRevision) error {
+	readClusterTemplateRevisions, err := clusterTemplateRevisionsRead(client, ctID)
 	if err != nil {
 		return err
 	}
@@ -370,7 +381,7 @@ func clusterTemplateRevisionsDelete(client *managementClient.Client, ctID string
 			if !found {
 				err = client.ClusterTemplateRevision.Delete(&readCtr)
 				if err != nil {
-					return err
+					return fmt.Errorf("Error removing Cluster Template Revision [%s]: %s", readCtr.ID, err)
 				}
 			}
 		}
