@@ -42,15 +42,14 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
           user       = "test"
         }
         monitoring {
-            provider = "metrics-server"
+          provider = "metrics-server"
         }
         ingress {
-            provider = "nginx"
-            node_selector = {
-                app = "ingress"
-            }
-
+          provider = "nginx"
+          node_selector = {
+            app = "ingress"
           }
+        }
         network {
           plugin = "canal"
         }
@@ -135,15 +134,14 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
           user       = "test"
         }
         monitoring {
-            provider = "metrics-server"
+          provider = "metrics-server"
         }
         ingress {
-            provider = "nginx"
-            node_selector = {
-                app = "ingress"
-            }
-
+          provider = "nginx"
+          node_selector = {
+            app = "ingress"
           }
+        }
         network {
           plugin = "canal"
         }

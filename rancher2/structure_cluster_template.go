@@ -2,10 +2,21 @@ package rancher2
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/types/client/management/v3"
 )
+
+// Sorters
+
+type ByNameClusterTemplateRevisions []managementClient.ClusterTemplateRevision
+
+func (a ByNameClusterTemplateRevisions) Len() int { return len(a) }
+func (a ByNameClusterTemplateRevisions) Less(i, j int) bool {
+	return strings.Compare(a[i].Name, a[j].Name) == -1
+}
+func (a ByNameClusterTemplateRevisions) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
 // Flatteners
 
@@ -90,31 +101,67 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 	return []interface{}{obj}, nil
 }
 
-func flattenClusterTemplateRevisions(input []managementClient.ClusterTemplateRevision, ctrID string, p []interface{}) (string, []interface{}, error) {
-	if len(input) == 0 {
-		return "", []interface{}{}, nil
+func flattenClusterTemplateRevisions(input []managementClient.ClusterTemplateRevision, defaultCtrID string, p []interface{}) ([]interface{}, error) {
+	if len(input) == 0 || p == nil {
+		return []interface{}{}, nil
 	}
 
-	defaultID := ctrID
-	out := make([]interface{}, len(input))
-	lenP := len(p)
-	for i, in := range input {
-		var obj map[string]interface{}
-		if lenP <= i {
-			obj = make(map[string]interface{})
-		} else {
-			obj = p[i].(map[string]interface{})
-		}
+	if len(defaultCtrID) == 0 {
+		return []interface{}{}, fmt.Errorf("Default Cluster Template Revision ID can't be empty")
+	}
 
-		if len(in.ID) > 0 {
-			obj["id"] = in.ID
-			if in.ID == defaultID {
-				obj["default"] = true
+	// Sorting input array by data interface
+	pIndexID := map[string]int{}
+	pIndexName := map[string]int{}
+	for i := range p {
+		if row, ok := p[i].(map[string]interface{}); ok {
+			if v, ok := row["id"].(string); ok && len(v) > 0 {
+				pIndexID[v] = i
+			}
+			if v, ok := row["name"].(string); ok {
+				pIndexName[v] = i
 			}
 		}
+	}
+	sortedInput := make([]managementClient.ClusterTemplateRevision, len(input))
+	newCTR := []managementClient.ClusterTemplateRevision{}
+	lastIndex := 0
+	for i := range sortedInput {
+		if v, ok := pIndexID[input[i].ID]; ok {
+			sortedInput[v] = input[i]
+			lastIndex++
+			continue
+		}
+		if v, ok := pIndexName[input[i].Name]; ok {
+			sortedInput[v] = input[i]
+			lastIndex++
+			continue
+		}
+		newCTR = append(newCTR, input[i])
+	}
 
-		if v, ok := obj["default"].(bool); ok && v {
-			defaultID = in.ID
+	for i := range newCTR {
+		sortedInput[lastIndex+i] = newCTR[i]
+	}
+
+	out := make([]interface{}, len(sortedInput))
+	for i, in := range sortedInput {
+		var obj map[string]interface{}
+		if v, ok := pIndexName[in.Name]; ok {
+			if row, ok := p[v].(map[string]interface{}); ok {
+				obj = row
+			}
+		}
+		if obj == nil {
+			obj = make(map[string]interface{})
+		}
+
+		obj["default"] = false
+		if len(in.ID) > 0 {
+			obj["id"] = in.ID
+			if in.ID == defaultCtrID {
+				obj["default"] = true
+			}
 		}
 
 		if in.ClusterConfig != nil {
@@ -124,7 +171,7 @@ func flattenClusterTemplateRevisions(input []managementClient.ClusterTemplateRev
 			}
 			clusterConfig, err := flattenClusterSpecBase(in.ClusterConfig, v)
 			if err != nil {
-				return "", []interface{}{}, err
+				return []interface{}{}, err
 			}
 			obj["cluster_config"] = clusterConfig
 		}
@@ -133,7 +180,9 @@ func flattenClusterTemplateRevisions(input []managementClient.ClusterTemplateRev
 			obj["cluster_template_id"] = in.ClusterTemplateID
 		}
 
-		obj["enabled"] = *in.Enabled
+		if in.Enabled != nil {
+			obj["enabled"] = *in.Enabled
+		}
 
 		if len(in.Name) > 0 {
 			obj["name"] = in.Name
@@ -149,7 +198,7 @@ func flattenClusterTemplateRevisions(input []managementClient.ClusterTemplateRev
 		out[i] = obj
 	}
 
-	return defaultID, out, nil
+	return out, nil
 }
 
 func flattenClusterTemplate(d *schema.ResourceData, in *managementClient.ClusterTemplate, revisions []managementClient.ClusterTemplateRevision) error {
@@ -157,18 +206,17 @@ func flattenClusterTemplate(d *schema.ResourceData, in *managementClient.Cluster
 		d.SetId(in.ID)
 	}
 
+	d.Set("default_revision_id", in.DefaultRevisionID)
+
 	v, ok := d.Get("template_revisions").([]interface{})
 	if !ok {
 		v = []interface{}{}
 	}
-	defaultRevision, templateRevisions, err := flattenClusterTemplateRevisions(revisions, in.DefaultRevisionID, v)
+	templateRevisions, err := flattenClusterTemplateRevisions(revisions, in.DefaultRevisionID, v)
 	if err != nil {
 		return err
 	}
 	d.Set("template_revisions", templateRevisions)
-	d.Set("default_revision_id", defaultRevision)
-
-	d.Set("default_revision_id", in.DefaultRevisionID)
 	if len(in.Description) > 0 {
 		d.Set("description", in.Description)
 	}
@@ -287,13 +335,14 @@ func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, 
 	return obj, nil
 }
 
-func expandClusterTemplateRevisions(p []interface{}) ([]managementClient.ClusterTemplateRevision, error) {
+func expandClusterTemplateRevisions(p []interface{}) (int, []managementClient.ClusterTemplateRevision, error) {
 	if len(p) == 0 || p[0] == nil {
-		return []managementClient.ClusterTemplateRevision{}, nil
+		return 0, []managementClient.ClusterTemplateRevision{}, nil
 	}
 
 	obj := make([]managementClient.ClusterTemplateRevision, len(p))
 
+	indexDefault := 0
 	hasDefault := false
 	names := map[string]int{}
 	for i := range p {
@@ -307,7 +356,7 @@ func expandClusterTemplateRevisions(p []interface{}) ([]managementClient.Cluster
 			var err error
 			obj[i].ClusterConfig, err = expandClusterSpecBase(v)
 			if err != nil {
-				return nil, err
+				return 0, nil, err
 			}
 		}
 
@@ -317,9 +366,10 @@ func expandClusterTemplateRevisions(p []interface{}) ([]managementClient.Cluster
 
 		if v, ok := in["default"].(bool); ok && v {
 			if hasDefault {
-				return nil, fmt.Errorf("[ERROR] Expanding cluster template revisions: more than one default defined")
+				return 0, nil, fmt.Errorf("[ERROR] Expanding cluster template revisions: more than one default defined")
 			}
 			hasDefault = true
+			indexDefault = i
 		}
 
 		if v, ok := in["enabled"].(bool); ok {
@@ -330,7 +380,7 @@ func expandClusterTemplateRevisions(p []interface{}) ([]managementClient.Cluster
 			obj[i].Name = v
 			names[v]++
 			if names[v] > 1 {
-				return nil, fmt.Errorf("[ERROR] Expanding cluster template revisions: name \"%s\" is repeated", v)
+				return 0, nil, fmt.Errorf("[ERROR] Expanding cluster template revisions: name \"%s\" is repeated", v)
 			}
 		}
 
@@ -348,17 +398,17 @@ func expandClusterTemplateRevisions(p []interface{}) ([]managementClient.Cluster
 	}
 
 	if !hasDefault {
-		return nil, fmt.Errorf("[ERROR] Expanding cluster template revisions: NO default defined")
+		return 0, nil, fmt.Errorf("[ERROR] Expanding cluster template revisions: NO default defined")
 	}
 
-	return obj, nil
+	return indexDefault, obj, nil
 
 }
 
-func expandClusterTemplate(in *schema.ResourceData) (*managementClient.ClusterTemplate, []managementClient.ClusterTemplateRevision, error) {
+func expandClusterTemplate(in *schema.ResourceData) (int, *managementClient.ClusterTemplate, []managementClient.ClusterTemplateRevision, error) {
 	obj := &managementClient.ClusterTemplate{}
 	if in == nil {
-		return nil, nil, nil
+		return 0, nil, nil, nil
 	}
 
 	if v := in.Id(); len(v) > 0 {
@@ -389,7 +439,7 @@ func expandClusterTemplate(in *schema.ResourceData) (*managementClient.ClusterTe
 		obj.Labels = toMapString(v)
 	}
 
-	clusterTemplateRevisions, err := expandClusterTemplateRevisions(in.Get("template_revisions").([]interface{}))
+	indexDefault, clusterTemplateRevisions, err := expandClusterTemplateRevisions(in.Get("template_revisions").([]interface{}))
 
-	return obj, clusterTemplateRevisions, err
+	return indexDefault, obj, clusterTemplateRevisions, err
 }

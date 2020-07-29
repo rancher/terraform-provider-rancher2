@@ -15,7 +15,9 @@ func flattenClusterRKEConfigNodeDrainInput(in *managementClient.NodeDrainInput) 
 	obj["delete_local_data"] = in.DeleteLocalData
 	obj["force"] = in.Force
 	obj["grace_period"] = int(in.GracePeriod)
-	obj["ignore_daemon_sets"] = *in.IgnoreDaemonSets
+	if in.IgnoreDaemonSets != nil {
+		obj["ignore_daemon_sets"] = *in.IgnoreDaemonSets
+	}
 	obj["timeout"] = int(in.Timeout)
 
 	return []interface{}{obj}

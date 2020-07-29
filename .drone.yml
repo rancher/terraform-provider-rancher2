@@ -16,7 +16,6 @@ steps:
   - cd /go/src/github.com/rancher/terraform-provider-rancher2
   - make build-rancher
   - make testacc
-  - make website-test
   - kill %1
   privileged: true
 
