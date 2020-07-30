@@ -11,9 +11,9 @@ build: fmtcheck
 build-rancher: validate-rancher
 	@sh -c "'$(CURDIR)/scripts/gobuild.sh'"
 
-validate-rancher: vet lint test
+validate-rancher: vet test
 
-package-rancher:
+package-rancher: 
 	@sh -c "'$(CURDIR)/scripts/gopackage.sh'"
 
 test: fmtcheck
