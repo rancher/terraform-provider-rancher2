@@ -55,7 +55,11 @@ func flattenClusterRKEConfigServicesKubeAPIEventRateLimit(in *managementClient.E
 	obj["enabled"] = in.Enabled
 
 	if len(in.Configuration) > 0 {
-		obj["configuration"] = in.Configuration
+		configStr, err := mapInterfaceToYAML(in.Configuration)
+		if err != nil {
+			return []interface{}{obj}
+		}
+		obj["configuration"] = configStr
 	}
 
 	return []interface{}{obj}
@@ -207,8 +211,12 @@ func expandClusterRKEConfigServicesKubeAPIEventRateLimit(p []interface{}) *manag
 		obj.Enabled = v
 	}
 
-	if v, ok := in["configuration"].(map[string]interface{}); ok && len(v) > 0 {
-		obj.Configuration = v
+	if v, ok := in["configuration"].(string); ok && len(v) > 0 {
+		configMap, err := ghodssyamlToMapInterface(v)
+		if err != nil {
+			return obj
+		}
+		obj.Configuration = configMap
 	}
 
 	return obj
