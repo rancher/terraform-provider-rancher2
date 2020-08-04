@@ -1,3 +1,18 @@
+## 1.10.1 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix `rke_config.event_rate_limit.configuration` argument to work properly
+* Fix cluster and project role template binding doc files name
+
 ## 1.10.0 (July 29, 2020)
 
 FEATURES:
