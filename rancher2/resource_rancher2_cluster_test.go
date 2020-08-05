@@ -43,6 +43,10 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
             policy = "apiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n  creationTimestamp: null\nomitStages:\n- RequestReceived\nrules:\n- level: RequestResponse\n  resources:\n  - resources:\n    - pods\n"
           }
         }
+        event_rate_limit {
+          configuration = "apiVersion: eventratelimit.admission.k8s.io/v1alpha1\nkind: Configuration\nlimits:\n- type: Server\n  burst: 30000\n  qps: 6000\n"
+          enabled = false
+        }
       }
     }
     upgrade_strategy {
@@ -95,6 +99,10 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
             format = "json"
             policy = "apiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n  creationTimestamp: null\nomitStages:\n- RequestReceived\nrules:\n- level: RequestResponse\n  resources:\n  - resources:\n    - pods\n"
           }
+        }
+        event_rate_limit {
+          configuration = "apiVersion: eventratelimit.admission.k8s.io/v1alpha1\nkind: Configuration\nlimits:\n- type: Server\n  burst: 30000\n  qps: 6000\n"
+          enabled = false
         }
       }
     }
