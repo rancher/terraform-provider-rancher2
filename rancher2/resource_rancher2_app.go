@@ -87,6 +87,16 @@ func resourceRancher2AppRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Refreshing App ID %s", id)
 
+	err := meta.(*Config).ProjectExist(projectID)
+	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) {
+			log.Printf("[INFO] Project ID %s not found.", projectID)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
 	client, err := meta.(*Config).ProjectClient(projectID)
 	if err != nil {
 		return err
@@ -94,7 +104,7 @@ func resourceRancher2AppRead(d *schema.ResourceData, meta interface{}) error {
 
 	app, err := client.App.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] App ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -269,7 +279,7 @@ func appStateRefreshFunc(client *projectClient.Client, appID string) resource.St
 	return func() (interface{}, string, error) {
 		obj, err := client.App.ByID(appID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err
