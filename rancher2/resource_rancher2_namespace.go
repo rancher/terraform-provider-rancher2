@@ -104,6 +104,16 @@ func resourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Refreshing Namespace ID %s", d.Id())
 
+	_, _, err := meta.(*Config).isClusterActive(clusterID)
+	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) {
+			log.Printf("[INFO] Cluster ID %s not found.", clusterID)
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
 	client, err := meta.(*Config).ClusterClient(clusterID)
 	if err != nil {
 		return err
@@ -111,7 +121,7 @@ func resourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) err
 
 	ns, err := client.Namespace.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Namespace ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -244,7 +254,7 @@ func namespaceStateRefreshFunc(client *clusterClient.Client, nsID string) resour
 	return func() (interface{}, string, error) {
 		obj, err := client.Namespace.ByID(nsID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

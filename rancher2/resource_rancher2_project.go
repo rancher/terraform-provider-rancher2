@@ -111,7 +111,7 @@ func resourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) error
 
 	project, err := client.Project.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Project ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -259,7 +259,7 @@ func projectStateRefreshFunc(client *managementClient.Client, projectID string) 
 	return func() (interface{}, string, error) {
 		obj, err := client.Project.ByID(projectID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err
