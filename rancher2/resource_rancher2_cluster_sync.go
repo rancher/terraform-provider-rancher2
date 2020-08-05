@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -75,7 +76,7 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	d.SetId(clusterID)
+	d.SetId(clusterSyncPrefixID + clusterID)
 
 	return resourceRancher2ClusterSyncRead(d, meta)
 }
@@ -85,6 +86,11 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 
 	active, clus, err := meta.(*Config).isClusterActive(clusterID)
 	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) {
+			log.Printf("[INFO] Cluster ID %s not found.", clusterID)
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
