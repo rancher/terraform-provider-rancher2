@@ -59,6 +59,8 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	d.SetId(newCluster.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{expectedState},
@@ -74,6 +76,12 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
 	if newCluster.EnableClusterMonitoring && monitoringInput != nil {
+		if len(newCluster.Actions["editMonitoring"]) == 0 {
+			err = client.APIBaseClient.ByID(managementClient.ClusterType, newCluster.ID, newCluster)
+			if err != nil {
+				return err
+			}
+		}
 		clusterResource := &norman.Resource{
 			ID:      newCluster.ID,
 			Type:    newCluster.Type,
@@ -85,8 +93,6 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 	}
-
-	d.SetId(newCluster.ID)
 
 	return resourceRancher2ClusterRead(d, meta)
 }
@@ -111,7 +117,12 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
-	if err != nil {
+	if err != nil && !IsForbidden(err) {
+		return err
+	}
+
+	defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
+	if err != nil && !IsForbidden(err) {
 		return err
 	}
 
@@ -122,36 +133,29 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		Actions: cluster.Actions,
 	}
 	kubeConfig := &managementClient.GenerateKubeConfigOutput{}
-	err = client.APIBaseClient.Action(managementClient.ClusterType, "generateKubeconfig", clusterResource, nil, kubeConfig)
-	if err != nil {
-		return err
-	}
-
-	defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
-	if err != nil {
-		return err
-	}
-
-	monitoringInput := &managementClient.MonitoringInput{}
-	if cluster.EnableClusterMonitoring {
-		monitoringOutput := &managementClient.MonitoringOutput{}
-		err = client.APIBaseClient.Action(managementClient.ClusterType, "viewMonitoring", clusterResource, nil, monitoringOutput)
+	if len(cluster.Actions["generateKubeconfig"]) > 0 {
+		err = client.APIBaseClient.Action(managementClient.ClusterType, "generateKubeconfig", clusterResource, nil, kubeConfig)
 		if err != nil {
 			return err
 		}
+	}
+	monitoringInput := &managementClient.MonitoringInput{}
+	if len(cluster.Actions["viewMonitoring"]) > 0 {
+		if cluster.EnableClusterMonitoring {
+			monitoringOutput := &managementClient.MonitoringOutput{}
+			err = client.APIBaseClient.Action(managementClient.ClusterType, "viewMonitoring", clusterResource, nil, monitoringOutput)
+			if err != nil {
+				return err
+			}
 
-		if monitoringOutput != nil && len(monitoringOutput.Answers) > 0 {
-			monitoringInput.Answers = monitoringOutput.Answers
-			monitoringInput.Version = monitoringOutput.Version
+			if monitoringOutput != nil && len(monitoringOutput.Answers) > 0 {
+				monitoringInput.Answers = monitoringOutput.Answers
+				monitoringInput.Version = monitoringOutput.Version
+			}
 		}
 	}
 
-	err = flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID, monitoringInput)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID, monitoringInput)
 }
 
 func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) error {

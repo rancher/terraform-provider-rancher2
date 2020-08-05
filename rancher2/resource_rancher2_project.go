@@ -46,15 +46,10 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("[ERROR] Creating Project: Cluster ID %s is not active", project.ClusterID)
 		}
 
-		mgmtClient, err := meta.(*Config).ManagementClient()
-		if err != nil {
-			return err
-		}
-
 		stateCluster := &resource.StateChangeConf{
 			Pending:    []string{},
 			Target:     []string{"active"},
-			Refresh:    clusterStateRefreshFunc(mgmtClient, project.ClusterID),
+			Refresh:    clusterStateRefreshFunc(client, project.ClusterID),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -72,6 +67,8 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	d.SetId(newProject.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"initializing", "configuring", "active"},
 		Target:     []string{"active"},
@@ -88,15 +85,16 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 
 	monitoringInput := expandMonitoringInput(d.Get("project_monitoring_input").([]interface{}))
 	if newProject.EnableProjectMonitoring && monitoringInput != nil {
+		if len(newProject.Actions["editMonitoring"]) == 0 {
+			newProject, err = client.Project.ByID(newProject.ID)
+			if err != nil {
+				return err
+			}
+		}
 		err = client.Project.ActionEditMonitoring(newProject, monitoringInput)
 		if err != nil {
 			return err
 		}
-	}
-
-	err = flattenProject(d, newProject, monitoringInput)
-	if err != nil {
-		return err
 	}
 
 	return resourceRancher2ProjectRead(d, meta)
