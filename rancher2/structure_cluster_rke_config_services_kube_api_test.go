@@ -55,17 +55,14 @@ func init() {
 	testClusterRKEConfigServicesKubeAPIEventRateLimitConf = &managementClient.EventRateLimit{
 		Enabled: true,
 		Configuration: map[string]interface{}{
-			"conf1": "conf1",
-			"conf2": "conf2",
+			"apiVersion": "eventratelimit.admission.k8s.io/v1alpha1",
+			"kind":       "Configuration",
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIEventRateLimitInterface = []interface{}{
 		map[string]interface{}{
-			"enabled": true,
-			"configuration": map[string]interface{}{
-				"conf1": "conf1",
-				"conf2": "conf2",
-			},
+			"enabled":       true,
+			"configuration": "apiVersion: eventratelimit.admission.k8s.io/v1alpha1\nkind: Configuration\n",
 		},
 	}
 	testClusterRKEConfigServicesKubeAPISecretsEncryptionConfigConf = &managementClient.SecretsEncryptionConfig{
