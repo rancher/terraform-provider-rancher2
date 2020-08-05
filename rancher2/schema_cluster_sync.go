@@ -4,6 +4,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+const clusterSyncPrefixID = "sync:"
+
 //Schemas
 
 func clusterSyncFields() map[string]*schema.Schema {

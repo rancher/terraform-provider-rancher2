@@ -55,7 +55,7 @@ resource "rancher2_app" "foo" {
   project_id = "<project_id>"
   template_name = "<template_name>"
   template_version = "<template_version>"
-  target_namespace = rancher2_namespace.foo.name
+  target_namespace = rancher2_namespace.foo.id
   answers = {
     "ingress_host" = "test.xip.io"
     "foo" = "bar"
@@ -73,7 +73,7 @@ The following arguments are supported:
   * add project ID before name, `p-XXXXX:<name>`
 * `name` - (Required/ForceNew) The name of the app (string)
 * `project_id` - (Required/ForceNew) The project id where the app will be installed (string)
-* `target_namespace` - (Required/ForceNew) The namespace name where the app will be installed (string)
+* `target_namespace` - (Required/ForceNew) The namespace id where the app will be installed (string)
 * `template_name` - (Required) Template name of the app. If modified, app will be upgraded (string)
 * `answers` - (Optional) Answers for the app template. If modified, app will be upgraded (map)
 * `description` - (Optional/Computed) Description for the app (string)
