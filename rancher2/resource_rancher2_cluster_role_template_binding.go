@@ -54,6 +54,8 @@ func resourceRancher2ClusterRoleTemplateBindingCreate(d *schema.ResourceData, me
 		return err
 	}
 
+	d.SetId(newClusterRole.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
@@ -68,11 +70,6 @@ func resourceRancher2ClusterRoleTemplateBindingCreate(d *schema.ResourceData, me
 			"[ERROR] waiting for cluster role template binding (%s) to be created: %s", newClusterRole.ID, waitErr)
 	}
 
-	err = flattenClusterRoleTemplateBinding(d, newClusterRole)
-	if err != nil {
-		return err
-	}
-
 	return resourceRancher2ClusterRoleTemplateBindingRead(d, meta)
 }
 
@@ -85,7 +82,7 @@ func resourceRancher2ClusterRoleTemplateBindingRead(d *schema.ResourceData, meta
 
 	clusterRole, err := client.ClusterRoleTemplateBinding.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Role Template Binding ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -93,12 +90,7 @@ func resourceRancher2ClusterRoleTemplateBindingRead(d *schema.ResourceData, meta
 		return err
 	}
 
-	err = flattenClusterRoleTemplateBinding(d, clusterRole)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenClusterRoleTemplateBinding(d, clusterRole)
 }
 
 func resourceRancher2ClusterRoleTemplateBindingUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -155,7 +147,7 @@ func resourceRancher2ClusterRoleTemplateBindingDelete(d *schema.ResourceData, me
 
 	clusterRole, err := client.ClusterRoleTemplateBinding.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Role Template Binding ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -194,7 +186,7 @@ func clusterRoleTemplateBindingStateRefreshFunc(client *managementClient.Client,
 	return func() (interface{}, string, error) {
 		obj, err := client.ClusterRoleTemplateBinding.ByID(clusterRoleID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

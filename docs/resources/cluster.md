@@ -153,7 +153,7 @@ resource "rancher2_app" "istio" {
   project_id = rancher2_namespace.foo-istio.project_id
   template_name = "rancher-istio"
   template_version = "0.1.1"
-  target_namespace = rancher2_namespace.foo-istio.name
+  target_namespace = rancher2_namespace.foo-istio.id
   answers = {
     "certmanager.enabled" = false
     "enableCRDs" = true

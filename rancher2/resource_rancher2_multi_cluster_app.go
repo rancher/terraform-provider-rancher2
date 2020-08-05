@@ -54,6 +54,8 @@ func resourceRancher2MultiClusterAppCreate(d *schema.ResourceData, meta interfac
 		return err
 	}
 
+	d.SetId(newMultiClusterApp.ID)
+
 	if d.Get("wait").(bool) {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{},
@@ -68,8 +70,6 @@ func resourceRancher2MultiClusterAppCreate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("[ERROR] waiting for multi cluster app (%s) to be created: %s", newMultiClusterApp.ID, waitErr)
 		}
 	}
-
-	d.SetId(newMultiClusterApp.ID)
 
 	return resourceRancher2MultiClusterAppRead(d, meta)
 }
@@ -86,7 +86,7 @@ func resourceRancher2MultiClusterAppRead(d *schema.ResourceData, meta interface{
 
 	multiClusterApp, err := client.MultiClusterApp.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] multi cluster app ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -207,7 +207,7 @@ func resourceRancher2MultiClusterAppDelete(d *schema.ResourceData, meta interfac
 
 	multiClusterApp, err := client.MultiClusterApp.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] multi cluster app ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -277,7 +277,7 @@ func multiClusterAppStateRefreshFunc(client *managementClient.Client, appID stri
 	return func() (interface{}, string, error) {
 		obj, err := client.MultiClusterApp.ByID(appID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

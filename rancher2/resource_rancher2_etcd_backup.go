@@ -52,6 +52,8 @@ func resourceRancher2EtcdBackupCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
+	d.SetId(newEtcdBackup.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active", "activating"},
@@ -65,8 +67,6 @@ func resourceRancher2EtcdBackupCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("[ERROR] waiting for etcd backup (%s) to be created: %s", newEtcdBackup.ID, waitErr)
 	}
 
-	d.SetId(newEtcdBackup.ID)
-
 	return resourceRancher2EtcdBackupRead(d, meta)
 }
 
@@ -79,7 +79,7 @@ func resourceRancher2EtcdBackupRead(d *schema.ResourceData, meta interface{}) er
 
 	etcdBackup, err := client.EtcdBackup.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Etcd Backup ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -87,12 +87,7 @@ func resourceRancher2EtcdBackupRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	err = flattenEtcdBackup(d, etcdBackup)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenEtcdBackup(d, etcdBackup)
 }
 
 func resourceRancher2EtcdBackupUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -152,7 +147,7 @@ func resourceRancher2EtcdBackupDelete(d *schema.ResourceData, meta interface{}) 
 
 	etcdBackup, err := client.EtcdBackup.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Etcd Backup ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -190,7 +185,7 @@ func etcdBackupStateRefreshFunc(client *managementClient.Client, nodePoolID stri
 	return func() (interface{}, string, error) {
 		obj, err := client.EtcdBackup.ByID(nodePoolID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

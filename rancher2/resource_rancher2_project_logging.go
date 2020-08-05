@@ -52,6 +52,8 @@ func resourceRancher2ProjectLoggingCreate(d *schema.ResourceData, meta interface
 		return err
 	}
 
+	d.SetId(newProjectLogging.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"provisioning"},
 		Target:     []string{"active"},
@@ -66,11 +68,6 @@ func resourceRancher2ProjectLoggingCreate(d *schema.ResourceData, meta interface
 			"[ERROR] waiting for project logging (%s) to be created: %s", newProjectLogging.ID, waitErr)
 	}
 
-	err = flattenProjectLogging(d, newProjectLogging)
-	if err != nil {
-		return err
-	}
-
 	return resourceRancher2ProjectLoggingRead(d, meta)
 }
 
@@ -83,7 +80,7 @@ func resourceRancher2ProjectLoggingRead(d *schema.ResourceData, meta interface{}
 
 	projectLogging, err := client.ProjectLogging.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Project Logging ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -91,12 +88,7 @@ func resourceRancher2ProjectLoggingRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	err = flattenProjectLogging(d, projectLogging)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenProjectLogging(d, projectLogging)
 }
 
 func resourceRancher2ProjectLoggingUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -191,7 +183,7 @@ func resourceRancher2ProjectLoggingDelete(d *schema.ResourceData, meta interface
 
 	projectLogging, err := client.ProjectLogging.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Project Logging ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -230,7 +222,7 @@ func projectLoggingStateRefreshFunc(client *managementClient.Client, projectLogg
 	return func() (interface{}, string, error) {
 		obj, err := client.ProjectLogging.ByID(projectLoggingID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

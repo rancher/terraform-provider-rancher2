@@ -52,6 +52,8 @@ func resourceRancher2ClusterLoggingCreate(d *schema.ResourceData, meta interface
 		return err
 	}
 
+	d.SetId(newClusterLogging.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"provisioning"},
 		Target:     []string{"active"},
@@ -66,11 +68,6 @@ func resourceRancher2ClusterLoggingCreate(d *schema.ResourceData, meta interface
 			"[ERROR] waiting for cluster logging (%s) to be created: %s", newClusterLogging.ID, waitErr)
 	}
 
-	err = flattenClusterLogging(d, newClusterLogging)
-	if err != nil {
-		return err
-	}
-
 	return resourceRancher2ClusterLoggingRead(d, meta)
 }
 
@@ -83,7 +80,7 @@ func resourceRancher2ClusterLoggingRead(d *schema.ResourceData, meta interface{}
 
 	clusterLogging, err := client.ClusterLogging.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Logging ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -91,12 +88,7 @@ func resourceRancher2ClusterLoggingRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	err = flattenClusterLogging(d, clusterLogging)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenClusterLogging(d, clusterLogging)
 }
 
 func resourceRancher2ClusterLoggingUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -191,7 +183,7 @@ func resourceRancher2ClusterLoggingDelete(d *schema.ResourceData, meta interface
 
 	clusterLogging, err := client.ClusterLogging.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Logging ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -230,7 +222,7 @@ func clusterLoggingStateRefreshFunc(client *managementClient.Client, clusterLogg
 	return func() (interface{}, string, error) {
 		obj, err := client.ClusterLogging.ByID(clusterLoggingID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

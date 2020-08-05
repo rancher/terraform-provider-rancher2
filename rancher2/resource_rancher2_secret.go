@@ -62,7 +62,7 @@ func resourceRancher2SecretRead(d *schema.ResourceData, meta interface{}) error 
 
 	secret, err := meta.(*Config).GetSecret(id, projectID, namespaceID)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Secret ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -114,7 +114,7 @@ func resourceRancher2SecretDelete(d *schema.ResourceData, meta interface{}) erro
 
 	secret, err := meta.(*Config).GetSecret(id, projectID, namespaceID)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Secret ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

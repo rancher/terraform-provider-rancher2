@@ -129,6 +129,8 @@ func resourceRancher2ClusterTemplateCreate(d *schema.ResourceData, meta interfac
 		return err
 	}
 
+	d.SetId(newClusterTemplate.ID)
+
 	// Update defaultRevisionId if needed
 	if len(newClusterTemplateRevisions) > 0 {
 		update := map[string]interface{}{
@@ -140,8 +142,6 @@ func resourceRancher2ClusterTemplateCreate(d *schema.ResourceData, meta interfac
 			return err
 		}
 	}
-
-	d.SetId(newClusterTemplate.ID)
 
 	return resourceRancher2ClusterTemplateRead(d, meta)
 }
@@ -157,7 +157,7 @@ func resourceRancher2ClusterTemplateRead(d *schema.ResourceData, meta interface{
 
 	clusterTemplate, err := client.ClusterTemplate.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Template ID %s not found.", clusterTemplate.ID)
 			d.SetId("")
 			return nil
@@ -236,7 +236,7 @@ func resourceRancher2ClusterTemplateDelete(d *schema.ResourceData, meta interfac
 
 	clusterTemplate, err := client.ClusterTemplate.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Template ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

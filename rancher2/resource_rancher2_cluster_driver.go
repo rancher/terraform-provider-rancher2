@@ -43,6 +43,8 @@ func resourceRancher2ClusterDriverCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
+	d.SetId(newClusterDriver.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"downloading", "activating"},
 		Target:     []string{"active", "inactive"},
@@ -56,8 +58,6 @@ func resourceRancher2ClusterDriverCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("[ERROR] waiting for cluster driver (%s) to be created: %s", newClusterDriver.ID, waitErr)
 	}
 
-	d.SetId(newClusterDriver.ID)
-
 	return resourceRancher2ClusterDriverRead(d, meta)
 }
 
@@ -70,7 +70,7 @@ func resourceRancher2ClusterDriverRead(d *schema.ResourceData, meta interface{})
 
 	clusterDriver, err := client.KontainerDriver.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Driver ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -137,7 +137,7 @@ func resourceRancher2ClusterDriverDelete(d *schema.ResourceData, meta interface{
 
 	clusterDriver, err := client.KontainerDriver.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Driver ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -178,7 +178,7 @@ func clusterDriverStateRefreshFunc(client *managementClient.Client, clusterDrive
 	return func() (interface{}, string, error) {
 		obj, err := client.KontainerDriver.ByID(clusterDriverID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

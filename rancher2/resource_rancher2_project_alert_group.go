@@ -47,6 +47,8 @@ func resourceRancher2ProjectAlertGroupCreate(d *schema.ResourceData, meta interf
 		return err
 	}
 
+	d.SetId(newProjectAlertGroup.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -60,8 +62,6 @@ func resourceRancher2ProjectAlertGroupCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("[ERROR] waiting for project alert group (%s) to be created: %s", newProjectAlertGroup.ID, waitErr)
 	}
 
-	d.SetId(newProjectAlertGroup.ID)
-
 	return resourceRancher2ProjectAlertGroupRead(d, meta)
 }
 
@@ -74,7 +74,7 @@ func resourceRancher2ProjectAlertGroupRead(d *schema.ResourceData, meta interfac
 
 	projectAlertGroup, err := client.ProjectAlertGroup.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Project Alert Group ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -147,7 +147,7 @@ func resourceRancher2ProjectAlertGroupDelete(d *schema.ResourceData, meta interf
 
 	projectAlertGroup, err := client.ProjectAlertGroup.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Project Alert Group ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -216,7 +216,7 @@ func projectAlertGroupStateRefreshFunc(client *managementClient.Client, projectA
 	return func() (interface{}, string, error) {
 		obj, err := client.ProjectAlertGroup.ByID(projectAlertGroupID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

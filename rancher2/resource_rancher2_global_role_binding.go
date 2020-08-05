@@ -49,6 +49,8 @@ func resourceRancher2GlobalRoleBindingCreate(d *schema.ResourceData, meta interf
 		return err
 	}
 
+	d.SetId(newGlobalRole.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
@@ -63,11 +65,6 @@ func resourceRancher2GlobalRoleBindingCreate(d *schema.ResourceData, meta interf
 			"[ERROR] waiting for global role binding (%s) to be created: %s", newGlobalRole.ID, waitErr)
 	}
 
-	err = flattenGlobalRoleBinding(d, newGlobalRole)
-	if err != nil {
-		return err
-	}
-
 	return resourceRancher2GlobalRoleBindingRead(d, meta)
 }
 
@@ -80,7 +77,7 @@ func resourceRancher2GlobalRoleBindingRead(d *schema.ResourceData, meta interfac
 
 	globalRole, err := client.GlobalRoleBinding.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Global Role Binding ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -88,12 +85,7 @@ func resourceRancher2GlobalRoleBindingRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	err = flattenGlobalRoleBinding(d, globalRole)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenGlobalRoleBinding(d, globalRole)
 }
 
 func resourceRancher2GlobalRoleBindingUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -145,7 +137,7 @@ func resourceRancher2GlobalRoleBindingDelete(d *schema.ResourceData, meta interf
 
 	globalRole, err := client.GlobalRoleBinding.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Global Role Binding ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -184,7 +176,7 @@ func globalRoleBindingStateRefreshFunc(client *managementClient.Client, globalRo
 	return func() (interface{}, string, error) {
 		obj, err := client.GlobalRoleBinding.ByID(globalRoleID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

@@ -130,12 +130,7 @@ func resourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	err = flattenProject(d, project, monitoringInput)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenProject(d, project, monitoringInput)
 }
 
 func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -218,7 +213,7 @@ func resourceRancher2ProjectDelete(d *schema.ResourceData, meta interface{}) err
 
 	project, err := client.Project.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Project ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

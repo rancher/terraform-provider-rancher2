@@ -67,6 +67,8 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
+	d.SetId(newNodeTemplate.ID)
+
 	stateConf = &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -79,8 +81,6 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for node template (%s) to be created: %s", newNodeTemplate.ID, waitErr)
 	}
-
-	d.SetId(newNodeTemplate.ID)
 
 	return resourceRancher2NodeTemplateRead(d, meta)
 }
@@ -99,7 +99,7 @@ func resourceRancher2NodeTemplateRead(d *schema.ResourceData, meta interface{}) 
 
 	err = client.APIBaseClient.ByID(managementClient.NodeTemplateType, d.Id(), nodeTemplate)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Node template ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -190,7 +190,7 @@ func resourceRancher2NodeTemplateDelete(d *schema.ResourceData, meta interface{}
 	nodeTemplate := &norman.Resource{}
 	err = client.APIBaseClient.ByID(managementClient.NodeTemplateType, id, nodeTemplate)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Node Template ID %s not found.", id)
 			d.SetId("")
 			return nil

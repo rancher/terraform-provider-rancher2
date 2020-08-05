@@ -43,6 +43,8 @@ func resourceRancher2ProjectAlertRuleCreate(d *schema.ResourceData, meta interfa
 		return err
 	}
 
+	d.SetId(newProjectAlertRule.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -56,8 +58,6 @@ func resourceRancher2ProjectAlertRuleCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("[ERROR] waiting for project alert rule (%s) to be created: %s", newProjectAlertRule.ID, waitErr)
 	}
 
-	d.SetId(newProjectAlertRule.ID)
-
 	return resourceRancher2ProjectAlertRuleRead(d, meta)
 }
 
@@ -70,7 +70,7 @@ func resourceRancher2ProjectAlertRuleRead(d *schema.ResourceData, meta interface
 
 	projectAlertRule, err := client.ProjectAlertRule.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Project Alert Rule ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -150,7 +150,7 @@ func resourceRancher2ProjectAlertRuleDelete(d *schema.ResourceData, meta interfa
 
 	projectAlertRule, err := client.ProjectAlertRule.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Project Alert Rule ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -189,7 +189,7 @@ func projectAlertRuleStateRefreshFunc(client *managementClient.Client, projectAl
 	return func() (interface{}, string, error) {
 		obj, err := client.ProjectAlertRule.ByID(projectAlertRuleID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

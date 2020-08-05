@@ -58,7 +58,7 @@ func resourceRancher2PodSecurityPolicyTemplateRead(d *schema.ResourceData, meta 
 
 	pspt, err := client.PodSecurityPolicyTemplate.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] PodSecurityPolicyTemplate with ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -101,7 +101,7 @@ func resourceRancher2PodSecurityPolicyTemplateDelete(d *schema.ResourceData, met
 
 	pspt, err := client.PodSecurityPolicyTemplate.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] PodSecurityPolicyTemplate with ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -138,7 +138,7 @@ func podSecurityPolicyTemplateStateRefreshFunc(client *managementClient.Client, 
 	return func() (interface{}, string, error) {
 		obj, err := client.PodSecurityPolicyTemplate.ByID(pspID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

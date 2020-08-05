@@ -44,6 +44,8 @@ func resourceRancher2UserCreate(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
+	d.SetId(newUser.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -58,11 +60,6 @@ func resourceRancher2UserCreate(d *schema.ResourceData, meta interface{}) error 
 			"[ERROR] waiting for user (%s) to be created: %s", newUser.ID, waitErr)
 	}
 
-	err = flattenUser(d, newUser)
-	if err != nil {
-		return err
-	}
-
 	return resourceRancher2UserRead(d, meta)
 }
 
@@ -75,7 +72,7 @@ func resourceRancher2UserRead(d *schema.ResourceData, meta interface{}) error {
 
 	user, err := client.User.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] User ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -83,12 +80,7 @@ func resourceRancher2UserRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	err = flattenUser(d, user)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenUser(d, user)
 }
 
 func resourceRancher2UserUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -148,7 +140,7 @@ func resourceRancher2UserDelete(d *schema.ResourceData, meta interface{}) error 
 
 	user, err := client.User.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] User ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -187,7 +179,7 @@ func userStateRefreshFunc(client *managementClient.Client, userID string) resour
 	return func() (interface{}, string, error) {
 		obj, err := client.User.ByID(userID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

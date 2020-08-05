@@ -36,7 +36,7 @@ func resourceRancher2SettingCreate(d *schema.ResourceData, meta interface{}) err
 		return resourceRancher2SettingUpdate(d, meta)
 	}
 	if err != nil {
-		if !IsNotFound(err) {
+		if !IsNotFound(err) || IsForbidden(err) {
 			return err
 		}
 	}
@@ -53,6 +53,8 @@ func resourceRancher2SettingCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
+	d.SetId(newSetting.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
@@ -65,11 +67,6 @@ func resourceRancher2SettingCreate(d *schema.ResourceData, meta interface{}) err
 	if waitErr != nil {
 		return fmt.Errorf(
 			"[ERROR] waiting for setting (%s) to be created: %s", newSetting.ID, waitErr)
-	}
-
-	err = flattenSetting(d, newSetting)
-	if err != nil {
-		return err
 	}
 
 	return resourceRancher2SettingRead(d, meta)
@@ -86,7 +83,7 @@ func resourceRancher2SettingRead(d *schema.ResourceData, meta interface{}) error
 
 	setting, err := client.Setting.ByID(name)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Setting ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -152,7 +149,7 @@ func resourceRancher2SettingDelete(d *schema.ResourceData, meta interface{}) err
 
 	setting, err := client.Setting.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Setting ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -205,7 +202,7 @@ func settingStateRefreshFunc(client *managementClient.Client, settingID string) 
 	return func() (interface{}, string, error) {
 		obj, err := client.Setting.ByID(settingID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

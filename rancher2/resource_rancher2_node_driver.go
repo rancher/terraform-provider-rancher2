@@ -43,6 +43,8 @@ func resourceRancher2NodeDriverCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
+	d.SetId(newNodeDriver.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"downloading", "activating"},
 		Target:     []string{"active", "inactive"},
@@ -56,8 +58,6 @@ func resourceRancher2NodeDriverCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("[ERROR] waiting for node driver (%s) to be created: %s", newNodeDriver.ID, waitErr)
 	}
 
-	d.SetId(newNodeDriver.ID)
-
 	return resourceRancher2NodeDriverRead(d, meta)
 }
 
@@ -70,7 +70,7 @@ func resourceRancher2NodeDriverRead(d *schema.ResourceData, meta interface{}) er
 
 	nodeDriver, err := client.NodeDriver.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Node Driver ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -138,7 +138,7 @@ func resourceRancher2NodeDriverDelete(d *schema.ResourceData, meta interface{}) 
 
 	nodeDriver, err := client.NodeDriver.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Node Driver ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -179,7 +179,7 @@ func nodeDriverStateRefreshFunc(client *managementClient.Client, nodeDriverID st
 	return func() (interface{}, string, error) {
 		obj, err := client.NodeDriver.ByID(nodeDriverID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

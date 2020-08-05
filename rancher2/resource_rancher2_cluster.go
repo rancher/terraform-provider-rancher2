@@ -108,7 +108,7 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 	cluster := &Cluster{}
 	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster ID %s not found.", cluster.ID)
 			d.SetId("")
 			return nil
@@ -283,7 +283,7 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 	cluster := &norman.Resource{}
 	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
