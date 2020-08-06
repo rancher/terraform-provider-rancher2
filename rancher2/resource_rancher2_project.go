@@ -39,6 +39,9 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 
 	active, _, err := meta.(*Config).isClusterActive(project.ClusterID)
 	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) {
+			return fmt.Errorf("[ERROR] Creating Project: Cluster ID %s not found or is forbidden", project.ClusterID)
+		}
 		return err
 	}
 	if !active {
@@ -62,11 +65,13 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Project %s on Cluster ID %s", project.Name, project.ClusterID)
 
+	// Creating cluster with monitoring disabled
+	project.EnableProjectMonitoring = false
 	newProject, err := client.Project.Create(project)
 	if err != nil {
 		return err
 	}
-
+	newProject.EnableProjectMonitoring = d.Get("enable_project_monitoring").(bool)
 	d.SetId(newProject.ID)
 
 	stateConf := &resource.StateChangeConf{
@@ -84,14 +89,14 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	monitoringInput := expandMonitoringInput(d.Get("project_monitoring_input").([]interface{}))
-	if newProject.EnableProjectMonitoring && monitoringInput != nil {
-		if len(newProject.Actions["editMonitoring"]) == 0 {
+	if newProject.EnableProjectMonitoring {
+		if len(newProject.Actions[monitoringActionEnable]) == 0 {
 			newProject, err = client.Project.ByID(newProject.ID)
 			if err != nil {
 				return err
 			}
 		}
-		err = client.Project.ActionEditMonitoring(newProject, monitoringInput)
+		err = client.Project.ActionEnableMonitoring(newProject, monitoringInput)
 		if err != nil {
 			return err
 		}
@@ -117,17 +122,14 @@ func resourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	monitoringInput := &managementClient.MonitoringInput{}
-	if project.EnableProjectMonitoring {
-		monitoringOutput, err := client.Project.ActionViewMonitoring(project)
+	var monitoringInput *managementClient.MonitoringInput
+	if len(project.Annotations[monitoringInputAnnotation]) > 0 {
+		monitoringInput = &managementClient.MonitoringInput{}
+		err = jsonToInterface(project.Annotations[monitoringInputAnnotation], monitoringInput)
 		if err != nil {
 			return err
 		}
 
-		if monitoringOutput != nil && len(monitoringOutput.Answers) > 0 {
-			monitoringInput.Answers = monitoringOutput.Answers
-			monitoringInput.Version = monitoringOutput.Version
-		}
 	}
 
 	return flattenProject(d, project, monitoringInput)
@@ -146,12 +148,10 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	resourceQuota, nsResourceQuota := expandProjectResourceQuota(d.Get("resource_quota").([]interface{}))
-
 	update := map[string]interface{}{
 		"name":                          d.Get("name").(string),
 		"description":                   d.Get("description").(string),
 		"containerDefaultResourceLimit": expandProjectContainerResourceLimit(d.Get("container_resource_limit").([]interface{})),
-		"enableProjectMonitoring":       d.Get("enable_project_monitoring").(bool),
 		"namespaceDefaultResourceQuota": nsResourceQuota,
 		"resourceQuota":                 resourceQuota,
 		"annotations":                   toMapString(d.Get("annotations").(map[string]interface{})),
@@ -191,11 +191,59 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("enable_project_monitoring") || d.HasChange("project_monitoring_input") {
-		monitoringInput := expandMonitoringInput(d.Get("project_monitoring_input").([]interface{}))
-		if newProject.EnableProjectMonitoring && monitoringInput != nil {
-			err = client.Project.ActionEditMonitoring(newProject, monitoringInput)
+		enableMonitoring := d.Get("enable_project_monitoring").(bool)
+		if !enableMonitoring && len(newProject.Actions[monitoringActionDisable]) > 0 {
+			err = client.Project.ActionDisableMonitoring(newProject)
 			if err != nil {
 				return err
+			}
+		}
+		if enableMonitoring {
+			monitoringInput := expandMonitoringInput(d.Get("project_monitoring_input").([]interface{}))
+			if len(newProject.Actions[monitoringActionEnable]) > 0 {
+				err = client.Project.ActionEnableMonitoring(newProject, monitoringInput)
+				if err != nil {
+					return err
+				}
+			} else {
+				monitorVersionChanged := false
+				if d.HasChange("project_monitoring_input") {
+					old, new := d.GetChange("project_monitoring_input")
+					oldInput := old.([]interface{})
+					oldInputLen := len(oldInput)
+					newInput := new.([]interface{})
+					newInputLen := len(newInput)
+					monitorVersionChanged = (oldInputLen != newInputLen)
+					if newInputLen > 0 && !monitorVersionChanged {
+						oldRow, oldOK := oldInput[0].(map[string]interface{})
+						newRow, newOK := newInput[0].(map[string]interface{})
+						if oldOK && newOK {
+							if oldRow["version"] != newRow["version"] {
+								monitorVersionChanged = true
+							}
+						}
+					}
+				}
+				if monitorVersionChanged {
+					err = client.Project.ActionDisableMonitoring(newProject)
+					if err != nil {
+						return err
+					}
+					time.Sleep(5 * time.Second)
+					newProject, err = client.Project.ByID(newProject.ID)
+					if err != nil {
+						return err
+					}
+					err = client.Project.ActionEnableMonitoring(newProject, monitoringInput)
+					if err != nil {
+						return err
+					}
+				} else {
+					err = client.Project.ActionEditMonitoring(newProject, monitoringInput)
+					if err != nil {
+						return err
+					}
+				}
 			}
 		}
 	}
