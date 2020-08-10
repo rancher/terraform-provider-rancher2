@@ -5,13 +5,15 @@ PROVIDER_NAME=terraform-provider-rancher2
 
 default: build
 
-build: fmtcheck
-	go install
+build: validate
+	@sh -c "'$(CURDIR)/scripts/gobuild.sh'"
 
 build-rancher: validate-rancher
 	@sh -c "'$(CURDIR)/scripts/gobuild.sh'"
 
-validate-rancher: vet test
+validate-rancher: validate test
+
+validate: fmtcheck vet lint
 
 package-rancher: 
 	@sh -c "'$(CURDIR)/scripts/gopackage.sh'"
@@ -42,7 +44,7 @@ vet:
 
 lint:
 	@echo "==> Checking that code complies with golint requirements..."
-	@go get -u golang.org/x/lint/golint
+	@GO111MODULE=off go get -u golang.org/x/lint/golint
 	@if [ -n "$$(golint $$(go list ./...) | grep -v 'should have comment.*or be unexported' | tee /dev/stderr)" ]; then \
 		echo ""; \
 		echo "golint found style issues. Please check the reported issues"; \
