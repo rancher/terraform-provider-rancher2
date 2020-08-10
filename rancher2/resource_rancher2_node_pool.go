@@ -49,6 +49,8 @@ func resourceRancher2NodePoolCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
+	d.SetId(newNodePool.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -62,8 +64,6 @@ func resourceRancher2NodePoolCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("[ERROR] waiting for node pool (%s) to be created: %s", newNodePool.ID, waitErr)
 	}
 
-	d.SetId(newNodePool.ID)
-
 	return resourceRancher2NodePoolRead(d, meta)
 }
 
@@ -76,7 +76,7 @@ func resourceRancher2NodePoolRead(d *schema.ResourceData, meta interface{}) erro
 
 	nodePool, err := client.NodePool.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Node Pool ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -84,12 +84,7 @@ func resourceRancher2NodePoolRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	err = flattenNodePool(d, nodePool)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenNodePool(d, nodePool)
 }
 
 func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -150,7 +145,7 @@ func resourceRancher2NodePoolDelete(d *schema.ResourceData, meta interface{}) er
 
 	nodePool, err := client.NodePool.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Node Pool ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -189,7 +184,7 @@ func nodePoolStateRefreshFunc(client *managementClient.Client, nodePoolID string
 	return func() (interface{}, string, error) {
 		obj, err := client.NodePool.ByID(nodePoolID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

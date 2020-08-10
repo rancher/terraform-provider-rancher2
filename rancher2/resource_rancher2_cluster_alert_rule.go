@@ -43,6 +43,8 @@ func resourceRancher2ClusterAlertRuleCreate(d *schema.ResourceData, meta interfa
 		return err
 	}
 
+	d.SetId(newClusterAlertRule.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -56,8 +58,6 @@ func resourceRancher2ClusterAlertRuleCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("[ERROR] waiting for cluster alert rule (%s) to be created: %s", newClusterAlertRule.ID, waitErr)
 	}
 
-	d.SetId(newClusterAlertRule.ID)
-
 	return resourceRancher2ClusterAlertRuleRead(d, meta)
 }
 
@@ -70,7 +70,7 @@ func resourceRancher2ClusterAlertRuleRead(d *schema.ResourceData, meta interface
 
 	clusterAlertRule, err := client.ClusterAlertRule.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Alert Rule ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -154,7 +154,7 @@ func resourceRancher2ClusterAlertRuleDelete(d *schema.ResourceData, meta interfa
 
 	clusterAlertRule, err := client.ClusterAlertRule.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Alert Rule ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -193,7 +193,7 @@ func clusterAlertRuleStateRefreshFunc(client *managementClient.Client, clusterAl
 	return func() (interface{}, string, error) {
 		obj, err := client.ClusterAlertRule.ByID(clusterAlertRuleID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

@@ -13,9 +13,11 @@ BUG FIXES:
 * Fix `rke_config.event_rate_limit.configuration` argument to work properly
 * Fix cluster and project role template binding doc files name
 * Fix `rancher2_cluster_sync` resource error if referred cluster deleted out of band
-* Fix `rancher2_namespace` and `rancher2_project` resources error if destroyed by a cluster member
+* Fix `rancher2_namespace` and `rancher2_project` resources error if destroyed by not global admin user
 * Fix `rancher2_app` resource error if referred project deleted out of band
 * Fix `rancher2_app` doc typo on `target_namespace` argument description 
+* Fix `rancher2_cluster` and `rancher2_project` resources error if created with monitoring enabled by not global admin user
+* Fix `rancher2_token` to set annotations and labels as computed attibutes
 
 ## 1.10.0 (July 29, 2020)
 

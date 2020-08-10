@@ -53,11 +53,15 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		expectedState = "provisioning"
 	}
 
+	// Creating cluster with monitoring disabled
+	cluster.EnableClusterMonitoring = false
 	newCluster := &Cluster{}
 	err = client.APIBaseClient.Create(managementClient.ClusterType, cluster, newCluster)
 	if err != nil {
 		return err
 	}
+	newCluster.EnableClusterMonitoring = d.Get("enable_cluster_monitoring").(bool)
+	d.SetId(newCluster.ID)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
@@ -73,20 +77,24 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
-	if newCluster.EnableClusterMonitoring && monitoringInput != nil {
+	if newCluster.EnableClusterMonitoring {
+		if len(newCluster.Actions[monitoringActionEnable]) == 0 {
+			err = client.APIBaseClient.ByID(managementClient.ClusterType, newCluster.ID, newCluster)
+			if err != nil {
+				return err
+			}
+		}
 		clusterResource := &norman.Resource{
 			ID:      newCluster.ID,
 			Type:    newCluster.Type,
 			Links:   newCluster.Links,
 			Actions: newCluster.Actions,
 		}
-		err = client.APIBaseClient.Action(managementClient.ClusterType, "editMonitoring", clusterResource, monitoringInput, nil)
+		err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
 		if err != nil {
 			return err
 		}
 	}
-
-	d.SetId(newCluster.ID)
 
 	return resourceRancher2ClusterRead(d, meta)
 }
@@ -102,7 +110,7 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 	cluster := &Cluster{}
 	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster ID %s not found.", cluster.ID)
 			d.SetId("")
 			return nil
@@ -111,7 +119,12 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
-	if err != nil {
+	if err != nil && !IsForbidden(err) {
+		return err
+	}
+
+	defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
+	if err != nil && !IsForbidden(err) {
 		return err
 	}
 
@@ -122,36 +135,24 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		Actions: cluster.Actions,
 	}
 	kubeConfig := &managementClient.GenerateKubeConfigOutput{}
-	err = client.APIBaseClient.Action(managementClient.ClusterType, "generateKubeconfig", clusterResource, nil, kubeConfig)
-	if err != nil {
-		return err
+	if len(cluster.Actions["generateKubeconfig"]) > 0 {
+		err = client.APIBaseClient.Action(managementClient.ClusterType, "generateKubeconfig", clusterResource, nil, kubeConfig)
+		if err != nil {
+			return err
+		}
 	}
 
-	defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
-	if err != nil {
-		return err
-	}
-
-	monitoringInput := &managementClient.MonitoringInput{}
-	if cluster.EnableClusterMonitoring {
-		monitoringOutput := &managementClient.MonitoringOutput{}
-		err = client.APIBaseClient.Action(managementClient.ClusterType, "viewMonitoring", clusterResource, nil, monitoringOutput)
+	var monitoringInput *managementClient.MonitoringInput
+	if len(cluster.Annotations[monitoringInputAnnotation]) > 0 {
+		monitoringInput = &managementClient.MonitoringInput{}
+		err = jsonToInterface(cluster.Annotations[monitoringInputAnnotation], monitoringInput)
 		if err != nil {
 			return err
 		}
 
-		if monitoringOutput != nil && len(monitoringOutput.Answers) > 0 {
-			monitoringInput.Answers = monitoringOutput.Answers
-			monitoringInput.Version = monitoringOutput.Version
-		}
 	}
 
-	err = flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID, monitoringInput)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID, monitoringInput)
 }
 
 func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -177,7 +178,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"desiredAuthImage":                   d.Get("desired_auth_image").(string),
 		"dockerRootDir":                      d.Get("docker_root_dir").(string),
 		"enableClusterAlerting":              d.Get("enable_cluster_alerting").(bool),
-		"enableClusterMonitoring":            d.Get("enable_cluster_monitoring").(bool),
 		"enableNetworkPolicy":                &enableNetworkPolicy,
 		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
 		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
@@ -248,17 +248,66 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("enable_cluster_monitoring") || d.HasChange("cluster_monitoring_input") {
-		monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
-		if newCluster.EnableClusterMonitoring && monitoringInput != nil {
-			clusterResource := &norman.Resource{
-				ID:      newCluster.ID,
-				Type:    newCluster.Type,
-				Links:   newCluster.Links,
-				Actions: newCluster.Actions,
-			}
-			err = client.APIBaseClient.Action(managementClient.ClusterType, "editMonitoring", clusterResource, monitoringInput, nil)
+		clusterResource := &norman.Resource{
+			ID:      newCluster.ID,
+			Type:    newCluster.Type,
+			Links:   newCluster.Links,
+			Actions: newCluster.Actions,
+		}
+		enableMonitoring := d.Get("enable_cluster_monitoring").(bool)
+		if !enableMonitoring && len(newCluster.Actions[monitoringActionDisable]) > 0 {
+			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, nil, nil)
 			if err != nil {
 				return err
+			}
+		}
+		if enableMonitoring {
+			monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
+			if len(newCluster.Actions[monitoringActionEnable]) > 0 {
+				err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
+				if err != nil {
+					return err
+				}
+			} else {
+				monitorVersionChanged := false
+				if d.HasChange("cluster_monitoring_input") {
+					old, new := d.GetChange("cluster_monitoring_input")
+					oldInput := old.([]interface{})
+					oldInputLen := len(oldInput)
+					newInput := new.([]interface{})
+					newInputLen := len(newInput)
+					monitorVersionChanged = (oldInputLen != newInputLen)
+					if newInputLen > 0 && !monitorVersionChanged {
+						oldRow, oldOK := oldInput[0].(map[string]interface{})
+						newRow, newOK := newInput[0].(map[string]interface{})
+						if oldOK && newOK {
+							if oldRow["version"] != newRow["version"] {
+								monitorVersionChanged = true
+							}
+						}
+					}
+				}
+				if monitorVersionChanged {
+					err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, monitoringInput, nil)
+					if err != nil {
+						return err
+					}
+					time.Sleep(5 * time.Second)
+					err = client.APIBaseClient.ByID(managementClient.ClusterType, newCluster.ID, newCluster)
+					if err != nil {
+						return err
+					}
+					clusterResource.Actions = newCluster.Actions
+					err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
+					if err != nil {
+						return err
+					}
+				} else {
+					err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEdit, clusterResource, monitoringInput, nil)
+					if err != nil {
+						return err
+					}
+				}
 			}
 		}
 	}
@@ -279,7 +328,7 @@ func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) err
 	cluster := &norman.Resource{}
 	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

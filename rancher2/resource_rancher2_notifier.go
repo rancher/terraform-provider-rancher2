@@ -47,6 +47,8 @@ func resourceRancher2NotifierCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
+	d.SetId(newNotifier.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -61,11 +63,6 @@ func resourceRancher2NotifierCreate(d *schema.ResourceData, meta interface{}) er
 			"[ERROR] waiting for notifier (%s) to be created: %s", newNotifier.ID, waitErr)
 	}
 
-	err = flattenNotifier(d, newNotifier)
-	if err != nil {
-		return err
-	}
-
 	return resourceRancher2NotifierRead(d, meta)
 }
 
@@ -78,7 +75,7 @@ func resourceRancher2NotifierRead(d *schema.ResourceData, meta interface{}) erro
 
 	notifier, err := client.Notifier.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Notifier ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -86,12 +83,7 @@ func resourceRancher2NotifierRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	err = flattenNotifier(d, notifier)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenNotifier(d, notifier)
 }
 
 func resourceRancher2NotifierUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -167,7 +159,7 @@ func resourceRancher2NotifierDelete(d *schema.ResourceData, meta interface{}) er
 
 	notifier, err := client.Notifier.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Notifier ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -206,7 +198,7 @@ func notifierStateRefreshFunc(client *managementClient.Client, notifierID string
 	return func() (interface{}, string, error) {
 		obj, err := client.Notifier.ByID(notifierID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

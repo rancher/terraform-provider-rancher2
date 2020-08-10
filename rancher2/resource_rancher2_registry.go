@@ -62,7 +62,7 @@ func resourceRancher2RegistryRead(d *schema.ResourceData, meta interface{}) erro
 
 	registry, err := meta.(*Config).GetRegistry(id, projectID, namespaceID)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Registry ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -114,7 +114,7 @@ func resourceRancher2RegistryDelete(d *schema.ResourceData, meta interface{}) er
 
 	registry, err := meta.(*Config).GetRegistry(id, projectID, namespaceID)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Registry ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

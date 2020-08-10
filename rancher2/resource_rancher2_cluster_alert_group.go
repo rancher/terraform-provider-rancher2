@@ -47,6 +47,8 @@ func resourceRancher2ClusterAlertGroupCreate(d *schema.ResourceData, meta interf
 		return err
 	}
 
+	d.SetId(newClusterAlertGroup.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -60,8 +62,6 @@ func resourceRancher2ClusterAlertGroupCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("[ERROR] waiting for cluster alert group (%s) to be created: %s", newClusterAlertGroup.ID, waitErr)
 	}
 
-	d.SetId(newClusterAlertGroup.ID)
-
 	return resourceRancher2ClusterAlertGroupRead(d, meta)
 }
 
@@ -74,7 +74,7 @@ func resourceRancher2ClusterAlertGroupRead(d *schema.ResourceData, meta interfac
 
 	clusterAlertGroup, err := client.ClusterAlertGroup.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Alert Group ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -147,7 +147,7 @@ func resourceRancher2ClusterAlertGroupDelete(d *schema.ResourceData, meta interf
 
 	clusterAlertGroup, err := client.ClusterAlertGroup.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cluster Alert Group ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -216,7 +216,7 @@ func clusterAlertGroupStateRefreshFunc(client *managementClient.Client, clusterA
 	return func() (interface{}, string, error) {
 		obj, err := client.ClusterAlertGroup.ByID(clusterAlertGroupID)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

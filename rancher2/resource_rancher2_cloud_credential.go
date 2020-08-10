@@ -62,6 +62,8 @@ func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interfac
 		return err
 	}
 
+	d.SetId(newCloudCredential.ID)
+
 	stateConf = &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -74,8 +76,6 @@ func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interfac
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for cloud credential (%s) to be created: %s", newCloudCredential.ID, waitErr)
 	}
-
-	d.SetId(newCloudCredential.ID)
 
 	return resourceRancher2CloudCredentialRead(d, meta)
 }
@@ -90,7 +90,7 @@ func resourceRancher2CloudCredentialRead(d *schema.ResourceData, meta interface{
 	cloudCredential := &CloudCredential{}
 	err = client.APIBaseClient.ByID(managementClient.CloudCredentialType, d.Id(), cloudCredential)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cloud Credential ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -98,12 +98,7 @@ func resourceRancher2CloudCredentialRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	err = flattenCloudCredential(d, cloudCredential)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return flattenCloudCredential(d, cloudCredential)
 }
 
 func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -177,7 +172,7 @@ func resourceRancher2CloudCredentialDelete(d *schema.ResourceData, meta interfac
 	cloudCredential := &norman.Resource{}
 	err = client.APIBaseClient.ByID(managementClient.CloudCredentialType, id, cloudCredential)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Cloud Credential ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -216,7 +211,7 @@ func cloudCredentialStateRefreshFunc(client *managementClient.Client, credential
 		obj := &CloudCredential{}
 		err := client.APIBaseClient.ByID(managementClient.CloudCredentialType, credentialID, obj)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

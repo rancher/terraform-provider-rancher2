@@ -77,6 +77,8 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	d.SetId(newNs.ID)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"activating"},
 		Target:     []string{"active"},
@@ -89,11 +91,6 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 	if waitErr != nil {
 		return fmt.Errorf(
 			"[ERROR] waiting for namespace (%s) to be created: %s", newNs.ID, waitErr)
-	}
-
-	err = flattenNamespace(d, newNs)
-	if err != nil {
-		return err
 	}
 
 	return resourceRancher2NamespaceRead(d, meta)
@@ -215,7 +212,7 @@ func resourceRancher2NamespaceDelete(d *schema.ResourceData, meta interface{}) e
 
 	ns, err := client.Namespace.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Namespace ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

@@ -153,7 +153,7 @@ resource "rancher2_app" "istio" {
   project_id = rancher2_namespace.foo-istio.project_id
   template_name = "rancher-istio"
   template_version = "0.1.1"
-  target_namespace = rancher2_namespace.foo-istio.name
+  target_namespace = rancher2_namespace.foo-istio.id
   answers = {
     "certmanager.enabled" = false
     "enableCRDs" = true
@@ -358,7 +358,7 @@ The following arguments are supported:
 * `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `k3s_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
-* `cluster_monitoring_input` - (Optional/Computed) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
+* `cluster_monitoring_input` - (Optional) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
 * `cluster_template_answers` - (Optional/Computed) Cluster template answers. Just for Rancher v2.3.x and above (list maxitems:1)
 * `cluster_template_id` - (Optional) Cluster template ID. Just for Rancher v2.3.x and above (string)
 * `cluster_template_questions` - (Optional) Cluster template questions. Just for Rancher v2.3.x and above (list)

@@ -48,10 +48,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster is nil")
 	}
 
-	if clusterRegToken == nil {
-		return fmt.Errorf("[ERROR] flattening cluster: Input cluster registration token is nil")
-	}
-
 	if kubeConfig == nil {
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster kube config is nil")
 	}

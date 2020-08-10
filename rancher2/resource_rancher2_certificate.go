@@ -62,7 +62,7 @@ func resourceRancher2CertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	certificate, err := meta.(*Config).GetCertificate(id, projectID, namespaceID)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Certificate ID %s not found.", id)
 			d.SetId("")
 			return nil
@@ -125,7 +125,7 @@ func resourceRancher2CertificateDelete(d *schema.ResourceData, meta interface{})
 
 	certificate, err := meta.(*Config).GetCertificate(id, projectID, namespaceID)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Certificate ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

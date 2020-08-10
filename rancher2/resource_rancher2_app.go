@@ -207,7 +207,7 @@ func resourceRancher2AppDelete(d *schema.ResourceData, meta interface{}) error {
 
 	app, err := client.App.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] App ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

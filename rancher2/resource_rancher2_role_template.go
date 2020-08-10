@@ -56,7 +56,7 @@ func resourceRancher2RoleTemplateRead(d *schema.ResourceData, meta interface{}) 
 
 	roleTemplate, err := client.RoleTemplate.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] role template ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -125,7 +125,7 @@ func resourceRancher2RoleTemplateDelete(d *schema.ResourceData, meta interface{}
 
 	roleTemplate, err := client.RoleTemplate.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Role template ID %s not found.", id)
 			d.SetId("")
 			return nil

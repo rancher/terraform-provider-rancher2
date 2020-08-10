@@ -51,6 +51,8 @@ func resourceRancher2CatalogCreate(d *schema.ResourceData, meta interface{}) err
 		id = newCatalog.(*managementClient.ProjectCatalog).ID
 	}
 
+	d.SetId(id)
+
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"refreshed"},
 		Target:     []string{"active"},
@@ -61,18 +63,7 @@ func resourceRancher2CatalogCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
-		// Removing catalog if not getting active state
-		err = meta.(*Config).DeleteCatalog(scope, newCatalog)
-		if err != nil {
-			return fmt.Errorf("Error removing %s Catalog: %s", scope, err)
-		}
-		return fmt.Errorf(
-			"[ERROR] waiting for catalog (%s) to be created: %s", id, waitErr)
-	}
-
-	err = flattenCatalog(d, newCatalog)
-	if err != nil {
-		return err
+		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be created: %s", id, waitErr)
 	}
 
 	return resourceRancher2CatalogRead(d, meta)
@@ -85,16 +76,11 @@ func resourceRancher2CatalogRead(d *schema.ResourceData, meta interface{}) error
 
 	catalog, err := meta.(*Config).GetCatalog(id, scope)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] %s Catalog ID %s not found.", scope, id)
 			d.SetId("")
 			return nil
 		}
-		return err
-	}
-
-	err = flattenCatalog(d, catalog)
-	if err != nil {
 		return err
 	}
 
@@ -118,7 +104,7 @@ func resourceRancher2CatalogRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return nil
+	return flattenCatalog(d, catalog)
 }
 
 func resourceRancher2CatalogUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -170,7 +156,7 @@ func resourceRancher2CatalogDelete(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[INFO] Deleting %s catalog ID %s", scope, id)
 	catalog, err := meta.(*Config).GetCatalog(id, scope)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] %s Catalog ID %s not found.", scope, id)
 			d.SetId("")
 			return nil
@@ -209,7 +195,7 @@ func catalogStateRefreshFunc(meta interface{}, catalogID, scope string) resource
 	return func() (interface{}, string, error) {
 		obj, err := meta.(*Config).GetCatalog(catalogID, scope)
 		if err != nil {
-			if IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err

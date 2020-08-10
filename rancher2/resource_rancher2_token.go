@@ -58,7 +58,7 @@ func resourceRancher2TokenRead(d *schema.ResourceData, meta interface{}) error {
 
 	token, err := client.Token.ByID(d.Id())
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Token ID %s not found.", d.Id())
 			d.SetId("")
 			return nil
@@ -93,7 +93,7 @@ func resourceRancher2TokenDelete(d *schema.ResourceData, meta interface{}) error
 
 	token, err := client.Token.ByID(id)
 	if err != nil {
-		if IsNotFound(err) {
+		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Token ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

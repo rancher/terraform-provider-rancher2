@@ -130,7 +130,6 @@ func projectFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			MaxItems:    1,
 			Optional:    true,
-			Computed:    true,
 			Description: "Cluster monitoring configuration",
 			Elem: &schema.Resource{
 				Schema: monitoringInputFields(),
