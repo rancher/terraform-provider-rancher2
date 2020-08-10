@@ -21,6 +21,7 @@ type amazonec2Config struct {
 	InsecureTransport       bool     `json:"insecureTransport,omitempty" yaml:"insecureTransport,omitempty"`
 	InstanceType            string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	KeypairName             string   `json:"keypairName,omitempty" yaml:"keypairName,omitempty"`
+	KmsKey                  string   `json:"kmsKey,omitempty" yaml:"kmsKey,omitempty"`
 	Monitoring              bool     `json:"monitoring,omitempty" yaml:"monitoring,omitempty"`
 	OpenPort                []string `json:"openPort,omitempty" yaml:"openPort,omitempty"`
 	PrivateAddressOnly      bool     `json:"privateAddressOnly,omitempty" yaml:"privateAddressOnly,omitempty"`
@@ -132,6 +133,11 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "AWS keypair to use; requires --amazonec2-ssh-keypath",
+		},
+		"kms_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Custom KMS key ID using the AWS Managed CMK",
 		},
 		"monitoring": {
 			Type:        schema.TypeBool,
