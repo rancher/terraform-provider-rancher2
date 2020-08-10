@@ -36,8 +36,6 @@ The following arguments are supported:
 * `description` - (Optional/ForceNew) Token description (string)
 * `renew` - (Optional/ForceNew) Renew token if expired or disabled. If `true`, a terraform diff would be generated to renew the token if it's disabled or expired. If `false`, the token will not be renewed. Default `true` (bool)
 * `ttl` - (Optional/ForceNew) Token time to live in seconds. Default `0` (int)
-* `annotations` - (Optional/Computed) Annotations of the token (map)
-* `labels` - (Optional/Computed) Labels of the token (map)
 
 ## Attributes Reference
 
@@ -51,6 +49,8 @@ The following attributes are exported:
 * `secret_key` - (Computed/Sensitive) Token secret key part (string)
 * `token` - (Computed/Sensitive) Token value (string)
 * `user_id` - (Computed) Token user ID (string)
+* `annotations` - (Computed) Annotations of the token (map)
+* `labels` - (Computed) Labels of the token (map)
 
 ## Timeouts
 
