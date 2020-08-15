@@ -76,7 +76,7 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	d.SetId(clusterSyncPrefixID + clusterID)
+	d.SetId(clusterID)
 
 	return resourceRancher2ClusterSyncRead(d, meta)
 }
