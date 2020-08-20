@@ -18,6 +18,7 @@ BUG FIXES:
 * Fix `rancher2_app` doc typo on `target_namespace` argument description 
 * Fix `rancher2_cluster` and `rancher2_project` resources error if created with monitoring enabled by not global admin user
 * Fix `rancher2_token` to set annotations and labels as computed attibutes
+* Fix `rke_config.secrets_encryption_config.custom_config` argument to work properly
 
 ## 1.10.0 (July 29, 2020)
 
