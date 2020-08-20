@@ -1,7 +1,11 @@
 package rancher2
 
 import (
+	"fmt"
+
 	managementClient "github.com/rancher/types/client/management/v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiserverconfigv1 "k8s.io/apiserver/pkg/apis/config/v1"
 )
 
 // Flatteners
@@ -65,19 +69,41 @@ func flattenClusterRKEConfigServicesKubeAPIEventRateLimit(in *managementClient.E
 	return []interface{}{obj}
 }
 
-func flattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(in *managementClient.SecretsEncryptionConfig) []interface{} {
+func flattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(in *managementClient.SecretsEncryptionConfig) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
-		return []interface{}{}
+		return []interface{}{}, nil
 	}
 
 	obj["enabled"] = in.Enabled
 
 	if len(in.CustomConfig) > 0 {
-		obj["custom_config"] = in.CustomConfig
+		customConfigStrV1, err := mapInterfaceToYAML(in.CustomConfig)
+		if err != nil {
+			return []interface{}{obj}, nil
+		}
+		customConfigV1 := &apiserverconfigv1.EncryptionConfiguration{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault,
+				APIVersion: clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault,
+			},
+		}
+		err = ghodssyamlToInterface(customConfigStrV1, customConfigV1)
+		if err != nil {
+			return []interface{}{}, fmt.Errorf("Unmashalling custom_config yaml: %v", err)
+		}
+		customConfigMap, _ := interfaceToMap(customConfigV1)
+		if err != nil {
+			return []interface{}{}, fmt.Errorf("Mashalling custom_config map: %v", err)
+		}
+		customConfigStr, err := interfaceToGhodssyaml(customConfigMap)
+		if err != nil {
+			return []interface{}{}, fmt.Errorf("Mashalling custom_config yaml: %v", err)
+		}
+		obj["custom_config"] = customConfigStr
 	}
 
-	return []interface{}{obj}
+	return []interface{}{obj}, nil
 }
 
 func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService) ([]interface{}, error) {
@@ -123,7 +149,11 @@ func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService)
 	obj["pod_security_policy"] = in.PodSecurityPolicy
 
 	if in.SecretsEncryptionConfig != nil {
-		obj["secrets_encryption_config"] = flattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(in.SecretsEncryptionConfig)
+		customConfig, err := flattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(in.SecretsEncryptionConfig)
+		if err != nil {
+			return []interface{}{}, err
+		}
+		obj["secrets_encryption_config"] = customConfig
 	}
 
 	if len(in.ServiceClusterIPRange) > 0 {
@@ -233,8 +263,12 @@ func expandClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(p []interface{
 		obj.Enabled = v
 	}
 
-	if v, ok := in["custom_config"].(map[string]interface{}); ok && len(v) > 0 {
-		obj.CustomConfig = v
+	if v, ok := in["custom_config"].(string); ok && len(v) > 0 {
+		configMap, err := ghodssyamlToMapInterface(v)
+		if err != nil {
+			return obj
+		}
+		obj.CustomConfig = configMap
 	}
 
 	return obj

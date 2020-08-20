@@ -414,6 +414,21 @@ func jsonToInterface(in string, out interface{}) error {
 	return err
 }
 
+func interfaceToMap(in interface{}) (map[string]interface{}, error) {
+	bytes, err := json.Marshal(in)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(map[string]interface{})
+
+	err = json.Unmarshal(bytes, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func ghodssyamlToMapInterface(in string) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
 	err := ghodssyaml.Unmarshal([]byte(in), &out)
@@ -484,6 +499,17 @@ func interfaceToYAML(in interface{}) (string, error) {
 		return "", nil
 	}
 	out, err := yaml.Marshal(in)
+	if err != nil {
+		return "", err
+	}
+	return string(out), err
+}
+
+func interfaceToGhodssyaml(in interface{}) (string, error) {
+	if in == nil {
+		return "", nil
+	}
+	out, err := ghodssyaml.Marshal(in)
 	if err != nil {
 		return "", err
 	}

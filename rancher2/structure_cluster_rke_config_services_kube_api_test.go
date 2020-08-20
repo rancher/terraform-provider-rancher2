@@ -28,8 +28,8 @@ func init() {
 		MaxSize:   100,
 		Path:      "path",
 		Policy: map[string]interface{}{
-			"apiVersion": "audit.k8s.io/v1",
-			"kind":       "Policy",
+			"apiVersion": clusterRKEConfigServicesKubeAPIAuditLogConfigPolicyAPIDefault,
+			"kind":       clusterRKEConfigServicesKubeAPIAuditLogConfigPolicyKindDefault,
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIAuditLogConfigInterface = []interface{}{
@@ -39,7 +39,7 @@ func init() {
 			"max_backup": 10,
 			"max_size":   100,
 			"path":       "path",
-			"policy":     "apiVersion: audit.k8s.io/v1\nkind: Policy\n",
+			"policy":     "apiVersion: " + clusterRKEConfigServicesKubeAPIAuditLogConfigPolicyAPIDefault + "\nkind: " + clusterRKEConfigServicesKubeAPIAuditLogConfigPolicyKindDefault + "\n",
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIAuditLogConf = &managementClient.AuditLog{
@@ -55,30 +55,28 @@ func init() {
 	testClusterRKEConfigServicesKubeAPIEventRateLimitConf = &managementClient.EventRateLimit{
 		Enabled: true,
 		Configuration: map[string]interface{}{
-			"apiVersion": "eventratelimit.admission.k8s.io/v1alpha1",
-			"kind":       "Configuration",
+			"apiVersion": clusterRKEConfigServicesKubeAPIEventRateLimitConfigAPIDefault,
+			"kind":       clusterRKEConfigServicesKubeAPIEventRateLimitConfigKindDefault,
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIEventRateLimitInterface = []interface{}{
 		map[string]interface{}{
 			"enabled":       true,
-			"configuration": "apiVersion: eventratelimit.admission.k8s.io/v1alpha1\nkind: Configuration\n",
+			"configuration": "apiVersion: " + clusterRKEConfigServicesKubeAPIEventRateLimitConfigAPIDefault + "\nkind: " + clusterRKEConfigServicesKubeAPIEventRateLimitConfigKindDefault + "\n",
 		},
 	}
 	testClusterRKEConfigServicesKubeAPISecretsEncryptionConfigConf = &managementClient.SecretsEncryptionConfig{
 		Enabled: true,
 		CustomConfig: map[string]interface{}{
-			"conf1": "conf1",
-			"conf2": "conf2",
+			"apiVersion": clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault,
+			"kind":       clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault,
+			"resources":  nil,
 		},
 	}
 	testClusterRKEConfigServicesKubeAPISecretsEncryptionConfigInterface = []interface{}{
 		map[string]interface{}{
-			"enabled": true,
-			"custom_config": map[string]interface{}{
-				"conf1": "conf1",
-				"conf2": "conf2",
-			},
+			"enabled":       true,
+			"custom_config": "apiVersion: " + clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault + "\nkind: " + clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault + "\nresources: null\n",
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIConf = &managementClient.KubeAPIService{
@@ -199,7 +197,10 @@ func TestFlattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(t *testin
 	}
 
 	for _, tc := range cases {
-		output := flattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(tc.Input)
+		output, err := flattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
