@@ -23,6 +23,7 @@ type azureConfig struct {
 	Location           string   `json:"location,omitempty" yaml:"location,omitempty"`
 	ManagedDisks       bool     `json:"managedDisks,omitempty" yaml:"managedDisks,omitempty"`
 	NoPublicIP         bool     `json:"noPublicIp,omitempty" yaml:"noPublicIp,omitempty"`
+	Nsg                string   `json:"nsg,omitempty" yaml:"nsg,omitempty"`
 	OpenPort           []string `json:"openPort,omitempty" yaml:"openPort,omitempty"`
 	PrivateAddressOnly bool     `json:"privateAddressOnly,omitempty" yaml:"privateAddressOnly,omitempty"`
 	PrivateIPAddress   string   `json:"privateIpAddress,omitempty" yaml:"privateIpAddress,omitempty"`
@@ -119,6 +120,12 @@ func azureConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Do not create a public IP address for the machine",
 		},
+		"nsg": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "docker-machine-nsg",
+			Description: "Azure Network Security Group to assign this node to (accepts either a name or resource ID, default is to create a new NSG for each machine)",
+		},		
 		"open_port": {
 			Type:        schema.TypeList,
 			Optional:    true,

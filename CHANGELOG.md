@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* Added `nsg` support on `azure_config` argument on `rancher2_node_template` resource
 
 
 BUG FIXES:
