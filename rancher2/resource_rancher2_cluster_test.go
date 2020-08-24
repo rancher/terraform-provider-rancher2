@@ -47,6 +47,10 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
           configuration = "apiVersion: eventratelimit.admission.k8s.io/v1alpha1\nkind: Configuration\nlimits:\n- type: Server\n  burst: 30000\n  qps: 6000\n"
           enabled = false
         }
+        secrets_encryption_config {
+          custom_config = "apiVersion: apiserver.config.k8s.io/v1\nkind: EncryptionConfiguration\nresources:\n- providers:\n  - aescbc:\n      keys:\n      - name: k-gt6hv\n        secret: RTczRjFDODMwQzAyMDVBREU4NDJBMUZFNDhCNzM5N0I=\n  - identity: {}\n  resources:\n  - secrets\n"
+          enabled = true
+        }
       }
     }
     upgrade_strategy {
@@ -103,6 +107,10 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
         event_rate_limit {
           configuration = "apiVersion: eventratelimit.admission.k8s.io/v1alpha1\nkind: Configuration\nlimits:\n- type: Server\n  burst: 30000\n  qps: 6000\n"
           enabled = false
+        }
+        secrets_encryption_config {
+          custom_config = "apiVersion: apiserver.config.k8s.io/v1\nkind: EncryptionConfiguration\nresources:\n- providers:\n  - aescbc:\n      keys:\n      - name: k-gt6hv\n        secret: RTczRjFDODMwQzAyMDVBREU4NDJBMUZFNDhCNzM5N0I=\n  - identity: {}\n  resources:\n  - secrets\n"
+          enabled = true
         }
       }
     }

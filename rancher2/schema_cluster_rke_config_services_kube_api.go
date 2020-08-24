@@ -12,8 +12,12 @@ import (
 const (
 	clusterRKEConfigServicesKubeAPIApiversionTag                   = "apiVersion"
 	clusterRKEConfigServicesKubeAPIKindTag                         = "kind"
+	clusterRKEConfigServicesKubeAPIAuditLogConfigPolicyAPIDefault  = "audit.k8s.io/v1"
+	clusterRKEConfigServicesKubeAPIEventRateLimitConfigAPIDefault  = "eventratelimit.admission.k8s.io/v1alpha1"
+	clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault      = "apiserver.config.k8s.io/v1"
 	clusterRKEConfigServicesKubeAPIAuditLogConfigPolicyKindDefault = "Policy"
 	clusterRKEConfigServicesKubeAPIEventRateLimitConfigKindDefault = "Configuration"
+	clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault     = "EncryptionConfiguration"
 )
 
 var (
@@ -170,8 +174,40 @@ func clusterRKEConfigServicesKubeAPIEventRateLimitFields() map[string]*schema.Sc
 func clusterRKEConfigServicesKubeAPISecretsEncryptionConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"custom_config": {
-			Type:     schema.TypeMap,
+			Type:     schema.TypeString,
 			Optional: true,
+			ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+				v, ok := val.(string)
+				if !ok || len(v) == 0 {
+					return
+				}
+				m, err := ghodssyamlToMapInterface(v)
+				if err != nil {
+					errs = append(errs, fmt.Errorf("%q must be in yaml format, error: %v", key, err))
+					return
+				}
+				for _, k := range clusterRKEConfigServicesKubeAPIRequired {
+					check, ok := m[k].(string)
+					if !ok || len(check) == 0 {
+						errs = append(errs, fmt.Errorf("%s is required on yaml", k))
+					}
+					if k == clusterRKEConfigServicesKubeAPIKindTag {
+						if check != clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault {
+							errs = append(errs, fmt.Errorf("%s value %s should be: %s", k, check, clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault))
+						}
+					}
+
+				}
+				return
+			},
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				if old == "" || new == "" {
+					return false
+				}
+				oldMap, _ := ghodssyamlToMapInterface(old)
+				newMap, _ := ghodssyamlToMapInterface(new)
+				return reflect.DeepEqual(oldMap, newMap)
+			},
 		},
 		"enabled": {
 			Type:     schema.TypeBool,
