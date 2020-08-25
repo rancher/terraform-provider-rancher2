@@ -23,7 +23,7 @@ type azureConfig struct {
 	Location           string   `json:"location,omitempty" yaml:"location,omitempty"`
 	ManagedDisks       bool     `json:"managedDisks,omitempty" yaml:"managedDisks,omitempty"`
 	NoPublicIP         bool     `json:"noPublicIp,omitempty" yaml:"noPublicIp,omitempty"`
-	Nsg                string   `json:"nsg,omitempty" yaml:"nsg,omitempty"`
+	NSG                string   `json:"nsg,omitempty" yaml:"nsg,omitempty"`
 	OpenPort           []string `json:"openPort,omitempty" yaml:"openPort,omitempty"`
 	PrivateAddressOnly bool     `json:"privateAddressOnly,omitempty" yaml:"privateAddressOnly,omitempty"`
 	PrivateIPAddress   string   `json:"privateIpAddress,omitempty" yaml:"privateIpAddress,omitempty"`
