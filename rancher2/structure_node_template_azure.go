@@ -51,6 +51,10 @@ func flattenAzureConfig(in *azureConfig) []interface{} {
 	obj["managed_disks"] = in.ManagedDisks
 	obj["no_public_ip"] = in.NoPublicIP
 
+	if len(in.NSG) > 0 {
+		obj["nsg"] = in.NSG
+	}
+
 	if len(in.OpenPort) > 0 {
 		obj["open_port"] = toArrayInterface(in.OpenPort)
 	}
@@ -159,6 +163,10 @@ func expandAzureConfig(p []interface{}) *azureConfig {
 
 	if v, ok := in["no_public_ip"].(bool); ok {
 		obj.NoPublicIP = v
+	}
+
+	if v, ok := in["nsg"].(string); ok && len(v) > 0 {
+		obj.NSG = v
 	}
 
 	if v, ok := in["open_port"].([]interface{}); ok && len(v) > 0 {
