@@ -40,7 +40,7 @@ func TestFlattenToken(t *testing.T) {
 
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, tokenFields(), map[string]interface{}{})
-		err := flattenToken(output, tc.Input)
+		err := flattenToken(output, tc.Input, false)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
@@ -69,7 +69,7 @@ func TestExpandToken(t *testing.T) {
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, tokenFields(), tc.Input)
-		output, err := expandToken(inputResourceData)
+		output, err := expandToken(inputResourceData, false)
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
