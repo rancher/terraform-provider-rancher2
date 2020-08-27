@@ -20,6 +20,7 @@ BUG FIXES:
 * Fix `rancher2_cluster` and `rancher2_project` resources error if created with monitoring enabled by not global admin user
 * Fix `rancher2_token` to set annotations and labels as computed attibutes
 * Fix `rke_config.secrets_encryption_config.custom_config` argument to work properly
+* Fix `rancher2_project` resource applying `pod_security_policy_template_id` argument on creation
 
 ## 1.10.0 (July 29, 2020)
 

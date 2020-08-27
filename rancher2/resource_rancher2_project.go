@@ -102,6 +102,19 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	if pspID, ok := d.Get("pod_security_policy_template_id").(string); ok && len(pspID) > 0 {
+		pspInput := &managementClient.SetPodSecurityPolicyTemplateInput{
+			PodSecurityPolicyTemplateName: pspID,
+		}
+		_, err = client.Project.ActionSetpodsecuritypolicytemplate(newProject, pspInput)
+		if err != nil {
+			// Checking error due to ActionSetpodsecuritypolicytemplate() issue
+			if error.Error(err) != "unexpected end of JSON input" {
+				return err
+			}
+		}
+	}
+
 	return resourceRancher2ProjectRead(d, meta)
 }
 
