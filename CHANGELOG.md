@@ -22,6 +22,7 @@ BUG FIXES:
 * Fix `rancher2_token` to set annotations and labels as computed attibutes
 * Fix `rke_config.secrets_encryption_config.custom_config` argument to work properly
 * Fix `rancher2_token.ttl` argument to work properly on Rancher v2.4.6
+* Fix `rancher2_project` resource applying `pod_security_policy_template_id` argument on creation
 
 ## 1.10.0 (July 29, 2020)
 
