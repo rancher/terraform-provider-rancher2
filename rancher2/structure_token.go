@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -10,7 +11,7 @@ import (
 
 // Flatteners
 
-func flattenToken(d *schema.ResourceData, in *managementClient.Token) error {
+func flattenToken(d *schema.ResourceData, in *managementClient.Token, patch bool) error {
 	if in == nil {
 		return nil
 	}
@@ -43,7 +44,9 @@ func flattenToken(d *schema.ResourceData, in *managementClient.Token) error {
 	}
 
 	if in.TTLMillis >= 1000 {
-		d.Set("ttl", int(in.TTLMillis/1000))
+		if !patch {
+			d.Set("ttl", int(in.TTLMillis/1000))
+		}
 	}
 
 	if len(in.UserID) > 0 {
@@ -66,7 +69,7 @@ func flattenToken(d *schema.ResourceData, in *managementClient.Token) error {
 
 // Expanders
 
-func expandToken(in *schema.ResourceData) (*managementClient.Token, error) {
+func expandToken(in *schema.ResourceData, patch bool) (*managementClient.Token, error) {
 	obj := &managementClient.Token{}
 	if in == nil {
 		return nil, fmt.Errorf("[ERROR] Expanding token: Schema Resource data is nil")
@@ -85,7 +88,13 @@ func expandToken(in *schema.ResourceData) (*managementClient.Token, error) {
 	}
 
 	if v, ok := in.Get("ttl").(int); ok && v > 0 {
-		obj.TTLMillis = int64(v * 1000)
+		if patch {
+			// From rancher v2.4.6 ttl is read in minutes from API
+			mins := math.Round(float64(v / 60))
+			obj.TTLMillis = int64(mins)
+		} else {
+			obj.TTLMillis = int64(v * 1000)
+		}
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {

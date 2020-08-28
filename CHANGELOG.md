@@ -1,4 +1,4 @@
-## 1.10.1 (Unreleased)
+## 1.10.1 (August 27, 2020)
 
 FEATURES:
 
@@ -7,7 +7,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * Added `nsg` support on `azure_config` argument on `rancher2_node_template` resource
-
+* Updated go mod, vendor files and provider tests to support rancher 2.4.6
+* Added aws kms key id support to `rancher2_node_template`
 
 BUG FIXES:
 
@@ -20,6 +21,7 @@ BUG FIXES:
 * Fix `rancher2_cluster` and `rancher2_project` resources error if created with monitoring enabled by not global admin user
 * Fix `rancher2_token` to set annotations and labels as computed attibutes
 * Fix `rke_config.secrets_encryption_config.custom_config` argument to work properly
+* Fix `rancher2_token.ttl` argument to work properly on Rancher v2.4.6
 * Fix `rancher2_project` resource applying `pod_security_policy_template_id` argument on creation
 
 ## 1.10.0 (July 29, 2020)
