@@ -20,7 +20,7 @@ CERTMANAGER_CRD=${CERTMANAGER_CRD:-"https://github.com/jetstack/cert-manager/rel
 CERTMANAGER_NS=${CERTMANAGER_NS:-"cert-manager"}
 
 ## rancher
-RANCHER_VERSION=${RANCHER_VERSION:-"v2.4.8"}
+RANCHER_VERSION=${RANCHER_VERSION:-"v2.5.0"}
 RANCHER_NS=${RANCHER_NS:-"cattle-system"}
 RANCHER_HOSTNAME="rancher.${K3S_SERVER_IP}.xip.io"
 
@@ -83,7 +83,6 @@ spec:
   version: ${RANCHER_VERSION}
   set:
     hostname: ${RANCHER_HOSTNAME}
-    certmanager.version: ${CERTMANAGER_VERSION}
     replicas: 1
 EOF
 

@@ -34,6 +34,34 @@ type AmazonElasticContainerServiceConfig struct {
 	VirtualNetwork              string   `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
 }
 
+type state struct {
+	ClusterName       string
+	DisplayName       string
+	ClientID          string
+	ClientSecret      string
+	SessionToken      string
+	KeyPairName       string
+	KubernetesVersion string
+
+	MinimumASGSize int64
+	MaximumASGSize int64
+	DesiredASGSize int64
+	NodeVolumeSize *int64
+	EBSEncryption  bool
+
+	UserData string
+
+	InstanceType string
+	Region       string
+
+	VirtualNetwork              string
+	Subnets                     []string
+	SecurityGroups              []string
+	ServiceRole                 string
+	AMI                         string
+	AssociateWorkerNodePublicIP *bool
+}
+
 //Schemas
 
 func clusterEKSConfigFields() map[string]*schema.Schema {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	clusterClient "github.com/rancher/types/client/cluster/v3"
+	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
 )
 
 const (

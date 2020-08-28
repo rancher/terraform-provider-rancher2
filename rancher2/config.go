@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
-	clusterClient "github.com/rancher/types/client/cluster/v3"
-	managementClient "github.com/rancher/types/client/management/v3"
-	projectClient "github.com/rancher/types/client/project/v3"
+	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -122,7 +122,7 @@ func (c *Config) getK8SVersions() ([]string, error) {
 		return nil, nil
 	}
 
-	RKEK8sSystemImageCollection, err := c.Client.Management.RKEK8sSystemImage.ListAll(NewListOpts(nil))
+	RKEK8sSystemImageCollection, err := c.Client.Management.RkeK8sSystemImage.ListAll(NewListOpts(nil))
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] Listing RKE K8s System Images: %s", err)
 	}

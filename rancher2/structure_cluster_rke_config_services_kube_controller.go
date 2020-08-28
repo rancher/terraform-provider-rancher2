@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 // Flatteners

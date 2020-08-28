@@ -3,7 +3,7 @@ package rancher2
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 const (

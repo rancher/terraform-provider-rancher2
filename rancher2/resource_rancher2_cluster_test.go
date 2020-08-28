@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	norman "github.com/rancher/norman/types"
-	managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 const (
@@ -46,10 +46,6 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
         event_rate_limit {
           configuration = "apiVersion: eventratelimit.admission.k8s.io/v1alpha1\nkind: Configuration\nlimits:\n- type: Server\n  burst: 30000\n  qps: 6000\n"
           enabled = false
-        }
-        secrets_encryption_config {
-          custom_config = "apiVersion: apiserver.config.k8s.io/v1\nkind: EncryptionConfiguration\nresources:\n- providers:\n  - aescbc:\n      keys:\n      - name: k-gt6hv\n        secret: RTczRjFDODMwQzAyMDVBREU4NDJBMUZFNDhCNzM5N0I=\n  - identity: {}\n  resources:\n  - secrets\n"
-          enabled = true
         }
       }
     }
@@ -107,10 +103,6 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
         event_rate_limit {
           configuration = "apiVersion: eventratelimit.admission.k8s.io/v1alpha1\nkind: Configuration\nlimits:\n- type: Server\n  burst: 30000\n  qps: 6000\n"
           enabled = false
-        }
-        secrets_encryption_config {
-          custom_config = "apiVersion: apiserver.config.k8s.io/v1\nkind: EncryptionConfiguration\nresources:\n- providers:\n  - aescbc:\n      keys:\n      - name: k-gt6hv\n        secret: RTczRjFDODMwQzAyMDVBREU4NDJBMUZFNDhCNzM5N0I=\n  - identity: {}\n  resources:\n  - secrets\n"
-          enabled = true
         }
       }
     }
