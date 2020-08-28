@@ -64,8 +64,9 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-vendor-status:
-	@govendor status
+vendor:
+	@echo "==> Updating vendor modules..."
+	@GO111MODULE=on go mod vendor
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -75,5 +76,4 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile bin
-
+.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile bin vendor

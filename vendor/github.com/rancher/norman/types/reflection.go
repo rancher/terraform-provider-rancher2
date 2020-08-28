@@ -16,7 +16,7 @@ import (
 var (
 	namespacedType = reflect.TypeOf(Namespaced{})
 	resourceType   = reflect.TypeOf(Resource{})
-	blacklistNames = map[string]bool{
+	skipNames      = map[string]bool{
 		"links":         true,
 		"actions":       true,
 		"managedFields": true,
@@ -273,8 +273,8 @@ func (s *Schemas) readFields(schema *Schema, t reflect.Type) error {
 			}
 		}
 
-		if blacklistNames[fieldName] {
-			logrus.Tracef("Ignoring blacklisted field %s.%s for %v", schema.ID, fieldName, field)
+		if skipNames[fieldName] {
+			logrus.Tracef("Ignoring skip field %s.%s for %v", schema.ID, fieldName, field)
 			continue
 		}
 
