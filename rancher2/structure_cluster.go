@@ -162,6 +162,15 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if err != nil {
 			return err
 		}
+	case clusterDriverEKSImport:
+		v, ok := d.Get("eks_import").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err = d.Set("eks_import", flattenClusterEKSImport(in.EKSConfig, v))
+		if err != nil {
+			return err
+		}
 	case clusterDriverGKE:
 		v, ok := d.Get("gke_config").([]interface{})
 		if !ok {
@@ -347,6 +356,11 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 		obj.AmazonElasticContainerServiceConfig = eksConfig
 		obj.Driver = clusterDriverEKS
+	}
+
+	if v, ok := in.Get("eks_import").([]interface{}); ok && len(v) > 0 {
+		obj.EKSConfig = expandClusterEKSImport(v)
+		obj.Driver = clusterDriverEKSImport
 	}
 
 	if v, ok := in.Get("gke_config").([]interface{}); ok && len(v) > 0 {

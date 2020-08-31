@@ -36,6 +36,8 @@ func flattenClusterEKSConfig(in *AmazonElasticContainerServiceConfig, p []interf
 		obj["instance_type"] = in.InstanceType
 	}
 
+	obj["ebs_encryption"] = in.EBSEncryption
+
 	if len(in.KeyPairName) > 0 {
 		obj["key_pair_name"] = in.KeyPairName
 	}
@@ -117,6 +119,10 @@ func expandClusterEKSConfig(p []interface{}, name string) (*AmazonElasticContain
 
 	if v, ok := in["desired_nodes"].(int); ok && v > 0 {
 		obj.DesiredNodes = int64(v)
+	}
+
+	if v, ok := in["ebs_encryption"].(bool); ok {
+		obj.EBSEncryption = v
 	}
 
 	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {

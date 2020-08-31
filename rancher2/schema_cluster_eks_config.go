@@ -18,6 +18,7 @@ type AmazonElasticContainerServiceConfig struct {
 	DesiredNodes                int64    `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
 	DisplayName                 string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	DriverName                  string   `json:"driverName,omitempty" yaml:"driverName,omitempty"`
+	EBSEncryption               bool     `json:"ebsEncryption,omitempty" yaml:"ebsEncryption,omitempty"`
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
 	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
@@ -32,34 +33,6 @@ type AmazonElasticContainerServiceConfig struct {
 	Subnets                     []string `json:"subnets,omitempty" yaml:"subnets,omitempty"`
 	UserData                    string   `json:"userData,omitempty" yaml:"userData,omitempty"`
 	VirtualNetwork              string   `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
-}
-
-type state struct {
-	ClusterName       string
-	DisplayName       string
-	ClientID          string
-	ClientSecret      string
-	SessionToken      string
-	KeyPairName       string
-	KubernetesVersion string
-
-	MinimumASGSize int64
-	MaximumASGSize int64
-	DesiredASGSize int64
-	NodeVolumeSize *int64
-	EBSEncryption  bool
-
-	UserData string
-
-	InstanceType string
-	Region       string
-
-	VirtualNetwork              string
-	Subnets                     []string
-	SecurityGroups              []string
-	ServiceRole                 string
-	AMI                         string
-	AssociateWorkerNodePublicIP *bool
 }
 
 //Schemas
@@ -99,6 +72,12 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     3,
 			Description: "The desired number of worker nodes",
+		},
+		"ebs_encryption": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enables EBS encryption of worker nodes",
 		},
 		"instance_type": {
 			Type:        schema.TypeString,

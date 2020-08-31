@@ -113,7 +113,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	expectedState := "active"
 
-	if cluster.Driver == clusterDriverImported {
+	if cluster.Driver == clusterDriverImported || cluster.Driver == clusterDriverEKSImport {
 		expectedState = "pending"
 	}
 
@@ -280,6 +280,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["amazonElasticContainerServiceConfig"] = eksConfig
+	case clusterDriverEKSImport:
+		update["eksConfig"] = expandClusterEKSImport(d.Get("eks_import").([]interface{}))
 	case clusterDriverGKE:
 		gkeConfig, err := expandClusterGKEConfig(d.Get("gke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {

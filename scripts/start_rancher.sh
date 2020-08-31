@@ -80,15 +80,15 @@ spec:
   chart: rancher
   repo: https://releases.rancher.com/server-charts/latest
   targetNamespace: ${RANCHER_NS}
-  version: ${RANCHER_VERSION}
   set:
     hostname: ${RANCHER_HOSTNAME}
     replicas: 1
+    rancherImageTag: ${RANCHER_VERSION}
 EOF
 
 ${DOCKER_BIN} cp ${TEMP_DIR}"/rancher.yaml" ${K3S_SERVER}:/var/lib/rancher/k3s/server/manifests/
 ## waiting for HelmChart rancher
-while [[ $(${KUBECTL_BIN} -n kube-system get helmchart rancher -o 'jsonpath={..spec.version}') != ${RANCHER_VERSION} ]] ; 
+while [[ $(${KUBECTL_BIN} -n kube-system get helmchart rancher -o 'jsonpath={..spec.set.rancherImageTag}') != ${RANCHER_VERSION} ]] ; 
 do echo "Waiting for HelmChart rancher" && sleep 2;
 done
 ## waiting for helm-install-rancher
