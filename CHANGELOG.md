@@ -1,3 +1,24 @@
+## 1.10.2 (September 10, 2020)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Updated go mod, vendor files and provider tests to support rancher 2.4.8 and k3s v1.18.8-k3s1
+* Added `rancher2_cluster_sync.state_confirm` argument to wait until active status is confirmed a number of times
+* Added `syslog_config.enable_tls` argument to cluster and project logging
+
+BUG FIXES:
+
+* Fix `rke_config.cloud_provider.name` argument to not be validated
+* Fix `rancher2_certificate` resource update
+* Fix false diff if `rancher2_project.project_monitoring_input` not specified
+* Fix `rancher2_token.ttl` argument to work properly on Rancher up to v2.4.7
+* Fix `rancher2_namespace.resource_quota` argument to computed
+* Fix `rancher2_app` resource to wait until created/updated
+
 ## 1.10.1 (August 27, 2020)
 
 FEATURES:
