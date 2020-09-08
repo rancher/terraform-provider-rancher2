@@ -4,10 +4,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-const (
-	cloudProviderVsphereName = "vsphere"
-)
-
 //Schemas
 
 func clusterRKEConfigCloudProviderVsphereDiskFields() map[string]*schema.Schema {

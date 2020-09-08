@@ -4,10 +4,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-const (
-	cloudProviderAwsName = "aws"
-)
-
 //Schemas
 
 func clusterRKEConfigCloudProviderAwsGlobalFields() map[string]*schema.Schema {

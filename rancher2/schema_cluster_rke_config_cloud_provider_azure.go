@@ -6,7 +6,6 @@ import (
 )
 
 const (
-	cloudProviderAzureName                    = "azure"
 	cloudProviderAzureLoadBalancerSkuBasic    = "basic"
 	cloudProviderAzureLoadBalancerSkuStandard = "standard"
 )
