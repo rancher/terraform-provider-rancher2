@@ -1416,7 +1416,7 @@ func (c *Config) CreateCertificate(cert interface{}) (interface{}, error) {
 	}
 }
 
-func (c *Config) updateCertificate(cert *projectClient.Certificate, update map[string]interface{}) (*projectClient.Certificate, error) {
+func (c *Config) updateCertificate(cert *projectClient.Certificate, update interface{}) (*projectClient.Certificate, error) {
 	client, err := c.ProjectClient(cert.ProjectID)
 	if err != nil {
 		return nil, err
@@ -1424,7 +1424,7 @@ func (c *Config) updateCertificate(cert *projectClient.Certificate, update map[s
 	return client.Certificate.Update(cert, update)
 }
 
-func (c *Config) updateNamespacedCertificate(cert *projectClient.NamespacedCertificate, update map[string]interface{}) (*projectClient.NamespacedCertificate, error) {
+func (c *Config) updateNamespacedCertificate(cert *projectClient.NamespacedCertificate, update interface{}) (*projectClient.NamespacedCertificate, error) {
 	client, err := c.ProjectClient(cert.ProjectID)
 	if err != nil {
 		return nil, err
@@ -1432,7 +1432,7 @@ func (c *Config) updateNamespacedCertificate(cert *projectClient.NamespacedCerti
 	return client.NamespacedCertificate.Update(cert, update)
 }
 
-func (c *Config) UpdateCertificate(cert interface{}, update map[string]interface{}) (interface{}, error) {
+func (c *Config) UpdateCertificate(cert interface{}, update interface{}) (interface{}, error) {
 	if cert == nil {
 		return nil, fmt.Errorf("[ERROR] Certificate can't be nil")
 	}

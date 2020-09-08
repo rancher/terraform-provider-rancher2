@@ -85,22 +85,9 @@ func resourceRancher2CertificateUpdate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	certs, err := Base64Decode(d.Get("certs").(string))
+	update, err := expandCertificate(d)
 	if err != nil {
-		return fmt.Errorf("Updating certificate: certs is not base64 encoded")
-	}
-
-	key, err := Base64Decode(d.Get("key").(string))
-	if err != nil {
-		return fmt.Errorf("Updating certificate: key is not base64 encoded")
-	}
-
-	update := map[string]interface{}{
-		"description": d.Get("description").(string),
-		"certs":       certs,
-		"keys":        key,
-		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
+		return err
 	}
 
 	newCertificate, err := meta.(*Config).UpdateCertificate(certificate, update)
