@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 //Schemas
@@ -13,6 +14,13 @@ func clusterSyncFields() map[string]*schema.Schema {
 			Required:    true,
 			ForceNew:    true,
 			Description: "Cluster id to sync",
+		},
+		"state_confirm": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      1,
+			Description:  "Wait until active status is confirmed a number of times (wait interval of 5s)",
+			ValidateFunc: validation.IntAtLeast(1),
 		},
 		"wait_monitoring": {
 			Type:        schema.TypeBool,
