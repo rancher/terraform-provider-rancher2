@@ -122,6 +122,7 @@ func namespaceFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: namespaceResourceQuotaFields(),
 			},
