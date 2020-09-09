@@ -66,15 +66,27 @@ func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("wait").(bool) {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{},
-			Target:     []string{"active"},
-			Refresh:    appStateRefreshFunc(client, newApp.ID),
+			Target:     []string{"no"},
+			Refresh:    appTransitionRefreshFunc(client, newApp.ID),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
 		_, waitErr := stateConf.WaitForState()
 		if waitErr != nil {
-			return fmt.Errorf("[ERROR] waiting for app (%s) to be created: %s", newApp.ID, waitErr)
+			return fmt.Errorf("[ERROR] waiting for app (%s) to finish transitioning: %s", newApp.ID, waitErr)
+		}
+		stateConf = &resource.StateChangeConf{
+			Pending:    []string{},
+			Target:     []string{"active"},
+			Refresh:    appStateRefreshFunc(client, newApp.ID),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitErr = stateConf.WaitForState()
+		if waitErr != nil {
+			return fmt.Errorf("[ERROR] waiting for app (%s) to be active: %s", newApp.ID, waitErr)
 		}
 	}
 
@@ -177,6 +189,18 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.Get("wait").(bool) {
 		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"yes"},
+			Target:     []string{"no"},
+			Refresh:    appTransitionRefreshFunc(client, id),
+			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return fmt.Errorf("[ERROR] waiting for app (%s) to finish transitioning: %s", id, waitErr)
+		}
+		stateConf = &resource.StateChangeConf{
 			Pending:    []string{},
 			Target:     []string{"active"},
 			Refresh:    appStateRefreshFunc(client, id),
@@ -184,7 +208,7 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
-		_, waitErr := stateConf.WaitForState()
+		_, waitErr = stateConf.WaitForState()
 		if waitErr != nil {
 			return fmt.Errorf(
 				"[ERROR] waiting for app (%s) to be updated: %s", id, waitErr)
@@ -284,7 +308,20 @@ func appStateRefreshFunc(client *projectClient.Client, appID string) resource.St
 			}
 			return nil, "", err
 		}
-
 		return obj, obj.State, nil
+	}
+}
+
+// appTransitionRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher App.
+func appTransitionRefreshFunc(client *projectClient.Client, appID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := client.App.ByID(appID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				return obj, "no", nil
+			}
+			return nil, "", err
+		}
+		return obj, obj.Transitioning, nil
 	}
 }
