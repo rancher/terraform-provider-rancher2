@@ -21,7 +21,8 @@ const (
 	rancher2RetriesWait               = 5
 	rancher2RKEK8sSystemImageVersion  = "2.3.0"
 	rancher2NodeTemplateChangeVersion = "2.3.3" // Change node template id format
-	rancher2TokeChangeVersion         = "2.4.6" // ttl token is readed in minutes
+	rancher2TokeTTLMinutesVersion     = "2.4.6" // ttl token is readed in minutes
+	rancher2TokeTTLMilisVersion       = "2.4.7" // ttl token is readed in miliseconds
 	rancher2NodeTemplateNewPrefix     = "cattle-global-nt:nt-"
 )
 
@@ -149,6 +150,22 @@ func (c *Config) fixNodeTemplateID(id string) string {
 	return id
 }
 
+func (c *Config) IsRancherVersionGreaterThanOrEqualAndLessThan(ver1, ver2 string) (bool, error) {
+	_, err := c.GetRancherVersion()
+	if err != nil {
+		return false, fmt.Errorf("[ERROR] getting rancher server version")
+	}
+	greaterOrEqualThan, err := IsVersionGreaterThanOrEqual(c.RancherVersion, ver1)
+	if err != nil {
+		return false, err
+	}
+	lessThan, err := IsVersionLessThan(c.RancherVersion, ver2)
+	if err != nil {
+		return false, err
+	}
+	return (greaterOrEqualThan && lessThan), nil
+}
+
 func (c *Config) IsRancherVersionLessThan(ver string) (bool, error) {
 	if len(ver) == 0 {
 		return false, fmt.Errorf("[ERROR] version is nil")
@@ -157,7 +174,7 @@ func (c *Config) IsRancherVersionLessThan(ver string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("[ERROR] getting rancher server version")
 	}
-	return IsVersionLessThanl(c.RancherVersion, ver)
+	return IsVersionLessThan(c.RancherVersion, ver)
 }
 
 func (c *Config) IsRancherVersionGreaterThanOrEqual(ver string) (bool, error) {

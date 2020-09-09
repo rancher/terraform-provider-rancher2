@@ -89,7 +89,7 @@ func expandToken(in *schema.ResourceData, patch bool) (*managementClient.Token, 
 
 	if v, ok := in.Get("ttl").(int); ok && v > 0 {
 		if patch {
-			// From rancher v2.4.6 ttl is read in minutes from API
+			// Rancher v2.4.6 ttl is read in minutes from API
 			mins := math.Round(float64(v / 60))
 			obj.TTLMillis = int64(mins)
 		} else {

@@ -26,7 +26,7 @@ func resourceRancher2Token() *schema.Resource {
 
 func resourceRancher2TokenCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Creating Token")
-	patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqual(rancher2TokeChangeVersion)
+	patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqualAndLessThan(rancher2TokeTTLMinutesVersion, rancher2TokeTTLMilisVersion)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func resourceRancher2TokenRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("renew", false)
 	}
 
-	patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqual(rancher2TokeChangeVersion)
+	patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqualAndLessThan(rancher2TokeTTLMinutesVersion, rancher2TokeTTLMilisVersion)
 	if err != nil {
 		return err
 	}
