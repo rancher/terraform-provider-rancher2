@@ -167,6 +167,7 @@ provider "rancher2" {
 	testAccCheckRancher2UpgradeConfigV25 = testAccCheckRancher2UpgradeConfig + `
 ` + testAccRancher2App + `
 ` + testAccCheckRancher2UpgradeCatalogV24 + `
+` + testAccRancher2CatalogV2 + `
 ` + testAccCheckRancher2UpgradeCertificateV24 + `
 ` + testAccRancher2CloudCredentialConfigAmazonec2 + `
 ` + testAccRancher2CloudCredentialConfigAzure + `

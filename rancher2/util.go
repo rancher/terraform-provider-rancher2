@@ -516,6 +516,28 @@ func interfaceToGhodssyaml(in interface{}) (string, error) {
 	return string(out), err
 }
 
+func YAMLToJSON(in string) (string, error) {
+	if len(in) == 0 {
+		return "", nil
+	}
+	out, err := ghodssyaml.YAMLToJSON([]byte(in))
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
+func JSONToYAML(in string) (string, error) {
+	if len(in) == 0 {
+		return "", nil
+	}
+	out, err := ghodssyaml.JSONToYAML([]byte(in))
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
 func FileExist(path string) (bool, error) {
 	if path == "" {
 		return false, nil
