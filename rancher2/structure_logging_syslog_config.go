@@ -45,6 +45,7 @@ func flattenLoggingSyslogConfig(in *managementClient.SyslogConfig, p []interface
 	}
 
 	obj["ssl_verify"] = in.SSLVerify
+	obj["enable_tls"] = in.EnableTLS
 
 	if len(in.Token) > 0 {
 		obj["token"] = in.Token
@@ -93,6 +94,10 @@ func expandLoggingSyslogConfig(p []interface{}) (*managementClient.SyslogConfig,
 
 	if v, ok := in["ssl_verify"].(bool); ok {
 		obj.SSLVerify = v
+	}
+
+	if v, ok := in["enable_tls"].(bool); ok {
+		obj.EnableTLS = v
 	}
 
 	if v, ok := in["token"].(string); ok && len(v) > 0 {

@@ -134,6 +134,7 @@ The following attributes are exported:
 * `protocol` - (Optional) Protocol for the syslog service. `tcp` and `udp` are supported. Default: `udp` (string)
 * `severity` - (Optional) Date format for the syslog logs. `emergency`, `alert`, `critical`, `error`, `warning`, `notice`, `info` and `debug` are supported. Default: `notice` (string)
 * `ssl_verify` - (Optional) SSL verify for the syslog service (bool)
+* `enable_tls` - (Optional) Enable TLS for the syslog service. Default `false` (bool)
 * `token` - (Optional/Sensitive) Token for the syslog service (string)
 
 ## Timeouts
