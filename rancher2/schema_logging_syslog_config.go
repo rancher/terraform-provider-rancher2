@@ -58,6 +58,11 @@ func loggingSyslogConfigFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+		"enable_tls": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
 		"token": {
 			Type:      schema.TypeString,
 			Optional:  true,

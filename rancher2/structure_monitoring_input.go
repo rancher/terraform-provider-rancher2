@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	managementClient "github.com/rancher/types/client/management/v3"
+	"reflect"
 )
 
 const (
@@ -14,7 +15,7 @@ const (
 // Flatteners
 
 func flattenMonitoringInput(in *managementClient.MonitoringInput) []interface{} {
-	if in == nil {
+	if in == nil || reflect.DeepEqual(in, &managementClient.MonitoringInput{}) {
 		return []interface{}{}
 	}
 	obj := map[string]interface{}{}

@@ -541,7 +541,7 @@ func newFalse() *bool {
 	return &b
 }
 
-func IsVersionLessThanl(ver1, ver2 string) (bool, error) {
+func IsVersionLessThan(ver1, ver2 string) (bool, error) {
 	v1, err := gover.NewVersion(ver1)
 	if err != nil {
 		return false, err

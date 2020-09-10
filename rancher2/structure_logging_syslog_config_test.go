@@ -22,6 +22,7 @@ func init() {
 		Protocol:    "tcp",
 		Severity:    "emergency",
 		SSLVerify:   true,
+		EnableTLS:   true,
 		Token:       "XXXXXXXXXXXX",
 	}
 	testLoggingSyslogInterface = []interface{}{
@@ -34,6 +35,7 @@ func init() {
 			"protocol":    "tcp",
 			"severity":    "emergency",
 			"ssl_verify":  true,
+			"enable_tls":  true,
 			"token":       "XXXXXXXXXXXX",
 		},
 	}

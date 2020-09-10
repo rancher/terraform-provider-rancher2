@@ -2,16 +2,6 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-)
-
-const (
-	cloudProviderCustomName   = "custom"
-	cloudProviderExternalName = "external"
-)
-
-var (
-	cloudProviderList = []string{cloudProviderAwsName, cloudProviderAzureName, cloudProviderCustomName, cloudProviderExternalName, cloudProviderOpenstackName, cloudProviderVsphereName}
 )
 
 //Schemas
@@ -40,10 +30,9 @@ func clusterRKEConfigCloudProviderFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"name": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			ValidateFunc: validation.StringInSlice(cloudProviderList, true),
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
 		},
 		"openstack_cloud_provider": {
 			Type:     schema.TypeList,

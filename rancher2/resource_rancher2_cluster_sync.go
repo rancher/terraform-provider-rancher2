@@ -28,27 +28,26 @@ func resourceRancher2ClusterSync() *schema.Resource {
 func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 
-	active, cluster, err := meta.(*Config).isClusterActive(clusterID)
+	cluster, err := meta.(*Config).GetClusterByID(clusterID)
 	if err != nil {
 		return err
 	}
-	if !active {
-		client, err := meta.(*Config).ManagementClient()
-		if err != nil {
-			return err
-		}
-		stateCluster := &resource.StateChangeConf{
-			Pending:    []string{},
-			Target:     []string{"active"},
-			Refresh:    clusterStateRefreshFunc(client, clusterID),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      1 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-		_, waitClusterErr := stateCluster.WaitForState()
-		if waitClusterErr != nil {
-			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) to be active: %s", clusterID, waitClusterErr)
-		}
+	client, err := meta.(*Config).ManagementClient()
+	if err != nil {
+		return err
+	}
+	stateCluster := &resource.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{"active"},
+		Refresh:                   clusterStateRefreshFunc(client, clusterID),
+		Timeout:                   d.Timeout(schema.TimeoutCreate),
+		Delay:                     1 * time.Second,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: d.Get("state_confirm").(int),
+	}
+	_, waitClusterErr := stateCluster.WaitForState()
+	if waitClusterErr != nil {
+		return fmt.Errorf("[ERROR] waiting for cluster ID (%s) to be active: %s", clusterID, waitClusterErr)
 	}
 
 	if cluster.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
@@ -68,7 +67,7 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 			Refresh:    appStateRefreshFunc(client, appID),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      1 * time.Second,
-			MinTimeout: 3 * time.Second,
+			MinTimeout: 5 * time.Second,
 		}
 		_, waitClusterErr := stateCluster.WaitForState()
 		if waitClusterErr != nil {
