@@ -1,3 +1,17 @@
+## 1.10.3 (September 14, 2020)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix `Error: string is required` upgrading rancher2 provider from v1.10.0 or lower
+
 ## 1.10.2 (September 10, 2020)
 
 FEATURES:
