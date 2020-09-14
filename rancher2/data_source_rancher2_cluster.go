@@ -28,7 +28,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: clusterRKEConfigFields(),
+					Schema: clusterRKEConfigFieldsData(),
 				},
 			},
 			"k3s_config": {

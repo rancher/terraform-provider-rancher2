@@ -19,7 +19,15 @@ func resourceRancher2ClusterTemplate() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceRancher2ClusterTemplateImport,
 		},
-		Schema: clusterTemplateFields(),
+		Schema:        clusterTemplateFields(),
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceRancher2ClusterTemplateResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceRancher2ClusterTemplateStateUpgradeV0,
+				Version: 0,
+			},
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -104,6 +112,33 @@ func resourceRancher2ClusterTemplate() *schema.Resource {
 			}),
 		),
 	}
+}
+
+func resourceRancher2ClusterTemplateResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: clusterTemplateFieldsV0(),
+	}
+}
+
+func resourceRancher2ClusterTemplateStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if tmplRevisions, ok := rawState["template_revisions"].([]interface{}); ok && len(tmplRevisions) > 0 {
+		for i1 := range tmplRevisions {
+			if tmplRevision, ok := tmplRevisions[i1].(map[string]interface{}); ok && len(tmplRevision) > 0 {
+				if clusterConfigs, ok := tmplRevision["cluster_config"].([]interface{}); ok && len(clusterConfigs) > 0 {
+					for i2 := range clusterConfigs {
+						if clusterConfig, ok := clusterConfigs[i2].(map[string]interface{}); ok && len(clusterConfig) > 0 {
+							newValue, err := resourceRancher2ClusterStateUpgradeV0(clusterConfig, meta)
+							if err != nil {
+								return nil, fmt.Errorf("Upgrading Cluster Template schema V0: %v", err)
+							}
+							rawState["template_revisions"].([]interface{})[i1].(map[string]interface{})["cluster_config"].([]interface{})[i2] = newValue
+						}
+					}
+				}
+			}
+		}
+	}
+	return rawState, nil
 }
 
 func resourceRancher2ClusterTemplateCreate(d *schema.ResourceData, meta interface{}) error {

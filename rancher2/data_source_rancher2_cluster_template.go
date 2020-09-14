@@ -40,7 +40,7 @@ func dataSourceRancher2ClusterTemplate() *schema.Resource {
 				Computed:    true,
 				Description: "Cluster template revisions",
 				Elem: &schema.Resource{
-					Schema: clusterTemplateRevisionFields(),
+					Schema: clusterTemplateRevisionFieldsData(),
 				},
 			},
 			"annotations": {

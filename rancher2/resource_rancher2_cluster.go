@@ -20,7 +20,15 @@ func resourceRancher2Cluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceRancher2ClusterImport,
 		},
-		Schema: clusterFields(),
+		Schema:        clusterFields(),
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceRancher2ClusterResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceRancher2ClusterStateUpgradeV0,
+				Version: 0,
+			},
+		},
 		// Setting default timeouts to be liberal in order to accommodate managed Kubernetes providers like EKS, GKE, and AKS
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -28,6 +36,66 @@ func resourceRancher2Cluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 	}
+}
+
+func resourceRancher2ClusterResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: clusterFieldsV0(),
+	}
+}
+
+func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if rkeConfigs, ok := rawState["rke_config"].([]interface{}); ok && len(rkeConfigs) > 0 {
+		for i1 := range rkeConfigs {
+			if rkeConfig, ok := rkeConfigs[i1].(map[string]interface{}); ok && len(rkeConfig) > 0 {
+				if services, ok := rkeConfig["services"].([]interface{}); ok && len(services) > 0 {
+					for i2 := range services {
+						if service, ok := services[i2].(map[string]interface{}); ok && len(service) > 0 {
+							if kubeApis, ok := service["kube_api"].([]interface{}); ok && len(kubeApis) > 0 {
+								for i3 := range kubeApis {
+									if kubeAPI, ok := kubeApis[i3].(map[string]interface{}); ok && len(kubeAPI) > 0 {
+										if eventRates, ok := kubeAPI["event_rate_limit"].([]interface{}); ok && len(eventRates) > 0 {
+											for i4 := range eventRates {
+												if eventRate, ok := eventRates[i4].(map[string]interface{}); ok && len(eventRate) > 0 {
+													if config, ok := eventRate["configuration"].(map[string]interface{}); ok {
+														newValue := ""
+														if len(config) > 0 {
+															conf, err := mapInterfaceToYAML(config)
+															if err == nil {
+																newValue = conf
+															}
+														}
+														rawState["rke_config"].([]interface{})[i1].(map[string]interface{})["services"].([]interface{})[i2].(map[string]interface{})["kube_api"].([]interface{})[i3].(map[string]interface{})["event_rate_limit"].([]interface{})[i4].(map[string]interface{})["configuration"] = newValue
+													}
+												}
+											}
+										}
+										if secretEncs, ok := kubeAPI["secrets_encryption_config"].([]interface{}); ok && len(secretEncs) > 0 {
+											for i4 := range secretEncs {
+												if secretEnc, ok := secretEncs[i4].(map[string]interface{}); ok && len(secretEnc) > 0 {
+													if config, ok := secretEnc["custom_config"].(map[string]interface{}); ok {
+														newValue := ""
+														if len(config) > 0 {
+															conf, err := mapInterfaceToYAML(config)
+															if err == nil {
+																newValue = conf
+															}
+														}
+														rawState["rke_config"].([]interface{})[i1].(map[string]interface{})["services"].([]interface{})[i2].(map[string]interface{})["kube_api"].([]interface{})[i3].(map[string]interface{})["secrets_encryption_config"].([]interface{})[i4].(map[string]interface{})["custom_config"] = newValue
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return rawState, nil
 }
 
 func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) error {

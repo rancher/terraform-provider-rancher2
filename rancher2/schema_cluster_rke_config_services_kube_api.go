@@ -123,6 +123,21 @@ func clusterRKEConfigServicesKubeAPIAuditLogFields() map[string]*schema.Schema {
 	return s
 }
 
+func clusterRKEConfigServicesKubeAPIEventRateLimitFieldsV0() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"configuration": {
+			Type:     schema.TypeMap,
+			Optional: true,
+		},
+		"enabled": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+	}
+	return s
+}
+
 func clusterRKEConfigServicesKubeAPIEventRateLimitFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"configuration": {
@@ -161,6 +176,33 @@ func clusterRKEConfigServicesKubeAPIEventRateLimitFields() map[string]*schema.Sc
 				newMap, _ := ghodssyamlToMapInterface(new)
 				return reflect.DeepEqual(oldMap, newMap)
 			},
+		},
+		"enabled": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+	}
+	return s
+}
+
+// Used by datasource
+func clusterRKEConfigServicesKubeAPIEventRateLimitFieldsData() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"enabled": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+	}
+	return s
+}
+
+func clusterRKEConfigServicesKubeAPISecretsEncryptionConfigFieldsV0() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"custom_config": {
+			Type:     schema.TypeMap,
+			Optional: true,
 		},
 		"enabled": {
 			Type:     schema.TypeBool,
@@ -213,6 +255,96 @@ func clusterRKEConfigServicesKubeAPISecretsEncryptionConfigFields() map[string]*
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
+		},
+	}
+	return s
+}
+
+// Used by datasource
+func clusterRKEConfigServicesKubeAPISecretsEncryptionConfigFieldsData() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"enabled": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+	}
+	return s
+}
+
+func clusterRKEConfigServicesKubeAPIFieldsV0() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"admission_configuration": {
+			Type:     schema.TypeMap,
+			Optional: true,
+		},
+		"always_pull_images": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"audit_log": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesKubeAPIAuditLogFields(),
+			},
+		},
+		"event_rate_limit": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesKubeAPIEventRateLimitFieldsV0(),
+			},
+		},
+		"extra_args": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+		"extra_binds": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"extra_env": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"image": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"pod_security_policy": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"secrets_encryption_config": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesKubeAPISecretsEncryptionConfigFieldsV0(),
+			},
+		},
+		"service_cluster_ip_range": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"service_node_port_range": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
 		},
 	}
 	return s
@@ -280,6 +412,85 @@ func clusterRKEConfigServicesKubeAPIFields() map[string]*schema.Schema {
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesKubeAPISecretsEncryptionConfigFields(),
+			},
+		},
+		"service_cluster_ip_range": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"service_node_port_range": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+	}
+	return s
+}
+
+// Used by datasource
+func clusterRKEConfigServicesKubeAPIFieldsData() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"admission_configuration": {
+			Type:     schema.TypeMap,
+			Optional: true,
+		},
+		"always_pull_images": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"audit_log": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesKubeAPIAuditLogFields(),
+			},
+		},
+		"event_rate_limit": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesKubeAPIEventRateLimitFieldsData(),
+			},
+		},
+		"extra_args": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+		"extra_binds": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"extra_env": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"image": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"pod_security_policy": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"secrets_encryption_config": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesKubeAPISecretsEncryptionConfigFieldsData(),
 			},
 		},
 		"service_cluster_ip_range": {
