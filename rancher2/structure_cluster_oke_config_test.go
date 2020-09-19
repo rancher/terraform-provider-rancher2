@@ -1,0 +1,122 @@
+// Copyright 2020 Oracle and/or its affiliates.
+
+package rancher2
+
+import (
+	"reflect"
+	"testing"
+)
+
+var (
+	testClusterOKEConfigConf      *OracleKubernetesEngineConfig
+	testClusterOKEConfigInterface []interface{}
+)
+
+func init() {
+	testClusterOKEConfigConf = &OracleKubernetesEngineConfig{
+		CompartmentID:               "compartment",
+		Description:                 "description",
+		DisplayName:                 "test",
+		DriverName:                  clusterDriverOKE,
+		EnableKubernetesDashboard:   true,
+		Fingerprint:                 "fingerprint",
+		KubernetesVersion:           "version",
+		Name:                        "test",
+		NodeImage:                   "image",
+		NodePoolSubnetDNSDomainName: "nodedns",
+		NodePoolSubnetName:          "nodedns",
+		NodePublicSSHKeyContents:    "public_key",
+		NodeShape:                   "shape",
+		PrivateKeyContents:          "private_key_contents",
+		PrivateKeyPassphrase:        "",
+		PrivateNodes:                false,
+		QuantityOfSubnets:           2,
+		QuantityPerSubnet:           1,
+		Region:                      "region",
+		ServiceLBSubnet1Name:        "",
+		ServiceLBSubnet2Name:        "",
+		ServiceSubnetDNSDomainName:  "svcdns",
+		SkipVCNDelete:               false,
+		TenancyID:                   "tenancy",
+		UserOCID:                    "user",
+		VCNName:                     "",
+		VcnCompartmentID:            "",
+		WorkerNodeIngressCidr:       "",
+	}
+	testClusterOKEConfigInterface = []interface{}{
+		map[string]interface{}{
+			"compartment_id":              "compartment",
+			"description":                 "description",
+			"enable_kubernetes_dashboard": true,
+			"enable_private_nodes":        false,
+			"fingerprint":                 "fingerprint",
+			"kubernetes_version":          "version",
+			"node_image":                  "image",
+			"node_pool_dns_domain_name":   "nodedns",
+			"node_pool_subnet_name":       "nodedns",
+			"node_public_key_contents":    "public_key",
+			"node_shape":                  "shape",
+			"private_key_contents":        "private_key_contents",
+			"private_key_passphrase":      "",
+			"quantity_of_node_subnets":    2,
+			"quantity_per_subnet":         1,
+			"region":                      "region",
+			"load_balancer_subnet_name_1": "",
+			"load_balancer_subnet_name_2": "",
+			"service_dns_domain_name":     "svcdns",
+			"skip_vcn_delete":             false,
+			"tenancy_id":                  "tenancy",
+			"user_ocid":                   "user",
+			"vcn_name":                    "",
+			"worker_node_ingress_cidr":    "",
+		},
+	}
+}
+
+func TestFlattenClusterOKEConfig(t *testing.T) {
+
+	cases := []struct {
+		Input          *OracleKubernetesEngineConfig
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterOKEConfigConf,
+			testClusterOKEConfigInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output, err := flattenClusterOKEConfig(tc.Input, testClusterOKEConfigInterface)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestExpandClusterOKEConfig(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput *OracleKubernetesEngineConfig
+	}{
+		{
+			testClusterOKEConfigInterface,
+			testClusterOKEConfigConf,
+		},
+	}
+
+	for _, tc := range cases {
+		output, err := expandClusterOKEConfig(tc.Input, "test")
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}

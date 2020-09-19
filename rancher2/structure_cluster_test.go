@@ -29,6 +29,8 @@ var (
 	testClusterInterfaceEKS                        map[string]interface{}
 	testClusterConfGKE                             *Cluster
 	testClusterInterfaceGKE                        map[string]interface{}
+	testClusterConfOKE                             *Cluster
+	testClusterInterfaceOKE                        map[string]interface{}
 	testClusterConfRKE                             *Cluster
 	testClusterInterfaceRKE                        map[string]interface{}
 	testClusterConfTemplate                        *Cluster
@@ -233,6 +235,31 @@ func testCluster() {
 		"gke_config":                              testClusterGKEConfigInterface,
 		"system_project_id":                       "system_project_id",
 	}
+	testClusterConfOKE = &Cluster{
+		OracleKubernetesEngineConfig: testClusterOKEConfigConf,
+	}
+	testClusterConfOKE.Name = "test"
+	testClusterConfOKE.Description = "description"
+	testClusterConfOKE.Driver = clusterOKEKind
+	testClusterConfOKE.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfOKE.EnableClusterMonitoring = true
+	testClusterConfOKE.EnableNetworkPolicy = newTrue()
+	testClusterConfOKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
+	testClusterInterfaceOKE = map[string]interface{}{
+		"id":                         "id",
+		"name":                       "test",
+		"default_project_id":         "default_project_id",
+		"description":                "description",
+		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token": testClusterRegistrationTokenInterface,
+		"default_pod_security_policy_template_id": "restricted",
+		"enable_cluster_monitoring":               true,
+		"enable_network_policy":                   true,
+		"kube_config":                             "kube_config",
+		"driver":                                  clusterOKEKind,
+		"oke_config":                              testClusterOKEConfigInterface,
+		"system_project_id":                       "system_project_id",
+	}
 	testClusterConfRKE = &Cluster{}
 	testClusterConfRKE.Name = "test"
 	testClusterConfRKE.Description = "description"
@@ -350,6 +377,12 @@ func TestFlattenCluster(t *testing.T) {
 			testClusterInterfaceGKE,
 		},
 		{
+			testClusterConfOKE,
+			testClusterRegistrationTokenConf,
+			testClusterGenerateKubeConfigOutput,
+			testClusterInterfaceOKE,
+		},
+		{
 			testClusterConfRKE,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
@@ -428,6 +461,10 @@ func TestExpandCluster(t *testing.T) {
 		{
 			testClusterInterfaceGKE,
 			testClusterConfGKE,
+		},
+		{
+			testClusterInterfaceOKE,
+			testClusterConfOKE,
 		},
 		{
 			testClusterInterfaceRKE,

@@ -351,11 +351,12 @@ resource "rancher2_cluster" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
-* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config` and `k3s_config` (list maxitems:1)
-* `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config` and `rke_config` (list maxitems:1)
-* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `gke_config`, `k3s_config` and `rke_config` (list maxitems:1)
-* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `gke_config`, `k3s_config` and `rke_config` (list maxitems:1)
-* `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `k3s_config` and `rke_config` (list maxitems:1)
+* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` and `k3s_config` (list maxitems:1)
+* `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` and `rke_config` (list maxitems:1)
+* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `gke_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `gke_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config` `k3s_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_monitoring_input` - (Optional) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
@@ -1066,6 +1067,37 @@ The following arguments are supported:
 * `use_ip_aliases` - (Optional) Whether alias IPs will be used for pod IPs in the cluster. Default `false` (bool)
 * `taints` - (Required) List of Kubernetes taints to be applied to each node (list)
 * `zone` - (Optional) GKE cluster zone. Conflicts with `region` (string)
+
+### `oke_config`
+
+#### Arguments
+
+The following arguments are supported:
+
+* `compartment_id` - (Required) The OCID of the compartment in which to create resources OKE cluster and related resources (string)
+* `description` - (Optional) An optional description of this cluster (string)
+* `enable_kubernetes_dashboard` - (Optional) Specifies whether to enable the Kubernetes dashboard. Default `false` (bool)
+* `enable_private_nodes` - (Optional) Specifies whether worker nodes will be deployed into a new, private, subnet. Default `false` (bool)
+* `fingerprint` - (Required) The fingerprint corresponding to the specified user's private API Key (string)
+* `kubernetes_version` - (Required) The Kubernetes version that will be used for your master *and* OKE worker nodes (string)
+* `load_balancer_subnet_name_1` - (Optional) The name of the first existing subnet to use for Kubernetes services / LB. `vcn_name` is also required when specifying an existing subnet. (string)
+* `load_balancer_subnet_name_2` - (Optional) The name of a second existing subnet to use for Kubernetes services / LB. A second subnet is only required when it is AD-specific (non-regional) (string)
+* `node_image` - (Required) The Oracle Linux OS image name to use for the OKE node(s). See [here](https://docs.cloud.oracle.com/en-us/iaas/images/) for a list of images. (string)
+* `node_pool_dns_domain_name` - (Optional) Name for DNS domain of node pool subnet. Default `nodedns` (string)
+* `node_pool_subnet_name` - (Optional) Name for node pool subnet. Default `nodedns` (string)
+* `node_public_key_contents` - (Optional) The contents of the SSH public key file to use for the nodes (string)
+* `node_shape` - (Required) The shape of the node (determines number of CPUs and  amount of memory on each OKE node) (string)
+* `private_key_contents` - (Required/Sensitive) The private API key file contents for the specified user, in PEM format (string)
+* `private_key_passphrase` - (Optional/Sensitive) The passphrase (if any) of the private key for the OKE cluster (string)
+* `quantity_of_node_subnets` - (Optional) Number of node subnets. Default `1` (int)
+* `quantity_per_subnet` - (Optional) Number of OKE worker nodes in each subnet / availability domain. Default `1` (int)
+* `region` - (Required) The availability domain within the region to host the cluster. See [here](https://docs.cloud.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm) for a list of region names. (string)
+* `service_dns_domain_name` - (Optional) Name for DNS domain of service subnet. Default `svcdns` (string)
+* `skip_vcn_delete` - (Optional) Specifies whether to skip deleting the virtual cloud network (VCN) on destroy. Default `false` (bool)
+* `tenancy_id` - (Required) The OCID of the tenancy in which to create resources (string)
+* `user_ocid` - (Required) The OCID of a user who has access to the tenancy/compartment (string)
+* `vcn_name` - (Optional) The name of an existing virtual network to use for the cluster creation. If set, you must also set `load_balancer_subnet_name_1`. A VCN and subnets will be created if none are specified. (string)
+* `worker_node_ingress_cidr` - (Optional) Additional CIDR from which to allow ingress to worker nodes (string)
 
 ### `cluster_auth_endpoint`
 
