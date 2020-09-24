@@ -12,7 +12,7 @@ const (
 )
 
 var (
-	clusterDrivers = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverK3S, clusterDriverRKE}
+	clusterDrivers = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverK3S, clusterDriverOKE, clusterDriverRKE}
 )
 
 //Types
@@ -22,6 +22,7 @@ type Cluster struct {
 	AmazonElasticContainerServiceConfig *AmazonElasticContainerServiceConfig `json:"amazonElasticContainerServiceConfig,omitempty" yaml:"amazonElasticContainerServiceConfig,omitempty"`
 	AzureKubernetesServiceConfig        *AzureKubernetesServiceConfig        `json:"azureKubernetesServiceConfig,omitempty" yaml:"azureKubernetesServiceConfig,omitempty"`
 	GoogleKubernetesEngineConfig        *GoogleKubernetesEngineConfig        `json:"googleKubernetesEngineConfig,omitempty" yaml:"googleKubernetesEngineConfig,omitempty"`
+	OracleKubernetesEngineConfig        *OracleKubernetesEngineConfig        `json:"okeEngineConfig,omitempty" yaml:"okeEngineConfig,omitempty"`
 }
 
 // Schemas
@@ -481,7 +482,7 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "k3s_config"},
+			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "k3s_config", "oke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigFields(),
 			},
@@ -491,7 +492,7 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "rke_config"},
+			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "oke_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterK3SConfigFields(),
 			},
@@ -500,7 +501,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"aks_config", "gke_config", "k3s_config", "rke_config"},
+			ConflictsWith: []string{"aks_config", "gke_config", "k3s_config", "oke_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterEKSConfigFields(),
 			},
@@ -509,7 +510,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"eks_config", "gke_config", "k3s_config", "rke_config"},
+			ConflictsWith: []string{"eks_config", "gke_config", "k3s_config", "oke_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterAKSConfigFields(),
 			},
@@ -518,9 +519,18 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "k3s_config", "rke_config"},
+			ConflictsWith: []string{"aks_config", "eks_config", "k3s_config", "oke_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigFields(),
+			},
+		},
+		"oke_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "k3s_config", "rke_config"},
+			Elem: &schema.Resource{
+				Schema: clusterOKEConfigFields(),
 			},
 		},
 		"default_project_id": {
