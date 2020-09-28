@@ -1,3 +1,20 @@
+## 1.10.4 (Unreleased)
+
+FEATURES:
+
+* **New Argument:** `rancher2_cluster.oke_config` - (Optional) Oracle OKE configuration
+
+ENHANCEMENTS:
+
+* Added new computed `ca_cert` argument at `rancher2_cluster` resource and datasource
+* Updated acceptance tests to use k3s `v1.18.9-k3s1` and cert-manager `v1.0.1`
+* Delete `rancher2_app` if created and got timeout to be active
+
+BUG FIXES:
+
+* Fix `rke_config.monitoring.replicas` argument to set default value to 1 if monitoring enabled
+
+
 ## 1.10.3 (September 14, 2020)
 
 FEATURES:
