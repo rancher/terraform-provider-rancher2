@@ -11,6 +11,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 	"sort"
@@ -101,7 +102,7 @@ func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 }
 
 func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
-	loginURL := url + "-public/localProviders/local?action=login"
+	loginURL := url + "/v3-public/localProviders/local?action=login"
 	loginData := `{"username": "` + user + `", "password": "` + pass + `", "ttl": ` + ttl + `, "description": "` + desc + `"}`
 	loginHead := map[string]string{
 		"Accept":       "application/json",
@@ -237,18 +238,17 @@ func DoGet(url, username, password, cacert string, insecure bool) ([]byte, error
 
 }
 
-func NormalizeURL(url string) string {
-	if url == "" || url == "https://" || url == "http://" {
+func NormalizeURL(input string) string {
+	if input == "" {
 		return ""
 	}
-
-	url = strings.TrimSuffix(url, "/")
-
-	if !strings.HasSuffix(url, "/v3") {
-		url = url + "/v3"
+	u, err := url.Parse(input)
+	if err != nil || u.Host == "" || (u.Scheme != "https" && u.Scheme != "http") {
+		return ""
 	}
-
-	return url
+	// Setting empty url path
+	u.Path = ""
+	return u.String()
 }
 
 func RootURL(url string) string {
@@ -291,6 +291,13 @@ func splitTokenID(token string) string {
 	}
 
 	return token
+}
+
+func splitBySep(data, sep string) []string {
+	if len(sep) == 0 {
+		return nil
+	}
+	return strings.Split(data, sep)
 }
 
 func splitID(id string) (clusterID, resourceID string) {
