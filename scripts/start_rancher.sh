@@ -15,7 +15,7 @@ K3S_INGRESS_PORT_TLS=${K3S_INGRESS_PORT_TLS:-8443}
 KUBECTL_BIN=${KUBECTL_BIN:-"${DOCKER_BIN} exec -i ${K3S_SERVER} kubectl"}
 
 ## cert-manager
-CERTMANAGER_VERSION=${CERTMANAGER_VERSION:-"v0.14.3"}
+CERTMANAGER_VERSION=${CERTMANAGER_VERSION:-"v1.0.1"}
 CERTMANAGER_CRD=${CERTMANAGER_CRD:-"https://github.com/jetstack/cert-manager/releases/download/${CERTMANAGER_VERSION}/cert-manager.crds.yaml"}
 CERTMANAGER_NS=${CERTMANAGER_NS:-"cert-manager"}
 
