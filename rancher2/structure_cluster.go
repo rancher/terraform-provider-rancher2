@@ -126,6 +126,10 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 
+	if len(in.CACert) > 0 {
+		d.Set("ca_cert", in.CACert)
+	}
+
 	d.Set("kube_config", kubeConfig.Config)
 	d.Set("default_project_id", defaultProjectID)
 	d.Set("system_project_id", systemProjectID)
