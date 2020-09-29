@@ -25,6 +25,7 @@ const (
 	rancher2NodeTemplateChangeVersion = "2.3.3" // Change node template id format
 	rancher2TokeTTLMinutesVersion     = "2.4.6" // ttl token is readed in minutes
 	rancher2TokeTTLMilisVersion       = "2.4.7" // ttl token is readed in miliseconds
+	rancher2UILandingVersion          = "2.5.0" // ui landing option
 	rancher2NodeTemplateNewPrefix     = "cattle-global-nt:nt-"
 )
 

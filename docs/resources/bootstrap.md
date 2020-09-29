@@ -61,6 +61,7 @@ The following arguments are supported:
 * `telemetry` - (Optional) Send telemetry anonymous data. Default: `false` (bool)
 * `token_ttl` - (Optional) TTL in seconds for generated admin token. Default: `0`  (int)
 * `token_update` - (Optional) Regenerate admin token. Default: `false` (bool)
+* `ui_default_landing` - (Optional) Default UI landing for k8s clusters. Available options: `ember` (cluster manager ui)  and `vue` (cluster explorer ui). Default: `ember` (string)
 
 ## Attributes Reference
 

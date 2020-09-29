@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const (
@@ -10,8 +11,15 @@ const (
 	bootstrapDefaultUser        = "admin"
 	bootstrapDefaultPassword    = "admin"
 	bootstrapDefaultTTL         = "60000"
+	bootstrapSettingUILanding   = "ui-default-landing"
 	bootstrapSettingURL         = "server-url"
 	bootstrapSettingTelemetry   = "telemetry-opt"
+	bootstrapUILandingExplorer  = "vue"
+	bootstrapUILandingManager   = "ember"
+)
+
+var (
+	bootstrapUILandingKinds = []string{bootstrapUILandingExplorer, bootstrapUILandingManager}
 )
 
 //Schemas
@@ -53,6 +61,12 @@ func bootstrapFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,
+		},
+		"ui_default_landing": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      bootstrapUILandingManager,
+			ValidateFunc: validation.StringInSlice(bootstrapUILandingKinds, true),
 		},
 		"temp_token": {
 			Type:      schema.TypeString,
