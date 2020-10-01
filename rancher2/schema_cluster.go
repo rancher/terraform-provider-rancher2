@@ -477,6 +477,11 @@ func clusterFields() map[string]*schema.Schema {
 			Computed:  true,
 			Sensitive: true,
 		},
+		"ca_cert": {
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
+		},
 		"rke_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,

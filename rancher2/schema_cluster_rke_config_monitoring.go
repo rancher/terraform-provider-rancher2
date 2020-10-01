@@ -4,6 +4,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+const (
+	clusterRKEConfigMonitoringProviderDisabled = "none"
+)
+
 //Schemas
 
 func clusterRKEConfigMonitoringFields() map[string]*schema.Schema {

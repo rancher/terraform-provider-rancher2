@@ -55,8 +55,13 @@ func expandClusterRKEConfigMonitoring(p []interface{}) (*managementClient.Monito
 	if v, ok := in["provider"].(string); ok && len(v) > 0 {
 		obj.Provider = v
 	}
+	if obj.Provider != clusterRKEConfigMonitoringProviderDisabled {
+		// Setting Replicas to 1 if monitoring enabled
+		value := int64(1)
+		obj.Replicas = &value
+	}
 
-	if v, ok := in["replicas"].(int); ok {
+	if v, ok := in["replicas"].(int); ok && v > 0 {
 		value := int64(v)
 		obj.Replicas = &value
 	}

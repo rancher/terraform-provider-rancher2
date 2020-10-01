@@ -396,6 +396,7 @@ The following attributes are exported:
 * `driver` - (Computed) The driver used for the Cluster. `imported`, `azurekubernetesservice`, `amazonelasticcontainerservice`, `googlekubernetesengine` and `rancherKubernetesEngine` are supported (string)
 * `istio_enabled` - (Computed) Is istio enabled at cluster? Just for Rancher v2.3.x and above (bool)
 * `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster (string)
+* `ca_cert` - (Computed/Sensitive) K8s cluster ca cert (string)
 * `system_project_id` - (Computed) System project ID for the cluster (string)
 
 ## Nested blocks

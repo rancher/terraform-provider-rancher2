@@ -29,6 +29,7 @@ The following attributes are exported:
 * `default_project_id` - (Computed) Default project ID for the cluster (string)
 * `driver` - (Computed) The driver used for the Cluster. `imported`, `azurekubernetesservice`, `amazonelasticcontainerservice`, `googlekubernetesengine` and `rancherKubernetesEngine` are supported (string)
 * `kube_config` - (Computed) Kube Config generated for the cluster (string)
+* `ca_cert` - (Computed) K8s cluster ca cert (string)
 * `system_project_id` - (Computed) System project ID for the cluster (string)
 * `rke_config` - (Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config` and `gke_config` (list maxitems:1)
 * `k3s_config` - (Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config` and `rke_config` (list maxitems:1)

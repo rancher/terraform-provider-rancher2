@@ -61,8 +61,6 @@ func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(newApp.ID)
-
 	if d.Get("wait").(bool) {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{},
@@ -74,6 +72,7 @@ func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		_, waitErr := stateConf.WaitForState()
 		if waitErr != nil {
+			client.App.Delete(newApp)
 			return fmt.Errorf("[ERROR] waiting for app (%s) to finish transitioning: %s", newApp.ID, waitErr)
 		}
 		stateConf = &resource.StateChangeConf{
@@ -86,9 +85,11 @@ func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		_, waitErr = stateConf.WaitForState()
 		if waitErr != nil {
+			client.App.Delete(newApp)
 			return fmt.Errorf("[ERROR] waiting for app (%s) to be active: %s", newApp.ID, waitErr)
 		}
 	}
+	d.SetId(newApp.ID)
 
 	return resourceRancher2AppRead(d, meta)
 }
