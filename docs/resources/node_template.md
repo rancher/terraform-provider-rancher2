@@ -235,12 +235,12 @@ The following attributes are exported:
 * `auth_url` - (Required) OpenStack authentication URL (string)
 * `availability_zone` - (Required) OpenStack availability zone (string)
 * `region` - (Required) OpenStack region name (string)
-* `username` - (Required) OpenStack username (string)
+* `username` - (Required**) OpenStack username (string)
 * `active_timeout`- (Optional) OpenStack active timeout Default `200` (string)
 * `cacert` - (Optional) CA certificate bundle to verify against (string)
 * `config_drive` - (Optional) Enables the OpenStack config drive for the instance. Default `false` (bool)
-* `domain_id` - (Required*) OpenStack domain ID. Identity v3 only. Conflicts with `domain_name` (string)
-* `domain_name` - (Required*) OpenStack domain name. Identity v3 only. Conflicts with `domain_id` (string)
+* `domain_id` - (Required**) OpenStack domain ID. Identity v3 only. Conflicts with `domain_name` (string)
+* `domain_name` - (Required**) OpenStack domain name. Identity v3 only. Conflicts with `domain_id` (string)
 * `endpoint_type` - (Optional) OpenStack endpoint type. adminURL, internalURL or publicURL (string)
 * `flavor_id` - (Required*) OpenStack flavor id to use for the instance. Conflicts with `flavor_name` (string)
 * `flavor_name` - (Required*) OpenStack flavor name to use for the instance. Conflicts with `flavor_id` (string)
@@ -258,11 +258,16 @@ The following attributes are exported:
 * `sec_groups` - (Optional) OpenStack comma separated security groups for the machine (string)
 * `ssh_port` - (Optional) OpenStack SSH port * Default `22` (string)
 * `ssh_user` - (Optional) OpenStack SSH user * Default: `root` (string)
-* `tenant_id` - (Required*) OpenStack tenant id. Conflicts with `tenant_name` (string)
-* `tenant_name` - (Required*) OpenStack tenant name. Conflicts with `tenant_id` (string)
+* `tenant_id` - (Required**) OpenStack tenant id. Conflicts with `tenant_name` (string)
+* `tenant_name` - (Required**) OpenStack tenant name. Conflicts with `tenant_id` (string)
 * `user_data_file` - (Optional) File containing an openstack userdata script (string)
+* `application_credential_id` - (Optional) OpenStack application credential id. Conflicts with `application_credential_name` (string)
+* `application_credential_name` - (Optional) OpenStack application credential name. Conflicts with `application_credential_id` (string)
+* `application_credential_secret` - (Optional) OpenStack application credential secret (string)
 
 > **Note**: `Required*` denotes that either the _name or _id is required but you cannot use both.
+
+> **Note**: `Required**` denotes that either the _name or _id is required unless `application_credential_id` is defined.
 
 ### `vsphere_config`
 
