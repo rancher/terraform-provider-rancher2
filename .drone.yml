@@ -4,23 +4,20 @@ name: default
 
 steps:
 - name: build
-  image: docker:19.03.12-dind
-  environment:
-    GOPATH: /go
-    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/go/bin
+  image: golang:1.14.9
   commands:
-  - /usr/local/bin/dockerd-entrypoint.sh &
-  - apk add -U bash make gcc musl-dev git wget go curl
   - mkdir -p /go/src/github.com/rancher
   - ln -s /drone/src /go/src/github.com/rancher/terraform-provider-rancher2
   - cd /go/src/github.com/rancher/terraform-provider-rancher2
   - make build-rancher
   - make testacc
-  - kill %1
   privileged: true
+  volumes:
+  - name: socket
+    path: /var/run/docker.sock
 
 - name: build-all-binaries
-  image: golang:1.13.14
+  image: golang:1.14.9
   environment:
     CROSS: 1
     VERSION: ${DRONE_TAG}
@@ -73,3 +70,8 @@ steps:
     event: tag
     ref:
       exclude: [ refs/tags/*rc* ]
+
+volumes:
+- name: socket
+  host:
+    path: /var/run/docker.sock

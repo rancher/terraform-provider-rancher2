@@ -1,6 +1,6 @@
 module github.com/terraform-providers/terraform-provider-rancher2
 
-go 1.13
+go 1.14
 
 require (
 	github.com/ghodss/yaml v1.0.0
@@ -9,10 +9,10 @@ require (
 	github.com/rancher/client-go v11.0.0+incompatible // indirect
 	github.com/rancher/lasso v0.0.0-20200905045615-7fcb07d6a20b
 	github.com/rancher/norman v0.0.0-20200930000340-693d65aaffe3
-	github.com/rancher/rancher v0.0.0-20201001001323-dfe81bf6efac
+	github.com/rancher/rancher v0.0.0-20201006004413-65f3525cdc11
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
-	github.com/rancher/wrangler v0.6.2-0.20200922204249-68dfef44d080
+	github.com/rancher/wrangler v0.7.2
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.19.0
@@ -23,8 +23,8 @@ require (
 
 replace (
 	github.com/crewjam/saml => github.com/crewjam/saml v0.4.1
-	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20201001001323-dfe81bf6efac
-	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20201001001323-dfe81bf6efac
+	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20201006004413-65f3525cdc11
+	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20201006004413-65f3525cdc11
 	k8s.io/api => k8s.io/api v0.19.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.0
 	k8s.io/apimachinery => github.com/rancher/apimachinery v0.19.0-rancher1

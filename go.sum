@@ -1056,6 +1056,8 @@ github.com/rancher/eks-operator v0.1.0-rc22 h1:wPX+aP/kJ3q9wA7qiZ8jEDbRZ6PV6cWno
 github.com/rancher/eks-operator v0.1.0-rc22/go.mod h1:TrTF54+K2X6QLhVFspIfawYcPnVNLSIBrgCvpE1BiqM=
 github.com/rancher/eks-operator v0.1.0-rc30 h1:5Q/TWFRzHX7O4ZsNAdaSMSSHVHoxYxB5GlxwcFh+3WQ=
 github.com/rancher/eks-operator v0.1.0-rc30/go.mod h1:Q9J5NGpq/y1qdog+6YzYmvhPDKgJ7F/8vOgza9+HF6M=
+github.com/rancher/eks-operator v1.0.1 h1:U2b7kJSOm4oKiEVfMdXqNpo2RlFOh+VSvsqtjZBQxKk=
+github.com/rancher/eks-operator v1.0.1/go.mod h1:Q9J5NGpq/y1qdog+6YzYmvhPDKgJ7F/8vOgza9+HF6M=
 github.com/rancher/kubernetes-provider-detector v0.0.0-20200807181951-690274ab1fb3/go.mod h1:ypuJS7kP7rUiAn330xG46mj+Nhvym05GM8NqMVekpH0=
 github.com/rancher/kubernetes-provider-detector v0.1.0/go.mod h1:ypuJS7kP7rUiAn330xG46mj+Nhvym05GM8NqMVekpH0=
 github.com/rancher/lasso v0.0.0-20200427171700-e0509f89f319/go.mod h1:6Dw19z1lDIpL887eelVjyqH/mna1hfR61ddCFOG78lw=
@@ -1088,6 +1090,10 @@ github.com/rancher/rancher v0.0.0-20200925132407-a7c40273ac93 h1:fh3ix0hMHpZp7Qg
 github.com/rancher/rancher v0.0.0-20200925132407-a7c40273ac93/go.mod h1:iXDdzfkp4UsDobpu7RfwAzFWZWQULLXriXUw7VWl8mg=
 github.com/rancher/rancher v0.0.0-20201001001323-dfe81bf6efac h1:Rp8auXGCunogglwOGpcVUIaAboodra27jbW0h8V5zys=
 github.com/rancher/rancher v0.0.0-20201001001323-dfe81bf6efac/go.mod h1:CUjSSZgyEfXrrFjVOQcV6v50Ou/3rjCfdi/XK7gTkTA=
+github.com/rancher/rancher v0.0.0-20201005033433-660042f7f163 h1:LQLJS2JzDLVLicfhyYhkJtJy1Dafw8z/SCDDi53sngs=
+github.com/rancher/rancher v0.0.0-20201005033433-660042f7f163/go.mod h1:9SAouAL0Ju4MislIyIvDMlZzWY1baecQ7AQleW+EQ0A=
+github.com/rancher/rancher v0.0.0-20201006004413-65f3525cdc11 h1:rswGHFUGMjvWpx9cBfR45XjPMxV0NzmzZxk9+U8wzeQ=
+github.com/rancher/rancher v0.0.0-20201006004413-65f3525cdc11/go.mod h1:9SAouAL0Ju4MislIyIvDMlZzWY1baecQ7AQleW+EQ0A=
 github.com/rancher/rancher v2.2.13+incompatible h1:LzIBmtbHxMl9gpwcwWYPl8Qdl9+bzY2JeSiTAGtochY=
 github.com/rancher/rancher/pkg/apis v0.0.0-20200827144819-5e1b21b931ac/go.mod h1:IRGNKTYcyi3lg/IwYpxvc0f+B71WdFeEz58Nb/7+6GA=
 github.com/rancher/rancher/pkg/apis v0.0.0-20200828154848-941896ed704f h1:8sR6QrTy0iM/5pFiO9UJB411ev5b3Wm5sly+QtuDK2U=
@@ -1096,6 +1102,10 @@ github.com/rancher/rancher/pkg/apis v0.0.0-20200925132407-a7c40273ac93 h1:lhX7QE
 github.com/rancher/rancher/pkg/apis v0.0.0-20200925132407-a7c40273ac93/go.mod h1:ysToMpm2tBWYCXqr0Dby66x9BGdtSj7I19mFImh6Ats=
 github.com/rancher/rancher/pkg/apis v0.0.0-20201001001323-dfe81bf6efac h1:4kNDeuDpo6UkqY0WutA/NAyNkexA4IPKAfRWeM5Z0U8=
 github.com/rancher/rancher/pkg/apis v0.0.0-20201001001323-dfe81bf6efac/go.mod h1:ysToMpm2tBWYCXqr0Dby66x9BGdtSj7I19mFImh6Ats=
+github.com/rancher/rancher/pkg/apis v0.0.0-20201005033433-660042f7f163 h1:3LYsLecq0z0a9v+vlTOo0Skyx/RW8v1r22y7ktckR4w=
+github.com/rancher/rancher/pkg/apis v0.0.0-20201005033433-660042f7f163/go.mod h1:DfKhLz+l9O7g+4sly/7/8PnJrfi4mVJRFG3SMDf/nJ4=
+github.com/rancher/rancher/pkg/apis v0.0.0-20201006004413-65f3525cdc11 h1:71sUAv8Zc5hBiX8gAvvkMO5SvUHGy9exPp7rPP3+6Bg=
+github.com/rancher/rancher/pkg/apis v0.0.0-20201006004413-65f3525cdc11/go.mod h1:DfKhLz+l9O7g+4sly/7/8PnJrfi4mVJRFG3SMDf/nJ4=
 github.com/rancher/rancher/pkg/client v0.0.0-20200827144819-5e1b21b931ac h1:3EgTrvGwtyeMlBJl/9vqBjdf6W3MPQpvMHnRBkK8F0E=
 github.com/rancher/rancher/pkg/client v0.0.0-20200827144819-5e1b21b931ac/go.mod h1:iUy4JIYYA0BBQ7nFxueLJYDCYg7Hhoo+VY5t9HQXmlc=
 github.com/rancher/rancher/pkg/client v0.0.0-20200828154848-941896ed704f h1:AAXDQWGx7wVlcJGU6V4ACd6hdGW/ZYoCBOQu1VomAAk=
@@ -1104,6 +1114,10 @@ github.com/rancher/rancher/pkg/client v0.0.0-20200925132407-a7c40273ac93 h1:cgn2
 github.com/rancher/rancher/pkg/client v0.0.0-20200925132407-a7c40273ac93/go.mod h1:iUy4JIYYA0BBQ7nFxueLJYDCYg7Hhoo+VY5t9HQXmlc=
 github.com/rancher/rancher/pkg/client v0.0.0-20201001001323-dfe81bf6efac h1:46nQHuFm7sVZZNT9gATQu2DY4UbjrG89BTWvG+xzl04=
 github.com/rancher/rancher/pkg/client v0.0.0-20201001001323-dfe81bf6efac/go.mod h1:iUy4JIYYA0BBQ7nFxueLJYDCYg7Hhoo+VY5t9HQXmlc=
+github.com/rancher/rancher/pkg/client v0.0.0-20201005033433-660042f7f163 h1:s9g34XyCoTHyekeL8JqLb9tGI69GFCEOptzfNDzGzT0=
+github.com/rancher/rancher/pkg/client v0.0.0-20201005033433-660042f7f163/go.mod h1:iUy4JIYYA0BBQ7nFxueLJYDCYg7Hhoo+VY5t9HQXmlc=
+github.com/rancher/rancher/pkg/client v0.0.0-20201006004413-65f3525cdc11 h1:ifnmLznwYZakL4B3coIeZZGJE48PaPNYjxtKr0k0qUY=
+github.com/rancher/rancher/pkg/client v0.0.0-20201006004413-65f3525cdc11/go.mod h1:iUy4JIYYA0BBQ7nFxueLJYDCYg7Hhoo+VY5t9HQXmlc=
 github.com/rancher/rdns-server v0.0.0-20180802070304-bf662911db6a/go.mod h1:YW8wJ/coee2n9ed937uPBWQArBaVlxs+5wkkS9KiyDc=
 github.com/rancher/remotedialer v0.2.6-0.20200820180140-e5448aaba7ee/go.mod h1:dbzn9NF1JWbGEHL6Q/1KG4KFROILiY/j6wmfF1Np3fk=
 github.com/rancher/rke v1.2.0-rc15 h1:s8kPVj16/+yppC08mvNUQ6S6sA2mxfUrO/KgaM4I0w4=
@@ -1112,6 +1126,8 @@ github.com/rancher/rke v1.2.0-rc6 h1:bEEHhYk7YHTJwNp7LpDuXD5c57vQ2xK8YOp0+8ajOsI
 github.com/rancher/rke v1.2.0-rc6/go.mod h1:JXG/6VZssKO711ZgkKcV3ALvpCaxVcO108Ou5zLK4v8=
 github.com/rancher/rke v1.2.0-rc8 h1:WrEE/NVUyBHk1ueIIwUiKu4Qt6Tefemq8qpjLVT5SqE=
 github.com/rancher/rke v1.2.0-rc8/go.mod h1:aPSc14Hp8UGLscL/wB9ZZQHPX/kjDiPXLcoMTCY2NS4=
+github.com/rancher/rke v1.2.0 h1:IxnUfQKyiQ1F16xERd9JSboS8g43JHtjpmtcfgssHQE=
+github.com/rancher/rke v1.2.0/go.mod h1:aPSc14Hp8UGLscL/wB9ZZQHPX/kjDiPXLcoMTCY2NS4=
 github.com/rancher/security-scan v0.1.7-0.20200222041501-f7377f127168/go.mod h1:WlLAocVyVQs5J8r0IiQXsp0ajVZO6hYi/Vo6zxjo73s=
 github.com/rancher/steve v0.0.0-20200810194305-6ebfa39af82c h1:GyN1uaOC5XU0m3Yn40gb6CLl8r094cG10GMBsfs0YQE=
 github.com/rancher/steve v0.0.0-20200810194305-6ebfa39af82c/go.mod h1:OzaEqY4YLLtoxJ9Qozo6+PcmDnzzJ/VN8l3o48d8mR0=
@@ -1119,6 +1135,8 @@ github.com/rancher/steve v0.0.0-20200922204646-09d79b238ba3 h1:F1BZvJAIQgNbm75Ha
 github.com/rancher/steve v0.0.0-20200922204646-09d79b238ba3/go.mod h1:BwtPwkGv6vayWxQXWaJazMEbt/NM0kb/+qbGVSCfrCg=
 github.com/rancher/steve v0.0.0-20200930182348-e7858849e90c h1:uu7ZgUMc/DeTT72R067ow6I0OXojCL4XX35QByYRAEs=
 github.com/rancher/steve v0.0.0-20200930182348-e7858849e90c/go.mod h1:BwtPwkGv6vayWxQXWaJazMEbt/NM0kb/+qbGVSCfrCg=
+github.com/rancher/steve v0.0.0-20201001183606-e0e2eddcb1b2 h1:D0kqOYXm1mTLwmckKajkTU9630Io+FZyqNH372FnjYg=
+github.com/rancher/steve v0.0.0-20201001183606-e0e2eddcb1b2/go.mod h1:ejhy2JaZWwl/FWvuR566aizHG4XvBLHCWyRXVozCa6s=
 github.com/rancher/system-upgrade-controller/pkg/apis v0.0.0-20200825145542-a04e2061be24/go.mod h1:f8UA6yw5xPtSspqXUQZNfs7bTyG0UOfzJz7zOkegir4=
 github.com/rancher/types v0.0.0-20200609171948-b18f4c194419 h1:UdhVgG4irjMaNVoZlJygXv1AD7eDYeS4srnLHjMezbg=
 github.com/rancher/types v0.0.0-20200609171948-b18f4c194419/go.mod h1:J6XqSEmTbADDyC4Dp6LLiceNtnlYvyHEcV4o7zG/0hg=
@@ -1143,6 +1161,9 @@ github.com/rancher/wrangler v0.6.2-0.20200827201958-9b574583587e/go.mod h1:I7qe4
 github.com/rancher/wrangler v0.6.2-0.20200916052259-24781350894c/go.mod h1:I7qe4DZNMOLKVa9ax7DJdBZ0XtKOppLF/dalhPX3vaE=
 github.com/rancher/wrangler v0.6.2-0.20200922204249-68dfef44d080 h1:XimUWWj22wLfDOqxvmIlAkkQZBn35PG0Ldj4i0tPs08=
 github.com/rancher/wrangler v0.6.2-0.20200922204249-68dfef44d080/go.mod h1:I7qe4DZNMOLKVa9ax7DJdBZ0XtKOppLF/dalhPX3vaE=
+github.com/rancher/wrangler v0.7.1/go.mod h1:goezjesEKwMxHLfltdjg9DW0xWV7txQee6vOuSDqXAI=
+github.com/rancher/wrangler v0.7.2 h1:GlUIFKO26qq1ICMf1CjAGBr2uP52GQX3E0E69zkW88Q=
+github.com/rancher/wrangler v0.7.2/go.mod h1:goezjesEKwMxHLfltdjg9DW0xWV7txQee6vOuSDqXAI=
 github.com/rancher/wrangler-api v0.5.1-0.20200326194427-c13310506d04/go.mod h1:R3nemXoECcrDqXDSHdY7yJay4j42TeEkU79Hep0rdJ8=
 github.com/rancher/wrangler-api v0.6.1-0.20200427172631-a7c2f09b783e/go.mod h1:2lcWR98q8HU3U4mVETnXc8quNG0uXxrt8vKd6cAa/30=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
