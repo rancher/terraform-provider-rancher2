@@ -37,6 +37,9 @@ func flattenOpenstackConfig(in *openstackConfig) []interface{} {
 	obj["tenant_name"] = in.TenantName
 	obj["user_data_file"] = in.UserDataFile
 	obj["username"] = in.Username
+	obj["application_credential_id"] = in.ApplicationCredentialID
+	obj["application_credential_name"] = in.ApplicationCredentialName
+	obj["application_credential_secret"] = in.ApplicationCredentialSecret
 
 	return []interface{}{obj}
 }
@@ -139,6 +142,15 @@ func expandOpenstackConfig(p []interface{}) *openstackConfig {
 	}
 	if v, ok := in["username"].(string); ok && len(v) > 0 {
 		obj.Username = v
+	}
+	if v, ok := in["application_credential_id"].(string); ok && len(v) > 0 {
+		obj.ApplicationCredentialID = v
+	}
+	if v, ok := in["application_credential_name"].(string); ok && len(v) > 0 {
+		obj.ApplicationCredentialName = v
+	}
+	if v, ok := in["application_credential_secret"].(string); ok && len(v) > 0 {
+		obj.ApplicationCredentialSecret = v
 	}
 	return obj
 }
