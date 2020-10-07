@@ -3,12 +3,21 @@
 FEATURES:
 
 * **New Argument:** `rancher2_cluster.oke_config` - (Optional) Oracle OKE configuration
+* **New Argument:** `rancher2_node_template.openstack_config.application_credential_id` - (Optional) OpenStack application credential id
+* **New Argument:** `rancher2_node_template.openstack_config.application_credential_name` - (Optional) OpenStack application credential name
+* **New Argument:** `rancher2_node_template.openstack_config.application_credential_secret` - (Optional) OpenStack application credential secret
+* **New Argument:** `rancher2_cluster.eks_import` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above 
+* **New Argument:** `rancher2_bootstrap.ui_default_landing` - (Optional) Set default ui landing on Rancher bootstrap. Just for Rancher v2.5.0 and above 
+* **New Data Source:** `rancher2_catalog_v2` - Support new Rancher catalog V2 datasource. Just for Rancher v2.5.0 and above
+* **New Resource:** `rancher2_catalog_v2` - Support new Rancher catalog V2 resource. Just for Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 
 * Added new computed `ca_cert` argument at `rancher2_cluster` resource and datasource
 * Updated acceptance tests to use k3s `v1.18.9-k3s1` and cert-manager `v1.0.1`
 * Delete `rancher2_app` if created and got timeout to be active
+* Updated golang to v1.14.9 and removing vendor folder
+* Updated go mod to support Rancher `v2.5.0`
 
 BUG FIXES:
 
