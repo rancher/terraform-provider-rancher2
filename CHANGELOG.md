@@ -1,4 +1,4 @@
-## 1.10.4 (Unreleased)
+## 1.10.4 (October 29, 2020)
 
 FEATURES:
 
@@ -12,17 +12,19 @@ FEATURES:
 * **New Argument:** `rancher2_bootstrap.ui_default_landing` - (Optional) Set default ui landing on Rancher bootstrap. Just for Rancher v2.5.0 and above 
 * **New Data Source:** `rancher2_catalog_v2` - Support new Rancher catalog V2 datasource. Just for Rancher v2.5.0 and above
 * **New Resource:** `rancher2_catalog_v2` - Support new Rancher catalog V2 resource. Just for Rancher v2.5.0 and above
+* **New Resource:** `rancher2_app_v2` - Support new Rancher app V2 resource. Just for Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 
 * Added new computed `ca_cert` argument at `rancher2_cluster` resource and datasource
-* Updated acceptance tests to use k3s `v1.18.9-k3s1` and cert-manager `v1.0.1`
 * Delete `rancher2_app` if created and got timeout to be active
 * Updated golang to v1.14.9 and removing vendor folder
-* Updated go mod to support Rancher `v2.5.0`
+* Updated go mod to support Rancher `v2.5.1`
 * Added dingtal_config and msteams_config arguments at rancher2_notifier resource. go code and docs
 * Improved `rancher2_cluster_sync` wait for cluster monitoring 
 * Improved `rancher2_bootstrap` on resource creation. `bootstrapDoLogin` function will retry 3 times user/pass login before fail
+* Updated acceptance tests to use Rancher `v2.5.1`, k3s `v1.18.9-k3s1` and cert-manager `v1.0.1`
+* Added new `Apps & marketplace` guide for Rancher v2.5.0
 
 BUG FIXES:
 
