@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
-	managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2Cluster() *schema.Resource {
@@ -113,7 +113,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	expectedState := "active"
 
-	if cluster.Driver == clusterDriverImported {
+	if cluster.Driver == clusterDriverImported || cluster.Driver == clusterDriverEKSImport {
 		expectedState = "pending"
 	}
 
@@ -280,6 +280,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["amazonElasticContainerServiceConfig"] = eksConfig
+	case clusterDriverEKSImport:
+		update["eksConfig"] = expandClusterEKSImport(d.Get("eks_import").([]interface{}))
 	case clusterDriverGKE:
 		gkeConfig, err := expandClusterGKEConfig(d.Get("gke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {

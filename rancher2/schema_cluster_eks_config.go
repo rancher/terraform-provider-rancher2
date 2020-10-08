@@ -18,6 +18,7 @@ type AmazonElasticContainerServiceConfig struct {
 	DesiredNodes                int64    `json:"desiredNodes,omitempty" yaml:"desiredNodes,omitempty"`
 	DisplayName                 string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	DriverName                  string   `json:"driverName,omitempty" yaml:"driverName,omitempty"`
+	EBSEncryption               bool     `json:"ebsEncryption,omitempty" yaml:"ebsEncryption,omitempty"`
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
 	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
@@ -71,6 +72,12 @@ func clusterEKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     3,
 			Description: "The desired number of worker nodes",
+		},
+		"ebs_encryption": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enables EBS encryption of worker nodes",
 		},
 		"instance_type": {
 			Type:        schema.TypeString,

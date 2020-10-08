@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 // Flatteners
@@ -159,6 +159,15 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 			return err
 		}
 		err = d.Set("eks_config", eksConfig)
+		if err != nil {
+			return err
+		}
+	case clusterDriverEKSImport:
+		v, ok := d.Get("eks_import").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err = d.Set("eks_import", flattenClusterEKSImport(in.EKSConfig, v))
 		if err != nil {
 			return err
 		}
@@ -347,6 +356,11 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 		obj.AmazonElasticContainerServiceConfig = eksConfig
 		obj.Driver = clusterDriverEKS
+	}
+
+	if v, ok := in.Get("eks_import").([]interface{}); ok && len(v) > 0 {
+		obj.EKSConfig = expandClusterEKSImport(v)
+		obj.Driver = clusterDriverEKSImport
 	}
 
 	if v, ok := in.Get("gke_config").([]interface{}); ok && len(v) > 0 {

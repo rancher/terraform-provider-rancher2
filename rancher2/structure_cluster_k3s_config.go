@@ -1,12 +1,12 @@
 package rancher2
 
 import (
-	managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 // Flatteners
 
-func flattenClusterK3SUpgradeStrategyConfig(in *managementClient.K3sUpgradeStrategy) []interface{} {
+func flattenClusterK3SUpgradeStrategyConfig(in *managementClient.ClusterUpgradeStrategy) []interface{} {
 	obj := make(map[string]interface{})
 	if in == nil {
 		return []interface{}{}
@@ -26,8 +26,8 @@ func flattenClusterK3SConfig(in *managementClient.K3sConfig) []interface{} {
 		return []interface{}{}
 	}
 
-	if in.K3sUpgradeStrategy != nil {
-		obj["upgrade_strategy"] = flattenClusterK3SUpgradeStrategyConfig(in.K3sUpgradeStrategy)
+	if in.ClusterUpgradeStrategy != nil {
+		obj["upgrade_strategy"] = flattenClusterK3SUpgradeStrategyConfig(in.ClusterUpgradeStrategy)
 	}
 
 	if len(in.Version) > 0 {
@@ -39,8 +39,8 @@ func flattenClusterK3SConfig(in *managementClient.K3sConfig) []interface{} {
 
 // Expanders
 
-func expandClusterK3SUpgradeStrategyConfig(p []interface{}) *managementClient.K3sUpgradeStrategy {
-	obj := &managementClient.K3sUpgradeStrategy{}
+func expandClusterK3SUpgradeStrategyConfig(p []interface{}) *managementClient.ClusterUpgradeStrategy {
+	obj := &managementClient.ClusterUpgradeStrategy{}
 	if len(p) == 0 || p[0] == nil {
 		return obj
 	}
@@ -73,7 +73,7 @@ func expandClusterK3SConfig(p []interface{}) *managementClient.K3sConfig {
 	in := p[0].(map[string]interface{})
 
 	if v, ok := in["upgrade_strategy"].([]interface{}); ok && len(v) > 0 {
-		obj.K3sUpgradeStrategy = expandClusterK3SUpgradeStrategyConfig(v)
+		obj.ClusterUpgradeStrategy = expandClusterK3SUpgradeStrategyConfig(v)
 	}
 
 	if v, ok := in["version"].(string); ok && len(v) > 0 {

@@ -49,6 +49,16 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	// Set ui default landing option for rancher up to 2.5.0
+	if ok, _ := meta.(*Config).IsRancherVersionGreaterThanOrEqual(rancher2UILandingVersion); ok {
+		uiLanding := d.Get("ui_default_landing").(string)
+
+		err = meta.(*Config).SetSetting(bootstrapSettingUILanding, uiLanding)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Generate a new token
 	tokenID, token, err := meta.(*Config).GenerateUserToken(bootstrapDefaultUser, bootstrapDefaultTokenDesc, d.Get("token_ttl").(int))
 	if err != nil {

@@ -17,8 +17,10 @@ var (
 	testAccCheckRancher2UpgradeConfig         string
 	testAccCheckRancher2UpgradeConfigV23      string
 	testAccCheckRancher2UpgradeConfigV24      string
+	testAccCheckRancher2UpgradeConfigV25      string
 	testAccCheckRancher2UpgradeCluster        string
 	testAccCheckRancher2UpgradeVersion        []string
+	testAccCheckRancher2RunningVersionIndex   int
 	testAccCheckRancher2UpgradeCatalogV24     string
 	testAccCheckRancher2UpgradeCertificateV24 string
 )
@@ -36,11 +38,11 @@ resource "rancher2_namespace" "testacc" {
   project_id = rancher2_cluster_sync.testacc.default_project_id
 }
 `
-	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.8"}
+	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.8", "v2.5.0"}
+	testAccCheckRancher2RunningVersionIndex = 0
 	testAccCheckRancher2UpgradeCluster = os.Getenv("RANCHER_ACC_CLUSTER_NAME")
 	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
 	testAccCheckRancher2UpgradeCertificateV24 = testAccRancher2Certificate + testAccRancher2CertificateNs
-
 	testAccCheckRancher2UpgradeConfig = `
 provider "rancher2" {
   alias = "bootstrap"
@@ -161,6 +163,56 @@ provider "rancher2" {
 ` + testAccRancher2Token + `
 ` + testAccRancher2TokenCluster + `
 `
+
+	testAccCheckRancher2UpgradeConfigV25 = testAccCheckRancher2UpgradeConfig + `
+` + testAccRancher2App + `
+` + testAccCheckRancher2UpgradeCatalogV24 + `
+` + testAccRancher2CatalogV2 + `
+` + testAccCheckRancher2UpgradeCertificateV24 + `
+` + testAccRancher2CloudCredentialConfigAmazonec2 + `
+` + testAccRancher2CloudCredentialConfigAzure + `
+` + testAccRancher2CloudCredentialConfigDigitalocean + `
+` + testAccRancher2CloudCredentialConfigOpenstack + `
+` + testAccRancher2CloudCredentialConfigVsphere + `
+` + testAccRancher2ClusterConfigRKE + `
+` + testAccRancher2ClusterAlertGroup + `
+` + testAccRancher2ClusterAlertRule + `
+` + testAccRancher2ClusterDriver + `
+` + testAccRancher2ClusterLoggingSyslog + `
+` + testAccRancher2User + `
+` + testAccRancher2ClusterRoleTemplateBinding + `
+` + testAccRancher2ClusterTemplateConfig + `
+` + testAccRancher2EtcdBackup + `
+` + testAccRancher2GlobalRoleBinding + `
+` + testAccRancher2MultiClusterApp + `
+` + testAccRancher2Namespace + `
+` + testAccRancher2NodeDriver + `
+` + testAccRancher2NodePool + `
+` + testAccRancher2NodeTemplateAmazonec2 + `
+` + testAccRancher2NodeTemplateAzure + `
+` + testAccRancher2NodeTemplateDigitalocean + `
+` + testAccRancher2NodeTemplateOpennebulaConfig + `
+` + testAccRancher2NodeTemplateOpenstack + `
+` + testAccRancher2NodeTemplateVsphere + `
+` + testAccRancher2NotifierPagerduty + `
+` + testAccRancher2NotifierSlack + `
+` + testAccRancher2NotifierSMTP + `
+` + testAccRancher2NotifierWebhook + `
+` + testAccRancher2NotifierWechat + `
+` + testAccCheckRancher2PodSecurityPolicyTemplate + `
+` + testAccRancher2ProjectAlertGroupConfig + `
+` + testAccRancher2ProjectAlertRule + `
+` + testAccRancher2ProjectLoggingSyslog + `
+` + testAccRancher2ProjectRoleTemplateBinding + `
+` + testAccRancher2Project + `
+` + testAccRancher2Registry + `
+` + testAccRancher2RoleTemplateConfig + `
+` + testAccRancher2Secret + `
+` + testAccRancher2SecretNs + `
+` + testAccRancher2SettingConfig + `
+` + testAccRancher2Token + `
+` + testAccRancher2TokenCluster + `
+`
 }
 
 func TestAccRancher2Upgrade(t *testing.T) {
@@ -206,6 +258,22 @@ func TestAccRancher2Upgrade(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
+					testAccRancher2UpgradeRancher(),
+				),
+			},
+			{
+				Config: testAccCheckRancher2UpgradeConfigV25,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
+					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
 				),
 			},
 		},
@@ -214,14 +282,15 @@ func TestAccRancher2Upgrade(t *testing.T) {
 
 func testAccRancher2UpgradeRancher() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		os.Setenv("RANCHER_VERSION", testAccCheckRancher2UpgradeVersion[1])
+		testAccCheckRancher2RunningVersionIndex++
+		os.Setenv("RANCHER_VERSION", testAccCheckRancher2UpgradeVersion[testAccCheckRancher2RunningVersionIndex])
 		cmd := exec.Command("make", "upgrade-rancher")
 		cmd.Env = os.Environ()
 		path, _ := os.Getwd()
 		cmd.Dir = path + "/.."
 		out, err := cmd.Output()
 		if err != nil {
-			return fmt.Errorf("Upgrading rancher: %s\n%v", out, err)
+			return fmt.Errorf("Upgrading rancher to %s: %s\n%v", testAccCheckRancher2UpgradeVersion[testAccCheckRancher2RunningVersionIndex], out, err)
 		}
 		clusterActive, _, err := testAccProvider.Meta().(*Config).isClusterActive(testAccRancher2ClusterID)
 		for retry := 0; retry < 10 && !clusterActive; clusterActive, _, err = testAccProvider.Meta().(*Config).isClusterActive(testAccRancher2ClusterID) {

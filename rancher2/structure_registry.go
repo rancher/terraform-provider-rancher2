@@ -2,7 +2,7 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	projectClient "github.com/rancher/types/client/project/v3"
+	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 )
 
 // Flatteners

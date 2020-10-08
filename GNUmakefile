@@ -8,6 +8,9 @@ default: build
 build: validate
 	@sh -c "'$(CURDIR)/scripts/gobuild.sh'"
 
+docker-build: 
+	@sh -c "'$(CURDIR)/scripts/gobuild_docker.sh'"
+
 build-rancher: validate-rancher
 	@sh -c "'$(CURDIR)/scripts/gobuild.sh'"
 
@@ -64,8 +67,9 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-vendor-status:
-	@govendor status
+vendor:
+	@echo "==> Updating vendor modules..."
+	@GO111MODULE=on go mod vendor
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -75,5 +79,4 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile bin
-
+.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile bin vendor

@@ -1,8 +1,9 @@
 package rancher2
 
 import (
-	managementClient "github.com/rancher/types/client/management/v3"
 	"reflect"
+
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 const (

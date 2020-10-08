@@ -4,18 +4,18 @@ import (
 	"reflect"
 	"testing"
 
-	managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 var (
-	testClusterK3SUpgradeStrategyConfigConf      *managementClient.K3sUpgradeStrategy
+	testClusterK3SUpgradeStrategyConfigConf      *managementClient.ClusterUpgradeStrategy
 	testClusterK3SUpgradeStrategyConfigInterface []interface{}
 	testClusterK3SConfigConf                     *managementClient.K3sConfig
 	testClusterK3SConfigInterface                []interface{}
 )
 
 func init() {
-	testClusterK3SUpgradeStrategyConfigConf = &managementClient.K3sUpgradeStrategy{
+	testClusterK3SUpgradeStrategyConfigConf = &managementClient.ClusterUpgradeStrategy{
 		DrainServerNodes:  true,
 		DrainWorkerNodes:  true,
 		ServerConcurrency: 2,
@@ -30,8 +30,8 @@ func init() {
 		},
 	}
 	testClusterK3SConfigConf = &managementClient.K3sConfig{
-		K3sUpgradeStrategy: testClusterK3SUpgradeStrategyConfigConf,
-		Version:            "version",
+		ClusterUpgradeStrategy: testClusterK3SUpgradeStrategyConfigConf,
+		Version:                "version",
 	}
 	testClusterK3SConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -44,7 +44,7 @@ func init() {
 func TestFlattenClusterK3SUpgradeStrategyConfig(t *testing.T) {
 
 	cases := []struct {
-		Input          *managementClient.K3sUpgradeStrategy
+		Input          *managementClient.ClusterUpgradeStrategy
 		ExpectedOutput []interface{}
 	}{
 		{
@@ -87,7 +87,7 @@ func TestExpandClusterK3SUpgradeStrategyConfig(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput *managementClient.K3sUpgradeStrategy
+		ExpectedOutput *managementClient.ClusterUpgradeStrategy
 	}{
 		{
 			testClusterK3SUpgradeStrategyConfigInterface,

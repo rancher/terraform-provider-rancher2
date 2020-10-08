@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
-	clusterClient "github.com/rancher/types/client/cluster/v3"
-	managementClient "github.com/rancher/types/client/management/v3"
-	projectClient "github.com/rancher/types/client/project/v3"
+	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
+	catalogController "github.com/rancher/rancher/pkg/generated/controllers/catalog.cattle.io/v1"
 	"golang.org/x/crypto/bcrypt"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -23,6 +25,7 @@ const (
 	rancher2NodeTemplateChangeVersion = "2.3.3" // Change node template id format
 	rancher2TokeTTLMinutesVersion     = "2.4.6" // ttl token is readed in minutes
 	rancher2TokeTTLMilisVersion       = "2.4.7" // ttl token is readed in miliseconds
+	rancher2UILandingVersion          = "2.5.0" // ui landing option
 	rancher2NodeTemplateNewPrefix     = "cattle-global-nt:nt-"
 )
 
@@ -31,6 +34,8 @@ type Client struct {
 	Management *managementClient.Client
 	Cluster    *clusterClient.Client
 	Project    *projectClient.Client
+	Catalog    map[string]catalogController.ClusterRepoController
+	Factory    map[string]*k8sFactory
 }
 
 // Config is the configuration parameters for a Rancher v3 API
@@ -48,6 +53,86 @@ type Config struct {
 	K8SSupportedVersions []string
 	Sync                 sync.Mutex
 	Client               Client
+}
+
+func (c *Config) k8sFactory(clusterID string) (*k8sFactory, error) {
+	if len(clusterID) == 0 {
+		return nil, fmt.Errorf("Cluster id is nil")
+	}
+	c.Sync.Lock()
+	if c.Client.Factory == nil {
+		c.Client.Factory = map[string]*k8sFactory{}
+	}
+	cFactory := c.Client.Factory[clusterID]
+	c.Sync.Unlock()
+	if cFactory != nil {
+		return cFactory, nil
+	}
+	config, err := c.getK8sRestConfig(clusterID)
+	if err != nil {
+		return nil, err
+	}
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+	cFactory, err = newK8sFactory(config)
+	if err != nil {
+		return nil, err
+	}
+	c.Client.Factory[clusterID] = cFactory
+	return cFactory, nil
+}
+
+func (c *Config) getK8sRestConfig(clusterID string) (*rest.Config, error) {
+	if len(clusterID) == 0 {
+		return nil, fmt.Errorf("Cluster id is nil")
+	}
+	active, k8sCluster, err := c.isClusterActive(clusterID)
+	if err != nil {
+		return nil, err
+	}
+	if !active {
+		return nil, fmt.Errorf("Getting cluster %s rest config: Cluster is not active", clusterID)
+	}
+	mClient, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+	kubeOutput, err := mClient.Cluster.ActionGenerateKubeconfig(k8sCluster)
+	if err != nil {
+		return nil, err
+	}
+	restConfig, err := getK8sRestConfig(kubeOutput.Config)
+	if err != nil {
+		return nil, fmt.Errorf("Getting cluster %s rest config: %v", clusterID, err)
+	}
+
+	return restConfig, nil
+}
+
+func (c *Config) k8sClientForKind(kind, clusterID string) (k8sClientInterface, error) {
+	f, err := c.k8sFactory(clusterID)
+	if err != nil {
+		return nil, err
+	}
+	switch kind {
+	case catalogV2Kind:
+		return f.newCatalogV2Client()
+	case configMapKind:
+		return f.newConfigMapClient()
+	case secretKind:
+		return f.newSecretClient()
+	default:
+		return nil, fmt.Errorf("Kind %s not supported", kind)
+	}
+}
+func (c *Config) catalogV2Client(clusterID string) (k8sClientInterface, error) {
+	return c.k8sClientForKind(catalogV2Kind, clusterID)
+}
+func (c *Config) configMapClient(clusterID string) (k8sClientInterface, error) {
+	return c.k8sClientForKind(configMapKind, clusterID)
+}
+func (c *Config) secretClient(clusterID string) (k8sClientInterface, error) {
+	return c.k8sClientForKind(secretKind, clusterID)
 }
 
 // GetRancherVersion get Rancher server version
@@ -122,7 +207,7 @@ func (c *Config) getK8SVersions() ([]string, error) {
 		return nil, nil
 	}
 
-	RKEK8sSystemImageCollection, err := c.Client.Management.RKEK8sSystemImage.ListAll(NewListOpts(nil))
+	RKEK8sSystemImageCollection, err := c.Client.Management.RkeK8sSystemImage.ListAll(NewListOpts(nil))
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] Listing RKE K8s System Images: %s", err)
 	}

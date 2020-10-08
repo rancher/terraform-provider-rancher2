@@ -10,17 +10,17 @@ steps:
     PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/go/bin
   commands:
   - /usr/local/bin/dockerd-entrypoint.sh &
-  - apk add -U bash make gcc musl-dev git wget go curl
+  - apk add -U bash make gcc musl-dev git wget go curl 
   - mkdir -p /go/src/github.com/rancher
   - ln -s /drone/src /go/src/github.com/rancher/terraform-provider-rancher2
   - cd /go/src/github.com/rancher/terraform-provider-rancher2
-  - make build-rancher
-  - make testacc
+  - make docker-build
+  - make docker-testacc
   - kill %1
   privileged: true
 
 - name: build-all-binaries
-  image: golang:1.13.14
+  image: golang:1.14.9
   environment:
     CROSS: 1
     VERSION: ${DRONE_TAG}

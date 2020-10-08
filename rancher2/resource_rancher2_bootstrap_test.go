@@ -38,6 +38,7 @@ resource "` + testAccRancher2BootstrapType + `" "foo" {
 	testAccRancher2BootstrapUpdateConfig = testAccRancher2ProviderConfig + `
 resource "` + testAccRancher2BootstrapType + `" "foo" {
   password = "` + testAccRancher2BootstrapPass + `"
+  ui_default_landing = "` + bootstrapUILandingExplorer + `"
 }
  `
 }
@@ -54,6 +55,7 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2BootstrapPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "ui_default_landing", bootstrapUILandingManager),
 				),
 			},
 			{
@@ -63,6 +65,7 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2BootstrapPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "false"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "ui_default_landing", bootstrapUILandingExplorer),
 				),
 			},
 			{
@@ -72,6 +75,7 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2BootstrapPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "ui_default_landing", bootstrapUILandingManager),
 				),
 			},
 		},
