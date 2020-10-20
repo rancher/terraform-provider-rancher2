@@ -9,12 +9,12 @@ import (
 )
 
 var (
-	testCatalogV2Conf      *managementClient.ClusterRepo
+	testCatalogV2Conf      *ClusterRepo
 	testCatalogV2Interface map[string]interface{}
 )
 
 func init() {
-	testCatalogV2Conf = &managementClient.ClusterRepo{}
+	testCatalogV2Conf = &ClusterRepo{}
 
 	testCatalogV2Conf.TypeMeta.Kind = catalogV2Kind
 	testCatalogV2Conf.TypeMeta.APIVersion = catalogV2APIGroup + "/" + catalogV2APIVersion
@@ -67,7 +67,7 @@ func init() {
 func TestFlattenCatalogV2(t *testing.T) {
 
 	cases := []struct {
-		Input          *managementClient.ClusterRepo
+		Input          *ClusterRepo
 		ExpectedOutput map[string]interface{}
 	}{
 		{
@@ -97,7 +97,7 @@ func TestExpandCatalogV2(t *testing.T) {
 
 	cases := []struct {
 		Input          map[string]interface{}
-		ExpectedOutput *managementClient.ClusterRepo
+		ExpectedOutput *ClusterRepo
 	}{
 		{
 			testCatalogV2Interface,

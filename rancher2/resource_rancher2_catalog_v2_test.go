@@ -3,13 +3,10 @@ package rancher2
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/watch"
 )
 
 const testAccRancher2CatalogV2Type = "rancher2_catalog_v2"
@@ -43,7 +40,7 @@ resource "` + testAccRancher2CatalogV2Type + `" "foo" {
 }
 
 func TestAccRancher2CatalogV2_basic(t *testing.T) {
-	var catalog interface{}
+	var catalog *ClusterRepo
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -57,7 +54,6 @@ func TestAccRancher2CatalogV2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_repo", "https://git.rancher.io/charts"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_branch", "dev-v2.5"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 			{
@@ -67,7 +63,6 @@ func TestAccRancher2CatalogV2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_repo", "https://git.rancher.io/charts"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_branch", "master"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 			{
@@ -77,7 +72,6 @@ func TestAccRancher2CatalogV2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_repo", "https://git.rancher.io/charts"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_branch", "dev-v2.5"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
 		},
@@ -85,7 +79,7 @@ func TestAccRancher2CatalogV2_basic(t *testing.T) {
 }
 
 func TestAccRancher2CatalogV2_disappears(t *testing.T) {
-	var catalog interface{}
+	var catalog *ClusterRepo
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -104,52 +98,35 @@ func TestAccRancher2CatalogV2_disappears(t *testing.T) {
 	})
 }
 
-func testAccRancher2CatalogV2Disappears(cat interface{}) resource.TestCheckFunc {
+func testAccRancher2CatalogV2Disappears(cat *ClusterRepo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != testAccRancher2CatalogV2Type {
 				continue
 			}
-
 			clusterID := rs.Primary.Attributes["cluster_id"]
-			name := rs.Primary.Attributes["name"]
-			client, err := testAccProvider.Meta().(*Config).catalogV2Client(clusterID)
+			catalog, err := testAccProvider.Meta().(*Config).GetCatalogV2ByID(clusterID, rs.Primary.ID)
 			if err != nil {
-				return err
-			}
-			obj, err := client.Get(name, "", metaV1.GetOptions{})
-			if err != nil {
-				if errors.IsNotFound(err) || errors.IsForbidden(err) {
+				if IsNotFound(err) || IsForbidden(err) {
 					return nil
 				}
-				return err
+				return fmt.Errorf("testAccRancher2CatalogV2Disappears-get: %v", err)
 			}
-			catalog := obj.(*v1.ClusterRepo)
-			err = client.Delete(name, "", nil)
+			err = testAccProvider.Meta().(*Config).DeleteCatalogV2(clusterID, catalog)
 			if err != nil {
-				return fmt.Errorf("Error removing Catalog V2 %s: %s", name, err)
+				return fmt.Errorf("testAccRancher2CatalogV2Disappears-delete: %v", err)
 			}
-
-			timeout := int64(600)
-			listOption := metaV1.ListOptions{
-				TypeMeta:        catalog.TypeMeta,
-				Watch:           true,
-				ResourceVersion: catalog.ObjectMeta.ResourceVersion,
-				TimeoutSeconds:  &timeout,
+			stateConf := &resource.StateChangeConf{
+				Pending:    []string{},
+				Target:     []string{"removed"},
+				Refresh:    catalogV2StateRefreshFunc(testAccProvider.Meta(), clusterID, catalog.ID),
+				Timeout:    10 * time.Second,
+				Delay:      1 * time.Second,
+				MinTimeout: 3 * time.Second,
 			}
-			watcher, err := client.Watch("", listOption)
-			for {
-				select {
-				case event, open := <-watcher.ResultChan():
-					if open {
-						if event.Type == watch.Deleted {
-							watcher.Stop()
-							return nil
-						}
-						continue
-					}
-					return fmt.Errorf("[ERROR] waiting for catalog V2 (%s) to be deleted", name)
-				}
+			_, waitErr := stateConf.WaitForState()
+			if waitErr != nil {
+				return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", catalog.ID, waitErr)
 			}
 		}
 		return nil
@@ -157,7 +134,7 @@ func testAccRancher2CatalogV2Disappears(cat interface{}) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckRancher2CatalogV2Exists(n string, cat interface{}) resource.TestCheckFunc {
+func testAccCheckRancher2CatalogV2Exists(n string, cat *ClusterRepo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -170,17 +147,12 @@ func testAccCheckRancher2CatalogV2Exists(n string, cat interface{}) resource.Tes
 		}
 
 		clusterID := rs.Primary.Attributes["cluster_id"]
-		name := rs.Primary.Attributes["name"]
-		client, err := testAccProvider.Meta().(*Config).catalogV2Client(clusterID)
+		foundReg, err := testAccProvider.Meta().(*Config).GetCatalogV2ByID(clusterID, rs.Primary.ID)
 		if err != nil {
-			return err
-		}
-		foundReg, err := client.Get(name, "", metaV1.GetOptions{})
-		if err != nil {
-			if errors.IsNotFound(err) {
+			if IsNotFound(err) || IsForbidden(err) {
 				return nil
 			}
-			return err
+			return fmt.Errorf("testAccCheckRancher2CatalogV2Exists: %v", err)
 		}
 
 		cat = foundReg
@@ -195,17 +167,12 @@ func testAccCheckRancher2CatalogV2Destroy(s *terraform.State) error {
 			continue
 		}
 		clusterID := rs.Primary.Attributes["cluster_id"]
-		name := rs.Primary.Attributes["name"]
-		client, err := testAccProvider.Meta().(*Config).catalogV2Client(clusterID)
+		_, err := testAccProvider.Meta().(*Config).GetCatalogV2ByID(clusterID, rs.Primary.ID)
 		if err != nil {
-			return err
-		}
-		_, err = client.Get(name, "", metaV1.GetOptions{})
-		if err != nil {
-			if errors.IsNotFound(err) {
+			if IsNotFound(err) {
 				return nil
 			}
-			return err
+			return fmt.Errorf("testAccCheckRancher2CatalogV2Destroy: %v", err)
 		}
 		return fmt.Errorf("CatalogV2 still exists")
 	}

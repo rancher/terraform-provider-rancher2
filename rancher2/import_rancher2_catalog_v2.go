@@ -10,7 +10,7 @@ func resourceRancher2CatalogV2Import(d *schema.ResourceData, meta interface{}) (
 	d.Set("name", name)
 
 	err := resourceRancher2CatalogV2Read(d, meta)
-	if err != nil {
+	if err != nil || d.Id() == "" {
 		return []*schema.ResourceData{}, err
 	}
 

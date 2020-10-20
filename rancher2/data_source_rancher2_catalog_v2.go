@@ -1,12 +1,9 @@
 package rancher2
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func dataSourceRancher2CatalogV2() *schema.Resource {
@@ -79,19 +76,18 @@ func dataSourceRancher2CatalogV2() *schema.Resource {
 }
 
 func dataSourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) error {
-	name := d.Get("name").(string)
 	clusterID := d.Get("cluster_id").(string)
+	name := d.Get("name").(string)
 
-	client, err := meta.(*Config).catalogV2Client(clusterID)
+	catalog, err := meta.(*Config).GetCatalogV2ByID(clusterID, name)
 	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) {
+			log.Printf("[INFO] Catalog V2 %s not found at cluster %s", name, clusterID)
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
-	obj, err := client.Get(name, "", metaV1.GetOptions{ResourceVersion: d.Get("resource_version").(string)})
-	if err != nil {
-		if errors.IsNotFound(err) || errors.IsForbidden(err) {
-			return fmt.Errorf("[ERROR] catalog v2 on cluster %s with name \"%s\" not found", clusterID, name)
-		}
-	}
 
-	return flattenCatalogV2(d, obj.(*v1.ClusterRepo))
+	return flattenCatalogV2(d, catalog)
 }

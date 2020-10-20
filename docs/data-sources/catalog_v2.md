@@ -10,14 +10,14 @@ Use this data source to retrieve information about a Rancher2 catalog v2.
 
 ```
 data "rancher2_catalog_v2" "foo" {
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = <CLUSTER_ID>
   name = "foo"
 }
 ```
 
 ## Argument Reference
 
-* `cluster_id` - (Required) The cluster id of the catalog (string)
+* `cluster_id` - (Required) The cluster id of the catalog V2 (string)
 * `name` - (Required) The name of the catalog v2 (string)
 
 ## Attributes Reference

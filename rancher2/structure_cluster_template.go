@@ -376,7 +376,7 @@ func expandClusterTemplateRevisions(p []interface{}) (int, []managementClient.Cl
 			obj[i].Enabled = &v
 		}
 
-		if v, ok := in["name"].(string); ok && len(v) > 0 {
+		if v, ok := in["name"].(string); ok {
 			obj[i].Name = v
 			names[v]++
 			if names[v] > 1 {
