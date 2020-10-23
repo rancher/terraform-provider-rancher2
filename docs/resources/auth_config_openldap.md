@@ -28,6 +28,8 @@ The following arguments are supported:
 * `servers` - (Required) OpenLdap servers list (list)
 * `service_account_distinguished_name` - (Required/Sensitive) Service account DN for access OpenLdap service (string)
 * `service_account_password` - (Required/Sensitive) Service account password for access OpenLdap service (string)
+* `test_username` - (Required) Username for test access to OpenLdap service (string)
+* `test_password` - (Required/Sensitive) Password for test access to OpenLdap service (string)
 * `user_search_base` - (Required) User search base DN (string)
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `openldap_user://<DN>`  `openldap_group://<DN>` (list)
