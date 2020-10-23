@@ -22,6 +22,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix `rke_config.monitoring.replicas` argument to set default value to 1 if monitoring enabled
+* Fix Rancher auth config apply on activedirectory, freeipa and openldap providers
 
 
 ## 1.10.3 (September 14, 2020)
