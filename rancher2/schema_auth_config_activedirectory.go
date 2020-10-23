@@ -27,6 +27,15 @@ func authConfigActiveDirectoryFields() map[string]*schema.Schema {
 			Required:  true,
 			Sensitive: true,
 		},
+		"test_username": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"test_password": {
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
+		},
 		"user_search_base": {
 			Type:     schema.TypeString,
 			Required: true,

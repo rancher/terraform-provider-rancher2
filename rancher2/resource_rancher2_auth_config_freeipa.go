@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -43,13 +44,34 @@ func resourceRancher2AuthConfigFreeIpaCreate(d *schema.ResourceData, meta interf
 		if err != nil {
 			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigFreeIpaName, err)
 		}
-	}
-
-	// Updated auth config
-	newAuth := &managementClient.FreeIpaConfig{}
-	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authFreeIpa, newAuth)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigFreeIpaName, err)
+		// Updated auth config
+		authResource := &norman.Resource{
+			ID:      auth.ID,
+			Type:    auth.Type,
+			Links:   auth.Links,
+			Actions: auth.Actions,
+		}
+		testInput := &managementClient.FreeIpaTestAndApplyInput{
+			LdapConfig: authFreeIpa,
+			Password:   d.Get("test_password").(string),
+			Username:   d.Get("test_username").(string),
+		}
+		err = client.APIBaseClient.Action(managementClient.FreeIpaConfigType, "testAndApply", authResource, testInput, nil)
+		if err != nil {
+			return err
+		}
+	} else {
+		if len(auth.Actions["disable"]) > 0 {
+			err = client.Post(auth.Actions["disable"], nil, nil)
+			if err != nil {
+				return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigFreeIpaName, err)
+			}
+		}
+		newAuth := &managementClient.FreeIpaConfig{}
+		err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authFreeIpa, newAuth)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigFreeIpaName, err)
+		}
 	}
 
 	return resourceRancher2AuthConfigFreeIpaRead(d, meta)

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -43,13 +44,34 @@ func resourceRancher2AuthConfigOpenLdapCreate(d *schema.ResourceData, meta inter
 		if err != nil {
 			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigOpenLdapName, err)
 		}
-	}
-
-	// Updated auth config
-	newAuth := &managementClient.OpenLdapConfig{}
-	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOpenLdap, newAuth)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigOpenLdapName, err)
+		// Updated auth config
+		authResource := &norman.Resource{
+			ID:      auth.ID,
+			Type:    auth.Type,
+			Links:   auth.Links,
+			Actions: auth.Actions,
+		}
+		testInput := &managementClient.OpenLdapTestAndApplyInput{
+			LdapConfig: authOpenLdap,
+			Password:   d.Get("test_password").(string),
+			Username:   d.Get("test_username").(string),
+		}
+		err = client.APIBaseClient.Action(managementClient.OpenLdapConfigType, "testAndApply", authResource, testInput, nil)
+		if err != nil {
+			return err
+		}
+	} else {
+		if len(auth.Actions["disable"]) > 0 {
+			err = client.Post(auth.Actions["disable"], nil, nil)
+			if err != nil {
+				return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigOpenLdapName, err)
+			}
+		}
+		newAuth := &managementClient.OpenLdapConfig{}
+		err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOpenLdap, newAuth)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigOpenLdapName, err)
+		}
 	}
 
 	return resourceRancher2AuthConfigOpenLdapRead(d, meta)

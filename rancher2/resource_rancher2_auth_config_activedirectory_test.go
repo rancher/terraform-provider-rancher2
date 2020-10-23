@@ -19,6 +19,9 @@ resource "` + testAccRancher2AuthConfigActiveDirectoryType + `" "activedirectory
   user_search_base = "dc=test,dc=local"
   port = 389
   default_login_domain = "test"
+  enabled = false
+  test_username = "test"
+  test_password = "test"
 }
 `
 
@@ -30,6 +33,9 @@ resource "` + testAccRancher2AuthConfigActiveDirectoryType + `" "activedirectory
   user_search_base = "dc=users,dc=test,dc=local"
   port = 389
   default_login_domain = "test-updated"
+  enabled = false
+  test_username = "test"
+  test_password = "test"
 }
  `
 )
@@ -87,7 +93,6 @@ func TestAccRancher2AuthConfigActiveDirectory_disappears(t *testing.T) {
 					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigActiveDirectoryType+"."+AuthConfigActiveDirectoryName, authConfig),
 					testAccRancher2AuthConfigDisappears(authConfig, testAccRancher2AuthConfigActiveDirectoryType),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

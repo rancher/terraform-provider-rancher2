@@ -28,6 +28,8 @@ The following arguments are supported:
 * `servers` - (Required) FreeIpa servers list (list)
 * `service_account_distinguished_name` - (Required/Sensitive) Service account DN for access FreeIpa service (string)
 * `service_account_password` - (Required/Sensitive) Service account password for access FreeIpa service (string)
+* `test_username` - (Required) Username for test access to FreeIpa service (string)
+* `test_password` - (Required/Sensitive) Password for test access to FreeIpa service (string)
 * `user_search_base` - (Required) User search base DN (string)
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `freeipa_user://<DN>`  `freeipa_group://<DN>` (list)
