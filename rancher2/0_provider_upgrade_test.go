@@ -38,7 +38,7 @@ resource "rancher2_namespace" "testacc" {
   project_id = rancher2_cluster_sync.testacc.default_project_id
 }
 `
-	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.8", "v2.5.0"}
+	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.8", "v2.5.1"}
 	testAccCheckRancher2RunningVersionIndex = 0
 	testAccCheckRancher2UpgradeCluster = os.Getenv("RANCHER_ACC_CLUSTER_NAME")
 	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
@@ -144,6 +144,8 @@ provider "rancher2" {
 ` + testAccRancher2NodeTemplateOpennebulaConfig + `
 ` + testAccRancher2NodeTemplateOpenstack + `
 ` + testAccRancher2NodeTemplateVsphere + `
+` + testAccRancher2NotifierDingtalk + `
+` + testAccRancher2NotifierMSTeams + `
 ` + testAccRancher2NotifierPagerduty + `
 ` + testAccRancher2NotifierSlack + `
 ` + testAccRancher2NotifierSMTP + `
@@ -194,6 +196,8 @@ provider "rancher2" {
 ` + testAccRancher2NodeTemplateOpennebulaConfig + `
 ` + testAccRancher2NodeTemplateOpenstack + `
 ` + testAccRancher2NodeTemplateVsphere + `
+` + testAccRancher2NotifierDingtalk + `
+` + testAccRancher2NotifierMSTeams + `
 ` + testAccRancher2NotifierPagerduty + `
 ` + testAccRancher2NotifierSlack + `
 ` + testAccRancher2NotifierSMTP + `

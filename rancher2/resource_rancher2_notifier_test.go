@@ -15,6 +15,14 @@ const (
 )
 
 var (
+	testAccRancher2NotifierDingtalk              string
+	testAccRancher2NotifierDingtalkUpdate        string
+	testAccRancher2NotifierDingtalkConfig        string
+	testAccRancher2NotifierDingtalkUpdateConfig  string
+	testAccRancher2NotifierMSTeams               string
+	testAccRancher2NotifierMSTeamsUpdate         string
+	testAccRancher2NotifierMSTeamsConfig         string
+	testAccRancher2NotifierMSTeamsUpdateConfig   string
 	testAccRancher2NotifierPagerduty             string
 	testAccRancher2NotifierPagerdutyUpdate       string
 	testAccRancher2NotifierPagerdutyConfig       string
@@ -38,6 +46,58 @@ var (
 )
 
 func init() {
+	testAccRancher2NotifierDingtalk = `
+resource "` + testAccRancher2NotifierType + `" "foo-dingtalk" {
+  name = "foo-dingtalk"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
+  send_resolved = "true"
+  description = "Terraform notifier acceptance test"
+  dingtalk_config {
+    url = "http://url.test.io"
+    proxy_url = "http://proxy.test.io"
+  }
+}
+`
+	testAccRancher2NotifierDingtalkUpdate = `
+resource "` + testAccRancher2NotifierType + `" "foo-dingtalk" {
+  name = "foo-dingtalk"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
+  send_resolved = "false"
+  description = "Terraform notifier acceptance test - updated"
+  dingtalk_config {
+    url = "http://url2.test.io"
+    proxy_url = "http://proxy2.test.io"
+  }
+}
+`
+	testAccRancher2NotifierDingtalkConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierDingtalk
+	testAccRancher2NotifierDingtalkUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierDingtalkUpdate
+	testAccRancher2NotifierMSTeams = `
+resource "` + testAccRancher2NotifierType + `" "foo-msteams" {
+  name = "foo-msteams"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
+  send_resolved = "true"
+  description = "Terraform notifier acceptance test"
+  msteams_config {
+    url = "http://url.test.io"
+    proxy_url = "http://proxy.test.io"
+  }
+}
+`
+	testAccRancher2NotifierMSTeamsUpdate = `
+resource "` + testAccRancher2NotifierType + `" "foo-msteams" {
+  name = "foo-msteams"
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
+  send_resolved = "false"
+  description = "Terraform notifier acceptance test - updated"
+  msteams_config {
+    url = "http://url2.test.io"
+    proxy_url = "http://proxy2.test.io"
+  }
+}
+`
+	testAccRancher2NotifierMSTeamsConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierMSTeams
+	testAccRancher2NotifierMSTeamsUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierMSTeamsUpdate
 	testAccRancher2NotifierPagerduty = `
 resource "` + testAccRancher2NotifierType + `" "foo-pagerduty" {
   name = "foo-pagerduty"
@@ -182,6 +242,136 @@ resource "` + testAccRancher2NotifierType + `" "foo-wechat" {
 `
 	testAccRancher2NotifierWechatConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierWechat
 	testAccRancher2NotifierWechatUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2NotifierWechatUpdate
+}
+
+func TestAccRancher2Notifier_basic_Dingtalk(t *testing.T) {
+	var notifier *managementClient.Notifier
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NotifierDingtalkConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-dingtalk", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "name", "foo-dingtalk"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "dingtalk_config.0.url", "http://url.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "dingtalk_config.0.proxy_url", "http://proxy.test.io"),
+				),
+			},
+			{
+				Config: testAccRancher2NotifierDingtalkUpdateConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-dingtalk", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "name", "foo-dingtalk"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "description", "Terraform notifier acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "send_resolved", "false"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "dingtalk_config.0.url", "http://url2.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "dingtalk_config.0.proxy_url", "http://proxy2.test.io"),
+				),
+			},
+			{
+				Config: testAccRancher2NotifierDingtalkConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-dingtalk", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "name", "foo-dingtalk"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "dingtalk_config.0.url", "http://url.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-dingtalk", "dingtalk_config.0.proxy_url", "http://proxy.test.io"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2Notifier_disappears_Dingtalk(t *testing.T) {
+	var notifier *managementClient.Notifier
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NotifierDingtalkConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-dingtalk", notifier),
+					testAccRancher2NotifierDisappears(notifier),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2Notifier_basic_MSTeams(t *testing.T) {
+	var notifier *managementClient.Notifier
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NotifierMSTeamsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-msteams", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "name", "foo-msteams"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "msteams_config.0.url", "http://url.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "msteams_config.0.proxy_url", "http://proxy.test.io"),
+				),
+			},
+			{
+				Config: testAccRancher2NotifierMSTeamsUpdateConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-msteams", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "name", "foo-msteams"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "description", "Terraform notifier acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "send_resolved", "false"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "msteams_config.0.url", "http://url2.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "msteams_config.0.proxy_url", "http://proxy2.test.io"),
+				),
+			},
+			{
+				Config: testAccRancher2NotifierMSTeamsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-msteams", notifier),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "name", "foo-msteams"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "description", "Terraform notifier acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "send_resolved", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "msteams_config.0.url", "http://url.test.io"),
+					resource.TestCheckResourceAttr(testAccRancher2NotifierType+".foo-msteams", "msteams_config.0.proxy_url", "http://proxy.test.io"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2Notifier_disappears_MSTeams(t *testing.T) {
+	var notifier *managementClient.Notifier
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NotifierMSTeamsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NotifierExists(testAccRancher2NotifierType+".foo-msteams", notifier),
+					testAccRancher2NotifierDisappears(notifier),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
 func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {

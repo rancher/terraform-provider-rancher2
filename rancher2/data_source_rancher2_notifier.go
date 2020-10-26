@@ -26,11 +26,29 @@ func dataSourceRancher2Notifier() *schema.Resource {
 				Computed:    true,
 				Description: "Notifier description",
 			},
+			"dingtalk_config": {
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				ConflictsWith: []string{"msteams_config", "pagerduty_config", "smtp_config", "slack_config", "webhook_config", "wechat_config"},
+				Elem: &schema.Resource{
+					Schema: notifierDingtalkConfigFields(),
+				},
+			},
+			"msteams_config": {
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				ConflictsWith: []string{"dingtalk_config", "pagerduty_config", "smtp_config", "slack_config", "webhook_config", "wechat_config"},
+				Elem: &schema.Resource{
+					Schema: notifierMSTeamsConfigFields(),
+				},
+			},
 			"pagerduty_config": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
-				ConflictsWith: []string{"smtp_config", "slack_config", "webhook_config", "wechat_config"},
+				ConflictsWith: []string{"dingtalk_config", "msteams_config", "smtp_config", "slack_config", "webhook_config", "wechat_config"},
 				Elem: &schema.Resource{
 					Schema: notifierPagerdutyConfigFields(),
 				},
@@ -39,7 +57,7 @@ func dataSourceRancher2Notifier() *schema.Resource {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
-				ConflictsWith: []string{"pagerduty_config", "smtp_config", "webhook_config", "wechat_config"},
+				ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "webhook_config", "wechat_config"},
 				Elem: &schema.Resource{
 					Schema: notifierSlackConfigFields(),
 				},
@@ -48,7 +66,7 @@ func dataSourceRancher2Notifier() *schema.Resource {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
-				ConflictsWith: []string{"pagerduty_config", "slack_config", "webhook_config", "wechat_config"},
+				ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "slack_config", "webhook_config", "wechat_config"},
 				Elem: &schema.Resource{
 					Schema: notifierSMTPConfigFields(),
 				},
@@ -57,7 +75,7 @@ func dataSourceRancher2Notifier() *schema.Resource {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
-				ConflictsWith: []string{"pagerduty_config", "smtp_config", "slack_config", "wechat_config"},
+				ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "slack_config", "wechat_config"},
 				Elem: &schema.Resource{
 					Schema: notifierWebhookConfigFields(),
 				},
@@ -66,7 +84,7 @@ func dataSourceRancher2Notifier() *schema.Resource {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Computed:      true,
-				ConflictsWith: []string{"pagerduty_config", "smtp_config", "slack_config", "webhook_config"},
+				ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "slack_config", "webhook_config"},
 				Elem: &schema.Resource{
 					Schema: notifierWechatConfigFields(),
 				},

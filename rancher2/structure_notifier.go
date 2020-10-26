@@ -24,6 +24,24 @@ func flattenNotifier(d *schema.ResourceData, in *managementClient.Notifier) erro
 
 	d.Set("send_resolved", in.SendResolved)
 
+	if in.DingtalkConfig != nil {
+		v, ok := d.Get("dingtalk_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+
+		d.Set("dingtalk_config", flattenNotifierDingtalkConfig(in.DingtalkConfig, v))
+	}
+
+	if in.MSTeamsConfig != nil {
+		v, ok := d.Get("msteams_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+
+		d.Set("msteams_config", flattenNotifierMSTeamsConfig(in.MSTeamsConfig, v))
+	}
+
 	if in.PagerdutyConfig != nil {
 		v, ok := d.Get("pagerduty_config").([]interface{})
 		if !ok {
@@ -104,6 +122,14 @@ func expandNotifier(in *schema.ResourceData) (*managementClient.Notifier, error)
 
 	if v, ok := in.Get("send_resolved").(bool); ok {
 		obj.SendResolved = v
+	}
+
+	if v, ok := in.Get("dingtalk_config").([]interface{}); ok && len(v) > 0 {
+		obj.DingtalkConfig = expandNotifierDingtalkConfig(v)
+	}
+
+	if v, ok := in.Get("msteams_config").([]interface{}); ok && len(v) > 0 {
+		obj.MSTeamsConfig = expandNotifierMSTeamsConfig(v)
 	}
 
 	if v, ok := in.Get("pagerduty_config").([]interface{}); ok && len(v) > 0 {

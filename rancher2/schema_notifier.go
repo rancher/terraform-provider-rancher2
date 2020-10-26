@@ -30,11 +30,29 @@ func notifierFields() map[string]*schema.Schema {
 			Description: "Notifier send resolved",
 			Default:     false,
 		},
+		"dingtalk_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"msteams_config", "pagerduty_config", "smtp_config", "slack_config", "webhook_config", "wechat_config"},
+			Elem: &schema.Resource{
+				Schema: notifierDingtalkConfigFields(),
+			},
+		},
+		"msteams_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"dingtalk_config", "pagerduty_config", "smtp_config", "slack_config", "webhook_config", "wechat_config"},
+			Elem: &schema.Resource{
+				Schema: notifierMSTeamsConfigFields(),
+			},
+		},
 		"pagerduty_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"smtp_config", "slack_config", "webhook_config", "wechat_config"},
+			ConflictsWith: []string{"dingtalk_config", "msteams_config", "smtp_config", "slack_config", "webhook_config", "wechat_config"},
 			Elem: &schema.Resource{
 				Schema: notifierPagerdutyConfigFields(),
 			},
@@ -43,7 +61,7 @@ func notifierFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"pagerduty_config", "smtp_config", "webhook_config", "wechat_config"},
+			ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "webhook_config", "wechat_config"},
 			Elem: &schema.Resource{
 				Schema: notifierSlackConfigFields(),
 			},
@@ -52,7 +70,7 @@ func notifierFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"pagerduty_config", "slack_config", "webhook_config", "wechat_config"},
+			ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "slack_config", "webhook_config", "wechat_config"},
 			Elem: &schema.Resource{
 				Schema: notifierSMTPConfigFields(),
 			},
@@ -61,7 +79,7 @@ func notifierFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"pagerduty_config", "smtp_config", "slack_config", "wechat_config"},
+			ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "slack_config", "wechat_config"},
 			Elem: &schema.Resource{
 				Schema: notifierWebhookConfigFields(),
 			},
@@ -70,7 +88,7 @@ func notifierFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"pagerduty_config", "smtp_config", "slack_config", "webhook_config"},
+			ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "slack_config", "webhook_config"},
 			Elem: &schema.Resource{
 				Schema: notifierWechatConfigFields(),
 			},

@@ -25,6 +25,8 @@ data "rancher2_notifier" "foo" {
 * `id` - (Computed) The ID of the resource (string)
 * `description` - (Computed) The notifier description (string)
 * `send_resolved` - (Computed) If the notifier sends resolved notifications (bool)
+* `dingtalk_config` - (Computed) Dingtalk config for notifier (list maxitems:1)
+* `msteams_config` - (Computed) MSTeams config for notifier (list maxitems:1)
 * `pagerduty_config` - (Computed) Pagerduty config for notifier (list maxitems:1)
 * `slack_config` - (Computed) Slack config for notifier (list maxitems:1)
 * `smtp_config` - (Computed) SMTP config for notifier (list maxitems:1)
