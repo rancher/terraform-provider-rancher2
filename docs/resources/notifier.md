@@ -30,6 +30,8 @@ The following arguments are supported:
 * `cluster_id` - (Required/ForceNew) The cluster id where create notifier (string)
 * `description` - (Optional) The notifier description (string)
 * `send_resolved` = (Optional) Enable the notifier to send resolved notifications. Default `false` (bool)
+* `dingtalk_config` - (Optional) Dingtalk config for notifier (list maxitems:1)
+* `msteams_config` - (Optional) MSTeams config for notifier (list maxitems:1)
 * `pagerduty_config` - (Optional) Pagerduty config for notifier (list maxitems:1)
 * `slack_config` - (Optional) Slack config for notifier (list maxitems:1)
 * `smtp_config` - (Optional) SMTP config for notifier (list maxitems:1)
@@ -45,6 +47,21 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource (string)
 
 ## Nested blocks
+
+### `dingtalk_config`
+
+#### Arguments
+
+* `url` - (Required) Dingtalk url (string)
+* `proxy_url` - (Optional) Dingtalk proxy url (string)
+* `secret` - (Optional) Secret for url sign enable (string)
+
+### `msteams_config`
+
+#### Arguments
+
+* `url` - (Required) MSTeams url (string)
+* `proxy_url` - (Optional) MSTeams proxy url (string)
 
 ### `pagerduty_config`
 

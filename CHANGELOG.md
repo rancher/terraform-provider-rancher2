@@ -6,6 +6,8 @@ FEATURES:
 * **New Argument:** `rancher2_node_template.openstack_config.application_credential_id` - (Optional) OpenStack application credential id
 * **New Argument:** `rancher2_node_template.openstack_config.application_credential_name` - (Optional) OpenStack application credential name
 * **New Argument:** `rancher2_node_template.openstack_config.application_credential_secret` - (Optional) OpenStack application credential secret
+* **New Argument:** `rancher2_notifier.dingtal_config` - (Optional) Dingtalk config for notifier. For Rancher v2.4.0 and above (list maxitems:1)
+* **New Argument:** `rancher2_notifier.msteams_config` - (Optional) MSTeams config for notifier. For Rancher v2.4.0 and above (list maxitems:1) 
 * **New Argument:** `rancher2_cluster.eks_import` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above 
 * **New Argument:** `rancher2_bootstrap.ui_default_landing` - (Optional) Set default ui landing on Rancher bootstrap. Just for Rancher v2.5.0 and above 
 * **New Data Source:** `rancher2_catalog_v2` - Support new Rancher catalog V2 datasource. Just for Rancher v2.5.0 and above
@@ -18,6 +20,7 @@ ENHANCEMENTS:
 * Delete `rancher2_app` if created and got timeout to be active
 * Updated golang to v1.14.9 and removing vendor folder
 * Updated go mod to support Rancher `v2.5.0`
+* Added dingtal_config and msteams_config arguments at rancher2_notifier resource. go code and docs
 
 BUG FIXES:
 

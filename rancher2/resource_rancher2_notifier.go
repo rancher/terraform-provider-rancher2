@@ -107,6 +107,14 @@ func resourceRancher2NotifierUpdate(d *schema.ResourceData, meta interface{}) er
 		"labels":       toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
+	if notifier.DingtalkConfig != nil && d.HasChange("dingtalk_config") {
+		update["dingtalkConfig"] = expandNotifierDingtalkConfig(d.Get("dingtalk_config").([]interface{}))
+	}
+
+	if notifier.MSTeamsConfig != nil && d.HasChange("msteams_config") {
+		update["msteamsConfig"] = expandNotifierMSTeamsConfig(d.Get("msteams_config").([]interface{}))
+	}
+
 	if notifier.PagerdutyConfig != nil && d.HasChange("pagerduty_config") {
 		update["pagerdutyConfig"] = expandNotifierPagerdutyConfig(d.Get("pagerduty_config").([]interface{}))
 	}
