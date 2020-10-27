@@ -21,6 +21,8 @@ ENHANCEMENTS:
 * Updated golang to v1.14.9 and removing vendor folder
 * Updated go mod to support Rancher `v2.5.0`
 * Added dingtal_config and msteams_config arguments at rancher2_notifier resource. go code and docs
+* Improved `rancher2_cluster_sync` wait for cluster monitoring 
+* Improved `rancher2_bootstrap` on resource creation. `bootstrapDoLogin` function will retry 3 times user/pass login before fail
 
 BUG FIXES:
 
