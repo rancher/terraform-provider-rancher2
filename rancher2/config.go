@@ -32,8 +32,8 @@ const (
 // Client are the client kind for a Rancher v3 API
 type Client struct {
 	Management *managementClient.Client
-	Cluster    *clusterClient.Client
-	Project    *projectClient.Client
+	Cluster    map[string]*clusterClient.Client
+	Project    map[string]*projectClient.Client
 	Catalog    map[string]catalogController.ClusterRepoController
 	Factory    map[string]*k8sFactory
 }
@@ -289,19 +289,23 @@ func (c *Config) UpdateToken(token string) error {
 		return err
 	}
 
-	if c.Client.Cluster != nil {
-		c.Client.Cluster = nil
-		_, err := c.ClusterClient(c.ClusterID)
-		if err != nil {
-			return err
-		}
+	for i := range c.Client.Cluster {
+		if c.Client.Cluster[i] != nil {
+			c.Client.Cluster[i] = nil
+			_, err := c.ClusterClient(i)
+			if err != nil {
+				return err
+			}
 
+		}
 	}
-	if c.Client.Project != nil {
-		c.Client.Project = nil
-		_, err := c.ProjectClient(c.ProjectID)
-		if err != nil {
-			return err
+	for i := range c.Client.Project {
+		if c.Client.Project[i] != nil {
+			c.Client.Project[i] = nil
+			_, err := c.ProjectClient(i)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -344,15 +348,19 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 
 // ClusterClient creates a Rancher client scoped to a Cluster API
 func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
-	c.Sync.Lock()
-	defer c.Sync.Unlock()
-
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Cluster Client: cluster ID is nil")
 	}
 
-	if c.Client.Cluster != nil && id == c.ClusterID {
-		return c.Client.Cluster, nil
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+
+	if c.Client.Cluster == nil {
+		c.Client.Cluster = map[string]*clusterClient.Client{}
+	}
+
+	if c.Client.Cluster[id] != nil {
+		return c.Client.Cluster[id], nil
 	}
 
 	err := c.isRancherReady()
@@ -367,23 +375,26 @@ func (c *Config) ClusterClient(id string) (*clusterClient.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	c.Client.Cluster = cClient
-	c.ClusterID = id
+	c.Client.Cluster[id] = cClient
 
-	return c.Client.Cluster, nil
+	return c.Client.Cluster[id], nil
 }
 
 // ProjectClient creates a Rancher client scoped to a Project API
 func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
-	c.Sync.Lock()
-	defer c.Sync.Unlock()
-
 	if id == "" {
 		return nil, fmt.Errorf("[ERROR] Rancher Project Client: project ID is nil")
 	}
 
-	if c.Client.Project != nil && id == c.ProjectID {
-		return c.Client.Project, nil
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+
+	if c.Client.Project == nil {
+		c.Client.Project = map[string]*projectClient.Client{}
+	}
+
+	if c.Client.Project[id] != nil {
+		return c.Client.Project[id], nil
 	}
 
 	err := c.isRancherReady()
@@ -399,10 +410,9 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 		return nil, err
 	}
 
-	c.Client.Project = pClient
-	c.ProjectID = id
+	c.Client.Project[id] = pClient
 
-	return c.Client.Project, nil
+	return c.Client.Project[id], nil
 }
 
 func (c *Config) NormalizeURL() {
@@ -418,7 +428,6 @@ func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
 		CACerts:  c.CACerts,
 		Insecure: c.Insecure,
 	}
-
 	return options
 }
 

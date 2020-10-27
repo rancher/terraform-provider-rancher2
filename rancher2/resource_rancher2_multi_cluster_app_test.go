@@ -159,6 +159,7 @@ func testAccRancher2MultiClusterAppDisappears(mca *managementClient.MultiCluster
 				return fmt.Errorf(
 					"[ERROR] waiting for multi cluster app (%s) to be removed: %s", rs.Primary.ID, waitErr)
 			}
+			time.Sleep(5 * time.Second)
 		}
 		return nil
 	}
