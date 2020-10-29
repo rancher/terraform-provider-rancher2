@@ -104,6 +104,8 @@ func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
 func TestAccRancher2MultiClusterApp_disappears(t *testing.T) {
 	var app *managementClient.MultiClusterApp
 
+	time.Sleep(5 * time.Second)
+
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2MultiClusterAppDestroy,

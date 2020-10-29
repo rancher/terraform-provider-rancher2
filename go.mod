@@ -9,7 +9,7 @@ require (
 	github.com/rancher/client-go v11.0.0+incompatible // indirect
 	github.com/rancher/lasso v0.0.0-20200905045615-7fcb07d6a20b
 	github.com/rancher/norman v0.0.0-20200930000340-693d65aaffe3
-	github.com/rancher/rancher v0.0.0-20201006004413-65f3525cdc11
+	github.com/rancher/rancher v0.0.0-20201007163458-eb990af66be1
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
 	github.com/rancher/wrangler v0.7.2
@@ -23,8 +23,8 @@ require (
 
 replace (
 	github.com/crewjam/saml => github.com/crewjam/saml v0.4.1
-	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20201006004413-65f3525cdc11
-	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20201006004413-65f3525cdc11
+	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20201007163458-eb990af66be1
+	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20201007163458-eb990af66be1
 	k8s.io/api => k8s.io/api v0.19.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.0
 	k8s.io/apimachinery => github.com/rancher/apimachinery v0.19.0-rancher1

@@ -5,11 +5,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/watch"
 )
 
 func resourceRancher2CatalogV2() *schema.Resource {
@@ -35,149 +33,122 @@ func resourceRancher2CatalogV2Create(d *schema.ResourceData, meta interface{}) e
 	name := d.Get("name").(string)
 	catalog := expandCatalogV2(d)
 
-	log.Printf("[INFO] Creating Catalog V2 %s at %s", name, clusterID)
+	log.Printf("[INFO] Creating Catalog V2 %s", name)
 
-	client, err := meta.(*Config).catalogV2Client(clusterID)
+	newCatalog, err := meta.(*Config).CreateCatalogV2(clusterID, catalog)
 	if err != nil {
 		return err
 	}
-	obj, err := client.Create("", catalog)
-	if err != nil {
-		return err
-	}
-	newCatalog := obj.(*v1.ClusterRepo)
-	id := string(newCatalog.ObjectMeta.UID)
+	id := newCatalog.ID
 	d.SetId(id)
-
-	timeout := int64(d.Timeout(schema.TimeoutCreate).Seconds())
-	listOption := metaV1.ListOptions{
-		TypeMeta:        newCatalog.TypeMeta,
-		Watch:           true,
-		ResourceVersion: newCatalog.ObjectMeta.ResourceVersion,
-		TimeoutSeconds:  &timeout,
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"active"},
+		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, id),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
 	}
-	watcher, err := client.Watch("", listOption)
-	for {
-		select {
-		case event, open := <-watcher.ResultChan():
-			if open {
-				if event.Type == watch.Added || event.Type == watch.Modified {
-					if repo, ok := event.Object.DeepCopyObject().(*v1.ClusterRepo); ok && len(repo.Status.URL) > 0 && len(repo.Status.IndexConfigMapName) > 0 {
-						watcher.Stop()
-						return resourceRancher2CatalogV2Read(d, meta)
-					}
-				}
-				continue
-			}
-			return fmt.Errorf("[ERROR] waiting for catalog V2 (%s) to be added", name)
-		}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", id, waitErr)
 	}
+	return resourceRancher2CatalogV2Read(d, meta)
 }
 
 func resourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
-	log.Printf("[INFO] Refreshing Catalog V2 %s at %s", name, clusterID)
+	log.Printf("[INFO] Refreshing Catalog V2 %s", name)
 
-	client, err := meta.(*Config).catalogV2Client(clusterID)
+	catalog, err := meta.(*Config).GetCatalogV2ByID(clusterID, d.Id())
 	if err != nil {
-		return err
-	}
-	obj, err := client.Get(name, "", metaV1.GetOptions{ResourceVersion: d.Get("resource_version").(string)})
-	if err != nil {
-		if errors.IsNotFound(err) || errors.IsForbidden(err) {
-			log.Printf("[INFO] Catalog V2 %s not found at %s", name, clusterID)
+		if IsNotFound(err) || IsForbidden(err) {
+			log.Printf("[INFO] Catalog V2 %s not found", name)
 			d.SetId("")
 			return nil
 		}
+		return err
 	}
-	return flattenCatalogV2(d, obj.(*v1.ClusterRepo))
+	return flattenCatalogV2(d, catalog)
 }
 
 func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	catalog := expandCatalogV2(d)
-	log.Printf("[INFO] Updating Catalog V2 %s at %s", name, clusterID)
+	log.Printf("[INFO] Updating Catalog V2 %s", name)
 
-	client, err := meta.(*Config).catalogV2Client(clusterID)
+	newCatalog, err := meta.(*Config).UpdateCatalogV2(clusterID, d.Id(), catalog)
 	if err != nil {
 		return err
 	}
-	obj, err := client.Update("", catalog)
-	if err != nil {
-		return err
+	d.SetId(newCatalog.ID)
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"active"},
+		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, newCatalog.ID),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
 	}
-	newCatalog := obj.(*v1.ClusterRepo)
-	timeout := int64(d.Timeout(schema.TimeoutUpdate).Seconds())
-	listOption := metaV1.ListOptions{
-		TypeMeta:        newCatalog.TypeMeta,
-		Watch:           true,
-		ResourceVersion: newCatalog.ObjectMeta.ResourceVersion,
-		TimeoutSeconds:  &timeout,
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", newCatalog.ID, waitErr)
 	}
-	watcher, err := client.Watch("", listOption)
-	for {
-		select {
-		case event, open := <-watcher.ResultChan():
-			if open {
-				if event.Type == watch.Added || event.Type == watch.Modified {
-					if repo, ok := event.Object.DeepCopyObject().(*v1.ClusterRepo); ok && len(repo.Status.URL) > 0 && len(repo.Status.IndexConfigMapName) > 0 {
-						watcher.Stop()
-						return resourceRancher2CatalogV2Read(d, meta)
-					}
-				}
-				continue
-			}
-			return fmt.Errorf("[ERROR] waiting for catalog V2 (%s) to be updated", name)
-		}
-	}
+	return resourceRancher2CatalogV2Read(d, meta)
 }
 
 func resourceRancher2CatalogV2Delete(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
-	log.Printf("[INFO] Deleting Catalog V2 %s at %s", name, clusterID)
+	log.Printf("[INFO] Deleting Catalog V2 %s", name)
 
-	client, err := meta.(*Config).catalogV2Client(clusterID)
+	catalog, err := meta.(*Config).GetCatalogV2ByID(clusterID, d.Id())
 	if err != nil {
-		return err
-	}
-	obj, err := client.Get(name, "", metaV1.GetOptions{})
-	if err != nil {
-		if errors.IsNotFound(err) || errors.IsForbidden(err) {
-			log.Printf("[INFO] Catalog V2 %s not found at %s", name, clusterID)
+		if IsNotFound(err) || IsForbidden(err) {
 			d.SetId("")
 			return nil
 		}
+	}
+	err = meta.(*Config).DeleteCatalogV2(clusterID, catalog)
+	if err != nil {
 		return err
 	}
-	catalog := obj.(*v1.ClusterRepo)
-	err = client.Delete(name, "", nil)
-	if err != nil {
-		return fmt.Errorf("Error removing Catalog V2 %s: %s", name, err)
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"removed"},
+		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, catalog.ID),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
 	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", catalog.ID, waitErr)
+	}
+	d.SetId("")
+	return nil
+}
 
-	timeout := int64(d.Timeout(schema.TimeoutDelete).Seconds())
-	listOption := metaV1.ListOptions{
-		TypeMeta:        catalog.TypeMeta,
-		Watch:           true,
-		ResourceVersion: catalog.ObjectMeta.ResourceVersion,
-		TimeoutSeconds:  &timeout,
-	}
-	watcher, err := client.Watch("", listOption)
-	for {
-		select {
-		case event, open := <-watcher.ResultChan():
-			if open {
-				if event.Type == watch.Deleted {
-					d.SetId("")
-					watcher.Stop()
-					return nil
-				}
-				continue
+// catalogV2StateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Catalog v2.
+func catalogV2StateRefreshFunc(meta interface{}, clusterID, catalogID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := meta.(*Config).GetCatalogV2ByID(clusterID, catalogID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				return obj, "removed", nil
 			}
-			return fmt.Errorf("[ERROR] waiting for catalog V2 (%s) to be deleted", name)
+			return nil, "", err
 		}
+		for i := range obj.Status.Conditions {
+			if obj.Status.Conditions[i].Type == string(v1.RepoDownloaded) {
+				if obj.Status.Conditions[i].Status == "True" {
+					return obj, "active", nil
+				}
+				return nil, "error", fmt.Errorf("%s", obj.Status.Conditions[i].Message)
+			}
+		}
+		return obj, "transitioning", nil
 	}
 }

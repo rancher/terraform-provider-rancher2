@@ -252,6 +252,7 @@ func resourceRancher2MultiClusterAppDelete(d *schema.ResourceData, meta interfac
 		}
 		stateConf.WaitForState()
 	}
+	time.Sleep(5 * time.Second)
 
 	return nil
 }

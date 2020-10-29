@@ -7,12 +7,14 @@ import (
 
 // Flatteners
 
-func flattenCatalogV2(d *schema.ResourceData, in *v1.ClusterRepo) error {
+func flattenCatalogV2(d *schema.ResourceData, in *ClusterRepo) error {
 	if in == nil {
 		return nil
 	}
 
-	d.SetId(string(in.ObjectMeta.UID))
+	if len(in.ID) > 0 {
+		d.SetId(in.ID)
+	}
 	d.Set("name", in.ObjectMeta.Name)
 	err := d.Set("annotations", toMapInterface(in.ObjectMeta.Annotations))
 	if err != nil {
@@ -44,12 +46,15 @@ func flattenCatalogV2(d *schema.ResourceData, in *v1.ClusterRepo) error {
 
 // Expanders
 
-func expandCatalogV2(in *schema.ResourceData) *v1.ClusterRepo {
+func expandCatalogV2(in *schema.ResourceData) *ClusterRepo {
 	if in == nil {
 		return nil
 	}
-	obj := &v1.ClusterRepo{}
+	obj := &ClusterRepo{}
 
+	if len(in.Id()) > 0 {
+		obj.ID = in.Id()
+	}
 	obj.TypeMeta.Kind = catalogV2Kind
 	obj.TypeMeta.APIVersion = catalogV2APIGroup + "/" + catalogV2APIVersion
 

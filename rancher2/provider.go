@@ -91,6 +91,7 @@ func Provider() terraform.ResourceProvider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"rancher2_app":                           resourceRancher2App(),
+			"rancher2_app_v2":                        resourceRancher2AppV2(),
 			"rancher2_auth_config_activedirectory":   resourceRancher2AuthConfigActiveDirectory(),
 			"rancher2_auth_config_adfs":              resourceRancher2AuthConfigADFS(),
 			"rancher2_auth_config_azuread":           resourceRancher2AuthConfigAzureAD(),

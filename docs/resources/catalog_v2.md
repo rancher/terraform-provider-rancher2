@@ -11,14 +11,14 @@ Provides a Rancher Catalog v2 resource. This can be used to create cluster helm 
 ```hcl
 # Create a new Rancher2 Catalog V2 using git repo and branch
 resource "rancher2_catalog_v2" "foo" {
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = <CLUSTER_ID>
   name = "foo"
   git_repo = "<GIT_REPO_URL>"
   git_branch = "<GIT_BRANCH>"
 }
 # Create a new Rancher2 Catalog V2 using url
 resource "rancher2_catalog_v2" "foo-url" {
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = <CLUSTER_ID>
   name = "foo-url"
   url = "https://<CATALOG_URL>"
 }
@@ -28,7 +28,7 @@ resource "rancher2_catalog_v2" "foo-url" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required/ForceNew) The cluster id of the catalog (string)
+* `cluster_id` - (Required/ForceNew) The cluster id of the catalog V2 (string)
 * `name` - (Required) The name of the catalog v2 (string)
 * `ca_bundle` - (Optional) PEM encoded CA bundle which will be used to validate the repo's certificate (string)
 * `enabled` - (Optional) If disabled the repo clone will not be updated or allowed to be installed from. Default: `true` (bool)
@@ -61,7 +61,7 @@ The following attributes are exported:
 
 ## Import
 
-V2 catalogs can be imported using the Rancher Catalog V2 cluster ID and name.
+V2 catalogs can be imported using the Rancher cluster ID and Catalog V2 name.
 
 ```
 $ terraform import rancher2_catalog_v2.foo &lt;CLUSTER_ID&gt;.&lt;CATALOG_V2_NAME&gt;

@@ -2,22 +2,33 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	norman "github.com/rancher/norman/types"
+	"github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 )
 
 const (
 	catalogV2Kind       = "ClusterRepo"
 	catalogV2APIGroup   = "catalog.cattle.io"
 	catalogV2APIVersion = "v1"
+	catalogV2APIType    = rancher2CatalogTypePrefix + ".clusterrepo"
 )
+
+//Types
+
+type ClusterRepo struct {
+	norman.Resource
+	v1.ClusterRepo
+}
 
 // Schemas
 
 func catalogV2Fields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"cluster_id": {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true,
+			Description: "K8s cluster ID",
 		},
 		"name": {
 			Type:        schema.TypeString,
