@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+const clusterSyncMonitoringEnabledCondition = "MonitoringEnabled"
+
 func resourceRancher2ClusterSync() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRancher2ClusterSyncCreate,
@@ -28,6 +30,7 @@ func resourceRancher2ClusterSync() *schema.Resource {
 func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 
+	start := time.Now()
 	cluster, err := meta.(*Config).GetClusterByID(clusterID)
 	if err != nil {
 		return err
@@ -51,27 +54,26 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if cluster.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
-		_, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(clusterID)
-		if err != nil {
-			return err
+		enabled := false
+		for cluster, err := meta.(*Config).GetClusterByID(clusterID); ; cluster, err = meta.(*Config).GetClusterByID(clusterID) {
+			if err != nil {
+				return err
+			}
+			for _, v := range cluster.Conditions {
+				if v.Type == clusterSyncMonitoringEnabledCondition {
+					if v.Status == "True" {
+						enabled = true
+					}
+					break
+				}
+			}
+			if time.Since(start) >= d.Timeout(schema.TimeoutCreate) || enabled {
+				break
+			}
+			time.Sleep(5 * time.Second)
 		}
-		client, err := meta.(*Config).ProjectClient(systemProjectID)
-		if err != nil {
-			return err
-		}
-		projectID := splitProjectIDPart(systemProjectID)
-		appID := projectID + ":cluster-monitoring"
-		stateCluster := &resource.StateChangeConf{
-			Pending:    []string{},
-			Target:     []string{"active"},
-			Refresh:    appStateRefreshFunc(client, appID),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      1 * time.Second,
-			MinTimeout: 5 * time.Second,
-		}
-		_, waitClusterErr := stateCluster.WaitForState()
-		if waitClusterErr != nil {
-			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) monitoring to be running: %s", clusterID, waitClusterErr)
+		if !enabled {
+			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) monitoring to be running: Timeout", clusterID)
 		}
 	}
 

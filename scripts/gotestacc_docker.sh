@@ -24,5 +24,6 @@ ${DOCKER_BIN} build -t ${BUILDER_TAG} -f $(dirname $0)/Dockerfile.builder .
 ${DOCKER_BIN} run -i --rm \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v $PWD:/go/src/github.com/terraform-providers/terraform-provider-rancher2 \
+  -e DOCKERIZED=true \
   -e EXPOSE_HOST_PORTS=${EXPOSE_HOST_PORTS} \
   ${BUILDER_TAG} make testacc

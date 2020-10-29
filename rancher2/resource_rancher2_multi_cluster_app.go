@@ -234,8 +234,25 @@ func resourceRancher2MultiClusterAppDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf(
 			"[ERROR] waiting for multi cluster app (%s) to be removed: %s", id, waitErr)
 	}
-
 	d.SetId("")
+
+	for i := range multiClusterApp.Targets {
+		client, err := meta.(*Config).ProjectClient(multiClusterApp.Targets[i].ProjectID)
+		if err != nil {
+			continue
+		}
+		mappID := splitProjectIDPart(multiClusterApp.Targets[i].ProjectID) + ":" + multiClusterApp.Targets[i].AppID
+		stateConf = &resource.StateChangeConf{
+			Pending:    []string{"removing"},
+			Target:     []string{"removed"},
+			Refresh:    appStateRefreshFunc(client, mappID),
+			Timeout:    d.Timeout(schema.TimeoutDelete),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		stateConf.WaitForState()
+	}
+
 	return nil
 }
 

@@ -27,7 +27,7 @@ resource "` + testAccRancher2CatalogV2Type + `" "foo" {
   cluster_id = rancher2_cluster_sync.testacc.cluster_id
   name = "foo"
   git_repo = "https://git.rancher.io/charts"
-  git_branch = "v2.5.0"
+  git_branch = "dev-v2.5"
 }
 `
 	testAccRancher2CatalogV2Update = `
@@ -56,7 +56,7 @@ func TestAccRancher2CatalogV2_basic(t *testing.T) {
 					testAccCheckRancher2CatalogV2Exists(testAccRancher2CatalogV2Type+".foo", catalog),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_repo", "https://git.rancher.io/charts"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_branch", "v2.5.0"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_branch", "dev-v2.5"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
@@ -76,7 +76,7 @@ func TestAccRancher2CatalogV2_basic(t *testing.T) {
 					testAccCheckRancher2CatalogV2Exists(testAccRancher2CatalogV2Type+".foo", catalog),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "name", "foo"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_repo", "https://git.rancher.io/charts"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_branch", "v2.5.0"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "git_branch", "dev-v2.5"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
