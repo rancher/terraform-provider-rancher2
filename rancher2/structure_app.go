@@ -158,5 +158,7 @@ func expandApp(in *schema.ResourceData) (*projectClient.App, error) {
 		obj.Labels = toMapString(v)
 	}
 
+	obj.Timeout = int64(in.Timeout(schema.TimeoutCreate).Seconds())
+
 	return obj, nil
 }

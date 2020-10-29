@@ -40,6 +40,7 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
+		Timeout: 1200,
 	}
 	testAppInterfaceGlobal = map[string]interface{}{
 		"catalog_name": "test",
@@ -85,6 +86,7 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
+		Timeout: 1200,
 	}
 	testAppInterfaceClusterLocal = map[string]interface{}{
 		"catalog_name":     "local:test",
@@ -129,6 +131,7 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
+		Timeout: 1200,
 	}
 	testAppInterfaceCluster = map[string]interface{}{
 		"catalog_name":     "c-XXXXX:test",
@@ -173,6 +176,7 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
+		Timeout: 1200,
 	}
 	testAppInterfaceProject = map[string]interface{}{
 		"catalog_name":     "p-XXXXX:test",
