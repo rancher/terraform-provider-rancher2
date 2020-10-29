@@ -23,7 +23,7 @@ data "` + testAccRancher2CatalogV2Type + `" "foo" {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(name, "name", "foo"),
 					resource.TestCheckResourceAttr(name, "git_repo", "https://git.rancher.io/charts"),
-					resource.TestCheckResourceAttr(name, "git_branch", "v2.5.0"),
+					resource.TestCheckResourceAttr(name, "git_branch", "dev-v2.5"),
 				),
 			},
 		},

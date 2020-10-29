@@ -20,6 +20,10 @@ RANCHER_VERSION=${RANCHER_VERSION:-"v2.3.6"}
 
 source $(dirname $0)/start_rancher.sh
 
+if [ "${DOCKERIZED}" == "true" ]; then
+  echo "${RANCHER_IP} ${RANCHER_HOSTNAME}" >> /etc/hosts
+fi
+
 RANCHER_URL=${RANCHER_URL:-""}
 RANCHER_TOKEN_KEY=${RANCHER_TOKEN_KEY:-""}
 RANCHER_INSECURE=${RANCHER_INSECURE:-true}
