@@ -66,7 +66,6 @@ func linodeConfigFields() map[string]*schema.Schema {
 		"label": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     false,
 			Description: "Linode Instance Label",
 		},
 		"region": {
