@@ -29,7 +29,9 @@ func flattenClusterRKEConfigNodeUpgradeStrategy(in *managementClient.NodeUpgrade
 		return []interface{}{}
 	}
 
-	obj["drain"] = in.Drain
+	if in.Drain != nil {
+		obj["drain"] = *in.Drain
+	}
 
 	if in.DrainInput != nil {
 		obj["drain_input"] = flattenClusterRKEConfigNodeDrainInput(in.DrainInput)
@@ -144,7 +146,7 @@ func expandClusterRKEConfigNodeUpgradeStrategy(p []interface{}) *managementClien
 	in := p[0].(map[string]interface{})
 
 	if v, ok := in["drain"].(bool); ok {
-		obj.Drain = v
+		obj.Drain = &v
 	}
 
 	if v, ok := in["drain_input"].([]interface{}); ok {

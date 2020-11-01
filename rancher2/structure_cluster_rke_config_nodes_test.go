@@ -34,7 +34,7 @@ func init() {
 		},
 	}
 	testClusterRKEConfigNodeUpgradeStrategyConf = &managementClient.NodeUpgradeStrategy{
-		Drain:                      false,
+		Drain:                      newFalse(),
 		DrainInput:                 testClusterRKEConfigNodeDrainInputConf,
 		MaxUnavailableControlplane: "2",
 		MaxUnavailableWorker:       "20%",
