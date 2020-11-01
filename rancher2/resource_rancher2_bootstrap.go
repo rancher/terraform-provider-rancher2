@@ -259,8 +259,8 @@ func bootstrapDoLogin(d *schema.ResourceData, meta interface{}) error {
 	}
 	tokenID, token, err := DoUserLogin(meta.(*Config).URL, bootstrapDefaultUser, currentPass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
 	if err != nil {
-		// 3 login retries waiting 5 seconds if user/pass login fails
-		for i := 0; i < 3; i++ {
+		// login retries waiting 5 seconds if user/pass login fails
+		for i := 0; i < meta.(*Config).Retries; i++ {
 			time.Sleep(5 * time.Second)
 			tokenID, token, err = DoUserLogin(meta.(*Config).URL, bootstrapDefaultUser, currentPass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
 			if err == nil {
