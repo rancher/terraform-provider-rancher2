@@ -127,7 +127,8 @@ EOF
 }
 ```
 
-** tip ** If you are reinstalling `rancher-monitoring` and the deployment is failing, try adding this values to app v2
+**Tip:** If you are reinstalling `rancher-monitoring` and the deployment is failing, try adding this values to app v2
+
 ```
 alertmanager:
   alertmanagerSpec:
@@ -147,6 +148,11 @@ resource "rancher2_app_v2" "rancher-monitoring" {
   chart_name = "rancher-monitoring"
   chart_version = "9.4.200"
   values = <<EOF
+alertmanager:
+  alertmanagerSpec:
+    enabled: false
+    useExistingSecret: true
+    configSecret: alertmanager-rancher-monitoring-alertmanager
 prometheus:
   prometheusSpec:
     requests:
