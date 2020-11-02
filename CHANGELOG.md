@@ -1,4 +1,4 @@
-## 1.10.5 (Unreleased)
+## 1.10.5 (November 6, 2020)
 
 FEATURES:
 
@@ -7,11 +7,20 @@ FEATURES:
 
 ENHANCEMENTS:
 
-
+* Updated go mod to support Rancher `v2.5.2-rc2`
+* Updated acceptance tests to use Rancher `v2.5.2-rc2`
+* Improved `rancher2_bootstrap` on resource creation. Number of retires on `bootstrapDoLogin` function can be configured with `retries` provider argument
+* Updated `rancher2_catalog_v2` contextualized resource id with `cluster_id` prefix
+* Updated `rancher2_app_v2` contextualized resource id with `cluster_id` prefix
+* Updated `rancher2_app_v2` to show helm operation log if fail
+* Updated `rancher2_app_v2.values` argument as sensitive
 
 BUG FIXES:
 
-
+* Fixed `rancher2_cluster.rke_config.upgrade_strategy.drain` argument to set false value properly
+* Fixed `Apps & marketplace` guide for Rancher v2.5.0 format
+* Fixed `rancher2_app_v2.values` argument to avoid false diff
+* Fixed `rancher2_cluster_role_template_binding` and  `rancher2_cluster_role_template_binding` arguments to forceNew on update  
 
 ## 1.10.4 (October 29, 2020)
 
@@ -45,6 +54,7 @@ BUG FIXES:
 
 * Fix `rke_config.monitoring.replicas` argument to set default value to 1 if monitoring enabled
 * Fix Rancher auth config apply on activedirectory, freeipa and openldap providers
+* Fix `rancher2_cluster.rke_config.upgrade_strategy.drain` argument to set false value properly
 
 
 ## 1.10.3 (September 14, 2020)
