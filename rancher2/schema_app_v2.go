@@ -79,6 +79,7 @@ func appV2Fields() map[string]*schema.Schema {
 		"values": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Sensitive:   false,
 			Description: "App v2 custom values yaml",
 			ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 				v, ok := val.(string)
@@ -102,7 +103,7 @@ func appV2Fields() map[string]*schema.Schema {
 				globalInfo := map[string]interface{}{
 					"cattle": map[string]interface{}{
 						"clusterId":   d.Get("cluster_id").(string),
-						"clusterName": d.Get("cluster_id").(string),
+						"clusterName": d.Get("cluster_name").(string),
 					},
 				}
 				if newGlobal, ok := newMap["global"].(map[string]interface{}); ok && len(newGlobal) > 0 {
