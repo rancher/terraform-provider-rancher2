@@ -16,6 +16,7 @@ const (
 	appV2APIType          = rancher2CatalogTypePrefix + ".app"
 	appV2OperationAPIType = rancher2CatalogTypePrefix + ".operation"
 	appV2ValueGlobal      = "global."
+	appV2ClusterIDsep     = "."
 )
 
 //Types

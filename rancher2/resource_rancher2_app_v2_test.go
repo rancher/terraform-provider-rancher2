@@ -164,7 +164,8 @@ func testAccRancher2AppV2Disappears(cat *AppV2) resource.TestCheckFunc {
 
 			clusterID := rs.Primary.Attributes["cluster_id"]
 			name := rs.Primary.Attributes["name"]
-			app, err := testAccProvider.Meta().(*Config).GetAppV2ByID(clusterID, rs.Primary.ID)
+			_, rancherID := splitID(rs.Primary.ID)
+			app, err := testAccProvider.Meta().(*Config).GetAppV2ByID(clusterID, rancherID)
 			if err != nil {
 				if IsNotFound(err) || IsForbidden(err) {
 					return nil
@@ -206,7 +207,8 @@ func testAccCheckRancher2AppV2Exists(n string, cat *AppV2) resource.TestCheckFun
 		}
 
 		clusterID := rs.Primary.Attributes["cluster_id"]
-		foundReg, err := testAccProvider.Meta().(*Config).GetAppV2ByID(clusterID, rs.Primary.ID)
+		_, rancherID := splitID(rs.Primary.ID)
+		foundReg, err := testAccProvider.Meta().(*Config).GetAppV2ByID(clusterID, rancherID)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
 				return nil
@@ -226,7 +228,8 @@ func testAccCheckRancher2AppV2Destroy(s *terraform.State) error {
 			continue
 		}
 		clusterID := rs.Primary.Attributes["cluster_id"]
-		_, err := testAccProvider.Meta().(*Config).GetAppV2ByID(clusterID, rs.Primary.ID)
+		_, rancherID := splitID(rs.Primary.ID)
+		_, err := testAccProvider.Meta().(*Config).GetAppV2ByID(clusterID, rancherID)
 		if err != nil {
 			if IsNotFound(err) {
 				return nil

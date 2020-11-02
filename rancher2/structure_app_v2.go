@@ -16,9 +16,6 @@ func flattenAppV2(d *schema.ResourceData, in *AppV2) error {
 		return nil
 	}
 
-	if len(in.ID) > 0 {
-		d.SetId(in.ID)
-	}
 	d.Set("name", in.ObjectMeta.Name)
 	d.Set("namespace", in.ObjectMeta.Namespace)
 	err := d.Set("annotations", toMapInterface(in.ObjectMeta.Annotations))
@@ -46,8 +43,14 @@ func flattenAppV2(d *schema.ResourceData, in *AppV2) error {
 				if clusterID, ok := cattle["clusterId"].(string); ok && len(clusterID) > 0 {
 					d.Set("cluster_id", clusterID)
 				}
+				if clusterName, ok := cattle["clusterName"].(string); ok && len(clusterName) > 0 {
+					d.Set("cluster_name", clusterName)
+				}
 			}
 		}
+	}
+	if len(in.ID) > 0 {
+		d.SetId(d.Get("cluster_id").(string) + appV2ClusterIDsep + in.ID)
 	}
 
 	return nil
