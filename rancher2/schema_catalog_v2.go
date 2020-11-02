@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	catalogV2Kind       = "ClusterRepo"
-	catalogV2APIGroup   = "catalog.cattle.io"
-	catalogV2APIVersion = "v1"
-	catalogV2APIType    = rancher2CatalogTypePrefix + ".clusterrepo"
+	catalogV2Kind         = "ClusterRepo"
+	catalogV2APIGroup     = "catalog.cattle.io"
+	catalogV2APIVersion   = "v1"
+	catalogV2APIType      = rancher2CatalogTypePrefix + ".clusterrepo"
+	catalogV2ClusterIDsep = "."
 )
 
 //Types

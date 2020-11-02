@@ -13,7 +13,7 @@ func flattenCatalogV2(d *schema.ResourceData, in *ClusterRepo) error {
 	}
 
 	if len(in.ID) > 0 {
-		d.SetId(in.ID)
+		d.SetId(d.Get("cluster_id").(string) + catalogV2ClusterIDsep + in.ID)
 	}
 	d.Set("name", in.ObjectMeta.Name)
 	err := d.Set("annotations", toMapInterface(in.ObjectMeta.Annotations))
@@ -53,7 +53,7 @@ func expandCatalogV2(in *schema.ResourceData) *ClusterRepo {
 	obj := &ClusterRepo{}
 
 	if len(in.Id()) > 0 {
-		obj.ID = in.Id()
+		_, obj.ID = splitID(in.Id())
 	}
 	obj.TypeMeta.Kind = catalogV2Kind
 	obj.TypeMeta.APIVersion = catalogV2APIGroup + "/" + catalogV2APIVersion
