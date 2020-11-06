@@ -8,7 +8,7 @@ Provides a Rancher v2 Cluster resource. This can be used to create Clusters for 
 
 ## Example Usage
 
-Creating Rancher v2 imported cluster
+### Creating Rancher v2 imported cluster
 
 ```hcl
 # Create a new rancher2 imported Cluster
@@ -58,7 +58,7 @@ resource "rancher2_cluster" "foo-custom" {
 }
 ```
 
-Creating Rancher v2 RKE cluster enabling and customizing monitoring
+### Creating Rancher v2 RKE cluster enabling and customizing monitoring
 
 ```hcl
 # Create a new rancher2 RKE Cluster
@@ -97,7 +97,7 @@ resource "rancher2_cluster" "foo-custom" {
 }
 ```
 
-Creating Rancher v2 RKE cluster enabling/customizing monitoring and istio
+### Creating Rancher v2 RKE cluster enabling/customizing monitoring and istio
 
 ```hcl
 # Create a new rancher2 RKE Cluster
@@ -198,7 +198,7 @@ resource "rancher2_app" "istio" {
 }
 ```
 
-Creating Rancher v2 RKE cluster assigning a node pool (overlapped planes)
+### Creating Rancher v2 RKE cluster assigning a node pool (overlapped planes)
 
 ```hcl
 # Create a new rancher2 RKE Cluster
@@ -239,7 +239,7 @@ resource "rancher2_node_pool" "foo" {
 }
 ```
 
-Creating Rancher v2 RKE cluster from template. For Rancher v2.3.x or above.
+### Creating Rancher v2 RKE cluster from template. For Rancher v2.3.x or above.
 
 ```hcl
 # Create a new rancher2 cluster template
@@ -276,7 +276,7 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-Creating Rancher v2 RKE cluster with upgrade strategy. For Rancher v2.4.x or above.
+### Creating Rancher v2 RKE cluster with upgrade strategy. For Rancher v2.4.x or above.
 
 ```hcl
 resource "rancher2_cluster" "foo" {
@@ -313,7 +313,7 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-Creating Rancher v2 RKE cluster with scheduled cluster scan. For Rancher v2.4.x or above.
+### Creating Rancher v2 RKE cluster with scheduled cluster scan. For Rancher v2.4.x or above.
 
 ```hcl
 resource "rancher2_cluster" "foo" {
@@ -346,7 +346,7 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-Importing EKS cluster to Rancher v2. For Rancher v2.5.x or above.
+### Importing EKS cluster to Rancher v2, using `eks_config_v2`. For Rancher v2.5.x or above.
 
 ```hcl
 resource "rancher2_cloud_credential" "foo" {
@@ -360,10 +360,46 @@ resource "rancher2_cloud_credential" "foo" {
 resource "rancher2_cluster" "foo" {
   name = "foo"
   description = "Terraform EKS cluster"
-  eks_import {
-    cloud_credential = rancher2_cloud_credential.foo.id
+  eks_config_v2 {
+    cloud_credential_id = rancher2_cloud_credential.foo.id
     name = "<CLUSTER_NAME>"
     region = "<EKS_REGION>"
+    imported = true
+  }
+}
+```
+
+### Creating EKS cluster from Rancher v2, using `eks_config_v2`. For Rancher v2.5.x or above.
+
+```hcl
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description = "foo test"
+  amazonec2_credential_config {
+    access_key = "<AWS_ACCESS_KEY>"
+    secret_key = "<AWS_SECRET_KEY>"
+  }
+}
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform EKS cluster"
+  eks_config_v2 {
+    cloud_credential_id = rancher2_cloud_credential.foo.id
+    region = "<EKS_REGION>"
+    kubernetes_version = "1.17"
+    logging_types = ["audit", "api"]
+    node_groups {
+      name = "node_group1"
+      instance_type = "t3.medium"
+      desired_size = 3
+      max_size = 5
+    }
+    node_groups {
+      name = "node_group2"
+      instance_type = "m5.xlarge"
+      desired_size = 2
+      max_size = 3
+    }
   }
 }
 ```
@@ -375,9 +411,9 @@ The following arguments are supported:
 * `name` - (Required) The name of the Cluster (string)
 * `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` and `k3s_config` (list maxitems:1)
 * `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` and `rke_config` (list maxitems:1)
-* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `eks_import`, `gke_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `eks_import`, `gke_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `eks_import` - (Optional) The Amazon EKS configuration to import `eks` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `eks_config_v2`, `gke_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `eks_config_v2`, `gke_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `eks_config_v2` - (Optional) The Amazon EKS configuration to create or import `eks` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` `k3s_config` and `rke_config`. For Rancher v2.5.x or above (list maxitems:1)
 * `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_import`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
 * `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_import`, `gke_config` `k3s_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
@@ -385,7 +421,7 @@ The following arguments are supported:
 * `cluster_monitoring_input` - (Optional) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
 * `cluster_template_answers` - (Optional/Computed) Cluster template answers. Just for Rancher v2.3.x and above (list maxitems:1)
 * `cluster_template_id` - (Optional) Cluster template ID. Just for Rancher v2.3.x and above (string)
-* `cluster_template_questions` - (Optional) Cluster template questions. Just for Rancher v2.3.x and above (list)
+* `cluster_template_questions` - (Optional/Computed) Cluster template questions. Just for Rancher v2.3.x and above (list)
 * `cluster_template_revision_id` - (Optional) Cluster template revision ID. Just for Rancher v2.3.x and above (string)
 * `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support) (string)
 * `desired_agent_image` - (Optional/Computed) Desired agent image. Just for Rancher v2.3.x and above (string)
@@ -1033,15 +1069,46 @@ The following arguments are supported:
 * `user_data` - (Optional/Computed) Pass user-data to the nodes to perform automated configuration tasks (string)
 * `virtual_network` - (Optional) The name of the virtual network to use. If it's not specified Rancher will create a new VPC (string)
 
-### `eks_import`
+### `eks_config_v2`
 
 #### Arguments
 
 The following arguments are supported:
 
-* `cloud_credential` - (Required) The EKS cloud_credential id (string)
-* `name` - (Required) The EKS cluster name to import (string)
-* `region` - (Required) The EKS cluster region (string)
+* `cloud_credential_id` - (Required) The EKS cloud_credential id (string)
+* `imported` - (Optional) Set to `true` to import EKS cluster. Default: `false` (bool)
+* `name` - (Optional/Computed) The EKS cluster name to import. Required to import a cluster (string)
+* `kms_key` - (Optional) The AWS kms key to use (string)
+* `kubernetes_version` - (Optional/Computed) The EKS cluster kubernetes version. Required to create a new cluster (string)
+* `logging_types` - (Optional) The AWS cloudwatch logging types. `audit`, `api`, `scheduler`, `controllerManager` and `authenticator` values are allowed (list)
+* `node_groups` - (Optional/Computed) The EKS cluster name to import. Required to create a new cluster (list)
+* `private_access` - (Optional) The EKS cluster has private access. Default: `false` (bool)
+* `public_access` - (Optional) The EKS cluster has public access. Default: `true` (bool)
+* `public_access_sources` - (Optional) The EKS cluster public access sources (map)
+* `region` - (Optional) The EKS cluster region. Default: `us-west-2` (string)
+* `secrets_encryption` - (Optional) Enable EKS cluster secret encryption. Default: `false` (bool)
+* `security_groups` - (Optional/Computed) List of security groups to use for the cluster (list)
+* `service_role` - (Optional) The AWS service role to use (string)
+* `subnets` - (Optional) List of subnets in the virtual network to use (list)
+* `tags` - (Optional) The EKS cluster tags (map)
+
+
+#### `node_groups`
+
+##### Arguments
+
+The following arguments are supported:
+
+* `name` - (Required) The EKS node group name to import (string)
+* `desired_size` - (Optional) The EKS node group desired size. Default: `2` (int)
+* `disk_size` - (Optional) The EKS node group disk size (Gb). Default: `20` (int)
+* `ec2_ssh_key` - (Optional) The EKS node group ssh key (string)
+* `gpu` - (Optional) Set true to EKS use gpu. Default: `false` (bool)
+* `instance_type` - (Optional) The EKS node group instance type. Default: `t3.medium` (string)
+* `labels` - (Optional) The EKS cluster labels (map)
+* `max_size` - (Optional) The EKS node group maximum size. Default `2` (int)
+* `min_size` - (Optional) The EKS node group maximum size. Default `2` (int)
+* `tags` - (Optional) The EKS cluster tags (map)
 
 ### `gke_config`
 

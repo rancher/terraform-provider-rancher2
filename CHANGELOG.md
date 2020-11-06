@@ -1,3 +1,18 @@
+## 1.10.5 (Unreleased)
+
+FEATURES:
+
+* **Deprecated Argument:** `rancher2_cluster.eks_import` - (Optional) Use `rancher2_cluster.eks_config_v2` instead. Just for Rancher v2.5.0 and above 
+* **New Argument:** `rancher2_cluster.eks_config_v2` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+
+
 ## 1.10.4 (October 29, 2020)
 
 FEATURES:

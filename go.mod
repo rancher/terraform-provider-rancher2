@@ -7,7 +7,8 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.14.0
 	github.com/rancher/client-go v11.0.0+incompatible // indirect
-	github.com/rancher/lasso v0.0.0-20200905045615-7fcb07d6a20b
+	github.com/rancher/eks-operator v1.0.1 // indirect
+	github.com/rancher/lasso v0.0.0-20200905045615-7fcb07d6a20b // indirect
 	github.com/rancher/norman v0.0.0-20200930000340-693d65aaffe3
 	github.com/rancher/rancher v0.0.0-20201007163458-eb990af66be1
 	github.com/rancher/rancher/pkg/apis v0.0.0

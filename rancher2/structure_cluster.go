@@ -162,12 +162,8 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if err != nil {
 			return err
 		}
-	case clusterDriverEKSImport:
-		v, ok := d.Get("eks_import").([]interface{})
-		if !ok {
-			v = []interface{}{}
-		}
-		err = d.Set("eks_import", flattenClusterEKSImport(in.EKSConfig, v))
+	case ToLower(clusterDriverEKSV2):
+		err = d.Set("eks_config_v2", flattenClusterEKSConfigV2(in.EKSConfig))
 		if err != nil {
 			return err
 		}
@@ -358,9 +354,16 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		obj.Driver = clusterDriverEKS
 	}
 
-	if v, ok := in.Get("eks_import").([]interface{}); ok && len(v) > 0 {
-		obj.EKSConfig = expandClusterEKSImport(v)
-		obj.Driver = clusterDriverEKSImport
+	if v, ok := in.Get("eks_config_v2").([]interface{}); ok && len(v) > 0 {
+		// Setting eks cluster name if empty
+		if eksData, ok := v[0].(map[string]interface{}); ok {
+			if name, ok := eksData["name"].(string); !ok || len(name) == 0 {
+				eksData["name"] = obj.Name
+				v[0] = eksData
+			}
+		}
+		obj.EKSConfig = expandClusterEKSConfigV2(v)
+		obj.Driver = clusterDriverEKSV2
 	}
 
 	if v, ok := in.Get("gke_config").([]interface{}); ok && len(v) > 0 {
