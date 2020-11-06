@@ -113,7 +113,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	expectedState := "active"
 
-	if cluster.Driver == clusterDriverImported || cluster.Driver == clusterDriverEKSImport {
+	if cluster.Driver == clusterDriverImported || (cluster.Driver == clusterDriverEKSV2 && cluster.EKSConfig.Imported) {
 		expectedState = "pending"
 	}
 
@@ -124,10 +124,18 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	// Creating cluster with monitoring disabled
 	cluster.EnableClusterMonitoring = false
 	newCluster := &Cluster{}
-	err = client.APIBaseClient.Create(managementClient.ClusterType, cluster, newCluster)
+	if cluster.EKSConfig != nil && !cluster.EKSConfig.Imported {
+		clusterStr, _ := interfaceToJSON(cluster)
+		clusterMap, _ := jsonToMapInterface(clusterStr)
+		clusterMap["eksConfig"] = structToMap(cluster.EKSConfig)
+		err = client.APIBaseClient.Create(managementClient.ClusterType, clusterMap, newCluster)
+	} else {
+		err = client.APIBaseClient.Create(managementClient.ClusterType, cluster, newCluster)
+	}
 	if err != nil {
 		return err
 	}
+
 	newCluster.EnableClusterMonitoring = d.Get("enable_cluster_monitoring").(bool)
 	d.SetId(newCluster.ID)
 
@@ -280,8 +288,9 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["amazonElasticContainerServiceConfig"] = eksConfig
-	case clusterDriverEKSImport:
-		update["eksConfig"] = expandClusterEKSImport(d.Get("eks_import").([]interface{}))
+	case ToLower(clusterDriverEKSV2):
+		eksConfigV2 := expandClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}))
+		update["eksConfig"] = structToMap(eksConfigV2)
 	case clusterDriverGKE:
 		gkeConfig, err := expandClusterGKEConfig(d.Get("gke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {

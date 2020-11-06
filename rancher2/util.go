@@ -616,3 +616,65 @@ func getLatestVersion(list map[string]string) (string, error) {
 
 	return sorted[len(sorted)-1].Original(), nil
 }
+
+func structToMap(item interface{}) map[string]interface{} {
+	res := map[string]interface{}{}
+	if item == nil {
+		return res
+	}
+	relType := reflect.TypeOf(item)
+	relValue := reflect.ValueOf(item)
+	switch relType.Kind() {
+	case reflect.Ptr:
+		relValue = reflect.ValueOf(item).Elem()
+		if !relValue.IsValid() {
+			return res
+		}
+		relType = reflect.ValueOf(item).Elem().Type()
+	}
+	for i := 0; i < relType.NumField(); i++ {
+		tags := strings.Split(relType.Field(i).Tag.Get("json"), ",")
+		tag := tags[0]
+		if tag != "" && tag != "-" {
+			switch relType.Field(i).Type.Kind() {
+			case reflect.Slice, reflect.Array:
+				subtype := relValue.Field(i).Type().Elem()
+				if subtype.Kind() == reflect.Struct {
+					subvalue := reflect.ValueOf(relValue.Field(i).Interface())
+					field := make([]interface{}, subvalue.Len())
+					for i := 0; i < subvalue.Len(); i++ {
+						field[i] = structToMap(subvalue.Index(i).Interface())
+					}
+					res[tag] = field
+				} else {
+					res[tag] = relValue.Field(i).Interface()
+				}
+			case reflect.Ptr:
+				subvalue := reflect.ValueOf(relValue.Field(i).Interface())
+				if !subvalue.IsValid() {
+					res[tag] = map[string]interface{}{}
+					break
+				}
+				subtype := relValue.Field(i).Type().Elem()
+				if subtype.Kind() == reflect.Struct {
+					res[tag] = structToMap(relValue.Field(i).Interface())
+				} else {
+					res[tag] = relValue.Field(i).Interface()
+				}
+			case reflect.Struct:
+				res[tag] = structToMap(relValue.Field(i).Interface())
+			default:
+				res[tag] = relValue.Field(i).Interface()
+			}
+		} else {
+			if relType.Field(i).Type.Kind() == reflect.Struct {
+				data := structToMap(relValue.Field(i).Interface())
+				for i := range data {
+					res[i] = data[i]
+				}
+			}
+		}
+	}
+
+	return res
+}
