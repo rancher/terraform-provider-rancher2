@@ -213,7 +213,11 @@ func appV2OperationWait(meta interface{}, clusterID, opID string) error {
 			if state, ok := metadata["state"].(map[string]interface{}); ok && len(state) > 0 {
 				if transitioning, ok := state["transitioning"].(bool); ok && !transitioning {
 					if opError, ok := state["error"].(bool); ok && opError {
-						return fmt.Errorf("%s", state["message"])
+						message, err := meta.(*Config).GetAppV2OperationLogs(clusterID, obj)
+						if err != nil {
+							return fmt.Errorf("%s: %s", state["message"], err)
+						}
+						return fmt.Errorf("%s", message)
 					}
 					return nil
 				}
