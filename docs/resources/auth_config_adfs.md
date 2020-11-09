@@ -31,7 +31,7 @@ The following arguments are supported:
 * `display_name_field` - (Required) ADFS display name field (string)
 * `groups_field` - (Required) ADFS group field (string)
 * `idp_metadata_content` - (Required/Sensitive) ADFS IDP metadata content (string)
-* `rancher_api_host` - (Required) Rancher url. Schema needs to be specified, `https://<RANCHER_API_HOST>` (string)
+* `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
 * `sp_cert` - (Required/Sensitive) ADFS SP cert (string)
 * `sp_key` - (Required/Sensitive) ADFS SP key (string)
 * `uid_field` - (Required) ADFS UID field (string)

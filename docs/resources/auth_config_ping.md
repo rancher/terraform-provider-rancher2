@@ -31,7 +31,7 @@ The following arguments are supported:
 * `display_name_field` - (Required) Ping display name field (string)
 * `groups_field` - (Required) Ping group field (string)
 * `idp_metadata_content` - (Required/Sensitive) Ping IDP metadata content (string)
-* `rancher_api_host` - (Required) Rancher url. Schema needs to be specified, `https://<RANCHER_API_HOST>` (string)
+* `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
 * `sp_cert` - (Required/Sensitive) Ping SP cert (string)
 * `sp_key` - (Required/Sensitive) Ping SP key (string)
 * `uid_field` - (Required) Ping UID field (string)
