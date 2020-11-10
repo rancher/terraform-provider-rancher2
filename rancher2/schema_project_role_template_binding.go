@@ -21,24 +21,29 @@ func projectRoleTemplateBindingFields() map[string]*schema.Schema {
 		"name": {
 			Type:     schema.TypeString,
 			Required: true,
+			ForceNew: true,
 		},
 		"group_id": {
 			Type:     schema.TypeString,
 			Optional: true,
+			ForceNew: true,
 		},
 		"group_principal_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
+			ForceNew: true,
 		},
 		"user_id": {
 			Type:     schema.TypeString,
 			Optional: true,
+			ForceNew: true,
 		},
 		"user_principal_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
+			ForceNew: true,
 		},
 	}
 
