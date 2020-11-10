@@ -31,7 +31,7 @@ The following arguments are supported:
 * `display_name_field` - (Required) OKTA display name field (string)
 * `groups_field` - (Required) OKTA group field (string)
 * `idp_metadata_content` - (Required/Sensitive) OKTA IDP metadata content (string)
-* `rancher_api_host` - (Required) Rancher url. Schema needs to be specified, `https://<RANCHER_API_HOST>` (string)
+* `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
 * `sp_cert` - (Required/Sensitive) OKTA SP cert (string)
 * `sp_key` - (Required/Sensitive) OKTA SP key (string)
 * `uid_field` - (Required) OKTA UID field (string)
