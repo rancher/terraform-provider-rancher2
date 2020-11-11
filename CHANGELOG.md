@@ -1,3 +1,17 @@
+## 1.10.6 (November 11, 2020)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fixed `flattenClusterTemplateRevisions` func to avoid crash on `rancher2_cluster_template` resource at some circunstances
+
 ## 1.10.5 (November 11, 2020)
 
 FEATURES:
