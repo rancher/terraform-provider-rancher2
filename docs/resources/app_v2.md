@@ -32,7 +32,7 @@ The following arguments are supported:
 * `chart_name` - (Required) The app v2 chart name (string)
 * `chart_version` - (Optional) The app v2 chart version (string)
 * `project_id` - (Optional) Deploy the app v2 within project ID (string)
-* `values` - (Optional) The app v2 values yaml. Yaml format is required (string)
+* `values` - (Optional/Sensitive) The app v2 values yaml. Yaml format is required (string)
 * `cleanup_on_fail` - (Optional) Cleanup app v2 on failed chart upgrade. Default: `false` (bool)
 * `disable_hooks` - (Optional) Disable app v2 chart hooks. Default: `false` (bool)
 * `disable_open_api_validation` - (Optional) Disable app V2 Open API Validation. Default: `false` (bool)

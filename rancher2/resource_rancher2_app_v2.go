@@ -60,7 +60,7 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return fmt.Errorf("[ERROR] installing App V2: %s", err)
 	}
-	d.SetId(chartInstallAction.Namespace + "/" + name)
+	d.SetId(clusterID + appV2ClusterIDsep + chartInstallAction.Namespace + "/" + name)
 
 	return resourceRancher2AppV2Read(d, meta)
 }
@@ -77,8 +77,8 @@ func resourceRancher2AppV2Read(d *schema.ResourceData, meta interface{}) error {
 		}
 		d.Set("cluster_name", cluster.Name)
 	}
-
-	app, err := meta.(*Config).GetAppV2ByID(clusterID, d.Id())
+	_, rancherID := splitID(d.Id())
+	app, err := meta.(*Config).GetAppV2ByID(clusterID, rancherID)
 	if err != nil {
 		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] App V2 %s not found at %s", name, clusterID)
@@ -123,7 +123,8 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting App V2 %s at %s", name, clusterID)
 
-	app, err := meta.(*Config).GetAppV2ByID(clusterID, d.Id())
+	_, rancherID := splitID(d.Id())
+	app, err := meta.(*Config).GetAppV2ByID(clusterID, rancherID)
 	if err != nil {
 		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] App V2 %s not found at %s", name, clusterID)
@@ -148,20 +149,16 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for app (%s) to be deleted: %s", app.ID, waitErr)
 	}
-	if app.Spec.Chart.Metadata != nil && app.Spec.Chart.Metadata.Annotations != nil && len(app.Spec.Chart.Metadata.Annotations) > 0 {
+	if app.Spec.Chart.Metadata != nil && app.Spec.Chart.Metadata.Annotations != nil && len(app.Spec.Chart.Metadata.Annotations) > 0 && len(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"]) > 0 {
 		namespace := d.Get("namespace").(string)
-		name := ""
 		if len(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/namespace"]) > 0 {
 			namespace = app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/namespace"]
 		}
-		if len(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"]) > 0 {
-			chartAuto := splitBySep(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"], "=")
-			if len(chartAuto) != 2 {
-				return fmt.Errorf("bad format on chart annotation catalog.cattle.io/auto-install: %s", app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"])
-			}
-			name = chartAuto[0]
+		chartAuto := splitBySep(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"], "=")
+		if len(chartAuto) != 2 {
+			return fmt.Errorf("bad format on chart annotation catalog.cattle.io/auto-install: %s", app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"])
 		}
-
+		name := chartAuto[0]
 		app, err = meta.(*Config).GetAppV2ByID(clusterID, namespace+"/"+name)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -185,6 +182,7 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 		if waitErr != nil {
 			return fmt.Errorf("[ERROR] waiting for app (%s) to be deleted: %s", app.ID, waitErr)
 		}
+
 	}
 	return nil
 }
@@ -215,7 +213,11 @@ func appV2OperationWait(meta interface{}, clusterID, opID string) error {
 			if state, ok := metadata["state"].(map[string]interface{}); ok && len(state) > 0 {
 				if transitioning, ok := state["transitioning"].(bool); ok && !transitioning {
 					if opError, ok := state["error"].(bool); ok && opError {
-						return fmt.Errorf("%s", state["message"])
+						message, err := meta.(*Config).GetAppV2OperationLogs(clusterID, obj)
+						if err != nil {
+							return fmt.Errorf("%s: %s", state["message"], err)
+						}
+						return fmt.Errorf("%s", message)
 					}
 					return nil
 				}

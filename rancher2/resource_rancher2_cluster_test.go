@@ -107,7 +107,7 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
       }
     }
     upgrade_strategy {
-      drain = true
+      drain = false
       max_unavailable_worker = "10%"
     }
   }
@@ -209,7 +209,7 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.creation", "12h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.etcd.0.retention", "72h"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.services.0.kube_api.0.audit_log.0.configuration.0.max_age", "7"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.drain", "false"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "rke_config.0.upgrade_strategy.0.max_unavailable_worker", "10%"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 10 * * *"),

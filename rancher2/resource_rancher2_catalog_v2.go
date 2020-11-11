@@ -39,19 +39,18 @@ func resourceRancher2CatalogV2Create(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	id := newCatalog.ID
-	d.SetId(id)
+	d.SetId(clusterID + catalogV2ClusterIDsep + newCatalog.ID)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
-		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, id),
+		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, newCatalog.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", id, waitErr)
+		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", newCatalog.ID, waitErr)
 	}
 	return resourceRancher2CatalogV2Read(d, meta)
 }
@@ -61,7 +60,8 @@ func resourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) err
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing Catalog V2 %s", name)
 
-	catalog, err := meta.(*Config).GetCatalogV2ByID(clusterID, d.Id())
+	_, rancherID := splitID(d.Id())
+	catalog, err := meta.(*Config).GetCatalogV2ByID(clusterID, rancherID)
 	if err != nil {
 		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Catalog V2 %s not found", name)
@@ -79,11 +79,12 @@ func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) e
 	catalog := expandCatalogV2(d)
 	log.Printf("[INFO] Updating Catalog V2 %s", name)
 
-	newCatalog, err := meta.(*Config).UpdateCatalogV2(clusterID, d.Id(), catalog)
+	_, rancherID := splitID(d.Id())
+	newCatalog, err := meta.(*Config).UpdateCatalogV2(clusterID, rancherID, catalog)
 	if err != nil {
 		return err
 	}
-	d.SetId(newCatalog.ID)
+	d.SetId(clusterID + catalogV2ClusterIDsep + newCatalog.ID)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -104,7 +105,8 @@ func resourceRancher2CatalogV2Delete(d *schema.ResourceData, meta interface{}) e
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Catalog V2 %s", name)
 
-	catalog, err := meta.(*Config).GetCatalogV2ByID(clusterID, d.Id())
+	_, rancherID := splitID(d.Id())
+	catalog, err := meta.(*Config).GetCatalogV2ByID(clusterID, rancherID)
 	if err != nil {
 		if IsNotFound(err) || IsForbidden(err) {
 			d.SetId("")

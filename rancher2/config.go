@@ -84,7 +84,7 @@ func (c *Config) isRancherReady() error {
 	var resp []byte
 	url := RootURL(c.URL) + "/ping"
 	for i := 0; i <= c.Retries; i++ {
-		resp, err = DoGet(url, "", "", c.CACerts, c.Insecure)
+		resp, err = DoGet(url, "", "", "", c.CACerts, c.Insecure)
 		if err == nil && rancher2ReadyAnswer == string(resp) {
 			return nil
 		}
@@ -758,6 +758,25 @@ func (c *Config) GetAppV2OperationByID(clusterID, id string) (map[string]interfa
 	err = client.ByID(appV2OperationAPIType, id, &resp)
 
 	return resp, err
+}
+
+func (c *Config) GetAppV2OperationLogs(clusterID string, op map[string]interface{}) (string, error) {
+	if op["id"].(string) == "" {
+		return "", fmt.Errorf("App V2 operation id is nil")
+	}
+
+	links := toMapString(op["links"].(map[string]interface{}))
+	link := "logs"
+	if links == nil && len(links[link]) == 0 {
+		return "", fmt.Errorf("failed to get app v2 operation log %s", op["id"])
+	}
+
+	resp, err := DoGet(links[link], "", "", c.TokenKey, c.CACerts, c.Insecure)
+	if err != nil {
+		return "", fmt.Errorf("failed to get app v2 operation log %s: %s", op["id"], err)
+	}
+
+	return string(resp), nil
 }
 
 func (c *Config) DeleteAppV2(clusterID string, app *AppV2) error {

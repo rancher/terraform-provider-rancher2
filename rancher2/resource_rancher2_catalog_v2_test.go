@@ -105,7 +105,8 @@ func testAccRancher2CatalogV2Disappears(cat *ClusterRepo) resource.TestCheckFunc
 				continue
 			}
 			clusterID := rs.Primary.Attributes["cluster_id"]
-			catalog, err := testAccProvider.Meta().(*Config).GetCatalogV2ByID(clusterID, rs.Primary.ID)
+			_, rancherID := splitID(rs.Primary.ID)
+			catalog, err := testAccProvider.Meta().(*Config).GetCatalogV2ByID(clusterID, rancherID)
 			if err != nil {
 				if IsNotFound(err) || IsForbidden(err) {
 					return nil
@@ -147,7 +148,8 @@ func testAccCheckRancher2CatalogV2Exists(n string, cat *ClusterRepo) resource.Te
 		}
 
 		clusterID := rs.Primary.Attributes["cluster_id"]
-		foundReg, err := testAccProvider.Meta().(*Config).GetCatalogV2ByID(clusterID, rs.Primary.ID)
+		_, rancherID := splitID(rs.Primary.ID)
+		foundReg, err := testAccProvider.Meta().(*Config).GetCatalogV2ByID(clusterID, rancherID)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
 				return nil
@@ -167,7 +169,8 @@ func testAccCheckRancher2CatalogV2Destroy(s *terraform.State) error {
 			continue
 		}
 		clusterID := rs.Primary.Attributes["cluster_id"]
-		_, err := testAccProvider.Meta().(*Config).GetCatalogV2ByID(clusterID, rs.Primary.ID)
+		_, rancherID := splitID(rs.Primary.ID)
+		_, err := testAccProvider.Meta().(*Config).GetCatalogV2ByID(clusterID, rancherID)
 		if err != nil {
 			if IsNotFound(err) {
 				return nil

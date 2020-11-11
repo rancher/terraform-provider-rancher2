@@ -177,7 +177,7 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 	return response, nil
 }
 
-func DoGet(url, username, password, cacert string, insecure bool) ([]byte, error) {
+func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte, error) {
 	start := time.Now()
 
 	if url == "" {
@@ -186,13 +186,16 @@ func DoGet(url, username, password, cacert string, insecure bool) ([]byte, error
 	log.Println("Getting from ", url)
 
 	client := &http.Client{
-		Timeout: time.Duration(10 * time.Second),
+		Timeout: time.Duration(60 * time.Second),
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= maxHTTPRedirect {
 				return fmt.Errorf("Stopped after %d redirects", maxHTTPRedirect)
 			}
-			if len(username) > 0 && len(password) > 0 {
-				req.SetBasicAuth(username, password)
+			if len(token) > 0 {
+				req.Header.Add("Authorization", "Bearer "+token)
+			} else if len(username) > 0 && len(password) > 0 {
+				s := username + ":" + password
+				req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(s)))
 			}
 			return nil
 		},
@@ -222,8 +225,11 @@ func DoGet(url, username, password, cacert string, insecure bool) ([]byte, error
 	if err != nil {
 		return nil, fmt.Errorf("Doing get: %v", err)
 	}
-	if len(username) > 0 && len(password) > 0 {
-		req.SetBasicAuth(username, password)
+	if len(token) > 0 {
+		req.Header.Add("Authorization", "Bearer "+token)
+	} else if len(username) > 0 && len(password) > 0 {
+		s := username + ":" + password
+		req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(s)))
 	}
 	resp, err := client.Do(req)
 	if err != nil {
