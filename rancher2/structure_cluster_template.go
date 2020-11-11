@@ -123,16 +123,24 @@ func flattenClusterTemplateRevisions(input []managementClient.ClusterTemplateRev
 			}
 		}
 	}
-	sortedInput := make([]managementClient.ClusterTemplateRevision, len(input))
+	inputLen := len(input)
+	pLen := len(p)
+	sortedInput := make([]managementClient.ClusterTemplateRevision, inputLen)
 	newCTR := []managementClient.ClusterTemplateRevision{}
 	lastIndex := 0
 	for i := range sortedInput {
 		if v, ok := pIndexID[input[i].ID]; ok {
+			if v > i && pLen > inputLen {
+				v = v - (v - i)
+			}
 			sortedInput[v] = input[i]
 			lastIndex++
 			continue
 		}
 		if v, ok := pIndexName[input[i].Name]; ok {
+			if v > i && pLen > inputLen {
+				v = v - (v - i)
+			}
 			sortedInput[v] = input[i]
 			lastIndex++
 			continue
