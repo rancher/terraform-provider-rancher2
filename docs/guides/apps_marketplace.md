@@ -42,30 +42,32 @@ This resource has the following arguments definition:
 These are some examples how to use a new catalog v2:
 
 * Create new repository using git repo and branch
-```
+
+```hcl
 resource "rancher2_catalog_v2" "foo" {
-  cluster_id = "<CLUSTER_ID>""
+  cluster_id = "&lt;CLUSTER_ID&gt;""
   name = "foo"
-  git_repo = "<GIT_REPO_URL>"
-  git_branch = "<GIT_BRANCH>"
+  git_repo = "&lt;GIT_REPO_URL&gt;"
+  git_branch = "&lt;GIT_BRANCH&gt;"
 }
 ```
 
 * Create new repository using http url
-```
+
+```hcl
 resource "rancher2_catalog_v2" "foo-url" {
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = "&lt;CLUSTER_ID&gt;"
   name = "foo-url"
-  url = "https://<CATALOG_URL>"
+  url = "https://&lt;CATALOG_URL&gt;"
 }
 ```
 
 * Import existing repository
 
-```
+```hcl
 ## Define catalog at tf file
 resource "rancher2_catalog_v2" "rancher-charts" {
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = "&lt;CLUSTER_ID&gt;"
   name = "rancher-charts"
   git_repo = "https://git.rancher.io/charts"
   git_branch = "main"
@@ -76,9 +78,9 @@ resource "rancher2_catalog_v2" "rancher-charts" {
 
 * Using datasource
 
-```
+```hcl
 data "rancher2_catalog_v2" "foo" {
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = "&lt;CLUSTER_ID&gt;"
   name = "foo"
 }
 ```
@@ -109,15 +111,15 @@ These are some examples how to deploy some Rancher cerfified apps v2:
 
 * Deploy Rancher monitoring
 
-```
+```hcl
 resource "rancher2_app_v2" "rancher-monitoring" {
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = "&lt;CLUSTER_ID&gt;"
   name = "rancher-monitoring"
   namespace = "cattle-monitoring-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-monitoring"
   chart_version = "9.4.200"
-  values = <<EOF
+  values = &lt;&lt;EOF
 prometheus:
   prometheusSpec:
     requests:
@@ -125,29 +127,39 @@ prometheus:
       memory: "250Mi"
 EOF
 }
-```
 
-**Tip:** If you are reinstalling `rancher-monitoring` and the deployment is failing, try adding this values to app v2
-
-```
-alertmanager:
-  alertmanagerSpec:
-    enabled: false
-    useExistingSecret: true
-    configSecret: alertmanager-rancher-monitoring-alertmanager
+# If you are reinstalling `rancher-monitoring` and the deployment is failing, try adding this values to app v2
+#
+#alertmanager:
+#  alertmanagerSpec:
+#    enabled: false
+#    useExistingSecret: true
+#    configSecret: alertmanager-rancher-monitoring-alertmanager
+#Example:
+#  values = &lt;&lt;EOF
+#alertmanager:
+#  alertmanagerSpec:
+#    enabled: false
+#    useExistingSecret: true
+#    configSecret: alertmanager-rancher-monitoring-alertmanager
+#prometheus:
+#  prometheusSpec:
+#    requests:
+#      cpu: "250m"
+#      memory: "250Mi"
 ```
 
 * Deploy Rancher istio and Rancher monitoring as requirement
 
-```
+```hcl
 resource "rancher2_app_v2" "rancher-monitoring" {
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = "&lt;CLUSTER_ID&gt;"
   name = "rancher-monitoring"
   namespace = "cattle-monitoring-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-monitoring"
   chart_version = "9.4.200"
-  values = <<EOF
+  values = &lt;&lt;EOF
 alertmanager:
   alertmanagerSpec:
     enabled: false
@@ -164,7 +176,7 @@ EOF
 resource "rancher2_app_v2" "rancher-istio" {
   depends_on = [rancher2_app_v2.rancher-monitoring] # Rancher-istio requires rancher-monitoring
   
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = "&lt;CLUSTER_ID&gt;"
   name = "rancher-istio"
   namespace = "istio-system"
   repo_name = "rancher-charts"
@@ -175,9 +187,9 @@ resource "rancher2_app_v2" "rancher-istio" {
 
 * Deploy Rancher cis benchmark
 
-```
+```hcl
 resource "rancher2_app_v2" "rancher-cis-benchmark" {  
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = "&lt;CLUSTER_ID&gt;"
   name = "rancher-cis-benchmark"
   namespace = "istio-system"
   repo_name = "rancher-charts"
@@ -189,15 +201,15 @@ resource "rancher2_app_v2" "rancher-cis-benchmark" {
 
 * Deploy Rancher backup
 
-```
+```hcl
 resource "rancher2_app_v2" "rancher-backup" {  
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = "&lt;CLUSTER_ID&gt;"
   name = "rancher-backup"
   namespace = "cattle-resources-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-backup"
   chart_version = "1.0.200"
-  values = <<EOF
+  values = &lt;&lt;EOF
 persistence:
   enabled: false
   size: 2Gi
@@ -220,9 +232,9 @@ EOF
 
 * Deploy Rancher logging
 
-```
+```hcl
 resource "rancher2_app_v2" "rancher-logging" {  
-  cluster_id = "<CLUSTER_ID>"
+  cluster_id = "&lt;CLUSTER_ID&gt;"
   name = "rancher-logging"
   namespace = "cattle-logging-system"
   repo_name = "rancher-charts"
