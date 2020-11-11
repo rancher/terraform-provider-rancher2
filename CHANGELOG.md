@@ -1,4 +1,4 @@
-## 1.10.5 (November 6, 2020)
+## 1.10.5 (November 11, 2020)
 
 FEATURES:
 
@@ -7,8 +7,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* Updated go mod to support Rancher `v2.5.2-rc2`
-* Updated acceptance tests to use Rancher `v2.5.2-rc2`
+* Updated go mod to support Rancher `v2.5.2`
+* Updated acceptance tests to use Rancher `v2.5.2`
 * Improved `rancher2_bootstrap` on resource creation. Number of retires on `bootstrapDoLogin` function can be configured with `retries` provider argument
 * Updated `rancher2_catalog_v2` contextualized resource id with `cluster_id` prefix
 * Updated `rancher2_app_v2` contextualized resource id with `cluster_id` prefix
