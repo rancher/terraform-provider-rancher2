@@ -16,6 +16,7 @@ type NodeTemplate struct {
 	OpenstackConfig     *openstackConfig     `json:"openstackConfig,omitempty" yaml:"openstackConfig,omitempty"`
 	VmwarevsphereConfig *vmwarevsphereConfig `json:"vmwarevsphereConfig,omitempty" yaml:"vmwarevsphereConfig,omitempty"`
 	OpennebulaConfig    *opennebulaConfig    `json:"opennebulaConfig,omitempty" yaml:"opennebulaConfig,omitempty"`
+	HetznerConfig       *hetznerConfig       `json:"hetznerConfig,omitempty" yaml:"hetznerConfig,omitempty"`
 }
 
 //Schemas
@@ -30,7 +31,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"azure_config", "digitalocean_config", "opennebula_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: []string{"azure_config", "digitalocean_config", "opennebula_config", "openstack_config", "hetzner_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: amazonec2ConfigFields(),
 			},
@@ -49,7 +50,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "digitalocean_config", "opennebula_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: []string{"amazonec2_config", "digitalocean_config", "opennebula_config", "openstack_config", "hetzner_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: azureConfigFields(),
 			},
@@ -66,7 +67,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "opennebula_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "opennebula_config", "openstack_config", "hetzner_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: digitaloceanConfigFields(),
 			},
@@ -119,7 +120,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "opennebula_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "opennebula_config", "openstack_config", "hetzner_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: linodeConfigFields(),
 			},
@@ -128,9 +129,18 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "opennebula_config", "vsphere_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "opennebula_config", "hetzner_config", "vsphere_config"},
 			Elem: &schema.Resource{
 				Schema: openstackConfigFields(),
+			},
+		},
+		"hetzner_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "opennebula_config", "openstack_config", "vsphere_config"},
+			Elem: &schema.Resource{
+				Schema: hetznerConfigFields(),
 			},
 		},
 		"use_internal_ip_address": {
@@ -142,7 +152,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "opennebula_config", "openstack_config"},
+			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "opennebula_config", "hetzner_config", "openstack_config"},
 			Elem: &schema.Resource{
 				Schema: vsphereConfigFields(),
 			},
