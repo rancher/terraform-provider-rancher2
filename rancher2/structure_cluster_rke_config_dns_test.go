@@ -8,10 +8,14 @@ import (
 )
 
 var (
-	testClusterRKEConfigDNSNodelocalConf      *managementClient.Nodelocal
-	testClusterRKEConfigDNSNodelocalInterface []interface{}
-	testClusterRKEConfigDNSConf               *managementClient.DNSConfig
-	testClusterRKEConfigDNSInterface          []interface{}
+	testClusterRKEConfigDNSNodelocalConf                        *managementClient.Nodelocal
+	testClusterRKEConfigDNSLinearAutoscalerParamsConf           *managementClient.LinearAutoscalerParams
+	testClusterRKEConfigDNSLinearAutoscalerParamsConfFalse      *managementClient.LinearAutoscalerParams
+	testClusterRKEConfigDNSNodelocalInterface                   []interface{}
+	testClusterRKEConfigDNSLinearAutoscalerParamsInterface      []interface{}
+	testClusterRKEConfigDNSLinearAutoscalerParamsInterfaceFalse []interface{}
+	testClusterRKEConfigDNSConf                                 *managementClient.DNSConfig
+	testClusterRKEConfigDNSInterface                            []interface{}
 )
 
 func init() {
@@ -22,6 +26,20 @@ func init() {
 		},
 		IPAddress: "ip_address",
 	}
+	testClusterRKEConfigDNSLinearAutoscalerParamsConf = &managementClient.LinearAutoscalerParams{
+		CoresPerReplica:           float64(128),
+		Max:                       int64(0),
+		Min:                       int64(1),
+		NodesPerReplica:           float64(4),
+		PreventSinglePointFailure: true,
+	}
+	testClusterRKEConfigDNSLinearAutoscalerParamsConfFalse = &managementClient.LinearAutoscalerParams{
+		CoresPerReplica:           float64(64),
+		Max:                       int64(10),
+		Min:                       int64(1),
+		NodesPerReplica:           float64(8),
+		PreventSinglePointFailure: false,
+	}
 	testClusterRKEConfigDNSNodelocalInterface = []interface{}{
 		map[string]interface{}{
 			"node_selector": map[string]interface{}{
@@ -31,15 +49,34 @@ func init() {
 			"ip_address": "ip_address",
 		},
 	}
+	testClusterRKEConfigDNSLinearAutoscalerParamsInterface = []interface{}{
+		map[string]interface{}{
+			"cores_per_replica":            float64(128),
+			"max":                          0,
+			"min":                          1,
+			"nodes_per_replica":            float64(4),
+			"prevent_single_point_failure": true,
+		},
+	}
+	testClusterRKEConfigDNSLinearAutoscalerParamsInterfaceFalse = []interface{}{
+		map[string]interface{}{
+			"cores_per_replica":            float64(64),
+			"max":                          10,
+			"min":                          1,
+			"nodes_per_replica":            float64(8),
+			"prevent_single_point_failure": false,
+		},
+	}
 	testClusterRKEConfigDNSConf = &managementClient.DNSConfig{
 		NodeSelector: map[string]string{
 			"sel1": "value1",
 			"sel2": "value2",
 		},
-		Nodelocal:           testClusterRKEConfigDNSNodelocalConf,
-		Provider:            "kube-dns",
-		ReverseCIDRs:        []string{"rev1", "rev2"},
-		UpstreamNameservers: []string{"up1", "up2"},
+		Nodelocal:              testClusterRKEConfigDNSNodelocalConf,
+		LinearAutoscalerParams: testClusterRKEConfigDNSLinearAutoscalerParamsConf,
+		Provider:               "kube-dns",
+		ReverseCIDRs:           []string{"rev1", "rev2"},
+		UpstreamNameservers:    []string{"up1", "up2"},
 	}
 	testClusterRKEConfigDNSInterface = []interface{}{
 		map[string]interface{}{
@@ -47,10 +84,11 @@ func init() {
 				"sel1": "value1",
 				"sel2": "value2",
 			},
-			"nodelocal":            testClusterRKEConfigDNSNodelocalInterface,
-			"provider":             "kube-dns",
-			"reverse_cidrs":        []interface{}{"rev1", "rev2"},
-			"upstream_nameservers": []interface{}{"up1", "up2"},
+			"nodelocal":                testClusterRKEConfigDNSNodelocalInterface,
+			"linear_autoscaler_params": testClusterRKEConfigDNSLinearAutoscalerParamsInterface,
+			"provider":                 "kube-dns",
+			"reverse_cidrs":            []interface{}{"rev1", "rev2"},
+			"upstream_nameservers":     []interface{}{"up1", "up2"},
 		},
 	}
 }
@@ -69,6 +107,31 @@ func TestFlattenClusterRKEConfigDNSNodelocal(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterRKEConfigDNSNodelocal(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestFlattenClusterRKEConfigDNSLinearAutoscalerParams(t *testing.T) {
+
+	cases := []struct {
+		Input          *managementClient.LinearAutoscalerParams
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterRKEConfigDNSLinearAutoscalerParamsConf,
+			testClusterRKEConfigDNSLinearAutoscalerParamsInterface,
+		},
+		{
+			testClusterRKEConfigDNSLinearAutoscalerParamsConfFalse,
+			testClusterRKEConfigDNSLinearAutoscalerParamsInterfaceFalse,
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenClusterRKEConfigDNSLinearAutoscalerParams(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -114,6 +177,31 @@ func TestExpandClusterRKEConfigDNSNodelocal(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterRKEConfigDNSNodelocal(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestExpandClusterRKEConfigDNSLinearAutoscalerParams(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput *managementClient.LinearAutoscalerParams
+	}{
+		{
+			testClusterRKEConfigDNSLinearAutoscalerParamsInterface,
+			testClusterRKEConfigDNSLinearAutoscalerParamsConf,
+		},
+		{
+			testClusterRKEConfigDNSLinearAutoscalerParamsInterfaceFalse,
+			testClusterRKEConfigDNSLinearAutoscalerParamsConfFalse,
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandClusterRKEConfigDNSLinearAutoscalerParams(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

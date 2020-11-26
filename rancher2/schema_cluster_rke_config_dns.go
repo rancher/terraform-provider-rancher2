@@ -32,6 +32,32 @@ func clusterRKEConfigDNSNodelocalFields() map[string]*schema.Schema {
 	return s
 }
 
+func clusterRKEConfigDNSLinearAutoscalerParamsFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"cores_per_replica": {
+			Type:     schema.TypeFloat,
+			Optional: true,
+		},
+		"nodes_per_replica": {
+			Type:     schema.TypeFloat,
+			Optional: true,
+		},
+		"prevent_single_point_failure": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
+		"min": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"max": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	}
+	return s
+}
+
 func clusterRKEConfigDNSFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"node_selector": {
@@ -46,6 +72,15 @@ func clusterRKEConfigDNSFields() map[string]*schema.Schema {
 			Description: "Nodelocal dns",
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigDNSNodelocalFields(),
+			},
+		},
+		"linear_autoscaler_params": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Description: "Linear Autoscaler Params",
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigDNSLinearAutoscalerParamsFields(),
 			},
 		},
 		"provider": {
@@ -68,6 +103,15 @@ func clusterRKEConfigDNSFields() map[string]*schema.Schema {
 			Computed: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
+			},
+		},
+		"update_strategy": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Description: "Update deployment strategy",
+			Elem: &schema.Resource{
+				Schema: deploymentStrategyFields(),
 			},
 		},
 	}
