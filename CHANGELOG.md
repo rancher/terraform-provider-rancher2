@@ -1,3 +1,20 @@
+## 1.11.0 (Unreleased)
+
+FEATURES:
+
+* **New Argument:** `rancher2_node_template.hetzner_config` - (Optional) Hetzner config for the Node Template (list maxitems:1)
+* **New Argument:** `rancher2_cluster.rke_config.dns.linear_autoscaler_params` - (Optional) LinearAutoScalerParams dns config (list Maxitem: 1)
+* **New Argument:** `rancher2_cluster.rke_config.dns.update_strategy` - (Optional) DNS update strategy (list Maxitems: 1)
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fixed `rancher2_cluster` resource, added retry when enabling cluster monitoring and got apierr 500. https://github.com/rancher/rancher/issues/30188
+* Fixed `rancher2_cluster` datasource error, when `rke_config.services.kube_api.secrets_encryption_config.custom_config` or `rke_config.services.kube_api.event_rate_limit.configuration` are set. https://github.com/rancher/terraform-provider-rancher2/issues/546
+
 ## 1.10.6 (November 11, 2020)
 
 FEATURES:
@@ -7,10 +24,9 @@ FEATURES:
 ENHANCEMENTS:
 
 
-
 BUG FIXES:
 
-* Fixed `flattenClusterTemplateRevisions` func to avoid crash on `rancher2_cluster_template` resource at some circunstances
+* Fixed `flattenClusterTemplateRevisions` func to avoid crash on `rancher2_cluster_template` resource at some circumstances
 
 ## 1.10.5 (November 11, 2020)
 
