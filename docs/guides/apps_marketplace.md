@@ -45,10 +45,10 @@ These are some examples how to use a new catalog v2:
 
 ```hcl
 resource "rancher2_catalog_v2" "foo" {
-  cluster_id = "&lt;CLUSTER_ID&gt;""
+  cluster_id = "<CLUSTER_ID>"
   name = "foo"
-  git_repo = "&lt;GIT_REPO_URL&gt;"
-  git_branch = "&lt;GIT_BRANCH&gt;"
+  git_repo = "<GIT_REPO_URL>"
+  git_branch = "<GIT_BRANCH>"
 }
 ```
 
@@ -56,9 +56,9 @@ resource "rancher2_catalog_v2" "foo" {
 
 ```hcl
 resource "rancher2_catalog_v2" "foo-url" {
-  cluster_id = "&lt;CLUSTER_ID&gt;"
+  cluster_id = "<CLUSTER_ID>"
   name = "foo-url"
-  url = "https://&lt;CATALOG_URL&gt;"
+  url = "https://<CATALOG_URL>"
 }
 ```
 
@@ -67,7 +67,7 @@ resource "rancher2_catalog_v2" "foo-url" {
 ```hcl
 ## Define catalog at tf file
 resource "rancher2_catalog_v2" "rancher-charts" {
-  cluster_id = "&lt;CLUSTER_ID&gt;"
+  cluster_id = "<CLUSTER_ID>"
   name = "rancher-charts"
   git_repo = "https://git.rancher.io/charts"
   git_branch = "main"
@@ -80,7 +80,7 @@ resource "rancher2_catalog_v2" "rancher-charts" {
 
 ```hcl
 data "rancher2_catalog_v2" "foo" {
-  cluster_id = "&lt;CLUSTER_ID&gt;"
+  cluster_id = "<CLUSTER_ID>"
   name = "foo"
 }
 ```
@@ -107,19 +107,23 @@ This resource has the following arguments definition:
 
 ### Examples
 
-These are some examples how to deploy some Rancher cerfified apps v2:
+These are some examples how to deploy some Rancher cerfified Apps v2:
 
-* Deploy Rancher monitoring
+**Note** Apps v2 certified by Rancher should be installed within fixed app name and namespace defined by chart annotations, `catalog.cattle.io/release-name` and `catalog.cattle.io/namespace`. The provider will be forcing them on Rancher cerfified Apps v2 installation, but generating a diff on next `terraform apply`, if app v2 name and/or namespace is customized by user. Adjusting the values at tf file should supress the diff
+
+**Note** Latest app v2 version will be deployed, if `chart_version` is not provided
+
+* `rancher-monitoring` - Deploy Rancher monitoring
 
 ```hcl
 resource "rancher2_app_v2" "rancher-monitoring" {
-  cluster_id = "&lt;CLUSTER_ID&gt;"
+  cluster_id = "<CLUSTER_ID>"
   name = "rancher-monitoring"
   namespace = "cattle-monitoring-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-monitoring"
   chart_version = "9.4.200"
-  values = &lt;&lt;EOF
+  values = <<EOF
 prometheus:
   prometheusSpec:
     requests:
@@ -149,17 +153,17 @@ EOF
 #      memory: "250Mi"
 ```
 
-* Deploy Rancher istio and Rancher monitoring as requirement
+* `rancher-istio` - Deploy Rancher istio and Rancher monitoring as requirement
 
 ```hcl
 resource "rancher2_app_v2" "rancher-monitoring" {
-  cluster_id = "&lt;CLUSTER_ID&gt;"
+  cluster_id = "<CLUSTER_ID>"
   name = "rancher-monitoring"
   namespace = "cattle-monitoring-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-monitoring"
   chart_version = "9.4.200"
-  values = &lt;&lt;EOF
+  values = <<EOF
 alertmanager:
   alertmanagerSpec:
     enabled: false
@@ -176,7 +180,7 @@ EOF
 resource "rancher2_app_v2" "rancher-istio" {
   depends_on = [rancher2_app_v2.rancher-monitoring] # Rancher-istio requires rancher-monitoring
   
-  cluster_id = "&lt;CLUSTER_ID&gt;"
+  cluster_id = "<CLUSTER_ID>"
   name = "rancher-istio"
   namespace = "istio-system"
   repo_name = "rancher-charts"
@@ -185,13 +189,13 @@ resource "rancher2_app_v2" "rancher-istio" {
 }
 ```
 
-* Deploy Rancher cis benchmark
+* `rancher-cis-benchmark` - Deploy Rancher cis benchmark
 
 ```hcl
 resource "rancher2_app_v2" "rancher-cis-benchmark" {  
-  cluster_id = "&lt;CLUSTER_ID&gt;"
+  cluster_id = "<CLUSTER_ID>"
   name = "rancher-cis-benchmark"
-  namespace = "istio-system"
+  namespace = "cis-operator-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-cis-benchmark"
   chart_version = "1.0.100"
@@ -199,17 +203,17 @@ resource "rancher2_app_v2" "rancher-cis-benchmark" {
 }
 ```
 
-* Deploy Rancher backup
+* `rancher-backup` - Deploy Rancher backup
 
 ```hcl
 resource "rancher2_app_v2" "rancher-backup" {  
-  cluster_id = "&lt;CLUSTER_ID&gt;"
+  cluster_id = "<CLUSTER_ID>"
   name = "rancher-backup"
   namespace = "cattle-resources-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-backup"
   chart_version = "1.0.200"
-  values = &lt;&lt;EOF
+  values = <<EOF
 persistence:
   enabled: false
   size: 2Gi
@@ -230,16 +234,44 @@ EOF
 }
 ```
 
-* Deploy Rancher logging
+* `rancher-logging` - Deploy Rancher logging
 
 ```hcl
 resource "rancher2_app_v2" "rancher-logging" {  
-  cluster_id = "&lt;CLUSTER_ID&gt;"
+  cluster_id = "<CLUSTER_ID>"
   name = "rancher-logging"
   namespace = "cattle-logging-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-logging"
   chart_version = "3.6.000"
+  wait = true
+}
+```
+
+* `longhorn` - Deploy Rancher Longhorn
+
+```hcl
+resource "rancher2_app_v2" "longhorn" {  
+  cluster_id = "<CLUSTER_ID>"
+  name = "rancher-longhorn"
+  namespace = "longhorn-system"
+  repo_name = "rancher-charts"
+  chart_name = "longhorn"
+  chart_version = "1.0.201"
+  wait = true
+}
+```
+
+* `rancher-gatekeeper` - Deploy OPA Gatekeeper
+
+```hcl
+resource "rancher2_app_v2" "rancher-gatekeeper" {  
+  cluster_id = "<CLUSTER_ID>"
+  name = "rancher-gatekeeper"
+  namespace = "cattle-gatekeeper-system"
+  repo_name = "rancher-charts"
+  chart_name = "rancher-gatekeeper"
+  chart_version = "3.1.101"
   wait = true
 }
 ```
