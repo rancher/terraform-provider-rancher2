@@ -6,7 +6,7 @@ page_title: "rancher2_node_template Resource"
 
 Provides a Rancher v2 Node Template resource. This can be used to create Node Template for Rancher v2 and retrieve their information.
 
-amazonec2, azure, digitalocean, linode, opennebula, openstack, and vsphere drivers are supported for node templates.
+amazonec2, azure, digitalocean, linode, opennebula, openstack, hetzner, and vsphere drivers are supported for node templates.
 
 **Note** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
 
@@ -51,6 +51,31 @@ resource "rancher2_node_template" "foo" {
     subnet_id = "<SUBNET_ID>"
     vpc_id = "<VPC_ID>"
     zone = "<ZONE>"
+  }
+}
+```
+
+### Using the Hetzner Node Driver
+
+```hcl
+# Create a new rancher2 Node Template using hetzner node_driver
+resource "rancher2_node_driver" "hetzner_node_driver" {
+  active   = true
+  builtin  = false
+  name     = "Hetzner"
+  ui_url   = "https://storage.googleapis.com/hcloud-rancher-v2-ui-driver/component.js"
+  url      = "https://github.com/JonasProgrammer/docker-machine-driver-hetzner/releases/download/3.0.0/docker-machine-driver-hetzner_3.0.0_linux_amd64.tar.gz"
+  whitelist_domains = ["storage.googleapis.com"]
+}
+
+resource "rancher2_node_template" "my_hetzner_node_template" {
+  name = "my-hetzner-node-template"
+  driver_id = rancher2_node_driver.hetzner_node_driver.id
+  hetzner_config {
+    api_token = "XXXXXXXXXX"
+    image = "ubuntu-18.04"
+    server_location = "nbg1"
+    server_type = "cx11"
   }
 }
 ```
@@ -180,6 +205,21 @@ The following attributes are exported:
 * `ssh_user` - (Optional) SSH username. Default `root` (string)
 * `tags` - (Optional) Comma-separated list of tags to apply to the Droplet (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
+
+### `hetzner_config`
+
+#### Arguments
+
+* `api_token` - (Required/Sensitive) Hetzner Cloud project API token (string)
+* `image` - (Optional) Hetzner Cloud server image. Default `ubuntu-18.04` (string)
+* `server_location` - (Optional) Hetzner Cloud datacenter. Default `nbg1` (string) 
+* `server_type` - (Optional) Hetzner Cloud server type. Default `cx11` (string)
+* `networks` - (Optional) Comma-separated list of network IDs or names which should be attached to the server private network interface (string)
+* `use_private_networks` - (Optional) Use private network. Default `false` (bool)
+* `volumes` - (Optional) Comma-separated list of volume IDs or names which should be attached to the server (string)
+* `userdata` - (Optional) Path to file with cloud-init user-data (string)
+
+> **Note**: You need to install the Hetzner Docker Machine Driver first as shown as in the [examples section](#using-the-hetzner-node-driver).
 
 ### `linode_config`
 
