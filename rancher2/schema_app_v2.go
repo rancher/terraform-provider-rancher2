@@ -65,6 +65,7 @@ func appV2Fields() map[string]*schema.Schema {
 		"chart_version": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "Chart version",
 		},
 		"cluster_name": {

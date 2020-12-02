@@ -30,7 +30,7 @@ The following arguments are supported:
 * `namespace` - (Required/ForceNew) The namespace of the app v2 (string)
 * `repo_name` - (Required) Repo name (string)
 * `chart_name` - (Required) The app v2 chart name (string)
-* `chart_version` - (Optional) The app v2 chart version (string)
+* `chart_version` - (Optional/Computed) The app v2 chart version (string)
 * `project_id` - (Optional) Deploy the app v2 within project ID (string)
 * `values` - (Optional/Sensitive) The app v2 values yaml. Yaml format is required (string)
 * `cleanup_on_fail` - (Optional) Cleanup app v2 on failed chart upgrade. Default: `false` (bool)
