@@ -5,15 +5,23 @@ FEATURES:
 * **New Argument:** `rancher2_node_template.hetzner_config` - (Optional) Hetzner config for the Node Template (list maxitems:1)
 * **New Argument:** `rancher2_cluster.rke_config.dns.linear_autoscaler_params` - (Optional) LinearAutoScalerParams dns config (list Maxitem: 1)
 * **New Argument:** `rancher2_cluster.rke_config.dns.update_strategy` - (Optional) DNS update strategy (list Maxitems: 1)
+* **New Argument:** `rancher2_notifier.dingtalk_config` - (Optional) Dingtalk config for notifier (list maxitems:1)
+* **New Argument:** `rancher2_notifier.msteams_config` - (Optional) MSTeams config for notifier (list maxitems:1)
 
 ENHANCEMENTS:
 
-
+* Updated `rancher2_app_v2.chart_version` as optional/computed argument. Deploying latest app v2 version if `chart_version` is not provided
+* Updated `rancher2_app_v2.wait` default value to `true`
 
 BUG FIXES:
 
 * Fixed `rancher2_cluster` resource, added retry when enabling cluster monitoring and got apierr 500. https://github.com/rancher/rancher/issues/30188
 * Fixed `rancher2_cluster` datasource error, when `rke_config.services.kube_api.secrets_encryption_config.custom_config` or `rke_config.services.kube_api.event_rate_limit.configuration` are set. https://github.com/rancher/terraform-provider-rancher2/issues/546
+* Fixed `rancher2_cluster_template` required argument definition on docs
+* Fixed `Apps & marketplace` guide for Rancher v2.5.0 format
+* Fixed doc examples for activedirectory, freeipa and openldap auth providers
+* Fixed `rancher2_app_v2` resource to properly pass global values to sub charts. https://github.com/rancher/terraform-provider-rancher2/issues/545
+* Fixed `rancher2_app_v2` resource to don't override name nor namespace on App v2 not certified by rancher
 
 ## 1.10.6 (November 11, 2020)
 
