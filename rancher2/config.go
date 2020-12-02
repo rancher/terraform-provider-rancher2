@@ -24,6 +24,7 @@ const (
 	rancher2ManagementV2TypePrefix    = "management.cattle.io"
 	rancher2ReadyAnswer               = "pong"
 	rancher2RetriesWait               = 5
+	rancher2RetriesOnServerError      = 3
 	rancher2RKEK8sSystemImageVersion  = "2.3.0"
 	rancher2NodeTemplateChangeVersion = "2.3.3" // Change node template id format
 	rancher2TokeTTLMinutesVersion     = "2.4.6" // ttl token is readed in minutes

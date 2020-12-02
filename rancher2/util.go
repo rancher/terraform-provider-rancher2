@@ -289,6 +289,16 @@ func IsNotAllowed(err error) bool {
 	return apiError.StatusCode == http.StatusMethodNotAllowed
 }
 
+// IsServerError checks if the given APIError is a Internal Server Error HTTP statuscode
+func IsServerError(err error) bool {
+	apiError, ok := err.(*clientbase.APIError)
+	if !ok {
+		return false
+	}
+
+	return apiError.StatusCode == http.StatusInternalServerError
+}
+
 func splitTokenID(token string) string {
 	separator := ":"
 
