@@ -69,15 +69,21 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if len(in.ClusterTemplateRevisionID) > 0 {
 			d.Set("cluster_template_revision_id", in.ClusterTemplateRevisionID)
 		}
+		if len(in.ClusterTemplateQuestions) > 0 {
+			d.Set("cluster_template_questions", flattenQuestions(in.ClusterTemplateQuestions))
+		}
 		if in.ClusterTemplateAnswers != nil {
+			for k, v := range readPreservedClusterTemplateAnswers(d) {
+				if _, ok := in.ClusterTemplateAnswers.Values[k]; !ok {
+					in.ClusterTemplateAnswers.Values[k] = v
+				}
+			}
 			err = d.Set("cluster_template_answers", flattenAnswer(in.ClusterTemplateAnswers))
 			if err != nil {
 				return err
 			}
 		}
-		if len(in.ClusterTemplateQuestions) > 0 {
-			d.Set("cluster_template_questions", flattenQuestions(in.ClusterTemplateQuestions))
-		}
+
 	}
 
 	if len(in.DefaultPodSecurityPolicyTemplateID) > 0 {
@@ -221,6 +227,31 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	d.Set("windows_prefered_cluster", in.WindowsPreferedCluster)
 
 	return nil
+}
+
+func readPreservedClusterTemplateAnswers(d *schema.ResourceData) map[string]string {
+	var questions []managementClient.Question
+	if q, ok := d.Get("cluster_template_questions").([]interface{}); ok && len(q) > 0 {
+		questions = expandQuestions(q)
+	}
+
+	var answers *managementClient.Answer
+	if a, ok := d.Get("cluster_template_answers").([]interface{}); ok && len(a) > 0 {
+		answers = expandAnswer(a)
+	}
+
+	preservedAnswers := map[string]string{}
+	if questions != nil && answers != nil {
+		for _, question := range questions {
+			if question.Type == questionTypePassword {
+				if answer, ok := answers.Values[question.Variable]; ok {
+					preservedAnswers[question.Variable] = answer
+				}
+			}
+		}
+	}
+
+	return preservedAnswers
 }
 
 // Expanders

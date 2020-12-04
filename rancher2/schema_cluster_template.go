@@ -6,13 +6,14 @@ import (
 )
 
 const (
-	questionTypeInt    = "int"
-	questionTypeBool   = "boolean"
-	questionTypeString = "string"
+	questionTypeInt      = "int"
+	questionTypeBool     = "boolean"
+	questionTypeString   = "string"
+	questionTypePassword = "password"
 )
 
 var (
-	questionTypeKinds = []string{questionTypeInt, questionTypeBool, questionTypeString}
+	questionTypeKinds = []string{questionTypeInt, questionTypeBool, questionTypeString, questionTypePassword}
 )
 
 //Schemas

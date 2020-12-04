@@ -44,8 +44,8 @@ func testCluster() {
 		ClusterID: "cluster_id",
 		ProjectID: "project_id",
 		Values: map[string]string{
-			"value1": "one",
-			"value2": "two",
+			"string.value1": "one",
+			"string.value2": "two",
 		},
 	}
 	testClusterAnswersInterface = []interface{}{
@@ -53,8 +53,8 @@ func testCluster() {
 			"cluster_id": "cluster_id",
 			"project_id": "project_id",
 			"values": map[string]interface{}{
-				"value1": "one",
-				"value2": "two",
+				"string.value1": "one",
+				"string.value2": "two",
 			},
 		},
 	}
@@ -63,7 +63,19 @@ func testCluster() {
 			Default:  "default",
 			Required: true,
 			Type:     "string",
-			Variable: "variable",
+			Variable: "string.value1",
+		},
+		{
+			Default:  "default",
+			Required: true,
+			Type:     "string",
+			Variable: "string.value2",
+		},
+		{
+			Default:  "default",
+			Required: true,
+			Type:     "password",
+			Variable: "password.var",
 		},
 	}
 	testClusterQuestionsInterface = []interface{}{
@@ -71,7 +83,19 @@ func testCluster() {
 			"default":  "default",
 			"required": true,
 			"type":     "string",
-			"variable": "variable",
+			"variable": "string.value1",
+		},
+		map[string]interface{}{
+			"default":  "default",
+			"required": true,
+			"type":     "string",
+			"variable": "string.value2",
+		},
+		map[string]interface{}{
+			"default":  "default",
+			"required": true,
+			"type":     "password",
+			"variable": "password.var",
 		},
 	}
 	testLocalClusterAuthEndpointConf = &managementClient.LocalClusterAuthEndpoint{
@@ -522,5 +546,107 @@ func TestExpandCluster(t *testing.T) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
 		}
+	}
+}
+
+func TestFlattenClusterWithPreservedClusterTemplateAnswers(t *testing.T) {
+
+	testClusterInterfaceTemplate["cluster_template_answers"] = []interface{}{
+		map[string]interface{}{
+			"cluster_id": "cluster_id",
+			"project_id": "project_id",
+			"values": map[string]interface{}{
+				"string.value1": "one",
+				"string.value2": "two",
+				"password.var":  "password",
+			},
+		},
+	}
+
+	cases := []struct {
+		Input          *Cluster
+		InputToken     *managementClient.ClusterRegistrationToken
+		InputKube      *managementClient.GenerateKubeConfigOutput
+		ExpectedOutput map[string]interface{}
+	}{
+		{
+
+			testClusterConfTemplate,
+			testClusterRegistrationTokenConf,
+			testClusterGenerateKubeConfigOutput,
+			testClusterInterfaceTemplate,
+		},
+	}
+
+	for _, tc := range cases {
+		output := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{
+			"cluster_template_answers": []interface{}{
+				map[string]interface{}{
+					"cluster_id": "cluster_id",
+					"project_id": "project_id",
+					"values": map[string]interface{}{
+						"password.var": "password",
+					},
+				},
+			},
+		})
+		tc.InputToken.ID = "id"
+		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
+		expectedOutput := map[string]interface{}{}
+		for k := range tc.ExpectedOutput {
+			expectedOutput[k] = output.Get(k)
+
+		}
+		if tc.ExpectedOutput["driver"] == clusterDriverRKE {
+			expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig, []interface{}{})
+		}
+		expectedOutput["id"] = "id"
+		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, expectedOutput)
+		}
+	}
+}
+
+func TestReadPreservedClusterTemplateAnswers(t *testing.T) {
+
+	inputResourceData := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{
+		"cluster_template_answers": []interface{}{
+			map[string]interface{}{
+				"cluster_id": "cluster_id",
+				"project_id": "project_id",
+				"values": map[string]interface{}{
+					"password.var":  "password",
+					"string.value1": "one",
+				},
+			},
+		},
+		"cluster_template_questions": []interface{}{
+			map[string]interface{}{
+				"default":  "default",
+				"required": true,
+				"type":     "string",
+				"variable": "string.value1",
+			},
+			map[string]interface{}{
+				"default":  "default",
+				"required": true,
+				"type":     "password",
+				"variable": "password.var",
+			},
+		},
+	})
+
+	expectedOutput := map[string]string{
+		"password.var": "password",
+	}
+
+	result := readPreservedClusterTemplateAnswers(inputResourceData)
+	if !reflect.DeepEqual(result, expectedOutput) {
+		t.Fatalf("Unexpected result from preserved answers.\nExpected: %#v\nGiven:    %#v",
+			expectedOutput, result)
 	}
 }
