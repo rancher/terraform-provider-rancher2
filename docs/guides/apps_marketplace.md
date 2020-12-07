@@ -101,7 +101,7 @@ This resource has the following arguments definition:
 * `disable_hooks` - (Optional) Disable app v2 chart hooks. Default: `false` (bool)
 * `disable_open_api_validation` - (Optional) Disable app V2 Open API Validation. Default: `false` (bool)
 * `force_upgrade` - (Optional) Force app V2 chart upgrade. Default: `false` (bool)
-* `wait` - (Optional) Wait until app is deployed. Default: `false` (bool)
+* `wait` - (Optional) Wait until app is deployed. Default: `true` (bool)
 * `annotations` - (Optional/Computed) Annotations for the app v2 (map)
 * `labels` - (Optional/Computed) Labels for the app v2 (map)
 
@@ -199,7 +199,6 @@ resource "rancher2_app_v2" "rancher-cis-benchmark" {
   repo_name = "rancher-charts"
   chart_name = "rancher-cis-benchmark"
   chart_version = "1.0.100"
-  wait = true
 }
 ```
 
@@ -230,7 +229,6 @@ s3:
   insecureTLSSkipVerify: false
   region: ""
 EOF
-  wait = true
 }
 ```
 
@@ -244,7 +242,19 @@ resource "rancher2_app_v2" "rancher-logging" {
   repo_name = "rancher-charts"
   chart_name = "rancher-logging"
   chart_version = "3.6.000"
-  wait = true
+}
+```
+
+* Deploy Rancher Longhorn
+
+```hcl
+resource "rancher2_app_v2" "longhorn" {  
+  cluster_id = "<CLUSTER_ID>"
+  name = "rancher-longhorn"
+  namespace = "longhorn-system"
+  repo_name = "rancher-charts"
+  chart_name = "longhorn"
+  chart_version = "1.0.201"
 }
 ```
 

@@ -147,7 +147,7 @@ func appV2Fields() map[string]*schema.Schema {
 		"wait": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Default:     true,
 			Description: "Wait until app is deployed",
 		},
 	}

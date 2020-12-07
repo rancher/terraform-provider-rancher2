@@ -140,12 +140,17 @@ func expandChartInstallActionV2(in *schema.ResourceData, chartInfo *types.ChartI
 	if err != nil {
 		return nil, err
 	}
+	wait := in.Get("wait").(bool)
+	if len(chartIntalls) > 1 {
+		// Forcing wait = true if chart has dependencies
+		wait = true
+	}
 
 	timeOut := &metaV1.Duration{}
 	timeOut.Duration = in.Timeout(schema.TimeoutCreate)
 	obj := &types.ChartInstallAction{
 		Timeout:                  timeOut,
-		Wait:                     in.Get("wait").(bool),
+		Wait:                     wait,
 		DisableHooks:             in.Get("disable_hooks").(bool),
 		DisableOpenAPIValidation: in.Get("disable_open_api_validation").(bool),
 		Namespace:                namespace,
@@ -243,12 +248,17 @@ func expandChartUpgradeActionV2(in *schema.ResourceData, chartInfo *types.ChartI
 	if err != nil {
 		return nil, err
 	}
+	wait := in.Get("wait").(bool)
+	if len(chartUpgrades) > 1 {
+		// Forcing wait = true if chart has dependencies
+		wait = true
+	}
 
 	timeOut := &metaV1.Duration{}
 	timeOut.Duration = in.Timeout(schema.TimeoutUpdate)
 	obj := &types.ChartUpgradeAction{
 		Timeout:                  timeOut,
-		Wait:                     in.Get("wait").(bool),
+		Wait:                     wait,
 		DisableHooks:             in.Get("disable_hooks").(bool),
 		DisableOpenAPIValidation: in.Get("disable_open_api_validation").(bool),
 		Force:                    in.Get("force_upgrade").(bool),
