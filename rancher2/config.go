@@ -1780,7 +1780,11 @@ func (c *Config) GetRecipientByNotifier(id string) (*managementClient.Recipient,
 	out := &managementClient.Recipient{}
 
 	out.NotifierID = notifier.ID
-	if notifier.PagerdutyConfig != nil {
+	if notifier.DingtalkConfig != nil {
+		out.NotifierType = recipientTypeDingtalk
+	} else if notifier.MSTeamsConfig != nil {
+		out.NotifierType = recipientTypeMsTeams
+	} else if notifier.PagerdutyConfig != nil {
 		out.NotifierType = recipientTypePagerduty
 		out.Recipient = notifier.PagerdutyConfig.ServiceKey
 	} else if notifier.SlackConfig != nil {

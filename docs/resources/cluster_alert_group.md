@@ -52,7 +52,7 @@ The following attributes are exported:
 
 #### Attributes
 
-* `notifier_type` - (Computed) Recipient notifier ID. Supported values : `"pagerduty" | "slack" | "email" | "webhook" | "wechat"` (string)
+* `notifier_type` - (Computed) Recipient notifier ID. Supported values : `"dingtalk" | "msteams" | "pagerduty" | "slack" | "email" | "webhook" | "wechat"` (string)
 
 ## Timeouts
 

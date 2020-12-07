@@ -5,6 +5,8 @@ import (
 )
 
 const (
+	recipientTypeDingtalk  = "dingtalk"
+	recipientTypeMsTeams   = "msteams"
 	recipientTypePagerduty = "pagerduty"
 	recipientTypeSlack     = "slack"
 	recipientTypeSMTP      = "email"
