@@ -18,6 +18,8 @@ resource "rancher2_auth_config_openldap" "openldap" {
   service_account_password = "<SERVICE_PASSWORD>"
   user_search_base = "<SEARCH_BASE>"
   port = <OPENLDAP_PORT>
+  test_username = "<USER_NAME>"
+  test_password = "<USER_PASSWORD>"
 }
 ```
 

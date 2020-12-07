@@ -18,6 +18,8 @@ resource "rancher2_auth_config_freeipa" "freeipa" {
   service_account_password = "<SERVICE_PASSWORD>"
   user_search_base = "<SEARCH_BASE>"
   port = <FREEIPA_PORT>
+  test_username = "<USER_NAME>"
+  test_password = "<USER_PASSWORD>"
 }
 ```
 
