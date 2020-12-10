@@ -60,7 +60,7 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return fmt.Errorf("[ERROR] installing App V2: %s", err)
 	}
-	d.SetId(clusterID + appV2ClusterIDsep + chartInstallAction.Namespace + "/" + name)
+	d.SetId(clusterID + appV2ClusterIDsep + chartInstallAction.Namespace + "/" + d.Get("name").(string))
 
 	return resourceRancher2AppV2Read(d, meta)
 }
