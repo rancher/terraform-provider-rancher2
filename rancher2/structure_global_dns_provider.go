@@ -1,78 +1,83 @@
 package rancher2
 
 import (
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 // Flatteners
-func flattenRoute53DNSProvider(in *managementClient.Route53ProviderConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+
+func flattenAliDNSProvider(in *managementClient.AlidnsProviderConfig, p []interface{}) []interface{} {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
 	if in == nil {
-		return []interface{}{}, nil
-	}
-
-	if len(in.Region) > 0 {
-		obj["region"] = in.Region
-	}
-
-	if len(in.SecretKey) > 0 {
-		obj["secret_key"] = in.SecretKey
+		return []interface{}{}
 	}
 
 	if len(in.AccessKey) > 0 {
 		obj["access_key"] = in.AccessKey
 	}
 
-	if len(in.RoleArn) > 0 {
-		obj["role_arn"] = in.RoleArn
-	}
-
-	if len(in.CredentialsPath) > 0 {
-		obj["credentials_path"] = in.CredentialsPath
-	}
-
-	return []interface{}{obj}, nil
+	return []interface{}{obj}
 }
 
-func flattenAliDNSProvider(in *managementClient.AlidnsProviderConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
+func flattenCloudFlareDNSProvider(in *managementClient.CloudflareProviderConfig, p []interface{}) []interface{} {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
 	if in == nil {
-		return []interface{}{}, nil
-	}
-
-	if len(in.SecretKey) > 0 {
-		obj["secret_key"] = in.SecretKey
-	}
-
-	if len(in.AccessKey) > 0 {
-		obj["access_key"] = in.AccessKey
-	}
-
-	return []interface{}{obj}, nil
-}
-
-func flattenCloudFlareDNSProvider(in *managementClient.CloudflareProviderConfig) ([]interface{}, error) {
-	obj := make(map[string]interface{})
-	if in == nil {
-		return []interface{}{}, nil
-	}
-
-	if len(in.APIKey) > 0 {
-		obj["api_key"] = in.APIKey
+		return []interface{}{}
 	}
 
 	if len(in.APIEmail) > 0 {
 		obj["api_email"] = in.APIEmail
 	}
 
-	obj["proxy_setting"] = in.ProxySetting
+	if in.ProxySetting != nil {
+		obj["proxy_setting"] = *in.ProxySetting
+	}
 
-	return []interface{}{obj}, nil
+	return []interface{}{obj}
 }
 
-func flattenGlobalDNSProvider(d *schema.ResourceData, in *managementClient.GlobalDNSProvider) error {
+func flattenRoute53DNSProvider(in *managementClient.Route53ProviderConfig, p []interface{}) []interface{} {
+	var obj map[string]interface{}
+	if len(p) == 0 || p[0] == nil {
+		obj = make(map[string]interface{})
+	} else {
+		obj = p[0].(map[string]interface{})
+	}
+	if in == nil {
+		return []interface{}{}
+	}
+
+	if len(in.AccessKey) > 0 {
+		obj["access_key"] = in.AccessKey
+	}
+	if len(in.CredentialsPath) > 0 {
+		obj["credentials_path"] = in.CredentialsPath
+	}
+	if len(in.Region) > 0 {
+		obj["region"] = in.Region
+	}
+	if len(in.RoleArn) > 0 {
+		obj["role_arn"] = in.RoleArn
+	}
+	if len(in.ZoneType) > 0 {
+		obj["zone_type"] = in.ZoneType
+	}
+
+	return []interface{}{obj}
+}
+
+func flattenGlobalDNSProvider(d *schema.ResourceData, in *managementClient.GlobalDnsProvider) error {
 	if in == nil {
 		return nil
 	}
@@ -81,95 +86,81 @@ func flattenGlobalDNSProvider(d *schema.ResourceData, in *managementClient.Globa
 	d.Set("root_domain", in.RootDomain)
 	d.Set("name", in.Name)
 
-	switch d.Get("dns_provider") {
-	case "route53":
-		route53Config, err := flattenRoute53DNSProvider(in.Route53ProviderConfig)
+	if in.AlidnsProviderConfig != nil {
+		err := d.Set("alidns_config", flattenAliDNSProvider(in.AlidnsProviderConfig, d.Get("alidns_config").([]interface{})))
 		if err != nil {
 			return err
 		}
-		err = d.Set("route53_config", route53Config)
+		d.Set("dns_provider", globalDNSProviderAlidnsKind)
+	}
+	if in.CloudflareProviderConfig != nil {
+		err := d.Set("cloudflare_config", flattenCloudFlareDNSProvider(in.CloudflareProviderConfig, d.Get("cloudflare_config").([]interface{})))
 		if err != nil {
 			return err
 		}
-	case "alidns":
-		aliDNSConfig, err := flattenAliDNSProvider(in.AlidnsProviderConfig)
+		d.Set("dns_provider", globalDNSProviderCloudflareKind)
+	}
+	if in.Route53ProviderConfig != nil {
+		err := d.Set("route53_config", flattenRoute53DNSProvider(in.Route53ProviderConfig, d.Get("route53_config").([]interface{})))
 		if err != nil {
 			return err
 		}
-		err = d.Set("alidns_config", aliDNSConfig)
-		if err != nil {
-			return err
-		}
-	case "cloudfare":
-		cfDNS, err := flattenCloudFlareDNSProvider(in.CloudflareProviderConfig)
-		if err != nil {
-			return err
-		}
-		err = d.Set("cloudflare_config", cfDNS)
+		d.Set("dns_provider", globalDNSProviderRoute53Kind)
+	}
+
+	err := d.Set("annotations", toMapInterface(in.Annotations))
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("labels", toMapInterface(in.Labels))
+	if err != nil {
+		return err
 	}
 
 	return nil
-
 }
 
 // Expanders
-func expandGlobalDNSProvider(in *schema.ResourceData) (*managementClient.GlobalDNSProvider, error) {
-	obj := &managementClient.GlobalDNSProvider{}
-	if in == nil {
-		return nil, fmt.Errorf("resource rancher2_global_dns_provider data cannot be nil")
+
+func expandAliDNSConfig(p []interface{}) *managementClient.AlidnsProviderConfig {
+	obj := &managementClient.AlidnsProviderConfig{}
+	if len(p) == 0 || p[0] == nil {
+		return nil
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["access_key"].(string); ok && len(v) > 0 {
+		obj.AccessKey = v
 	}
 
-	if v := in.Id(); len(v) > 0 {
-		obj.ID = v
+	if v, ok := in["secret_key"].(string); ok && len(v) > 0 {
+		obj.SecretKey = v
 	}
 
-	obj.Name = in.Get("name").(string)
-	obj.RootDomain = in.Get("root_domain").(string)
-
-	switch in.Get("dns_provider").(string) {
-	case "route53":
-		if v, ok := in.Get("route53_config").([]interface{}); ok && len(v) > 0 {
-			route53Config, err := expandRoute53DNSConfig(v)
-			if err != nil {
-				return nil, err
-			}
-			obj.Route53ProviderConfig = route53Config
-		}
-	case "alidns":
-		if v, ok := in.Get("alidns_config").([]interface{}); ok && len(v) > 0 {
-			aliDNSConfig, err := expandAliDNSConfig(v)
-			if err != nil {
-				return nil, err
-			}
-			obj.AlidnsProviderConfig = aliDNSConfig
-		}
-	case "cloudflare":
-		if v, ok := in.Get("rcloudflare_config").([]interface{}); ok && len(v) > 0 {
-			cloudFlareConfig, err := expandCloudFlareDNSConfig(v)
-			if err != nil {
-				return nil, err
-			}
-			obj.CloudflareProviderConfig = cloudFlareConfig
-		}
-	}
-
-	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
-		obj.Annotations = toMapString(v)
-	}
-
-	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
-		obj.Labels = toMapString(v)
-	}
-
-	return obj, nil
+	return obj
 }
 
-func expandRoute53DNSConfig(p []interface{}) (*managementClient.Route53ProviderConfig, error) {
+func expandCloudFlareDNSConfig(p []interface{}) *managementClient.CloudflareProviderConfig {
+	obj := &managementClient.CloudflareProviderConfig{}
+	if len(p) == 0 || p[0] == nil {
+		return nil
+	}
+	in := p[0].(map[string]interface{})
+
+	obj.APIEmail = in["api_email"].(string)
+	obj.APIKey = in["api_key"].(string)
+	proxySetting := in["proxy_setting"].(bool)
+	obj.ProxySetting = &proxySetting
+
+	return obj
+}
+
+func expandRoute53DNSConfig(p []interface{}) *managementClient.Route53ProviderConfig {
 	obj := &managementClient.Route53ProviderConfig{}
 	if len(p) == 0 || p[0] == nil {
-		return nil, fmt.Errorf("route_53 cannot be empty")
+		return nil
 	}
-
 	in := p[0].(map[string]interface{})
 
 	if v, ok := in["access_key"].(string); ok && len(v) > 0 {
@@ -196,39 +187,43 @@ func expandRoute53DNSConfig(p []interface{}) (*managementClient.Route53ProviderC
 		obj.Region = v
 	}
 
-	return obj, nil
+	return obj
 
 }
 
-func expandAliDNSConfig(p []interface{}) (*managementClient.AlidnsProviderConfig, error) {
-	obj := &managementClient.AlidnsProviderConfig{}
-	if len(p) == 0 || p[0] == nil {
-		return nil, fmt.Errorf("alidns config cannot be empty")
+func expandGlobalDNSProvider(in *schema.ResourceData) *managementClient.GlobalDnsProvider {
+	obj := &managementClient.GlobalDnsProvider{}
+	if in == nil {
+		return nil
 	}
 
-	in := p[0].(map[string]interface{})
-
-	if v, ok := in["access_key"].(string); ok && len(v) > 0 {
-		obj.AccessKey = v
+	if v := in.Id(); len(v) > 0 {
+		obj.ID = v
 	}
 
-	if v, ok := in["secret_key"].(string); ok && len(v) > 0 {
-		obj.SecretKey = v
+	obj.Name = in.Get("name").(string)
+	obj.RootDomain = in.Get("root_domain").(string)
+
+	if v, ok := in.Get("alidns_config").([]interface{}); ok && len(v) > 0 {
+		obj.AlidnsProviderConfig = expandAliDNSConfig(v)
+		in.Set("dns_provider", globalDNSProviderAlidnsKind)
+	}
+	if v, ok := in.Get("cloudflare_config").([]interface{}); ok && len(v) > 0 {
+		obj.CloudflareProviderConfig = expandCloudFlareDNSConfig(v)
+		in.Set("dns_provider", globalDNSProviderCloudflareKind)
+	}
+	if v, ok := in.Get("route53_config").([]interface{}); ok && len(v) > 0 {
+		obj.Route53ProviderConfig = expandRoute53DNSConfig(v)
+		in.Set("dns_provider", globalDNSProviderRoute53Kind)
 	}
 
-	return obj, nil
-}
-
-func expandCloudFlareDNSConfig(p []interface{}) (*managementClient.CloudflareProviderConfig, error) {
-	obj := &managementClient.CloudflareProviderConfig{}
-	if len(p) == 0 || p[0] == nil {
-		return nil, fmt.Errorf("cloudflare_config connot be empty")
+	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Annotations = toMapString(v)
 	}
 
-	in := p[0].(map[string]interface{})
-	obj.APIEmail = in["api_email"].(string)
-	obj.APIKey = in["api_key"].(string)
-	obj.ProxySetting = in["proxy_setting"].(*bool)
+	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+		obj.Labels = toMapString(v)
+	}
 
-	return obj, nil
+	return obj
 }

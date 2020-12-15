@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	managementClient "github.com/rancher/types/client/management/v3"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2GlobalDNSProvider() *schema.Resource {
@@ -30,11 +30,7 @@ func resourceRancher2GlobalDNSProvider() *schema.Resource {
 }
 
 func resourceRancher2GlobalDNSProviderCreate(d *schema.ResourceData, meta interface{}) error {
-	globalDNSProvider, err := expandGlobalDNSProvider(d)
-
-	if err != nil {
-		return err
-	}
+	globalDNSProvider := expandGlobalDNSProvider(d)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
@@ -43,7 +39,7 @@ func resourceRancher2GlobalDNSProviderCreate(d *schema.ResourceData, meta interf
 
 	log.Printf("[INFO] Creating Global DNS Provider %s", globalDNSProvider.Name)
 
-	newGlobalDNSProvider, err := client.GlobalDNSProvider.Create(globalDNSProvider)
+	newGlobalDNSProvider, err := client.GlobalDnsProvider.Create(globalDNSProvider)
 	if err != nil {
 		return err
 	}
@@ -77,7 +73,7 @@ func resourceRancher2GlobalDNSProviderRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	globalDNSProvider, err := client.GlobalDNSProvider.ByID(d.Id())
+	globalDNSProvider, err := client.GlobalDnsProvider.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
 			log.Printf("[INFO] Global DNS Provider ID %s not found.", d.Id())
@@ -102,7 +98,7 @@ func resourceRancher2GlobalDNSProviderUpdate(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	globalDNSProvider, err := client.GlobalDNSProvider.ByID(d.Id())
+	globalDNSProvider, err := client.GlobalDnsProvider.ByID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -112,7 +108,7 @@ func resourceRancher2GlobalDNSProviderUpdate(d *schema.ResourceData, meta interf
 		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
-	newGlobalDNSProvider, err := client.GlobalDNSProvider.Update(globalDNSProvider, update)
+	newGlobalDNSProvider, err := client.GlobalDnsProvider.Update(globalDNSProvider, update)
 	if err != nil {
 		return err
 	}
@@ -142,7 +138,7 @@ func resourceRancher2GlobalDNSProviderDelete(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	globalDNSProvider, err := client.GlobalDNSProvider.ByID(id)
+	globalDNSProvider, err := client.GlobalDnsProvider.ByID(id)
 	if err != nil {
 		if IsNotFound(err) {
 			log.Printf("[INFO] Global DNS Provider ID %s not found.", d.Id())
@@ -152,7 +148,7 @@ func resourceRancher2GlobalDNSProviderDelete(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	err = client.GlobalDNSProvider.Delete(globalDNSProvider)
+	err = client.GlobalDnsProvider.Delete(globalDNSProvider)
 	if err != nil {
 		return fmt.Errorf("Error removing Global DNS Provider: %s", err)
 	}
@@ -181,7 +177,7 @@ func resourceRancher2GlobalDNSProviderDelete(d *schema.ResourceData, meta interf
 // globalDNSProviderStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Global DNS Provider.
 func globalDNSProviderStateRefreshFunc(client *managementClient.Client, globalDNSProviderID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		obj, err := client.GlobalDNSProvider.ByID(globalDNSProviderID)
+		obj, err := client.GlobalDnsProvider.ByID(globalDNSProviderID)
 		if err != nil {
 			if IsNotFound(err) {
 				return obj, "removed", nil

@@ -10,32 +10,12 @@ const (
 	testAccRancher2GlobalDNSProviderDataSourceType = "rancher2_global_dns_provider"
 )
 
-var (
-	testAccCheckRancher2GlobalDNSProviderDataSourceConfig string
-)
-
-func init() {
-	testAccCheckRancher2GlobalDNSProviderDataSourceConfig = `
-resource "rancher2_global_dns_provider" "dns" {
-  name = "foo-test2"
-  dns_provider = "route53"
-  root_domain = "non.example.com"
-
-  route53_config {
-    access_key = "YYYYYYYYYYYYYYYYYYYY"
-    secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    zone_type = "private"
-    region = "us-east-1"
-  }
-}
-
+func TestAccRancher2GlobalDNSProviderDataSource(t *testing.T) {
+	testAccCheckRancher2GlobalDNSProviderDataSourceConfig := testAccRancher2GlobalDNSProviderRoute53Config + `
 data "` + testAccRancher2GlobalDNSProviderDataSourceType + `" "foo" {
-	name = "${rancher2_global_dns_provider.dns.name}"
+  name = rancher2_global_dns_provider.foo-route53.name
 }
 `
-}
-
-func TestAccRancher2GlobalDNSProviderDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -43,7 +23,11 @@ func TestAccRancher2GlobalDNSProviderDataSource(t *testing.T) {
 			{
 				Config: testAccCheckRancher2GlobalDNSProviderDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data."+testAccRancher2GlobalDNSProviderDataSourceType+".foo", "name", "foo-test2"),
+					resource.TestCheckResourceAttr("data."+testAccRancher2GlobalDNSProviderDataSourceType+".foo", "name", "foo-route53"),
+					resource.TestCheckResourceAttr("data."+testAccRancher2GlobalDNSProviderDataSourceType+".foo", "dns_provider", globalDNSProviderRoute53Kind),
+					resource.TestCheckResourceAttr("data."+testAccRancher2GlobalDNSProviderDataSourceType+".foo", "root_domain", "example.com"),
+					resource.TestCheckResourceAttr("data."+testAccRancher2GlobalDNSProviderDataSourceType+".foo", "route53_config.0.access_key", "YYYYYYYYYYYYYYYYYYYY"),
+					resource.TestCheckResourceAttr("data."+testAccRancher2GlobalDNSProviderDataSourceType+".foo", "route53_config.0.zone_type", "private"),
 				),
 			},
 		},

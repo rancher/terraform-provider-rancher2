@@ -2,7 +2,6 @@ package rancher2
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -26,35 +25,34 @@ func dataSourceRancher2GlobalDNSProvider() *schema.Resource {
 			},
 			"root_domain": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"dns_provider": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"route53", "cloudflare", "alidns"}, true),
-			},
-			"route53_config": {
-				Type:     schema.TypeSet,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: globalDNSProviderRoute53ConfigSchema(),
-				},
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"alidns_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 1,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderAliConfigSchema(),
 				},
 			},
 			"cloudflare_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 1,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderCloudFareConfigSchema(),
+				},
+			},
+			"route53_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: globalDNSProviderRoute53ConfigSchema(),
 				},
 			},
 		},
@@ -74,7 +72,7 @@ func dataSourceRancher2GlobalDNSProviderRead(d *schema.ResourceData, meta interf
 
 	listOpts := NewListOpts(filters)
 
-	globalDNSProvider, err := client.GlobalDNSProvider.List(listOpts)
+	globalDNSProvider, err := client.GlobalDnsProvider.List(listOpts)
 	if err != nil {
 		return err
 	}
@@ -86,6 +84,10 @@ func dataSourceRancher2GlobalDNSProviderRead(d *schema.ResourceData, meta interf
 	if count > 1 {
 		return fmt.Errorf("[ERROR] found %d global dns provider with name \"%s\"", count, name)
 	}
+
+	flattenGlobalDNSProvider(d, &globalDNSProvider.Data[0])
+
+	//return fmt.Errorf("[ERROR] %#v\n%#v", d.Get("route53_config"), globalDNSProvider.Data[0].Route53ProviderConfig)
 
 	return flattenGlobalDNSProvider(d, &globalDNSProvider.Data[0])
 }
