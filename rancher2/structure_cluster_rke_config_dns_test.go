@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var (
@@ -67,6 +68,26 @@ func init() {
 			"prevent_single_point_failure": false,
 		},
 	}
+	testRollingUpdateDeploymentConf = &managementClient.RollingUpdateDeployment{
+		MaxSurge:       intstr.FromInt(10),
+		MaxUnavailable: intstr.FromInt(10),
+	}
+	testRollingUpdateDeploymentInterface = []interface{}{
+		map[string]interface{}{
+			"max_surge":       10,
+			"max_unavailable": 10,
+		},
+	}
+	testDeploymentStrategyConf = &managementClient.DeploymentStrategy{
+		RollingUpdate: testRollingUpdateDeploymentConf,
+		Strategy:      "strategy",
+	}
+	testDeploymentStrategyInterface = []interface{}{
+		map[string]interface{}{
+			"rolling_update": testRollingUpdateDeploymentInterface,
+			"strategy":       "strategy",
+		},
+	}
 	testClusterRKEConfigDNSConf = &managementClient.DNSConfig{
 		NodeSelector: map[string]string{
 			"sel1": "value1",
@@ -77,6 +98,7 @@ func init() {
 		Provider:               "kube-dns",
 		ReverseCIDRs:           []string{"rev1", "rev2"},
 		UpstreamNameservers:    []string{"up1", "up2"},
+		UpdateStrategy:         testDeploymentStrategyConf,
 	}
 	testClusterRKEConfigDNSInterface = []interface{}{
 		map[string]interface{}{
@@ -89,6 +111,7 @@ func init() {
 			"provider":                 "kube-dns",
 			"reverse_cidrs":            []interface{}{"rev1", "rev2"},
 			"upstream_nameservers":     []interface{}{"up1", "up2"},
+			"update_strategy":          testDeploymentStrategyInterface,
 		},
 	}
 }
