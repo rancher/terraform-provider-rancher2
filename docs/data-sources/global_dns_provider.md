@@ -3,16 +3,16 @@ layout: "rancher2"
 page_title: "Rancher2: rancher2_global_dns_provider"
 sidebar_current: "docs-rancher2-datasource-global_dns_provider"
 description: |-
-  Get information on a Rancher v2 global DNS provider.
+  Provides a Rancher V2 Global DNS Provider data source. Use this data source to retrieve information about a Rancher v2 global DNS provider
 ---
 
 # rancher2\_global\_dns\_provider
 
-Use this data source to retrieve information about a Rancher v2 global DNS provider.
+Provides a Rancher V2 Global DNS Provider data source. Use this data source to retrieve information about a Rancher v2 global DNS provider
 
 ## Example Usage
 
-```
+```hcl
 data "rancher2_global_dns_provider" "foo" {
     name = "foo"
 }
