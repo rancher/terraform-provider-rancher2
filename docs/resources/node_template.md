@@ -101,6 +101,7 @@ The following arguments are supported:
 * `engine_opt` - (Optional) Engine options for the node template (map)
 * `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
 * `engine_storage_driver` - (Optional) Engine storage driver for the node template (string)
+* `hetzner_config` - (Optional) Hetzner config for the Node Template (list maxitems:1)
 * `opennebula_config` - (Optional) Opennebula config for the Node Template (list maxitems:1)
 * `openstack_config` - (Optional) Openstack config for the Node Template (list maxitems:1)
 * `use_internal_ip_address` - (Optional) Engine storage driver for the node template (bool)

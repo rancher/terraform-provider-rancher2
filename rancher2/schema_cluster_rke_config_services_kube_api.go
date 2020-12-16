@@ -189,6 +189,10 @@ func clusterRKEConfigServicesKubeAPIEventRateLimitFields() map[string]*schema.Sc
 // Used by datasource
 func clusterRKEConfigServicesKubeAPIEventRateLimitFieldsData() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"configuration": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"enabled": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -263,6 +267,10 @@ func clusterRKEConfigServicesKubeAPISecretsEncryptionConfigFields() map[string]*
 // Used by datasource
 func clusterRKEConfigServicesKubeAPISecretsEncryptionConfigFieldsData() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"custom_config": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"enabled": {
 			Type:     schema.TypeBool,
 			Optional: true,

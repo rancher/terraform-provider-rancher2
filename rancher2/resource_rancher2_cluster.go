@@ -166,9 +166,16 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 			Links:   newCluster.Links,
 			Actions: newCluster.Actions,
 		}
-		err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
-		if err != nil {
-			return err
+		// Retry enabling monitoring if got apierr 500 https://github.com/rancher/rancher/issues/30188
+		for i := 0; i < rancher2RetriesOnServerError; i++ {
+			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
+			if err == nil {
+				break
+			}
+			if !IsServerError(err) || (i+1) == rancher2RetriesOnServerError {
+				return err
+			}
+			time.Sleep(2 * time.Second)
 		}
 	}
 
