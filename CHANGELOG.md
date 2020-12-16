@@ -22,6 +22,7 @@ BUG FIXES:
 * Fixed doc examples for activedirectory, freeipa and openldap auth providers
 * Fixed `rancher2_app_v2` resource to properly pass global values to sub charts. https://github.com/rancher/terraform-provider-rancher2/issues/545
 * Fixed `rancher2_app_v2` resource to don't override name nor namespace on App v2 not certified by rancher
+* Fixed `rancher2_cluster` docs, adding missed `gke_config.enable_master_authorized_network` argument
 
 ## 1.10.6 (November 11, 2020)
 
