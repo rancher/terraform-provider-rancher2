@@ -800,8 +800,8 @@ func (c *Config) DeleteAppV2(clusterID string, app *AppV2) error {
 }
 
 func (c *Config) InfoAppV2(clusterID, repoName, chartName, chartVersion string) (*ClusterRepo, *types2.ChartInfo, error) {
-	if repoName == "" || chartName == "" || chartVersion == "" {
-		return nil, nil, fmt.Errorf("Catalog V2 id, chart name and chart version should be provided")
+	if repoName == "" || chartName == "" {
+		return nil, nil, fmt.Errorf("Catalog V2 id and chart name should be provided")
 	}
 	repo, err := c.GetCatalogV2ByID(clusterID, repoName)
 	if err != nil {
@@ -817,7 +817,10 @@ func (c *Config) InfoAppV2(clusterID, repoName, chartName, chartVersion string) 
 	if resource.Links == nil && len(resource.Links[link]) == 0 {
 		return nil, nil, fmt.Errorf("failed to get chart info %s:%s from catalog v2 %s", chartName, chartVersion, repoName)
 	}
-	resource.Links[link] = resource.Links[link] + "&chartName=" + chartName + "&version=" + chartVersion
+	resource.Links[link] = resource.Links[link] + "&chartName=" + chartName
+	if len(chartVersion) > 0 {
+		resource.Links[link] = resource.Links[link] + "&version=" + chartVersion
+	}
 
 	client, err := c.CatalogV2Client(clusterID)
 	if err != nil {
@@ -1777,7 +1780,11 @@ func (c *Config) GetRecipientByNotifier(id string) (*managementClient.Recipient,
 	out := &managementClient.Recipient{}
 
 	out.NotifierID = notifier.ID
-	if notifier.PagerdutyConfig != nil {
+	if notifier.DingtalkConfig != nil {
+		out.NotifierType = recipientTypeDingtalk
+	} else if notifier.MSTeamsConfig != nil {
+		out.NotifierType = recipientTypeMsTeams
+	} else if notifier.PagerdutyConfig != nil {
 		out.NotifierType = recipientTypePagerduty
 		out.Recipient = notifier.PagerdutyConfig.ServiceKey
 	} else if notifier.SlackConfig != nil {

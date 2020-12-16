@@ -148,7 +148,7 @@ resource "rancher2_cluster_template" "foo" {
 #### Arguments
 
 * `name` - (Required) The cluster template revision name (string)
-* `cluster_config` - (Optional) Cluster configuration (list maxitem: 1)
+* `cluster_config` - (Required) Cluster configuration (list maxitem: 1)
 * `default` - (Optional) Default cluster template revision. Default `false` (bool)
 * `enabled` - (Optional) Enable cluster template revision. Default `true` (bool)
 * `questions` - (Optional) Cluster template questions (list)
@@ -173,7 +173,7 @@ resource "rancher2_cluster_template" "foo" {
 * `enable_cluster_alerting` - (Optional) Enable built-in cluster alerting. Default: `false` (bool)
 * `enable_cluster_monitoring` - (Optional) Enable built-in cluster monitoring. Default: `false` (bool)
 * `enable_network_policy` - (Optional) Enable project network isolation. Default: `false` (bool)
-* `rke_config` - (Optional/Computed) Rancher Kubernetes Engine Config (list maxitems: 1)
+* `rke_config` - (Required) Rancher Kubernetes Engine Config (list maxitems: 1)
 * `scheduled_cluster_scan`- (Optional) Cluster scheduled cis scan. For Rancher v2.4.0 or above (List MaxItem:1)
 * `windows_prefered_cluster` - (Optional) Windows prefered cluster. Default: `false` (bool)
 

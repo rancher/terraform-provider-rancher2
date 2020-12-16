@@ -71,6 +71,27 @@ func expandChartInstallV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 			"clusterName": in.Get("cluster_name").(string),
 		},
 	}
+	valuesData := v3.MapStringInterface{}
+	if v, ok := in.Get("values").(string); ok {
+		values, err := ghodssyamlToMapInterface(v)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to unmarshal chart install values yaml: %#v", err)
+		}
+		if values == nil {
+			values = map[string]interface{}{}
+		}
+		if global, ok := values["global"].(map[string]interface{}); ok && len(global) > 0 {
+			if _, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
+				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
+				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
+			} else {
+				values["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
+			}
+		} else {
+			values["global"] = globalInfo
+		}
+		valuesData = v3.MapStringInterface(values)
+	}
 	if chartAnnotations, ok := chartInfo.Chart["annotations"].(map[string]interface{}); ok && len(chartAnnotations) > 0 {
 		if autoInstall, ok := chartAnnotations["catalog.cattle.io/auto-install"].(string); ok && len(autoInstall) > 0 {
 			chartAuto := splitBySep(autoInstall, "=")
@@ -87,41 +108,28 @@ func expandChartInstallV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 				Version:     chartVersion,
 				ReleaseName: chartName,
 				Values: v3.MapStringInterface{
-					"global": globalInfo,
+					"global": valuesData["global"],
 				},
 			}
 			out = append(out, obj)
 		}
-		// Forcing release name and namespace if defined
-		if chartName, ok := chartAnnotations["catalog.cattle.io/release-name"].(string); ok && len(chartName) > 0 {
-			name = chartName
-		}
-		if chartNamespace, ok := chartAnnotations["catalog.cattle.io/namespace"].(string); ok && len(chartNamespace) > 0 {
-			namespace = chartNamespace
+		// Forcing release name and namespace if rancher certified
+		if chartCertified, ok := chartAnnotations["catalog.cattle.io/certified"].(string); ok && chartCertified == "rancher" {
+			if chartName, ok := chartAnnotations["catalog.cattle.io/release-name"].(string); ok && len(chartName) > 0 {
+				name = chartName
+				in.Set("name", name)
+			}
+			if chartNamespace, ok := chartAnnotations["catalog.cattle.io/namespace"].(string); ok && len(chartNamespace) > 0 {
+				namespace = chartNamespace
+				in.Set("namespace", namespace)
+			}
 		}
 	}
 	obj := types.ChartInstall{
 		ChartName:   chartInfo.Chart["name"].(string),
 		Version:     chartInfo.Chart["version"].(string),
 		ReleaseName: name,
-		Values:      v3.MapStringInterface{},
-	}
-	if v, ok := in.Get("values").(string); ok && len(v) > 0 {
-		values, err := ghodssyamlToMapInterface(v)
-		if err != nil {
-			return "", nil, fmt.Errorf("failed to unmarshal chart install values yaml: %#v", err)
-		}
-		if global, ok := values["global"].(map[string]interface{}); ok && len(global) > 0 {
-			if _, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
-			} else {
-				values["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
-			}
-		} else {
-			values["global"] = globalInfo
-		}
-		obj.Values = v3.MapStringInterface(values)
+		Values:      valuesData,
 	}
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
@@ -140,12 +148,17 @@ func expandChartInstallActionV2(in *schema.ResourceData, chartInfo *types.ChartI
 	if err != nil {
 		return nil, err
 	}
+	wait := in.Get("wait").(bool)
+	if len(chartIntalls) > 1 {
+		// Forcing wait = true if chart has dependencies
+		wait = true
+	}
 
 	timeOut := &metaV1.Duration{}
 	timeOut.Duration = in.Timeout(schema.TimeoutCreate)
 	obj := &types.ChartInstallAction{
 		Timeout:                  timeOut,
-		Wait:                     in.Get("wait").(bool),
+		Wait:                     wait,
 		DisableHooks:             in.Get("disable_hooks").(bool),
 		DisableOpenAPIValidation: in.Get("disable_open_api_validation").(bool),
 		Namespace:                namespace,
@@ -172,6 +185,27 @@ func expandChartUpgradeV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 			"clusterName": in.Get("cluster_name").(string),
 		},
 	}
+	valuesData := v3.MapStringInterface{}
+	if v, ok := in.Get("values").(string); ok {
+		values, err := ghodssyamlToMapInterface(v)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to unmarshal chart install values yaml: %#v", err)
+		}
+		if values == nil {
+			values = map[string]interface{}{}
+		}
+		if global, ok := values["global"].(map[string]interface{}); ok && len(global) > 0 {
+			if _, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
+				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
+				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
+			} else {
+				values["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
+			}
+		} else {
+			values["global"] = globalInfo
+		}
+		valuesData = v3.MapStringInterface(values)
+	}
 	if chartAnnotations, ok := chartInfo.Chart["annotations"].(map[string]interface{}); ok && len(chartAnnotations) > 0 {
 		if autoInstall, ok := chartAnnotations["catalog.cattle.io/auto-install"].(string); ok && len(autoInstall) > 0 {
 			chartAuto := splitBySep(autoInstall, "=")
@@ -188,43 +222,30 @@ func expandChartUpgradeV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 				Version:     chartVersion,
 				ReleaseName: chartName,
 				Values: v3.MapStringInterface{
-					"global": globalInfo,
+					"global": valuesData["global"],
 				},
 				Force: in.Get("force_upgrade").(bool),
 			}
 			out = append(out, obj)
 		}
-		// Forcing release name and namespace if defined
-		if chartName, ok := chartAnnotations["catalog.cattle.io/release-name"].(string); ok && len(chartName) > 0 {
-			name = chartName
-		}
-		if chartNamespace, ok := chartAnnotations["catalog.cattle.io/namespace"].(string); ok && len(chartNamespace) > 0 {
-			namespace = chartNamespace
+		// Forcing release name and namespace if rancher certified
+		if chartCertified, ok := chartAnnotations["catalog.cattle.io/certified"].(string); ok && chartCertified == "rancher" {
+			if chartName, ok := chartAnnotations["catalog.cattle.io/release-name"].(string); ok && len(chartName) > 0 {
+				name = chartName
+				in.Set("name", name)
+			}
+			if chartNamespace, ok := chartAnnotations["catalog.cattle.io/namespace"].(string); ok && len(chartNamespace) > 0 {
+				namespace = chartNamespace
+				in.Set("namespace", namespace)
+			}
 		}
 	}
 	obj := types.ChartUpgrade{
 		ChartName:   chartName,
 		Version:     chartVersion,
 		ReleaseName: name,
-		Values:      map[string]interface{}{},
+		Values:      valuesData,
 		Force:       in.Get("force_upgrade").(bool),
-	}
-	if v, ok := in.Get("values").(string); ok && len(v) > 0 {
-		values, err := ghodssyamlToMapInterface(v)
-		if err != nil {
-			return "", nil, fmt.Errorf("failed to unmarshal chart upgrade values yaml: %#v", err)
-		}
-		if global, ok := values["global"].(map[string]interface{}); ok && len(global) > 0 {
-			if _, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
-			} else {
-				values["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
-			}
-		} else {
-			values["global"] = globalInfo
-		}
-		obj.Values = v3.MapStringInterface(values)
 	}
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
@@ -243,12 +264,17 @@ func expandChartUpgradeActionV2(in *schema.ResourceData, chartInfo *types.ChartI
 	if err != nil {
 		return nil, err
 	}
+	wait := in.Get("wait").(bool)
+	if len(chartUpgrades) > 1 {
+		// Forcing wait = true if chart has dependencies
+		wait = true
+	}
 
 	timeOut := &metaV1.Duration{}
 	timeOut.Duration = in.Timeout(schema.TimeoutUpdate)
 	obj := &types.ChartUpgradeAction{
 		Timeout:                  timeOut,
-		Wait:                     in.Get("wait").(bool),
+		Wait:                     wait,
 		DisableHooks:             in.Get("disable_hooks").(bool),
 		DisableOpenAPIValidation: in.Get("disable_open_api_validation").(bool),
 		Force:                    in.Get("force_upgrade").(bool),
