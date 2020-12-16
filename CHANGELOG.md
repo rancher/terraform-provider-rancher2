@@ -7,6 +7,9 @@ FEATURES:
 * **New Argument:** `rancher2_cluster.rke_config.dns.update_strategy` - (Optional) DNS update strategy (list Maxitems: 1)
 * **New Argument:** `rancher2_notifier.dingtalk_config` - (Optional) Dingtalk config for notifier (list maxitems:1)
 * **New Argument:** `rancher2_notifier.msteams_config` - (Optional) MSTeams config for notifier (list maxitems:1)
+* **New Data Source:** `rancher2_global_dns_provider` - Provides a Rancher V2 Global DNS Provider data source
+* **New Resource:** `rancher2_global_dns` - Provides a Rancher V2 Global DNS resource
+* **New Resource:** `rancher2_global_dns_provider` - Provides a Rancher V2 Global DNS Provider resource
 
 ENHANCEMENTS:
 
