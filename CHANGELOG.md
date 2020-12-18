@@ -1,4 +1,4 @@
-## 1.11.0 (Unreleased)
+## 1.11.0 (January 08, 2021)
 
 FEATURES:
 
@@ -15,6 +15,8 @@ ENHANCEMENTS:
 
 * Updated `rancher2_app_v2.chart_version` as optional/computed argument. Deploying latest app v2 version if `chart_version` is not provided
 * Updated `rancher2_app_v2.wait` default value to `true`
+* Updated go mod to support Rancher `v2.5.4`
+* Updated acceptance tests to use Rancher `v2.5.4`
 
 BUG FIXES:
 
