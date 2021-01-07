@@ -6,19 +6,14 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.14.0
-	github.com/rancher/client-go v11.0.0+incompatible // indirect
-	github.com/rancher/lasso v0.0.0-20200905045615-7fcb07d6a20b // indirect
 	github.com/rancher/norman v0.0.0-20200930000340-693d65aaffe3
 	github.com/rancher/rancher v0.0.0-20201109223515-3205bc1e82e5
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
-	github.com/rancher/wrangler v0.7.3-0.20201023210123-9b7d265b90ec // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.19.0 // indirect
 	k8s.io/apimachinery v0.19.0
 	k8s.io/apiserver v0.19.0
-	k8s.io/client-go v12.0.0+incompatible // indirect
 )
 
 replace (
