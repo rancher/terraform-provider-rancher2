@@ -7,7 +7,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.14.0
 	github.com/rancher/norman v0.0.0-20200930000340-693d65aaffe3
-	github.com/rancher/rancher v0.0.0-20201109223515-3205bc1e82e5
+	github.com/rancher/rancher v0.0.0-20210107052628-be72f967248a
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
@@ -18,8 +18,8 @@ require (
 
 replace (
 	github.com/crewjam/saml => github.com/crewjam/saml v0.4.1
-	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20201109223515-3205bc1e82e5
-	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20201109223515-3205bc1e82e5
+	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20210107052628-be72f967248a
+	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20210107052628-be72f967248a
 	k8s.io/api => k8s.io/api v0.19.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.0
 	k8s.io/apimachinery => github.com/rancher/apimachinery v0.19.0-rancher1
