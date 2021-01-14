@@ -122,6 +122,10 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig,
 		obj["prefix_path"] = in.PrefixPath
 	}
 
+	if len(in.WindowsPrefixPath) > 0 {
+		obj["win_prefix_path"] = in.WindowsPrefixPath
+	}
+
 	if in.PrivateRegistries != nil {
 		v, ok := obj["private_registries"].([]interface{})
 		if !ok {
@@ -290,6 +294,9 @@ func expandClusterRKEConfig(p []interface{}, name string) (*managementClient.Ran
 
 	if v, ok := in["prefix_path"].(string); ok && len(v) > 0 {
 		obj.PrefixPath = v
+	}
+	if v, ok := in["win_prefix_path"].(string); ok && len(v) > 0 {
+		obj.WindowsPrefixPath = v
 	}
 
 	if v, ok := in["private_registries"].([]interface{}); ok && len(v) > 0 {

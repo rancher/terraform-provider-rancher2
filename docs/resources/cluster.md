@@ -479,6 +479,7 @@ The following attributes are exported:
 * `network` - (Optional/Computed) Kubernetes cluster networking (list maxitems:1)
 * `nodes` - (Optional) RKE cluster nodes (list)
 * `prefix_path` - (Optional/Computed) Prefix to customize Kubernetes path (string)
+* `win_prefix_path` - (Optional/Computed) Prefix to customize Kubernetes path for windows (string)
 * `private_registries` - (Optional) private registries for docker images (list)
 * `services` - (Optional/Computed) Kubernetes cluster services (list maxitems:1)
 * `ssh_agent_auth` - (Optional) Use ssh agent auth. Default `false`

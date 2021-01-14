@@ -314,6 +314,12 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Optional prefix to customize kubernetes path",
 		},
+		"win_prefix_path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Optional prefix to customize kubernetes path for windows",
+		},
 		"private_registries": {
 			Type:        schema.TypeList,
 			Description: "Optional private registries for docker images",
@@ -491,6 +497,12 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Optional prefix to customize kubernetes path",
+		},
+		"win_prefix_path": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Optional prefix to customize kubernetes path for windows nodes",
 		},
 		"private_registries": {
 			Type:        schema.TypeList,
