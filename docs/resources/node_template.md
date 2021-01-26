@@ -213,7 +213,7 @@ The following attributes are exported:
 
 * `api_token` - (Required/Sensitive) Hetzner Cloud project API token (string)
 * `image` - (Optional) Hetzner Cloud server image. Default `ubuntu-18.04` (string)
-* `server_location` - (Optional) Hetzner Cloud datacenter. Default `nbg1` (string) 
+* `server_location` - (Optional) Hetzner Cloud datacenter. Default `nbg1` (string)
 * `server_type` - (Optional) Hetzner Cloud server type. Default `cx11` (string)
 * `networks` - (Optional) Comma-separated list of network IDs or names which should be attached to the server private network interface (string)
 * `use_private_networks` - (Optional) Use private network. Default `false` (bool)
@@ -305,6 +305,12 @@ The following attributes are exported:
 * `application_credential_id` - (Optional) OpenStack application credential id. Conflicts with `application_credential_name` (string)
 * `application_credential_name` - (Optional) OpenStack application credential name. Conflicts with `application_credential_id` (string)
 * `application_credential_secret` - (Optional) OpenStack application credential secret (string)
+* `boot_from_volume` - (Optional) Enable booting from volume. Default is `false` (bool)
+* `volume_size` - (Optional) OpenStack volume size (GiB). Required when `boot_from_volume` is `true` (string)
+* `volume_type` - (Optional) OpenStack volume type. Required when `boot_from_volume` is `true` and openstack cloud does not have a default volume type (string)
+* `volume_id` - (Optional) OpenStack volume id of existing volume. Applicable only when `boot_from_volume` is `true` (string)
+* `volume_name` - (Optional) OpenStack volume name of existing volume. Applicable only when `boot_from_volume` is `true` (string)
+* `volume_device_path` - (Optional) OpenStack volume device path (attaching). Applicable only when `boot_from_volume` is `true`. Omit for auto `/dev/vdb`. (string)
 
 > **Note**: `Required*` denotes that either the _name or _id is required but you cannot use both.
 
