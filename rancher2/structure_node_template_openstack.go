@@ -40,6 +40,12 @@ func flattenOpenstackConfig(in *openstackConfig) []interface{} {
 	obj["application_credential_id"] = in.ApplicationCredentialID
 	obj["application_credential_name"] = in.ApplicationCredentialName
 	obj["application_credential_secret"] = in.ApplicationCredentialSecret
+	obj["boot_from_volume"] = in.BootFromVolume
+	obj["volume_size"] = in.VolumeSize
+	obj["volume_type"] = in.VolumeType
+	obj["volume_id"] = in.VolumeID
+	obj["volume_name"] = in.VolumeName
+	obj["volume_device_path"] = in.VolumeDevicePath
 
 	return []interface{}{obj}
 }
@@ -151,6 +157,24 @@ func expandOpenstackConfig(p []interface{}) *openstackConfig {
 	}
 	if v, ok := in["application_credential_secret"].(string); ok && len(v) > 0 {
 		obj.ApplicationCredentialSecret = v
+	}
+	if v, ok := in["boot_from_volume"].(bool); ok {
+		obj.BootFromVolume = v
+	}
+	if v, ok := in["volume_size"].(string); ok && len(v) > 0 {
+		obj.VolumeSize = v
+	}
+	if v, ok := in["volume_type"].(string); ok && len(v) > 0 {
+		obj.VolumeType = v
+	}
+	if v, ok := in["volume_id"].(string); ok && len(v) > 0 {
+		obj.VolumeID = v
+	}
+	if v, ok := in["volume_name"].(string); ok && len(v) > 0 {
+		obj.VolumeName = v
+	}
+	if v, ok := in["volume_device_path"].(string); ok && len(v) > 0 {
+		obj.VolumeDevicePath = v
 	}
 	return obj
 }

@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* Updated `rancher2_node_template.openstack_config` to support `boot_from_volume` and related arguments
 * Added `password` as valid `cluster_template_questions` type to `rancher2_cluster` resource
 * Preserve `cluster_template_answers` for `cluster_template_questions` of type `password` in `rancher2_cluster` resource to avoid misleading diffs
 
@@ -53,7 +54,7 @@ BUG FIXES:
 
 FEATURES:
 
-* **Deprecated Argument:** `rancher2_cluster.eks_import` - (Optional) Use `rancher2_cluster.eks_config_v2` instead. Just for Rancher v2.5.0 and above 
+* **Deprecated Argument:** `rancher2_cluster.eks_import` - (Optional) Use `rancher2_cluster.eks_config_v2` instead. Just for Rancher v2.5.0 and above
 * **New Argument:** `rancher2_cluster.eks_config_v2` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above
 
 ENHANCEMENTS:
@@ -71,7 +72,7 @@ BUG FIXES:
 * Fixed `rancher2_cluster.rke_config.upgrade_strategy.drain` argument to set false value properly
 * Fixed `Apps & marketplace` guide for Rancher v2.5.0 format
 * Fixed `rancher2_app_v2.values` argument to avoid false diff
-* Fixed `rancher2_cluster_role_template_binding` and  `rancher2_cluster_role_template_binding` arguments to forceNew on update  
+* Fixed `rancher2_cluster_role_template_binding` and  `rancher2_cluster_role_template_binding` arguments to forceNew on update
 
 ## 1.10.4 (October 29, 2020)
 
@@ -82,9 +83,9 @@ FEATURES:
 * **New Argument:** `rancher2_node_template.openstack_config.application_credential_name` - (Optional) OpenStack application credential name
 * **New Argument:** `rancher2_node_template.openstack_config.application_credential_secret` - (Optional) OpenStack application credential secret
 * **New Argument:** `rancher2_notifier.dingtal_config` - (Optional) Dingtalk config for notifier. For Rancher v2.4.0 and above (list maxitems:1)
-* **New Argument:** `rancher2_notifier.msteams_config` - (Optional) MSTeams config for notifier. For Rancher v2.4.0 and above (list maxitems:1) 
-* **New Argument:** `rancher2_cluster.eks_import` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above 
-* **New Argument:** `rancher2_bootstrap.ui_default_landing` - (Optional) Set default ui landing on Rancher bootstrap. Just for Rancher v2.5.0 and above 
+* **New Argument:** `rancher2_notifier.msteams_config` - (Optional) MSTeams config for notifier. For Rancher v2.4.0 and above (list maxitems:1)
+* **New Argument:** `rancher2_cluster.eks_import` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above
+* **New Argument:** `rancher2_bootstrap.ui_default_landing` - (Optional) Set default ui landing on Rancher bootstrap. Just for Rancher v2.5.0 and above
 * **New Data Source:** `rancher2_catalog_v2` - Support new Rancher catalog V2 datasource. Just for Rancher v2.5.0 and above
 * **New Resource:** `rancher2_catalog_v2` - Support new Rancher catalog V2 resource. Just for Rancher v2.5.0 and above
 * **New Resource:** `rancher2_app_v2` - Support new Rancher app V2 resource. Just for Rancher v2.5.0 and above
@@ -96,7 +97,7 @@ ENHANCEMENTS:
 * Updated golang to v1.14.9 and removing vendor folder
 * Updated go mod to support Rancher `v2.5.1`
 * Added dingtal_config and msteams_config arguments at rancher2_notifier resource. go code and docs
-* Improved `rancher2_cluster_sync` wait for cluster monitoring 
+* Improved `rancher2_cluster_sync` wait for cluster monitoring
 * Improved `rancher2_bootstrap` on resource creation. `bootstrapDoLogin` function will retry 3 times user/pass login before fail
 * Updated acceptance tests to use Rancher `v2.5.1`, k3s `v1.18.9-k3s1` and cert-manager `v1.0.1`
 * Added new `Apps & marketplace` guide for Rancher v2.5.0
@@ -162,7 +163,7 @@ BUG FIXES:
 * Fix `rancher2_cluster_sync` resource error if referred cluster deleted out of band
 * Fix `rancher2_namespace` and `rancher2_project` resources error if destroyed by not global admin user
 * Fix `rancher2_app` resource error if referred project deleted out of band
-* Fix `rancher2_app` doc typo on `target_namespace` argument description 
+* Fix `rancher2_app` doc typo on `target_namespace` argument description
 * Fix `rancher2_cluster` and `rancher2_project` resources error if created with monitoring enabled by not global admin user
 * Fix `rancher2_token` to set annotations and labels as computed attibutes
 * Fix `rke_config.secrets_encryption_config.custom_config` argument to work properly
@@ -200,8 +201,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* Updated acceptance tests: 
-  * run rancher HA environment on k3s v1.18.2-k3s1 
+* Updated acceptance tests:
+  * run rancher HA environment on k3s v1.18.2-k3s1
   * integrated rancher update scenario from v2.3.6 to v2.4.5
 * Updated local cluster on `rancher2_bootstrap` resource, due to issue https://github.com/rancher/rancher/issues/16213
 * Added `load_balancer_sku` argument to `azure_cloud_provider` configuration

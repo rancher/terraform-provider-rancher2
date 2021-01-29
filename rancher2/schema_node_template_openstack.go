@@ -43,6 +43,12 @@ type openstackConfig struct {
 	ApplicationCredentialID     string `json:"applicationCredentialId,omitempty" yaml:"applicationCredentialId,omitempty"`
 	ApplicationCredentialName   string `json:"applicationCredentialName,omitempty" yaml:"applicationCredentialName,omitempty"`
 	ApplicationCredentialSecret string `json:"applicationCredentialSecret,omitempty" yaml:"applicationCredentialSecret,omitempty"`
+	BootFromVolume              bool   `json:"bootFromVolume,omitempty" yaml:"bootFromVolume,omitempty"`
+	VolumeType                  string `json:"volumeType,omitempty" yaml:"volumeType,omitempty"`
+	VolumeSize                  string `json:"volumeSize,omitempty" yaml:"volumeSize,omitempty"`
+	VolumeID                    string `json:"volumeId,omitempty" yaml:"volumeId,omitempty"`
+	VolumeName                  string `json:"volumeName,omitempty" yaml:"volumeName,omitempty"`
+	VolumeDevicePath            string `json:"volumeDevicePath,omitempty" yaml:"volumeDevicePath,omitempty"`
 }
 
 //Schemas
@@ -186,6 +192,31 @@ func openstackConfigFields() map[string]*schema.Schema {
 			Type:      schema.TypeString,
 			Optional:  true,
 			Sensitive: true,
+		},
+		"boot_from_volume": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"volume_size": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"volume_type": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"volume_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"volume_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"volume_device_path": {
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 	}
 	return s
