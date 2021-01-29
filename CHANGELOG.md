@@ -1,3 +1,10 @@
+## 1.12.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* Added `password` as valid `cluster_template_questions` type to `rancher2_cluster` resource
+* Preserve `cluster_template_answers` for `cluster_template_questions` of type `password` in `rancher2_cluster` resource to avoid misleading diffs
+
 ## 1.11.0 (January 08, 2021)
 
 FEATURES:

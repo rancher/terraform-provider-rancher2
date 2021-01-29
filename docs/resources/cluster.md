@@ -1243,7 +1243,7 @@ The following arguments are supported:
 
 * `default` - (Required) Default variable value (string)
 * `required` - (Optional) Required variable. Default `false` (bool)
-* `type` - (Optional) Variable type. `boolean`, `int` and `string` are allowed. Default `string` (string)
+* `type` - (Optional) Variable type. `boolean`, `int`, `password`, and `string` are allowed. Default `string` (string)
 * `variable` - (Optional) Variable name (string)
 
 ### `cluster_registration_token`
