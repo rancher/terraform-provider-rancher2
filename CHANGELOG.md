@@ -4,12 +4,17 @@ FEATURES:
 
 * **New Data Source:** `rancher2_global_role` - Provides a Rancher V2 Global Role data source
 * **New Resource:** `rancher2_global_role` - Provides a Rancher V2 Global Role resource
+* **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. Just for Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 
 * Updated `rancher2_node_template.openstack_config` to support `boot_from_volume` and related arguments
 * Added `password` as valid `cluster_template_questions` type to `rancher2_cluster` resource
 * Preserve `cluster_template_answers` for `cluster_template_questions` of type `password` in `rancher2_cluster` resource to avoid misleading diffs
+
+BUG FIXES:
+
+* Fixed cluster and project resource for update monitoring version properly
 
 ## 1.11.0 (January 08, 2021)
 
