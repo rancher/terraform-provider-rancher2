@@ -18,7 +18,7 @@ data "rancher2_role_template" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Node Template (string)
+* `name` - (Required) The name of the Role Template (string)
 * `context` - (Optional/Computed) Role template context. `cluster` and `project` values are supported (string)
 
 ## Attributes Reference
