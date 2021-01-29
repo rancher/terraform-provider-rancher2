@@ -1,9 +1,17 @@
 ## 1.12.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. Just for Rancher v2.5.0 and above
+
 ENHANCEMENTS:
 
 * Added `password` as valid `cluster_template_questions` type to `rancher2_cluster` resource
 * Preserve `cluster_template_answers` for `cluster_template_questions` of type `password` in `rancher2_cluster` resource to avoid misleading diffs
+
+BUG FIXES:
+
+
 
 ## 1.11.0 (January 08, 2021)
 
