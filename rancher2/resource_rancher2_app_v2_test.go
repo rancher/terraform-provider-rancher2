@@ -70,7 +70,6 @@ resource "` + testAccRancher2AppV2Type + `" "foo" {
   namespace = "cattle-monitoring-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-monitoring"
-  chart_version = "9.4.200"
   values = <<EOF
 ` + valuesStr + `
 EOF
@@ -83,7 +82,6 @@ resource "` + testAccRancher2AppV2Type + `" "foo" {
   namespace = "cattle-monitoring-system"
   repo_name = "rancher-charts"
   chart_name = "rancher-monitoring"
-  chart_version = "9.4.200"
   values = <<EOF
 ` + valuesStrUpdated + `
 EOF
