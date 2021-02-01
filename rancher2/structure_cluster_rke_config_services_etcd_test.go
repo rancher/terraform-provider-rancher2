@@ -41,6 +41,7 @@ func init() {
 		Retention:      10,
 		S3BackupConfig: testClusterRKEConfigServicesETCDBackupS3Conf,
 		SafeTimestamp:  true,
+		Timeout:        500,
 	}
 	testClusterRKEConfigServicesETCDBackupInterface = []interface{}{
 		map[string]interface{}{
@@ -49,6 +50,7 @@ func init() {
 			"retention":        10,
 			"s3_backup_config": testClusterRKEConfigServicesETCDBackupS3Interface,
 			"safe_timestamp":   true,
+			"timeout":          500,
 		},
 	}
 	testClusterRKEConfigServicesETCDConf = &managementClient.ETCDService{
