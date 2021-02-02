@@ -1,5 +1,10 @@
 ## 1.12.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `rancher2_global_role` - Provides a Rancher V2 Global Role data source
+* **New Resource:** `rancher2_global_role` - Provides a Rancher V2 Global Role resource
+
 ENHANCEMENTS:
 
 * Updated `rancher2_node_template.openstack_config` to support `boot_from_volume` and related arguments
