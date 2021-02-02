@@ -54,7 +54,7 @@ func hetznerConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Comma-separated list of network IDs or names which should be attached to the server private network interface",
 		},
-		"use_private_networks": {
+		"use_private_network": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
