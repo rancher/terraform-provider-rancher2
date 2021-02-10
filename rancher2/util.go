@@ -380,6 +380,27 @@ func splitAppID(id string) (projectID, appID string, err error) {
 	return fields[0] + separator + fields[1], fields[1] + separator + fields[2], nil
 }
 
+func updateVersionExternalID(externalID, version string) string {
+	//Global catalog url: catalog://?catalog=demo&template=test&version=1.23.0
+	//Cluster catalog url: catalog://?catalog=c-XXXXX/test&type=clusterCatalog&template=test&version=1.23.0
+	//Project catalog url: catalog://?catalog=p-XXXXX/test&type=projectCatalog&template=test&version=1.23.0
+
+	str := strings.TrimPrefix(externalID, AppTemplateExternalIDPrefix)
+	values := strings.Split(str, "&")
+	out := AppTemplateExternalIDPrefix
+	for _, v := range values {
+		if strings.Contains(v, "version=") {
+			pair := strings.Split(v, "=")
+			if pair[0] == "version" {
+				pair[1] = version
+			}
+			v = pair[0] + "=" + pair[1]
+		}
+		out = out + "&" + v
+	}
+	return out
+}
+
 func toArrayString(in []interface{}) []string {
 	out := make([]string, len(in))
 	for i, v := range in {

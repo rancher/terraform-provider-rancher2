@@ -5,6 +5,7 @@ FEATURES:
 * **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. Just for Rancher v2.5.0 and above
 * **New Data Source:** `rancher2_global_role` - Provides a Rancher V2 Global Role data source
 * **New Resource:** `rancher2_global_role` - Provides a Rancher V2 Global Role resource
+* **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. Just for Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 
@@ -14,7 +15,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-
+* Fixed cluster and project resource for update monitoring version properly
 
 ## 1.11.0 (January 08, 2021)
 

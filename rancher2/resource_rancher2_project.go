@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 )
 
 func resourceRancher2Project() *schema.Resource {
@@ -238,24 +239,14 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 					}
 				}
 				if monitorVersionChanged {
-					err = client.Project.ActionDisableMonitoring(newProject)
+					err = updateProjectMonitoringApps(meta, newProject.ID, monitoringInput.Version)
 					if err != nil {
 						return err
 					}
-					time.Sleep(5 * time.Second)
-					newProject, err = client.Project.ByID(newProject.ID)
-					if err != nil {
-						return err
-					}
-					err = client.Project.ActionEnableMonitoring(newProject, monitoringInput)
-					if err != nil {
-						return err
-					}
-				} else {
-					err = client.Project.ActionEditMonitoring(newProject, monitoringInput)
-					if err != nil {
-						return err
-					}
+				}
+				err = client.Project.ActionEditMonitoring(newProject, monitoringInput)
+				if err != nil {
+					return err
 				}
 			}
 		}
@@ -321,4 +312,37 @@ func projectStateRefreshFunc(client *managementClient.Client, projectID string) 
 
 		return obj, obj.State, nil
 	}
+}
+
+func updateProjectMonitoringApps(meta interface{}, projectID, version string) error {
+	cliProject, err := meta.(*Config).ProjectClient(projectID)
+	if err != nil {
+		return err
+	}
+
+	filters := map[string]interface{}{
+		"name": "project-monitoring",
+	}
+
+	listOpts := NewListOpts(filters)
+
+	apps, err := cliProject.App.List(listOpts)
+	if err != nil {
+		return err
+	}
+
+	for _, a := range apps.Data {
+		externalID := updateVersionExternalID(a.ExternalID, version)
+		upgrade := &projectClient.AppUpgradeConfig{
+			Answers:      a.Answers,
+			ExternalID:   externalID,
+			ForceUpgrade: true,
+		}
+
+		err = cliProject.App.ActionUpgrade(&a, upgrade)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

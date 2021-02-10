@@ -9,6 +9,7 @@ import (
 const (
 	clusterDriverImported        = "imported"
 	clusterRegistrationTokenName = "system"
+	clusterMonitoringV1Namespace = "cattle-prometheus"
 )
 
 var (

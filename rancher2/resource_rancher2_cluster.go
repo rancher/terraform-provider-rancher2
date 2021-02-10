@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 )
 
 func resourceRancher2Cluster() *schema.Resource {
@@ -380,25 +381,14 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 					}
 				}
 				if monitorVersionChanged {
-					err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, monitoringInput, nil)
+					err = updateClusterMonitoringApps(meta, d.Get("system_project_id").(string), monitoringInput.Version)
 					if err != nil {
 						return err
 					}
-					time.Sleep(5 * time.Second)
-					err = client.APIBaseClient.ByID(managementClient.ClusterType, newCluster.ID, newCluster)
-					if err != nil {
-						return err
-					}
-					clusterResource.Actions = newCluster.Actions
-					err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
-					if err != nil {
-						return err
-					}
-				} else {
-					err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEdit, clusterResource, monitoringInput, nil)
-					if err != nil {
-						return err
-					}
+				}
+				err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEdit, clusterResource, monitoringInput, nil)
+				if err != nil {
+					return err
 				}
 			}
 		}
@@ -538,4 +528,39 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 		return nil, fmt.Errorf("[ERROR] waiting for cluster registration token (%s) to be created: %s", newRegToken.ID, waitErr)
 	}
 	return newRegToken, nil
+}
+
+func updateClusterMonitoringApps(meta interface{}, systemProjectID, version string) error {
+	cliProject, err := meta.(*Config).ProjectClient(systemProjectID)
+	if err != nil {
+		return err
+	}
+
+	filters := map[string]interface{}{
+		"targetNamespace": clusterMonitoringV1Namespace,
+	}
+
+	listOpts := NewListOpts(filters)
+
+	apps, err := cliProject.App.List(listOpts)
+	if err != nil {
+		return err
+	}
+
+	for _, a := range apps.Data {
+		if a.Name == "cluster-monitoring" || a.Name == "monitoring-operator" {
+			externalID := updateVersionExternalID(a.ExternalID, version)
+			upgrade := &projectClient.AppUpgradeConfig{
+				Answers:      a.Answers,
+				ExternalID:   externalID,
+				ForceUpgrade: true,
+			}
+
+			err = cliProject.App.ActionUpgrade(&a, upgrade)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
