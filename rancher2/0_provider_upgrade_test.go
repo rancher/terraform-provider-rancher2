@@ -194,6 +194,7 @@ provider "rancher2" {
 ` + testAccRancher2ClusterRoleTemplateBinding + `
 ` + testAccRancher2ClusterTemplateConfig + `
 ` + testAccRancher2EtcdBackup + `
+` + testAccRancher2FeatureConfig + `
 ` + testAccRancher2GlobalDNS + `
 ` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
 ` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
