@@ -89,6 +89,10 @@ func flattenClusterAKSConfig(in *AzureKubernetesServiceConfig, p []interface{}) 
 		obj["kubernetes_version"] = in.KubernetesVersion
 	}
 
+	if len(in.LoadBalancerSku) > 0 {
+		obj["load_balancer_sku"] = in.LoadBalancerSku
+	}
+
 	if len(in.Location) > 0 {
 		obj["location"] = in.Location
 	}
@@ -251,6 +255,10 @@ func expandClusterAKSConfig(p []interface{}, name string) (*AzureKubernetesServi
 
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
 		obj.KubernetesVersion = v
+	}
+
+	if v, ok := in["load_balancer_sku"].(string); ok && len(v) > 0 {
+		obj.LoadBalancerSku = v
 	}
 
 	if v, ok := in["location"].(string); ok && len(v) > 0 {
