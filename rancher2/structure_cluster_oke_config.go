@@ -97,6 +97,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 		obj["user_ocid"] = in.UserOCID
 	}
 
+	if len(in.VcnCompartmentID) > 0 {
+		obj["vcn_compartment_id"] = in.VcnCompartmentID
+	}
+
 	if len(in.VCNName) > 0 {
 		obj["vcn_name"] = in.VCNName
 	}
@@ -211,6 +215,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 
 	if v, ok := in["user_ocid"].(string); ok && len(v) > 0 {
 		obj.UserOCID = v
+	}
+
+	if v, ok := in["vcn_compartment_id"].(string); ok && len(v) > 0 {
+		obj.VcnCompartmentID = v
 	}
 
 	if v, ok := in["vcn_name"].(string); ok && len(v) > 0 {
