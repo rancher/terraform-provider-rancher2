@@ -2,7 +2,8 @@
 
 FEATURES:
 
-* **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. Just for Rancher v2.5.0 and above
+* **New Argument:** `rancher2_cluster.aks_config.load_balancer_sku` - (Optional/Computed) Load balancer type (basic | standard). Must be standard for auto-scaling
+* **New Argument:** `rancher2_cluster.rke_config.services.etc.backup_config.timeout` - (Optional/Computed) Set timeout in seconds for etcd backup. Just for Rancher v2.5.6 and above
 * **New Data Source:** `rancher2_global_role` - Provides a Rancher V2 Global Role data source
 * **New Resource:** `rancher2_global_role` - Provides a Rancher V2 Global Role resource
 * **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. Just for Rancher v2.5.0 and above

@@ -6,14 +6,20 @@ import (
 )
 
 const (
-	clusterAKSKind   = "aks"
-	clusterDriverAKS = "azurekubernetesservice"
+	clusterAKSKind                    = "aks"
+	clusterDriverAKS                  = "azurekubernetesservice"
+	clusterAKSLoadBalancerSkuBasic    = "basic"
+	clusterAKSLoadBalancerSkuStandard = "standard"
 )
 
 var (
 	clusterAKSAgentStorageProfile = []string{"ManagedDisks", "StorageAccount"}
 	clusterAKSNetworkPlugin       = []string{"azure", "kubenet"}
 	clusterAKSNetworkPolicy       = []string{"calico"}
+	clusterAKSLoadBalancerSkuList = []string{
+		clusterAKSLoadBalancerSkuBasic,
+		clusterAKSLoadBalancerSkuStandard,
+	}
 )
 
 //Types
@@ -41,6 +47,7 @@ type AzureKubernetesServiceConfig struct {
 	EnableHTTPApplicationRouting       bool              `json:"enableHttpApplicationRouting,omitempty" yaml:"enableHttpApplicationRouting,omitempty"`
 	EnableMonitoring                   *bool             `json:"enableMonitoring,omitempty" yaml:"enableMonitoring,omitempty"`
 	KubernetesVersion                  string            `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
+	LoadBalancerSku                    string            `json:"loadBalancerSku,omitempty" yaml:"loadBalancerSku,omitempty"`
 	Location                           string            `json:"location,omitempty" yaml:"location,omitempty"`
 	LogAnalyticsWorkspace              string            `json:"logAnalyticsWorkspace,omitempty" yaml:"logAnalyticsWorkspace,omitempty"`
 	LogAnalyticsWorkspaceResourceGroup string            `json:"logAnalyticsWorkspaceResourceGroup,omitempty" yaml:"logAnalyticsWorkspaceResourceGroup,omitempty"`
@@ -222,6 +229,13 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     true,
 			Description: "Turn on Azure Log Analytics monitoring. Uses the Log Analytics \"Default\" workspace if it exists, else creates one. if using an existing workspace, specifies \"log analytics workspace resource id\"",
+		},
+		"load_balancer_sku": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			Description:  "Load balancer type (basic | standard). Must be standard for auto-scaling",
+			ValidateFunc: validation.StringInSlice(clusterAKSLoadBalancerSkuList, true),
 		},
 		"location": {
 			Type:        schema.TypeString,
