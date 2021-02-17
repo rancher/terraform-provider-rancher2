@@ -125,6 +125,13 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: linodeConfigFields(),
 			},
 		},
+		"node_taints": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: taintFields(),
+			},
+		},
 		"openstack_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,

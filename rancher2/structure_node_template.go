@@ -113,9 +113,14 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		d.Set("engine_storage_driver", in.EngineStorageDriver)
 	}
 
+	err := d.Set("node_taints", flattenTaints(in.NodeTaints))
+	if err != nil {
+		return err
+	}
+
 	d.Set("use_internal_ip_address", *in.UseInternalIPAddress)
 
-	err := d.Set("annotations", toMapInterface(in.Annotations))
+	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}
@@ -198,6 +203,10 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 
 	if v, ok := in.Get("engine_storage_driver").(string); ok && len(v) > 0 {
 		obj.EngineStorageDriver = v
+	}
+
+	if v, ok := in.Get("node_taints").([]interface{}); ok && len(v) > 0 {
+		obj.NodeTaints = expandTaints(v)
 	}
 
 	if v, ok := in.Get("linode_config").([]interface{}); ok && len(v) > 0 {
