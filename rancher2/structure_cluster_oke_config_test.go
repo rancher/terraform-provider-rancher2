@@ -67,6 +67,7 @@ func init() {
 			"skip_vcn_delete":             false,
 			"tenancy_id":                  "tenancy",
 			"user_ocid":                   "user",
+			"vcn_compartment_id":          "",
 			"vcn_name":                    "",
 			"worker_node_ingress_cidr":    "",
 		},

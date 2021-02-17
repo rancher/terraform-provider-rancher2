@@ -1212,6 +1212,7 @@ The following arguments are supported:
 * `skip_vcn_delete` - (Optional) Specifies whether to skip deleting the virtual cloud network (VCN) on destroy. Default `false` (bool)
 * `tenancy_id` - (Required) The OCID of the tenancy in which to create resources (string)
 * `user_ocid` - (Required) The OCID of a user who has access to the tenancy/compartment (string)
+* `vcn_compartment_id` - (Optional) The OCID of the compartment (if different from `compartment_id`) in which to find the pre-existing virtual network set with `vcn_name`. (string)
 * `vcn_name` - (Optional) The name of an existing virtual network to use for the cluster creation. If set, you must also set `load_balancer_subnet_name_1`. A VCN and subnets will be created if none are specified. (string)
 * `worker_node_ingress_cidr` - (Optional) Additional CIDR from which to allow ingress to worker nodes (string)
 

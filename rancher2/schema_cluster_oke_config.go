@@ -168,6 +168,11 @@ func clusterOKEConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Whether to skip deleting VCN",
 		},
+		"vcn_compartment_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The OCID of the compartment (if different from compartment_id) in which to find the pre-existing virtual network set with vcn_name.",
+		},
 		"vcn_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
