@@ -20,6 +20,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 		obj["compartment_id"] = in.CompartmentID
 	}
 
+	if in.CustomBootVolumeSize > 0 {
+		obj["custom_boot_volume_size"] = int(in.CustomBootVolumeSize)
+	}
+
 	if len(in.Description) > 0 {
 		obj["description"] = in.Description
 	}
@@ -29,6 +33,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 
 	if len(in.Fingerprint) > 0 {
 		obj["fingerprint"] = in.Fingerprint
+	}
+
+	if in.FlexOCPUs > 0 {
+		obj["flex_ocpus"] = int(in.FlexOCPUs)
 	}
 
 	if len(in.KubernetesVersion) > 0 {
@@ -129,6 +137,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 		obj.CompartmentID = v
 	}
 
+	if v, ok := in["custom_boot_volume_size"].(int); ok && v > 0 {
+		obj.CustomBootVolumeSize = int64(v)
+	}
+
 	if v, ok := in["description"].(string); ok && len(v) > 0 {
 		obj.Description = v
 	}
@@ -143,6 +155,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 
 	if v, ok := in["fingerprint"].(string); ok && len(v) > 0 {
 		obj.Fingerprint = v
+	}
+
+	if v, ok := in["flex_ocpus"].(int); ok && v > 0 {
+		obj.FlexOCPUs = int64(v)
 	}
 
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
