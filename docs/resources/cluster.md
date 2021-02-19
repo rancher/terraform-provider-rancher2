@@ -60,6 +60,8 @@ resource "rancher2_cluster" "foo-custom" {
 
 ### Creating Rancher v2 RKE cluster enabling and customizing monitoring
 
+**Note** Cluster monitoring version `0.2.0` or above, can't be enabled until cluster is fully deployed as [`kubeVersion`](https://github.com/rancher/system-charts/blob/52be656700468904b9bf15c3f39cd7112e1f8c9b/charts/rancher-monitoring/v0.2.0/Chart.yaml#L12) requirement has been introduced to helm chart 
+
 ```hcl
 # Create a new rancher2 RKE Cluster
 resource "rancher2_cluster" "foo-custom" {
