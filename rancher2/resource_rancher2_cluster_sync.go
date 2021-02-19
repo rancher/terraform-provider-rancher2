@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	"log"
 	"time"
 
@@ -112,6 +113,11 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 		d.Set("kube_config", kubeConfig.Config)
+		nodes, err := meta.(*Config).GetClusterNodes(clusterID)
+		if err != nil {
+			return err
+		}
+		d.Set("nodes", flattenClusterNodes(nodes))
 	}
 
 	d.Set("synced", active)
@@ -126,4 +132,38 @@ func resourceRancher2ClusterSyncUpdate(d *schema.ResourceData, meta interface{})
 func resourceRancher2ClusterSyncDelete(d *schema.ResourceData, meta interface{}) error {
 	d.SetId("")
 	return nil
+}
+
+func flattenClusterNodes(n []managementClient.Node) []interface{} {
+	if len(n) == 0 {
+		return []interface{}{}
+	}
+	out := make([]interface{}, len(n))
+	for i, in := range n {
+		obj := make(map[string]interface{})
+
+		obj["cluster_id"] = in.ClusterID
+		obj["id"] = in.ID
+		obj["name"] = in.Name
+		obj["node_name"] = in.NodeName
+		obj["node_pool_id"] = in.NodePoolID
+		obj["node_template_id"] = in.NodeTemplateID
+		obj["external_ip_address"] = in.ExternalIPAddress
+		obj["ip_address"] = in.IPAddress
+		obj["hostname"] = in.Hostname
+		obj["requested_hostname"] = in.RequestedHostname
+		obj["pod_cidr"] = in.PodCidr
+		obj["pod_cidrs"] = in.PodCidrs
+		obj["provider_id"] = in.ProviderId
+		obj["ssh_user"] = in.SshUser
+		obj["state"] = in.State
+		obj["control_lane"] = in.ControlPlane
+		obj["etcd"] = in.Etcd
+		obj["worker"] = in.Worker
+		obj["taints"] = flattenTaints(in.Taints)
+
+		out[i] = obj
+	}
+
+	return out
 }

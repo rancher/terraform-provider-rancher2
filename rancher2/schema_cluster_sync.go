@@ -36,6 +36,13 @@ func clusterSyncFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
+		"nodes": {
+			Type:     schema.TypeList,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: clusterSyncNodeFields(),
+			},
+		},
 		"synced": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -54,6 +61,100 @@ func clusterSyncFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+	}
+
+	return s
+}
+
+func clusterSyncNodeFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"cluster_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"node_name": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"node_pool_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"node_template_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"external_ip_address": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"ip_address": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"hostname": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"requested_hostname": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"pod_cidr": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"pod_cidrs": {
+			Type:     schema.TypeList,
+			Computed: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"provider_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"ssh_user": {
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: true,
+		},
+		"state": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"control_lane": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"etcd": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"worker": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"taints": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: taintFields(),
+			},
+		},
+	}
+
+	for k, v := range commonAnnotationLabelFields() {
+		s[k] = v
 	}
 
 	return s

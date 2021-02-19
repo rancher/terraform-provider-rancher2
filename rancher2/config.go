@@ -596,6 +596,27 @@ func (c *Config) GetClusterSpecialProjectsID(id string) (string, string, error) 
 	return defaultProjectID, systemProjectID, nil
 }
 
+func (c *Config) GetClusterNodes(id string) ([]managementClient.Node, error) {
+	if id == "" {
+		return nil, fmt.Errorf("[ERROR] Cluster id is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, err
+	}
+
+	filters := map[string]interface{}{"clusterId": id}
+	listOpts := NewListOpts(filters)
+
+	collection, err := client.Node.List(listOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	return collection.Data, nil
+}
+
 func (c *Config) GetClusterByName(name string) (*managementClient.Cluster, error) {
 	if name == "" {
 		return nil, fmt.Errorf("[ERROR] Cluster name is nil")
