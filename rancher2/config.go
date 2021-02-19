@@ -756,7 +756,16 @@ func (c *Config) GetAppV2OperationByID(clusterID, id string) (map[string]interfa
 		return nil, err
 	}
 	resp := map[string]interface{}{}
-	err = client.ByID(appV2OperationAPIType, id, &resp)
+	for i := 0; i < rancher2RetriesOnServerError; i++ {
+		err = client.ByID(appV2OperationAPIType, id, &resp)
+		if err == nil {
+			break
+		}
+		if !IsServerError(err) || (i+1) == rancher2RetriesOnServerError {
+			return nil, err
+		}
+		time.Sleep(2 * time.Second)
+	}
 
 	return resp, err
 }
