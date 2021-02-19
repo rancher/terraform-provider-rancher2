@@ -17,6 +17,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fixed cluster and project resource for update monitoring version properly
+* Fixed `rancher2_app_v2` resource, added retry to GetAppV2OperationByID if got apierr 500
 
 ## 1.11.0 (January 08, 2021)
 
