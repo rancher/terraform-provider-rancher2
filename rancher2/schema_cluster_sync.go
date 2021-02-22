@@ -40,7 +40,7 @@ func clusterSyncFields() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: clusterSyncNodeFields(),
+				Schema: clusterNodeFields(),
 			},
 		},
 		"synced": {
@@ -66,14 +66,43 @@ func clusterSyncFields() map[string]*schema.Schema {
 	return s
 }
 
-func clusterSyncNodeFields() map[string]*schema.Schema {
+func clusterNodeFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+
+		"id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"cluster_id": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"id": {
+		"control_plane": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"etcd": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"external_ip_address": {
 			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"hostname": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"ip_address": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"imported": {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		"info": {
+			Type:     schema.TypeMap,
 			Computed: true,
 		},
 		"name": {
@@ -92,22 +121,6 @@ func clusterSyncNodeFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"external_ip_address": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"ip_address": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"hostname": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"requested_hostname": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
 		"pod_cidr": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -123,33 +136,18 @@ func clusterSyncNodeFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"requested_hostname": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"ssh_user": {
 			Type:      schema.TypeString,
 			Computed:  true,
 			Sensitive: true,
 		},
-		"state": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"control_lane": {
-			Type:     schema.TypeBool,
-			Computed: true,
-		},
-		"etcd": {
-			Type:     schema.TypeBool,
-			Computed: true,
-		},
 		"worker": {
 			Type:     schema.TypeBool,
 			Computed: true,
-		},
-		"taints": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: taintFields(),
-			},
 		},
 	}
 

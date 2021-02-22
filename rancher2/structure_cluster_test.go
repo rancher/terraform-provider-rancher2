@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -649,4 +650,118 @@ func TestReadPreservedClusterTemplateAnswers(t *testing.T) {
 		t.Fatalf("Unexpected result from preserved answers.\nExpected: %#v\nGiven:    %#v",
 			expectedOutput, result)
 	}
+}
+
+func TestFlattenClusterNodes(t *testing.T) {
+
+	testClusterNodes := []managementClient.Node{
+		{
+			Resource: types.Resource{
+				ID: "id",
+			},
+			Annotations: map[string]string{
+				"node_one": "one",
+				"node_two": "two",
+			},
+			ClusterID:         "cluster_id",
+			ControlPlane:      true,
+			Etcd:              true,
+			ExternalIPAddress: "172.18.0.5",
+			Hostname:          "hostname",
+			IPAddress:         "172.18.0.5",
+			Imported:          true,
+			Info: &managementClient.NodeInfo{
+				CPU: &managementClient.CPUInfo{
+					Count: 4,
+				},
+				Kubernetes: &managementClient.KubernetesInfo{
+					KubeProxyVersion: "v1.19.7",
+					KubeletVersion:   "v1.19.7",
+				},
+				Memory: &managementClient.MemoryInfo{
+					MemTotalKiB: 8156056,
+				},
+				OS: &managementClient.OSInfo{
+					DockerVersion:   "containerd://1.4.3",
+					KernelVersion:   "4.19.121",
+					OperatingSystem: "Unknown",
+				},
+			},
+			Labels: map[string]string{
+				"option1": "value1",
+				"option2": "value2",
+			},
+			Name:              "name",
+			NodeName:          "node_name",
+			NodePoolID:        "node_pool_id",
+			NodeTemplateID:    "node_template_id",
+			PodCidr:           "10.42.3.0/24",
+			PodCidrs:          []string{"10.42.3.0/24"},
+			ProviderId:        "provider_id",
+			RequestedHostname: "requested_hostname",
+			SshUser:           "ssh_user",
+			Worker:            true,
+		},
+	}
+
+	testClusterNodesInterface := []interface{}{
+		map[string]interface{}{
+			"id": "id",
+			"annotations": map[string]interface{}{
+				"node_one": "one",
+				"node_two": "two",
+			},
+			"cluster_id":          "cluster_id",
+			"control_plane":       true,
+			"etcd":                true,
+			"external_ip_address": "172.18.0.5",
+			"hostname":            "hostname",
+			"ip_address":          "172.18.0.5",
+			"imported":            true,
+			"info": map[string]string{
+				"cpu_count":          "4",
+				"kube_proxy_version": "v1.19.7",
+				"kubelet_version":    "v1.19.7",
+				"memory":             "8156056",
+				"docker_version":     "containerd://1.4.3",
+				"kernel_version":     "4.19.121",
+				"operating_system":   "Unknown",
+			},
+			"labels": map[string]interface{}{
+				"option1": "value1",
+				"option2": "value2",
+			},
+			"name":             "name",
+			"node_name":        "node_name",
+			"node_pool_id":     "node_pool_id",
+			"node_template_id": "node_template_id",
+			"pod_cidr":         "10.42.3.0/24",
+			"pod_cidrs": []string{
+				"10.42.3.0/24",
+			},
+			"provider_id":        "provider_id",
+			"requested_hostname": "requested_hostname",
+			"ssh_user":           "ssh_user",
+			"worker":             true,
+		},
+	}
+
+	cases := []struct {
+		Input          []managementClient.Node
+		ExpectedOutput []interface{}
+	}{
+		{
+			Input:          testClusterNodes,
+			ExpectedOutput: testClusterNodesInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenClusterNodes(tc.Input)
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+
 }
