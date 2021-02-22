@@ -2,7 +2,6 @@ package rancher2
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
@@ -263,27 +262,33 @@ func flattenClusterNodes(in []managementClient.Node) []interface{} {
 	for i, in := range in {
 		obj := make(map[string]interface{})
 
-		obj["id"] = in.ID
 		obj["annotations"] = toMapInterface(in.Annotations)
+		obj["capacity"] = toMapInterface(in.Capacity)
 		obj["cluster_id"] = in.ClusterID
-		obj["control_plane"] = in.ControlPlane
-		obj["etcd"] = in.Etcd
 		obj["external_ip_address"] = in.ExternalIPAddress
 		obj["hostname"] = in.Hostname
+		obj["id"] = in.ID
 		obj["ip_address"] = in.IPAddress
-		obj["imported"] = in.Imported
-		obj["info"] = flattenNodeInfo(in.Info)
 		obj["labels"] = toMapInterface(in.Labels)
-		obj["name"] = in.Name
-		obj["node_name"] = in.NodeName
+		obj["name"] = in.NodeName
 		obj["node_pool_id"] = in.NodePoolID
 		obj["node_template_id"] = in.NodeTemplateID
-		obj["pod_cidr"] = in.PodCidr
-		obj["pod_cidrs"] = in.PodCidrs
 		obj["provider_id"] = in.ProviderId
 		obj["requested_hostname"] = in.RequestedHostname
 		obj["ssh_user"] = in.SshUser
-		obj["worker"] = in.Worker
+		obj["system_info"] = flattenNodeInfo(in.Info)
+
+		var roles []string
+		if in.ControlPlane {
+			roles = append(roles, "control_plane")
+		}
+		if in.Etcd {
+			roles = append(roles, "etcd")
+		}
+		if in.Worker {
+			roles = append(roles, "worker")
+		}
+		obj["roles"] = roles
 
 		out[i] = obj
 	}
@@ -298,11 +303,9 @@ func flattenNodeInfo(in *managementClient.NodeInfo) map[string]string {
 		return map[string]string{}
 	}
 
-	out["cpu_count"] = strconv.Itoa(int(in.CPU.Count))
 	out["kube_proxy_version"] = in.Kubernetes.KubeProxyVersion
 	out["kubelet_version"] = in.Kubernetes.KubeletVersion
-	out["memory"] = strconv.Itoa(int(in.Memory.MemTotalKiB))
-	out["docker_version"] = in.OS.DockerVersion
+	out["container_runtime_version"] = in.OS.DockerVersion
 	out["kernel_version"] = in.OS.KernelVersion
 	out["operating_system"] = in.OS.OperatingSystem
 

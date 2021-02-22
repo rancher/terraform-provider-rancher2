@@ -69,20 +69,12 @@ func clusterSyncFields() map[string]*schema.Schema {
 func clusterNodeFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 
-		"id": {
-			Type:     schema.TypeString,
+		"capacity": {
+			Type:     schema.TypeMap,
 			Computed: true,
 		},
 		"cluster_id": {
 			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"control_plane": {
-			Type:     schema.TypeBool,
-			Computed: true,
-		},
-		"etcd": {
-			Type:     schema.TypeBool,
 			Computed: true,
 		},
 		"external_ip_address": {
@@ -93,23 +85,15 @@ func clusterNodeFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"ip_address": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"imported": {
-			Type:     schema.TypeBool,
-			Computed: true,
-		},
-		"info": {
-			Type:     schema.TypeMap,
-			Computed: true,
-		},
 		"name": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"node_name": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -121,17 +105,6 @@ func clusterNodeFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"pod_cidr": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"pod_cidrs": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
 		"provider_id": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -140,13 +113,20 @@ func clusterNodeFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"roles": {
+			Type:     schema.TypeList,
+			Computed: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 		"ssh_user": {
 			Type:      schema.TypeString,
 			Computed:  true,
 			Sensitive: true,
 		},
-		"worker": {
-			Type:     schema.TypeBool,
+		"system_info": {
+			Type:     schema.TypeMap,
 			Computed: true,
 		},
 	}

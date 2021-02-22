@@ -98,7 +98,39 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource. Same as `cluster_id` (string)
 * `default_project_id` - (Computed) Default project ID for the cluster sync (string)
 * `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster sync (string)
+* `nodes` - (Computed) The cluster nodes (list).
 * `system_project_id` - (Computed) System project ID for the cluster sync (string)
+
+## Nested blocks
+
+### `nodes`
+
+#### Arguments
+
+* `annotations` - (Computed) Annotations of the node (map).
+* `capacity` - (Computed) The total resources of a node (map).
+* `cluster_id` - (Computed) The Cluster ID of the node (string).
+* `external_ip_address` - (Computed)  The external IP address of the node (string).
+* `hostname` - (Computed) The hostname of the node (string).
+* `id` - (Computed) The ID of the node (string)
+* `ip_address` - (Computed) The private IP address of the node (string).
+* `labels` - (Computed) Labels of the node (map).
+* `name` - (Computed) The name of the node (string).
+* `node_pool_id` - (Computed) The Node Pool ID of the node (string).
+* `node_template_id` - (Computed) The Node Template ID of the node (string).
+* `provider_id` - (Computed) The Provider ID of the node (string).
+* `requested_hostname` - (Computed) The requested hostname (string).
+* `roles` - (Computed) Roles of the node. `controlplane`, `etcd` and `worker`. (list)
+* `ssh_user` - (Computed/Sensitive) The user to connect to the node (string).
+* `system_info` - (Computed) General information about the node, such as kernel version, kubelet and kube-proxy version, Docker version (if used), and OS name.
+
+### `system_info`
+
+* `container_runtime_version` - (Computed) ContainerRuntime Version reported by the node through runtime remote API (e.g. docker://1.5.0).
+* `kernel_version` - (Computed) Kernel Version reported by the node from 'uname -r' (e.g. 3.16.0-0.bpo.4-amd64).
+* `kube_proxy_version` - (Computed) KubeProxy Version reported by the node.
+* `kubelet_version` - (Computed) Kubelet Version reported by the node.
+* `operating_system` - (Computed) The Operating System reported by the node.
 
 ## Timeouts
 

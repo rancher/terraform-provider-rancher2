@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * Updated `rancher2_node_template.openstack_config` to support `boot_from_volume` and related arguments
 * Added `password` as valid `cluster_template_questions` type to `rancher2_cluster` resource
 * Preserve `cluster_template_answers` for `cluster_template_questions` of type `password` in `rancher2_cluster` resource to avoid misleading diffs
+* Added `nodes` attribute reference to `rancher2_cluster_sync` resource
 
 BUG FIXES:
 
