@@ -299,6 +299,26 @@ func IsServerError(err error) bool {
 	return apiError.StatusCode == http.StatusInternalServerError
 }
 
+// IsBadGatewayError checks if the given APIError is a Bad Gateway Server Error HTTP statuscode
+func IsBadGatewayError(err error) bool {
+	apiError, ok := err.(*clientbase.APIError)
+	if !ok {
+		return false
+	}
+
+	return apiError.StatusCode == http.StatusBadGateway
+}
+
+// IsServiceUnavailableError checks if the given APIError is a Service Unavailable Server Error HTTP statuscode
+func IsServiceUnavailableError(err error) bool {
+	apiError, ok := err.(*clientbase.APIError)
+	if !ok {
+		return false
+	}
+
+	return apiError.StatusCode == http.StatusServiceUnavailable
+}
+
 func splitTokenID(token string) string {
 	separator := ":"
 

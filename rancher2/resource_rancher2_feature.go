@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2Feature() *schema.Resource {
@@ -43,7 +42,7 @@ func resourceRancher2FeatureRead(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] refreshing feature %s: %v", d.Id(), err)
 	}
 
 	err = flattenFeature(d, feature)
@@ -75,13 +74,16 @@ func resourceRancher2FeatureUpdate(d *schema.ResourceData, meta interface{}) err
 
 	newFeature, err := client.Feature.Update(feature, update)
 	if err != nil {
-		return fmt.Errorf("aki %v", err)
+		// Bad gateway or service unavailable error may be fine if Rancher is restarted
+		if !IsBadGatewayError(err) && !IsServiceUnavailableError(err) {
+			return fmt.Errorf("[ERROR] updating feature %s: %v", d.Id(), err)
+		}
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"active"},
+		Pending:    []string{"active", "rebooting"},
 		Target:     []string{"active"},
-		Refresh:    featureStateRefreshFunc(client, newFeature.ID),
+		Refresh:    featureStateRefreshFunc(meta, newFeature.ID),
 		Timeout:    10 * time.Minute,
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -103,8 +105,16 @@ func resourceRancher2FeatureDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 // featureStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project.
-func featureStateRefreshFunc(client *managementClient.Client, featureID string) resource.StateRefreshFunc {
+func featureStateRefreshFunc(meta interface{}, featureID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
+		err := meta.(*Config).isRancherReady()
+		if err != nil {
+			return nil, "rebooting", nil
+		}
+		client, err := meta.(*Config).ManagementClient()
+		if err != nil {
+			return nil, "", err
+		}
 		obj, err := client.Feature.ByID(featureID)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
