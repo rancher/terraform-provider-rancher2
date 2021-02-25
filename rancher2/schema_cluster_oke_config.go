@@ -15,10 +15,12 @@ const (
 
 type OracleKubernetesEngineConfig struct {
 	CompartmentID               string `json:"compartmentId,omitempty" yaml:"compartmentId,omitempty"`
+	CustomBootVolumeSize        int64  `json:"customBootVolumeSize,omitempty" yaml:"customBootVolumeSize,omitempty"`
 	Description                 string `json:"description,omitempty" yaml:"description,omitempty"`
 	DisplayName                 string `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	EnableKubernetesDashboard   bool   `json:"enableKubernetesDashboard,omitempty" yaml:"enableKubernetesDashboard,omitempty"`
 	Fingerprint                 string `json:"fingerprint,omitempty" yaml:"fingerprint,omitempty"`
+	FlexOCPUs                   int64  `json:"flexOcpus,omitempty" yaml:"flexOcpus,omitempty"`
 	KubernetesVersion           string `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
 	DriverName                  string `json:"driverName,omitempty" yaml:"driverName,omitempty"`
 	Name                        string `json:"name,omitempty" yaml:"name,omitempty"`
@@ -54,15 +56,25 @@ func clusterOKEConfigFields() map[string]*schema.Schema {
 			Required:    true,
 			Description: "The OCID of the compartment in which to create resources (VCN, worker nodes, etc.)",
 		},
+		"custom_boot_volume_size": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "An optional custom boot volume size (in GB) for the nodes",
+		},
 		"fingerprint": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "The fingerprint corresponding to the specified user's private API Key",
 		},
+		"flex_ocpus": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Optional number of OCPUs for nodes (requires flexible node_shape)",
+		},
 		"kubernetes_version": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The Kubernetes version that will be used for your master *and* worker nodes e.g. v1.17.9",
+			Description: "The Kubernetes version that will be used for your master *and* worker nodes e.g. v1.18.10",
 		},
 		"node_image": {
 			Type:        schema.TypeString,

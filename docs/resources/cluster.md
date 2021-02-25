@@ -1193,10 +1193,12 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `compartment_id` - (Required) The OCID of the compartment in which to create resources OKE cluster and related resources (string)
+* `custom_boot_volume_size` - (Optional) Optional custom boot volume size (GB) for all nodes. If you specify 0, it will apply the default according to the `node_image` specified. Default `0` (int)
 * `description` - (Optional) An optional description of this cluster (string)
 * `enable_kubernetes_dashboard` - (Optional) Specifies whether to enable the Kubernetes dashboard. Default `false` (bool)
 * `enable_private_nodes` - (Optional) Specifies whether worker nodes will be deployed into a new, private, subnet. Default `false` (bool)
 * `fingerprint` - (Required) The fingerprint corresponding to the specified user's private API Key (string)
+* `flex_ocpus` - (Optional) Specifies number of OCPUs for nodes (requires flexible shape specified with `node_shape`) (int)
 * `kubernetes_version` - (Required) The Kubernetes version that will be used for your master *and* OKE worker nodes (string)
 * `load_balancer_subnet_name_1` - (Optional) The name of the first existing subnet to use for Kubernetes services / LB. `vcn_name` is also required when specifying an existing subnet. (string)
 * `load_balancer_subnet_name_2` - (Optional) The name of a second existing subnet to use for Kubernetes services / LB. A second subnet is only required when it is AD-specific (non-regional) (string)
