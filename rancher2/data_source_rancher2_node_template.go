@@ -62,6 +62,13 @@ func dataSourceRancher2NodeTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"node_taints": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: taintFields(),
+				},
+			},
 			"use_internal_ip_address": {
 				Type:     schema.TypeBool,
 				Optional: true,

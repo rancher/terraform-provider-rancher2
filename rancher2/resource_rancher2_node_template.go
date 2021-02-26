@@ -135,6 +135,7 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 		"engineOpt":                toMapString(d.Get("engine_opt").(map[string]interface{})),
 		"engineRegistryMirror":     toArrayString(d.Get("engine_registry_mirror").([]interface{})),
 		"engineStorageDriver":      d.Get("engine_storage_driver").(string),
+		"nodeTaints":               expandTaints(d.Get("node_taints").([]interface{})),
 		"annotations":              toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
 	}

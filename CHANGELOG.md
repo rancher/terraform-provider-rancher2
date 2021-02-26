@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Argument:** `rancher2_node_template.node_taints` - (Optional) Node taints. For Rancher v2.3.3 or above (List)
 * **New Argument:** `rancher2_cluster.aks_config.load_balancer_sku` - (Optional/Computed) Load balancer type (basic | standard). Must be standard for auto-scaling
 * **New Argument:** `rancher2_cluster.rke_config.services.etc.backup_config.timeout` - (Optional/Computed) Set timeout in seconds for etcd backup. Just for Rancher v2.5.6 and above
 * **New Data Source:** `rancher2_global_role` - Provides a Rancher V2 Global Role data source

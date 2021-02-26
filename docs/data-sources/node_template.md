@@ -35,6 +35,7 @@ The following attributes are exported:
 * `engine_opt` - (Computed) Engine options for the node template (map)
 * `engine_registry_mirror` - (Computed) Engine registry mirror for the node template (list)
 * `engine_storage_driver` - (Computed) Engine storage driver for the node template (string)
+* `node_taints` - (Computed) Node taints (List)
 * `use_internal_ip_address` - (Computed) Engine storage driver for the node template (bool)
 * `annotations` - (Computed) Annotations for Node Template object (map)
 * `labels` - (Computed) Labels for Node Template object (map)
