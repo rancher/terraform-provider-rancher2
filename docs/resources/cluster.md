@@ -435,7 +435,7 @@ The following arguments are supported:
 * `enable_network_policy` - (Optional/Computed) Enable project network isolation (bool)
 * `scheduled_cluster_scan`- (Optional/Computed) Cluster scheduled cis scan. For Rancher v2.4.0 or above (List maxitems:1)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
-* `labels` - (Optional/Computed) Labels for Node Pool object (map)
+* `labels` - (Optional/Computed) Labels for the Cluster (map)
 * `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
 
 
