@@ -24,7 +24,7 @@ const (
 	rancher2ManagementV2TypePrefix    = "management.cattle.io"
 	rancher2ReadyAnswer               = "pong"
 	rancher2RetriesWait               = 5
-	rancher2RetriesOnServerError      = 3
+	rancher2RetriesOnServerError      = 5
 	rancher2RKEK8sSystemImageVersion  = "2.3.0"
 	rancher2NodeTemplateChangeVersion = "2.3.3" // Change node template id format
 	rancher2TokeTTLMinutesVersion     = "2.4.6" // ttl token is readed in minutes
@@ -106,11 +106,17 @@ func (c *Config) getK8SDefaultVersion() (string, error) {
 		}
 	}
 
-	k8sVer, err := c.Client.Management.Setting.ByID("k8s-version")
-	if err != nil {
-		return "", err
+	for i := 0; i < rancher2RetriesOnServerError; i++ {
+		k8sVer, err := c.Client.Management.Setting.ByID("k8s-version")
+		if err == nil {
+			c.K8SDefaultVersion = k8sVer.Value
+			break
+		}
+		if (!IsServerError(err) && !IsForbidden(err)) || (i+1) == rancher2RetriesOnServerError {
+			return "", err
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
 	}
-	c.K8SDefaultVersion = k8sVer.Value
 	return c.K8SDefaultVersion, nil
 }
 
@@ -785,7 +791,7 @@ func (c *Config) GetAppV2OperationByID(clusterID, id string) (map[string]interfa
 		if !IsServerError(err) || (i+1) == rancher2RetriesOnServerError {
 			return nil, err
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(rancher2RetriesWait * time.Second)
 	}
 
 	return resp, err
