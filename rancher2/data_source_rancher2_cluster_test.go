@@ -36,6 +36,7 @@ resource "rancher2_cluster" "foo" {
       cis_scan_config {
         debug_master = true
         debug_worker = true
+        override_benchmark_version = "rke-cis-1.5"
       }
     }
     schedule_config {

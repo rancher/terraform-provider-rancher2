@@ -1,4 +1,4 @@
-## 1.12.0 (Unreleased)
+## 1.12.0 (March 05, 2021)
 
 FEATURES:
 
@@ -15,11 +15,16 @@ ENHANCEMENTS:
 * Added `password` as valid `cluster_template_questions` type to `rancher2_cluster` resource
 * Preserve `cluster_template_answers` for `cluster_template_questions` of type `password` in `rancher2_cluster` resource to avoid misleading diffs
 * Added `nodes` attribute reference to `rancher2_cluster_sync` resource
+* Updated go mod to support Rancher `v2.5.6`
+* Updated acceptance tests to use Rancher `v2.5.6`
+* Added retry to get k8s default version, if getting forbidden or server error
+* Added retry to get V2 catalogs and apps, if getting server error
 
 BUG FIXES:
 
 * Fixed cluster and project resource for update monitoring version properly
 * Fixed `rancher2_app_v2` resource, added retry to GetAppV2OperationByID if got apierr 500
+* Fixed `rancher2_cluster` docs, annotations and labels argument description
 
 ## 1.11.0 (January 08, 2021)
 

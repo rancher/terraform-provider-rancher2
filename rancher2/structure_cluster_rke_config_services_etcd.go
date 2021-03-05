@@ -76,6 +76,10 @@ func flattenClusterRKEConfigServicesEtcdBackupConfig(in *managementClient.Backup
 
 	obj["safe_timestamp"] = in.SafeTimestamp
 
+	if in.Timeout > 0 {
+		obj["timeout"] = int(in.Timeout)
+	}
+
 	return []interface{}{obj}
 }
 
@@ -229,6 +233,10 @@ func expandClusterRKEConfigServicesEtcdBackupConfig(p []interface{}) (*managemen
 
 	if v, ok := in["safe_timestamp"].(bool); ok {
 		obj.SafeTimestamp = v
+	}
+
+	if v, ok := in["timeout"].(int); ok && v > 0 {
+		obj.Timeout = int64(v)
 	}
 
 	return obj, nil

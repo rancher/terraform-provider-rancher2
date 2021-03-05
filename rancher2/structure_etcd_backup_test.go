@@ -44,6 +44,7 @@ func init() {
 		Retention:      10,
 		S3BackupConfig: testEtcdBackupConfigS3Conf,
 		SafeTimestamp:  false,
+		Timeout:        500,
 	}
 	testEtcdBackupConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -52,6 +53,7 @@ func init() {
 			"retention":        10,
 			"s3_backup_config": testEtcdBackupConfigS3Interface,
 			"safe_timestamp":   false,
+			"timeout":          500,
 		},
 	}
 	testEtcdBackupConf = &managementClient.EtcdBackup{

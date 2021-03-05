@@ -434,8 +434,8 @@ The following arguments are supported:
 * `enable_cluster_istio` - (Deprecated) Deploy istio on `system` project and `istio-system` namespace, using rancher2_app resource instead. See above example.
 * `enable_network_policy` - (Optional/Computed) Enable project network isolation (bool)
 * `scheduled_cluster_scan`- (Optional/Computed) Cluster scheduled cis scan. For Rancher v2.4.0 or above (List maxitems:1)
-* `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
-* `labels` - (Optional/Computed) Labels for Node Pool object (map)
+* `annotations` - (Optional/Computed) Annotations for the Cluster (map)
+* `labels` - (Optional/Computed) Labels for the Cluster (map)
 * `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
 
 
@@ -873,6 +873,7 @@ The following attributes are exported:
 * `retention` - (Optional) Retention for etcd backup. Default `6` (int)
 * `s3_backup_config` - (Optional) S3 config options for etcd backup (list maxitems:1)
 * `safe_timestamp` - (Optional) Safe timestamp for etcd backup. Default: `false` (bool)
+* `timeout` - (Optional/Computed) Timeout in seconds for etcd backup. Default: `300`. Just for Rancher v2.5.6 and above (int)
 
 ###### `s3_backup_config`
 
