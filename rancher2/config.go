@@ -24,7 +24,7 @@ const (
 	rancher2ManagementV2TypePrefix    = "management.cattle.io"
 	rancher2ReadyAnswer               = "pong"
 	rancher2RetriesWait               = 5
-	rancher2RetriesOnServerError      = 5
+	rancher2RetriesOnServerError      = 3
 	rancher2RKEK8sSystemImageVersion  = "2.3.0"
 	rancher2NodeTemplateChangeVersion = "2.3.3" // Change node template id format
 	rancher2TokeTTLMinutesVersion     = "2.4.6" // ttl token is readed in minutes
@@ -684,9 +684,18 @@ func (c *Config) GetSettingV2ByID(clusterID, id string) (*SettingV2, error) {
 		return nil, err
 	}
 	resp := &SettingV2{}
-	err = client.ByID(settingV2APIType, id, resp)
+	for i := 0; i < rancher2RetriesOnServerError; i++ {
+		err = client.ByID(settingV2APIType, id, resp)
+		if err == nil {
+			break
+		}
+		if !IsServerError(err) || (i+1) == rancher2RetriesOnServerError {
+			return nil, err
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
+	}
 
-	return resp, err
+	return resp, nil
 }
 
 func (c *Config) GetCatalogV2ByID(clusterID, id string) (*ClusterRepo, error) {
@@ -699,9 +708,18 @@ func (c *Config) GetCatalogV2ByID(clusterID, id string) (*ClusterRepo, error) {
 		return nil, err
 	}
 	resp := &ClusterRepo{}
-	err = client.ByID(catalogV2APIType, id, resp)
+	for i := 0; i < rancher2RetriesOnServerError; i++ {
+		err = client.ByID(catalogV2APIType, id, resp)
+		if err == nil {
+			break
+		}
+		if (!IsServerError(err) && !IsNotFound(err)) || (i+1) == rancher2RetriesOnServerError {
+			return nil, err
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
+	}
 
-	return resp, err
+	return resp, nil
 }
 
 func (c *Config) CreateCatalogV2(clusterID string, repo *ClusterRepo) (*ClusterRepo, error) {
@@ -768,9 +786,18 @@ func (c *Config) GetAppV2ByID(clusterID, id string) (*AppV2, error) {
 		return nil, err
 	}
 	resp := &AppV2{}
-	err = client.ByID(appV2APIType, id, resp)
+	for i := 0; i < rancher2RetriesOnServerError; i++ {
+		err = client.ByID(appV2APIType, id, resp)
+		if err == nil {
+			break
+		}
+		if (!IsServerError(err) && !IsNotFound(err)) || (i+1) == rancher2RetriesOnServerError {
+			return nil, err
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
+	}
 
-	return resp, err
+	return resp, nil
 }
 
 func (c *Config) GetAppV2OperationByID(clusterID, id string) (map[string]interface{}, error) {
@@ -794,7 +821,7 @@ func (c *Config) GetAppV2OperationByID(clusterID, id string) (map[string]interfa
 		time.Sleep(rancher2RetriesWait * time.Second)
 	}
 
-	return resp, err
+	return resp, nil
 }
 
 func (c *Config) GetAppV2OperationLogs(clusterID string, op map[string]interface{}) (string, error) {
@@ -863,10 +890,17 @@ func (c *Config) InfoAppV2(clusterID, repoName, chartName, chartVersion string) 
 		return nil, nil, err
 	}
 	resp := &types2.ChartInfo{}
-	err = client.GetLink(resource, link, resp)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get chart info %s:%s from catalog v2 %s: %v", chartName, chartVersion, repoName, err)
+	for i := 0; i < rancher2RetriesOnServerError; i++ {
+		err = client.GetLink(resource, link, resp)
+		if err == nil {
+			break
+		}
+		if !IsServerError(err) || (i+1) == rancher2RetriesOnServerError {
+			return nil, nil, fmt.Errorf("failed to get chart info %s:%s from catalog v2 %s: %v", chartName, chartVersion, repoName, err)
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
 	}
+
 	return repo, resp, nil
 }
 
