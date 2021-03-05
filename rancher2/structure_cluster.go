@@ -254,6 +254,64 @@ func readPreservedClusterTemplateAnswers(d *schema.ResourceData) map[string]stri
 	return preservedAnswers
 }
 
+func flattenClusterNodes(in []managementClient.Node) []interface{} {
+	if len(in) == 0 {
+		return []interface{}{}
+	}
+	out := make([]interface{}, len(in))
+	for i, in := range in {
+		obj := make(map[string]interface{})
+
+		obj["annotations"] = toMapInterface(in.Annotations)
+		obj["capacity"] = toMapInterface(in.Capacity)
+		obj["cluster_id"] = in.ClusterID
+		obj["external_ip_address"] = in.ExternalIPAddress
+		obj["hostname"] = in.Hostname
+		obj["id"] = in.ID
+		obj["ip_address"] = in.IPAddress
+		obj["labels"] = toMapInterface(in.Labels)
+		obj["name"] = in.NodeName
+		obj["node_pool_id"] = in.NodePoolID
+		obj["node_template_id"] = in.NodeTemplateID
+		obj["provider_id"] = in.ProviderId
+		obj["requested_hostname"] = in.RequestedHostname
+		obj["ssh_user"] = in.SshUser
+		obj["system_info"] = flattenNodeInfo(in.Info)
+
+		var roles []string
+		if in.ControlPlane {
+			roles = append(roles, "control_plane")
+		}
+		if in.Etcd {
+			roles = append(roles, "etcd")
+		}
+		if in.Worker {
+			roles = append(roles, "worker")
+		}
+		obj["roles"] = roles
+
+		out[i] = obj
+	}
+
+	return out
+}
+
+func flattenNodeInfo(in *managementClient.NodeInfo) map[string]string {
+	out := make(map[string]string)
+
+	if in == nil {
+		return map[string]string{}
+	}
+
+	out["kube_proxy_version"] = in.Kubernetes.KubeProxyVersion
+	out["kubelet_version"] = in.Kubernetes.KubeletVersion
+	out["container_runtime_version"] = in.OS.DockerVersion
+	out["kernel_version"] = in.OS.KernelVersion
+	out["operating_system"] = in.OS.OperatingSystem
+
+	return out
+}
+
 // Expanders
 
 func expandClusterRegistationToken(p []interface{}, clusterID string) (*managementClient.ClusterRegistrationToken, error) {

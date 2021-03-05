@@ -112,6 +112,11 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 		d.Set("kube_config", kubeConfig.Config)
+		nodes, err := meta.(*Config).GetClusterNodes(clusterID)
+		if err != nil {
+			return err
+		}
+		d.Set("nodes", flattenClusterNodes(nodes))
 	}
 
 	d.Set("synced", active)
