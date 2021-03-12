@@ -57,9 +57,11 @@ func init() {
 		"value1": "one",
 		"value2": "two",
 		"global": map[string]interface{}{
+			"systemDefaultRegistry": "",
 			"cattle": map[string]interface{}{
-				"clusterId":   "cluster_id",
-				"clusterName": "",
+				"clusterId":             "cluster_id",
+				"clusterName":           "",
+				"systemDefaultRegistry": "",
 			},
 		},
 	}

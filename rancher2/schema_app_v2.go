@@ -10,13 +10,14 @@ import (
 )
 
 const (
-	appV2Kind             = "App"
-	appV2APIGroup         = "catalog.cattle.io"
-	appV2APIVersion       = "v1"
-	appV2APIType          = rancher2CatalogTypePrefix + ".app"
-	appV2OperationAPIType = rancher2CatalogTypePrefix + ".operation"
-	appV2ValueGlobal      = "global."
-	appV2ClusterIDsep     = "."
+	appV2Kind              = "App"
+	appV2APIGroup          = "catalog.cattle.io"
+	appV2APIVersion        = "v1"
+	appV2APIType           = rancher2CatalogTypePrefix + ".app"
+	appV2OperationAPIType  = rancher2CatalogTypePrefix + ".operation"
+	appV2ValueGlobal       = "global."
+	appV2ClusterIDsep      = "."
+	appV2DefaultRegistryID = "system-default-registry"
 )
 
 //Types
@@ -77,6 +78,10 @@ func appV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Deploy app within project ID",
 		},
+		"system_default_registry": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"values": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -102,15 +107,19 @@ func appV2Fields() map[string]*schema.Schema {
 					newMap = map[string]interface{}{}
 				}
 				globalInfo := map[string]interface{}{
+					"systemDefaultRegistry": d.Get("system_default_registry").(string),
 					"cattle": map[string]interface{}{
-						"clusterId":   d.Get("cluster_id").(string),
-						"clusterName": d.Get("cluster_name").(string),
+						"clusterId":             d.Get("cluster_id").(string),
+						"clusterName":           d.Get("cluster_name").(string),
+						"systemDefaultRegistry": d.Get("system_default_registry").(string),
 					},
 				}
 				if newGlobal, ok := newMap["global"].(map[string]interface{}); ok && len(newGlobal) > 0 {
+					newMap["global"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["systemDefaultRegistry"]
 					if newCattle, ok := newGlobal["cattle"].(map[string]interface{}); ok && len(newCattle) > 0 {
 						newMap["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
 						newMap["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
+						newMap["global"].(map[string]interface{})["cattle"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["cattle"].(map[string]interface{})["systemDefaultRegistry"]
 					} else {
 						newMap["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
 					}

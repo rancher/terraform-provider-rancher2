@@ -46,6 +46,9 @@ func flattenAppV2(d *schema.ResourceData, in *AppV2) error {
 				if clusterName, ok := cattle["clusterName"].(string); ok && len(clusterName) > 0 {
 					d.Set("cluster_name", clusterName)
 				}
+				if systemDefaultRegistry, ok := cattle["systemDefaultRegistry"].(string); ok && len(systemDefaultRegistry) > 0 {
+					d.Set("system_default_registry", systemDefaultRegistry)
+				}
 			}
 		}
 	}
@@ -66,9 +69,11 @@ func expandChartInstallV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 	name := in.Get("name").(string)
 	namespace := in.Get("namespace").(string)
 	globalInfo := map[string]interface{}{
+		"systemDefaultRegistry": in.Get("system_default_registry").(string),
 		"cattle": map[string]interface{}{
-			"clusterId":   in.Get("cluster_id").(string),
-			"clusterName": in.Get("cluster_name").(string),
+			"clusterId":             in.Get("cluster_id").(string),
+			"clusterName":           in.Get("cluster_name").(string),
+			"systemDefaultRegistry": in.Get("system_default_registry").(string),
 		},
 	}
 	valuesData := v3.MapStringInterface{}
@@ -81,9 +86,12 @@ func expandChartInstallV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 			values = map[string]interface{}{}
 		}
 		if global, ok := values["global"].(map[string]interface{}); ok && len(global) > 0 {
+			values["global"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["systemDefaultRegistry"]
 			if _, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
 				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
 				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
+				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["cattle"].(map[string]interface{})["systemDefaultRegistry"]
+
 			} else {
 				values["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
 			}
@@ -180,9 +188,11 @@ func expandChartUpgradeV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 	name := in.Get("name").(string)
 	namespace := in.Get("namespace").(string)
 	globalInfo := map[string]interface{}{
+		"systemDefaultRegistry": in.Get("system_default_registry").(string),
 		"cattle": map[string]interface{}{
-			"clusterId":   in.Get("cluster_id").(string),
-			"clusterName": in.Get("cluster_name").(string),
+			"clusterId":             in.Get("cluster_id").(string),
+			"clusterName":           in.Get("cluster_name").(string),
+			"systemDefaultRegistry": in.Get("system_default_registry").(string),
 		},
 	}
 	valuesData := v3.MapStringInterface{}
@@ -195,9 +205,11 @@ func expandChartUpgradeV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 			values = map[string]interface{}{}
 		}
 		if global, ok := values["global"].(map[string]interface{}); ok && len(global) > 0 {
+			values["global"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["systemDefaultRegistry"]
 			if _, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
 				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
 				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
+				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["cattle"].(map[string]interface{})["systemDefaultRegistry"]
 			} else {
 				values["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
 			}
