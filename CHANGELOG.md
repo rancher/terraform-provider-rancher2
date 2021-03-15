@@ -1,3 +1,17 @@
+## 1.13.0 (Unreleased)
+
+FEATURES:
+
+* **New Attribute:** `rancher2_app_v2.system_default_registry` - (Computed) The system default registry of the app (string)
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix `rancher2_app_v2` to respect Rancher system default registry
+
 ## 1.12.0 (March 05, 2021)
 
 FEATURES:

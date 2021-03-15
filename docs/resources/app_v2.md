@@ -47,6 +47,7 @@ The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
 * `cluster_name` - (Computed) The cluster name of the app (string)
+* `system_default_registry` - (Computed) The system default registry of the app (string)
 
 ## Timeouts
 
