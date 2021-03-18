@@ -422,12 +422,6 @@ func TestFlattenCluster(t *testing.T) {
 			testClusterInterfaceEKS,
 		},
 		{
-			testClusterConfEKSV2,
-			testClusterRegistrationTokenConf,
-			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceEKSV2,
-		},
-		{
 			testClusterConfGKE,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
