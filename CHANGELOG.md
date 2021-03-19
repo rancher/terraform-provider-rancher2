@@ -2,15 +2,31 @@
 
 FEATURES:
 
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.image_id` - (Optional) The EKS node group image ID (string)
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.launch_template` - (Optional) The EKS node groups launch template (list Maxitem: 1)
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.launch_template.id` - (Required) The EKS node group launch template ID (string)
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.launch_template.name` - (Optional/Computed) The EKS node group launch template name (string)
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.launch_template.version` - (Optional) The EKS node group launch template version. Default: `1` (int)
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.request_spot_instances` - (Optional) Enable EKS node group request spot instances (bool)
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.resource_tags` - (Optional) The EKS node group resource tags (map)
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.spot_instance_types` - (Optional) The EKS node group sport instace types (list string)
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.subnets` - (Optional) The EKS node group subnets (list string)
+* **New Argument:** `rancher2_cluster.eks_config_v2.node_groups.user_data` - (Optional) The EKS node group user data (string)
+* **New Argument:** `rancher2_cluster_sync.wait_catalogs` - (Optional) Wait until all catalogs are downloaded and active. Default: `false` (bool)
+* **New Attribute:** `rancher2_cluster.eks_config_v2.node_groups.version` - (Computed) The EKS node group version (string)
 * **New Attribute:** `rancher2_app_v2.system_default_registry` - (Computed) The system default registry of the app (string)
 
 ENHANCEMENTS:
 
-
+* Updated go mod to support Rancher `v2.5.7`
+* Updated acceptance tests to use Rancher `v2.5.7`
+* Updated `rancher2_cluster_sync` to allow wait until all catalogs are downloaded and active
 
 BUG FIXES:
 
 * Fix `rancher2_app_v2` to respect Rancher system default registry
+* Fix `rancher2_cluster.eks_config_v2` to deploy properly EKS clusters
+* Fix `rancher2_catalog_v2` to wait until `downloaded` status
 
 ## 1.12.0 (March 05, 2021)
 
