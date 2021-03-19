@@ -86,6 +86,7 @@ The following arguments are supported:
 
 * `cluster_id` - (Required/ForceNew) The cluster ID that is syncing (string)
 * `node_pool_ids` - (Optional) The node pool IDs used by the cluster id (list)
+* `wait_catalogs` - (Optional) Wait until all catalogs are downloaded and active. Default: `false` (bool)
 * `wait_monitoring` - (Optional) Wait until monitoring is up and running. Default: `false` (bool)
 * `state_confirm` - (Optional) Wait until active status is confirmed a number of times (wait interval of 5s). Default: `1` means no confirmation (int)
 
