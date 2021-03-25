@@ -708,8 +708,8 @@ func structToMap(item interface{}) map[string]interface{} {
 				}
 			case reflect.Ptr:
 				subvalue := reflect.ValueOf(relValue.Field(i).Interface())
-				if !subvalue.IsValid() {
-					res[tag] = map[string]interface{}{}
+				if subvalue.IsNil() {
+					res[tag] = nil
 					break
 				}
 				subtype := relValue.Field(i).Type().Elem()

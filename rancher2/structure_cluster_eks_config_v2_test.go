@@ -8,13 +8,26 @@ import (
 )
 
 var (
-	testClusterEKSConfigV2NodeGroupConf      []managementClient.NodeGroup
-	testClusterEKSConfigV2NodeGroupInterface []interface{}
-	testClusterEKSConfigV2Conf               *managementClient.EKSClusterConfigSpec
-	testClusterEKSConfigV2Interface          []interface{}
+	testClusterEKSConfigV2NodeGroupLaunchTemplateConf      *managementClient.LaunchTemplate
+	testClusterEKSConfigV2NodeGroupLaunchTemplateInterface []interface{}
+	testClusterEKSConfigV2NodeGroupConf                    []managementClient.NodeGroup
+	testClusterEKSConfigV2NodeGroupInterface               []interface{}
+	testClusterEKSConfigV2Conf                             *managementClient.EKSClusterConfigSpec
+	testClusterEKSConfigV2Interface                        []interface{}
 )
 
 func init() {
+	LtVersion := int64(1)
+	testClusterEKSConfigV2NodeGroupLaunchTemplateConf = &managementClient.LaunchTemplate{
+		Name:    "launch_template",
+		Version: &LtVersion,
+	}
+	testClusterEKSConfigV2NodeGroupLaunchTemplateInterface = []interface{}{
+		map[string]interface{}{
+			"name":    "launch_template",
+			"version": 1,
+		},
+	}
 	size := int64(3)
 	testClusterEKSConfigV2NodeGroupConf = []managementClient.NodeGroup{
 		{
@@ -24,18 +37,27 @@ func init() {
 			DiskSize:      &size,
 			Ec2SshKey:     "ec2_ssh_key",
 			Gpu:           newTrue(),
+			ImageID:       "image_id",
 			Labels: map[string]string{
 				"label1": "one",
 				"label2": "two",
 			},
+			LaunchTemplate:       testClusterEKSConfigV2NodeGroupLaunchTemplateConf,
+			MaxSize:              &size,
+			MinSize:              &size,
+			RequestSpotInstances: newTrue(),
+			ResourceTags: map[string]string{
+				"rstag1": "one",
+				"rstag2": "two",
+			},
+			SpotInstanceTypes: []string{"spot1", "spot2"},
+			Subnets:           []string{"net1", "net2"},
 			Tags: map[string]string{
 				"tag1": "one",
 				"tag2": "two",
 			},
-			MaxSize: &size,
-			MinSize: &size,
-			Subnets: []string{"net1", "net2"},
-			Version: "kubernetes_version",
+			UserData: "user_data",
+			Version:  "kubernetes_version",
 		},
 	}
 	testClusterEKSConfigV2NodeGroupInterface = []interface{}{
@@ -46,16 +68,27 @@ func init() {
 			"disk_size":     3,
 			"ec2_ssh_key":   "ec2_ssh_key",
 			"gpu":           true,
+			"image_id":      "image_id",
 			"labels": map[string]interface{}{
 				"label1": "one",
 				"label2": "two",
 			},
+			"launch_template":        testClusterEKSConfigV2NodeGroupLaunchTemplateInterface,
+			"max_size":               3,
+			"min_size":               3,
+			"request_spot_instances": true,
+			"resource_tags": map[string]interface{}{
+				"rstag1": "one",
+				"rstag2": "two",
+			},
+			"spot_instance_types": []interface{}{"spot1", "spot2"},
+			"subnets":             []interface{}{"net1", "net2"},
 			"tags": map[string]interface{}{
 				"tag1": "one",
 				"tag2": "two",
 			},
-			"max_size": 3,
-			"min_size": 3,
+			"user_data": "user_data",
+			"version":   "kubernetes_version",
 		},
 	}
 	testClusterEKSConfigV2Conf = &managementClient.EKSClusterConfigSpec{
@@ -117,7 +150,7 @@ func TestFlattenClusterEKSConfigV2NodeGroups(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenClusterEKSConfigV2NodeGroups(tc.Input)
+		output := flattenClusterEKSConfigV2NodeGroups(tc.Input, tc.ExpectedOutput)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -138,7 +171,7 @@ func TestFlattenClusterEKSConfigV2(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenClusterEKSConfigV2(tc.Input)
+		output := flattenClusterEKSConfigV2(tc.Input, tc.ExpectedOutput)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

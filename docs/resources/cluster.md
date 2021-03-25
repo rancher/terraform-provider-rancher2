@@ -406,6 +406,38 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
+### Creating EKS cluster from Rancher v2, using `eks_config_v2` and launch template. For Rancher v2.5.6 or above.
+
+```hcl
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description = "foo test"
+  amazonec2_credential_config {
+    access_key = "<AWS_ACCESS_KEY>"
+    secret_key = "<AWS_SECRET_KEY>"
+  }
+}
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform EKS cluster"
+  eks_config_v2 {
+    cloud_credential_id = rancher2_cloud_credential.foo.id
+    region = "<EKS_REGION>"
+    kubernetes_version = "1.17"
+    logging_types = ["audit", "api"]
+    node_groups {
+      desired_size = 3
+      max_size = 5
+      name = "node_group1"
+      launch_template {
+        id = "<EC2_LAUNCH_TEMPLATE_ID>"
+        version = 1
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -1109,7 +1141,6 @@ The following arguments are supported:
 * `subnets` - (Optional) List of subnets in the virtual network to use (list)
 * `tags` - (Optional) The EKS cluster tags (map)
 
-
 #### `node_groups`
 
 ##### Arguments
@@ -1121,11 +1152,27 @@ The following arguments are supported:
 * `disk_size` - (Optional) The EKS node group disk size (Gb). Default: `20` (int)
 * `ec2_ssh_key` - (Optional) The EKS node group ssh key (string)
 * `gpu` - (Optional) Set true to EKS use gpu. Default: `false` (bool)
+* `image_id` - (Optional) The EKS node group image ID (string)
 * `instance_type` - (Optional) The EKS node group instance type. Default: `t3.medium` (string)
 * `labels` - (Optional) The EKS cluster labels (map)
+* `launch_template` - (Optional) The EKS node groups launch template (list Maxitem: 1)
 * `max_size` - (Optional) The EKS node group maximum size. Default `2` (int)
 * `min_size` - (Optional) The EKS node group maximum size. Default `2` (int)
+* `request_spot_instances` - (Optional) Enable EKS node group request spot instances (bool)
+* `resource_tags` - (Optional) The EKS node group resource tags (map)
+* `spot_instance_types` - (Optional) The EKS node group sport instace types (list string)
+* `subnets` - (Optional) The EKS node group subnets (list string)
 * `tags` - (Optional) The EKS cluster tags (map)
+* `user_data` - (Optional) The EKS node group user data (string)
+* `version` - (Computed) The EKS node group version (string)
+
+##### `launch_template`
+
+###### Arguments
+
+* `id` - (Required) The EKS node group launch template ID (string)
+* `name` - (Optional/Computed) The EKS node group launch template name (string)
+* `version` - (Optional) The EKS node group launch template version. Default: `1` (int)
 
 ### `gke_config`
 
