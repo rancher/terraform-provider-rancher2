@@ -12,6 +12,7 @@ const (
 	catalogV2APIVersion   = "v1"
 	catalogV2APIType      = rancher2CatalogTypePrefix + ".clusterrepo"
 	catalogV2ClusterIDsep = "."
+	catalogV2Timeout      = 120
 )
 
 //Types
@@ -19,6 +20,11 @@ const (
 type ClusterRepo struct {
 	norman.Resource
 	v1.ClusterRepo
+}
+
+type ClusterRepoCollection struct {
+	norman.Collection
+	Data []ClusterRepo `json:"data,omitempty"`
 }
 
 // Schemas

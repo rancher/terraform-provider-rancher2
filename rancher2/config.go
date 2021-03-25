@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -11,10 +12,12 @@ import (
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 	types2 "github.com/rancher/rancher/pkg/api/steve/catalog/types"
+	catalogClient "github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -722,6 +725,85 @@ func (c *Config) GetCatalogV2ByID(clusterID, id string) (*ClusterRepo, error) {
 	return resp, nil
 }
 
+func (c *Config) GetCatalogV2List(clusterID string) ([]ClusterRepo, error) {
+	if clusterID == "" {
+		return nil, fmt.Errorf("Cluster ID is nil")
+	}
+	client, err := c.CatalogV2Client(clusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	listOpts := NewListOpts(nil)
+	resp := &ClusterRepoCollection{}
+	for i := 0; i < rancher2RetriesOnServerError; i++ {
+		err = client.List(catalogV2APIType, listOpts, resp)
+		if err == nil {
+			break
+		}
+		if (!IsServerError(err) && !IsNotFound(err)) || (i+1) == rancher2RetriesOnServerError {
+			return nil, err
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
+	}
+
+	return resp.Data, nil
+}
+
+func (c *Config) WaitCatalogV2Downloaded(clusterID, catalogID string) (*ClusterRepo, error) {
+	if clusterID == "" || catalogID == "" {
+		return nil, fmt.Errorf("Cluster ID and/or Catalog V2 ID is nil")
+	}
+
+	for i := 0; i <= catalogV2Timeout; i = i + rancher2RetriesWait {
+		obj, err := c.GetCatalogV2ByID(clusterID, catalogID)
+		if err != nil {
+			return nil, fmt.Errorf("Getting catalog V2 ID (%s): %v", catalogID, err)
+		}
+		for i := range obj.Status.Conditions {
+			if obj.Status.Conditions[i].Type == string(catalogClient.RepoDownloaded) {
+				// Status of the condition, one of True, False, Unknown.
+				if obj.Status.Conditions[i].Status == "Unknown" {
+					break
+				}
+				if obj.Status.Conditions[i].Status == "True" {
+					return obj, nil
+				}
+				return nil, fmt.Errorf("Catalog V2 ID %s: %s", catalogID, obj.Status.Conditions[i].Message)
+			}
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
+	}
+	return nil, fmt.Errorf("Timeout waiting for catalog V2 ID %s", catalogID)
+}
+
+func (c *Config) WaitAllCatalogV2Downloaded(clusterID string) ([]ClusterRepo, error) {
+	clusterRepos, err := c.GetCatalogV2List(clusterID)
+	if err != nil {
+		return nil, fmt.Errorf("[ERROR] getting catalog V2 list at cluster ID (%s): %s", clusterID, err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), catalogV2Timeout*time.Second)
+	defer cancel()
+	g, ctx := errgroup.WithContext(ctx)
+	for _, clusterRepo := range clusterRepos {
+		repoID := clusterRepo.ID
+		g.Go(func() error {
+			_, err = c.WaitCatalogV2Downloaded(clusterID, repoID)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+	}
+	err = g.Wait()
+	if err != nil {
+		return clusterRepos, fmt.Errorf("[ERROR] waiting for all catalogs V2 to be active at cluster ID (%s): %s", clusterID, err)
+	}
+
+	return clusterRepos, nil
+}
+
 func (c *Config) CreateCatalogV2(clusterID string, repo *ClusterRepo) (*ClusterRepo, error) {
 	if repo == nil {
 		return nil, fmt.Errorf("Catalog V2 id is nil")
@@ -866,7 +948,8 @@ func (c *Config) InfoAppV2(clusterID, repoName, chartName, chartVersion string) 
 	if repoName == "" || chartName == "" {
 		return nil, nil, fmt.Errorf("Catalog V2 id and chart name should be provided")
 	}
-	repo, err := c.GetCatalogV2ByID(clusterID, repoName)
+	// Waiting for the Catalog V2 is Downloaded
+	repo, err := c.WaitCatalogV2Downloaded(clusterID, repoName)
 	if err != nil {
 		return nil, nil, err
 	}

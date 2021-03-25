@@ -53,6 +53,13 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("[ERROR] waiting for cluster ID (%s) to be active: %s", clusterID, waitClusterErr)
 	}
 
+	if d.Get("wait_catalogs").(bool) {
+		_, err := meta.(*Config).WaitAllCatalogV2Downloaded(clusterID)
+		if err != nil {
+			return err
+		}
+	}
+
 	if cluster.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
 		enabled := false
 		for cluster, err := meta.(*Config).GetClusterByID(clusterID); ; cluster, err = meta.(*Config).GetClusterByID(clusterID) {
@@ -117,6 +124,13 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 		d.Set("nodes", flattenClusterNodes(nodes))
+
+		if d.Get("wait_catalogs").(bool) {
+			_, err := meta.(*Config).WaitAllCatalogV2Downloaded(clusterID)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	d.Set("synced", active)

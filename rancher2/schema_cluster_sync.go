@@ -22,6 +22,12 @@ func clusterSyncFields() map[string]*schema.Schema {
 			Description:  "Wait until active status is confirmed a number of times (wait interval of 5s)",
 			ValidateFunc: validation.IntAtLeast(1),
 		},
+		"wait_catalogs": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Wait until all catalogs are downloaded and active",
+		},
 		"wait_monitoring": {
 			Type:        schema.TypeBool,
 			Optional:    true,

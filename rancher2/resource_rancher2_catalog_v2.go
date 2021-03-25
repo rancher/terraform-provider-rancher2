@@ -42,7 +42,7 @@ func resourceRancher2CatalogV2Create(d *schema.ResourceData, meta interface{}) e
 	d.SetId(clusterID + catalogV2ClusterIDsep + newCatalog.ID)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{"active"},
+		Target:     []string{"downloaded"},
 		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, newCatalog.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
@@ -87,7 +87,7 @@ func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) e
 	d.SetId(clusterID + catalogV2ClusterIDsep + newCatalog.ID)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{"active"},
+		Target:     []string{"downloaded"},
 		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, newCatalog.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
@@ -145,8 +145,11 @@ func catalogV2StateRefreshFunc(meta interface{}, clusterID, catalogID string) re
 		}
 		for i := range obj.Status.Conditions {
 			if obj.Status.Conditions[i].Type == string(v1.RepoDownloaded) {
+				if obj.Status.Conditions[i].Status == "Unknown" {
+					return obj, "transitioning", nil
+				}
 				if obj.Status.Conditions[i].Status == "True" {
-					return obj, "active", nil
+					return obj, "downloaded", nil
 				}
 				return nil, "error", fmt.Errorf("%s", obj.Status.Conditions[i].Message)
 			}
