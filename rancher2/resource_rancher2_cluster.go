@@ -128,7 +128,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	if cluster.EKSConfig != nil && !cluster.EKSConfig.Imported {
 		clusterStr, _ := interfaceToJSON(cluster)
 		clusterMap, _ := jsonToMapInterface(clusterStr)
-		clusterMap["eksConfig"] = structToMap(cluster.EKSConfig)
+		clusterMap["eksConfig"] = fixClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}), structToMap(cluster.EKSConfig))
 		err = client.APIBaseClient.Create(managementClient.ClusterType, clusterMap, newCluster)
 	} else {
 		err = client.APIBaseClient.Create(managementClient.ClusterType, cluster, newCluster)

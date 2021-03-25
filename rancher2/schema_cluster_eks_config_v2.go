@@ -16,6 +16,30 @@ const (
 
 //Schemas
 
+func clusterEKSConfigV2NodeGroupsLaunchTemplateFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The EKS node group launch template ID",
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "The EKS node group launch template name",
+		},
+		"version": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1,
+			Description: "The EKS node group launch template version",
+		},
+	}
+
+	return s
+}
+
 func clusterEKSConfigV2NodeGroupsFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"name": {
@@ -46,6 +70,11 @@ func clusterEKSConfigV2NodeGroupsFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Is EKS cluster using gpu?",
 		},
+		"image_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The EKS node group image ID",
+		},
 		"instance_type": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -56,6 +85,14 @@ func clusterEKSConfigV2NodeGroupsFields() map[string]*schema.Schema {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Description: "The EKS node group tags",
+		},
+		"launch_template": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "The EKS node groups launch template",
+			Elem: &schema.Resource{
+				Schema: clusterEKSConfigV2NodeGroupsLaunchTemplateFields(),
+			},
 		},
 		"max_size": {
 			Type:        schema.TypeInt,
@@ -69,10 +106,49 @@ func clusterEKSConfigV2NodeGroupsFields() map[string]*schema.Schema {
 			Default:     2,
 			Description: "The EKS node group minimum size",
 		},
+		"request_spot_instances": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable EKS node group request spot instances",
+		},
+		"resource_tags": {
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Description: "The EKS node group resource tags",
+		},
+		"spot_instance_types": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "The EKS node group spot instace types",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		"subnets": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "The EKS node group subnets",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 		"tags": {
 			Type:        schema.TypeMap,
 			Optional:    true,
 			Description: "The EKS node group tags",
+		},
+		"user_data": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "The EKS node group user data",
+		},
+		"version": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "The EKS node group k8s version",
 		},
 	}
 

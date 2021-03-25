@@ -11,14 +11,14 @@ const (
 //Types
 
 type hetznerConfig struct {
-	APIToken          string `json:"apiToken,omitempty" yaml:"apiToken,omitempty"`
-	Image             string `json:"image,omitempty" yaml:"image,omitempty"`
-	ServerLocation    string `json:"serverLocation,omitempty" yaml:"serverLocation,omitempty"`
-	ServerType        string `json:"serverType,omitempty" yaml:"serverType,omitempty"`
-	Networks          string `json:"networks,omitempty" yaml:"networks,omitempty"`
-	UsePrivateNetwork bool   `json:"usePrivateNetworks,omitempty" yaml:"usePrivateNetworks,omitempty"`
-	UserData          string `json:"userData,omitempty" yaml:"userData,omitempty"`
-	Volumes           string `json:"volumes,omitempty" yaml:"volumes,omitempty"`
+	APIToken          string   `json:"apiToken,omitempty" yaml:"apiToken,omitempty"`
+	Image             string   `json:"image,omitempty" yaml:"image,omitempty"`
+	ServerLocation    string   `json:"serverLocation,omitempty" yaml:"serverLocation,omitempty"`
+	ServerType        string   `json:"serverType,omitempty" yaml:"serverType,omitempty"`
+	Networks          []string `json:"networks,omitempty" yaml:"networks,omitempty"`
+	UsePrivateNetwork bool     `json:"usePrivateNetworks,omitempty" yaml:"usePrivateNetworks,omitempty"`
+	UserData          string   `json:"userData,omitempty" yaml:"userData,omitempty"`
+	Volumes           []string `json:"volumes,omitempty" yaml:"volumes,omitempty"`
 }
 
 //Schemas
@@ -54,7 +54,7 @@ func hetznerConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Comma-separated list of network IDs or names which should be attached to the server private network interface",
 		},
-		"use_private_networks": {
+		"use_private_network": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,

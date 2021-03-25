@@ -169,7 +169,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 			return err
 		}
 	case ToLower(clusterDriverEKSV2):
-		err = d.Set("eks_config_v2", flattenClusterEKSConfigV2(in.EKSConfig))
+		v, ok := d.Get("eks_config_v2").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err = d.Set("eks_config_v2", flattenClusterEKSConfigV2(in.EKSConfig, v))
 		if err != nil {
 			return err
 		}

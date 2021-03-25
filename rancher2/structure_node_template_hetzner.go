@@ -1,5 +1,7 @@
 package rancher2
 
+import "strings"
+
 // Flatteners
 
 func flattenHetznerConfig(in *hetznerConfig) []interface{} {
@@ -25,7 +27,7 @@ func flattenHetznerConfig(in *hetznerConfig) []interface{} {
 	}
 
 	if len(in.Networks) > 0 {
-		obj["networks"] = in.Networks
+		obj["networks"] = strings.Join(in.Networks, ",")
 	}
 
 	obj["use_private_network"] = in.UsePrivateNetwork
@@ -35,7 +37,7 @@ func flattenHetznerConfig(in *hetznerConfig) []interface{} {
 	}
 
 	if len(in.Volumes) > 0 {
-		obj["volumes"] = in.Volumes
+		obj["volumes"] = strings.Join(in.Volumes, ",")
 	}
 
 	return []interface{}{obj}
@@ -67,7 +69,7 @@ func expandHetznercloudConfig(p []interface{}) *hetznerConfig {
 	}
 
 	if v, ok := in["networks"].(string); ok && len(v) > 0 {
-		obj.Networks = v
+		obj.Networks = strings.Split(v, ",")
 	}
 
 	if v, ok := in["use_private_network"].(bool); ok {
@@ -79,7 +81,7 @@ func expandHetznercloudConfig(p []interface{}) *hetznerConfig {
 	}
 
 	if v, ok := in["volumes"].(string); ok && len(v) > 0 {
-		obj.Volumes = v
+		obj.Volumes = strings.Split(v, ",")
 	}
 
 	return obj

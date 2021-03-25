@@ -219,7 +219,7 @@ The following attributes are exported:
 * `server_location` - (Optional) Hetzner Cloud datacenter. Default `nbg1` (string)
 * `server_type` - (Optional) Hetzner Cloud server type. Default `cx11` (string)
 * `networks` - (Optional) Comma-separated list of network IDs or names which should be attached to the server private network interface (string)
-* `use_private_networks` - (Optional) Use private network. Default `false` (bool)
+* `use_private_network` - (Optional) Use private network. Default `false` (bool)
 * `volumes` - (Optional) Comma-separated list of volume IDs or names which should be attached to the server (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
 
