@@ -226,6 +226,7 @@ provider "rancher2" {
 ` + testAccRancher2Registry + `
 ` + testAccRancher2RoleTemplateConfig + `
 ` + testAccRancher2Secret + `
+` + testAccRancher2SecretV2 + `
 ` + testAccRancher2SecretNs + `
 ` + testAccRancher2SettingConfig + `
 ` + testAccRancher2Token + `
