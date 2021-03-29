@@ -1,4 +1,4 @@
-## 1.13.0 (Unreleased)
+## 1.13.0 (March 31, 2021)
 
 FEATURES:
 
@@ -15,6 +15,8 @@ FEATURES:
 * **New Argument:** `rancher2_cluster_sync.wait_catalogs` - (Optional) Wait until all catalogs are downloaded and active. Default: `false` (bool)
 * **New Attribute:** `rancher2_cluster.eks_config_v2.node_groups.version` - (Computed) The EKS node group version (string)
 * **New Attribute:** `rancher2_app_v2.system_default_registry` - (Computed) The system default registry of the app (string)
+* **New Data Source:** `rancher2_secret_v2` - Provides a Rancher V2 Secret V2 data source
+* **New Resource:** `rancher2_secret_v2` - Provides a Rancher V2 Secret V2 resource
 
 ENHANCEMENTS:
 
