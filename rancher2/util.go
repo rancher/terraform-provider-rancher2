@@ -453,6 +453,19 @@ func toMapString(in map[string]interface{}) map[string]string {
 	return out
 }
 
+func toMapByte(in map[string]interface{}) map[string][]byte {
+	out := make(map[string][]byte)
+	for i, v := range in {
+		if v == nil {
+			out[i] = []byte{}
+			continue
+		}
+		value := v.(string)
+		out[i] = []byte(value)
+	}
+	return out
+}
+
 func toMapInterface(in map[string]string) map[string]interface{} {
 	out := make(map[string]interface{})
 	for i, v := range in {
