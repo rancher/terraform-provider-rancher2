@@ -344,7 +344,7 @@ func testAccRancher2UpgradeRancher() resource.TestCheckFunc {
 		}
 		clusterActive, _, err := testAccProvider.Meta().(*Config).isClusterActive(testAccRancher2ClusterID)
 		for retry := 0; retry < 10 && !clusterActive; clusterActive, _, err = testAccProvider.Meta().(*Config).isClusterActive(testAccRancher2ClusterID) {
-			fmt.Printf("Waiting for cluster ID %s becomes active", testAccRancher2ClusterID)
+			fmt.Printf("Waiting for cluster ID %s becomes active %d\n", testAccRancher2ClusterID, retry+1)
 			time.Sleep(5 * time.Second)
 			retry++
 		}

@@ -130,6 +130,11 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		clusterMap, _ := jsonToMapInterface(clusterStr)
 		clusterMap["eksConfig"] = fixClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}), structToMap(cluster.EKSConfig))
 		err = client.APIBaseClient.Create(managementClient.ClusterType, clusterMap, newCluster)
+	} else if cluster.GKEConfig != nil && !cluster.GKEConfig.Imported {
+		clusterStr, _ := interfaceToJSON(cluster)
+		clusterMap, _ := jsonToMapInterface(clusterStr)
+		clusterMap["gkeConfig"] = fixClusterGKEConfigV2(structToMap(cluster.GKEConfig))
+		err = client.APIBaseClient.Create(managementClient.ClusterType, clusterMap, newCluster)
 	} else {
 		err = client.APIBaseClient.Create(managementClient.ClusterType, cluster, newCluster)
 	}
@@ -305,6 +310,9 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["googleKubernetesEngineConfig"] = gkeConfig
+	case ToLower(clusterDriverGKEV2):
+		gkeConfig := expandClusterGKEConfigV2(d.Get("gke_config_v2").([]interface{}))
+		update["gke_config"] = gkeConfig
 	case clusterOKEKind:
 		okeConfig, err := expandClusterOKEConfig(d.Get("oke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {

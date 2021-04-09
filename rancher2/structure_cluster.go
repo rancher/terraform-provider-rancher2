@@ -190,6 +190,16 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if err != nil {
 			return err
 		}
+	case ToLower(clusterDriverGKEV2):
+		v, ok := d.Get("gke_config_v2").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		gkeConfig := flattenClusterGKEConfigV2(in.GKEConfig, v)
+		err = d.Set("gke_config_v2", gkeConfig)
+		if err != nil {
+			return err
+		}
 	case clusterOKEKind, clusterDriverOKE:
 		v, ok := d.Get("oke_config").([]interface{})
 		if !ok {
@@ -470,6 +480,12 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 		obj.GoogleKubernetesEngineConfig = gkeConfig
 		obj.Driver = clusterDriverGKE
+	}
+
+	if v, ok := in.Get("gke_config_v2").([]interface{}); ok && len(v) > 0 {
+		gkeConfig := expandClusterGKEConfigV2(v)
+		obj.GKEConfig = gkeConfig
+		obj.Driver = clusterDriverGKEV2
 	}
 
 	if v, ok := in.Get("oke_config").([]interface{}); ok && len(v) > 0 {
