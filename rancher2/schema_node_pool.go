@@ -12,10 +12,12 @@ func nodePoolFields() map[string]*schema.Schema {
 		"cluster_id": {
 			Type:     schema.TypeString,
 			Required: true,
+			ForceNew: true,
 		},
 		"name": {
 			Type:     schema.TypeString,
 			Required: true,
+			ForceNew: true,
 		},
 		"hostname_prefix": {
 			Type:     schema.TypeString,

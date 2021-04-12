@@ -100,7 +100,6 @@ func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	update := map[string]interface{}{
-		"clusterId":               d.Get("cluster_id").(string),
 		"hostnamePrefix":          d.Get("hostname_prefix").(string),
 		"deleteNotReadyAfterSecs": int64(d.Get("delete_not_ready_after_secs").(int)),
 		"nodeTemplateId":          d.Get("node_template_id").(string),
