@@ -1,3 +1,17 @@
+## 1.14.0 (Unreleased)
+
+FEATURES:
+
+* **New Argument:** `rancher2_cluster.oke_config.limit_node_count` - (Optional) The maximum number of worker nodes. Can limit `quantity_per_subnet`. Default `0` (no limit) (int)
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix `rancher2_node_pool` resource, adding `forcenew` property to not updatable arguments
+
 ## 1.13.0 (March 31, 2021)
 
 FEATURES:
