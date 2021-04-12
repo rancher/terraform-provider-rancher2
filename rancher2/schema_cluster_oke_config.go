@@ -23,6 +23,7 @@ type OracleKubernetesEngineConfig struct {
 	FlexOCPUs                   int64  `json:"flexOcpus,omitempty" yaml:"flexOcpus,omitempty"`
 	KubernetesVersion           string `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
 	DriverName                  string `json:"driverName,omitempty" yaml:"driverName,omitempty"`
+	LimitNodeCount              int64  `json:"limitNodeCount,omitempty" yaml:"limitNodeCount,omitempty"`
 	Name                        string `json:"name,omitempty" yaml:"name,omitempty"`
 	NodeImage                   string `json:"nodeImage,omitempty" yaml:"nodeImage,omitempty"`
 	NodePoolSubnetDNSDomainName string `json:"nodePoolDnsDomainName,omitempty" yaml:"nodePoolDnsDomainName,omitempty"`
@@ -74,7 +75,12 @@ func clusterOKEConfigFields() map[string]*schema.Schema {
 		"kubernetes_version": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The Kubernetes version that will be used for your master *and* worker nodes e.g. v1.18.10",
+			Description: "The Kubernetes version that will be used for your master *and* worker nodes e.g. v1.19.7",
+		},
+		"limit_node_count": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Optional limit on the total number of nodes in the pool",
 		},
 		"node_image": {
 			Type:        schema.TypeString,

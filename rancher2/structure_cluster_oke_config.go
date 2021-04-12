@@ -43,6 +43,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 		obj["kubernetes_version"] = in.KubernetesVersion
 	}
 
+	if in.LimitNodeCount > 0 {
+		obj["limit_node_count"] = int(in.LimitNodeCount)
+	}
+
 	if len(in.ServiceLBSubnet1Name) > 0 {
 		obj["load_balancer_subnet_name_1"] = in.ServiceLBSubnet1Name
 	}
@@ -163,6 +167,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
 		obj.KubernetesVersion = v
+	}
+
+	if v, ok := in["limit_node_count"].(int); ok && v > 0 {
+		obj.LimitNodeCount = int64(v)
 	}
 
 	if v, ok := in["load_balancer_subnet_name_1"].(string); ok && len(v) > 0 {
