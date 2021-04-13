@@ -60,8 +60,8 @@ resource "rancher2_node_pool" "foo" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required) The RKE cluster id to use Node Pool (string)
-* `name` - (Required) The name of the Node Pool (string)
+* `cluster_id` - (Required/ForceNew) The RKE cluster id to use Node Pool (string)
+* `name` - (Required/ForceNew) The name of the Node Pool (string)
 * `hostname_prefix` - (Required) The prefix for created nodes of the Node Pool (string)
 * `node_template_id` - (Required) The Node Template ID to use for node creation (string)
 * `delete_not_ready_after_secs` - (Optional) Delete not ready node after secs. For Rancher v2.3.3 or above. Default `0` (int)
