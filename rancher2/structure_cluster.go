@@ -206,8 +206,12 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		}
 	}
 
-	// Setting k3s_config and rke_config always as computed
+	// Setting k3s_config, rke2_config and rke_config always as computed
 	err = d.Set("k3s_config", flattenClusterK3SConfig(in.K3sConfig))
+	if err != nil {
+		return err
+	}
+	err = d.Set("rke2_config", flattenClusterRKE2Config(in.Rke2Config))
 	if err != nil {
 		return err
 	}
@@ -489,6 +493,11 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 		obj.RancherKubernetesEngineConfig = rkeConfig
 		obj.Driver = clusterDriverRKE
+	}
+
+	if v, ok := in.Get("rke2_config").([]interface{}); ok && len(v) > 0 {
+		obj.Rke2Config = expandClusterRKE2Config(v)
+		obj.Driver = clusterDriverRKE2
 	}
 
 	if len(obj.Driver) == 0 {
