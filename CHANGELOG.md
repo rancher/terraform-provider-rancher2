@@ -4,14 +4,16 @@ FEATURES:
 
 * **New Argument:** `rancher2_cluster.oke_config.limit_node_count` - (Optional) The maximum number of worker nodes. Can limit `quantity_per_subnet`. Default `0` (no limit) (int)
 * **New Argument:** `rancher2_cluster.rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
+* **New Argument:** `rancher2_cluster_sync.wait_alerting` - (Optional) Wait until alerting is up and running. Default: `false` (bool)
 
 ENHANCEMENTS:
 
-
+* Improved `rancher2_cluster_sync` with new cluster state check method and new option to wait until alerting is enabled
 
 BUG FIXES:
 
 * Fix `rancher2_node_pool` resource, adding `forcenew` property to not updatable arguments
+* Fix `rancher2_cluster` resource, fixing provider crash if `cluster_monitoring_input` argument is deleted
 
 ## 1.13.0 (March 31, 2021)
 
