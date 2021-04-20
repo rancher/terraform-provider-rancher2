@@ -44,22 +44,9 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("[ERROR] Creating Namespace: Cluster ID %s is not active", clusterID)
 		}
 
-		mgmtClient, err := meta.(*Config).ManagementClient()
+		_, err := meta.(*Config).WaitForClusterState(clusterID, clusterActiveCondition, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
-			return err
-		}
-
-		stateCluster := &resource.StateChangeConf{
-			Pending:    []string{},
-			Target:     []string{"active"},
-			Refresh:    clusterStateRefreshFunc(mgmtClient, clusterID),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      1 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-		_, waitClusterErr := stateCluster.WaitForState()
-		if waitClusterErr != nil {
-			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) to be active: %s", clusterID, waitClusterErr)
+			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) to be active: %s", clusterID, err)
 		}
 	}
 
@@ -212,7 +199,7 @@ func resourceRancher2NamespaceDelete(d *schema.ResourceData, meta interface{}) e
 
 	ns, err := client.Namespace.ByID(id)
 	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
+		if IsNotFound(err) || IsForbidden(err) || IsServiceUnavailableError(err) {
 			log.Printf("[INFO] Namespace ID %s not found.", d.Id())
 			d.SetId("")
 			return nil

@@ -28,6 +28,12 @@ func clusterSyncFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Wait until all catalogs are downloaded and active",
 		},
+		"wait_alerting": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Wait until alerting is up and running",
+		},
 		"wait_monitoring": {
 			Type:        schema.TypeBool,
 			Optional:    true,

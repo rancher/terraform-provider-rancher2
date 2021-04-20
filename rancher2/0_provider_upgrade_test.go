@@ -13,8 +13,10 @@ import (
 
 var (
 	testAccCheckRancher2ClusterSyncTestacc    string
+	testAccCheckRancher2ClusterSyncTestaccV23 string
 	testAccCheckRancher2NamespaceTestacc      string
-	testAccCheckRancher2UpgradeConfig         string
+	testAccCheckRancher2Bootstrap             string
+	testAccCheckRancher2BootstrapV23          string
 	testAccCheckRancher2UpgradeConfigV23      string
 	testAccCheckRancher2UpgradeConfigV24      string
 	testAccCheckRancher2UpgradeConfigV25      string
@@ -26,9 +28,15 @@ var (
 )
 
 func init() {
+	testAccCheckRancher2ClusterSyncTestaccV23 = `
+resource "rancher2_cluster_sync" "testacc" {
+  cluster_id =  "` + testAccRancher2ClusterID + `"
+}
+`
 	testAccCheckRancher2ClusterSyncTestacc = `
 resource "rancher2_cluster_sync" "testacc" {
   cluster_id =  "` + testAccRancher2ClusterID + `"
+  wait_catalogs = true
 }
 `
 	testAccCheckRancher2NamespaceTestacc = `
@@ -43,7 +51,30 @@ resource "rancher2_namespace" "testacc" {
 	testAccCheckRancher2UpgradeCluster = os.Getenv("RANCHER_ACC_CLUSTER_NAME")
 	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
 	testAccCheckRancher2UpgradeCertificateV24 = testAccRancher2Certificate + testAccRancher2CertificateNs
-	testAccCheckRancher2UpgradeConfig = `
+	testAccCheckRancher2BootstrapV23 = `
+provider "rancher2" {
+  alias = "bootstrap"
+
+  bootstrap = true
+  insecure = true
+  token_key = "` + providerDefaultEmptyString + `"
+}
+resource "rancher2_bootstrap" "foo" {
+  provider = rancher2.bootstrap
+
+  password = "` + testAccRancher2DefaultAdminPass + `"
+  telemetry = true
+}
+provider "rancher2" {
+  api_url = rancher2_bootstrap.foo.url
+  token_key = rancher2_bootstrap.foo.token
+  insecure = true
+}
+` + testAccCheckRancher2ClusterSyncTestaccV23 + `
+` + testAccCheckRancher2NamespaceTestacc + `
+`
+
+	testAccCheckRancher2Bootstrap = `
 provider "rancher2" {
   alias = "bootstrap"
 
@@ -66,7 +97,7 @@ provider "rancher2" {
 ` + testAccCheckRancher2NamespaceTestacc + `
 `
 
-	testAccCheckRancher2UpgradeConfigV23 = testAccCheckRancher2UpgradeConfig + `
+	testAccCheckRancher2UpgradeConfigV23 = testAccCheckRancher2BootstrapV23 + `
 ` + testAccRancher2App + `
 ` + testAccCheckRancher2UpgradeCatalogV24 + `
 ` + testAccCheckRancher2UpgradeCertificateV24 + `
@@ -119,7 +150,7 @@ provider "rancher2" {
 ` + testAccRancher2TokenCluster + `
 `
 
-	testAccCheckRancher2UpgradeConfigV24 = testAccCheckRancher2UpgradeConfig + `
+	testAccCheckRancher2UpgradeConfigV24 = testAccCheckRancher2BootstrapV23 + `
 ` + testAccRancher2App + `
 ` + testAccCheckRancher2UpgradeCatalogV24 + `
 ` + testAccCheckRancher2UpgradeCertificateV24 + `
@@ -174,7 +205,7 @@ provider "rancher2" {
 ` + testAccRancher2TokenCluster + `
 `
 
-	testAccCheckRancher2UpgradeConfigV25 = testAccCheckRancher2UpgradeConfig + `
+	testAccCheckRancher2UpgradeConfigV25 = testAccCheckRancher2Bootstrap + `
 ` + testAccRancher2App + `
 ` + testAccRancher2AppV2 + `
 ` + testAccCheckRancher2UpgradeCatalogV24 + `
@@ -240,7 +271,7 @@ func TestAccRancher2Upgrade(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRancher2UpgradeConfig,
+				Config: testAccCheckRancher2BootstrapV23,
 				Check: resource.ComposeTestCheckFunc(
 					testAccRancher2UpgradeVars(),
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),

@@ -34,11 +34,14 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 	chartName := d.Get("chart_name").(string)
 	chartVersion := d.Get("chart_version").(string)
 
-	log.Printf("[INFO] Creating App V2 %s at %s", name, clusterID)
+	log.Printf("[INFO] Creating App V2 %s at cluster ID %s", name, clusterID)
 
-	cluster, err := meta.(*Config).GetClusterByID(clusterID)
+	active, cluster, err := meta.(*Config).isClusterActive(clusterID)
 	if err != nil {
 		return err
+	}
+	if !active {
+		return fmt.Errorf("[ERROR] creating App V2 %s at cluster ID %s: Cluster is not active", name, clusterID)
 	}
 	d.Set("cluster_name", cluster.Name)
 
