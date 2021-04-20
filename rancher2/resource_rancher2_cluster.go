@@ -369,20 +369,27 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 					old, new := d.GetChange("cluster_monitoring_input")
 					oldInput := old.([]interface{})
 					oldInputLen := len(oldInput)
-					newInput := new.([]interface{})
-					newInputLen := len(newInput)
-					monitorVersionChanged = (oldInputLen != newInputLen)
-					if newInputLen > 0 && !monitorVersionChanged {
+					oldVersion := ""
+					if oldInputLen > 0 {
 						oldRow, oldOK := oldInput[0].(map[string]interface{})
-						newRow, newOK := newInput[0].(map[string]interface{})
-						if oldOK && newOK {
-							if oldRow["version"] != newRow["version"] {
-								monitorVersionChanged = true
-							}
+						if oldOK {
+							oldVersion = oldRow["version"].(string)
 						}
 					}
+					newInput := new.([]interface{})
+					newInputLen := len(newInput)
+					newVersion := ""
+					if newInputLen > 0 {
+						newRow, newOK := newInput[0].(map[string]interface{})
+						if newOK {
+							newVersion = newRow["version"].(string)
+						}
+					}
+					if oldVersion != newVersion {
+						monitorVersionChanged = true
+					}
 				}
-				if monitorVersionChanged {
+				if monitorVersionChanged && monitoringInput != nil {
 					err = updateClusterMonitoringApps(meta, d.Get("system_project_id").(string), monitoringInput.Version)
 					if err != nil {
 						return err
