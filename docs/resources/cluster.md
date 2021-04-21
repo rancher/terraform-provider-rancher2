@@ -773,11 +773,29 @@ The following attributes are exported:
 
 ##### Arguments
 
+* `default_backend` - (Optional) Enable ingress default backend. Default: `true` (bool)
 * `dns_policy` - (Optional/Computed) Ingress controller DNS policy. `ClusterFirstWithHostNet`, `ClusterFirst`, `Default`, and `None` are supported. [K8S dns Policy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy) (string)
 * `extra_args` - (Optional/Computed) Extra arguments for RKE Ingress (map)
+* `http_port` - (Optional/Computed) HTTP port for RKE Ingress (int)
+* `https_port` - (Optional/Computed) HTTPS port for RKE Ingress (int)
+* `network_mode` - (Optional/Computed) Network mode for RKE Ingress (string)
 * `node_selector` - (Optional/Computed) Node selector for RKE Ingress (map)
 * `options` - (Optional/Computed) RKE options for Ingress (map)
 * `provider` - (Optional/Computed) Provider for RKE Ingress (string)
+* `update_strategy` - (Optional) RKE ingress update strategy (list Maxitems: 1)
+
+##### `update_strategy`
+
+###### Arguments
+
+* `rolling_update` - (Optional) Monitoring daemon set rolling update (list Maxitems: 1)
+* `strategy` - (Optional) Monitoring daemon set update strategy (string)
+
+###### `rolling_update`
+
+###### Arguments
+
+* `max_unavailable` - (Optional) Monitoring deployment rolling update max unavailable. Default: `1` (int)
 
 #### `monitoring`
 
