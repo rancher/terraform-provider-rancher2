@@ -73,6 +73,27 @@ func upgradeStrategyFields() map[string]*schema.Schema {
 	return s
 }
 
+func daemonSetStrategyFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"rolling_update": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Description: "Rolling update for update strategy",
+			Elem: &schema.Resource{
+				Schema: rollingUpdateDaemonSetFields(),
+			},
+		},
+		"strategy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Strategy",
+		},
+	}
+
+	return s
+}
+
 func deploymentStrategyFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"rolling_update": {

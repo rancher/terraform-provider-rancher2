@@ -5,20 +5,47 @@ import (
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var (
-	testClusterRKEConfigIngressConf      *managementClient.IngressConfig
-	testClusterRKEConfigIngressInterface []interface{}
+	testClusterRKEConfigIngressUpdateDaemonSetConf        *managementClient.RollingUpdateDaemonSet
+	testClusterRKEConfigIngressUpdateDaemonSetInterface   []interface{}
+	testClusterRKEConfigIngresstDaemonSetStrategyConf     *managementClient.DaemonSetUpdateStrategy
+	testClusterRKEConfigIngressDaemonSetStrategyInterface []interface{}
+	testClusterRKEConfigIngressConf                       *managementClient.IngressConfig
+	testClusterRKEConfigIngressInterface                  []interface{}
 )
 
 func init() {
+	testClusterRKEConfigIngressUpdateDaemonSetConf = &managementClient.RollingUpdateDaemonSet{
+		MaxUnavailable: intstr.FromInt(10),
+	}
+	testClusterRKEConfigIngressUpdateDaemonSetInterface = []interface{}{
+		map[string]interface{}{
+			"max_unavailable": 10,
+		},
+	}
+	testClusterRKEConfigIngresstDaemonSetStrategyConf = &managementClient.DaemonSetUpdateStrategy{
+		RollingUpdate: testClusterRKEConfigIngressUpdateDaemonSetConf,
+		Strategy:      "strategy",
+	}
+	testClusterRKEConfigIngressDaemonSetStrategyInterface = []interface{}{
+		map[string]interface{}{
+			"rolling_update": testClusterRKEConfigIngressUpdateDaemonSetInterface,
+			"strategy":       "strategy",
+		},
+	}
 	testClusterRKEConfigIngressConf = &managementClient.IngressConfig{
-		DNSPolicy: "test",
+		DefaultBackend: newFalse(),
+		DNSPolicy:      "test",
 		ExtraArgs: map[string]string{
 			"arg_one": "one",
 			"arg_two": "two",
 		},
+		HTTPPort:    80,
+		HTTPSPort:   443,
+		NetworkMode: "test",
 		NodeSelector: map[string]string{
 			"node_one": "one",
 			"node_two": "two",
@@ -27,15 +54,20 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
-		Provider: "test",
+		Provider:       "test",
+		UpdateStrategy: testClusterRKEConfigIngresstDaemonSetStrategyConf,
 	}
 	testClusterRKEConfigIngressInterface = []interface{}{
 		map[string]interface{}{
-			"dns_policy": "test",
+			"default_backend": false,
+			"dns_policy":      "test",
 			"extra_args": map[string]interface{}{
 				"arg_one": "one",
 				"arg_two": "two",
 			},
+			"http_port":    80,
+			"https_port":   443,
+			"network_mode": "test",
 			"node_selector": map[string]interface{}{
 				"node_one": "one",
 				"node_two": "two",
@@ -44,7 +76,8 @@ func init() {
 				"option1": "value1",
 				"option2": "value2",
 			},
-			"provider": "test",
+			"provider":        "test",
+			"update_strategy": testClusterRKEConfigIngressDaemonSetStrategyInterface,
 		},
 	}
 }
