@@ -6,11 +6,12 @@ FEATURES:
 
 ENHANCEMENTS:
 
-
+* Updated `rancher2_catalog_v2` schema resource, defining conflict between `git_repo` and `url` arguments
 
 BUG FIXES:
 
 * Fix `rancher2_node_pool` resource, adding `forcenew` property to not updatable arguments
+* Fix `rancher2_catalog_v2` resource, just setting default `git_branch` value if `git_repo` is specified
 
 ## 1.13.0 (March 31, 2021)
 
