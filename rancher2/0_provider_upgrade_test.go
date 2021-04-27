@@ -46,7 +46,7 @@ resource "rancher2_namespace" "testacc" {
   project_id = rancher2_cluster_sync.testacc.default_project_id
 }
 `
-	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.13", "v2.5.8-rc8"}
+	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.13", "v2.5.8"}
 	testAccCheckRancher2RunningVersionIndex = 0
 	testAccCheckRancher2UpgradeCluster = os.Getenv("RANCHER_ACC_CLUSTER_NAME")
 	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
@@ -214,6 +214,7 @@ provider "rancher2" {
 ` + testAccRancher2CloudCredentialConfigAmazonec2 + `
 ` + testAccRancher2CloudCredentialConfigAzure + `
 ` + testAccRancher2CloudCredentialConfigDigitalocean + `
+` + testAccRancher2CloudCredentialConfigGoogle + `
 ` + testAccRancher2CloudCredentialConfigOpenstack + `
 ` + testAccRancher2CloudCredentialConfigVsphere + `
 ` + testAccRancher2ClusterConfigRKE + `

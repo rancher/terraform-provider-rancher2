@@ -38,22 +38,9 @@ func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interfac
 	}
 
 	nodeDriver := d.Get("driver").(string)
-	err = meta.(*Config).activateNodeDriver(nodeDriver)
+	err = meta.(*Config).activateDriver(nodeDriver, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return err
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{},
-		Target:     []string{"active"},
-		Refresh:    nodeDriverStateRefreshFunc(client, nodeDriver),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      1 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, waitErr := stateConf.WaitForState()
-	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cloud credential (%s) to be activated: %s", nodeDriver, waitErr)
 	}
 
 	newCloudCredential := &CloudCredential{}
@@ -64,7 +51,7 @@ func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(newCloudCredential.ID)
 
-	stateConf = &resource.StateChangeConf{
+	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    cloudCredentialStateRefreshFunc(client, newCloudCredential.ID),
@@ -72,7 +59,7 @@ func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interfac
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr = stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for cloud credential (%s) to be created: %s", newCloudCredential.ID, waitErr)
 	}
@@ -128,6 +115,8 @@ func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interfac
 		update["azurecredentialConfig"] = expandCloudCredentialAzure(d.Get("azure_credential_config").([]interface{}))
 	case digitaloceanConfigDriver:
 		update["digitaloceancredentialConfig"] = expandCloudCredentialDigitalocean(d.Get("digitalocean_credential_config").([]interface{}))
+	case googleConfigDriver:
+		update["googlecredentialConfig"] = expandCloudCredentialGoogle(d.Get("google_credential_config").([]interface{}))
 	case linodeConfigDriver:
 		update["linodecredentialConfig"] = expandCloudCredentialLinode(d.Get("linode_credential_config").([]interface{}))
 	case openstackConfigDriver:

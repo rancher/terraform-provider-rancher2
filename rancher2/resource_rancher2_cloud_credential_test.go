@@ -73,6 +73,24 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-do" {
   }
 }
  `
+	testAccRancher2CloudCredentialConfigGoogle = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-google" {
+  name = "foo-google"
+  description= "Terraform cloudCredential acceptance test"
+  google_credential_config {
+	auth_encoded_json = "{\"auth_encoded_json\": true}"
+  }
+}
+`
+	testAccRancher2CloudCredentialUpdateConfigGoogle = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-google" {
+  name = "foo-google"
+  description= "Terraform cloudCredential acceptance test - updated"
+  google_credential_config {
+	auth_encoded_json = "{\"auth_encoded_json\": false}"
+  }
+}
+`
 	testAccRancher2CloudCredentialConfigOpenstack = `
 resource "` + testAccRancher2CloudCredentialType + `" "foo-openstack" {
   name = "foo-openstack"

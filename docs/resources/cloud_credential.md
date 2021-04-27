@@ -31,6 +31,7 @@ The following arguments are supported:
 * `azure_credential_config` - (Optional) Azure config for the Cloud Credential (list maxitems:1)
 * `description` - (Optional) Description for the Cloud Credential (string)
 * `digitalocean_credential_config` - (Optional) DigitalOcean config for the Cloud Credential (list maxitems:1)
+* `google_credential_config` - (Optional) Google config for the Cloud Credential (list maxitems:1)
 * `linode_credential_config` - (Optional) Linode config for the Cloud Credential (list maxitems:1)
 * `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
 * `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
@@ -66,6 +67,12 @@ The following attributes are exported:
 #### Arguments
 
 * `access_token` - (Required/Sensitive) DigitalOcean access token (string)
+
+### `google_credential_config`
+
+#### Arguments
+
+* `auth_encoded_json` - (Required/Sensitive) Google auth encoded json (string)
 
 ### `linode_credential_config`
 
