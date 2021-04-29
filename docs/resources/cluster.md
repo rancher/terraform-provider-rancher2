@@ -402,6 +402,8 @@ resource "rancher2_cluster" "foo" {
       desired_size = 2
       max_size = 3
     }
+    private_access = true
+    public_access = false
   }
 }
 ```
@@ -434,6 +436,8 @@ resource "rancher2_cluster" "foo" {
         version = 1
       }
     }
+    private_access = true
+    public_access = true
   }
 }
 ```
@@ -1168,11 +1172,11 @@ The following arguments are supported:
 * `kubernetes_version` - (Optional/Computed) The EKS cluster kubernetes version. Required to create a new cluster (string)
 * `logging_types` - (Optional) The AWS cloudwatch logging types. `audit`, `api`, `scheduler`, `controllerManager` and `authenticator` values are allowed (list)
 * `node_groups` - (Optional/Computed) The EKS cluster name to import. Required to create a new cluster (list)
-* `private_access` - (Optional) The EKS cluster has private access. Default: `false` (bool)
-* `public_access` - (Optional) The EKS cluster has public access. Default: `true` (bool)
+* `private_access` - (Optional/Computed) The EKS cluster has private access (bool)
+* `public_access` - (Optional/Computed) The EKS cluster has public access (bool)
 * `public_access_sources` - (Optional) The EKS cluster public access sources (map)
 * `region` - (Optional) The EKS cluster region. Default: `us-west-2` (string)
-* `secrets_encryption` - (Optional) Enable EKS cluster secret encryption. Default: `false` (bool)
+* `secrets_encryption` - (Optional/Computed) Enable EKS cluster secret encryption (bool)
 * `security_groups` - (Optional/Computed) List of security groups to use for the cluster (list)
 * `service_role` - (Optional) The AWS service role to use (string)
 * `subnets` - (Optional) List of subnets in the virtual network to use (list)

@@ -205,13 +205,13 @@ func clusterEKSConfigV2Fields() map[string]*schema.Schema {
 		"private_access": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Computed:    true,
 			Description: "The EKS cluster has private access",
 		},
 		"public_access": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     true,
+			Computed:    true,
 			Description: "The EKS cluster has public access",
 		},
 		"public_access_sources": {
@@ -231,7 +231,7 @@ func clusterEKSConfigV2Fields() map[string]*schema.Schema {
 		"secrets_encryption": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Computed:    true,
 			Description: "Enable EKS cluster secret encryption",
 		},
 		"security_groups": {
