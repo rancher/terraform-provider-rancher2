@@ -74,11 +74,12 @@ func expandCatalogV2(in *schema.ResourceData) *ClusterRepo {
 	if v, ok := in.Get("enabled").(bool); ok {
 		obj.Spec.Enabled = &v
 	}
-	if v, ok := in.Get("git_branch").(string); ok {
-		obj.Spec.GitBranch = v
-	}
-	if v, ok := in.Get("git_repo").(string); ok {
+	if v, ok := in.Get("git_repo").(string); ok && len(v) > 0 {
 		obj.Spec.GitRepo = v
+		obj.Spec.GitBranch = catalogV2DefaultGitBranch
+	}
+	if v, ok := in.Get("git_branch").(string); ok && len(v) > 0 {
+		obj.Spec.GitBranch = v
 	}
 	if v, ok := in.Get("insecure").(bool); ok {
 		obj.Spec.InsecureSkipTLSverify = v

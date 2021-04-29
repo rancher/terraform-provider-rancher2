@@ -32,10 +32,14 @@ var (
 	testClusterInterfaceEKSV2                      map[string]interface{}
 	testClusterConfGKE                             *Cluster
 	testClusterInterfaceGKE                        map[string]interface{}
+	testClusterConfK3S                             *Cluster
+	testClusterInterfaceK3S                        map[string]interface{}
 	testClusterConfOKE                             *Cluster
 	testClusterInterfaceOKE                        map[string]interface{}
 	testClusterConfRKE                             *Cluster
 	testClusterInterfaceRKE                        map[string]interface{}
+	testClusterConfRKE2                            *Cluster
+	testClusterInterfaceRKE2                       map[string]interface{}
 	testClusterConfTemplate                        *Cluster
 	testClusterInterfaceTemplate                   map[string]interface{}
 )
@@ -286,6 +290,33 @@ func testCluster() {
 		"gke_config":                              testClusterGKEConfigInterface,
 		"system_project_id":                       "system_project_id",
 	}
+	testClusterConfK3S = &Cluster{}
+	testClusterConfK3S.Name = "test"
+	testClusterConfK3S.Description = "description"
+	testClusterConfK3S.K3sConfig = testClusterK3SConfigConf
+	testClusterConfK3S.Driver = clusterDriverK3S
+	testClusterConfK3S.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfK3S.EnableClusterMonitoring = true
+	testClusterConfK3S.EnableNetworkPolicy = newTrue()
+	testClusterConfK3S.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
+	testClusterConfK3S.ScheduledClusterScan = testClusterScheduledClusterScanConf
+	testClusterInterfaceK3S = map[string]interface{}{
+		"id":                         "id",
+		"name":                       "test",
+		"default_project_id":         "default_project_id",
+		"description":                "description",
+		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token": testClusterRegistrationTokenInterface,
+		"default_pod_security_policy_template_id": "restricted",
+		"enable_cluster_monitoring":               true,
+		"enable_network_policy":                   true,
+		"kube_config":                             "kube_config",
+		"driver":                                  clusterDriverK3S,
+		"k3s_config":                              testClusterK3SConfigInterface,
+		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
+		"system_project_id":                       "system_project_id",
+		"windows_prefered_cluster":                false,
+	}
 	testClusterConfOKE = &Cluster{
 		OracleKubernetesEngineConfig: testClusterOKEConfigConf,
 	}
@@ -334,6 +365,33 @@ func testCluster() {
 		"kube_config":                             "kube_config",
 		"driver":                                  clusterDriverRKE,
 		"rke_config":                              testClusterRKEConfigInterface,
+		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
+		"system_project_id":                       "system_project_id",
+		"windows_prefered_cluster":                false,
+	}
+	testClusterConfRKE2 = &Cluster{}
+	testClusterConfRKE2.Name = "test"
+	testClusterConfRKE2.Description = "description"
+	testClusterConfRKE2.Rke2Config = testClusterRKE2ConfigConf
+	testClusterConfRKE2.Driver = clusterDriverRKE2
+	testClusterConfRKE2.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfRKE2.EnableClusterMonitoring = true
+	testClusterConfRKE2.EnableNetworkPolicy = newTrue()
+	testClusterConfRKE2.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
+	testClusterConfRKE2.ScheduledClusterScan = testClusterScheduledClusterScanConf
+	testClusterInterfaceRKE2 = map[string]interface{}{
+		"id":                         "id",
+		"name":                       "test",
+		"default_project_id":         "default_project_id",
+		"description":                "description",
+		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token": testClusterRegistrationTokenInterface,
+		"default_pod_security_policy_template_id": "restricted",
+		"enable_cluster_monitoring":               true,
+		"enable_network_policy":                   true,
+		"kube_config":                             "kube_config",
+		"driver":                                  clusterDriverRKE2,
+		"rke2_config":                             testClusterRKE2ConfigInterface,
 		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
 		"system_project_id":                       "system_project_id",
 		"windows_prefered_cluster":                false,
@@ -428,6 +486,12 @@ func TestFlattenCluster(t *testing.T) {
 			testClusterInterfaceGKE,
 		},
 		{
+			testClusterConfK3S,
+			testClusterRegistrationTokenConf,
+			testClusterGenerateKubeConfigOutput,
+			testClusterInterfaceK3S,
+		},
+		{
 			testClusterConfOKE,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
@@ -438,6 +502,12 @@ func TestFlattenCluster(t *testing.T) {
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
 			testClusterInterfaceRKE,
+		},
+		{
+			testClusterConfRKE2,
+			testClusterRegistrationTokenConf,
+			testClusterGenerateKubeConfigOutput,
+			testClusterInterfaceRKE2,
 		},
 		{
 			testClusterConfTemplate,
@@ -518,12 +588,20 @@ func TestExpandCluster(t *testing.T) {
 			testClusterConfGKE,
 		},
 		{
+			testClusterInterfaceK3S,
+			testClusterConfK3S,
+		},
+		{
 			testClusterInterfaceOKE,
 			testClusterConfOKE,
 		},
 		{
 			testClusterInterfaceRKE,
 			testClusterConfRKE,
+		},
+		{
+			testClusterInterfaceRKE2,
+			testClusterConfRKE2,
 		},
 		{
 			testClusterInterfaceTemplate,

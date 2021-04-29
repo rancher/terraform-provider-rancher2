@@ -443,13 +443,14 @@ resource "rancher2_cluster" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
-* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` and `k3s_config` (list maxitems:1)
-* `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` and `rke_config` (list maxitems:1)
-* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `eks_config_v2`, `gke_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `eks_config_v2`, `gke_config`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `eks_config_v2` - (Optional) The Amazon EKS configuration to create or import `eks` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` `k3s_config` and `rke_config`. For Rancher v2.5.x or above (list maxitems:1)
-* `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_import`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_import`, `gke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke2_config` (list maxitems:1)
+* `rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
+* `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config`, `rke_config` and `rke2_config` (list maxitems:1)
+* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `eks_config_v2`, `gke_config`, `oke_config` `k3s_config`, `rke_config` and `rke2_config` (list maxitems:1)
+* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `eks_config_v2`, `gke_config`, `oke_config` `k3s_config`, `rke_config` and `rke2_config` (list maxitems:1)
+* `eks_config_v2` - (Optional) The Amazon EKS configuration to create or import `eks` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config` `k3s_config`, `rke_config` and `rke2_config`. For Rancher v2.5.x or above (list maxitems:1)
+* `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_import`, `oke_config` `k3s_config`, `rke_config` and `rke2_config` (list maxitems:1)
+* `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_import`, `gke_config` `k3s_config`, `rke_config` and `rke2_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_monitoring_input` - (Optional) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
@@ -1047,6 +1048,24 @@ The following attributes are exported:
 * `grace_period` - RKE node drain grace period. Default: `-1` (int)
 * `ignore_daemon_sets` - Ignore RKE daemon sets. Default: `true` (bool)
 * `timeout` - RKE node drain timeout. Default: `60` (int)
+
+### `rke2_config`
+
+#### Arguments
+
+The following arguments are supported:
+
+* `upgrade_strategy` - (Optional/Computed) RKE2 upgrade strategy (List maxitems: 1)
+* `version` - (Optional/Computed) RKE2 kubernetes version (string)
+
+#### `upgrade_strategy`
+
+##### Arguments
+
+* `drain_server_nodes` - (Optional) Drain server nodes. Default: `false` (bool)
+* `drain_worker_nodes` - (Optional) Drain worker nodes. Default: `false` (bool)
+* `server_concurrency` - (Optional) Server concurrency. Default: `1` (int)
+* `worker_concurrency` - (Optional) Worker concurrency. Default: `1` (int)
 
 ### `k3s_config`
 
