@@ -9,11 +9,13 @@ FEATURES:
 ENHANCEMENTS:
 
 * Improved `rancher2_cluster_sync` with new cluster state check method and new option to wait until alerting is enabled
+* Updated `rancher2_catalog_v2` schema resource, defining conflict between `git_repo` and `url` arguments
 
 BUG FIXES:
 
 * Fix `rancher2_node_pool` resource, adding `forcenew` property to not updatable arguments
 * Fix `rancher2_cluster` resource, fixing provider crash if `cluster_monitoring_input` argument is deleted
+* Fix `rancher2_catalog_v2` resource, just setting default `git_branch` value if `git_repo` is specified
 
 ## 1.13.0 (March 31, 2021)
 
