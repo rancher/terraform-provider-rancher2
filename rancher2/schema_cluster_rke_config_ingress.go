@@ -25,8 +25,28 @@ var (
 
 func clusterRKEConfigIngressFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"default_backend": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  true,
+		},
 		"extra_args": {
 			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+		"http_port": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Computed: true,
+		},
+		"https_port": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Computed: true,
+		},
+		"network_mode": {
+			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
@@ -50,6 +70,15 @@ func clusterRKEConfigIngressFields() map[string]*schema.Schema {
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(clusterRKEConfigIngressDNSPolicyList, true),
+		},
+		"update_strategy": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Description: "Update daemon set strategy",
+			Elem: &schema.Resource{
+				Schema: daemonSetStrategyFields(),
+			},
 		},
 	}
 	return s
