@@ -677,6 +677,34 @@ func (c *Config) GetClusterByID(id string) (*managementClient.Cluster, error) {
 	return client.Cluster.ByID(id)
 }
 
+func (c *Config) WaitForClusterState(clusterID, state string, interval time.Duration) (*managementClient.Cluster, error) {
+	if clusterID == "" || state == "" {
+		return nil, fmt.Errorf("Cluster ID and/or state is nil")
+	}
+
+	timeout := int(interval.Seconds())
+	for i := 0; i <= timeout; i = i + rancher2RetriesWait {
+		obj, err := c.GetClusterByID(clusterID)
+		if err != nil {
+			return nil, fmt.Errorf("Getting cluster ID (%s): %v", clusterID, err)
+		}
+		for i := range obj.Conditions {
+			if obj.Conditions[i].Type == state {
+				// Status of the condition, one of True, False, Unknown.
+				if obj.Conditions[i].Status == "Unknown" {
+					break
+				}
+				if obj.Conditions[i].Status == "True" {
+					return obj, nil
+				}
+				return nil, fmt.Errorf("Cluster ID %s: %s", clusterID, obj.Conditions[i].Message)
+			}
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
+	}
+	return nil, fmt.Errorf("Timeout waiting for cluster ID %s", clusterID)
+}
+
 func (c *Config) getObjectV2ByID(clusterID, id, APIType string, resp interface{}) error {
 	if id == "" {
 		return fmt.Errorf("Object V2 id is nil")
@@ -1111,16 +1139,57 @@ func (c *Config) UpdateClusterByID(cluster *managementClient.Cluster, update map
 }
 
 func (c *Config) isClusterActive(id string) (bool, *managementClient.Cluster, error) {
-	clus, err := c.GetClusterByID(id)
+	obj, err := c.GetClusterByID(id)
 	if err != nil {
 		return false, nil, err
 	}
 
-	if clus.State == "active" {
-		return true, clus, nil
+	for i := range obj.Conditions {
+		if obj.Conditions[i].Type == clusterActiveCondition {
+			if obj.Conditions[i].Status == "True" {
+				return true, obj, nil
+			}
+			return false, obj, nil
+		}
 	}
 
-	return false, clus, nil
+	return false, obj, nil
+}
+
+func (c *Config) isClusterMonitoringEnabledCondition(id string) (bool, *managementClient.Cluster, error) {
+	obj, err := c.GetClusterByID(id)
+	if err != nil {
+		return false, nil, err
+	}
+
+	for i := range obj.Conditions {
+		if obj.Conditions[i].Type == clusterMonitoringEnabledCondition {
+			if obj.Conditions[i].Status == "True" {
+				return true, obj, nil
+			}
+			return false, obj, nil
+		}
+	}
+
+	return false, obj, nil
+}
+
+func (c *Config) isClusterAlertingEnabledCondition(id string) (bool, *managementClient.Cluster, error) {
+	obj, err := c.GetClusterByID(id)
+	if err != nil {
+		return false, nil, err
+	}
+
+	for i := range obj.Conditions {
+		if obj.Conditions[i].Type == clusterAlertingEnabledCondition {
+			if obj.Conditions[i].Status == "True" {
+				return true, obj, nil
+			}
+			return false, obj, nil
+		}
+	}
+
+	return false, obj, nil
 }
 
 func (c *Config) ClusterExist(id string) error {

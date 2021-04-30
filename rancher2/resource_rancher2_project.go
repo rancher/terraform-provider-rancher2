@@ -49,18 +49,9 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 		if v, ok := d.Get("wait_for_cluster").(bool); ok && !v {
 			return fmt.Errorf("[ERROR] Creating Project: Cluster ID %s is not active", project.ClusterID)
 		}
-
-		stateCluster := &resource.StateChangeConf{
-			Pending:    []string{},
-			Target:     []string{"active"},
-			Refresh:    clusterStateRefreshFunc(client, project.ClusterID),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      1 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-		_, waitClusterErr := stateCluster.WaitForState()
-		if waitClusterErr != nil {
-			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) to be active: %s", project.ClusterID, waitClusterErr)
+		_, err := meta.(*Config).WaitForClusterState(project.ClusterID, clusterActiveCondition, d.Timeout(schema.TimeoutCreate))
+		if err != nil {
+			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) to be active: %s", project.ClusterID, err)
 		}
 	}
 

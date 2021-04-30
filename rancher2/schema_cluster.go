@@ -7,9 +7,12 @@ import (
 )
 
 const (
-	clusterDriverImported        = "imported"
-	clusterRegistrationTokenName = "system"
-	clusterMonitoringV1Namespace = "cattle-prometheus"
+	clusterDriverImported             = "imported"
+	clusterRegistrationTokenName      = "system"
+	clusterMonitoringV1Namespace      = "cattle-prometheus"
+	clusterActiveCondition            = "Updated"
+	clusterMonitoringEnabledCondition = "MonitoringEnabled"
+	clusterAlertingEnabledCondition   = "AlertingEnabled"
 )
 
 var (
