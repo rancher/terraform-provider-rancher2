@@ -22,36 +22,18 @@ var (
 
 func init() {
 	values := v3.MapStringInterface{
-		"alertmanager": map[string]interface{}{
+		"alerts": map[string]interface{}{
 			"alertmanagerSpec": map[string]interface{}{
-				"enabled":           false,
-				"useExistingSecret": true,
-				"configSecret":      "alertmanager-rancher-monitoring-alertmanager",
-			},
-		},
-		"prometheus": map[string]interface{}{
-			"prometheusSpec": map[string]interface{}{
-				"requests": map[string]interface{}{
-					"cpu":    "150m",
-					"memory": "250Mi",
-				},
+				"enabled":  false,
+				"severity": "warning",
 			},
 		},
 	}
 	valuesUpdated := v3.MapStringInterface{
-		"alertmanager": map[string]interface{}{
+		"alerts": map[string]interface{}{
 			"alertmanagerSpec": map[string]interface{}{
-				"enabled":           false,
-				"useExistingSecret": true,
-				"configSecret":      "alertmanager-rancher-monitoring-alertmanager",
-			},
-		},
-		"prometheus": map[string]interface{}{
-			"prometheusSpec": map[string]interface{}{
-				"requests": map[string]interface{}{
-					"cpu":    "150m",
-					"memory": "250Mi",
-				},
+				"enabled":  false,
+				"severity": "info",
 			},
 		},
 	}
@@ -66,10 +48,10 @@ func init() {
 	testAccRancher2AppV2 = `
 resource "` + testAccRancher2AppV2Type + `" "foo" {
   cluster_id = rancher2_cluster_sync.testacc.cluster_id
-  name = "rancher-monitoring"
-  namespace = "cattle-monitoring-system"
+  name = "rancher-cis-benchmark"
+  namespace = "cis-operator-system"
   repo_name = "rancher-charts"
-  chart_name = "rancher-monitoring"
+  chart_name = "rancher-cis-benchmark"
   values = <<EOF
 ` + valuesStr + `
 EOF
@@ -78,10 +60,10 @@ EOF
 	testAccRancher2AppV2Update = `
 resource "` + testAccRancher2AppV2Type + `" "foo" {
   cluster_id = rancher2_cluster_sync.testacc.cluster_id
-  name = "rancher-monitoring"
-  namespace = "cattle-monitoring-system"
+  name = "rancher-cis-benchmark"
+  namespace = "cis-operator-system"
   repo_name = "rancher-charts"
-  chart_name = "rancher-monitoring"
+  chart_name = "rancher-cis-benchmark"
   values = <<EOF
 ` + valuesStrUpdated + `
 EOF
@@ -103,9 +85,9 @@ func TestAccRancher2AppV2_basic(t *testing.T) {
 				Config: testAccRancher2AppV2Config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AppV2Exists(testAccRancher2AppV2Type+".foo", app),
-					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "name", "rancher-monitoring"),
-					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "namespace", "cattle-monitoring-system"),
-					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "chart_name", "rancher-monitoring"),
+					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "name", "rancher-cis-benchmark"),
+					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "namespace", "cis-operator-system"),
+					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "chart_name", "rancher-cis-benchmark"),
 					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
@@ -113,9 +95,9 @@ func TestAccRancher2AppV2_basic(t *testing.T) {
 				Config: testAccRancher2AppV2UpdateConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AppV2Exists(testAccRancher2AppV2Type+".foo", app),
-					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "name", "rancher-monitoring"),
-					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "namespace", "cattle-monitoring-system"),
-					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "chart_name", "rancher-monitoring"),
+					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "name", "rancher-cis-benchmark"),
+					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "namespace", "cis-operator-system"),
+					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "chart_name", "rancher-cis-benchmark"),
 					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
@@ -123,9 +105,9 @@ func TestAccRancher2AppV2_basic(t *testing.T) {
 				Config: testAccRancher2AppV2Config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2AppV2Exists(testAccRancher2AppV2Type+".foo", app),
-					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "name", "rancher-monitoring"),
-					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "namespace", "cattle-monitoring-system"),
-					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "chart_name", "rancher-monitoring"),
+					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "name", "rancher-cis-benchmark"),
+					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "namespace", "cis-operator-system"),
+					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "chart_name", "rancher-cis-benchmark"),
 					resource.TestCheckResourceAttr(testAccRancher2AppV2Type+".foo", "cluster_id", testAccRancher2ClusterID),
 				),
 			},
