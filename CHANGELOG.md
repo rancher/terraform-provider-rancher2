@@ -20,6 +20,7 @@ BUG FIXES:
 
 * Fix `rancher2_node_pool` resource, adding `forcenew` property to not updatable arguments
 * Fix `rancher2_cluster` resource, fixing provider crash if `cluster_monitoring_input` argument is deleted
+* Fix `rancher2_project` resource, fixing provider crash if `project_monitoring_input` argument is deleted
 * Fix `rancher2_catalog_v2` resource, just setting default `git_branch` value if `git_repo` is specified
 * Fix `rancher2_cluster.eks_config_v2` argument, setting `private_access`, `public_access` and `secrets_encryption` as computed argument, removing default value
 

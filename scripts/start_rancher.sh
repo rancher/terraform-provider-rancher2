@@ -22,7 +22,8 @@ CERTMANAGER_NS=${CERTMANAGER_NS:-"cert-manager"}
 ## rancher
 RANCHER_VERSION=${RANCHER_VERSION:-"v2.5.6"}
 RANCHER_NS=${RANCHER_NS:-"cattle-system"}
-export RANCHER_HOSTNAME="rancher.${K3S_SERVER_IP}.xip.io"
+RANCHER_DNS_DOMAIN="nip.io"
+export RANCHER_HOSTNAME="rancher.${K3S_SERVER_IP}.${RANCHER_DNS_DOMAIN}"
 export RANCHER_IP=${K3S_SERVER_IP}
 
 # Installing helm charts 
@@ -110,5 +111,5 @@ export RANCHER_INSECURE=true
 export RANCHER_URL="https://${RANCHER_HOSTNAME}"
 export RANCHER_VERSION=${RANCHER_VERSION}
 if [ ${EXPOSE_HOST_PORTS} == "true" ]; then 
-  export RANCHER_EXPOSED_URL="https://rancher.127.0.0.1.xip.io:${K3S_INGRESS_PORT_TLS}"
+  export RANCHER_EXPOSED_URL="https://rancher.127.0.0.1.${RANCHER_DNS_DOMAIN}:${K3S_INGRESS_PORT_TLS}"
 fi
