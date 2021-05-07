@@ -1310,7 +1310,54 @@ func (c *Config) GetUserIDByName(name string) (string, error) {
 	return user.ID, nil
 }
 
-func (c *Config) activateNodeDriver(id string) error {
+func (c *Config) activateDriver(id string, interval time.Duration) error {
+	if id == googleConfigDriver {
+		return c.activateKontainerDriver(id, interval)
+	}
+
+	return c.activateNodeDriver(id, interval)
+}
+
+func (c *Config) activateKontainerDriver(id string, interval time.Duration) error {
+	if id == "" {
+		return fmt.Errorf("[ERROR] Node Driver id is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	driver, err := client.KontainerDriver.ByID(id)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Getting Node Driver %s: %v", id, err)
+	}
+
+	if driver.State == "active" {
+		return nil
+	}
+
+	err = client.KontainerDriver.ActionActivate(driver)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Activating Node Driver %s: %v", id, err)
+	}
+
+	timeout := int(interval.Seconds())
+	for i := 0; i <= timeout; i = i + rancher2RetriesWait {
+		if driver.State == "active" {
+			return nil
+		}
+		driver, err = client.KontainerDriver.ByID(id)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Waiting for activating Node Driver %s: %v", id, err)
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
+	}
+
+	return fmt.Errorf("[ERROR] Timeout activating Node Driver %s", id)
+}
+
+func (c *Config) activateNodeDriver(id string, interval time.Duration) error {
 	if id == "" {
 		return fmt.Errorf("[ERROR] Node Driver id is nil")
 	}
@@ -1329,12 +1376,24 @@ func (c *Config) activateNodeDriver(id string) error {
 		return nil
 	}
 
-	_, err = client.NodeDriver.ActionActivate(driver)
+	driver, err = client.NodeDriver.ActionActivate(driver)
 	if err != nil {
 		return fmt.Errorf("[ERROR] Activating Node Driver %s: %v", id, err)
 	}
 
-	return nil
+	timeout := int(interval.Seconds())
+	for i := 0; i <= timeout; i = i + rancher2RetriesWait {
+		if driver.State == "active" {
+			return nil
+		}
+		driver, err = client.NodeDriver.ByID(id)
+		if err != nil {
+			return fmt.Errorf("[ERROR] Waiting for activating Node Driver %s: %v", id, err)
+		}
+		time.Sleep(rancher2RetriesWait * time.Second)
+	}
+
+	return fmt.Errorf("[ERROR] timeout activating Node Driver %s", id)
 }
 
 func (c *Config) UserPasswordChanged(user *managementClient.User, pass string) bool {

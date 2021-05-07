@@ -73,6 +73,24 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-do" {
   }
 }
  `
+	testAccRancher2CloudCredentialConfigGoogle = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-google" {
+  name = "foo-google"
+  description= "Terraform cloudCredential acceptance test"
+  google_credential_config {
+	auth_encoded_json = "{\"auth_encoded_json\": true}"
+  }
+}
+`
+	testAccRancher2CloudCredentialUpdateConfigGoogle = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-google" {
+  name = "foo-google"
+  description= "Terraform cloudCredential acceptance test - updated"
+  google_credential_config {
+	auth_encoded_json = "{\"auth_encoded_json\": false}"
+  }
+}
+`
 	testAccRancher2CloudCredentialConfigOpenstack = `
 resource "` + testAccRancher2CloudCredentialType + `" "foo-openstack" {
   name = "foo-openstack"
@@ -293,6 +311,68 @@ func TestAccRancher2CloudCredential_disappears_Digitalocean(t *testing.T) {
 				Config: testAccRancher2CloudCredentialConfigDigitalocean,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-do", cloudCredential),
+					testAccRancher2CloudCredentialDisappears(cloudCredential),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_basic_Google(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2CloudCredentialConfigGoogle,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-google", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "name", "foo-google"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "driver", googleConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "google_credential_config.0.auth_encoded_json", "{\"auth_encoded_json\": true}"),
+				),
+			},
+			{
+				Config: testAccRancher2CloudCredentialUpdateConfigGoogle,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-google", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "name", "foo-google"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "description", "Terraform cloudCredential acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "driver", googleConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "google_credential_config.0.auth_encoded_json", "{\"auth_encoded_json\": false}"),
+				),
+			},
+			{
+				Config: testAccRancher2CloudCredentialConfigGoogle,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-google", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "name", "foo-google"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "driver", googleConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-google", "google_credential_config.0.auth_encoded_json", "{\"auth_encoded_json\": true}"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_disappears_Google(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2CloudCredentialConfigGoogle,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-google", cloudCredential),
 					testAccRancher2CloudCredentialDisappears(cloudCredential),
 				),
 				ExpectNonEmptyPlan: true,

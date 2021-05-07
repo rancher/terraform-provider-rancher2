@@ -1,4 +1,4 @@
-## 1.14.0 (Unreleased)
+## 1.14.0 (May 7, 2021)
 
 FEATURES:
 
@@ -10,11 +10,15 @@ FEATURES:
 * **New Argument:** `rancher2_cluster.rke_config.ingress.update_strategy` - (Optional) RKE ingress update strategy (list Maxitems: 1)
 * **New Argument:** `rancher2_cluster.rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
 * **New Argument:** `rancher2_cluster_sync.wait_alerting` - (Optional) Wait until alerting is up and running. Default: `false` (bool)
+* **New Argument:** `rancher2_cluster.gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 or above (list maxitems:1)
+* **New Argument:** `rancher2_cloud_credential.google_credential_config` - (Optional) Google config for the Cloud Credential (list maxitems:1)
 
 ENHANCEMENTS:
 
-* Improved `rancher2_cluster_sync` with new cluster state check method and new option to wait until alerting is enabled
 * Updated `rancher2_catalog_v2` schema resource, defining conflict between `git_repo` and `url` arguments
+* Improved `rancher2_cluster_sync` with new cluster state check method and new option to wait until alerting is enabled
+* Updated go mod to support Rancher `v2.5.8`
+* Updated acceptance tests to use Rancher `v2.5.8`
 
 BUG FIXES:
 

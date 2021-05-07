@@ -640,6 +640,11 @@ func newFalse() *bool {
 	return &b
 }
 
+func newEmptyString() *string {
+	b := ""
+	return &b
+}
+
 func IsVersionLessThan(ver1, ver2 string) (bool, error) {
 	v1, err := gover.NewVersion(ver1)
 	if err != nil {

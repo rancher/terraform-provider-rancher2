@@ -46,7 +46,7 @@ resource "rancher2_namespace" "testacc" {
   project_id = rancher2_cluster_sync.testacc.default_project_id
 }
 `
-	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.13", "v2.5.7"}
+	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.13", "v2.5.8"}
 	testAccCheckRancher2RunningVersionIndex = 0
 	testAccCheckRancher2UpgradeCluster = os.Getenv("RANCHER_ACC_CLUSTER_NAME")
 	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
@@ -214,6 +214,7 @@ provider "rancher2" {
 ` + testAccRancher2CloudCredentialConfigAmazonec2 + `
 ` + testAccRancher2CloudCredentialConfigAzure + `
 ` + testAccRancher2CloudCredentialConfigDigitalocean + `
+` + testAccRancher2CloudCredentialConfigGoogle + `
 ` + testAccRancher2CloudCredentialConfigOpenstack + `
 ` + testAccRancher2CloudCredentialConfigVsphere + `
 ` + testAccRancher2ClusterConfigRKE + `
@@ -344,7 +345,7 @@ func testAccRancher2UpgradeRancher() resource.TestCheckFunc {
 		}
 		clusterActive, _, err := testAccProvider.Meta().(*Config).isClusterActive(testAccRancher2ClusterID)
 		for retry := 0; retry < 10 && !clusterActive; clusterActive, _, err = testAccProvider.Meta().(*Config).isClusterActive(testAccRancher2ClusterID) {
-			fmt.Printf("Waiting for cluster ID %s becomes active", testAccRancher2ClusterID)
+			fmt.Printf("Waiting for cluster ID %s becomes active %d\n", testAccRancher2ClusterID, retry+1)
 			time.Sleep(5 * time.Second)
 			retry++
 		}

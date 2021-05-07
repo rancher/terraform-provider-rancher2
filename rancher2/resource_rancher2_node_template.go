@@ -42,22 +42,9 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 
 	driverID := d.Get("driver_id").(string)
 
-	err = meta.(*Config).activateNodeDriver(driverID)
+	err = meta.(*Config).activateNodeDriver(driverID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return err
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{},
-		Target:     []string{"active"},
-		Refresh:    nodeDriverStateRefreshFunc(client, driverID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      1 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, waitErr := stateConf.WaitForState()
-	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for node driver (%s) to be activated: %s", driverID, waitErr)
 	}
 
 	newNodeTemplate := &NodeTemplate{}
@@ -69,7 +56,7 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(newNodeTemplate.ID)
 
-	stateConf = &resource.StateChangeConf{
+	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    nodeTemplateStateRefreshFunc(client, newNodeTemplate.ID),
@@ -77,7 +64,7 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr = stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for node template (%s) to be created: %s", newNodeTemplate.ID, waitErr)
 	}

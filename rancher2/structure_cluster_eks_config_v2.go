@@ -285,10 +285,10 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	if v, ok := in["logging_types"].([]interface{}); ok {
 		obj.LoggingTypes = toArrayString(v)
 	}
-	if v, ok := in["private_access"].(bool); ok {
+	if v, ok := in["private_access"].(bool); ok && !obj.Imported {
 		obj.PrivateAccess = &v
 	}
-	if v, ok := in["public_access"].(bool); ok {
+	if v, ok := in["public_access"].(bool); ok && !obj.Imported {
 		obj.PublicAccess = &v
 	}
 	if v, ok := in["public_access_sources"].([]interface{}); ok {
@@ -297,7 +297,7 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	if v, ok := in["region"].(string); ok {
 		obj.Region = v
 	}
-	if v, ok := in["secrets_encryption"].(bool); ok {
+	if v, ok := in["secrets_encryption"].(bool); ok && !obj.Imported {
 		obj.SecretsEncryption = &v
 	}
 	if v, ok := in["security_groups"].([]interface{}); ok {

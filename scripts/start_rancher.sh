@@ -106,6 +106,7 @@ done
 while [ "$(${CURL_BIN} -sk https://${RANCHER_HOSTNAME}/ping || echo starting)" != "pong" ]; 
 do echo "waiting for rancher service" && sleep 5;
 done
+sleep 5
 
 export RANCHER_INSECURE=true
 export RANCHER_URL="https://${RANCHER_HOSTNAME}"
