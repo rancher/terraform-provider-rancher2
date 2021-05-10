@@ -130,7 +130,7 @@ func azureConfigFields() map[string]*schema.Schema {
 		"plan": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Purchase plan for Azure Virtual Machine (in <name>:<publisher>:<product> format)",
+			Description: "Purchase plan for Azure Virtual Machine (in <publisher>:<product>:<plan> format)",
 		},
 		"open_port": {
 			Type:        schema.TypeList,

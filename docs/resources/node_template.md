@@ -178,6 +178,7 @@ The following attributes are exported:
 * `managed_disks` - (Optional) Configures VM and availability set for managed disks. Just for Rancher v2.3.x and above. Default `false` (bool)
 * `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false` (bool)
 * `nsg` - (Optional) Azure Network Security Group to assign this node to (accepts either a name or resource ID, default is to create a new NSG for each machine). Default `docker-machine-nsg` (string)
+* `plan` - (Optional) Azure marketplace purchase plan for Azure Virtual Machine. Format is `<publisher>:<product>:<plan>`. (string)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
 * `private_ip_address` - (Optional) Specify a static private IP address for the machine. (string)
 * `resource_group` - (Optional) Azure Resource Group name (will be created if missing). Default `docker-machine` (string)
