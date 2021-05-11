@@ -16,7 +16,7 @@ type hetznerConfig struct {
 	ServerLocation    string   `json:"serverLocation,omitempty" yaml:"serverLocation,omitempty"`
 	ServerType        string   `json:"serverType,omitempty" yaml:"serverType,omitempty"`
 	Networks          []string `json:"networks,omitempty" yaml:"networks,omitempty"`
-	UsePrivateNetwork bool     `json:"usePrivateNetworks,omitempty" yaml:"usePrivateNetworks,omitempty"`
+	UsePrivateNetwork bool     `json:"usePrivateNetwork,omitempty" yaml:"usePrivateNetwork,omitempty"`
 	UserData          string   `json:"userData,omitempty" yaml:"userData,omitempty"`
 	Volumes           []string `json:"volumes,omitempty" yaml:"volumes,omitempty"`
 }
