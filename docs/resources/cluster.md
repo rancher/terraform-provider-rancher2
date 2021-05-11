@@ -560,6 +560,8 @@ The following attributes are exported:
 
 ### `rke_config`
 
+**Note** `rke_config` works the same as within Rancher GUI; it will not _provision_ hosts when using no `cloud_provider` or when `cloud_provider` is set to custom. It is expected that nodes are registered by having the `node_command` run on each node. Running the `node_command` is outside the scope of this provider. 
+
 #### Arguments
 
 * `addon_job_timeout` - (Optional/Computed) Duration in seconds of addon job (int)
