@@ -25,47 +25,47 @@ var (
 //Types
 
 type AzureKubernetesServiceConfig struct {
-	AADClientAppID                     string            `json:"addClientAppId,omitempty" yaml:"addClientAppId,omitempty"`
-	AADServerAppID                     string            `json:"addServerAppId,omitempty" yaml:"addServerAppId,omitempty"`
-	AADServerAppSecret                 string            `json:"addServerAppSecret,omitempty" yaml:"addServerAppSecret,omitempty"`
-	AADTenantID                        string            `json:"addTenantId,omitempty" yaml:"addTenantId,omitempty"`
-	AdminUsername                      string            `json:"adminUsername,omitempty" yaml:"adminUsername,omitempty"`
-	AgentDNSPrefix                     string            `json:"agentDnsPrefix,omitempty" yaml:"agentDnsPrefix,omitempty"`
-	AgentOsdiskSizeGB                  int64             `json:"agentOsdiskSize,omitempty" yaml:"agentOsdiskSize,omitempty"`
-	AgentPoolName                      string            `json:"agentPoolName,omitempty" yaml:"agentPoolName,omitempty"`
-	AgentStorageProfile                string            `json:"agentStorageProfile,omitempty" yaml:"agentStorageProfile,omitempty"`
-	AgentVMSize                        string            `json:"agentVmSize,omitempty" yaml:"agentVmSize,omitempty"`
-	AuthBaseURL                        string            `json:"authBaseUrl" yaml:"authBaseUrl"`
-	BaseURL                            string            `json:"baseUrl,omitempty" yaml:"baseUrl,omitempty"`
-	ClientID                           string            `json:"clientId,omitempty" yaml:"clientId,omitempty"`
-	ClientSecret                       string            `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
-	Count                              int64             `json:"count,omitempty" yaml:"count,omitempty"`
-	DisplayName                        string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
-	DriverName                         string            `json:"driverName,omitempty" yaml:"driverName,omitempty"`
-	DNSServiceIP                       string            `json:"dnsServiceIp,omitempty" yaml:"dnsServiceIp,omitempty"`
-	DockerBridgeCIDR                   string            `json:"dockerBridgeCidr,omitempty" yaml:"dockerBridgeCidr,omitempty"`
-	EnableHTTPApplicationRouting       bool              `json:"enableHttpApplicationRouting,omitempty" yaml:"enableHttpApplicationRouting,omitempty"`
-	EnableMonitoring                   *bool             `json:"enableMonitoring,omitempty" yaml:"enableMonitoring,omitempty"`
-	KubernetesVersion                  string            `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
-	LoadBalancerSku                    string            `json:"loadBalancerSku,omitempty" yaml:"loadBalancerSku,omitempty"`
-	Location                           string            `json:"location,omitempty" yaml:"location,omitempty"`
-	LogAnalyticsWorkspace              string            `json:"logAnalyticsWorkspace,omitempty" yaml:"logAnalyticsWorkspace,omitempty"`
-	LogAnalyticsWorkspaceResourceGroup string            `json:"logAnalyticsWorkspaceResourceGroup,omitempty" yaml:"logAnalyticsWorkspaceResourceGroup,omitempty"`
-	MasterDNSPrefix                    string            `json:"masterDnsPrefix,omitempty" yaml:"masterDnsPrefix,omitempty"`
-	MaxPods                            int64             `json:"maxPods,omitempty" yaml:"maxPods,omitempty"`
-	Name                               string            `json:"name,omitempty" yaml:"name,omitempty"`
-	NetworkPlugin                      string            `json:"networkPlugin,omitempty" yaml:"networkPlugin,omitempty"`
-	NetworkPolicy                      string            `json:"networkPolicy,omitempty" yaml:"networkPolicy,omitempty"`
-	PodCIDR                            string            `json:"podCidr,omitempty" yaml:"podCidr,omitempty"`
-	ResourceGroup                      string            `json:"resourceGroup,omitempty" yaml:"resourceGroup,omitempty"`
-	SSHPublicKeyContents               string            `json:"sshPublicKeyContents,omitempty" yaml:"sshPublicKeyContents,omitempty"`
-	ServiceCIDR                        string            `json:"serviceCidr,omitempty" yaml:"serviceCidr,omitempty"`
-	Subnet                             string            `json:"subnet,omitempty" yaml:"subnet,omitempty"`
-	SubscriptionID                     string            `json:"subscriptionId,omitempty" yaml:"subscriptionId,omitempty"`
-	Tag                                map[string]string `json:"tags,omitempty" yaml:"tags,omitempty"`
-	TenantID                           string            `json:"tenantId,omitempty" yaml:"tenantId,omitempty"`
-	VirtualNetwork                     string            `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
-	VirtualNetworkResourceGroup        string            `json:"virtualNetworkResourceGroup,omitempty" yaml:"virtualNetworkResourceGroup,omitempty"`
+	AADClientAppID                     string   `json:"addClientAppId,omitempty" yaml:"addClientAppId,omitempty"`
+	AADServerAppID                     string   `json:"addServerAppId,omitempty" yaml:"addServerAppId,omitempty"`
+	AADServerAppSecret                 string   `json:"addServerAppSecret,omitempty" yaml:"addServerAppSecret,omitempty"`
+	AADTenantID                        string   `json:"addTenantId,omitempty" yaml:"addTenantId,omitempty"`
+	AdminUsername                      string   `json:"adminUsername,omitempty" yaml:"adminUsername,omitempty"`
+	AgentDNSPrefix                     string   `json:"agentDnsPrefix,omitempty" yaml:"agentDnsPrefix,omitempty"`
+	AgentOsdiskSizeGB                  int64    `json:"agentOsdiskSize,omitempty" yaml:"agentOsdiskSize,omitempty"`
+	AgentPoolName                      string   `json:"agentPoolName,omitempty" yaml:"agentPoolName,omitempty"`
+	AgentStorageProfile                string   `json:"agentStorageProfile,omitempty" yaml:"agentStorageProfile,omitempty"`
+	AgentVMSize                        string   `json:"agentVmSize,omitempty" yaml:"agentVmSize,omitempty"`
+	AuthBaseURL                        string   `json:"authBaseUrl" yaml:"authBaseUrl"`
+	BaseURL                            string   `json:"baseUrl,omitempty" yaml:"baseUrl,omitempty"`
+	ClientID                           string   `json:"clientId,omitempty" yaml:"clientId,omitempty"`
+	ClientSecret                       string   `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
+	Count                              int64    `json:"count,omitempty" yaml:"count,omitempty"`
+	DisplayName                        string   `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	DriverName                         string   `json:"driverName,omitempty" yaml:"driverName,omitempty"`
+	DNSServiceIP                       string   `json:"dnsServiceIp,omitempty" yaml:"dnsServiceIp,omitempty"`
+	DockerBridgeCIDR                   string   `json:"dockerBridgeCidr,omitempty" yaml:"dockerBridgeCidr,omitempty"`
+	EnableHTTPApplicationRouting       bool     `json:"enableHttpApplicationRouting,omitempty" yaml:"enableHttpApplicationRouting,omitempty"`
+	EnableMonitoring                   *bool    `json:"enableMonitoring,omitempty" yaml:"enableMonitoring,omitempty"`
+	KubernetesVersion                  string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
+	LoadBalancerSku                    string   `json:"loadBalancerSku,omitempty" yaml:"loadBalancerSku,omitempty"`
+	Location                           string   `json:"location,omitempty" yaml:"location,omitempty"`
+	LogAnalyticsWorkspace              string   `json:"logAnalyticsWorkspace,omitempty" yaml:"logAnalyticsWorkspace,omitempty"`
+	LogAnalyticsWorkspaceResourceGroup string   `json:"logAnalyticsWorkspaceResourceGroup,omitempty" yaml:"logAnalyticsWorkspaceResourceGroup,omitempty"`
+	MasterDNSPrefix                    string   `json:"masterDnsPrefix,omitempty" yaml:"masterDnsPrefix,omitempty"`
+	MaxPods                            int64    `json:"maxPods,omitempty" yaml:"maxPods,omitempty"`
+	Name                               string   `json:"name,omitempty" yaml:"name,omitempty"`
+	NetworkPlugin                      string   `json:"networkPlugin,omitempty" yaml:"networkPlugin,omitempty"`
+	NetworkPolicy                      string   `json:"networkPolicy,omitempty" yaml:"networkPolicy,omitempty"`
+	PodCIDR                            string   `json:"podCidr,omitempty" yaml:"podCidr,omitempty"`
+	ResourceGroup                      string   `json:"resourceGroup,omitempty" yaml:"resourceGroup,omitempty"`
+	SSHPublicKeyContents               string   `json:"sshPublicKeyContents,omitempty" yaml:"sshPublicKeyContents,omitempty"`
+	ServiceCIDR                        string   `json:"serviceCidr,omitempty" yaml:"serviceCidr,omitempty"`
+	Subnet                             string   `json:"subnet,omitempty" yaml:"subnet,omitempty"`
+	SubscriptionID                     string   `json:"subscriptionId,omitempty" yaml:"subscriptionId,omitempty"`
+	Tags                               []string `json:"tags,omitempty" yaml:"tags,omitempty"`
+	TenantID                           string   `json:"tenantId,omitempty" yaml:"tenantId,omitempty"`
+	VirtualNetwork                     string   `json:"virtualNetwork,omitempty" yaml:"virtualNetwork,omitempty"`
+	VirtualNetworkResourceGroup        string   `json:"virtualNetworkResourceGroup,omitempty" yaml:"virtualNetworkResourceGroup,omitempty"`
 }
 
 //Schemas
@@ -289,6 +289,16 @@ func clusterAKSConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Tags for Kubernetes cluster. For example, foo=bar",
+			Deprecated:  "Use tags argument instead as []string",
+		},
+		"tags": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "Tags for Kubernetes cluster. For example, `[\"foo=bar\",\"bar=foo\"]`",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
 		},
 	}
 

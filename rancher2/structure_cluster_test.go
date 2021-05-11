@@ -564,6 +564,9 @@ func TestFlattenCluster(t *testing.T) {
 		if tc.ExpectedOutput["driver"] == clusterDriverRKE {
 			expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig, []interface{}{})
 		}
+		if tc.ExpectedOutput["driver"] == clusterDriverAKS {
+			expectedOutput["aks_config"], _ = flattenClusterAKSConfig(tc.Input.AzureKubernetesServiceConfig, []interface{}{})
+		}
 		expectedOutput["id"] = "id"
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
