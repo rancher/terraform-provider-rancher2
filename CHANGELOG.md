@@ -1,3 +1,18 @@
+## 1.15.0 (Unreleased)
+
+FEATURES:
+
+* **Deprecated Argument:** `rancher2_cluster.aks_config.tag` - (Deprecated) Use `tags` argument instead as []string
+* **New Argument:** `rancher2_cluster.aks_config.tags` - (Optional/Computed) Tags for Kubernetes cluster. For example, `["foo=bar","bar=foo"]` (list)
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+
+
 ## 1.14.0 (May 7, 2021)
 
 FEATURES:
