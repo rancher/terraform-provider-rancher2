@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -259,23 +260,26 @@ func bootstrapDoLogin(d *schema.ResourceData, meta interface{}) error {
 	}
 	tokenID, token, err := DoUserLogin(meta.(*Config).URL, bootstrapDefaultUser, currentPass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
 	if err != nil {
-		// login retries waiting 5 seconds if user/pass login fails
-		for i := 0; i < meta.(*Config).Retries; i++ {
-			time.Sleep(5 * time.Second)
+		// login retries until timeout if user/pass login fails
+		ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
+		defer cancel()
+		for {
 			tokenID, token, err = DoUserLogin(meta.(*Config).URL, bootstrapDefaultUser, currentPass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
 			if err == nil {
 				break
 			}
-		}
-		if err != nil {
-			return fmt.Errorf("[ERROR] Login with %s user: %v", bootstrapDefaultUser, err)
+			select {
+			case <-time.After(rancher2RetriesWait * time.Second):
+			case <-ctx.Done():
+				return fmt.Errorf("[ERROR] Timeout login with %s user: %v", bootstrapDefaultUser, err)
+			}
 		}
 	}
 
 	// Update config token
 	err = meta.(*Config).UpdateToken(token)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Connecting with user/pass: %s", err)
+		return fmt.Errorf("[ERROR] Updating token: %s", err)
 	}
 	log.Printf("[INFO] Connecting with user/pass")
 

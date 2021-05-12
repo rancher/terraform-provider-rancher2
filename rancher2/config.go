@@ -27,13 +27,13 @@ const (
 	rancher2ManagementV2TypePrefix    = "management.cattle.io"
 	rancher2ReadyAnswer               = "pong"
 	rancher2RetriesWait               = 5
-	rancher2RetriesOnServerError      = 3
 	rancher2RKEK8sSystemImageVersion  = "2.3.0"
 	rancher2NodeTemplateChangeVersion = "2.3.3" // Change node template id format
 	rancher2TokeTTLMinutesVersion     = "2.4.6" // ttl token is readed in minutes
 	rancher2TokeTTLMilisVersion       = "2.4.7" // ttl token is readed in miliseconds
 	rancher2UILandingVersion          = "2.5.0" // ui landing option
 	rancher2NodeTemplateNewPrefix     = "cattle-global-nt:nt-"
+	rancher2DefaultTimeout            = "120s"
 )
 
 // Client are the client kind for a Rancher v3 API
@@ -53,7 +53,7 @@ type Config struct {
 	Bootstrap            bool   `json:"bootstrap"`
 	ClusterID            string `json:"clusterId"`
 	ProjectID            string `json:"projectId"`
-	Retries              int
+	Timeout              time.Duration
 	RancherVersion       string
 	K8SDefaultVersion    string
 	K8SSupportedVersions []string
@@ -87,40 +87,50 @@ func (c *Config) isRancherReady() error {
 	var err error
 	var resp []byte
 	url := RootURL(c.URL) + "/ping"
-	for i := 0; i <= c.Retries; i++ {
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
+	for {
 		resp, err = DoGet(url, "", "", "", c.CACerts, c.Insecure)
 		if err == nil && rancher2ReadyAnswer == string(resp) {
 			return nil
 		}
-		time.Sleep(rancher2RetriesWait * time.Second)
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return fmt.Errorf("Rancher is not ready: %v", err)
+		}
 	}
-	return fmt.Errorf("Rancher is not ready: %v", err)
 }
 
 func (c *Config) getK8SDefaultVersion() (string, error) {
 	if len(c.K8SDefaultVersion) > 0 {
 		return c.K8SDefaultVersion, nil
 	}
-
+	var err error
 	if c.Client.Management == nil {
-		_, err := c.ManagementClient()
+		_, err = c.ManagementClient()
 		if err != nil {
 			return "", err
 		}
 	}
 
-	for i := 0; i < rancher2RetriesOnServerError; i++ {
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
+	for {
 		k8sVer, err := c.Client.Management.Setting.ByID("k8s-version")
 		if err == nil {
 			c.K8SDefaultVersion = k8sVer.Value
-			break
+			return c.K8SDefaultVersion, nil
 		}
-		if (!IsServerError(err) && !IsForbidden(err)) || (i+1) == rancher2RetriesOnServerError {
+		if !IsServerError(err) && !IsForbidden(err) {
 			return "", err
 		}
-		time.Sleep(rancher2RetriesWait * time.Second)
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return "", err
+		}
 	}
-	return c.K8SDefaultVersion, nil
 }
 
 func (c *Config) getK8SVersions() ([]string, error) {
@@ -682,8 +692,9 @@ func (c *Config) WaitForClusterState(clusterID, state string, interval time.Dura
 		return nil, fmt.Errorf("Cluster ID and/or state is nil")
 	}
 
-	timeout := int(interval.Seconds())
-	for i := 0; i <= timeout; i = i + rancher2RetriesWait {
+	ctx, cancel := context.WithTimeout(context.Background(), interval)
+	defer cancel()
+	for {
 		obj, err := c.GetClusterByID(clusterID)
 		if err != nil {
 			return nil, fmt.Errorf("Getting cluster ID (%s): %v", clusterID, err)
@@ -700,9 +711,12 @@ func (c *Config) WaitForClusterState(clusterID, state string, interval time.Dura
 				return nil, fmt.Errorf("Cluster ID %s: %s", clusterID, obj.Conditions[i].Message)
 			}
 		}
-		time.Sleep(rancher2RetriesWait * time.Second)
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return nil, fmt.Errorf("Timeout waiting for cluster ID %s", clusterID)
+		}
 	}
-	return nil, fmt.Errorf("Timeout waiting for cluster ID %s", clusterID)
 }
 
 func (c *Config) getObjectV2ByID(clusterID, id, APIType string, resp interface{}) error {
@@ -716,27 +730,32 @@ func (c *Config) getObjectV2ByID(clusterID, id, APIType string, resp interface{}
 		return fmt.Errorf("Object API V2 type is nil")
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
+
 	client, err := c.CatalogV2Client(clusterID)
 	if err != nil {
 		return err
 	}
-	for i := 0; i < rancher2RetriesOnServerError; i++ {
+	for {
 		err = client.ByID(APIType, id, resp)
 		if err == nil {
-			break
+			return nil
 		}
-		if (!IsServerError(err) && !IsNotFound(err)) || (i+1) == rancher2RetriesOnServerError {
+		if !IsServerError(err) && !IsUnknownSchemaType(err) {
 			return err
 		}
-		time.Sleep(rancher2RetriesWait * time.Second)
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return err
+		}
 	}
-
-	return nil
 }
 
-func (c *Config) GetSettingV2ByID(clusterID, id string) (*SettingV2, error) {
+func (c *Config) GetSettingV2ByID(id string) (*SettingV2, error) {
 	resp := &SettingV2{}
-	err := c.getObjectV2ByID(clusterID, id, settingV2APIType, resp)
+	err := c.getObjectV2ByID("local", id, settingV2APIType, resp)
 	if err != nil {
 		if !IsServerError(err) && !IsNotFound(err) && !IsForbidden(err) {
 			return nil, fmt.Errorf("Getting Setting V2: %s", err)
@@ -806,8 +825,7 @@ func (c *Config) createObjectV2(clusterID string, APIType string, obj, resp inte
 	if err != nil {
 		return err
 	}
-	err = client.Create(APIType, obj, resp)
-	return err
+	return client.Create(APIType, obj, resp)
 }
 
 func (c *Config) CreateCatalogV2(clusterID string, repo *ClusterRepo) (*ClusterRepo, error) {
@@ -843,20 +861,24 @@ func (c *Config) GetCatalogV2List(clusterID string) ([]ClusterRepo, error) {
 		return nil, err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
 	listOpts := NewListOpts(nil)
 	resp := &ClusterRepoCollection{}
-	for i := 0; i < rancher2RetriesOnServerError; i++ {
+	for {
 		err = client.List(catalogV2APIType, listOpts, resp)
 		if err == nil {
-			break
+			return resp.Data, nil
 		}
-		if (!IsServerError(err) && !IsNotFound(err)) || (i+1) == rancher2RetriesOnServerError {
+		if !IsServerError(err) && !IsUnknownSchemaType(err) && !IsNotFound(err) {
 			return nil, err
 		}
-		time.Sleep(rancher2RetriesWait * time.Second)
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return nil, err
+		}
 	}
-
-	return resp.Data, nil
 }
 
 func (c *Config) WaitCatalogV2Downloaded(clusterID, catalogID string) (*ClusterRepo, error) {
@@ -864,7 +886,9 @@ func (c *Config) WaitCatalogV2Downloaded(clusterID, catalogID string) (*ClusterR
 		return nil, fmt.Errorf("Cluster ID and/or Catalog V2 ID is nil")
 	}
 
-	for i := 0; i <= catalogV2Timeout; i = i + rancher2RetriesWait {
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
+	for {
 		obj, err := c.GetCatalogV2ByID(clusterID, catalogID)
 		if err != nil {
 			return nil, fmt.Errorf("Getting catalog V2 ID (%s): %v", catalogID, err)
@@ -881,9 +905,12 @@ func (c *Config) WaitCatalogV2Downloaded(clusterID, catalogID string) (*ClusterR
 				return nil, fmt.Errorf("Catalog V2 ID %s: %s", catalogID, obj.Status.Conditions[i].Message)
 			}
 		}
-		time.Sleep(rancher2RetriesWait * time.Second)
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return nil, fmt.Errorf("Timeout waiting for catalog V2 ID %s", catalogID)
+		}
 	}
-	return nil, fmt.Errorf("Timeout waiting for catalog V2 ID %s", catalogID)
 }
 
 func (c *Config) WaitAllCatalogV2Downloaded(clusterID string) ([]ClusterRepo, error) {
@@ -892,7 +919,7 @@ func (c *Config) WaitAllCatalogV2Downloaded(clusterID string) ([]ClusterRepo, er
 		return nil, fmt.Errorf("[ERROR] getting catalog V2 list at cluster ID (%s): %s", clusterID, err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), catalogV2Timeout*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
 	defer cancel()
 	g, ctx := errgroup.WithContext(ctx)
 	for _, clusterRepo := range clusterRepos {
@@ -1060,23 +1087,27 @@ func (c *Config) InfoAppV2(clusterID, repoName, chartName, chartVersion string) 
 		resource.Links[link] = resource.Links[link] + "&version=" + chartVersion
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
 	client, err := c.CatalogV2Client(clusterID)
 	if err != nil {
 		return nil, nil, err
 	}
 	resp := &types2.ChartInfo{}
-	for i := 0; i < rancher2RetriesOnServerError; i++ {
+	for {
 		err = client.GetLink(resource, link, resp)
 		if err == nil {
-			break
+			return repo, resp, nil
 		}
-		if (!IsServerError(err) && !IsNotFound(err)) || (i+1) == rancher2RetriesOnServerError {
+		if !IsServerError(err) && !IsNotFound(err) {
 			return nil, nil, fmt.Errorf("failed to get chart info %s:%s from catalog v2 %s: %v", chartName, chartVersion, repoName, err)
 		}
-		time.Sleep(rancher2RetriesWait * time.Second)
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return nil, nil, fmt.Errorf("Timeout getting chart info %s:%s from catalog v2 %s: %v", chartName, chartVersion, repoName, err)
+		}
 	}
-
-	return repo, resp, nil
 }
 
 func (c *Config) InstallAppV2(clusterID string, repo *ClusterRepo, chartIntall *types2.ChartInstallAction) (*types2.ChartActionOutput, error) {

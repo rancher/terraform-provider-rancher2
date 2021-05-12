@@ -45,7 +45,7 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("cluster_name", cluster.Name)
 
-	systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(clusterID, appV2DefaultRegistryID)
+	systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func resourceRancher2AppV2Read(d *schema.ResourceData, meta interface{}) error {
 		d.Set("cluster_name", cluster.Name)
 	}
 	if systemDefaultRegistry, ok := d.Get("system_default_registry").(string); !ok || len(systemDefaultRegistry) == 0 {
-		systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(clusterID, appV2DefaultRegistryID)
+		systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
 		if err != nil {
 			return err
 		}

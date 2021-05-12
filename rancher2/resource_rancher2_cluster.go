@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -172,16 +173,22 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 			Links:   newCluster.Links,
 			Actions: newCluster.Actions,
 		}
-		// Retry enabling monitoring if got apierr 500 https://github.com/rancher/rancher/issues/30188
-		for i := 0; i < rancher2RetriesOnServerError; i++ {
+		// Retry enabling monitoring until timeout if got apierr 500 https://github.com/rancher/rancher/issues/30188
+		ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
+		defer cancel()
+		for {
 			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
 			if err == nil {
-				break
+				return resourceRancher2ClusterRead(d, meta)
 			}
-			if !IsServerError(err) || (i+1) == rancher2RetriesOnServerError {
+			if !IsServerError(err) {
 				return err
 			}
-			time.Sleep(2 * time.Second)
+			select {
+			case <-time.After(rancher2RetriesWait * time.Second):
+			case <-ctx.Done():
+				break
+			}
 		}
 	}
 

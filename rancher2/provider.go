@@ -2,9 +2,9 @@ package rancher2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -81,11 +81,28 @@ func Provider() terraform.ResourceProvider {
 				Description: descriptions["insecure"],
 			},
 			"retries": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      10,
-				Description:  descriptions["retries"],
-				ValidateFunc: validation.IntBetween(1, 1000),
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
+				Deprecated:  "Use timeout instead",
+				Description: descriptions["retries"],
+			},
+			"timeout": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     rancher2DefaultTimeout,
+				Description: descriptions["timeout"],
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v, ok := val.(string)
+					if !ok || len(v) == 0 {
+						return
+					}
+					_, err := time.ParseDuration(v)
+					if err != nil {
+						errs = append(errs, fmt.Errorf("%q must be in golang duration format, error: %v", key, err))
+					}
+					return
+				},
 			},
 		},
 
@@ -193,6 +210,7 @@ func init() {
 		"api_url":    "The URL to the rancher API",
 		"bootstrap":  "Bootstrap rancher server",
 		"retries":    "Rancher connection retries",
+		"timeout":    "Rancher connection timeout (retry every 5s). Golang duration format, ex: \"60s\"",
 	}
 }
 
@@ -204,7 +222,11 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	caCerts := d.Get("ca_certs").(string)
 	insecure := d.Get("insecure").(bool)
 	bootstrap := d.Get("bootstrap").(bool)
-	retries := d.Get("retries").(int)
+
+	timeout, err := time.ParseDuration(d.Get("timeout").(string))
+	if err != nil {
+		return nil, fmt.Errorf("[ERROR] timeout must be in golang duration format, error: %v", err)
+	}
 
 	// Set tokenKey based on accessKey and secretKey if needed
 	if tokenKey == providerDefaultEmptyString && accessKey != providerDefaultEmptyString && secretKey != providerDefaultEmptyString {
@@ -217,7 +239,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		CACerts:   caCerts,
 		Insecure:  insecure,
 		Bootstrap: bootstrap,
-		Retries:   retries,
+		Timeout:   timeout,
 	}
 
 	return providerValidateConfig(config)
@@ -239,6 +261,15 @@ func providerValidateConfig(config *Config) (*Config, error) {
 		if config.TokenKey == providerDefaultEmptyString {
 			return &Config{}, fmt.Errorf("[ERROR] No token_key nor access_key and secret_key are provided")
 		}
+	}
+
+	// Setting default timeout if not specified
+	if config.Timeout.Seconds() == 0 {
+		timeout, err := time.ParseDuration(rancher2DefaultTimeout)
+		if err != nil {
+			return nil, fmt.Errorf("[ERROR] default timeout is not in golang duration format, error: %v", err)
+		}
+		config.Timeout = timeout
 	}
 
 	return config, nil

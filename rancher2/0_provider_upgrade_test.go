@@ -214,7 +214,6 @@ provider "rancher2" {
 ` + testAccRancher2CloudCredentialConfigAmazonec2 + `
 ` + testAccRancher2CloudCredentialConfigAzure + `
 ` + testAccRancher2CloudCredentialConfigDigitalocean + `
-` + testAccRancher2CloudCredentialConfigGoogle + `
 ` + testAccRancher2CloudCredentialConfigOpenstack + `
 ` + testAccRancher2CloudCredentialConfigVsphere + `
 ` + testAccRancher2ClusterConfigRKE + `
@@ -343,19 +342,11 @@ func testAccRancher2UpgradeRancher() resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("Upgrading rancher to %s: %s\n%v", testAccCheckRancher2UpgradeVersion[testAccCheckRancher2RunningVersionIndex], out, err)
 		}
-		clusterActive, _, err := testAccProvider.Meta().(*Config).isClusterActive(testAccRancher2ClusterID)
-		for retry := 0; retry < 10 && !clusterActive; clusterActive, _, err = testAccProvider.Meta().(*Config).isClusterActive(testAccRancher2ClusterID) {
-			fmt.Printf("Waiting for cluster ID %s becomes active %d\n", testAccRancher2ClusterID, retry+1)
-			time.Sleep(5 * time.Second)
-			retry++
-		}
-
+		_, err = testAccProvider.Meta().(*Config).WaitForClusterState(testAccRancher2ClusterID, clusterActiveCondition, (120 * time.Second))
 		if err != nil {
-			return fmt.Errorf("Getting cluster ID %s state: %s", testAccRancher2ClusterID, err)
+			return fmt.Errorf("Waiting for cluster ID %s to be active: %v", testAccRancher2ClusterID, err)
 		}
-		if !clusterActive {
-			return fmt.Errorf("Cluster ID %s is not active", testAccRancher2ClusterID)
-		}
+		time.Sleep(5 * time.Second)
 		return nil
 	}
 }
