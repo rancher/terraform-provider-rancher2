@@ -1478,6 +1478,7 @@ The following arguments are supported:
 * `enable_private_nodes` - (Optional) Specifies whether worker nodes will be deployed into a new, private, subnet. Default `false` (bool)
 * `fingerprint` - (Required) The fingerprint corresponding to the specified user's private API Key (string)
 * `flex_ocpus` - (Optional) Specifies number of OCPUs for nodes (requires flexible shape specified with `node_shape`) (int)
+* `kms_key_id` - (Optional) The OCID of a KMS vault master key used to encrypt secrets at rest. See [here](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengencryptingdata.htm) for help creating a vault and master encryption key (string)
 * `kubernetes_version` - (Required) The Kubernetes version that will be used for your master *and* OKE worker nodes (string)
 * `limit_node_count` - (Optional) The maximum number of worker nodes. Can limit `quantity_per_subnet`. Default `0` (no limit) (int)
 * `load_balancer_subnet_name_1` - (Optional) The name of the first existing subnet to use for Kubernetes services / LB. `vcn_name` is also required when specifying an existing subnet. (string)

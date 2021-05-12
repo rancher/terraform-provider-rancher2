@@ -39,6 +39,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 		obj["flex_ocpus"] = int(in.FlexOCPUs)
 	}
 
+	if len(in.KMSKeyID) > 0 {
+		obj["kms_key_id"] = in.KMSKeyID
+	}
+
 	if len(in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = in.KubernetesVersion
 	}
@@ -171,6 +175,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 
 	if v, ok := in["flex_ocpus"].(int); ok && v > 0 {
 		obj.FlexOCPUs = int64(v)
+	}
+
+	if v, ok := in["kms_key_id"].(string); ok && len(v) > 0 {
+		obj.KMSKeyID = v
 	}
 
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {

@@ -23,6 +23,7 @@ type OracleKubernetesEngineConfig struct {
 	FlexOCPUs                   int64  `json:"flexOcpus,omitempty" yaml:"flexOcpus,omitempty"`
 	KubernetesVersion           string `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
 	DriverName                  string `json:"driverName,omitempty" yaml:"driverName,omitempty"`
+	KMSKeyID                    string `json:"kmsKeyId" yaml:"kmsKeyId"`
 	LimitNodeCount              int64  `json:"limitNodeCount,omitempty" yaml:"limitNodeCount,omitempty"`
 	Name                        string `json:"name,omitempty" yaml:"name,omitempty"`
 	NodeImage                   string `json:"nodeImage,omitempty" yaml:"nodeImage,omitempty"`
@@ -73,6 +74,12 @@ func clusterOKEConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			Description: "Optional number of OCPUs for nodes (requires flexible node_shape)",
+		},
+		"kms_key_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Sensitive:   true,
+			Description: "Optional specify the OCID of the KMS Vault master key",
 		},
 		"kubernetes_version": {
 			Type:        schema.TypeString,
