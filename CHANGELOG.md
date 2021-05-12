@@ -1,3 +1,17 @@
+## 1.15.0 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fixed `rancher2_cluster.hetzner_config.UsePrivateNetwork` with proper json field name
+
 ## 1.14.0 (May 7, 2021)
 
 FEATURES:
