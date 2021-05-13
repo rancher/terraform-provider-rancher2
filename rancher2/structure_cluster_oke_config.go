@@ -75,6 +75,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 		obj["node_shape"] = in.NodeShape
 	}
 
+	if len(in.PodCidr) > 0 {
+		obj["pod_cidr"] = in.PodCidr
+	}
+
 	if len(in.PrivateKeyContents) > 0 {
 		obj["private_key_contents"] = in.PrivateKeyContents
 	}
@@ -93,6 +97,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 
 	if len(in.Region) > 0 {
 		obj["region"] = in.Region
+	}
+
+	if len(in.ServiceCidr) > 0 {
+		obj["service_cidr"] = in.ServiceCidr
 	}
 
 	if len(in.ServiceSubnetDNSDomainName) > 0 {
@@ -205,6 +213,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 		obj.NodeShape = v
 	}
 
+	if v, ok := in["pod_cidr"].(string); ok && len(v) > 0 {
+		obj.PodCidr = v
+	}
+
 	if v, ok := in["private_key_contents"].(string); ok && len(v) > 0 {
 		obj.PrivateKeyContents = v
 	}
@@ -227,6 +239,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 
 	if v, ok := in["service_dns_domain_name"].(string); ok && len(v) > 0 {
 		obj.ServiceSubnetDNSDomainName = v
+	}
+
+	if v, ok := in["service_cidr"].(string); ok && len(v) > 0 {
+		obj.ServiceCidr = v
 	}
 
 	if v, ok := in["skip_vcn_delete"].(bool); ok {
