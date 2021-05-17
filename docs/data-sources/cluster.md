@@ -25,6 +25,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
+* `agent_env_vars` - (Computed) Optional Agent Env Vars for Rancher agent. Just for Rancher v2.5.6 and above (list)
 * `cluster_registration_token` - (Computed) Cluster Registration Token generated for the cluster (list maxitems:1)
 * `default_project_id` - (Computed) Default project ID for the cluster (string)
 * `driver` - (Computed) The driver used for the Cluster. `imported`, `azurekubernetesservice`, `amazonelasticcontainerservice`, `googlekubernetesengine` and `rancherKubernetesEngine` are supported (string)
