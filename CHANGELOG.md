@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Argument:** `rancher2_cluster.agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. Just for Rancher v2.5.6 and above (list)
 
 
 ENHANCEMENTS:
