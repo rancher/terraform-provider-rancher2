@@ -15,6 +15,14 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"agent_env_vars": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Optional Agent Env Vars for Rancher agent",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"driver": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -22,6 +30,11 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			"kube_config": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"ca_cert": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"rke_config": {
 				Type:     schema.TypeList,

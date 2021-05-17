@@ -59,6 +59,10 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	d.Set("name", in.Name)
 	d.Set("description", in.Description)
 
+	if len(in.AgentEnvVars) > 0 {
+		d.Set("agent_env_vars", flattenEnvVars(in.AgentEnvVars))
+	}
+
 	err := d.Set("cluster_auth_endpoint", flattenClusterAuthEndpoint(in.LocalClusterAuthEndpoint))
 	if err != nil {
 		return err
@@ -395,6 +399,10 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
+
+	if v, ok := in.Get("agent_env_vars").([]interface{}); ok && len(v) > 0 {
+		obj.AgentEnvVars = expandEnvVars(v)
+	}
 
 	if v, ok := in.Get("cluster_auth_endpoint").([]interface{}); ok && len(v) > 0 {
 		obj.LocalClusterAuthEndpoint = expandClusterAuthEndpoint(v)
