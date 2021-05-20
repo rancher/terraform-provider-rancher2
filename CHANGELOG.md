@@ -2,8 +2,9 @@
 
 FEATURES:
 
+* **Deprecated Argument:** `rancher2_cluster.aks_config.tag` - (Deprecated) Use `tags` argument instead as []string
+* **New Argument:** `rancher2_cluster.aks_config.tags` - (Optional/Computed) Tags for Kubernetes cluster. For example, `["foo=bar","bar=foo"]` (list)
 * **New Argument:** `rancher2_cluster.agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. Just for Rancher v2.5.6 and above (list)
-
 
 ENHANCEMENTS:
 

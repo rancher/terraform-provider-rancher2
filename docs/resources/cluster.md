@@ -1201,7 +1201,8 @@ The following arguments are supported:
 * `network_policy` - (Optional) Network policy used for building Kubernetes network. Chooses from `calico` (string)
 * `pod_cidr` - (Optional) A CIDR notation IP range from which to assign Kubernetes Pod IPs when \"network plugin\" is specified in \"kubenet\". Default `172.244.0.0/16` (string)
 * `service_cidr` - (Optional) A CIDR notation IP range from which to assign Kubernetes Service cluster IPs. It must not overlap with any Subnet IP ranges. Default `10.0.0.0/16` (string)
-* `tag` - (Optional/Computed) Tags for Kubernetes cluster. For example, foo=bar (map)
+* `tag` - (Deprecated) Use `tags` argument instead as []string
+* `tags` - (Optional/Computed) Tags for Kubernetes cluster. For example, `["foo=bar","bar=foo"]` (list)
 
 ### `eks_config`
 
