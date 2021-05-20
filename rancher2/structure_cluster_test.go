@@ -10,6 +10,8 @@ import (
 )
 
 var (
+	testClusterEnvVarsConf                         []managementClient.EnvVar
+	testClusterEnvVarsInterface                    []interface{}
 	testClusterAnswersConf                         *managementClient.Answer
 	testClusterAnswersInterface                    []interface{}
 	testClusterQuestionsConf                       []managementClient.Question
@@ -47,6 +49,26 @@ var (
 )
 
 func testCluster() {
+	testClusterEnvVarsConf = []managementClient.EnvVar{
+		{
+			Name:  "name1",
+			Value: "value1",
+		},
+		{
+			Name:  "name2",
+			Value: "value2",
+		},
+	}
+	testClusterEnvVarsInterface = []interface{}{
+		map[string]interface{}{
+			"name":  "name1",
+			"value": "value1",
+		},
+		map[string]interface{}{
+			"name":  "name2",
+			"value": "value2",
+		},
+	}
 	testClusterAnswersConf = &managementClient.Answer{
 		ClusterID: "cluster_id",
 		ProjectID: "project_id",
@@ -199,6 +221,7 @@ func testCluster() {
 	testClusterConfAKS.Name = "test"
 	testClusterConfAKS.Description = "description"
 	testClusterConfAKS.Driver = clusterDriverAKS
+	testClusterConfAKS.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfAKS.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfAKS.EnableClusterMonitoring = true
 	testClusterConfAKS.EnableNetworkPolicy = newTrue()
@@ -206,6 +229,7 @@ func testCluster() {
 	testClusterInterfaceAKS = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
@@ -224,6 +248,7 @@ func testCluster() {
 	testClusterConfEKS.Name = "test"
 	testClusterConfEKS.Description = "description"
 	testClusterConfEKS.Driver = clusterDriverEKS
+	testClusterConfEKS.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfEKS.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfEKS.EnableClusterMonitoring = true
 	testClusterConfEKS.EnableNetworkPolicy = newTrue()
@@ -231,6 +256,7 @@ func testCluster() {
 	testClusterInterfaceEKS = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
@@ -248,6 +274,7 @@ func testCluster() {
 	testClusterConfEKSV2.Name = "test"
 	testClusterConfEKSV2.Description = "description"
 	testClusterConfEKSV2.Driver = clusterDriverEKSV2
+	testClusterConfEKSV2.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfEKSV2.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfEKSV2.EnableClusterMonitoring = true
 	testClusterConfEKSV2.EnableNetworkPolicy = newTrue()
@@ -255,6 +282,7 @@ func testCluster() {
 	testClusterInterfaceEKSV2 = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
@@ -273,6 +301,7 @@ func testCluster() {
 	testClusterConfGKE.Name = "test"
 	testClusterConfGKE.Description = "description"
 	testClusterConfGKE.Driver = clusterDriverGKE
+	testClusterConfGKE.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfGKE.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfGKE.EnableClusterMonitoring = true
 	testClusterConfGKE.EnableNetworkPolicy = newTrue()
@@ -280,6 +309,7 @@ func testCluster() {
 	testClusterInterfaceGKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
@@ -297,6 +327,7 @@ func testCluster() {
 	testClusterConfK3S.Description = "description"
 	testClusterConfK3S.K3sConfig = testClusterK3SConfigConf
 	testClusterConfK3S.Driver = clusterDriverK3S
+	testClusterConfK3S.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfK3S.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfK3S.EnableClusterMonitoring = true
 	testClusterConfK3S.EnableNetworkPolicy = newTrue()
@@ -305,6 +336,7 @@ func testCluster() {
 	testClusterInterfaceK3S = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
@@ -324,6 +356,7 @@ func testCluster() {
 	testClusterConfGKEV2.Name = "test"
 	testClusterConfGKEV2.Description = "description"
 	testClusterConfGKEV2.Driver = clusterDriverGKEV2
+	testClusterConfGKEV2.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfGKEV2.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfGKEV2.EnableClusterMonitoring = true
 	testClusterConfGKEV2.EnableNetworkPolicy = newTrue()
@@ -331,6 +364,7 @@ func testCluster() {
 	testClusterInterfaceGKEV2 = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
@@ -349,6 +383,7 @@ func testCluster() {
 	testClusterConfOKE.Name = "test"
 	testClusterConfOKE.Description = "description"
 	testClusterConfOKE.Driver = clusterOKEKind
+	testClusterConfOKE.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfOKE.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfOKE.EnableClusterMonitoring = true
 	testClusterConfOKE.EnableNetworkPolicy = newTrue()
@@ -356,6 +391,7 @@ func testCluster() {
 	testClusterInterfaceOKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
@@ -373,6 +409,7 @@ func testCluster() {
 	testClusterConfRKE.Description = "description"
 	testClusterConfRKE.RancherKubernetesEngineConfig = testClusterRKEConfigConf
 	testClusterConfRKE.Driver = clusterDriverRKE
+	testClusterConfRKE.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfRKE.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfRKE.EnableClusterMonitoring = true
 	testClusterConfRKE.EnableNetworkPolicy = newTrue()
@@ -381,6 +418,7 @@ func testCluster() {
 	testClusterInterfaceRKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
@@ -400,6 +438,7 @@ func testCluster() {
 	testClusterConfRKE2.Description = "description"
 	testClusterConfRKE2.Rke2Config = testClusterRKE2ConfigConf
 	testClusterConfRKE2.Driver = clusterDriverRKE2
+	testClusterConfRKE2.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfRKE2.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfRKE2.EnableClusterMonitoring = true
 	testClusterConfRKE2.EnableNetworkPolicy = newTrue()
@@ -408,6 +447,7 @@ func testCluster() {
 	testClusterInterfaceRKE2 = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
@@ -430,6 +470,7 @@ func testCluster() {
 	testClusterConfTemplate.ClusterTemplateQuestions = testClusterQuestionsConf
 	testClusterConfTemplate.ClusterTemplateRevisionID = "cluster_template_revision_id"
 	testClusterConfTemplate.Driver = clusterDriverRKE
+	testClusterConfTemplate.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfTemplate.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfTemplate.EnableClusterAlerting = true
 	testClusterConfTemplate.EnableClusterMonitoring = true
@@ -439,6 +480,7 @@ func testCluster() {
 	testClusterInterfaceTemplate = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
 		"default_project_id":         "default_project_id",
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,

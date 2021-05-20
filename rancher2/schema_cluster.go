@@ -470,6 +470,14 @@ func clusterFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"agent_env_vars": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional Agent Env Vars for Rancher agent",
+			Elem: &schema.Resource{
+				Schema: envVarFields(),
+			},
+		},
 		"driver": {
 			Type:         schema.TypeString,
 			Optional:     true,

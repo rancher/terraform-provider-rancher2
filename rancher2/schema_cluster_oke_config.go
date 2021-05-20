@@ -33,9 +33,11 @@ type OracleKubernetesEngineConfig struct {
 	PrivateKeyContents          string `json:"privateKeyContents,omitempty" yaml:"privateKeyContents,omitempty"`
 	PrivateKeyPassphrase        string `json:"privateKeyPassphrase,omitempty" yaml:"privateKeyPassphrase,omitempty"`
 	PrivateNodes                bool   `json:"enablePrivateNodes,omitempty" yaml:"enablePrivateNodes,omitempty"`
+	PodCidr                     string `json:"podCidr,omitempty" yaml:"podCidr,omitempty"`
 	QuantityOfSubnets           int64  `json:"quantityOfNodeSubnets,omitempty" yaml:"quantityOfNodeSubnets,omitempty"`
 	QuantityPerSubnet           int64  `json:"quantityPerSubnet,omitempty" yaml:"quantityPerSubnet,omitempty"`
 	Region                      string `json:"region,omitempty" yaml:"region,omitempty"`
+	ServiceCidr                 string `json:"serviceCidr,omitempty" yaml:"serviceCidr,omitempty"`
 	ServiceLBSubnet1Name        string `json:"loadBalancerSubnetName1,omitempty" yaml:"loadBalancerSubnetName1,omitempty"`
 	ServiceLBSubnet2Name        string `json:"loadBalancerSubnetName2,omitempty" yaml:"loadBalancerSubnetName2,omitempty"`
 	ServiceSubnetDNSDomainName  string `json:"serviceDnsDomainName,omitempty" yaml:"serviceDnsDomainName,omitempty"`
@@ -200,6 +202,16 @@ func clusterOKEConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Additional CIDR from which to allow ingress to worker nodes",
+		},
+		"pod_cidr": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Optional specify the pod CIDR, defaults to 10.244.0.0/16",
+		},
+		"service_cidr": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Optional specify the service CIDR, defaults to 10.96.0.0/16",
 		},
 	}
 

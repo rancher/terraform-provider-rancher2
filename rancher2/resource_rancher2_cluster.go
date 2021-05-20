@@ -261,6 +261,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	enableNetworkPolicy := d.Get("enable_network_policy").(bool)
 	update := map[string]interface{}{
 		"name":                               d.Get("name").(string),
+		"agentEnvVars":                       expandEnvVars(d.Get("agent_env_vars").([]interface{})),
 		"description":                        d.Get("description").(string),
 		"defaultPodSecurityPolicyTemplateId": d.Get("default_pod_security_policy_template_id").(string),
 		"desiredAgentImage":                  d.Get("desired_agent_image").(string),
