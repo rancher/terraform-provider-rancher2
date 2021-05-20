@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -188,13 +189,21 @@ func resourceRancher2NodeTemplateDelete(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	err = client.APIBaseClient.Delete(nodeTemplate)
-	for i := 0; i <= meta.(*Config).Retries && IsNotAllowed(err); err = client.APIBaseClient.Delete(nodeTemplate) {
-		time.Sleep(30 * time.Second)
-		i++
-	}
-	if err != nil {
-		return fmt.Errorf("Error removing Node Template: %s", err)
+	ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
+	defer cancel()
+	for {
+		err = client.APIBaseClient.Delete(nodeTemplate)
+		if err == nil {
+			break
+		}
+		if !IsNotAllowed(err) {
+			return fmt.Errorf("[ERROR] removing Node Template: %s", err)
+		}
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return fmt.Errorf("[ERROR] timeout removing Node Template: %s", err)
+		}
 	}
 
 	log.Printf("[DEBUG] Waiting for node template (%s) to be removed", id)

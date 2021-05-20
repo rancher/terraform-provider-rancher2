@@ -127,7 +127,7 @@ func resourceRancher2CatalogV2Delete(d *schema.ResourceData, meta interface{}) e
 	}
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", catalog.ID, waitErr)
+		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be deleted: %s", catalog.ID, waitErr)
 	}
 	d.SetId("")
 	return nil

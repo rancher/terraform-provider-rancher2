@@ -121,13 +121,13 @@ func testAccRancher2CatalogV2Disappears(cat *ClusterRepo) resource.TestCheckFunc
 				Pending:    []string{},
 				Target:     []string{"removed"},
 				Refresh:    catalogV2StateRefreshFunc(testAccProvider.Meta(), clusterID, catalog.ID),
-				Timeout:    10 * time.Second,
+				Timeout:    120 * time.Second,
 				Delay:      1 * time.Second,
 				MinTimeout: 3 * time.Second,
 			}
 			_, waitErr := stateConf.WaitForState()
 			if waitErr != nil {
-				return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", catalog.ID, waitErr)
+				return fmt.Errorf("[ERROR] waiting for catalog (%s) to be deleted: %s", catalog.ID, waitErr)
 			}
 		}
 		return nil

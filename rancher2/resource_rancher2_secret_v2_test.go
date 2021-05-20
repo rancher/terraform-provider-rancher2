@@ -137,13 +137,13 @@ func testAccRancher2SecretV2Disappears(cat *SecretV2) resource.TestCheckFunc {
 				Pending:    []string{},
 				Target:     []string{"removed"},
 				Refresh:    secretV2StateRefreshFunc(testAccProvider.Meta(), clusterID, secret.ID),
-				Timeout:    10 * time.Second,
+				Timeout:    120 * time.Second,
 				Delay:      1 * time.Second,
 				MinTimeout: 3 * time.Second,
 			}
 			_, waitErr := stateConf.WaitForState()
 			if waitErr != nil {
-				return fmt.Errorf("[ERROR] waiting for secret (%s) to be active: %s", secret.ID, waitErr)
+				return fmt.Errorf("[ERROR] waiting for secret (%s) to be deleted: %s", secret.ID, waitErr)
 			}
 		}
 		return nil

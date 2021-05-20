@@ -12,7 +12,6 @@ const (
 	catalogV2APIVersion       = "v1"
 	catalogV2APIType          = rancher2CatalogTypePrefix + ".clusterrepo"
 	catalogV2ClusterIDsep     = "."
-	catalogV2Timeout          = 120
 	catalogV2DefaultGitBranch = "master"
 )
 

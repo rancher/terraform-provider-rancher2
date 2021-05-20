@@ -1,10 +1,14 @@
-## 1.15.0 (Unreleased)
+## 1.15.0 (May 20, 2021)
 
 FEATURES:
 
 * **Deprecated Argument:** `rancher2_cluster.aks_config.tag` - (Deprecated) Use `tags` argument instead as []string
 * **New Argument:** `rancher2_cluster.aks_config.tags` - (Optional/Computed) Tags for Kubernetes cluster. For example, `["foo=bar","bar=foo"]` (list)
 * **New Argument:** `rancher2_cluster.agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. Just for Rancher v2.5.6 and above (list)
+* **Deprecated provider Argument:** `retries` - (Deprecated) Use timeout instead
+* **New provider Argument:** `timeout` - (Optional) Timeout duration to retry for Rancher connectivity and resource operations. Default: `"120s"`
+* **New Argument:** `rancher2_cluster.oke_config.pod_cidr` - (Optional) A CIDR IP range from which to assign Kubernetes Pod IPs (string)
+* **New Argument:** `rancher2_cluster.oke_config.service_cidr` - (Optional) A CIDR IP range from which to assign Kubernetes Service IPs (string)
 
 ENHANCEMENTS:
 
