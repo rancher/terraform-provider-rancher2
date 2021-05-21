@@ -294,15 +294,26 @@ func (c *Config) CatalogV2Client(id string) (*clientbase.APIBaseClient, error) {
 		return nil, err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
 	// Setup the cluster client
 	options := c.CreateClientOpts()
 	options.URL = options.URL + "/k8s/clusters/" + id + rancher2CatalogAPIVersion
-	cli, err := clientbase.NewAPIClient(options)
-	if err != nil {
-		return nil, err
+	for {
+		cli, err := clientbase.NewAPIClient(options)
+		if err == nil {
+			c.Client.CatalogV2[id] = &cli
+			return c.Client.CatalogV2[id], err
+		}
+		if !IsServerError(err) && !IsUnknownSchemaType(err) {
+			return nil, err
+		}
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return nil, err
+		}
 	}
-	c.Client.CatalogV2[id] = &cli
-	return c.Client.CatalogV2[id], err
 }
 
 // ClusterClient creates a Rancher client scoped to a Cluster API
@@ -730,13 +741,13 @@ func (c *Config) getObjectV2ByID(clusterID, id, APIType string, resp interface{}
 		return fmt.Errorf("Object API V2 type is nil")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
-	defer cancel()
-
 	client, err := c.CatalogV2Client(clusterID)
 	if err != nil {
 		return err
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
 	for {
 		err = client.ByID(APIType, id, resp)
 		if err == nil {
