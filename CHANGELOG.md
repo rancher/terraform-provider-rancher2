@@ -1,3 +1,17 @@
+## 1.15.1 (May 21, 2021)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Added timeout to `CatalogV2Client` function when getting new catalog v2 client
+
 ## 1.15.0 (May 20, 2021)
 
 FEATURES:
@@ -12,7 +26,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
-
+* Added timeout to `CatalogV2Client` function when getting new catalog v2 client
 
 BUG FIXES:
 
