@@ -41,6 +41,7 @@ The following arguments are supported:
 * `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
+* `entity_id` - (Optional/Computed) KeyCloak Client ID field (string)
 
 ## Attributes Reference
 
