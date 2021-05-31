@@ -1,13 +1,15 @@
-## 1.15.2 (Unreleased)
+## 1.16.0 (Unreleased)
 
 FEATURES:
 
-
+* **New Argument:** `rancher2_auth_config_keycloak.entity_id` - (Optional/Computed) KeyCloak Client ID field (string)
 
 ENHANCEMENTS:
 
 * Added timeout error message to `CatalogV2Client`, `getObjectV2ByID` and `GetCatalogV2List` functions
 * Updated `rancher2_bootstrap` resource to wait until `local` cluster is active
+* Updated `rancher2_cluster.rke_config.cloud_provider.name` argument from `Optional/Computed` to `Optional`
+* Updated `rancher2_cluster` resource to replace RKE cluster API info instead of update, if `rancher2_cluster.rke_config` has been updated
 
 BUG FIXES:
 
