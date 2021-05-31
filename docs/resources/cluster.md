@@ -8,6 +8,8 @@ Provides a Rancher v2 Cluster resource. This can be used to create Clusters for 
 
 ## Example Usage
 
+**Note optional/computed arguments** If any `optional/computed` argument of this resource is defined by the user, removing it from tf file will NOT reset its value. To reset it, let its definition at tf file as empty/false object. Ex: `enable_cluster_monitoring = false`, `cloud_provider {}`, `name = ""`
+
 ### Creating Rancher v2 imported cluster
 
 ```hcl
@@ -568,7 +570,7 @@ The following attributes are exported:
 
 ### `rke_config`
 
-**Note** `rke_config` works the same as within Rancher GUI; it will not _provision_ hosts when using no `cloud_provider` or when `cloud_provider` is set to custom. It is expected that nodes are registered by having the `node_command` run on each node. Running the `node_command` is outside the scope of this provider. 
+**Note** `rke_config` works the same as within Rancher GUI; it will not _provision_ hosts when not using `node_pool` nor `node_driver`. It is expected that nodes are registered by having the `node_command` run on each node. Running the `node_command` is outside the scope of this provider. 
 
 #### Arguments
 
@@ -627,7 +629,7 @@ The following attributes are exported:
 * `aws_cloud_provider` - (Optional/Computed) RKE AWS Cloud Provider config for Cloud Provider [rke-aws-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/aws/) (list maxitems:1)
 * `azure_cloud_provider` - (Optional/Computed) RKE Azure Cloud Provider config for Cloud Provider [rke-azure-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/azure/) (list maxitems:1)
 * `custom_cloud_provider` - (Optional/Computed) RKE Custom Cloud Provider config for Cloud Provider (string)
-* `name` - (Optional/Computed) RKE Cloud Provider name (string)
+* `name` - (Optional) RKE Cloud Provider name (string)
 * `openstack_cloud_provider` - (Optional/Computed) RKE Openstack Cloud Provider config for Cloud Provider [rke-openstack-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/openstack/) (list maxitems:1)
 * `vsphere_cloud_provider` - (Optional/Computed) RKE Vsphere Cloud Provider config for Cloud Provider [rke-vsphere-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/vsphere/) Extra argument `name` is required on `virtual_center` configuration. (list maxitems:1)
 
