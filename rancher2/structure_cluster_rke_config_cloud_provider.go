@@ -102,7 +102,7 @@ func expandClusterRKEConfigCloudProvider(p []interface{}) (*managementClient.Clo
 		obj.CustomCloudProvider = v
 	}
 
-	if v, ok := in["name"].(string); ok && len(v) > 0 {
+	if v, ok := in["name"].(string); ok {
 		obj.Name = v
 	}
 
