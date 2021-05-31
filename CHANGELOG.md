@@ -1,3 +1,18 @@
+## 1.15.2 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added timeout error message to `CatalogV2Client`, `getObjectV2ByID` and `GetCatalogV2List` functions
+* Updated `rancher2_bootstrap` resource to wait until `local` cluster is active
+
+BUG FIXES:
+
+* Fixed `rancher2_cluster.gke_config_v2.cluster_addons` to be optional
+
 ## 1.15.1 (May 21, 2021)
 
 FEATURES:
