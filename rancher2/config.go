@@ -303,7 +303,7 @@ func (c *Config) CatalogV2Client(id string) (*clientbase.APIBaseClient, error) {
 		cli, err := clientbase.NewAPIClient(options)
 		if err == nil {
 			c.Client.CatalogV2[id] = &cli
-			return c.Client.CatalogV2[id], err
+			return c.Client.CatalogV2[id], nil
 		}
 		if !IsServerError(err) && !IsUnknownSchemaType(err) {
 			return nil, err
@@ -311,7 +311,7 @@ func (c *Config) CatalogV2Client(id string) (*clientbase.APIBaseClient, error) {
 		select {
 		case <-time.After(rancher2RetriesWait * time.Second):
 		case <-ctx.Done():
-			return nil, err
+			return nil, fmt.Errorf("Timeout getting Catalog V2 Client at cluster ID %s: %v", id, err)
 		}
 	}
 }
@@ -759,7 +759,7 @@ func (c *Config) getObjectV2ByID(clusterID, id, APIType string, resp interface{}
 		select {
 		case <-time.After(rancher2RetriesWait * time.Second):
 		case <-ctx.Done():
-			return err
+			return fmt.Errorf("Timeout getting object V2 ID %s at cluster ID %s: %v", id, clusterID, err)
 		}
 	}
 }
@@ -887,7 +887,7 @@ func (c *Config) GetCatalogV2List(clusterID string) ([]ClusterRepo, error) {
 		select {
 		case <-time.After(rancher2RetriesWait * time.Second):
 		case <-ctx.Done():
-			return nil, err
+			return nil, fmt.Errorf("Timeout getting catalog V2 list at cluster ID %s: %v", clusterID, err)
 		}
 	}
 }
