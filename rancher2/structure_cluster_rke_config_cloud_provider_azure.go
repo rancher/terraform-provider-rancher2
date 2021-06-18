@@ -106,6 +106,10 @@ func flattenClusterRKEConfigCloudProviderAzure(in *managementClient.AzureCloudPr
 		obj["security_group_name"] = in.SecurityGroupName
 	}
 
+	if len(in.SecurityGroupResourceGroup) > 0 {
+		obj["security_group_resource_group"] = in.SecurityGroupResourceGroup
+	}
+
 	if len(in.SubnetName) > 0 {
 		obj["subnet_name"] = in.SubnetName
 	}
@@ -227,6 +231,10 @@ func expandClusterRKEConfigCloudProviderAzure(p []interface{}) (*managementClien
 
 	if v, ok := in["security_group_name"].(string); ok && len(v) > 0 {
 		obj.SecurityGroupName = v
+	}
+
+	if v, ok := in["security_group_resource_group"].(string); ok && len(v) > 0 {
+		obj.SecurityGroupResourceGroup = v
 	}
 
 	if v, ok := in["subnet_name"].(string); ok && len(v) > 0 {
