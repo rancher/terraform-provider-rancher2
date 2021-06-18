@@ -139,6 +139,11 @@ func clusterRKEConfigCloudProviderAzureFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+		"security_group_resource_group": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
 		"subnet_name": {
 			Type:     schema.TypeString,
 			Optional: true,
