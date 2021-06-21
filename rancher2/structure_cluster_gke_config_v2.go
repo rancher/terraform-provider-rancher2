@@ -318,7 +318,7 @@ func flattenClusterGKEConfigV2(in *managementClient.GKEClusterConfigSpec, p []in
 func expandClusterGKEConfigV2ClusterAddons(p []interface{}) *managementClient.GKEClusterAddons {
 	obj := &managementClient.GKEClusterAddons{}
 	if len(p) == 0 || p[0] == nil {
-		return nil
+		return obj
 	}
 	in := p[0].(map[string]interface{})
 

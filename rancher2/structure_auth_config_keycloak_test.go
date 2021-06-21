@@ -27,6 +27,7 @@ func init() {
 		SpCert:              "sp_cert",
 		UIDField:            "uid_field",
 		UserNameField:       "user_name_field",
+		EntityID:            "entity_id",
 	}
 	testAuthConfigKeyCloakInterface = map[string]interface{}{
 		"name":                  AuthConfigKeyCloakName,
@@ -41,6 +42,7 @@ func init() {
 		"sp_cert":               "sp_cert",
 		"uid_field":             "uid_field",
 		"user_name_field":       "user_name_field",
+		"entity_id":             "entity_id",
 	}
 }
 

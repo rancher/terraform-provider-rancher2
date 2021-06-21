@@ -48,6 +48,11 @@ func authConfigKeyCloakFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"entity_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
 	}
 
 	for k, v := range authConfigFields() {

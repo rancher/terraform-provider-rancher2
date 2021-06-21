@@ -470,7 +470,7 @@ resource "rancher2_cluster" "foo" {
 
 **Note** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585]](https://github.com/rancher/rancher/issues/32585)
 
-```
+```hcl
 resource "rancher2_cloud_credential" "foo-google" {
   name = "foo-google"
   description= "Terraform cloudCredential acceptance test"
