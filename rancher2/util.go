@@ -266,7 +266,7 @@ func RootURL(url string) string {
 }
 
 func IsUnknownSchemaType(err error) bool {
-	return strings.HasPrefix(err.Error(), "Unknown schema type")
+	return strings.Contains(err.Error(), "Unknown schema type")
 }
 
 func IsNotFound(err error) bool {

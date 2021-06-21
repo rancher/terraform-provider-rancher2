@@ -92,12 +92,12 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	clusterLocal, _ := client.Cluster.ByID("local")
+	clusterLocal, _ := client.Cluster.ByID(rancher2DefaultLocalClusterID)
 	if clusterLocal != nil && clusterLocal.State == "provisioning" {
 		annotations := clusterLocal.Annotations
 		annotations["rancher2.terraform.io/bootstrap"] = "true"
 		update := map[string]interface{}{
-			"name":        "local",
+			"name":        clusterLocal.Name,
 			"annotations": annotations,
 		}
 		_, err := client.Cluster.Update(clusterLocal, update)
@@ -117,6 +117,11 @@ func resourceRancher2BootstrapRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	err := bootstrapDoLogin(d, meta)
+	if err != nil {
+		return err
+	}
+
+	err = meta.(*Config).waitForRancherLocalActive()
 	if err != nil {
 		return err
 	}
