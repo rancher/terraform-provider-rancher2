@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Added timeout error message to `CatalogV2Client`, `getObjectV2ByID` and `GetCatalogV2List` functions
+* Updated `rancher2_bootstrap` resource to wait until `local` cluster is active
 
 BUG FIXES:
 

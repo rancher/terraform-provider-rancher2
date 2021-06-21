@@ -34,6 +34,7 @@ const (
 	rancher2UILandingVersion          = "2.5.0" // ui landing option
 	rancher2NodeTemplateNewPrefix     = "cattle-global-nt:nt-"
 	rancher2DefaultTimeout            = "120s"
+	rancher2DefaultLocalClusterID     = "local"
 )
 
 // Client are the client kind for a Rancher v3 API
@@ -100,6 +101,21 @@ func (c *Config) isRancherReady() error {
 			return fmt.Errorf("Rancher is not ready: %v", err)
 		}
 	}
+}
+
+func (c *Config) waitForRancherLocalActive() error {
+	client, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+	clusterLocal, _ := client.Cluster.ByID(rancher2DefaultLocalClusterID)
+	if clusterLocal != nil {
+		_, err := c.WaitForClusterState(clusterLocal.ID, clusterActiveCondition, c.Timeout)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *Config) getK8SDefaultVersion() (string, error) {
