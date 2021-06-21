@@ -34,7 +34,7 @@ The following arguments are supported:
 * `test_password` - (Required/Sensitive) Password for test access to ActiveDirectory service (string)
 * `user_search_base` - (Required) User search base DN (string)
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
-* `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `activedirectory_user://<DN>`  `activedirectory_group://<DN>` (list)
+* `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `activedirectory_user://<DN>`  `activedirectory_group://<DN>`. The local admin (`local://<admin id>`) and the `test_username` must be added too. (list)
 * `certificate` - (Optional/Sensitive) CA certificate for TLS if selfsigned (string)
 * `connection_timeout` - (Optional) ActiveDirectory connection timeout. Default `5000` (int)
 * `default_login_domain` - (Optional) ActiveDirectory defult login domain (string)
