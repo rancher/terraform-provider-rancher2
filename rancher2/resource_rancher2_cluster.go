@@ -296,6 +296,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	replace := false
 	switch driver := ToLower(d.Get("driver").(string)); driver {
 	case clusterDriverAKS:
 		aksConfig, err := expandClusterAKSConfig(d.Get("aks_config").([]interface{}), d.Get("name").(string))
@@ -333,6 +334,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["rancherKubernetesEngineConfig"] = rkeConfig
+		replace = d.HasChange("rke_config")
 	case clusterDriverK3S:
 		update["k3sConfig"] = expandClusterK3SConfig(d.Get("k3s_config").([]interface{}))
 	case clusterDriverRKE2:
@@ -340,7 +342,11 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	newCluster := &Cluster{}
-	err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
+	if replace {
+		err = client.APIBaseClient.Replace(managementClient.ClusterType, cluster, update, newCluster)
+	} else {
+		err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
+	}
 	if err != nil {
 		return err
 	}

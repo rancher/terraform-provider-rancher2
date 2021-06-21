@@ -32,7 +32,6 @@ func clusterRKEConfigCloudProviderFields() map[string]*schema.Schema {
 		"name": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Computed: true,
 		},
 		"openstack_cloud_provider": {
 			Type:     schema.TypeList,
