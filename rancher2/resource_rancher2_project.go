@@ -152,18 +152,9 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	resourceQuota, nsResourceQuota := expandProjectResourceQuota(d.Get("resource_quota").([]interface{}))
-	update := map[string]interface{}{
-		"name":                          d.Get("name").(string),
-		"description":                   d.Get("description").(string),
-		"containerDefaultResourceLimit": expandProjectContainerResourceLimit(d.Get("container_resource_limit").([]interface{})),
-		"namespaceDefaultResourceQuota": nsResourceQuota,
-		"resourceQuota":                 resourceQuota,
-		"annotations":                   toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":                        toMapString(d.Get("labels").(map[string]interface{})),
-	}
-
-	newProject, err := client.Project.Update(project, update)
+	newProject := expandProject(d)
+	newProject.Links = project.Links
+	newProject, err = client.Project.Replace(newProject)
 	if err != nil {
 		return err
 	}
