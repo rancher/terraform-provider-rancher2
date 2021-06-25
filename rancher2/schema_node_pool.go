@@ -40,6 +40,10 @@ func nodePoolFields() map[string]*schema.Schema {
 			Default:      0,
 			ValidateFunc: validation.IntAtLeast(0),
 		},
+		"drain_before_delete": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
 		"control_plane": {
 			Type:     schema.TypeBool,
 			Optional: true,
