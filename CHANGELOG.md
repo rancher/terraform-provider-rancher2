@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * Updated `rancher2_bootstrap` resource to wait until `local` cluster is active
 * Updated `rancher2_cluster.rke_config.cloud_provider.name` argument from `Optional/Computed` to `Optional`
 * Updated `rancher2_cluster` resource to replace RKE cluster API info instead of update, if `rancher2_cluster.rke_config` has been updated
+* Updated `rancher2_project` resource to replace project API info instead of update
 
 BUG FIXES:
 
