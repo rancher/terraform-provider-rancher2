@@ -49,6 +49,8 @@ The following arguments are supported:
 * `group_search_filter` - (Optional/Computed) Group search filter (string)
 * `nested_group_membership_enabled` - (Optional/Computed) Nested group membership enable. Default `false` (bool)
 * `port` - (Optional) ActiveDirectory port. Default `389` (int)
+* `start_tls` - (Optional/Computed) Enable start TLS connection (bool)
+* `tls` - (Optional/Computed) Enable TLS connection (bool)
 * `user_disabled_bit_mask` - (Optional) User disabled bit mask. Default `2` (int)
 * `user_enabled_attribute` - (Optional/Computed) User enable attribute (string)
 * `user_login_attribute` - (Optional/Computed) User login attribute. Default `sAMAccountName` (string)
@@ -56,7 +58,6 @@ The following arguments are supported:
 * `user_object_class` - (Optional/Computed) User object class. Default `person` (string)
 * `user_search_attribute` - (Optional/Computed) User search attribute. Default `sAMAccountName|sn|givenName` (string)
 * `user_search_filter` - (Optional/Computed) User search filter (string)
-* `tls` - (Optional/Computed) Enable TLS connection (bool)
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
 

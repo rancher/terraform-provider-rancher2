@@ -105,6 +105,16 @@ func authConfigActiveDirectoryFields() map[string]*schema.Schema {
 			Optional: true,
 			Default:  389,
 		},
+		"start_tls": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Computed: true,
+		},
+		"tls": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Computed: true,
+		},
 		"user_disabled_bit_mask": {
 			Type:     schema.TypeInt,
 			Optional: true,
@@ -137,11 +147,6 @@ func authConfigActiveDirectoryFields() map[string]*schema.Schema {
 		},
 		"user_search_filter": {
 			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"tls": {
-			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
 		},
