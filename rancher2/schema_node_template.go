@@ -95,7 +95,7 @@ func nodeTemplateFields() map[string]*schema.Schema {
 		"engine_install_url": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Default:  "https://releases.rancher.com/install-docker/18.09.sh",
+			Computed: true,
 		},
 		"engine_label": {
 			Type:     schema.TypeMap,

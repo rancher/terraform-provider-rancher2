@@ -65,6 +65,7 @@ The following arguments are supported:
 * `hostname_prefix` - (Required) The prefix for created nodes of the Node Pool (string)
 * `node_template_id` - (Required) The Node Template ID to use for node creation (string)
 * `delete_not_ready_after_secs` - (Optional) Delete not ready node after secs. For Rancher v2.3.3 or above. Default `0` (int)
+* `drain_before_delete` - (Optional) Drain nodes before delete. Default: `false` (bool)
 * `node_taints` - (Required) Node taints. For Rancher v2.3.3 or above (List)
 * `control_plane` - (Optional) RKE control plane role for created nodes (bool)
 * `etcd` - (Optional) RKE etcd role for created nodes (bool)
