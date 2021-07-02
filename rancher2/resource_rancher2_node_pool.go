@@ -102,6 +102,7 @@ func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) er
 	update := map[string]interface{}{
 		"hostnamePrefix":          d.Get("hostname_prefix").(string),
 		"deleteNotReadyAfterSecs": int64(d.Get("delete_not_ready_after_secs").(int)),
+		"drainBeforeDelete":       d.Get("drain_before_delete").(bool),
 		"nodeTemplateId":          d.Get("node_template_id").(string),
 		"nodeTaints":              expandTaints(d.Get("node_taints").([]interface{})),
 		"quantity":                int64(d.Get("quantity").(int)),

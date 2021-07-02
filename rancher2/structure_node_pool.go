@@ -16,6 +16,7 @@ func flattenNodePool(d *schema.ResourceData, in *managementClient.NodePool) erro
 	d.Set("cluster_id", in.ClusterID)
 	d.Set("name", in.Name)
 	d.Set("delete_not_ready_after_secs", int(in.DeleteNotReadyAfterSecs))
+	d.Set("drain_before_delete", in.DrainBeforeDelete)
 	d.Set("hostname_prefix", in.HostnamePrefix)
 	d.Set("node_template_id", in.NodeTemplateID)
 
@@ -56,6 +57,7 @@ func expandNodePool(in *schema.ResourceData) *managementClient.NodePool {
 	obj.ClusterID = in.Get("cluster_id").(string)
 	obj.Name = in.Get("name").(string)
 	obj.DeleteNotReadyAfterSecs = int64(in.Get("delete_not_ready_after_secs").(int))
+	obj.DrainBeforeDelete = in.Get("drain_before_delete").(bool)
 	obj.HostnamePrefix = in.Get("hostname_prefix").(string)
 	obj.NodeTemplateID = in.Get("node_template_id").(string)
 

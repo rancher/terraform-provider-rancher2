@@ -22,7 +22,7 @@ func commonAnnotationLabelFields() map[string]*schema.Schema {
 			Description: "Annotations of the resource",
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 				// Supressing diff for annotations containing cattle.io/
-				if (strings.Contains(k, commonAnnotationLabelCattle) || strings.Contains(k, commonAnnotationLabelRancher)) && old != "" && new == "" {
+				if (strings.Contains(k, commonAnnotationLabelCattle) || strings.Contains(k, commonAnnotationLabelRancher)) && new == "" {
 					return true
 				}
 				return false
@@ -35,7 +35,7 @@ func commonAnnotationLabelFields() map[string]*schema.Schema {
 			Description: "Labels of the resource",
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 				// Supressing diff for labels containing cattle.io/
-				if (strings.Contains(k, commonAnnotationLabelCattle) || strings.Contains(k, commonAnnotationLabelRancher)) && old != "" && new == "" {
+				if (strings.Contains(k, commonAnnotationLabelCattle) || strings.Contains(k, commonAnnotationLabelRancher)) && new == "" {
 					return true
 				}
 				return false

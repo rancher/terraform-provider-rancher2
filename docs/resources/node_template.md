@@ -96,7 +96,7 @@ The following arguments are supported:
 * `driver_id` - (Optional/Computed) The node driver id used by the node template. It's required if the node driver isn't built in Rancher (string)
 * `engine_env` - (Optional) Engine environment for the node template (string)
 * `engine_insecure_registry` - (Optional) Insecure registry for the node template (list)
-* `engine_install_url` - (Optional) Docker engine install URL for the node template. Default `https://releases.rancher.com/install-docker/18.09.sh`. Available install docker versions at `https://github.com/rancher/install-docker` (string)
+* `engine_install_url` - (Optional/Computed) Docker engine install URL for the node template. Available install docker versions at `https://github.com/rancher/install-docker` (string)
 * `engine_label` - (Optional) Engine label for the node template (string)
 * `engine_opt` - (Optional) Engine options for the node template (map)
 * `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
@@ -110,7 +110,7 @@ The following arguments are supported:
 * `annotations` - (Optional) Annotations for Node Template object (map)
 * `labels` - (Optional/Computed) Labels for Node Template object (map)
 
-**Note** `annotations`, `labels` and `node_taints` will be applied to nodes deployed using the Node Template
+**Note** `labels` and `node_taints` will be applied to nodes deployed using the Node Template
 
 ## Attributes Reference
 

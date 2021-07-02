@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Argument:** `rancher2_auth_config_keycloak.entity_id` - (Optional/Computed) KeyCloak Client ID field (string)
+* **New Argument:** `rancher2_node_pool.drain_before_delete` - (Optional) Drain nodes before delete (bool)
 
 ENHANCEMENTS:
 
@@ -11,6 +12,7 @@ ENHANCEMENTS:
 * Updated `rancher2_cluster.rke_config.cloud_provider.name` argument from `Optional/Computed` to `Optional`
 * Updated `rancher2_cluster` resource to replace RKE cluster API info instead of update, if `rancher2_cluster.rke_config` has been updated
 * Updated `rancher2_project` resource to replace project API info instead of update
+* Updated `rancher2_node_template.engine_install_url` argument to be `computed`
 
 BUG FIXES:
 
