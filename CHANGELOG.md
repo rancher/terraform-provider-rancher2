@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Argument:** `rancher2_auth_config_keycloak.entity_id` - (Optional/Computed) KeyCloak Client ID field (string)
+* **New Argument:** `rancher2_auth_config_activedirectory.start_tls` - (Optional/Computed) Enable start TLS connection (bool)
 * **New Argument:** `rancher2_node_pool.drain_before_delete` - (Optional) Drain nodes before delete (bool)
 
 ENHANCEMENTS:

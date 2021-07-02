@@ -49,6 +49,7 @@ func flattenAuthConfigActiveDirectory(d *schema.ResourceData, in *managementClie
 	d.Set("group_search_filter", in.GroupSearchFilter)
 	d.Set("nested_group_membership_enabled", *in.NestedGroupMembershipEnabled)
 	d.Set("port", int(in.Port))
+	d.Set("start_tls", in.StartTLS)
 	d.Set("tls", in.TLS)
 	d.Set("user_disabled_bit_mask", int(in.UserDisabledBitMask))
 	d.Set("user_enabled_attribute", in.UserEnabledAttribute)
@@ -162,6 +163,10 @@ func expandAuthConfigActiveDirectory(in *schema.ResourceData) (*managementClient
 
 	if v, ok := in.Get("port").(int); ok && v > 0 {
 		obj.Port = int64(v)
+	}
+
+	if v, ok := in.Get("start_tls").(bool); ok {
+		obj.StartTLS = v
 	}
 
 	if v, ok := in.Get("tls").(bool); ok {
