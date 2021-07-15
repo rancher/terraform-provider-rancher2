@@ -712,6 +712,13 @@ func clusterFields() map[string]*schema.Schema {
 			Description: "Windows preferred cluster",
 			ForceNew:    true,
 		},
+		"fleet_workspace": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "fleet-default",
+			Description: "Fleet Workspace for Cluster",
+			ForceNew:    false,
+		},
 	}
 
 	for k, v := range commonAnnotationLabelFields() {

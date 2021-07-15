@@ -220,6 +220,7 @@ func testCluster() {
 	}
 	testClusterConfAKS.Name = "test"
 	testClusterConfAKS.Description = "description"
+	testClusterConfAKS.FleetWorkspaceName = "fleet-custom"
 	testClusterConfAKS.Driver = clusterDriverAKS
 	testClusterConfAKS.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfAKS.DefaultPodSecurityPolicyTemplateID = "restricted"
@@ -241,12 +242,14 @@ func testCluster() {
 		"driver":                                  clusterDriverAKS,
 		"aks_config":                              testClusterAKSConfigInterface,
 		"system_project_id":                       "system_project_id",
+		"fleet_workspace":                         "fleet-custom",
 	}
 	testClusterConfEKS = &Cluster{
 		AmazonElasticContainerServiceConfig: testClusterEKSConfigConf,
 	}
 	testClusterConfEKS.Name = "test"
 	testClusterConfEKS.Description = "description"
+	testClusterConfEKS.FleetWorkspaceName = "fleet-custom"
 	testClusterConfEKS.Driver = clusterDriverEKS
 	testClusterConfEKS.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfEKS.DefaultPodSecurityPolicyTemplateID = "restricted"
@@ -268,11 +271,13 @@ func testCluster() {
 		"driver":                                  clusterDriverEKS,
 		"eks_config":                              testClusterEKSConfigInterface,
 		"system_project_id":                       "system_project_id",
+		"fleet_workspace":                         "fleet-custom",
 	}
 	testClusterConfEKSV2 = &Cluster{}
 	testClusterConfEKSV2.EKSConfig = testClusterEKSConfigV2Conf
 	testClusterConfEKSV2.Name = "test"
 	testClusterConfEKSV2.Description = "description"
+	testClusterConfEKSV2.FleetWorkspaceName = "fleet-custom"
 	testClusterConfEKSV2.Driver = clusterDriverEKSV2
 	testClusterConfEKSV2.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfEKSV2.DefaultPodSecurityPolicyTemplateID = "restricted"
@@ -294,12 +299,14 @@ func testCluster() {
 		"driver":                                  clusterDriverEKSV2,
 		"eks_config_v2":                           testClusterEKSConfigV2Interface,
 		"system_project_id":                       "system_project_id",
+		"fleet_workspace":                         "fleet-custom",
 	}
 	testClusterConfGKE = &Cluster{
 		GoogleKubernetesEngineConfig: testClusterGKEConfigConf,
 	}
 	testClusterConfGKE.Name = "test"
 	testClusterConfGKE.Description = "description"
+	testClusterConfGKE.FleetWorkspaceName = "fleet-custom"
 	testClusterConfGKE.Driver = clusterDriverGKE
 	testClusterConfGKE.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfGKE.DefaultPodSecurityPolicyTemplateID = "restricted"
@@ -321,10 +328,12 @@ func testCluster() {
 		"driver":                                  clusterDriverGKE,
 		"gke_config":                              testClusterGKEConfigInterface,
 		"system_project_id":                       "system_project_id",
+		"fleet_workspace":                         "fleet-custom",
 	}
 	testClusterConfK3S = &Cluster{}
 	testClusterConfK3S.Name = "test"
 	testClusterConfK3S.Description = "description"
+	testClusterConfK3S.FleetWorkspaceName = "fleet-custom"
 	testClusterConfK3S.K3sConfig = testClusterK3SConfigConf
 	testClusterConfK3S.Driver = clusterDriverK3S
 	testClusterConfK3S.AgentEnvVars = testClusterEnvVarsConf
@@ -350,11 +359,13 @@ func testCluster() {
 		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
 		"system_project_id":                       "system_project_id",
 		"windows_prefered_cluster":                false,
+		"fleet_workspace":                         "fleet-custom",
 	}
 	testClusterConfGKEV2 = &Cluster{}
 	testClusterConfGKEV2.GKEConfig = testClusterGKEConfigV2Conf
 	testClusterConfGKEV2.Name = "test"
 	testClusterConfGKEV2.Description = "description"
+	testClusterConfGKEV2.FleetWorkspaceName = "fleet-custom"
 	testClusterConfGKEV2.Driver = clusterDriverGKEV2
 	testClusterConfGKEV2.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfGKEV2.DefaultPodSecurityPolicyTemplateID = "restricted"
@@ -376,12 +387,14 @@ func testCluster() {
 		"driver":                                  clusterDriverGKEV2,
 		"gke_config_v2":                           testClusterGKEConfigV2Interface,
 		"system_project_id":                       "system_project_id",
+		"fleet_workspace":                         "fleet-custom",
 	}
 	testClusterConfOKE = &Cluster{
 		OracleKubernetesEngineConfig: testClusterOKEConfigConf,
 	}
 	testClusterConfOKE.Name = "test"
 	testClusterConfOKE.Description = "description"
+	testClusterConfOKE.FleetWorkspaceName = "fleet-custom"
 	testClusterConfOKE.Driver = clusterOKEKind
 	testClusterConfOKE.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfOKE.DefaultPodSecurityPolicyTemplateID = "restricted"
@@ -403,10 +416,12 @@ func testCluster() {
 		"driver":                                  clusterOKEKind,
 		"oke_config":                              testClusterOKEConfigInterface,
 		"system_project_id":                       "system_project_id",
+		"fleet_workspace":                         "fleet-custom",
 	}
 	testClusterConfRKE = &Cluster{}
 	testClusterConfRKE.Name = "test"
 	testClusterConfRKE.Description = "description"
+	testClusterConfRKE.FleetWorkspaceName = "fleet-custom"
 	testClusterConfRKE.RancherKubernetesEngineConfig = testClusterRKEConfigConf
 	testClusterConfRKE.Driver = clusterDriverRKE
 	testClusterConfRKE.AgentEnvVars = testClusterEnvVarsConf
@@ -432,10 +447,12 @@ func testCluster() {
 		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
 		"system_project_id":                       "system_project_id",
 		"windows_prefered_cluster":                false,
+		"fleet_workspace":                         "fleet-custom",
 	}
 	testClusterConfRKE2 = &Cluster{}
 	testClusterConfRKE2.Name = "test"
 	testClusterConfRKE2.Description = "description"
+	testClusterConfRKE2.FleetWorkspaceName = "fleet-custom"
 	testClusterConfRKE2.Rke2Config = testClusterRKE2ConfigConf
 	testClusterConfRKE2.Driver = clusterDriverRKE2
 	testClusterConfRKE2.AgentEnvVars = testClusterEnvVarsConf
@@ -461,10 +478,12 @@ func testCluster() {
 		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
 		"system_project_id":                       "system_project_id",
 		"windows_prefered_cluster":                false,
+		"fleet_workspace":                         "fleet-custom",
 	}
 	testClusterConfTemplate = &Cluster{}
 	testClusterConfTemplate.Name = "test"
 	testClusterConfTemplate.Description = "description"
+	testClusterConfTemplate.FleetWorkspaceName = "fleet-custom"
 	testClusterConfTemplate.ClusterTemplateAnswers = testClusterAnswersConf
 	testClusterConfTemplate.ClusterTemplateID = "cluster_template_id"
 	testClusterConfTemplate.ClusterTemplateQuestions = testClusterQuestionsConf
@@ -499,6 +518,7 @@ func testCluster() {
 		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
 		"system_project_id":                       "system_project_id",
 		"windows_prefered_cluster":                false,
+		"fleet_workspace":                         "fleet-custom",
 	}
 }
 

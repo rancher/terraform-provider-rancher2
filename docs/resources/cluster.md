@@ -536,6 +536,7 @@ The following arguments are supported:
 * `annotations` - (Optional/Computed) Annotations for the Cluster (map)
 * `labels` - (Optional/Computed) Labels for the Cluster (map)
 * `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
+* `fleet_workspace` - (Optional/Computed) Fleet Workspace for the Cluster (string)
 
 
 #### `schedule_config`

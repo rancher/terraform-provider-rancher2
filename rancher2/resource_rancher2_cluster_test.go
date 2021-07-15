@@ -17,6 +17,7 @@ const (
 resource "` + testAccRancher2ClusterType + `" "foo" {
   name = "foo"
   description = "Terraform custom cluster acceptance test"
+  fleet_workspace = "fleet-custom"
   rke_config {
     network {
       plugin = "canal"
