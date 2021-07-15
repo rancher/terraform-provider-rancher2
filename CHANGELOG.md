@@ -1,4 +1,4 @@
-## 1.16.0 (Unreleased)
+## 1.16.0 (July 15, 2021)
 
 FEATURES:
 
@@ -14,6 +14,8 @@ ENHANCEMENTS:
 * Updated `rancher2_cluster` resource to replace RKE cluster API info instead of update, if `rancher2_cluster.rke_config` has been updated
 * Updated `rancher2_project` resource to replace project API info instead of update
 * Updated `rancher2_node_template.engine_install_url` argument to be `computed`
+* Updated Rancher to v2.5.9
+* Updated golang to v1.16.5 and added darwin arm64 build
 
 BUG FIXES:
 
