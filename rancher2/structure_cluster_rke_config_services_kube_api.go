@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	apiserverconfigv1 "k8s.io/apiserver/pkg/apis/config/v1"
 )
 
 // Flatteners
@@ -77,26 +75,8 @@ func flattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(in *managemen
 
 	obj["enabled"] = in.Enabled
 
-	if len(in.CustomConfig) > 0 {
-		customConfigStrV1, err := mapInterfaceToYAML(in.CustomConfig)
-		if err != nil {
-			return []interface{}{obj}, nil
-		}
-		customConfigV1 := &apiserverconfigv1.EncryptionConfiguration{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault,
-				APIVersion: clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault,
-			},
-		}
-		err = ghodssyamlToInterface(customConfigStrV1, customConfigV1)
-		if err != nil {
-			return []interface{}{}, fmt.Errorf("Unmashalling custom_config yaml: %v", err)
-		}
-		customConfigMap, _ := interfaceToMap(customConfigV1)
-		if err != nil {
-			return []interface{}{}, fmt.Errorf("Mashalling custom_config map: %v", err)
-		}
-		customConfigStr, err := interfaceToGhodssyaml(customConfigMap)
+	if in.CustomConfig != nil {
+		customConfigStr, err := interfaceToGhodssyaml(in.CustomConfig)
 		if err != nil {
 			return []interface{}{}, fmt.Errorf("Mashalling custom_config yaml: %v", err)
 		}
@@ -264,11 +244,12 @@ func expandClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(p []interface{
 	}
 
 	if v, ok := in["custom_config"].(string); ok && len(v) > 0 {
-		configMap, err := ghodssyamlToMapInterface(v)
+		customConfig := &managementClient.EncryptionConfiguration{}
+		err := ghodssyamlToInterface(v, customConfig)
 		if err != nil {
 			return obj
 		}
-		obj.CustomConfig = configMap
+		obj.CustomConfig = customConfig
 	}
 
 	return obj

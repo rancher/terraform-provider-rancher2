@@ -67,16 +67,18 @@ func init() {
 	}
 	testClusterRKEConfigServicesKubeAPISecretsEncryptionConfigConf = &managementClient.SecretsEncryptionConfig{
 		Enabled: true,
-		CustomConfig: map[string]interface{}{
-			"apiVersion": clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault,
-			"kind":       clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault,
-			"resources":  nil,
+		CustomConfig: &managementClient.EncryptionConfiguration{
+			APIVersion: clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault,
+			Kind:       clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault,
+			Resources: []managementClient.ResourceConfiguration{
+				{},
+			},
 		},
 	}
 	testClusterRKEConfigServicesKubeAPISecretsEncryptionConfigInterface = []interface{}{
 		map[string]interface{}{
 			"enabled":       true,
-			"custom_config": "apiVersion: " + clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault + "\nkind: " + clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault + "\nresources: null\n",
+			"custom_config": "apiVersion: " + clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault + "\nkind: " + clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault + "\nresources:\n- {}\n",
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIConf = &managementClient.KubeAPIService{
