@@ -98,44 +98,12 @@ func resourceRancher2NotifierUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	update := map[string]interface{}{
-		"name":         d.Get("name").(string),
-		"description":  d.Get("description").(string),
-		"clusterId":    d.Get("cluster_id").(string),
-		"sendResolved": d.Get("send_resolved").(bool),
-		"annotations":  toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":       toMapString(d.Get("labels").(map[string]interface{})),
+	newNotifier, err := expandNotifier(d)
+	if err != nil {
+		return err
 	}
-
-	if notifier.DingtalkConfig != nil && d.HasChange("dingtalk_config") {
-		update["dingtalkConfig"] = expandNotifierDingtalkConfig(d.Get("dingtalk_config").([]interface{}))
-	}
-
-	if notifier.MSTeamsConfig != nil && d.HasChange("msteams_config") {
-		update["msteamsConfig"] = expandNotifierMSTeamsConfig(d.Get("msteams_config").([]interface{}))
-	}
-
-	if notifier.PagerdutyConfig != nil && d.HasChange("pagerduty_config") {
-		update["pagerdutyConfig"] = expandNotifierPagerdutyConfig(d.Get("pagerduty_config").([]interface{}))
-	}
-
-	if notifier.SlackConfig != nil && d.HasChange("slack_config") {
-		update["slackConfig"] = expandNotifierSlackConfig(d.Get("slack_config").([]interface{}))
-	}
-
-	if notifier.SMTPConfig != nil && d.HasChange("smtp_config") {
-		update["smtpConfig"] = expandNotifierSMTPConfig(d.Get("smtp_config").([]interface{}))
-	}
-
-	if notifier.WebhookConfig != nil && d.HasChange("webhook_config") {
-		update["webhookConfig"] = expandNotifierWebhookConfig(d.Get("webhook_config").([]interface{}))
-	}
-
-	if notifier.WechatConfig != nil && d.HasChange("wechat_config") {
-		update["wechatConfig"] = expandNotifierWechatConfig(d.Get("wechat_config").([]interface{}))
-	}
-
-	newNotifier, err := client.Notifier.Update(notifier, update)
+	newNotifier.Links = notifier.Links
+	newNotifier, err = client.Notifier.Replace(newNotifier)
 	if err != nil {
 		return err
 	}
