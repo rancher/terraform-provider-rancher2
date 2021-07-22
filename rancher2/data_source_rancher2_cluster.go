@@ -84,6 +84,14 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterAKSConfigFields(),
 				},
 			},
+			"aks_config_v2": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: clusterAKSConfigV2Fields(),
+				},
+			},
 			"gke_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,

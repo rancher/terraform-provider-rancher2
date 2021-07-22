@@ -61,6 +61,8 @@ The following attributes are exported:
 * `client_id` - (Required/Sensitive) Azure Service Principal Account ID (string)
 * `client_secret` - (Required/Sensitive) Azure Service Principal Account password (string)
 * `subscription_id` - (Required/Sensitive) Azure Subscription ID (string)
+* `environment` - (Optional/Computed) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud) (string)
+* `tenant_id` - (Optional/Computed) Azure Tenant ID (string)
 
 ### `digitalocean_credential_config`
 

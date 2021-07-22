@@ -319,6 +319,9 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["azureKubernetesServiceConfig"] = aksConfig
+	case ToLower(clusterDriverAKSV2):
+		aksConfigV2 := expandClusterAKSConfigV2(d.Get("aks_config_v2").([]interface{}))
+		update["aksConfig"] = aksConfigV2
 	case clusterDriverEKS:
 		eksConfig, err := expandClusterEKSConfig(d.Get("eks_config").([]interface{}), d.Get("name").(string))
 		if err != nil {

@@ -162,6 +162,15 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if err != nil {
 			return err
 		}
+	case ToLower(clusterDriverAKSV2):
+		v, ok := d.Get("aks_config_v2").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err = d.Set("aks_config_v2", flattenClusterAKSConfigV2(in.AKSConfig, v))
+		if err != nil {
+			return err
+		}
 	case clusterDriverEKS:
 		v, ok := d.Get("eks_config").([]interface{})
 		if !ok {
@@ -465,6 +474,18 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 		obj.AzureKubernetesServiceConfig = aksConfig
 		obj.Driver = clusterDriverAKS
+	}
+
+	if v, ok := in.Get("aks_config_v2").([]interface{}); ok && len(v) > 0 {
+		// Setting aks cluster name if empty
+		if aksData, ok := v[0].(map[string]interface{}); ok {
+			if name, ok := aksData["name"].(string); !ok || len(name) == 0 {
+				aksData["name"] = obj.Name
+				v[0] = aksData
+			}
+		}
+		obj.AKSConfig = expandClusterAKSConfigV2(v)
+		obj.Driver = clusterDriverAKSV2
 	}
 
 	if v, ok := in.Get("eks_config").([]interface{}); ok && len(v) > 0 {

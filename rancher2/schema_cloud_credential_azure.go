@@ -10,6 +10,8 @@ type azureCredentialConfig struct {
 	ClientID       string `json:"clientId,omitempty" yaml:"clientId,omitempty"`
 	ClientSecret   string `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
 	SubscriptionID string `json:"subscriptionId,omitempty" yaml:"subscriptionId,omitempty"`
+	Environment    string `json:"environment,omitempty" yaml:"environment,omitempty"`
+	TenantID       string `json:"tenantId,omitempty" yaml:"tenantId,omitempty"`
 }
 
 //Schemas
@@ -33,6 +35,18 @@ func cloudCredentialAzureFields() map[string]*schema.Schema {
 			Required:    true,
 			Sensitive:   true,
 			Description: "Azure Subscription ID",
+		},
+		"environment": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Azure environment (e.g. AzurePublicCloud, AzureChinaCloud)",
+		},
+		"tenant_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Azure Tenant ID",
 		},
 	}
 
