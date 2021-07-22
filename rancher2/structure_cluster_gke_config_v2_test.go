@@ -164,8 +164,8 @@ func init() {
 			InitialNodeCount:  &initialNodeCount,
 			Management:        testClusterGKEConfigV2NodePoolsManagementConf,
 			MaxPodsConstraint: &maxPodsConstraint,
-			Name:              "name",
-			Version:           "version",
+			Name:              newString("name"),
+			Version:           newString("version"),
 		},
 	}
 	testClusterGKEConfigV2NodePoolsConfigInterface = []interface{}{
@@ -195,30 +195,30 @@ func init() {
 
 	testClusterGKEConfigV2Conf = &managementClient.GKEClusterConfigSpec{
 		ClusterAddons:          testClusterGKEConfigV2ClusterAddonsConf,
-		ClusterIpv4CidrBlock:   "cluster_ipv4_cidr_block",
+		ClusterIpv4CidrBlock:   newString("cluster_ipv4_cidr_block"),
 		ClusterName:            "name",
 		Description:            "description",
 		EnableKubernetesAlpha:  newTrue(),
 		GoogleCredentialSecret: "google_credential_secret",
 		IPAllocationPolicy:     testClusterGKEConfigV2IPAllocationPolicyConf,
 		Imported:               false,
-		KubernetesVersion:      "kubernetes_version",
-		Labels: map[string]string{
+		KubernetesVersion:      newString("kubernetes_version"),
+		Labels: &map[string]string{
 			"label1": "value1",
 			"label2": "value2",
 		},
-		Locations:                      []string{"access1", "access2"},
-		LoggingService:                 "logging_service",
-		MaintenanceWindow:              "maintenance_window",
+		Locations:                      &[]string{"access1", "access2"},
+		LoggingService:                 newString("logging_service"),
+		MaintenanceWindow:              newString("maintenance_window"),
 		MasterAuthorizedNetworksConfig: testClusterGKEConfigV2MasterAuthorizedNetworksConfigConf,
-		MonitoringService:              "monitoring_service",
-		Network:                        "network",
+		MonitoringService:              newString("monitoring_service"),
+		Network:                        newString("network"),
 		NetworkPolicyEnabled:           newTrue(),
 		NodePools:                      testClusterGKEConfigV2NodePoolsConfigConf,
 		PrivateClusterConfig:           testClusterGKEConfigV2PrivateClusterConfigConf,
 		ProjectID:                      "project_id",
 		Region:                         "region",
-		Subnetwork:                     "subnetwork",
+		Subnetwork:                     newString("subnetwork"),
 		Zone:                           "zone",
 	}
 	testClusterGKEConfigV2Interface = []interface{}{

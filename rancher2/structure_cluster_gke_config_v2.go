@@ -200,11 +200,11 @@ func flattenClusterGKEConfigV2NodePoolsConfig(input []managementClient.GKENodePo
 		if in.MaxPodsConstraint != nil {
 			obj["max_pods_constraint"] = int(*in.MaxPodsConstraint)
 		}
-		if len(in.Name) > 0 {
-			obj["name"] = in.Name
+		if in.Name != nil && len(*in.Name) > 0 {
+			obj["name"] = *in.Name
 		}
-		if len(in.Version) > 0 {
-			obj["version"] = in.Version
+		if in.Version != nil && len(*in.Version) > 0 {
+			obj["version"] = *in.Version
 		}
 		out[i] = obj
 	}
@@ -261,8 +261,8 @@ func flattenClusterGKEConfigV2(in *managementClient.GKEClusterConfigSpec, p []in
 	if in.ClusterAddons != nil {
 		obj["cluster_addons"] = flattenClusterGKEConfigV2ClusterAddons(in.ClusterAddons)
 	}
-	if len(in.ClusterIpv4CidrBlock) > 0 {
-		obj["cluster_ipv4_cidr_block"] = in.ClusterIpv4CidrBlock
+	if in.ClusterIpv4CidrBlock != nil && len(*in.ClusterIpv4CidrBlock) > 0 {
+		obj["cluster_ipv4_cidr_block"] = *in.ClusterIpv4CidrBlock
 	}
 	if len(in.Description) > 0 {
 		obj["description"] = in.Description
@@ -273,29 +273,29 @@ func flattenClusterGKEConfigV2(in *managementClient.GKEClusterConfigSpec, p []in
 	if in.IPAllocationPolicy != nil {
 		obj["ip_allocation_policy"] = flattenClusterGKEConfigV2IPAllocationPolicy(in.IPAllocationPolicy)
 	}
-	if len(in.KubernetesVersion) > 0 {
-		obj["kubernetes_version"] = in.KubernetesVersion
+	if in.KubernetesVersion != nil && len(*in.KubernetesVersion) > 0 {
+		obj["kubernetes_version"] = *in.KubernetesVersion
 	}
-	if len(in.Labels) > 0 {
-		obj["labels"] = toMapInterface(in.Labels)
+	if in.Labels != nil && len(*in.Labels) > 0 {
+		obj["labels"] = toMapInterface(*in.Labels)
 	}
-	if len(in.Locations) > 0 {
-		obj["locations"] = toArrayInterface(in.Locations)
+	if in.Locations != nil && len(*in.Locations) > 0 {
+		obj["locations"] = toArrayInterface(*in.Locations)
 	}
-	if len(in.LoggingService) > 0 {
-		obj["logging_service"] = in.LoggingService
+	if in.LoggingService != nil && len(*in.LoggingService) > 0 {
+		obj["logging_service"] = *in.LoggingService
 	}
-	if len(in.MaintenanceWindow) > 0 {
-		obj["maintenance_window"] = in.MaintenanceWindow
+	if in.MaintenanceWindow != nil && len(*in.MaintenanceWindow) > 0 {
+		obj["maintenance_window"] = *in.MaintenanceWindow
 	}
 	if in.MasterAuthorizedNetworksConfig != nil {
 		obj["master_authorized_networks_config"] = flattenClusterGKEConfigV2MasterAuthorizedNetworksConfig(in.MasterAuthorizedNetworksConfig)
 	}
-	if len(in.MonitoringService) > 0 {
-		obj["monitoring_service"] = in.MonitoringService
+	if in.MonitoringService != nil && len(*in.MonitoringService) > 0 {
+		obj["monitoring_service"] = *in.MonitoringService
 	}
-	if len(in.Network) > 0 {
-		obj["network"] = in.Network
+	if in.Network != nil && len(*in.Network) > 0 {
+		obj["network"] = *in.Network
 	}
 	if in.NetworkPolicyEnabled != nil {
 		obj["network_policy_enabled"] = *in.NetworkPolicyEnabled
@@ -306,8 +306,8 @@ func flattenClusterGKEConfigV2(in *managementClient.GKEClusterConfigSpec, p []in
 	if in.PrivateClusterConfig != nil {
 		obj["private_cluster_config"] = flattenClusterGKEConfigV2PrivateClusterConfig(in.PrivateClusterConfig)
 	}
-	if len(in.Subnetwork) > 0 {
-		obj["subnetwork"] = in.Subnetwork
+	if in.Subnetwork != nil && len(*in.Subnetwork) > 0 {
+		obj["subnetwork"] = *in.Subnetwork
 	}
 
 	return []interface{}{obj}
@@ -532,10 +532,10 @@ func expandClusterGKEConfigV2NodePoolsConfig(p []interface{}) []managementClient
 			obj.MaxPodsConstraint = &max
 		}
 		if v, ok := in["name"].(string); ok {
-			obj.Name = v
+			obj.Name = &v
 		}
 		if v, ok := in["version"].(string); ok {
-			obj.Version = v
+			obj.Version = &v
 		}
 
 		out[i] = obj
@@ -565,7 +565,7 @@ func expandClusterGKEConfigV2PrivateClusterConfig(p []interface{}) *managementCl
 
 func expandClusterGKEConfigV2(p []interface{}) *managementClient.GKEClusterConfigSpec {
 	obj := &managementClient.GKEClusterConfigSpec{
-		Labels: map[string]string{},
+		Labels: &map[string]string{},
 	}
 	if len(p) == 0 || p[0] == nil {
 		return nil
@@ -591,14 +591,14 @@ func expandClusterGKEConfigV2(p []interface{}) *managementClient.GKEClusterConfi
 	}
 
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
-		obj.KubernetesVersion = v
+		obj.KubernetesVersion = &v
 	}
 
 	if v, ok := in["cluster_addons"].([]interface{}); ok {
 		obj.ClusterAddons = expandClusterGKEConfigV2ClusterAddons(v)
 	}
 	if v, ok := in["cluster_ipv4_cidr_block"].(string); ok && len(v) > 0 {
-		obj.ClusterIpv4CidrBlock = v
+		obj.ClusterIpv4CidrBlock = &v
 	}
 
 	if v, ok := in["description"].(string); ok && len(v) > 0 {
@@ -611,25 +611,27 @@ func expandClusterGKEConfigV2(p []interface{}) *managementClient.GKEClusterConfi
 		obj.IPAllocationPolicy = expandClusterGKEConfigV2IPAllocationPolicy(v)
 	}
 	if v, ok := in["labels"].(map[string]interface{}); ok {
-		obj.Labels = toMapString(v)
+		labels := toMapString(v)
+		obj.Labels = &labels
 	}
 	if v, ok := in["locations"].([]interface{}); ok {
-		obj.Locations = toArrayString(v)
+		locations := toArrayString(v)
+		obj.Locations = &locations
 	}
 	if v, ok := in["logging_service"].(string); ok && len(v) > 0 {
-		obj.LoggingService = v
+		obj.LoggingService = &v
 	}
 	if v, ok := in["maintenance_window"].(string); ok && len(v) > 0 {
-		obj.MaintenanceWindow = v
+		obj.MaintenanceWindow = &v
 	}
 	if v, ok := in["master_authorized_networks_config"].([]interface{}); ok {
 		obj.MasterAuthorizedNetworksConfig = expandClusterGKEConfigV2MasterAuthorizedNetworksConfig(v)
 	}
 	if v, ok := in["monitoring_service"].(string); ok && len(v) > 0 {
-		obj.MonitoringService = v
+		obj.MonitoringService = &v
 	}
 	if v, ok := in["network"].(string); ok && len(v) > 0 {
-		obj.Network = v
+		obj.Network = &v
 	}
 	if v, ok := in["network_policy_enabled"].(bool); ok {
 		obj.NetworkPolicyEnabled = &v
@@ -641,7 +643,7 @@ func expandClusterGKEConfigV2(p []interface{}) *managementClient.GKEClusterConfi
 		obj.PrivateClusterConfig = expandClusterGKEConfigV2PrivateClusterConfig(v)
 	}
 	if v, ok := in["subnetwork"].(string); ok && len(v) > 0 {
-		obj.Subnetwork = v
+		obj.Subnetwork = &v
 	}
 
 	return obj
