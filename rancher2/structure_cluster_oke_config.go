@@ -28,6 +28,7 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 		obj["description"] = in.Description
 	}
 
+	obj["enable_private_control_plane"] = in.PrivateControlPlane
 	obj["enable_kubernetes_dashboard"] = in.EnableKubernetesDashboard
 	obj["enable_private_nodes"] = in.PrivateNodes
 
@@ -159,6 +160,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 
 	if v, ok := in["description"].(string); ok && len(v) > 0 {
 		obj.Description = v
+	}
+
+	if v, ok := in["enable_private_control_plane"].(bool); ok {
+		obj.PrivateControlPlane = v
 	}
 
 	if v, ok := in["enable_kubernetes_dashboard"].(bool); ok {

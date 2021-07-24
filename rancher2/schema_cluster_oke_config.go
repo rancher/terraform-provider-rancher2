@@ -31,6 +31,7 @@ type OracleKubernetesEngineConfig struct {
 	NodePoolSubnetName          string `json:"nodePoolSubnetName,omitempty" yaml:"nodePoolSubnetName,omitempty"`
 	NodePublicSSHKeyContents    string `json:"nodePublicKeyContents,omitempty" yaml:"nodePublicKeyContents,omitempty"`
 	NodeShape                   string `json:"nodeShape,omitempty" yaml:"nodeShape,omitempty"`
+	PrivateControlPlane         bool   `json:"enablePrivateControlPlane,omitempty" yaml:"enablePrivateControlPlane,omitempty"`
 	PrivateKeyContents          string `json:"privateKeyContents,omitempty" yaml:"privateKeyContents,omitempty"`
 	PrivateKeyPassphrase        string `json:"privateKeyPassphrase,omitempty" yaml:"privateKeyPassphrase,omitempty"`
 	PrivateNodes                bool   `json:"enablePrivateNodes,omitempty" yaml:"enablePrivateNodes,omitempty"`
@@ -126,6 +127,11 @@ func clusterOKEConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "An optional description of this cluster",
+		},
+		"enable_private_control_plane": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "Whether Kubernetes API endpoint is a private IP only accessible from within the VCN",
 		},
 		"enable_kubernetes_dashboard": {
 			Type:        schema.TypeBool,
