@@ -108,6 +108,10 @@ func flattenClusterRKEConfigNetwork(in *managementClient.NetworkConfig) ([]inter
 		obj["plugin"] = in.Plugin
 	}
 
+	if in.Tolerations != nil && len(in.Tolerations) > 0 {
+		obj["tolerations"] = flattenTolerations(in.Tolerations)
+	}
+
 	return []interface{}{obj}, nil
 }
 
@@ -219,6 +223,10 @@ func expandClusterRKEConfigNetwork(p []interface{}) (*managementClient.NetworkCo
 
 	if v, ok := in["plugin"].(string); ok && len(v) > 0 {
 		obj.Plugin = v
+	}
+
+	if v, ok := in["tolerations"].([]interface{}); ok && len(v) > 0 {
+		obj.Tolerations = expandTolerations(v)
 	}
 
 	return obj, nil

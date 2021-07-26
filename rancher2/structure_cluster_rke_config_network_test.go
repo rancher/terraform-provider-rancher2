@@ -8,25 +8,46 @@ import (
 )
 
 var (
-	testClusterRKEConfigNetworkCalicoConf       *managementClient.CalicoNetworkProvider
-	testClusterRKEConfigNetworkCalicoInterface  []interface{}
-	testClusterRKEConfigNetworkCanalConf        *managementClient.CanalNetworkProvider
-	testClusterRKEConfigNetworkCanalInterface   []interface{}
-	testClusterRKEConfigNetworkFlannelConf      *managementClient.FlannelNetworkProvider
-	testClusterRKEConfigNetworkFlannelInterface []interface{}
-	testClusterRKEConfigNetworkWeaveConf        *managementClient.WeaveNetworkProvider
-	testClusterRKEConfigNetworkWeaveInterface   []interface{}
-	testClusterRKEConfigNetworkConfCalico       *managementClient.NetworkConfig
-	testClusterRKEConfigNetworkInterfaceCalico  []interface{}
-	testClusterRKEConfigNetworkConfCanal        *managementClient.NetworkConfig
-	testClusterRKEConfigNetworkInterfaceCanal   []interface{}
-	testClusterRKEConfigNetworkConfFlannel      *managementClient.NetworkConfig
-	testClusterRKEConfigNetworkInterfaceFlannel []interface{}
-	testClusterRKEConfigNetworkConfWeave        *managementClient.NetworkConfig
-	testClusterRKEConfigNetworkInterfaceWeave   []interface{}
+	testClusterRKEConfigNetworkTolerationsConf      []managementClient.Toleration
+	testClusterRKEConfigNetworkTolerationsInterface []interface{}
+	testClusterRKEConfigNetworkCalicoConf           *managementClient.CalicoNetworkProvider
+	testClusterRKEConfigNetworkCalicoInterface      []interface{}
+	testClusterRKEConfigNetworkCanalConf            *managementClient.CanalNetworkProvider
+	testClusterRKEConfigNetworkCanalInterface       []interface{}
+	testClusterRKEConfigNetworkFlannelConf          *managementClient.FlannelNetworkProvider
+	testClusterRKEConfigNetworkFlannelInterface     []interface{}
+	testClusterRKEConfigNetworkWeaveConf            *managementClient.WeaveNetworkProvider
+	testClusterRKEConfigNetworkWeaveInterface       []interface{}
+	testClusterRKEConfigNetworkConfCalico           *managementClient.NetworkConfig
+	testClusterRKEConfigNetworkInterfaceCalico      []interface{}
+	testClusterRKEConfigNetworkConfCanal            *managementClient.NetworkConfig
+	testClusterRKEConfigNetworkInterfaceCanal       []interface{}
+	testClusterRKEConfigNetworkConfFlannel          *managementClient.NetworkConfig
+	testClusterRKEConfigNetworkInterfaceFlannel     []interface{}
+	testClusterRKEConfigNetworkConfWeave            *managementClient.NetworkConfig
+	testClusterRKEConfigNetworkInterfaceWeave       []interface{}
 )
 
 func init() {
+	seconds := int64(10)
+	testClusterRKEConfigNetworkTolerationsConf = []managementClient.Toleration{
+		{
+			Key:               "key",
+			Value:             "value",
+			Effect:            "recipient",
+			Operator:          "operator",
+			TolerationSeconds: &seconds,
+		},
+	}
+	testClusterRKEConfigNetworkTolerationsInterface = []interface{}{
+		map[string]interface{}{
+			"key":      "key",
+			"value":    "value",
+			"effect":   "recipient",
+			"operator": "operator",
+			"seconds":  10,
+		},
+	}
 	testClusterRKEConfigNetworkCalicoConf = &managementClient.CalicoNetworkProvider{
 		CloudProvider: "aws",
 	}
@@ -66,7 +87,8 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
-		Plugin: networkPluginCalicoName,
+		Plugin:      networkPluginCalicoName,
+		Tolerations: testClusterRKEConfigNetworkTolerationsConf,
 	}
 	testClusterRKEConfigNetworkInterfaceCalico = []interface{}{
 		map[string]interface{}{
@@ -76,7 +98,8 @@ func init() {
 				"option1": "value1",
 				"option2": "value2",
 			},
-			"plugin": networkPluginCalicoName,
+			"plugin":      networkPluginCalicoName,
+			"tolerations": testClusterRKEConfigNetworkTolerationsInterface,
 		},
 	}
 	testClusterRKEConfigNetworkConfCanal = &managementClient.NetworkConfig{
@@ -86,7 +109,8 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
-		Plugin: networkPluginCanalName,
+		Plugin:      networkPluginCanalName,
+		Tolerations: testClusterRKEConfigNetworkTolerationsConf,
 	}
 	testClusterRKEConfigNetworkInterfaceCanal = []interface{}{
 		map[string]interface{}{
@@ -96,7 +120,8 @@ func init() {
 				"option1": "value1",
 				"option2": "value2",
 			},
-			"plugin": networkPluginCanalName,
+			"plugin":      networkPluginCanalName,
+			"tolerations": testClusterRKEConfigNetworkTolerationsInterface,
 		},
 	}
 	testClusterRKEConfigNetworkConfFlannel = &managementClient.NetworkConfig{
@@ -106,7 +131,8 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
-		Plugin: networkPluginFlannelName,
+		Plugin:      networkPluginFlannelName,
+		Tolerations: testClusterRKEConfigNetworkTolerationsConf,
 	}
 	testClusterRKEConfigNetworkInterfaceFlannel = []interface{}{
 		map[string]interface{}{
@@ -116,7 +142,8 @@ func init() {
 				"option1": "value1",
 				"option2": "value2",
 			},
-			"plugin": networkPluginFlannelName,
+			"plugin":      networkPluginFlannelName,
+			"tolerations": testClusterRKEConfigNetworkTolerationsInterface,
 		},
 	}
 	testClusterRKEConfigNetworkConfWeave = &managementClient.NetworkConfig{
@@ -126,7 +153,8 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
-		Plugin: networkPluginWeaveName,
+		Plugin:      networkPluginWeaveName,
+		Tolerations: testClusterRKEConfigNetworkTolerationsConf,
 	}
 	testClusterRKEConfigNetworkInterfaceWeave = []interface{}{
 		map[string]interface{}{
@@ -136,7 +164,8 @@ func init() {
 				"option1": "value1",
 				"option2": "value2",
 			},
-			"plugin": networkPluginWeaveName,
+			"plugin":      networkPluginWeaveName,
+			"tolerations": testClusterRKEConfigNetworkTolerationsInterface,
 		},
 	}
 }
