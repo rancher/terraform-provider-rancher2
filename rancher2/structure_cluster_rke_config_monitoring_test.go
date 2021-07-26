@@ -8,12 +8,33 @@ import (
 )
 
 var (
-	testClusterRKEConfigMonitoringConf      *managementClient.MonitoringConfig
-	testClusterRKEConfigMonitoringInterface []interface{}
-	testClusterRKEConfigMonitoringReplicas  int64
+	testClusterRKEConfigMonitoringTolerationsConf      []managementClient.Toleration
+	testClusterRKEConfigMonitoringTolerationsInterface []interface{}
+	testClusterRKEConfigMonitoringConf                 *managementClient.MonitoringConfig
+	testClusterRKEConfigMonitoringInterface            []interface{}
+	testClusterRKEConfigMonitoringReplicas             int64
 )
 
 func init() {
+	seconds := int64(10)
+	testClusterRKEConfigMonitoringTolerationsConf = []managementClient.Toleration{
+		{
+			Key:               "key",
+			Value:             "value",
+			Effect:            "recipient",
+			Operator:          "operator",
+			TolerationSeconds: &seconds,
+		},
+	}
+	testClusterRKEConfigMonitoringTolerationsInterface = []interface{}{
+		map[string]interface{}{
+			"key":      "key",
+			"value":    "value",
+			"effect":   "recipient",
+			"operator": "operator",
+			"seconds":  10,
+		},
+	}
 	testClusterRKEConfigMonitoringReplicas = int64(2)
 	testClusterRKEConfigMonitoringConf = &managementClient.MonitoringConfig{
 		NodeSelector: map[string]string{
@@ -24,8 +45,9 @@ func init() {
 			"option1": "value1",
 			"option2": "value2",
 		},
-		Provider: "test",
-		Replicas: &testClusterRKEConfigMonitoringReplicas,
+		Provider:    "test",
+		Replicas:    &testClusterRKEConfigMonitoringReplicas,
+		Tolerations: testClusterRKEConfigMonitoringTolerationsConf,
 	}
 	testClusterRKEConfigMonitoringInterface = []interface{}{
 		map[string]interface{}{
@@ -37,8 +59,9 @@ func init() {
 				"option1": "value1",
 				"option2": "value2",
 			},
-			"provider": "test",
-			"replicas": 2,
+			"provider":    "test",
+			"replicas":    2,
+			"tolerations": testClusterRKEConfigMonitoringTolerationsInterface,
 		},
 	}
 }
