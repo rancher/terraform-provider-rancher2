@@ -56,7 +56,7 @@ func flattenClusterRKEConfigDNS(in *managementClient.DNSConfig) ([]interface{}, 
 		return []interface{}{}, nil
 	}
 
-	if len(in.NodeSelector) > 0 {
+	if in.NodeSelector != nil && len(in.NodeSelector) > 0 {
 		obj["node_selector"] = toMapInterface(in.NodeSelector)
 	}
 
@@ -68,12 +68,20 @@ func flattenClusterRKEConfigDNS(in *managementClient.DNSConfig) ([]interface{}, 
 		obj["linear_autoscaler_params"] = flattenClusterRKEConfigDNSLinearAutoscalerParams(in.LinearAutoscalerParams)
 	}
 
+	if in.Options != nil && len(in.Options) > 0 {
+		obj["options"] = toMapInterface(in.Options)
+	}
+
 	if len(in.Provider) > 0 {
 		obj["provider"] = in.Provider
 	}
 
 	if len(in.ReverseCIDRs) > 0 {
 		obj["reverse_cidrs"] = toArrayInterface(in.ReverseCIDRs)
+	}
+
+	if in.Tolerations != nil && len(in.Tolerations) > 0 {
+		obj["tolerations"] = flattenTolerations(in.Tolerations)
 	}
 
 	if len(in.UpstreamNameservers) > 0 {
@@ -156,12 +164,20 @@ func expandClusterRKEConfigDNS(p []interface{}) (*managementClient.DNSConfig, er
 		obj.LinearAutoscalerParams = expandClusterRKEConfigDNSLinearAutoscalerParams(v)
 	}
 
+	if v, ok := in["options"].(map[string]interface{}); ok && len(v) > 0 {
+		obj.Options = toMapString(v)
+	}
+
 	if v, ok := in["provider"].(string); ok && len(v) > 0 {
 		obj.Provider = v
 	}
 
 	if v, ok := in["reverse_cidrs"].([]interface{}); ok && len(v) > 0 {
 		obj.ReverseCIDRs = toArrayString(v)
+	}
+
+	if v, ok := in["tolerations"].([]interface{}); ok && len(v) > 0 {
+		obj.Tolerations = expandTolerations(v)
 	}
 
 	if v, ok := in["upstream_nameservers"].([]interface{}); ok && len(v) > 0 {

@@ -9,6 +9,8 @@ import (
 )
 
 var (
+	testClusterRKEConfigDNSTolerationsConf                      []managementClient.Toleration
+	testClusterRKEConfigDNSTolerationsInterface                 []interface{}
 	testClusterRKEConfigDNSNodelocalConf                        *managementClient.Nodelocal
 	testClusterRKEConfigDNSLinearAutoscalerParamsConf           *managementClient.LinearAutoscalerParams
 	testClusterRKEConfigDNSLinearAutoscalerParamsConfFalse      *managementClient.LinearAutoscalerParams
@@ -20,6 +22,25 @@ var (
 )
 
 func init() {
+	seconds := int64(10)
+	testClusterRKEConfigDNSTolerationsConf = []managementClient.Toleration{
+		{
+			Key:               "key",
+			Value:             "value",
+			Effect:            "recipient",
+			Operator:          "operator",
+			TolerationSeconds: &seconds,
+		},
+	}
+	testClusterRKEConfigDNSTolerationsInterface = []interface{}{
+		map[string]interface{}{
+			"key":      "key",
+			"value":    "value",
+			"effect":   "recipient",
+			"operator": "operator",
+			"seconds":  10,
+		},
+	}
 	testClusterRKEConfigDNSNodelocalConf = &managementClient.Nodelocal{
 		NodeSelector: map[string]string{
 			"sel1": "value1",
@@ -95,10 +116,15 @@ func init() {
 		},
 		Nodelocal:              testClusterRKEConfigDNSNodelocalConf,
 		LinearAutoscalerParams: testClusterRKEConfigDNSLinearAutoscalerParamsConf,
-		Provider:               "kube-dns",
-		ReverseCIDRs:           []string{"rev1", "rev2"},
-		UpstreamNameservers:    []string{"up1", "up2"},
-		UpdateStrategy:         testDeploymentStrategyConf,
+		Options: map[string]string{
+			"opt1": "value1",
+			"opt2": "value2",
+		},
+		Provider:            "kube-dns",
+		ReverseCIDRs:        []string{"rev1", "rev2"},
+		Tolerations:         testClusterRKEConfigDNSTolerationsConf,
+		UpstreamNameservers: []string{"up1", "up2"},
+		UpdateStrategy:      testDeploymentStrategyConf,
 	}
 	testClusterRKEConfigDNSInterface = []interface{}{
 		map[string]interface{}{
@@ -108,10 +134,15 @@ func init() {
 			},
 			"nodelocal":                testClusterRKEConfigDNSNodelocalInterface,
 			"linear_autoscaler_params": testClusterRKEConfigDNSLinearAutoscalerParamsInterface,
-			"provider":                 "kube-dns",
-			"reverse_cidrs":            []interface{}{"rev1", "rev2"},
-			"upstream_nameservers":     []interface{}{"up1", "up2"},
-			"update_strategy":          testDeploymentStrategyInterface,
+			"options": map[string]interface{}{
+				"opt1": "value1",
+				"opt2": "value2",
+			},
+			"provider":             "kube-dns",
+			"reverse_cidrs":        []interface{}{"rev1", "rev2"},
+			"tolerations":          testClusterRKEConfigDNSTolerationsInterface,
+			"upstream_nameservers": []interface{}{"up1", "up2"},
+			"update_strategy":      testDeploymentStrategyInterface,
 		},
 	}
 }
