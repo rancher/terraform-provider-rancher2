@@ -1,3 +1,21 @@
+## 1.16.1 (Unreleased)
+
+FEATURES:
+
+* **New Argument:** `rancher2_cluster.rke_config.ingress.tolerations` - (Optional) Ingress add-on tolerations (list)
+* **New Argument:** `rancher2_cluster.rke_config.monitoring.tolerations` - (Optional) Monitoring add-on tolerations (list)
+* **New Argument:** `rancher2_cluster.rke_config.network.tolerations` - (Optional) Network add-on tolerations (list)
+* **New Argument:** `rancher2_cluster.rke_config.dns.options` - (Optional) DNS add-on options (map)
+* **New Argument:** `rancher2_cluster.rke_config.dns.tolerations` - (Optional) DNS add-on tolerations (list)
+
+ENHANCEMENTS:
+
+* Added tolerations schema, structure and tests
+
+BUG FIXES:
+
+* Updated rancher2_notifier resource to be replaced on update
+
 ## 1.16.0 (July 15, 2021)
 
 FEATURES:
