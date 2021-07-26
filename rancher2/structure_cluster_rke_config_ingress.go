@@ -48,6 +48,10 @@ func flattenClusterRKEConfigIngress(in *managementClient.IngressConfig) ([]inter
 		obj["provider"] = in.Provider
 	}
 
+	if in.Tolerations != nil && len(in.Tolerations) > 0 {
+		obj["tolerations"] = flattenTolerations(in.Tolerations)
+	}
+
 	if in.UpdateStrategy != nil {
 		obj["update_strategy"] = flattenDaemonSetStrategy(in.UpdateStrategy)
 	}
@@ -98,6 +102,10 @@ func expandClusterRKEConfigIngress(p []interface{}) (*managementClient.IngressCo
 
 	if v, ok := in["provider"].(string); ok && len(v) > 0 {
 		obj.Provider = v
+	}
+
+	if v, ok := in["tolerations"].([]interface{}); ok && len(v) > 0 {
+		obj.Tolerations = expandTolerations(v)
 	}
 
 	if v, ok := in["update_strategy"].([]interface{}); ok && v != nil {
