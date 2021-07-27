@@ -120,6 +120,14 @@ func clusterRKEConfigNetworkFields() map[string]*schema.Schema {
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(networkPluginList, true),
 		},
+		"tolerations": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Network add-on tolerations",
+			Elem: &schema.Resource{
+				Schema: tolerationFields(),
+			},
+		},
 	}
 	return s
 }

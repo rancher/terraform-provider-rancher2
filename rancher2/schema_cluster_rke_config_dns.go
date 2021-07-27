@@ -83,6 +83,11 @@ func clusterRKEConfigDNSFields() map[string]*schema.Schema {
 				Schema: clusterRKEConfigDNSLinearAutoscalerParamsFields(),
 			},
 		},
+		"options": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
 		"provider": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -95,6 +100,14 @@ func clusterRKEConfigDNSFields() map[string]*schema.Schema {
 			Computed: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
+			},
+		},
+		"tolerations": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "DNS service tolerations",
+			Elem: &schema.Resource{
+				Schema: tolerationFields(),
 			},
 		},
 		"upstream_nameservers": {

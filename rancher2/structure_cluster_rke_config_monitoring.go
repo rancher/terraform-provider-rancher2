@@ -28,6 +28,10 @@ func flattenClusterRKEConfigMonitoring(in *managementClient.MonitoringConfig) ([
 		obj["replicas"] = int(*in.Replicas)
 	}
 
+	if in.Tolerations != nil && len(in.Tolerations) > 0 {
+		obj["tolerations"] = flattenTolerations(in.Tolerations)
+	}
+
 	if in.UpdateStrategy != nil {
 		obj["update_strategy"] = flattenDeploymentStrategy(in.UpdateStrategy)
 	}
@@ -64,6 +68,10 @@ func expandClusterRKEConfigMonitoring(p []interface{}) (*managementClient.Monito
 	if v, ok := in["replicas"].(int); ok && v > 0 {
 		value := int64(v)
 		obj.Replicas = &value
+	}
+
+	if v, ok := in["tolerations"].([]interface{}); ok && len(v) > 0 {
+		obj.Tolerations = expandTolerations(v)
 	}
 
 	if v, ok := in["update_strategy"].([]interface{}); ok && v != nil {

@@ -40,6 +40,14 @@ func clusterRKEConfigMonitoringFields() map[string]*schema.Schema {
 				Schema: deploymentStrategyFields(),
 			},
 		},
+		"tolerations": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Monitoring add-on tolerations",
+			Elem: &schema.Resource{
+				Schema: tolerationFields(),
+			},
+		},
 	}
 	return s
 }

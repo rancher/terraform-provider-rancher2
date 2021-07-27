@@ -823,7 +823,9 @@ The following attributes are exported:
 * `nodelocal` - (Optional) Nodelocal dns config  (list Maxitem: 1)
 * `linear_autoscaler_params` - (Optional) LinearAutoScalerParams dns config (list Maxitem: 1)
 * `node_selector` - (Optional/Computed) DNS add-on node selector (map)
+* `options` - (Optional/Computed) DNS add-on options (map)
 * `provider` - (Optional) DNS add-on provider. `kube-dns`, `coredns` (default), and `none` are supported (string)
+* `tolerations` - (Optional) DNS add-on tolerations (list)
 * `reverse_cidrs` - (Optional/Computed) DNS add-on reverse cidr  (list)
 * `upstream_nameservers` - (Optional/Computed) DNS add-on upstream nameservers  (list)
 * `update_strategy` - (Optional) DNS update strategy (list Maxitems: 1)
@@ -845,6 +847,16 @@ The following attributes are exported:
 * `min` - (Optional) minimum number of replicas (int64)
 * `prevent_single_point_failure` - (Optional) prevent single point of failure
 
+##### `tolerations`
+
+###### Arguments
+
+* `key` - (Required) The toleration key (string)
+* `effect` - (Optional) The toleration effect. `NoExecute`, `NoSchedule`, and `PreferNoSchedule` are supported. Default: `NoExecute` (string)
+* `operator` - (Optional) The toleration operator. `Equal`, and `Exists` are supported. Default: `Equal` (string)
+* `seconds` - (Optional) The toleration seconds (int)
+* `value` - (Optional) The toleration value (string)
+
 #### `ingress`
 
 ##### Arguments
@@ -858,7 +870,18 @@ The following attributes are exported:
 * `node_selector` - (Optional/Computed) Node selector for RKE Ingress (map)
 * `options` - (Optional/Computed) RKE options for Ingress (map)
 * `provider` - (Optional/Computed) Provider for RKE Ingress (string)
+* `tolerations` - (Optional) Ingress add-on tolerations (list)
 * `update_strategy` - (Optional) RKE ingress update strategy (list Maxitems: 1)
+
+##### `tolerations`
+
+###### Arguments
+
+* `key` - (Required) The toleration key (string)
+* `effect` - (Optional) The toleration effect. `NoExecute`, `NoSchedule`, and `PreferNoSchedule` are supported. Default: `NoExecute` (string)
+* `operator` - (Optional) The toleration operator. `Equal`, and `Exists` are supported. Default: `Equal` (string)
+* `seconds` - (Optional) The toleration seconds (int)
+* `value` - (Optional) The toleration value (string)
 
 ##### `update_strategy`
 
@@ -881,7 +904,18 @@ The following attributes are exported:
 * `options` - (Optional/Computed) RKE options for monitoring (map)
 * `provider` - (Optional/Computed) RKE monitoring provider (string)
 * `replicas` - (Optional/Computed) RKE monitoring replicas (int)
+* `tolerations` - (Optional) RKE monitoring tolerations (list)
 * `update_strategy` - (Optional) RKE monitoring update strategy (list Maxitems: 1)
+
+##### `tolerations`
+
+###### Arguments
+
+* `key` - (Required) The toleration key (string)
+* `effect` - (Optional) The toleration effect. `NoExecute`, `NoSchedule`, and `PreferNoSchedule` are supported. Default: `NoExecute` (string)
+* `operator` - (Optional) The toleration operator. `Equal`, and `Exists` are supported. Default: `Equal` (string)
+* `seconds` - (Optional) The toleration seconds (int)
+* `value` - (Optional) The toleration value (string)
 
 ##### `update_strategy`
 
@@ -908,6 +942,7 @@ The following attributes are exported:
 * `mtu` - (Optional) Network provider MTU. Default `0` (int)
 * `options` - (Optional/Computed) RKE options for network (map)
 * `plugin` - (Optional/Computed) Plugin for RKE network. `canal` (default), `flannel`, `calico`, `none` and `weave` are supported. (string)
+* `tolerations` - (Optional) Network add-on tolerations (list)
 
 ##### `calico_network_provider`
 
@@ -932,6 +967,16 @@ The following attributes are exported:
 ###### Arguments
 
 * `password` - (Optional/Computed) Password config Weave network provider (string)
+
+##### `tolerations`
+
+###### Arguments
+
+* `key` - (Required) The toleration key (string)
+* `effect` - (Optional) The toleration effect. `NoExecute`, `NoSchedule`, and `PreferNoSchedule` are supported. Default: `NoExecute` (string)
+* `operator` - (Optional) The toleration operator. `Equal`, and `Exists` are supported. Default: `Equal` (string)
+* `seconds` - (Optional) The toleration seconds (int)
+* `value` - (Optional) The toleration value (string)
 
 #### `nodes`
 

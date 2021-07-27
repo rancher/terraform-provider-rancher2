@@ -9,6 +9,8 @@ import (
 )
 
 var (
+	testClusterRKEConfigIngressTolerationsConf            []managementClient.Toleration
+	testClusterRKEConfigIngressTolerationsInterface       []interface{}
 	testClusterRKEConfigIngressUpdateDaemonSetConf        *managementClient.RollingUpdateDaemonSet
 	testClusterRKEConfigIngressUpdateDaemonSetInterface   []interface{}
 	testClusterRKEConfigIngresstDaemonSetStrategyConf     *managementClient.DaemonSetUpdateStrategy
@@ -18,6 +20,25 @@ var (
 )
 
 func init() {
+	seconds := int64(10)
+	testClusterRKEConfigIngressTolerationsConf = []managementClient.Toleration{
+		{
+			Key:               "key",
+			Value:             "value",
+			Effect:            "recipient",
+			Operator:          "operator",
+			TolerationSeconds: &seconds,
+		},
+	}
+	testClusterRKEConfigIngressTolerationsInterface = []interface{}{
+		map[string]interface{}{
+			"key":      "key",
+			"value":    "value",
+			"effect":   "recipient",
+			"operator": "operator",
+			"seconds":  10,
+		},
+	}
 	testClusterRKEConfigIngressUpdateDaemonSetConf = &managementClient.RollingUpdateDaemonSet{
 		MaxUnavailable: intstr.FromInt(10),
 	}
@@ -55,6 +76,7 @@ func init() {
 			"option2": "value2",
 		},
 		Provider:       "test",
+		Tolerations:    testClusterRKEConfigIngressTolerationsConf,
 		UpdateStrategy: testClusterRKEConfigIngresstDaemonSetStrategyConf,
 	}
 	testClusterRKEConfigIngressInterface = []interface{}{
@@ -77,6 +99,7 @@ func init() {
 				"option2": "value2",
 			},
 			"provider":        "test",
+			"tolerations":     testClusterRKEConfigIngressTolerationsInterface,
 			"update_strategy": testClusterRKEConfigIngressDaemonSetStrategyInterface,
 		},
 	}

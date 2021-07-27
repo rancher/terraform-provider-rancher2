@@ -2,11 +2,15 @@
 
 FEATURES:
 
-
+* **New Argument:** `rancher2_cluster.rke_config.ingress.tolerations` - (Optional) Ingress add-on tolerations (list)
+* **New Argument:** `rancher2_cluster.rke_config.monitoring.tolerations` - (Optional) Monitoring add-on tolerations (list)
+* **New Argument:** `rancher2_cluster.rke_config.network.tolerations` - (Optional) Network add-on tolerations (list)
+* **New Argument:** `rancher2_cluster.rke_config.dns.options` - (Optional) DNS add-on options (map)
+* **New Argument:** `rancher2_cluster.rke_config.dns.tolerations` - (Optional) DNS add-on tolerations (list)
 
 ENHANCEMENTS:
 
-
+* Added tolerations schema, structure and tests
 
 BUG FIXES:
 

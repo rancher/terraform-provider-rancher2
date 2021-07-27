@@ -71,6 +71,14 @@ func clusterRKEConfigIngressFields() map[string]*schema.Schema {
 			Computed:     true,
 			ValidateFunc: validation.StringInSlice(clusterRKEConfigIngressDNSPolicyList, true),
 		},
+		"tolerations": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Ingress add-on tolerations",
+			Elem: &schema.Resource{
+				Schema: tolerationFields(),
+			},
+		},
 		"update_strategy": {
 			Type:        schema.TypeList,
 			Optional:    true,
