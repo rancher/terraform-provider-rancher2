@@ -492,7 +492,6 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 			}
 			return nil, "", err
 		}
-
 		return obj, obj.State, nil
 	}
 }
@@ -507,7 +506,6 @@ func clusterRegistrationTokenStateRefreshFunc(client *managementClient.Client, c
 			}
 			return nil, "", err
 		}
-
 		return obj, obj.State, nil
 	}
 }
@@ -522,17 +520,18 @@ func findFlattenClusterRegistrationToken(client *managementClient.Client, cluste
 }
 
 func findClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
-	regTokenID := clusterID + ":" + clusterRegistrationTokenName
-	regToken, err := client.ClusterRegistrationToken.ByID(regTokenID)
-
-	if err != nil {
-		if IsNotFound(err) {
-			return createClusterRegistrationToken(client, clusterID)
+	for i := range clusterRegistrationTokenNames {
+		regTokenID := clusterID + ":" + clusterRegistrationTokenNames[i]
+		regToken, err := client.ClusterRegistrationToken.ByID(regTokenID)
+		if err != nil {
+			if !IsNotFound(err) {
+				return nil, err
+			}
+			continue
 		}
-		return nil, err
+		return regToken, nil
 	}
-
-	return regToken, nil
+	return createClusterRegistrationToken(client, clusterID)
 }
 
 func createClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
@@ -557,6 +556,10 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return nil, fmt.Errorf("[ERROR] waiting for cluster registration token (%s) to be created: %s", newRegToken.ID, waitErr)
+	}
+	newRegToken, err = client.ClusterRegistrationToken.ByID(newRegToken.ID)
+	if err != nil {
+		return nil, err
 	}
 	return newRegToken, nil
 }

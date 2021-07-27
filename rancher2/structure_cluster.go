@@ -17,7 +17,7 @@ func flattenClusterRegistationToken(in *managementClient.ClusterRegistrationToke
 
 	obj["id"] = in.ID
 	obj["cluster_id"] = in.ClusterID
-	obj["name"] = clusterRegistrationTokenName
+	obj["name"] = in.Name
 	obj["command"] = in.Command
 	obj["insecure_command"] = in.InsecureCommand
 	obj["manifest_url"] = in.ManifestURL
