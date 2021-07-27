@@ -1,3 +1,17 @@
+## 1.16.1 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Updated rancher2_notifier resource to be replaced on update
+
 ## 1.16.0 (July 15, 2021)
 
 FEATURES:
