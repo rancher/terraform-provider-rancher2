@@ -8,7 +8,7 @@ import (
 
 const (
 	clusterDriverImported             = "imported"
-	clusterRegistrationTokenName      = "system"
+	clusterRegistrationTokenName      = "default-token"
 	clusterMonitoringV1Namespace      = "cattle-prometheus"
 	clusterActiveCondition            = "Updated"
 	clusterMonitoringEnabledCondition = "MonitoringEnabled"
@@ -16,7 +16,8 @@ const (
 )
 
 var (
-	clusterDrivers = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverGKEV2, clusterDriverK3S, clusterDriverOKE, clusterDriverRKE, clusterDriverRKE2}
+	clusterDrivers                = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverGKEV2, clusterDriverK3S, clusterDriverOKE, clusterDriverRKE, clusterDriverRKE2}
+	clusterRegistrationTokenNames = []string{clusterRegistrationTokenName, "system"}
 )
 
 //Types

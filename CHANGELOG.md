@@ -11,6 +11,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Added tolerations schema, structure and tests
+* Updated `rancher2_cluster` resource to properly generate cluster registration token
 
 BUG FIXES:
 
