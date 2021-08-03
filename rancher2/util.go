@@ -437,11 +437,29 @@ func toArrayString(in []interface{}) []string {
 	return out
 }
 
+func toArrayStringSorted(in []interface{}) []string {
+	if in == nil {
+		return nil
+	}
+	out := toArrayString(in)
+	sort.Strings(out)
+	return out
+}
+
 func toArrayInterface(in []string) []interface{} {
 	out := make([]interface{}, len(in))
 	for i, v := range in {
 		out[i] = v
 	}
+	return out
+}
+
+func toArrayInterfaceSorted(in []string) []interface{} {
+	if in == nil {
+		return nil
+	}
+	sort.Strings(in)
+	out := toArrayInterface(in)
 	return out
 }
 

@@ -217,6 +217,7 @@ func clusterEKSConfigV2Fields() map[string]*schema.Schema {
 		"public_access_sources": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Description: "The EKS cluster public access sources",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,

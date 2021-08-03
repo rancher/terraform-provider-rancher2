@@ -79,10 +79,10 @@ func flattenClusterEKSConfigV2NodeGroups(input []managementClient.NodeGroup, p [
 			obj["resource_tags"] = toMapInterface(in.ResourceTags)
 		}
 		if len(in.SpotInstanceTypes) > 0 {
-			obj["spot_instance_types"] = toArrayInterface(in.SpotInstanceTypes)
+			obj["spot_instance_types"] = toArrayInterfaceSorted(in.SpotInstanceTypes)
 		}
 		if len(in.Subnets) > 0 {
-			obj["subnets"] = toArrayInterface(in.Subnets)
+			obj["subnets"] = toArrayInterfaceSorted(in.Subnets)
 		}
 		if len(in.Tags) > 0 {
 			obj["tags"] = toMapInterface(in.Tags)
@@ -130,7 +130,7 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 		obj["kms_key"] = in.KmsKey
 	}
 	if len(in.LoggingTypes) > 0 {
-		obj["logging_types"] = toArrayInterface(in.LoggingTypes)
+		obj["logging_types"] = toArrayInterfaceSorted(in.LoggingTypes)
 	}
 	if in.PrivateAccess != nil {
 		obj["private_access"] = *in.PrivateAccess
@@ -139,7 +139,7 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 		obj["public_access"] = *in.PublicAccess
 	}
 	if len(in.PublicAccessSources) > 0 {
-		obj["public_access_sources"] = toArrayInterface(in.PublicAccessSources)
+		obj["public_access_sources"] = toArrayInterfaceSorted(in.PublicAccessSources)
 	}
 	if in.SecretsEncryption != nil {
 		obj["secrets_encryption"] = *in.SecretsEncryption
@@ -151,13 +151,13 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 		obj["secrets_encryption"] = *in.SecretsEncryption
 	}
 	if len(in.SecurityGroups) > 0 {
-		obj["security_groups"] = toArrayInterface(in.SecurityGroups)
+		obj["security_groups"] = toArrayInterfaceSorted(in.SecurityGroups)
 	}
 	if len(in.ServiceRole) > 0 {
 		obj["service_role"] = in.ServiceRole
 	}
 	if len(in.Subnets) > 0 {
-		obj["subnets"] = toArrayInterface(in.Subnets)
+		obj["subnets"] = toArrayInterfaceSorted(in.Subnets)
 	}
 	if len(in.Tags) > 0 {
 		obj["tags"] = toMapInterface(in.Tags)
@@ -235,14 +235,14 @@ func expandClusterEKSConfigV2NodeGroups(p []interface{}, subnets []string, versi
 			obj.ResourceTags = toMapString(v)
 		}
 		if v, ok := in["spot_instance_types"].([]interface{}); ok {
-			obj.SpotInstanceTypes = toArrayString(v)
+			obj.SpotInstanceTypes = toArrayStringSorted(v)
 		}
 		// setting objSubnets from subnet var or from tf argument
 		if subnets != nil {
 			obj.Subnets = subnets
 		}
 		if v, ok := in["subnets"].([]interface{}); ok {
-			obj.Subnets = toArrayString(v)
+			obj.Subnets = toArrayStringSorted(v)
 		}
 		if v, ok := in["tags"].(map[string]interface{}); ok {
 			obj.Tags = toMapString(v)
@@ -271,7 +271,7 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	obj.KubernetesVersion = in["kubernetes_version"].(string)
 
 	if v, ok := in["subnets"].([]interface{}); ok {
-		obj.Subnets = toArrayString(v)
+		obj.Subnets = toArrayStringSorted(v)
 	}
 	if v, ok := in["node_groups"].([]interface{}); ok {
 		obj.NodeGroups = expandClusterEKSConfigV2NodeGroups(v, obj.Subnets, obj.KubernetesVersion)
@@ -283,7 +283,7 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 		obj.KmsKey = v
 	}
 	if v, ok := in["logging_types"].([]interface{}); ok {
-		obj.LoggingTypes = toArrayString(v)
+		obj.LoggingTypes = toArrayStringSorted(v)
 	}
 	if v, ok := in["private_access"].(bool); ok && !obj.Imported {
 		obj.PrivateAccess = &v
@@ -292,7 +292,7 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 		obj.PublicAccess = &v
 	}
 	if v, ok := in["public_access_sources"].([]interface{}); ok {
-		obj.PublicAccessSources = toArrayString(v)
+		obj.PublicAccessSources = toArrayStringSorted(v)
 	}
 	if v, ok := in["region"].(string); ok {
 		obj.Region = v
@@ -301,7 +301,7 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 		obj.SecretsEncryption = &v
 	}
 	if v, ok := in["security_groups"].([]interface{}); ok {
-		obj.SecurityGroups = toArrayString(v)
+		obj.SecurityGroups = toArrayStringSorted(v)
 	}
 	if v, ok := in["service_role"].(string); ok {
 		obj.ServiceRole = v
