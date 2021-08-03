@@ -15,7 +15,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* Updated rancher2_notifier resource to be replaced on update
+* Updated `rancher2_notifier` resource to be replaced on update
+* Fixed `rancher2_cluster.eks_config_v2` to avoid false diff
 
 ## 1.16.0 (July 15, 2021)
 
