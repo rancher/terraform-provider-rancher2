@@ -16,6 +16,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Updated rancher2_notifier resource to be replaced on update
+* Updated `rancher2_cluster` docs to proper format yaml examples
 
 ## 1.16.0 (July 15, 2021)
 
