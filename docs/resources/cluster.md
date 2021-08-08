@@ -1562,6 +1562,7 @@ The following arguments are supported:
 * `compartment_id` - (Required) The OCID of the compartment in which to create resources OKE cluster and related resources (string)
 * `custom_boot_volume_size` - (Optional) Optional custom boot volume size (GB) for all nodes. If you specify 0, it will apply the default according to the `node_image` specified. Default `0` (int)
 * `description` - (Optional) An optional description of this cluster (string)
+* `enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` Just for Rancher v2.5.10 or above (bool)
 * `enable_kubernetes_dashboard` - (Optional) Specifies whether to enable the Kubernetes dashboard. Default `false` (bool)
 * `enable_private_nodes` - (Optional) Specifies whether worker nodes will be deployed into a new, private, subnet. Default `false` (bool)
 * `fingerprint` - (Required) The fingerprint corresponding to the specified user's private API Key (string)
