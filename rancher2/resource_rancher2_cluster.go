@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -21,6 +22,19 @@ func resourceRancher2Cluster() *schema.Resource {
 		Delete: resourceRancher2ClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRancher2ClusterImport,
+		},
+		CustomizeDiff: func(d *schema.ResourceDiff, i interface{}) error {
+			if d.Get("driver") == clusterDriverEKSV2 && d.HasChange("eks_config_v2") {
+				old, new := d.GetChange("eks_config_v2")
+				oldObj := expandClusterEKSConfigV2(old.([]interface{}))
+				newObj := expandClusterEKSConfigV2(new.([]interface{}))
+				if reflect.DeepEqual(oldObj, newObj) {
+					d.Clear("eks_config_v2")
+				} else {
+					d.SetNew("eks_config_v2", flattenClusterEKSConfigV2(newObj, []interface{}{}))
+				}
+			}
+			return nil
 		},
 		Schema:        clusterFields(),
 		SchemaVersion: 1,

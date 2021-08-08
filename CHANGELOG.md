@@ -15,6 +15,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* Updated `rancher2_notifier` resource to be replaced on update
+* Fixed `rancher2_cluster.eks_config_v2` to avoid false diff
 * Updated rancher2_notifier resource to be replaced on update
 * Updated `rancher2_cluster` docs to proper format yaml examples
 
