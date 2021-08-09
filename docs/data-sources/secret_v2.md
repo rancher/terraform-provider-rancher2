@@ -4,7 +4,7 @@ page_title: "rancher2_secret_v2 Datasource"
 
 # rancher2\_secret\_v2 Datasource
 
-Use this data source to retrieve information about a Rancher2 secret v2.
+Use this data source to retrieve information about a Rancher2 secret v2. Secret v2 resource is available at Rancher v2.5.x and above.
 
 ## Example Usage
 

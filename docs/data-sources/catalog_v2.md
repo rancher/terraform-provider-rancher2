@@ -4,7 +4,7 @@ page_title: "rancher2_catalog_v2 Data Source"
 
 # rancher2\_catalog\_v2 Data Source
 
-Use this data source to retrieve information about a Rancher2 catalog v2.
+Use this data source to retrieve information about a Rancher2 catalog v2. Catalog v2 resource is available at Rancher v2.5.x and above.
 
 ## Example Usage
 
@@ -23,6 +23,7 @@ data "rancher2_catalog_v2" "foo" {
 ## Attributes Reference
 
 * `id` - (Computed) The ID of the resource (string)
+* `resource_version` - (Computed) The k8s resource version (string)
 * `ca_bundle` - (Computed) PEM encoded CA bundle which will be used to validate the repo's certificate (string)
 * `enabled` - (Computed) If disabled the repo clone will not be updated or allowed to be installed from. Default: `true` (bool)
 * `git_branch` - (Computed) Git Repository branch containing Helm chart definitions. Default `master` (string)
