@@ -260,6 +260,7 @@ provider "rancher2" {
 ` + testAccRancher2SecretV2 + `
 ` + testAccRancher2SecretNs + `
 ` + testAccRancher2SettingConfig + `
+` + testAccRancher2StorageClassV2 + `
 ` + testAccRancher2Token + `
 ` + testAccRancher2TokenCluster + `
 `
