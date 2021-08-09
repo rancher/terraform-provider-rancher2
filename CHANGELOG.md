@@ -1,4 +1,4 @@
-## 1.16.1 (Unreleased)
+## 1.17.0 (Unreleased)
 
 FEATURES:
 
@@ -7,11 +7,15 @@ FEATURES:
 * **New Argument:** `rancher2_cluster.rke_config.network.tolerations` - (Optional) Network add-on tolerations (list)
 * **New Argument:** `rancher2_cluster.rke_config.dns.options` - (Optional) DNS add-on options (map)
 * **New Argument:** `rancher2_cluster.rke_config.dns.tolerations` - (Optional) DNS add-on tolerations (list)
+* **New Argument:** `rancher2_cluster.oke_config.enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` Just for Rancher v2.5.10 or above (bool)
+* **New Data Source:** `rancher2_storage_class_v2` - Provides Rancher Storage Class v2 data source. Available at Rancher v2.5.x and above.
+* **New Resource:** `rancher2_storage_class_v2` - Provides Rancher Storage Class v2 resource. Available at Rancher v2.5.x and above.
 
 ENHANCEMENTS:
 
 * Added tolerations schema, structure and tests
 * Updated `rancher2_cluster` resource to properly generate cluster registration token
+* Minor `rancher2_catalog_v2` and `rancher2_secret_v2` datasource docs update
 
 BUG FIXES:
 
