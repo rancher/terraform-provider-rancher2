@@ -4,9 +4,9 @@ page_title: "rancher2_etcd_backup Resource"
 
 # rancher2\_etcd\_backup Resource
 
-Provides a Rancher v2 Etcd Backup resource. This can be used to create Etcd Backup for Rancher v2.2.x and retrieve their information. 
+Provides a Rancher v2 Etcd Backup resource. This can be used to create an Etcd Backup for Rancher v2.2.x and above, and to retrieve their information. 
 
-`rancher2_etcd_backup` resource is used to define extra etcd backups for `rancher2_cluster`. The main etcd backup config for the cluster should be set on the [cluster config](https://www.terraform.io/docs/providers/rancher2/r/cluster.html#backup_config-1)
+The `rancher2_etcd_backup` resource is used to define extra etcd backups for a `rancher2_cluster`, which will be created as a local or S3 backup in accordance with the etcd backup config for the cluster. The main etcd backup config for the cluster should be set on the [cluster config](https://www.terraform.io/docs/providers/rancher2/r/cluster.html#backup_config-1)
 
 ## Example Usage
 
