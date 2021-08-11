@@ -1,4 +1,4 @@
-## 1.17.0 (Unreleased)
+## 1.17.0 (August 12, 2021)
 
 FEATURES:
 
@@ -13,16 +13,17 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* Added tolerations schema, structure and tests
+* Added `tolerations` schema, structure and tests
 * Updated `rancher2_cluster` resource to properly generate cluster registration token
 * Minor `rancher2_catalog_v2` and `rancher2_secret_v2` datasource docs update
 * Added verb `deletecollection` to policy rule
+* Updated `WaitForClusterState` function to check for cluster transitioning before return error
 
 BUG FIXES:
 
 * Updated `rancher2_notifier` resource to be replaced on update
 * Fixed `rancher2_cluster.eks_config_v2` to avoid false diff
-* Updated rancher2_notifier resource to be replaced on update
+* Updated `rancher2_notifier` resource to be replaced on update
 * Updated `rancher2_cluster` docs to proper format yaml examples
 
 ## 1.16.0 (July 15, 2021)
