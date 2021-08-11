@@ -154,6 +154,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_secret":                        resourceRancher2Secret(),
 			"rancher2_secret_v2":                     resourceRancher2SecretV2(),
 			"rancher2_setting":                       resourceRancher2Setting(),
+			"rancher2_storage_class_v2":              resourceRancher2StorageClassV2(),
 			"rancher2_token":                         resourceRancher2Token(),
 			"rancher2_user":                          resourceRancher2User(),
 		},
@@ -193,6 +194,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_secret":                        dataSourceRancher2Secret(),
 			"rancher2_secret_v2":                     dataSourceRancher2SecretV2(),
 			"rancher2_setting":                       dataSourceRancher2Setting(),
+			"rancher2_storage_class_v2":              dataSourceRancher2StorageClassV2(),
 			"rancher2_user":                          dataSourceRancher2User(),
 		},
 
