@@ -6,15 +6,16 @@ import (
 )
 
 const (
-	policyRuleAll        = "*"
-	policyRuleVerbCreate = "create"
-	policyRuleVerbDelete = "delete"
-	policyRuleVerbGet    = "get"
-	policyRuleVerbList   = "list"
-	policyRuleVerbPatch  = "patch"
-	policyRuleVerbUpdate = "update"
-	policyRuleVerbView   = "view"
-	policyRuleVerbWatch  = "watch"
+	policyRuleAll                  = "*"
+	policyRuleVerbCreate           = "create"
+	policyRuleVerbDelete           = "delete"
+	policyRuleVerbDeleteCollection = "deletecollection"
+	policyRuleVerbGet              = "get"
+	policyRuleVerbList             = "list"
+	policyRuleVerbPatch            = "patch"
+	policyRuleVerbUpdate           = "update"
+	policyRuleVerbView             = "view"
+	policyRuleVerbWatch            = "watch"
 )
 
 var (
@@ -22,6 +23,7 @@ var (
 		policyRuleAll,
 		policyRuleVerbCreate,
 		policyRuleVerbDelete,
+		policyRuleVerbDeleteCollection,
 		policyRuleVerbGet,
 		policyRuleVerbList,
 		policyRuleVerbPatch,

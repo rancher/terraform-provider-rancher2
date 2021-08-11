@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * Added tolerations schema, structure and tests
 * Updated `rancher2_cluster` resource to properly generate cluster registration token
 * Minor `rancher2_catalog_v2` and `rancher2_secret_v2` datasource docs update
+* Added verb `deletecollection` to policy rule
 
 BUG FIXES:
 
