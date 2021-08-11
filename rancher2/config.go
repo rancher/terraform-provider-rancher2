@@ -735,6 +735,10 @@ func (c *Config) WaitForClusterState(clusterID, state string, interval time.Dura
 				if obj.Conditions[i].Status == "True" {
 					return obj, nil
 				}
+				// When condition is false, checking if the cluster is transitioning to still wait for condition
+				if obj.Transitioning == "yes" {
+					break
+				}
 				return nil, fmt.Errorf("Cluster ID %s: %s", clusterID, obj.Conditions[i].Message)
 			}
 		}
