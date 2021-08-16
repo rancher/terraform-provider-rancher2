@@ -411,6 +411,7 @@ func testCluster() {
 	testClusterConfRKE.Driver = clusterDriverRKE
 	testClusterConfRKE.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfRKE.DefaultPodSecurityPolicyTemplateID = "restricted"
+	testClusterConfRKE.FleetWorkspaceName = "fleet-test"
 	testClusterConfRKE.EnableClusterMonitoring = true
 	testClusterConfRKE.EnableNetworkPolicy = newTrue()
 	testClusterConfRKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
@@ -426,6 +427,7 @@ func testCluster() {
 		"default_pod_security_policy_template_id": "restricted",
 		"enable_cluster_monitoring":               true,
 		"enable_network_policy":                   true,
+		"fleet_workspace_name":                    "fleet-test",
 		"kube_config":                             "kube_config",
 		"driver":                                  clusterDriverRKE,
 		"rke_config":                              testClusterRKEConfigInterface,
