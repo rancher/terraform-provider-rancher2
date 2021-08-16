@@ -52,5 +52,6 @@ The following attributes are exported:
 * `enable_cluster_monitoring` - (Computed) Enable built-in cluster monitoring. Default `false` (bool)
 * `enable_network_policy` - (Computed) Enable project network isolation. Default `false` (bool)
 * `enable_cluster_istio` - (Computed) Enable built-in cluster istio. Default `false` (bool)
+* `fleet_workspace_name` - (Computed) Fleet workspace name (string)
 * `annotations` - (Computed) Annotations for Node Pool object (map)
 * `labels` - (Computed) Labels for Node Pool object (map)

@@ -533,6 +533,7 @@ The following arguments are supported:
 * `enable_cluster_istio` - (Deprecated) Deploy istio on `system` project and `istio-system` namespace, using rancher2_app resource instead. See above example.
 * `enable_network_policy` - (Optional/Computed) Enable project network isolation (bool)
 * `scheduled_cluster_scan`- (Optional/Computed) Cluster scheduled cis scan. For Rancher v2.4.0 or above (List maxitems:1)
+* `fleet_workspace_name` - (Optional/Computed) Fleet workspace name (string)
 * `annotations` - (Optional/Computed) Annotations for the Cluster (map)
 * `labels` - (Optional/Computed) Labels for the Cluster (map)
 * `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
