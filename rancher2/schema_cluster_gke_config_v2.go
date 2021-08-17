@@ -226,6 +226,15 @@ func clusterGKEConfigV2NodeConfigFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Enable GKE node config preemptible",
 		},
+		"tags": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "The GKE node config tags",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 		"taints": {
 			Type:        schema.TypeList,
 			Optional:    true,

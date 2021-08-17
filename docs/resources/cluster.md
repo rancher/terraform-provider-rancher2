@@ -1616,8 +1616,9 @@ The following arguments are supported:
 * `labels` - (Optional/Computed) The GKE node config labels (map)
 * `local_ssd_count` - (Optional/Computed) The GKE node config local ssd count (int)
 * `machine_type` - (Optional/Computed) The GKE node config machine type (string)
-* `oauth_scopes` - (Optional) The GKE node config oauth scopes (List)
+* `oauth_scopes` - (Optional/Computed) The GKE node config oauth scopes (List)
 * `preemptible` - (Optional) Enable GKE node config preemptible. Default: `false` (bool)
+* `tags` - (Optional/Computed) The GKE node config tags (List)
 * `taints` - (Optional) The GKE node config taints (List)
 
 ###### `taints`

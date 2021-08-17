@@ -155,7 +155,10 @@ func flattenClusterGKEConfigV2NodeConfig(in *managementClient.GKENodeConfig) []i
 		obj["machine_type"] = in.MachineType
 	}
 	if len(in.OauthScopes) > 0 {
-		obj["oauth_scopes"] = toArrayInterface(in.OauthScopes)
+		obj["oauth_scopes"] = toArrayInterfaceSorted(in.OauthScopes)
+	}
+	if len(in.Tags) > 0 {
+		obj["tags"] = toArrayInterfaceSorted(in.Tags)
 	}
 	obj["preemptible"] = in.Preemptible
 	if len(in.Taints) > 0 {
@@ -478,10 +481,13 @@ func expandClusterGKEConfigV2NodeConfig(p []interface{}) *managementClient.GKENo
 		obj.MachineType = v
 	}
 	if v, ok := in["oauth_scopes"].([]interface{}); ok {
-		obj.OauthScopes = toArrayString(v)
+		obj.OauthScopes = toArrayStringSorted(v)
 	}
 	if v, ok := in["preemptible"].(bool); ok {
 		obj.Preemptible = v
+	}
+	if v, ok := in["tags"].([]interface{}); ok {
+		obj.Tags = toArrayStringSorted(v)
 	}
 	if v, ok := in["taints"].([]interface{}); ok && len(v) > 0 {
 		obj.Taints = expandClusterGKEConfigV2NodeTaintsConfig(v)

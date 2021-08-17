@@ -127,6 +127,7 @@ func init() {
 		MachineType:   "machine_type",
 		OauthScopes:   []string{"oauth1", "oauth1"},
 		Preemptible:   true,
+		Tags:          []string{"tags1", "tags2"},
 		Taints:        testClusterGKEConfigV2NodeTaintsConfigConf,
 	}
 	testClusterGKEConfigV2NodeConfigInterface = []interface{}{
@@ -142,6 +143,7 @@ func init() {
 			"machine_type":    "machine_type",
 			"oauth_scopes":    []interface{}{"oauth1", "oauth1"},
 			"preemptible":     true,
+			"tags":            []interface{}{"tags1", "tags2"},
 			"taints":          testClusterGKEConfigV2NodeTaintsConfigInterface,
 		},
 	}
