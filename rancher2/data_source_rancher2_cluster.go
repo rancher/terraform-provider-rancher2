@@ -192,6 +192,10 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed:    true,
 				Description: "Enable project network isolation",
 			},
+			"fleet_workspace_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"scheduled_cluster_scan": {
 				Type:        schema.TypeList,
 				Computed:    true,

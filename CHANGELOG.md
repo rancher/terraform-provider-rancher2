@@ -1,3 +1,17 @@
+## 1.17.1 (Unreleased)
+
+FEATURES:
+
+* **New Argument:** `rancher2_cluster.fleet_workspace_name` - (Optional/Computed) Fleet workspace name (string)
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix `rancher2_cluster` resource update to not reset fleet workspace name
+
 ## 1.17.0 (August 12, 2021)
 
 FEATURES:

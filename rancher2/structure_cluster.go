@@ -105,6 +105,9 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	if len(in.DockerRootDir) > 0 {
 		d.Set("docker_root_dir", in.DockerRootDir)
 	}
+	if len(in.FleetWorkspaceName) > 0 {
+		d.Set("fleet_workspace_name", in.FleetWorkspaceName)
+	}
 
 	d.Set("enable_cluster_alerting", in.EnableClusterAlerting)
 	d.Set("enable_cluster_monitoring", in.EnableClusterMonitoring)
@@ -449,6 +452,10 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if v, ok := in.Get("enable_network_policy").(bool); ok {
 		obj.EnableNetworkPolicy = &v
+	}
+
+	if v, ok := in.Get("fleet_workspace_name").(string); ok && len(v) > 0 {
+		obj.FleetWorkspaceName = v
 	}
 
 	if v, ok := in.Get("aks_config").([]interface{}); ok && len(v) > 0 {
