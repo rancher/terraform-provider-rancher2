@@ -111,10 +111,12 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
+	useInternalIPAddress := d.Get("use_internal_ip_address").(bool)
 	update := map[string]interface{}{
 		"name":                     d.Get("name").(string),
 		"authCertificateAuthority": d.Get("auth_certificate_authority").(string),
 		"authKey":                  d.Get("auth_key").(string),
+		"cloudCredentialId":        d.Get("cloud_credential_id").(string),
 		"description":              d.Get("description").(string),
 		"engineEnv":                toMapString(d.Get("engine_env").(map[string]interface{})),
 		"engineInsecureRegistry":   toArrayString(d.Get("engine_insecure_registry").([]interface{})),
@@ -124,6 +126,7 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 		"engineRegistryMirror":     toArrayString(d.Get("engine_registry_mirror").([]interface{})),
 		"engineStorageDriver":      d.Get("engine_storage_driver").(string),
 		"nodeTaints":               expandTaints(d.Get("node_taints").([]interface{})),
+		"useInternalIpAddress":     &useInternalIPAddress,
 		"annotations":              toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
 	}

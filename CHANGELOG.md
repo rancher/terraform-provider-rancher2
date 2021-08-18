@@ -1,4 +1,4 @@
-## 1.17.1 (Unreleased)
+## 1.17.1 (August 18, 2021)
 
 FEATURES:
 
@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fix `rancher2_cluster` resource update to not reset fleet workspace name
+* Fix `rancher2_node_template` resource to proper update `cloud_credential_id` and `use_internal_ip_address` arguments
 
 ## 1.17.0 (August 12, 2021)
 
