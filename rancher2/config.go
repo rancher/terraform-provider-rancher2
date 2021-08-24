@@ -27,6 +27,7 @@ const (
 	rancher2ManagementV2TypePrefix    = "management.cattle.io"
 	rancher2ReadyAnswer               = "pong"
 	rancher2RetriesWait               = 5
+	rancher2WaitFalseCond             = 120
 	rancher2RKEK8sSystemImageVersion  = "2.3.0"
 	rancher2NodeTemplateChangeVersion = "2.3.3" // Change node template id format
 	rancher2TokeTTLMinutesVersion     = "2.4.6" // ttl token is readed in minutes
@@ -735,8 +736,9 @@ func (c *Config) WaitForClusterState(clusterID, state string, interval time.Dura
 				if obj.Conditions[i].Status == "True" {
 					return obj, nil
 				}
-				// When condition is false, checking if the cluster is transitioning to still wait for condition
-				if obj.Transitioning == "yes" {
+				// When cluster condition is false, retrying if it has been updated for last rancher2WaitFalseCond seconds
+				lastUpdate, err := time.Parse(time.RFC3339, obj.Conditions[i].LastUpdateTime)
+				if err == nil && time.Since(lastUpdate) < rancher2WaitFalseCond*time.Second {
 					break
 				}
 				return nil, fmt.Errorf("Cluster ID %s: %s", clusterID, obj.Conditions[i].Message)
