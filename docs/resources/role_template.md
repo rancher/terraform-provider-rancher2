@@ -74,7 +74,7 @@ The following attributes are exported:
 * `non_resource_urls` - (Optional) Policy rule non resource urls (list)
 * `resource_names` - (Optional) Policy rule resource names (list)
 * `resources` - (Optional) Policy rule resources (list)
-* `verbs` - (Optional) Policy rule verbs. `create`, `delete`, `deletecollection`, `get`, `list`, `patch`, `update`, `view`, `watch` and `*` values are supported (list)
+* `verbs` - (Optional) Policy rule verbs. `create`, `delete`, `deletecollection`, `get`, `list`, `patch`, `update`, `view`, `watch`, `own` and `*` values are supported (list)
 
 ## Timeouts
 

@@ -16,6 +16,7 @@ const (
 	policyRuleVerbUpdate           = "update"
 	policyRuleVerbView             = "view"
 	policyRuleVerbWatch            = "watch"
+	policyRuleVerbOwn              = "own"
 )
 
 var (
@@ -30,6 +31,7 @@ var (
 		policyRuleVerbUpdate,
 		policyRuleVerbView,
 		policyRuleVerbWatch,
+		policyRuleVerbOwn,
 	}
 )
 
