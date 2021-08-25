@@ -1,3 +1,18 @@
+## 1.17.2 (August 25, 2021)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added verb `own` to policy rule
+* Updated `WaitForClusterState` function to check for condition last update before return error
+
+BUG FIXES:
+
+
+
 ## 1.17.1 (August 18, 2021)
 
 FEATURES:
