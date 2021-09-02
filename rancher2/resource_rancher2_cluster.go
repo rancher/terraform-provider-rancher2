@@ -238,18 +238,9 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	clusterResource := &norman.Resource{
-		ID:      cluster.ID,
-		Type:    cluster.Type,
-		Links:   cluster.Links,
-		Actions: cluster.Actions,
-	}
-	kubeConfig := &managementClient.GenerateKubeConfigOutput{}
-	if len(cluster.Actions["generateKubeconfig"]) > 0 {
-		err = client.APIBaseClient.Action(managementClient.ClusterType, "generateKubeconfig", clusterResource, nil, kubeConfig)
-		if err != nil {
-			return err
-		}
+	kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID)
+	if err != nil && !IsForbidden(err) {
+		return err
 	}
 
 	var monitoringInput *managementClient.MonitoringInput
@@ -580,6 +571,51 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 		return nil, err
 	}
 	return newRegToken, nil
+}
+
+func getClusterKubeconfig(c *Config, id string) (*managementClient.GenerateKubeConfigOutput, error) {
+	action := "generateKubeconfig"
+	cluster := &Cluster{}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
+	for {
+		err = client.APIBaseClient.ByID(managementClient.ClusterType, id, cluster)
+		if err != nil {
+			if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
+				return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+			}
+		} else if len(cluster.Actions[action]) > 0 {
+			clusterResource := &norman.Resource{
+				ID:      cluster.ID,
+				Type:    cluster.Type,
+				Links:   cluster.Links,
+				Actions: cluster.Actions,
+			}
+			kubeConfig := &managementClient.GenerateKubeConfigOutput{}
+			err = client.APIBaseClient.Action(managementClient.ClusterType, action, clusterResource, nil, kubeConfig)
+			if err == nil {
+				return kubeConfig, nil
+			}
+			if cluster.LocalClusterAuthEndpoint != nil && cluster.LocalClusterAuthEndpoint.Enabled && IsServiceUnavailableError(err) {
+				log.Printf("[WARN] Getting cluster Kubeconfig: kubeconfig is not yet available for cluster %s", cluster.Name)
+				return kubeConfig, nil
+			}
+			if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
+				return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+			}
+		}
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return nil, fmt.Errorf("Timeout getting cluster Kubeconfig: %v", err)
+		}
+	}
 }
 
 func updateClusterMonitoringApps(meta interface{}, systemProjectID, version string) error {
