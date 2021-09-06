@@ -1,3 +1,23 @@
+## 1.20.0 (Unreleased)
+
+FEATURES:
+
+* **New Argument:** `rancher2_cluster.aks_config_v2` - (Optional) The Azure AKS v2 configuration for creating/import `aks` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config`. Just for Rancher v2.6.0 and above (list maxitems:1)
+* **New Argument:** `rancher2_cloud_credential.azure_credential_config.environment` - (Optional/Computed) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud) (string)
+* **New Argument:** `rancher2_cloud_credential.azure_credential_config.tenant_id` - (Optional/Computed) Azure Tenant ID (string)
+
+ENHANCEMENTS:
+
+* Updated go modules and acceptance tests to support rancher v2.6.0
+* Updated `rancher2_cluster.rke_config` schema to support rancher v2.6.0 https://github.com/rancher/rke/pull/2409
+* Updated `rancher2_cluster.gke_config_v2` schema to support rancher v2.6.0 https://github.com/rancher/gke-operator/pull/49
+* Updated `rancher2_cluster.eks_config_v2` schema to support rancher v2.6.0 https://github.com/rancher/eks-operator/pull/38
+* Updated `rancher2_cluster.gke_config_v2` schema to support rancher v2.6.0 https://github.com/rancher/rancher/issues/34291
+
+BUG FIXES:
+
+
+
 ## 1.17.2 (August 25, 2021)
 
 FEATURES:

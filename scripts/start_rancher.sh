@@ -15,12 +15,12 @@ K3S_INGRESS_PORT_TLS=${K3S_INGRESS_PORT_TLS:-8443}
 KUBECTL_BIN=${KUBECTL_BIN:-"${DOCKER_BIN} exec -i ${K3S_SERVER} kubectl"}
 
 ## cert-manager
-CERTMANAGER_VERSION=${CERTMANAGER_VERSION:-"v1.0.1"}
+CERTMANAGER_VERSION=${CERTMANAGER_VERSION:-"v1.5.2"}
 CERTMANAGER_CRD=${CERTMANAGER_CRD:-"https://github.com/jetstack/cert-manager/releases/download/${CERTMANAGER_VERSION}/cert-manager.crds.yaml"}
 CERTMANAGER_NS=${CERTMANAGER_NS:-"cert-manager"}
 
 ## rancher
-RANCHER_VERSION=${RANCHER_VERSION:-"v2.5.9"}
+RANCHER_VERSION=${RANCHER_VERSION:-"v2.6.0"}
 RANCHER_NS=${RANCHER_NS:-"cattle-system"}
 RANCHER_DNS_DOMAIN="nip.io"
 export RANCHER_HOSTNAME="rancher.${K3S_SERVER_IP}.${RANCHER_DNS_DOMAIN}"
@@ -82,10 +82,12 @@ spec:
   chart: rancher
   repo: https://releases.rancher.com/server-charts/latest
   targetNamespace: ${RANCHER_NS}
+  version: ${RANCHER_VERSION}
   set:
     hostname: ${RANCHER_HOSTNAME}
     replicas: 1
     rancherImageTag: ${RANCHER_VERSION}
+    bootstrapPassword: "admin"
 EOF
 
 ${DOCKER_BIN} cp ${TEMP_DIR}"/rancher.yaml" ${K3S_SERVER}:/var/lib/rancher/k3s/server/manifests/

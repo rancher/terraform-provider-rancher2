@@ -19,7 +19,7 @@ var (
 func init() {
 	LtVersion := int64(1)
 	testClusterEKSConfigV2NodeGroupLaunchTemplateConf = &managementClient.LaunchTemplate{
-		Name:    "launch_template",
+		Name:    newString("launch_template"),
 		Version: &LtVersion,
 	}
 	testClusterEKSConfigV2NodeGroupLaunchTemplateInterface = []interface{}{
@@ -31,14 +31,14 @@ func init() {
 	size := int64(3)
 	testClusterEKSConfigV2NodeGroupConf = []managementClient.NodeGroup{
 		{
-			NodegroupName: "name",
-			InstanceType:  "instance_type",
+			NodegroupName: newString("name"),
+			InstanceType:  newString("instance_type"),
 			DesiredSize:   &size,
 			DiskSize:      &size,
-			Ec2SshKey:     "ec2_ssh_key",
+			Ec2SshKey:     newString("ec2_ssh_key"),
 			Gpu:           newTrue(),
-			ImageID:       "image_id",
-			Labels: map[string]string{
+			ImageID:       newString("image_id"),
+			Labels: &map[string]string{
 				"label1": "one",
 				"label2": "two",
 			},
@@ -46,18 +46,18 @@ func init() {
 			MaxSize:              &size,
 			MinSize:              &size,
 			RequestSpotInstances: newTrue(),
-			ResourceTags: map[string]string{
+			ResourceTags: &map[string]string{
 				"rstag1": "one",
 				"rstag2": "two",
 			},
-			SpotInstanceTypes: []string{"spot1", "spot2"},
-			Subnets:           []string{"net1", "net2"},
-			Tags: map[string]string{
+			SpotInstanceTypes: &[]string{"spot1", "spot2"},
+			Subnets:           &[]string{"net1", "net2"},
+			Tags: &map[string]string{
 				"tag1": "one",
 				"tag2": "two",
 			},
-			UserData: "user_data",
-			Version:  "kubernetes_version",
+			UserData: newString("user_data"),
+			Version:  newString("kubernetes_version"),
 		},
 	}
 	testClusterEKSConfigV2NodeGroupInterface = []interface{}{
@@ -94,20 +94,20 @@ func init() {
 	testClusterEKSConfigV2Conf = &managementClient.EKSClusterConfigSpec{
 		AmazonCredentialSecret: "test",
 		DisplayName:            "eksimport",
-		LoggingTypes:           []string{"type1", "type2"},
-		NodeGroups:             testClusterEKSConfigV2NodeGroupConf,
+		LoggingTypes:           &[]string{"type1", "type2"},
+		NodeGroups:             &testClusterEKSConfigV2NodeGroupConf,
 		Region:                 "test",
-		KmsKey:                 "kms_key",
+		KmsKey:                 newString("kms_key"),
 		Imported:               false,
-		KubernetesVersion:      "kubernetes_version",
+		KubernetesVersion:      newString("kubernetes_version"),
 		PrivateAccess:          newTrue(),
 		PublicAccess:           newTrue(),
-		PublicAccessSources:    []string{"access1", "access2"},
+		PublicAccessSources:    &[]string{"access1", "access2"},
 		SecretsEncryption:      newTrue(),
-		SecurityGroups:         []string{"sec1", "sec2"},
-		ServiceRole:            "service_role",
-		Subnets:                []string{"net1", "net2"},
-		Tags: map[string]string{
+		SecurityGroups:         &[]string{"sec1", "sec2"},
+		ServiceRole:            newString("service_role"),
+		Subnets:                &[]string{"net1", "net2"},
+		Tags: &map[string]string{
 			"value1": "one",
 			"value2": "two",
 		},

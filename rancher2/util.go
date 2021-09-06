@@ -652,6 +652,10 @@ func FileExist(path string) (bool, error) {
 	return true, nil
 }
 
+func newString(value string) *string {
+	return &value
+}
+
 func newTrue() *bool {
 	b := true
 	return &b

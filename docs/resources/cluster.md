@@ -502,21 +502,56 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
+### Creating AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 or above (Tech preview)
+
+```hcl
+resource "rancher2_cloud_credential" "foo-aks" {
+  name = "foo-aks"
+  azure_credential_config {
+    client_id = "<CLIENT_ID>"
+    client_secret = "<CLIENT_SECRET>"
+    subscription_id = "<SUBSCRIPTION_ID>"
+  }
+}
+
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform AKS cluster"
+  aks_config_v2 {
+    cloud_credential_id = rancher2_cloud_credential.foo-aks.id
+    resource_group = "<RESOURCE_GROUP>"
+    resource_location = "<RESOURCE_LOCATION>"
+    dns_prefix = "<DNS_PREFIX>"
+    kubernetes_version = "1.21.2"
+    network_plugin = "<NETWORK_PLUGIN>"
+    node_pools {
+      availability_zones = ["1", "2", "3"]
+      name = "<NODEPOOL_NAME>"
+      count = 1
+      orchestrator_version = "1.21.2"
+      os_disk_size_gb = 128
+      vm_size = "Standard_DS2_v2"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
 * `agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. Just for Rancher v2.5.6 and above (list)
-* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `k3s_config` (list maxitems:1)
-* `rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
-* `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `rke_config` (list maxitems:1)
-* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `k3s_config` (list maxitems:1)
+* `rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
+* `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `rke_config` (list maxitems:1)
+* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `aks_config_v2` - (Optional) The Azure AKS v2 configuration for creating/import `aks` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
+* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
 * `eks_config_v2` - (Optional/Computed) The Amazon EKS V2 configuration to create or import `eks` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config`. For Rancher v2.5.x or above (list maxitems:1)
-* `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config_v2`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
-* `gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 or above (list maxitems:1)
-* `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `k3s_config` and `rke_config` (list maxitems:1)
+* `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config_v2`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
+* `gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 or above (list maxitems:1)
+* `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `k3s_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_monitoring_input` - (Optional) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
@@ -1293,6 +1328,60 @@ The following arguments are supported:
 * `tag` - (Deprecated) Use `tags` argument instead as []string
 * `tags` - (Optional/Computed) Tags for Kubernetes cluster. For example, `["foo=bar","bar=foo"]` (list)
 
+### `aks_config_v2`
+
+#### Arguments
+
+The following arguments are supported:
+
+* `cloud_credential_id` - (Required) The AKS Cloud Credential ID to use (string)
+* `dns_prefix` - (Required) The AKS dns prefix (string)
+* `resource_group` - (Required) The AKS resource group (string)
+* `resource_location` - (Required) The AKS resource location (string)
+* `auth_base_url` - (Optional) The AKS auth base url (string)
+* `authorized_ip_ranges` - (Optional) The AKS authorized ip ranges (list)
+* `base_url` - (Optional) The AKS base url (string)
+* `http_application_routing` - (Optional/Computed) Enable AKS http application routing? (bool)
+* `imported` - (Optional) Is AKS cluster imported? Defaul: `false` (bool)
+* `kubernetes_version` - (Optional/Computed) The kubernetes master version (string)
+* `linux_admin_username` - (Optional) The AKS linux admin username (string)
+* `linux_ssh_public_key` - (Optional) The AKS linux ssh public key (string)
+* `load_balancer_sku` - (Optional) The AKS load balancer sku (string)
+* `log_analytics_workspace_group` - (Optional) The AKS log analytics workspace group (string)
+* `log_analytics_workspace_name` - (Optional) The AKS log analytics workspace name (string)
+* `monitoring` - (Optional/Computed) Is AKS cluster monitoring enabled? (bool)
+* `name` - (Optional) The AKS cluster name (string)
+* `network_dns_service_ip` - (Optional) The AKS network dns service ip (string)
+* `network_docker_bridge_cidr` - (Optional) The AKS network docker bridge cidr (string)
+* `network_plugin` - (Optional) The AKS network plugin (string)
+* `network_pod_cidr` - (Optional) The AKS network pod cidr (string)
+* `network_policy` - (Optional) The AKS network policy (string)
+* `network_service_cidr` - (Optional) The AKS network service cidr (string)
+* `node_pools` - (Optional) The AKS nnode pools (list)
+* `private_cluster` - (Optional/Computed) Is AKS cluster private? (bool)
+* `subnet` - (Optional) The AKS subnet (string)
+* `tags` - (Optional) The AKS cluster tags" (map)
+* `virtual_network` - (Optional) The AKS virtual network (string)
+* `virtual_network_resource_group` - (Optional) The AKS virtual network resource group (string)
+
+#### `node_pools`
+
+##### Arguments
+
+* `name` - (Required) The AKS node group name (string)
+* `availability_zones` - (Optional) The AKS node pool availability zones (list)
+* `count` - (Optional) The AKS node pool count. Default: `1` (int)
+* `enable_auto_scaling` - (Optional) Is AKS node pool auto scaling enabled? Default: `false` (bool)
+* `max_count` - (Optional) The AKS node pool max count. Default: `3` (int)
+* `max_pods` - (Optional) The AKS node pool max pods. Default: `110` (int)
+* `min_count` - (Optional) The AKS node pool min count. Default: `1` (int)
+* `mode` - (Optional) The AKS node group mode. Default: `System` (string)
+* `orchestrator_version` - (Optional) The AKS node pool orchestrator version (string)
+* `os_disk_size_gb` - (Optional) The AKS node pool os disk size gb. Default: `128` (int)
+* `os_disk_type` - (Optional) The AKS node pool os disk type. Default: `Managed` (string)
+* `os_type` - (Optional) The AKS node pool os type. Default: `Linux` (string)
+* `vm_size` - (Optional/computed) The AKS node pool orchestrator version (string)
+
 ### `eks_config`
 
 #### Arguments
@@ -1527,8 +1616,9 @@ The following arguments are supported:
 * `labels` - (Optional/Computed) The GKE node config labels (map)
 * `local_ssd_count` - (Optional/Computed) The GKE node config local ssd count (int)
 * `machine_type` - (Optional/Computed) The GKE node config machine type (string)
-* `oauth_scopes` - (Optional) The GKE node config oauth scopes (List)
+* `oauth_scopes` - (Optional/Computed) The GKE node config oauth scopes (List)
 * `preemptible` - (Optional) Enable GKE node config preemptible. Default: `false` (bool)
+* `tags` - (Optional/Computed) The GKE node config tags (List)
 * `taints` - (Optional) The GKE node config taints (List)
 
 ###### `taints`

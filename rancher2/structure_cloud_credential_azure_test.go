@@ -14,13 +14,17 @@ func init() {
 	testCloudCredentialAzureConf = &azureCredentialConfig{
 		ClientID:       "client_id",
 		ClientSecret:   "client_secret",
+		Environment:    "environment",
 		SubscriptionID: "subscription_id",
+		TenantID:       "tenant_id",
 	}
 	testCloudCredentialAzureInterface = []interface{}{
 		map[string]interface{}{
 			"client_id":       "client_id",
 			"client_secret":   "client_secret",
+			"environment":     "environment",
 			"subscription_id": "subscription_id",
+			"tenant_id":       "tenant_id",
 		},
 	}
 }

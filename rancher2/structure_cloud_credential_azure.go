@@ -26,6 +26,13 @@ func flattenCloudCredentialAzure(in *azureCredentialConfig, p []interface{}) []i
 		obj["subscription_id"] = in.SubscriptionID
 	}
 
+	if len(in.Environment) > 0 {
+		obj["environment"] = in.Environment
+	}
+
+	if len(in.TenantID) > 0 {
+		obj["tenant_id"] = in.TenantID
+	}
 	return []interface{}{obj}
 }
 
@@ -48,6 +55,14 @@ func expandCloudCredentialAzure(p []interface{}) *azureCredentialConfig {
 
 	if v, ok := in["subscription_id"].(string); ok && len(v) > 0 {
 		obj.SubscriptionID = v
+	}
+
+	if v, ok := in["environment"].(string); ok && len(v) > 0 {
+		obj.Environment = v
+	}
+
+	if v, ok := in["tenant_id"].(string); ok && len(v) > 0 {
+		obj.TenantID = v
 	}
 
 	return obj
