@@ -54,6 +54,14 @@ func clusterRegistationTokenFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"insecure_node_command": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"insecure_windows_node_command": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"manifest_url": {
 			Type:     schema.TypeString,
 			Computed: true,
