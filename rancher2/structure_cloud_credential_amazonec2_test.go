@@ -12,13 +12,15 @@ var (
 
 func init() {
 	testCloudCredentialAmazonec2Conf = &amazonec2CredentialConfig{
-		AccessKey: "access_key",
-		SecretKey: "secret_key",
+		AccessKey:     "access_key",
+		SecretKey:     "secret_key",
+		DefaultRegion: "default_region",
 	}
 	testCloudCredentialAmazonec2Interface = []interface{}{
 		map[string]interface{}{
-			"access_key": "access_key",
-			"secret_key": "secret_key",
+			"access_key":     "access_key",
+			"secret_key":     "secret_key",
+			"default_region": "default_region",
 		},
 	}
 }
