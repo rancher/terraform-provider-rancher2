@@ -138,6 +138,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_global_dns_provider":           resourceRancher2GlobalDNSProvider(),
 			"rancher2_global_role":                   resourceRancher2GlobalRole(),
 			"rancher2_global_role_binding":           resourceRancher2GlobalRoleBinding(),
+			"rancher2_machine_config_v2":             resourceRancher2MachineConfigV2(),
 			"rancher2_multi_cluster_app":             resourceRancher2MultiClusterApp(),
 			"rancher2_namespace":                     resourceRancher2Namespace(),
 			"rancher2_node_driver":                   resourceRancher2NodeDriver(),
