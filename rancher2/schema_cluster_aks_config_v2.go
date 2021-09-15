@@ -41,7 +41,6 @@ func clusterAKSConfigV2NodePoolsFields() map[string]*schema.Schema {
 		"max_count": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Default:     3,
 			Description: "The AKS node pool max count",
 		},
 		"max_pods": {
@@ -53,7 +52,6 @@ func clusterAKSConfigV2NodePoolsFields() map[string]*schema.Schema {
 		"min_count": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Default:     1,
 			Description: "The AKS node pool min count",
 		},
 		"mode": {
