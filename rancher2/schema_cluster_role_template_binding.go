@@ -26,6 +26,7 @@ func clusterRoleTemplateBindingFields() map[string]*schema.Schema {
 		"group_id": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true,
 			ForceNew: true,
 		},
 		"group_principal_id": {
@@ -37,6 +38,7 @@ func clusterRoleTemplateBindingFields() map[string]*schema.Schema {
 		"user_id": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true,
 			ForceNew: true,
 		},
 		"user_principal_id": {
