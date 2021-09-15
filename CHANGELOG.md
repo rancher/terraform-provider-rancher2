@@ -17,6 +17,9 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Updated `rancher2_project_role_template_binding` `rancher2_cluster_role_template_binding` resources, setting `user_id` and `group_id` arguments as computed
+* Updated `rancher2_cluster.aks_config_v2` to:
+  * disable default value for `node_pools.max_count` and `node_pools.min_count` https://github.com/rancher/rancher/issues/34752
+  * set optional arguments as computed for imported clusters https://github.com/rancher/rancher/issues/34758
 
 ## 1.17.2 (August 25, 2021)
 
