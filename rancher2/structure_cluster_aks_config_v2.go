@@ -253,7 +253,7 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	if v, ok := in["base_url"].(string); ok && len(v) > 0 {
 		obj.BaseURL = &v
 	}
-	if v, ok := in["dns_prefix"].(string); ok {
+	if v, ok := in["dns_prefix"].(string); ok && len(v) > 0 {
 		obj.DNSPrefix = &v
 	}
 	if v, ok := in["http_application_routing"].(bool); ok {
