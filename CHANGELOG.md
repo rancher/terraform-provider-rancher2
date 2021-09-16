@@ -16,7 +16,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-
+* Updated `rancher2_project_role_template_binding` `rancher2_cluster_role_template_binding` resources, setting `user_id` and `group_id` arguments as computed
 
 ## 1.17.2 (August 25, 2021)
 
