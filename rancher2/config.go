@@ -3,6 +3,7 @@ package rancher2
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"sync"
@@ -1115,9 +1116,10 @@ func (c *Config) InfoAppV2(clusterID, repoName, chartName, chartVersion string) 
 	if resource.Links == nil && len(resource.Links[link]) == 0 {
 		return nil, nil, fmt.Errorf("failed to get chart info %s:%s from catalog v2 %s", chartName, chartVersion, repoName)
 	}
-	resource.Links[link] = resource.Links[link] + "&chartName=" + chartName
+
+	resource.Links[link] = resource.Links[link] + "&chartName=" + url.QueryEscape(chartName)
 	if len(chartVersion) > 0 {
-		resource.Links[link] = resource.Links[link] + "&version=" + chartVersion
+		resource.Links[link] = resource.Links[link] + "&version=" + url.QueryEscape(chartVersion)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
