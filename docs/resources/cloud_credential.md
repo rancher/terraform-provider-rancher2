@@ -53,6 +53,7 @@ The following attributes are exported:
 
 * `access_key` - (Required/Sensitive) AWS access key (string)
 * `secret_key` - (Required/Sensitive) AWS secret key (string)
+* `default_region` - (Optional) AWS default region (string)
 
 ### `azure_credential_config`
 

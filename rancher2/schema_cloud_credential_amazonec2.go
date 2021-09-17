@@ -7,8 +7,9 @@ import (
 //Types
 
 type amazonec2CredentialConfig struct {
-	AccessKey string `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
-	SecretKey string `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
+	AccessKey     string `json:"accessKey,omitempty" yaml:"accessKey,omitempty"`
+	SecretKey     string `json:"secretKey,omitempty" yaml:"secretKey,omitempty"`
+	DefaultRegion string `json:"defaultRegion,omitempty" yaml:"defaultRegion,omitempty"`
 }
 
 //Schemas
@@ -26,6 +27,11 @@ func cloudCredentialAmazonec2Fields() map[string]*schema.Schema {
 			Required:    true,
 			Sensitive:   true,
 			Description: "AWS Secret Key",
+		},
+		"default_region": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "AWS default region",
 		},
 	}
 

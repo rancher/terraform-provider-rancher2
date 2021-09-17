@@ -1749,6 +1749,8 @@ The following arguments are supported:
 * `name` - (Computed) Name of cluster registration token (string)
 * `command` - (Computed) Command to execute in a imported k8s cluster (string)
 * `insecure_command` - (Computed) Insecure command to execute in a imported k8s cluster (string)
+* `insecure_node_command` - (Computed) Insecure node command to execute in a imported k8s cluster (string)
+* `insecure_windows_node_command` - (Computed) Insecure windows command to execute in a imported k8s cluster (string)
 * `manifest_url` - (Computed) K8s manifest url to execute with `kubectl` to import an existing k8s cluster (string)
 * `node_command` - (Computed) Node command to execute in linux nodes for custom k8s cluster (string)
 * `token` - (Computed) Token for cluster registration token object (string)

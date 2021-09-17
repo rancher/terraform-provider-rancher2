@@ -22,6 +22,10 @@ func flattenCloudCredentialAmazonec2(in *amazonec2CredentialConfig, p []interfac
 		obj["secret_key"] = in.SecretKey
 	}
 
+	if len(in.DefaultRegion) > 0 {
+		obj["default_region"] = in.DefaultRegion
+	}
+
 	return []interface{}{obj}
 }
 
@@ -40,6 +44,10 @@ func expandCloudCredentialAmazonec2(p []interface{}) *amazonec2CredentialConfig 
 
 	if v, ok := in["secret_key"].(string); ok && len(v) > 0 {
 		obj.SecretKey = v
+	}
+
+	if v, ok := in["default_region"].(string); ok && len(v) > 0 {
+		obj.DefaultRegion = v
 	}
 
 	return obj

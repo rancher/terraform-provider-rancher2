@@ -18,6 +18,8 @@ Rancher2 admin `token` can also be regenerated if `token_update` is set to true.
 
 Login to Rancher2 is done by trying to use `token` first. If it fails, it uses admin `current_password`. If admin password has been changed outside of terraform and the terraform `token` is expired, `current_password` field can be specified to allow terraform to manage admin password and token again.
 
+**Note** Starting from Rancher v2.6.0, the Rancher installation is setting a random admin password by default. To be able to still use the `rancher2_bootstrap` resource, the Rancher admin password should be set on installation time, using helm chart [`bootstrapPassword`](https://github.com/rancher/rancher/blob/release/v2.6/chart/values.yaml#L157) value for HA installation or docker env variable [`CATTLE_BOOTSTRAP_PASSWORD`](https://github.com/rancher/rancher/blob/release/v2.6/chart/templates/deployment.yaml#L135) for single node installation. If the Rancher admin password is set to something distinct than `admin` (previous default admin password), the `rancher2_bootstrap.current_password` argument should also be set with same value at tf file.
+
 ## Example Usage
 
 ```hcl
