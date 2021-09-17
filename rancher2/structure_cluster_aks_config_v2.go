@@ -28,15 +28,18 @@ func flattenClusterAKSConfigV2NodePools(input []managementClient.AKSNodePool, p 
 		}
 		if in.EnableAutoScaling != nil {
 			obj["enable_auto_scaling"] = *in.EnableAutoScaling
-		}
-		if in.MaxCount != nil {
-			obj["max_count"] = int(*in.MaxCount)
+			// Assigning max_count and min_count just if *obj.EnableAutoScaling is true
+			if *in.EnableAutoScaling {
+				if in.MaxCount != nil {
+					obj["max_count"] = int(*in.MaxCount)
+				}
+				if in.MinCount != nil {
+					obj["min_count"] = int(*in.MinCount)
+				}
+			}
 		}
 		if in.MaxPods != nil {
 			obj["max_pods"] = int(*in.MaxPods)
-		}
-		if in.MinCount != nil {
-			obj["min_count"] = int(*in.MinCount)
 		}
 		if len(in.Mode) > 0 {
 			obj["mode"] = in.Mode
@@ -189,18 +192,21 @@ func expandClusterAKSConfigV2NodePools(p []interface{}) []managementClient.AKSNo
 		}
 		if v, ok := in["enable_auto_scaling"].(bool); ok {
 			obj.EnableAutoScaling = &v
-		}
-		if v, ok := in["max_count"].(int); ok {
-			size := int64(v)
-			obj.MaxCount = &size
+			// Assigning max_count and min_count just if *obj.EnableAutoScaling is true
+			if *obj.EnableAutoScaling {
+				if v, ok := in["max_count"].(int); ok {
+					size := int64(v)
+					obj.MaxCount = &size
+				}
+				if v, ok := in["min_count"].(int); ok {
+					size := int64(v)
+					obj.MinCount = &size
+				}
+			}
 		}
 		if v, ok := in["max_pods"].(int); ok {
 			size := int64(v)
 			obj.MaxPods = &size
-		}
-		if v, ok := in["min_count"].(int); ok {
-			size := int64(v)
-			obj.MinCount = &size
 		}
 		if v, ok := in["mode"].(string); ok {
 			obj.Mode = v
@@ -247,7 +253,7 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	if v, ok := in["base_url"].(string); ok && len(v) > 0 {
 		obj.BaseURL = &v
 	}
-	if v, ok := in["dns_prefix"].(string); ok {
+	if v, ok := in["dns_prefix"].(string); ok && len(v) > 0 {
 		obj.DNSPrefix = &v
 	}
 	if v, ok := in["http_application_routing"].(bool); ok {

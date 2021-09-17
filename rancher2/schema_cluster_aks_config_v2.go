@@ -41,7 +41,6 @@ func clusterAKSConfigV2NodePoolsFields() map[string]*schema.Schema {
 		"max_count": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Default:     3,
 			Description: "The AKS node pool max count",
 		},
 		"max_pods": {
@@ -53,7 +52,6 @@ func clusterAKSConfigV2NodePoolsFields() map[string]*schema.Schema {
 		"min_count": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Default:     1,
 			Description: "The AKS node pool min count",
 		},
 		"mode": {
@@ -103,11 +101,6 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 			Required:    true,
 			Description: "The AKS Cloud Credential ID to use",
 		},
-		"dns_prefix": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "The AKS dns prefix",
-		},
 		"resource_group": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -136,6 +129,13 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "The AKS base url",
 		},
+		"dns_prefix": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			ForceNew:    true,
+			Description: "The AKS dns prefix",
+		},
 		"http_application_routing": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -157,26 +157,31 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 		"linux_admin_username": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS linux admin username",
 		},
 		"linux_ssh_public_key": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS linux ssh public key",
 		},
 		"load_balancer_sku": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS load balancer sku",
 		},
 		"log_analytics_workspace_group": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS log analytics workspace group",
 		},
 		"log_analytics_workspace_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS log analytics workspace name",
 		},
 		"monitoring": {
@@ -194,31 +199,37 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 		"network_dns_service_ip": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS network dns service ip",
 		},
 		"network_docker_bridge_cidr": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS network docker bridge cidr",
 		},
 		"network_plugin": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS network plugin",
 		},
 		"network_pod_cidr": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS network pod cidr",
 		},
 		"network_policy": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS network policy",
 		},
 		"network_service_cidr": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS network service cidr",
 		},
 		"node_pools": {
@@ -239,21 +250,25 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 		"subnet": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS subnet",
 		},
 		"tags": {
 			Type:        schema.TypeMap,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS cluster tags",
 		},
 		"virtual_network": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS virtual network",
 		},
 		"virtual_network_resource_group": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			Description: "The AKS virtual network resource group",
 		},
 	}
