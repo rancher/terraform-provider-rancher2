@@ -67,7 +67,7 @@ func resourceRancher2NamespaceCreate(d *schema.ResourceData, meta interface{}) e
 	d.SetId(newNs.ID)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"activating"},
+		Pending:    []string{"activating", "forbidden"},
 		Target:     []string{"active"},
 		Refresh:    namespaceStateRefreshFunc(client, newNs.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
@@ -216,7 +216,7 @@ func resourceRancher2NamespaceDelete(d *schema.ResourceData, meta interface{}) e
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"removing"},
-		Target:     []string{"removed"},
+		Target:     []string{"removed", "forbidden"},
 		Refresh:    namespaceStateRefreshFunc(client, id),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
@@ -238,8 +238,11 @@ func namespaceStateRefreshFunc(client *clusterClient.Client, nsID string) resour
 	return func() (interface{}, string, error) {
 		obj, err := client.Namespace.ByID(nsID)
 		if err != nil {
-			if IsNotFound(err) || IsForbidden(err) {
+			if IsNotFound(err) {
 				return obj, "removed", nil
+			}
+			if IsForbidden(err) {
+				return obj, "forbidden", nil
 			}
 			return nil, "", err
 		}
