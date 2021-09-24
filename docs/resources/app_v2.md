@@ -51,12 +51,12 @@ The following attributes are exported:
 
 ## Timeouts
 
-`rancher2_catalog` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
+`rancher2_app_v2` provides the following
+[Timeouts](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) configuration options:
 
-- `create` - (Default `10 minutes`) Used for creating v2 catalogs.
-- `update` - (Default `10 minutes`) Used for v2 catalog modifications.
-- `delete` - (Default `10 minutes`) Used for deleting v2 catalogs.
+- `create` - (Default `10 minutes`) Used for creating Rancher v2 apps.
+- `update` - (Default `10 minutes`) Used for Rancher v2 app modifications.
+- `delete` - (Default `10 minutes`) Used for deleting Rancher v2 apps.
 
 ## Import
 
