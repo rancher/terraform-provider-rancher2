@@ -106,6 +106,7 @@ func resourceRancher2ClusterLoggingUpdate(d *schema.ResourceData, meta interface
 	update := map[string]interface{}{
 		"name":                d.Get("name").(string),
 		"namespaceId":         d.Get("namespace_id").(string),
+		"enable_json_parsing": d.Get("enable_json_parsing").(bool),
 		"outputFlushInterval": int64(d.Get("output_flush_interval").(int)),
 		"outputTags":          toMapString(d.Get("output_tags").(map[string]interface{})),
 		"annotations":         toMapString(d.Get("annotations").(map[string]interface{})),
