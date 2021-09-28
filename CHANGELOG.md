@@ -1,3 +1,17 @@
+## 1.20.1 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Updated `waitForRancherLocalActive` function to allow `rancher2_bootstrap` works when using Rancher [restricted-admin](https://rancher.com/docs/rancher/v2.6/en/admin-settings/rbac/global-permissions/#restricted-admin) at Rancher 2.6.x
+
+BUG FIXES:
+
+* Fixed `expandClusterEKSConfigV2` function to avoid provider crash https://github.com/rancher/terraform-provider-rancher2/issues/753
+
 ## 1.20.0 (September 17, 2021)
 
 FEATURES:
