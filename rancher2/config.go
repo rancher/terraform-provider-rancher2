@@ -110,14 +110,15 @@ func (c *Config) waitForRancherLocalActive() error {
 	if err != nil {
 		return err
 	}
-	clusterLocal, _ := client.Cluster.ByID(rancher2DefaultLocalClusterID)
-	if clusterLocal != nil {
-		_, err := c.WaitForClusterState(clusterLocal.ID, clusterActiveCondition, c.Timeout)
-		if err != nil {
-			return err
+	clusterLocal, err := client.Cluster.ByID(rancher2DefaultLocalClusterID)
+	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) {
+			return nil
 		}
+		return fmt.Errorf("Waiting For local cluster. Getting cluster: %s", err)
 	}
-	return nil
+	_, err = c.WaitForClusterState(clusterLocal.ID, clusterActiveCondition, c.Timeout)
+	return err
 }
 
 func (c *Config) getK8SDefaultVersion() (string, error) {
@@ -726,23 +727,27 @@ func (c *Config) WaitForClusterState(clusterID, state string, interval time.Dura
 	for {
 		obj, err := c.GetClusterByID(clusterID)
 		if err != nil {
-			return nil, fmt.Errorf("Getting cluster ID (%s): %v", clusterID, err)
+			if !IsServerError(err) && !IsNotFound(err) && !IsForbidden(err) {
+				return nil, fmt.Errorf("Getting cluster ID (%s): %v", clusterID, err)
+			}
 		}
-		for i := range obj.Conditions {
-			if obj.Conditions[i].Type == state {
-				// Status of the condition, one of True, False, Unknown.
-				if obj.Conditions[i].Status == "Unknown" {
-					break
+		if obj != nil {
+			for i := range obj.Conditions {
+				if obj.Conditions[i].Type == state {
+					// Status of the condition, one of True, False, Unknown.
+					if obj.Conditions[i].Status == "Unknown" {
+						break
+					}
+					if obj.Conditions[i].Status == "True" {
+						return obj, nil
+					}
+					// When cluster condition is false, retrying if it has been updated for last rancher2WaitFalseCond seconds
+					lastUpdate, err := time.Parse(time.RFC3339, obj.Conditions[i].LastUpdateTime)
+					if err == nil && time.Since(lastUpdate) < rancher2WaitFalseCond*time.Second {
+						break
+					}
+					return nil, fmt.Errorf("Cluster ID %s: %s", clusterID, obj.Conditions[i].Message)
 				}
-				if obj.Conditions[i].Status == "True" {
-					return obj, nil
-				}
-				// When cluster condition is false, retrying if it has been updated for last rancher2WaitFalseCond seconds
-				lastUpdate, err := time.Parse(time.RFC3339, obj.Conditions[i].LastUpdateTime)
-				if err == nil && time.Since(lastUpdate) < rancher2WaitFalseCond*time.Second {
-					break
-				}
-				return nil, fmt.Errorf("Cluster ID %s: %s", clusterID, obj.Conditions[i].Message)
 			}
 		}
 		select {
