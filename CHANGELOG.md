@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Fixed `expandClusterEKSConfigV2` function to avoid provider crash https://github.com/rancher/terraform-provider-rancher2/issues/753
+* Fixed `rancher2_cluster` resource update to properly update eks v2 and gke v2 clusters
 
 ## 1.20.0 (September 17, 2021)
 
