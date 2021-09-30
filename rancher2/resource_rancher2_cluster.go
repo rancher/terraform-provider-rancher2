@@ -321,7 +321,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		update["amazonElasticContainerServiceConfig"] = eksConfig
 	case ToLower(clusterDriverEKSV2):
 		eksConfigV2 := expandClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}))
-		update["eksConfig"] = structToMap(eksConfigV2)
+		update["eksConfig"] = fixClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}), structToMap(eksConfigV2))
 	case clusterDriverGKE:
 		gkeConfig, err := expandClusterGKEConfig(d.Get("gke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
@@ -330,7 +330,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		update["googleKubernetesEngineConfig"] = gkeConfig
 	case ToLower(clusterDriverGKEV2):
 		gkeConfig := expandClusterGKEConfigV2(d.Get("gke_config_v2").([]interface{}))
-		update["gke_config"] = gkeConfig
+		update["gkeConfig"] = fixClusterGKEConfigV2(structToMap(gkeConfig))
 	case clusterOKEKind:
 		okeConfig, err := expandClusterOKEConfig(d.Get("oke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
