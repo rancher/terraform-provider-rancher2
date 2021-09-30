@@ -277,17 +277,18 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 
 	obj.AmazonCredentialSecret = in["cloud_credential_id"].(string)
 	obj.DisplayName = in["name"].(string)
+	k8sVersion := ""
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
-		k8sVersion := v
+		k8sVersion = v
 		obj.KubernetesVersion = &k8sVersion
 	}
-
+	subnets := []string{}
 	if v, ok := in["subnets"].([]interface{}); ok {
-		subnets := toArrayStringSorted(v)
+		subnets = toArrayStringSorted(v)
 		obj.Subnets = &subnets
 	}
 	if v, ok := in["node_groups"].([]interface{}); ok {
-		nodeGroups := expandClusterEKSConfigV2NodeGroups(v, *obj.Subnets, *obj.KubernetesVersion)
+		nodeGroups := expandClusterEKSConfigV2NodeGroups(v, subnets, k8sVersion)
 		obj.NodeGroups = &nodeGroups
 	}
 	if v, ok := in["imported"].(bool); ok {
