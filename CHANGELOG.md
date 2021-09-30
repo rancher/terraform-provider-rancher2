@@ -6,7 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
-
+* Updated `waitForRancherLocalActive` function to allow `rancher2_bootstrap` works when using Rancher [restricted-admin](https://rancher.com/docs/rancher/v2.6/en/admin-settings/rbac/global-permissions/#restricted-admin) at Rancher 2.6.x
 
 BUG FIXES:
 
