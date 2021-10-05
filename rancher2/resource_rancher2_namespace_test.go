@@ -153,7 +153,7 @@ func testAccRancher2NamespaceDisappears(ns *clusterClient.Namespace) resource.Te
 
 			stateConf := &resource.StateChangeConf{
 				Pending:    []string{"removing"},
-				Target:     []string{"removed"},
+				Target:     []string{"removed", "forbidden"},
 				Refresh:    namespaceStateRefreshFunc(client, ns.ID),
 				Timeout:    10 * time.Minute,
 				Delay:      1 * time.Second,
