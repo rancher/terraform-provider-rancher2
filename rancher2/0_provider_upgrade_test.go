@@ -222,6 +222,7 @@ provider "rancher2" {
 ` + testAccRancher2ClusterAlertRule + `
 ` + testAccRancher2ClusterDriver + `
 ` + testAccRancher2ClusterLoggingSyslog + `
+` + testAccRancher2ConfigMapV2 + `
 ` + testAccRancher2User + `
 ` + testAccRancher2ClusterRoleTemplateBinding + `
 ` + testAccRancher2ClusterTemplateConfig + `
@@ -283,6 +284,7 @@ provider "rancher2" {
 ` + testAccRancher2ClusterDriver + `
 ` + testAccRancher2ClusterLoggingSyslog + `
 ` + testAccRancher2ClusterV2 + `
+` + testAccRancher2ConfigMapV2 + `
 ` + testAccRancher2User + `
 ` + testAccRancher2ClusterRoleTemplateBinding + `
 ` + testAccRancher2ClusterTemplateConfig + `

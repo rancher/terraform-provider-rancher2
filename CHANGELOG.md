@@ -1,8 +1,9 @@
-## 1.20.1 (Unreleased)
+## 1.20.1 (October 5, 2021)
 
 FEATURES:
 
-
+* **New Data Source:** `rancher2_config_map_v2` - Provides Rancher configMap v2 data source. Available at Rancher v2.5.x and above.
+* **New Resource:** `rancher2_config_map_v2` - Provides Rancher configMap v2 resource. Available at Rancher v2.5.x and above.
 
 ENHANCEMENTS:
 
