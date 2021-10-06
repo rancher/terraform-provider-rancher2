@@ -60,7 +60,7 @@ The following attributes are exported:
 
 ## Import
 
-V2 apps can be imported using the Rancher cluster ID and App V2 name.
+V2 apps can be imported using the Rancher cluster ID and App V2 name, which is composed of `<namespace>/<application_name>`
 
 ```
 $ terraform import rancher2_app_v2.foo &lt;CLUSTER_ID&gt;.&lt;APP_V2_NAME&gt;
