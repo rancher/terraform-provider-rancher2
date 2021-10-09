@@ -20,10 +20,6 @@ func dataSourceRancher2Principal() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"provider_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -66,7 +62,6 @@ func flattenDataSourcePrincipal(d *schema.ResourceData, in *managementClient.Pri
 	d.SetId(in.ID)
 	d.Set("id", in.ID)
 	d.Set("type", in.PrincipalType)
-	d.Set("provider_name", in.Provider)
 
 	return nil
 }
