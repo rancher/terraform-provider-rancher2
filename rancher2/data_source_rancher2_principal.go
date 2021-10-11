@@ -71,7 +71,7 @@ func flattenDataSourcePrincipal(d *schema.ResourceData, in *managementClient.Pri
 		return nil
 	}
 
-	d.Set("id", in.ID)
+	d.SetId(in.ID)
 	d.Set("name", in.Name)
 	d.Set("type", in.PrincipalType)
 
