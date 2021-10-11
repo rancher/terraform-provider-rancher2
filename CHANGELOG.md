@@ -1,3 +1,17 @@
+## 1.21.0 (Unreleased)
+
+FEATURES:
+
+* **New Argument:** `rancher2_bootstrap.initial_password`  - (Optional/Computed/Sensitive) Initial password for Admin user. Default: `admin` (string)
+
+ENHANCEMENTS:
+
+* Updated `rancher2_bootstrap.current_password` argument to be Computed/Sensitive. Please be sure to remove this field from tf file before update.
+
+BUG FIXES:
+
+
+
 ## 1.20.1 (October 5, 2021)
 
 FEATURES:
