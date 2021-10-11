@@ -4,7 +4,17 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+)
+
+const (
+	principalTypeGroup = "group"
+	principalTypeUser  = "user"
+)
+
+var (
+	principalTypes = []string{principalTypeGroup, principalTypeUser}
 )
 
 func dataSourceRancher2Principal() *schema.Resource {
@@ -12,13 +22,15 @@ func dataSourceRancher2Principal() *schema.Resource {
 		Read: dataSourceRancher2PrincipalRead,
 
 		Schema: map[string]*schema.Schema{
-			"email": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      principalTypeUser,
+				ValidateFunc: validation.StringInSlice(principalTypes, true),
 			},
 		},
 	}
@@ -30,7 +42,7 @@ func dataSourceRancher2PrincipalRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	email := d.Get("email").(string)
+	name := d.Get("name").(string)
 	principalType := d.Get("type").(string)
 
 	collection, err := client.Principal.List(nil)
@@ -39,7 +51,7 @@ func dataSourceRancher2PrincipalRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	principals, err := client.Principal.CollectionActionSearch(collection, &managementClient.SearchPrincipalsInput{
-		Name:          email,
+		Name:          name,
 		PrincipalType: principalType,
 	})
 	if err != nil {
@@ -48,7 +60,7 @@ func dataSourceRancher2PrincipalRead(d *schema.ResourceData, meta interface{}) e
 
 	count := len(principals.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] principal \"%s\" of type \"%s\" not found", email, principalType)
+		return fmt.Errorf("[ERROR] principal \"%s\" of type \"%s\" not found", name, principalType)
 	}
 
 	return flattenDataSourcePrincipal(d, &principals.Data[0])
@@ -59,7 +71,6 @@ func flattenDataSourcePrincipal(d *schema.ResourceData, in *managementClient.Pri
 		return nil
 	}
 
-	d.SetId(in.ID)
 	d.Set("id", in.ID)
 	d.Set("type", in.PrincipalType)
 

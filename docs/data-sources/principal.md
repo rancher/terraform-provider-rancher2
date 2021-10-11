@@ -10,8 +10,7 @@ Use this data source to retrieve information about a Rancher v2 Principal resour
 
 ```hcl
 data "rancher2_principal" "foo" {
-  email = "group@example.com"
-  type  = "group"
+  name = "user@example.com"
 }
 ```
 
@@ -19,8 +18,8 @@ data "rancher2_principal" "foo" {
 
 The following arguments are supported:
 
-* `email` - (Required) The email address of the identity (string)
-* `type` - (Required) The type of the identity (string). Only `group` and `user` values are supported (string)
+* `name` - (Required) The full name of the principal (string)
+* `type` - (Optional) The type of the identity (string). Defaults to `user`. Only `user` and `group` values are supported (string)
 
 
 ## Attributes Reference
