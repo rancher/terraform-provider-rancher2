@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -216,6 +217,29 @@ func updateConfigMapV2(c *Config, clusterID, id string, obj *ConfigMapV2) (*Conf
 		return nil, fmt.Errorf("Updating configMap V2: ConfigMap V2 is nil")
 	}
 	resp := &ConfigMapV2{}
-	err := c.updateObjectV2(clusterID, id, configMapV2APIType, obj, resp)
-	return resp, err
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
+	for {
+		err := c.updateObjectV2(clusterID, id, configMapV2APIType, obj, resp)
+		if err == nil {
+			return resp, err
+		}
+		if !IsServerError(err) && !IsUnknownSchemaType(err) && !IsConflict(err) {
+			return nil, err
+		}
+		if IsConflict(err) {
+			// Read clusterRepo again and update ObjectMeta.ResourceVersion before retry
+			newObj := &ConfigMapV2{}
+			err = c.getObjectV2ByID(clusterID, id, configMapV2APIType, newObj)
+			if err != nil {
+				return nil, err
+			}
+			obj.ObjectMeta.ResourceVersion = newObj.ObjectMeta.ResourceVersion
+		}
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return nil, fmt.Errorf("Timeout updating ConfigMap V2 ID %s: %v", id, err)
+		}
+	}
 }

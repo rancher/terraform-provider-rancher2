@@ -47,7 +47,7 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.Get("wait_catalogs").(bool) {
-		_, err := meta.(*Config).WaitAllCatalogV2Downloaded(clusterID)
+		_, err := waitAllCatalogV2Downloaded(meta.(*Config), clusterID)
 		if err != nil {
 			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) downloading catalogs: %v", clusterID, err)
 		}
@@ -117,7 +117,7 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.Get("wait_catalogs").(bool) {
-			_, err := meta.(*Config).WaitAllCatalogV2Downloaded(clusterID)
+			_, err := waitAllCatalogV2Downloaded(meta.(*Config), clusterID)
 			if err != nil {
 				return err
 			}
