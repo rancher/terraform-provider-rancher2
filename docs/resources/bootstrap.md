@@ -12,13 +12,13 @@ This resource bootstraps a Rancher system by performing the following tasks:
 - Sets `telemetry-opt` setting.
 - Creates a token for admin user with concrete TTL.
 
+**Note** Starting from Rancher v2.6.0, the Rancher2 installation is setting a random initial admin password by default. To specify the initial password during rancher2 installation, helm chart [`bootstrapPassword`](https://github.com/rancher/rancher/blob/release/v2.6/chart/values.yaml#L157) value for HA installation or docker env variable [`CATTLE_BOOTSTRAP_PASSWORD`](https://github.com/rancher/rancher/blob/release/v2.6/chart/templates/deployment.yaml#L135) for single node installation can be used. To properly use this resource for Rancher v2.6.0 and above, set the `initial_password` argument to the password generated or set during installation.
+
 Rancher2 admin password can be updated after the initial run of terraform by setting `password` field and applying this resource again.
 
 Rancher2 admin `token` can also be regenerated if `token_update` is set to true. Refresh resource function will check if token is expired. If it is expired, `token_update` will be set to true to force token regeneration on next `terraform apply`.
 
-Login to Rancher2 is done by trying to use `token` first. If it fails, it uses admin `current_password`. If admin password has been changed outside of terraform and the terraform `token` is expired, `current_password` field can be specified to allow terraform to manage admin password and token again.
-
-**Note** Starting from Rancher v2.6.0, the Rancher installation is setting a random admin password by default. To be able to still use the `rancher2_bootstrap` resource, the Rancher admin password should be set on installation time, using helm chart [`bootstrapPassword`](https://github.com/rancher/rancher/blob/release/v2.6/chart/values.yaml#L157) value for HA installation or docker env variable [`CATTLE_BOOTSTRAP_PASSWORD`](https://github.com/rancher/rancher/blob/release/v2.6/chart/templates/deployment.yaml#L135) for single node installation. If the Rancher admin password is set to something distinct than `admin` (previous default admin password), the `rancher2_bootstrap.current_password` argument should also be set with same value at tf file.
+To login Rancher2, the provider tries until success using `token`, then `current_password` and then `initial_password`. If the admin password has been changed outside of terraform and the `token` is expired, the login will fails and the resource will be regenerated. To recover the bootstrap resource, set `initial_password` argument to the proper password and apply.
 
 ## Example Usage
 
@@ -31,6 +31,21 @@ provider "rancher2" {
 
 # Create a new rancher2_bootstrap
 resource "rancher2_bootstrap" "admin" {
+  password = "blahblah"
+  telemetry = true
+}
+```
+
+```hcl
+# Provider bootstrap config
+provider "rancher2" {
+  api_url   = "https://rancher.my-domain.com"
+  bootstrap = true
+}
+
+# Create a new rancher2_bootstrap for Rancher v2.6.0 and above
+resource "rancher2_bootstrap" "admin" {
+  initial_password = "<INSTALL_PASSWORD>"
   password = "blahblah"
   telemetry = true
 }
@@ -58,8 +73,8 @@ resource "rancher2_bootstrap" "admin" {
 
 The following arguments are supported:
 
-* `current_password` - (Optional/computed/sensitive) Current password for Admin user. Just needed for recover if admin password has been changed from other resources and token is expired (string)
-* `password` - (Optional/computed/sensitive) Password for Admin user or random generated if empty (string)
+* `initial_password` - (Optional/Computed/Sensitive) Initial password for Admin user. Default: `admin` (string)
+* `password` - (Optional/Computed/Sensitive) Password for Admin user or random generated if empty (string)
 * `telemetry` - (Optional) Send telemetry anonymous data. Default: `false` (bool)
 * `token_ttl` - (Optional) TTL in seconds for generated admin token. Default: `0`  (int)
 * `token_update` - (Optional) Regenerate admin token. Default: `false` (bool)
@@ -70,6 +85,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
+* `current_password` - (Computed/Sensitive) Current password for Admin user (string)
 * `token` - (Computed) Generated API token for Admin User (string)
 * `token_id` - (Computed) Generated API token id for Admin User (string)
 * `url` - (Computed) URL set as server-url (string)
