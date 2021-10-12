@@ -155,7 +155,7 @@ func flattenClusterAKSConfigV2(in *managementClient.AKSClusterConfigSpec, p []in
 	if in.Subnet != nil && len(*in.Subnet) > 0 {
 		obj["subnet"] = *in.Subnet
 	}
-	if len(*in.Tags) > 0 {
+	if in.Tags != nil && len(*in.Tags) > 0 {
 		obj["tags"] = toMapInterface(*in.Tags)
 	}
 	if in.VirtualNetwork != nil && len(*in.VirtualNetwork) > 0 {
@@ -243,6 +243,20 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	obj.AzureCredentialSecret = in["cloud_credential_id"].(string)
 	obj.ClusterName = in["name"].(string)
 
+	if v, ok := in["resource_group"].(string); ok {
+		obj.ResourceGroup = v
+	}
+	if v, ok := in["resource_location"].(string); ok {
+		obj.ResourceLocation = v
+	}
+
+	if v, ok := in["imported"].(bool); ok {
+		obj.Imported = v
+		if v {
+			return obj
+		}
+	}
+
 	if v, ok := in["auth_base_url"].(string); ok && len(v) > 0 {
 		obj.AuthBaseURL = &v
 	}
@@ -258,9 +272,6 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	}
 	if v, ok := in["http_application_routing"].(bool); ok {
 		obj.HTTPApplicationRouting = &v
-	}
-	if v, ok := in["imported"].(bool); ok {
-		obj.Imported = v
 	}
 	if v, ok := in["kubernetes_version"].(string); ok {
 		obj.KubernetesVersion = &v
@@ -307,12 +318,6 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	}
 	if v, ok := in["private_cluster"].(bool); ok {
 		obj.PrivateCluster = &v
-	}
-	if v, ok := in["resource_group"].(string); ok {
-		obj.ResourceGroup = v
-	}
-	if v, ok := in["resource_location"].(string); ok {
-		obj.ResourceLocation = v
 	}
 	if v, ok := in["subnet"].(string); ok && len(v) > 0 {
 		obj.Subnet = &v
