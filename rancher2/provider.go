@@ -189,6 +189,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_node_template":                 dataSourceRancher2NodeTemplate(),
 			"rancher2_notifier":                      dataSourceRancher2Notifier(),
 			"rancher2_pod_security_policy_template":  dataSourceRancher2PodSecurityPolicyTemplate(),
+			"rancher2_principal":                     dataSourceRancher2Principal(),
 			"rancher2_project":                       dataSourceRancher2Project(),
 			"rancher2_project_alert_group":           dataSourceRancher2ProjectAlertGroup(),
 			"rancher2_project_alert_rule":            dataSourceRancher2ProjectAlertRule(),
