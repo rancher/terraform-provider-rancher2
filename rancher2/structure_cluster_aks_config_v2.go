@@ -78,6 +78,21 @@ func flattenClusterAKSConfigV2(in *managementClient.AKSClusterConfigSpec, p []in
 	if len(in.AzureCredentialSecret) > 0 {
 		obj["cloud_credential_id"] = in.AzureCredentialSecret
 	}
+	if len(in.ClusterName) > 0 {
+		obj["name"] = in.ClusterName
+	}
+	if len(in.ResourceGroup) > 0 {
+		obj["resource_group"] = in.ResourceGroup
+	}
+	if len(in.ResourceLocation) > 0 {
+		obj["resource_location"] = in.ResourceLocation
+	}
+	obj["imported"] = in.Imported
+	if in.Imported {
+		// Return if the cluster is imported
+		return []interface{}{obj}
+	}
+
 	if in.AuthBaseURL != nil && len(*in.AuthBaseURL) > 0 {
 		obj["auth_base_url"] = *in.AuthBaseURL
 	}
@@ -87,16 +102,12 @@ func flattenClusterAKSConfigV2(in *managementClient.AKSClusterConfigSpec, p []in
 	if in.BaseURL != nil && len(*in.BaseURL) > 0 {
 		obj["base_url"] = *in.BaseURL
 	}
-	if len(in.ClusterName) > 0 {
-		obj["name"] = in.ClusterName
-	}
 	if in.DNSPrefix != nil && len(*in.DNSPrefix) > 0 {
 		obj["dns_prefix"] = *in.DNSPrefix
 	}
 	if in.HTTPApplicationRouting != nil {
 		obj["http_application_routing"] = *in.HTTPApplicationRouting
 	}
-	obj["imported"] = in.Imported
 	if in.KubernetesVersion != nil && len(*in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = *in.KubernetesVersion
 	}
@@ -146,16 +157,10 @@ func flattenClusterAKSConfigV2(in *managementClient.AKSClusterConfigSpec, p []in
 	if in.PrivateCluster != nil {
 		obj["private_cluster"] = *in.PrivateCluster
 	}
-	if len(in.ResourceGroup) > 0 {
-		obj["resource_group"] = in.ResourceGroup
-	}
-	if len(in.ResourceLocation) > 0 {
-		obj["resource_location"] = in.ResourceLocation
-	}
 	if in.Subnet != nil && len(*in.Subnet) > 0 {
 		obj["subnet"] = *in.Subnet
 	}
-	if len(*in.Tags) > 0 {
+	if in.Tags != nil && len(*in.Tags) > 0 {
 		obj["tags"] = toMapInterface(*in.Tags)
 	}
 	if in.VirtualNetwork != nil && len(*in.VirtualNetwork) > 0 {
@@ -242,7 +247,41 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 
 	obj.AzureCredentialSecret = in["cloud_credential_id"].(string)
 	obj.ClusterName = in["name"].(string)
+	if v, ok := in["resource_group"].(string); ok {
+		obj.ResourceGroup = v
+	}
+	if v, ok := in["resource_location"].(string); ok {
+		obj.ResourceLocation = v
+	}
+	if v, ok := in["imported"].(bool); ok {
+		obj.Imported = v
+		if obj.Imported {
+			// Return if the cluster is imported
+			return obj
+		}
+	}
 
+	// These fields should be assigned just when import=false, no matter if empty
+	if v, ok := in["dns_prefix"].(string); ok {
+		obj.DNSPrefix = &v
+	}
+	if v, ok := in["kubernetes_version"].(string); ok {
+		obj.KubernetesVersion = &v
+	}
+	if v, ok := in["network_plugin"].(string); ok {
+		obj.NetworkPlugin = &v
+	}
+	if v, ok := in["http_application_routing"].(bool); ok {
+		obj.HTTPApplicationRouting = &v
+	}
+	if v, ok := in["monitoring"].(bool); ok {
+		obj.Monitoring = &v
+	}
+	if v, ok := in["private_cluster"].(bool); ok {
+		obj.PrivateCluster = &v
+	}
+
+	// These fields should be assigned just when import=false and no empty
 	if v, ok := in["auth_base_url"].(string); ok && len(v) > 0 {
 		obj.AuthBaseURL = &v
 	}
@@ -252,18 +291,6 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	}
 	if v, ok := in["base_url"].(string); ok && len(v) > 0 {
 		obj.BaseURL = &v
-	}
-	if v, ok := in["dns_prefix"].(string); ok && len(v) > 0 {
-		obj.DNSPrefix = &v
-	}
-	if v, ok := in["http_application_routing"].(bool); ok {
-		obj.HTTPApplicationRouting = &v
-	}
-	if v, ok := in["imported"].(bool); ok {
-		obj.Imported = v
-	}
-	if v, ok := in["kubernetes_version"].(string); ok {
-		obj.KubernetesVersion = &v
 	}
 	if v, ok := in["linux_admin_username"].(string); ok && len(v) > 0 {
 		obj.LinuxAdminUsername = &v
@@ -280,17 +307,11 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	if v, ok := in["log_analytics_workspace_name"].(string); ok && len(v) > 0 {
 		obj.LogAnalyticsWorkspaceName = &v
 	}
-	if v, ok := in["monitoring"].(bool); ok {
-		obj.Monitoring = &v
-	}
 	if v, ok := in["network_dns_service_ip"].(string); ok && len(v) > 0 {
 		obj.NetworkDNSServiceIP = &v
 	}
 	if v, ok := in["network_docker_bridge_cidr"].(string); ok && len(v) > 0 {
 		obj.NetworkDockerBridgeCIDR = &v
-	}
-	if v, ok := in["network_plugin"].(string); ok {
-		obj.NetworkPlugin = &v
 	}
 	if v, ok := in["network_pod_cidr"].(string); ok && len(v) > 0 {
 		obj.NetworkPodCIDR = &v
@@ -301,24 +322,14 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	if v, ok := in["network_service_cidr"].(string); ok && len(v) > 0 {
 		obj.NetworkServiceCIDR = &v
 	}
-	if v, ok := in["node_pools"].([]interface{}); ok {
+	if v, ok := in["node_pools"].([]interface{}); ok && len(v) > 0 {
 		nodePools := expandClusterAKSConfigV2NodePools(v)
 		obj.NodePools = &nodePools
-	}
-	if v, ok := in["private_cluster"].(bool); ok {
-		obj.PrivateCluster = &v
-	}
-	if v, ok := in["resource_group"].(string); ok {
-		obj.ResourceGroup = v
-	}
-	if v, ok := in["resource_location"].(string); ok {
-		obj.ResourceLocation = v
 	}
 	if v, ok := in["subnet"].(string); ok && len(v) > 0 {
 		obj.Subnet = &v
 	}
-	obj.Tags = &map[string]string{}
-	if v, ok := in["tags"].(map[string]interface{}); ok {
+	if v, ok := in["tags"].(map[string]interface{}); ok && len(v) > 0 {
 		tags := toMapString(v)
 		obj.Tags = &tags
 	}

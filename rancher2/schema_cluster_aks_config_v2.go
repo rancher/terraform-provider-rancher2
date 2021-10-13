@@ -132,9 +132,8 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 		"dns_prefix": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Computed:    true,
 			ForceNew:    true,
-			Description: "The AKS dns prefix",
+			Description: "The AKS dns prefix. Required if `import=false`",
 		},
 		"http_application_routing": {
 			Type:        schema.TypeBool,
@@ -151,8 +150,7 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 		"kubernetes_version": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Computed:    true,
-			Description: "The kubernetes master version",
+			Description: "The kubernetes master version. Required if `import=false`",
 		},
 		"linux_admin_username": {
 			Type:        schema.TypeString,
@@ -211,8 +209,7 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 		"network_plugin": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Computed:    true,
-			Description: "The AKS network plugin",
+			Description: "The AKS network plugin. Required if `import=false`",
 		},
 		"network_pod_cidr": {
 			Type:        schema.TypeString,
@@ -235,8 +232,7 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 		"node_pools": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Computed:    true,
-			Description: "The AKS node pools to use",
+			Description: "The AKS node pools to use. Required if `import=false`",
 			Elem: &schema.Resource{
 				Schema: clusterAKSConfigV2NodePoolsFields(),
 			},
