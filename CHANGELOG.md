@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * Updated `waitForRancherLocalActive` function to allow `rancher2_bootstrap` works when using Rancher [restricted-admin](https://rancher.com/docs/rancher/v2.6/en/admin-settings/rbac/global-permissions/#restricted-admin) at Rancher 2.6.x
+* Updated `rancher2_cluster.aks_config_v2` schema and structure to fix aks cluster import errors https://github.com/rancher/terraform-provider-rancher2/issues/757 https://github.com/rancher/terraform-provider-rancher2/issues/771
 
 BUG FIXES:
 
