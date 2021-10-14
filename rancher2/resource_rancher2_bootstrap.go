@@ -118,7 +118,9 @@ func resourceRancher2BootstrapRead(d *schema.ResourceData, meta interface{}) err
 
 	err := bootstrapDoLogin(d, meta)
 	if err != nil {
-		return err
+		log.Printf("[INFO] Bootstrap is unable to login to Rancher")
+		d.SetId("")
+		return nil
 	}
 
 	err = meta.(*Config).waitForRancherLocalActive()
@@ -254,30 +256,35 @@ func bootstrapDoLogin(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	// If fails, try to login with default admin user and current password
-	currentPass := d.Get("current_password").(string)
-	if len(currentPass) == 0 {
-		currentPass = bootstrapDefaultPassword
-	}
 	err = meta.(*Config).isRancherReady()
 	if err != nil {
 		return err
 	}
-	tokenID, token, err := DoUserLogin(meta.(*Config).URL, bootstrapDefaultUser, currentPass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
-	if err != nil {
-		// login retries until timeout if user/pass login fails
-		ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
-		defer cancel()
-		for {
-			tokenID, token, err = DoUserLogin(meta.(*Config).URL, bootstrapDefaultUser, currentPass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
-			if err == nil {
-				break
+
+	// If fails, try to login with default admin user, current password and initial password if fails
+	loginPass := []string{
+		d.Get("current_password").(string),
+		d.Get("initial_password").(string),
+	}
+
+	var tokenID string
+	// login retries until timeout if user/pass login fails
+	ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
+	defer cancel()
+logged:
+	for {
+		for _, pass := range loginPass {
+			if len(pass) > 0 {
+				tokenID, token, err = DoUserLogin(meta.(*Config).URL, bootstrapDefaultUser, pass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
+				if err == nil {
+					break logged
+				}
 			}
-			select {
-			case <-time.After(rancher2RetriesWait * time.Second):
-			case <-ctx.Done():
-				return fmt.Errorf("[ERROR] Timeout login with %s user: %v", bootstrapDefaultUser, err)
-			}
+		}
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return fmt.Errorf("[ERROR] Timeout trying to login with %s user: %v", bootstrapDefaultUser, err)
 		}
 	}
 

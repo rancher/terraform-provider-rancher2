@@ -28,8 +28,13 @@ func bootstrapFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"current_password": {
 			Type:      schema.TypeString,
-			Optional:  true,
 			Computed:  true,
+			Sensitive: true,
+		},
+		"initial_password": {
+			Type:      schema.TypeString,
+			Optional:  true,
+			Default:   bootstrapDefaultPassword,
 			Sensitive: true,
 		},
 		"password": {
