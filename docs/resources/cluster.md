@@ -514,12 +514,11 @@ resource "rancher2_cloud_credential" "foo-aks" {
     subscription_id = "<SUBSCRIPTION_ID>"
   }
 }
-
+# For imported AKS clusters, don't add any other aks_config_v2 field
 resource "rancher2_cluster" "foo" {
-  name = "foo"
+  name = <CLUSTER_NAME>
   description = "Terraform AKS cluster"
   aks_config_v2 {
-    name = <CLUSTER_NAME>
     cloud_credential_id = rancher2_cloud_credential.foo-aks.id
     resource_group = "<RESOURCE_GROUP>"
     resource_location = "<RESOURCE_LOCATION>"
@@ -1363,27 +1362,30 @@ The following arguments are supported:
 * `cloud_credential_id` - (Required) The AKS Cloud Credential ID to use (string)
 * `resource_group` - (Required) The AKS resource group (string)
 * `resource_location` - (Required) The AKS resource location (string)
+* `imported` - (Optional) Is AKS cluster imported? Defaul: `false` (bool)
+
+The following arguments are supported just for creating new AKS clusters (`imported=false`): 
+
+* `node_pools` - (Optional) The AKS nnode pools. Required if `imported=false` (list)
+* `dns_prefix` - (Optional/ForceNew) The AKS dns prefix. Required if `imported=false` (string)
+* `kubernetes_version` - (Optional) The kubernetes master version. Required if `imported=false` (string)
+* `network_plugin` - (Optional) The AKS network plugin. Required if `imported=false` (string)
+* `name` - (Optional/Computed) The AKS cluster name (string)
 * `auth_base_url` - (Optional) The AKS auth base url (string)
 * `authorized_ip_ranges` - (Optional) The AKS authorized ip ranges (list)
 * `base_url` - (Optional) The AKS base url (string)
-* `dns_prefix` - (Optional/Computed/ForceNew) The AKS dns prefix. Required if `imported=false` (string)
 * `http_application_routing` - (Optional/Computed) Enable AKS http application routing? (bool)
-* `imported` - (Optional) Is AKS cluster imported? Defaul: `false` (bool)
-* `kubernetes_version` - (Optional/Computed) The kubernetes master version (string)
 * `linux_admin_username` - (Optional/Computed) The AKS linux admin username (string)
 * `linux_ssh_public_key` - (Optional/Computed) The AKS linux ssh public key (string)
 * `load_balancer_sku` - (Optional/Computed) The AKS load balancer sku (string)
 * `log_analytics_workspace_group` - (Optional/Computed) The AKS log analytics workspace group (string)
 * `log_analytics_workspace_name` - (Optional/Computed) The AKS log analytics workspace name (string)
 * `monitoring` - (Optional/Computed) Is AKS cluster monitoring enabled? (bool)
-* `name` - (Optional/Computed) The AKS cluster name (string)
 * `network_dns_service_ip` - (Optional/Computed) The AKS network dns service ip (string)
 * `network_docker_bridge_cidr` - (Optional/Computed) The AKS network docker bridge cidr (string)
-* `network_plugin` - (Optional/Computed) The AKS network plugin. Required if `imported=false` (string)
 * `network_pod_cidr` - (Optional/Computed) The AKS network pod cidr (string)
 * `network_policy` - (Optional/Computed) The AKS network policy (string)
 * `network_service_cidr` - (Optional/Computed) The AKS network service cidr (string)
-* `node_pools` - (Optional/Computed) The AKS nnode pools (list)
 * `private_cluster` - (Optional/Computed) Is AKS cluster private? (bool)
 * `subnet` - (Optional/Computed) The AKS subnet (string)
 * `tags` - (Optional/Computed) The AKS cluster tags" (map)
