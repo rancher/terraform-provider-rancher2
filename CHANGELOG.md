@@ -2,15 +2,23 @@
 
 FEATURES:
 
+* **New Data Source** `rancher2_principal` Use this data source to retrieve information about a Rancher v2 Principal resource
 * **New Argument:** `rancher2_bootstrap.initial_password`  - (Optional/Computed/Sensitive) Initial password for Admin user. Default: `admin` (string)
 
 ENHANCEMENTS:
 
+* Added `IsConflict` function to retry on update v2 resources
+* Added `RestartClients` function to restart Rancher2 clients
+* Updated `CatalogV2Client` function to also retry if err `IsNotFound` or `IsForbidden`
+* Refactored `activateNodeDriver` and `activateKontainerDriver` functions to retry if got conflict on node driver action
+* Refactored v2 resources CRUD functions to be defined at resources files. Added retry if got conflict on update
+* Updated `rancher2_cluster_v2` to support creation using Rancher2 standard user token
+* Refactored `config.NormalizeURL` function to return error
 * Updated `rancher2_bootstrap.current_password` argument to be Computed/Sensitive. Please be sure to remove this field from tf file before update.
 
 BUG FIXES:
 
-
+* Fixed `waitAllCatalogV2Downloaded` function avoiding race condition
 
 ## 1.20.1 (October 5, 2021)
 

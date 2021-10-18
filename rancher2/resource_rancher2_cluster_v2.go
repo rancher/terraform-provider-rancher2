@@ -62,7 +62,7 @@ func resourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) err
 
 	cluster, err := getClusterV2ByID(meta.(*Config), d.Id())
 	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
+		if IsNotFound(err) || IsForbidden(err) || IsNotLookForByID(err) {
 			log.Printf("[INFO] Cluster V2 %s not found", d.Id())
 			d.SetId("")
 			return nil
@@ -131,7 +131,7 @@ func clusterV2StateRefreshFunc(meta interface{}, objID string) resource.StateRef
 	return func() (interface{}, string, error) {
 		obj, err := getClusterV2ByID(meta.(*Config), objID)
 		if err != nil {
-			if IsNotFound(err) || IsForbidden(err) {
+			if IsNotFound(err) || IsForbidden(err) || IsNotLookForByID(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err
@@ -201,8 +201,31 @@ func updateClusterV2(c *Config, id string, obj *ClusterV2) (*ClusterV2, error) {
 		return nil, fmt.Errorf("Updating cluster V2: Cluster V2 is nil")
 	}
 	resp := &ClusterV2{}
-	err := c.updateObjectV2(rancher2DefaultLocalClusterID, id, clusterV2APIType, obj, resp)
-	return resp, err
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
+	for {
+		err := c.updateObjectV2(rancher2DefaultLocalClusterID, id, clusterV2APIType, obj, resp)
+		if err == nil {
+			return resp, err
+		}
+		if !IsServerError(err) && !IsUnknownSchemaType(err) && !IsConflict(err) {
+			return nil, err
+		}
+		if IsConflict(err) {
+			// Read cluster again and update ObjectMeta.ResourceVersion before retry
+			newObj := &ClusterV2{}
+			err = c.getObjectV2ByID(rancher2DefaultLocalClusterID, id, clusterV2APIType, newObj)
+			if err != nil {
+				return nil, err
+			}
+			obj.ObjectMeta.ResourceVersion = newObj.ObjectMeta.ResourceVersion
+		}
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return nil, fmt.Errorf("Timeout updating cluster V2 ID %s: %v", id, err)
+		}
+	}
 }
 
 func waitForClusterV2State(c *Config, id, state string, interval time.Duration) (*ClusterV2, error) {
@@ -215,23 +238,32 @@ func waitForClusterV2State(c *Config, id, state string, interval time.Duration) 
 	for {
 		obj, err := getClusterV2ByID(c, id)
 		if err != nil {
-			return nil, fmt.Errorf("Getting cluster V2 ID (%s): %v", id, err)
+			log.Printf("[DEBUG] Retrying on error Refreshing Cluster V2 %s: %v", id, err)
+			if !IsNotFound(err) && !IsForbidden(err) && !IsNotLookForByID(err) {
+				return nil, fmt.Errorf("Getting cluster V2 ID (%s): %v", id, err)
+			}
+			if IsNotLookForByID(err) {
+				// Restarting clients to update RBAC
+				c.RestartClients()
+			}
 		}
-		for i := range obj.Status.Conditions {
-			if obj.Status.Conditions[i].Type == state {
-				// Status of the condition, one of True, False, Unknown.
-				if obj.Status.Conditions[i].Status == "Unknown" {
-					break
+		if obj != nil {
+			for i := range obj.Status.Conditions {
+				if obj.Status.Conditions[i].Type == state {
+					// Status of the condition, one of True, False, Unknown.
+					if obj.Status.Conditions[i].Status == "Unknown" {
+						break
+					}
+					if obj.Status.Conditions[i].Status == "True" {
+						return obj, nil
+					}
+					// When cluster condition is false, retrying if it has been updated for last rancher2WaitFalseCond seconds
+					lastUpdate, err := time.Parse(time.RFC3339, obj.Status.Conditions[i].LastUpdateTime)
+					if err == nil && time.Since(lastUpdate) < rancher2WaitFalseCond*time.Second {
+						break
+					}
+					return nil, fmt.Errorf("Cluster V2 ID %s: %s", id, obj.Status.Conditions[i].Message)
 				}
-				if obj.Status.Conditions[i].Status == "True" {
-					return obj, nil
-				}
-				// When cluster condition is false, retrying if it has been updated for last rancher2WaitFalseCond seconds
-				lastUpdate, err := time.Parse(time.RFC3339, obj.Status.Conditions[i].LastUpdateTime)
-				if err == nil && time.Since(lastUpdate) < rancher2WaitFalseCond*time.Second {
-					break
-				}
-				return nil, fmt.Errorf("Cluster V2 ID %s: %s", id, obj.Status.Conditions[i].Message)
 			}
 		}
 		select {

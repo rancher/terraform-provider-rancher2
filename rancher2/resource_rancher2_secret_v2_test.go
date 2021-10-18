@@ -122,14 +122,14 @@ func testAccRancher2SecretV2Disappears(cat *SecretV2) resource.TestCheckFunc {
 			}
 			clusterID := rs.Primary.Attributes["cluster_id"]
 			_, rancherID := splitID(rs.Primary.ID)
-			secret, err := testAccProvider.Meta().(*Config).GetSecretV2ByID(clusterID, rancherID)
+			secret, err := getSecretV2ByID(testAccProvider.Meta().(*Config), clusterID, rancherID)
 			if err != nil {
 				if IsNotFound(err) || IsForbidden(err) {
 					return nil
 				}
 				return fmt.Errorf("testAccRancher2SecretV2Disappears-get: %v", err)
 			}
-			err = testAccProvider.Meta().(*Config).DeleteSecretV2(clusterID, secret)
+			err = deleteSecretV2(testAccProvider.Meta().(*Config), clusterID, secret)
 			if err != nil {
 				return fmt.Errorf("testAccRancher2SecretV2Disappears-delete: %v", err)
 			}
@@ -165,7 +165,7 @@ func testAccCheckRancher2SecretV2Exists(n string, cat *SecretV2) resource.TestCh
 
 		clusterID := rs.Primary.Attributes["cluster_id"]
 		_, rancherID := splitID(rs.Primary.ID)
-		foundReg, err := testAccProvider.Meta().(*Config).GetSecretV2ByID(clusterID, rancherID)
+		foundReg, err := getSecretV2ByID(testAccProvider.Meta().(*Config), clusterID, rancherID)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
 				return nil
@@ -186,7 +186,7 @@ func testAccCheckRancher2SecretV2Destroy(s *terraform.State) error {
 		}
 		clusterID := rs.Primary.Attributes["cluster_id"]
 		_, rancherID := splitID(rs.Primary.ID)
-		_, err := testAccProvider.Meta().(*Config).GetSecretV2ByID(clusterID, rancherID)
+		_, err := getSecretV2ByID(testAccProvider.Meta().(*Config), clusterID, rancherID)
 		if err != nil {
 			if IsNotFound(err) {
 				return nil

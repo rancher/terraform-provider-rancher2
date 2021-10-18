@@ -254,11 +254,10 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 }
 
 func providerValidateConfig(config *Config) (*Config, error) {
-	if config.URL == providerDefaultEmptyString {
-		return &Config{}, fmt.Errorf("[ERROR] No api_url provided")
+	err := config.NormalizeURL()
+	if err != nil {
+		return &Config{}, fmt.Errorf("[ERROR] %v", err)
 	}
-
-	config.URL = NormalizeURL(config.URL)
 	if config.Bootstrap {
 		// If bootstrap tokenkey accesskey nor secretkey can be provided
 		if config.TokenKey != providerDefaultEmptyString {

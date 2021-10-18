@@ -244,29 +244,28 @@ func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte
 
 }
 
-func NormalizeURL(input string) string {
+func NormalizeURL(input string) (string, error) {
+	if input == providerDefaultEmptyString {
+		return "", fmt.Errorf("Normalizing url: no api_url provided")
+	}
 	if input == "" {
-		return ""
+		return "", nil
 	}
 	u, err := url.Parse(input)
 	if err != nil || u.Host == "" || (u.Scheme != "https" && u.Scheme != "http") {
-		return ""
+		return "", fmt.Errorf("Normalizing url %s: %v", input, err)
 	}
 	// Setting empty url path
 	u.Path = ""
-	return u.String()
-}
-
-func RootURL(url string) string {
-	NormalizeURL(url)
-
-	url = strings.TrimSuffix(url, "/v3")
-
-	return url
+	return u.String(), nil
 }
 
 func IsUnknownSchemaType(err error) bool {
 	return strings.Contains(err.Error(), "Unknown schema type")
+}
+
+func IsNotLookForByID(err error) bool {
+	return strings.Contains(err.Error(), "can not be looked up by ID")
 }
 
 func IsNotFound(err error) bool {
@@ -291,6 +290,16 @@ func IsNotAllowed(err error) bool {
 	}
 
 	return apiError.StatusCode == http.StatusMethodNotAllowed
+}
+
+// IsConflict checks if the given APIError is a Conflict HTTP statuscode
+func IsConflict(err error) bool {
+	apiError, ok := err.(*clientbase.APIError)
+	if !ok {
+		return false
+	}
+
+	return apiError.StatusCode == http.StatusConflict
 }
 
 // IsServerError checks if the given APIError is a Internal Server Error HTTP statuscode

@@ -79,7 +79,7 @@ func dataSourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) e
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 
-	catalog, err := meta.(*Config).GetCatalogV2ByID(clusterID, name)
+	catalog, err := getCatalogV2ByID(meta.(*Config), clusterID, name)
 	if err != nil {
 		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Catalog V2 %s not found at cluster %s", name, clusterID)

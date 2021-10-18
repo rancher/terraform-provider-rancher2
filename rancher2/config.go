@@ -3,7 +3,6 @@ package rancher2
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"sort"
 	"strings"
 	"sync"
@@ -12,13 +11,10 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
-	types2 "github.com/rancher/rancher/pkg/api/steve/catalog/types"
-	catalogClient "github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -89,7 +85,7 @@ func (c *Config) GetRancherVersion() (string, error) {
 func (c *Config) isRancherReady() error {
 	var err error
 	var resp []byte
-	url := RootURL(c.URL) + "/ping"
+	url := c.URL + "/ping"
 	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
 	defer cancel()
 	for {
@@ -239,12 +235,19 @@ func (c *Config) UpdateToken(token string) error {
 	if len(token) == 0 {
 		return fmt.Errorf("token is nil")
 	}
-
 	c.TokenKey = token
 
+	return c.RestartClients()
+}
+
+// RestartClients connections
+func (c *Config) RestartClients() error {
+	c.Sync.Lock()
 	if c.Client.Management != nil {
 		c.Client.Management = nil
 	}
+	c.Sync.Unlock()
+
 	_, err := c.ManagementClient()
 	if err != nil {
 		return err
@@ -324,7 +327,7 @@ func (c *Config) CatalogV2Client(id string) (*clientbase.APIBaseClient, error) {
 			c.Client.CatalogV2[id] = &cli
 			return c.Client.CatalogV2[id], nil
 		}
-		if !IsServerError(err) && !IsUnknownSchemaType(err) {
+		if !IsServerError(err) && !IsUnknownSchemaType(err) && !IsNotFound(err) && !IsForbidden(err) {
 			return nil, err
 		}
 		select {
@@ -404,13 +407,18 @@ func (c *Config) ProjectClient(id string) (*projectClient.Client, error) {
 	return c.Client.Project[id], nil
 }
 
-func (c *Config) NormalizeURL() {
-	c.URL = NormalizeURL(c.URL)
+func (c *Config) NormalizeURL() error {
+	c.Sync.Lock()
+	defer c.Sync.Unlock()
+	url, err := NormalizeURL(c.URL)
+	if err != nil {
+		return err
+	}
+	c.URL = url
+	return nil
 }
 
 func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
-	c.NormalizeURL()
-
 	options := &clientbase.ClientOpts{
 		URL:      c.URL,
 		TokenKey: c.TokenKey,
@@ -804,54 +812,6 @@ func (c *Config) GetSettingV2ByID(id string) (*SettingV2, error) {
 	return resp, nil
 }
 
-func (c *Config) GetSecretV2ByID(clusterID, id string) (*SecretV2, error) {
-	resp := &SecretV2{}
-	err := c.getObjectV2ByID(clusterID, id, secretV2APIType, resp)
-	if err != nil {
-		if !IsServerError(err) && !IsNotFound(err) && !IsForbidden(err) {
-			return nil, fmt.Errorf("Getting Secret V2: %s", err)
-		}
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *Config) GetCatalogV2ByID(clusterID, id string) (*ClusterRepo, error) {
-	resp := &ClusterRepo{}
-	err := c.getObjectV2ByID(clusterID, id, catalogV2APIType, resp)
-	if err != nil {
-		if !IsServerError(err) && !IsNotFound(err) && !IsForbidden(err) {
-			return nil, fmt.Errorf("Getting Catalog V2: %s", err)
-		}
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *Config) GetAppV2ByID(clusterID, id string) (*AppV2, error) {
-	resp := &AppV2{}
-	err := c.getObjectV2ByID(clusterID, id, appV2APIType, resp)
-	if err != nil {
-		if !IsServerError(err) && !IsNotFound(err) && !IsForbidden(err) {
-			return nil, fmt.Errorf("Getting App V2: %s", err)
-		}
-		return nil, err
-	}
-	return resp, nil
-}
-
-func (c *Config) GetAppV2OperationByID(clusterID, id string) (map[string]interface{}, error) {
-	resp := map[string]interface{}{}
-	err := c.getObjectV2ByID(clusterID, id, appV2OperationAPIType, &resp)
-	if err != nil {
-		if !IsServerError(err) && !IsNotFound(err) && !IsForbidden(err) {
-			return nil, fmt.Errorf("Getting App V2 logs: %s", err)
-		}
-		return nil, err
-	}
-	return resp, nil
-}
-
 func (c *Config) createObjectV2(clusterID string, APIType string, obj, resp interface{}) error {
 	if resp == nil || obj == nil {
 		return fmt.Errorf("Object V2 and/or response is nil")
@@ -867,118 +827,6 @@ func (c *Config) createObjectV2(clusterID string, APIType string, obj, resp inte
 	return client.Create(APIType, obj, resp)
 }
 
-func (c *Config) CreateCatalogV2(clusterID string, repo *ClusterRepo) (*ClusterRepo, error) {
-	resp := &ClusterRepo{}
-	err := c.createObjectV2(clusterID, catalogV2APIType, repo, resp)
-	if err != nil {
-		return nil, fmt.Errorf("Creating Catalog V2: %s", err)
-	}
-	return resp, nil
-}
-
-func (c *Config) CreateSecretV2(clusterID string, secret *SecretV2) (*SecretV2, error) {
-	// Converting secret V2 object to map[string]interface{} as type fields is duplicated
-	secret2, err := interfaceToMap(secret)
-	if err != nil {
-		return nil, err
-	}
-	secret2["type"] = secret2["_type"]
-	resp := &SecretV2{}
-	err = c.createObjectV2(clusterID, secretV2APIType, secret2, resp)
-	if err != nil {
-		return nil, fmt.Errorf("Creating Catalog V2: %s", err)
-	}
-	return resp, nil
-}
-
-func (c *Config) GetCatalogV2List(clusterID string) ([]ClusterRepo, error) {
-	if clusterID == "" {
-		return nil, fmt.Errorf("Cluster ID is nil")
-	}
-	client, err := c.CatalogV2Client(clusterID)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
-	defer cancel()
-	listOpts := NewListOpts(nil)
-	resp := &ClusterRepoCollection{}
-	for {
-		err = client.List(catalogV2APIType, listOpts, resp)
-		if err == nil {
-			return resp.Data, nil
-		}
-		if !IsServerError(err) && !IsUnknownSchemaType(err) && !IsNotFound(err) {
-			return nil, err
-		}
-		select {
-		case <-time.After(rancher2RetriesWait * time.Second):
-		case <-ctx.Done():
-			return nil, fmt.Errorf("Timeout getting catalog V2 list at cluster ID %s: %v", clusterID, err)
-		}
-	}
-}
-
-func (c *Config) WaitCatalogV2Downloaded(clusterID, catalogID string) (*ClusterRepo, error) {
-	if clusterID == "" || catalogID == "" {
-		return nil, fmt.Errorf("Cluster ID and/or Catalog V2 ID is nil")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
-	defer cancel()
-	for {
-		obj, err := c.GetCatalogV2ByID(clusterID, catalogID)
-		if err != nil {
-			return nil, fmt.Errorf("Getting catalog V2 ID (%s): %v", catalogID, err)
-		}
-		for i := range obj.Status.Conditions {
-			if obj.Status.Conditions[i].Type == string(catalogClient.RepoDownloaded) {
-				// Status of the condition, one of True, False, Unknown.
-				if obj.Status.Conditions[i].Status == "Unknown" {
-					break
-				}
-				if obj.Status.Conditions[i].Status == "True" {
-					return obj, nil
-				}
-				return nil, fmt.Errorf("Catalog V2 ID %s: %s", catalogID, obj.Status.Conditions[i].Message)
-			}
-		}
-		select {
-		case <-time.After(rancher2RetriesWait * time.Second):
-		case <-ctx.Done():
-			return nil, fmt.Errorf("Timeout waiting for catalog V2 ID %s", catalogID)
-		}
-	}
-}
-
-func (c *Config) WaitAllCatalogV2Downloaded(clusterID string) ([]ClusterRepo, error) {
-	clusterRepos, err := c.GetCatalogV2List(clusterID)
-	if err != nil {
-		return nil, fmt.Errorf("[ERROR] getting catalog V2 list at cluster ID (%s): %s", clusterID, err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
-	defer cancel()
-	g, ctx := errgroup.WithContext(ctx)
-	for _, clusterRepo := range clusterRepos {
-		repoID := clusterRepo.ID
-		g.Go(func() error {
-			_, err = c.WaitCatalogV2Downloaded(clusterID, repoID)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-	}
-	err = g.Wait()
-	if err != nil {
-		return clusterRepos, fmt.Errorf("[ERROR] waiting for all catalogs V2 to be active at cluster ID (%s): %s", clusterID, err)
-	}
-
-	return clusterRepos, nil
-}
-
 func (c *Config) deleteObjectV2(clusterID string, resource *types.Resource) error {
 	if resource == nil {
 		return fmt.Errorf("Object V2 id is nil")
@@ -989,33 +837,6 @@ func (c *Config) deleteObjectV2(clusterID string, resource *types.Resource) erro
 		return err
 	}
 	return client.Delete(resource)
-}
-
-func (c *Config) DeleteCatalogV2(clusterID string, obj *ClusterRepo) error {
-	if obj == nil {
-		return fmt.Errorf("Catalog V2 is nil")
-	}
-
-	resource := &types.Resource{
-		ID:      obj.ID,
-		Type:    obj.Type,
-		Links:   obj.Links,
-		Actions: obj.Actions,
-	}
-	return c.deleteObjectV2(clusterID, resource)
-}
-
-func (c *Config) DeleteSecretV2(clusterID string, obj *SecretV2) error {
-	if obj == nil {
-		return fmt.Errorf("Secret V2 is nil")
-	}
-	resource := &types.Resource{
-		ID:      obj.ID,
-		Type:    secretV2APIType,
-		Links:   obj.Links,
-		Actions: obj.Actions,
-	}
-	return c.deleteObjectV2(clusterID, resource)
 }
 
 func (c *Config) updateObjectV2(clusterID, id, APIType string, update, resp interface{}) error {
@@ -1044,156 +865,6 @@ func (c *Config) updateObjectV2(clusterID, id, APIType string, update, resp inte
 		return err
 	}
 	return client.Update(APIType, resource, update, resp)
-}
-
-func (c *Config) UpdateCatalogV2(clusterID, id string, update *ClusterRepo) (*ClusterRepo, error) {
-	resp := &ClusterRepo{}
-	err := c.updateObjectV2(clusterID, id, catalogV2APIType, update, resp)
-	return resp, err
-}
-
-func (c *Config) UpdateSecretV2(clusterID, id string, update *SecretV2) (*SecretV2, error) {
-	// Converting secret V2 object to map[string]interface{} as type fields is duplicated
-	updateMap, err := interfaceToMap(update)
-	if err != nil {
-		return nil, err
-	}
-	updateMap["type"] = updateMap["_type"]
-	resp := &SecretV2{}
-	err = c.updateObjectV2(clusterID, id, secretV2APIType, updateMap, resp)
-	return resp, err
-}
-
-func (c *Config) GetAppV2OperationLogs(clusterID string, op map[string]interface{}) (string, error) {
-	if op["id"].(string) == "" {
-		return "", fmt.Errorf("App V2 operation id is nil")
-	}
-
-	links := toMapString(op["links"].(map[string]interface{}))
-	link := "logs"
-	if links == nil && len(links[link]) == 0 {
-		return "", fmt.Errorf("failed to get app v2 operation log %s", op["id"])
-	}
-
-	resp, err := DoGet(links[link], "", "", c.TokenKey, c.CACerts, c.Insecure)
-	if err != nil {
-		return "", fmt.Errorf("failed to get app v2 operation log %s: %s", op["id"], err)
-	}
-
-	return string(resp), nil
-}
-
-func (c *Config) DeleteAppV2(clusterID string, app *AppV2) error {
-	if app == nil {
-		return fmt.Errorf("App V2 id is nil")
-	}
-
-	client, err := c.CatalogV2Client(clusterID)
-	if err != nil {
-		return err
-	}
-	resource := &types.Resource{
-		ID:      app.ID,
-		Type:    app.Type,
-		Links:   app.Links,
-		Actions: app.Actions,
-	}
-	var resp interface{}
-	return client.Action(appV2APIType, "uninstall", resource, map[string]interface{}{}, resp)
-}
-
-func (c *Config) InfoAppV2(clusterID, repoName, chartName, chartVersion string) (*ClusterRepo, *types2.ChartInfo, error) {
-	if repoName == "" || chartName == "" {
-		return nil, nil, fmt.Errorf("Catalog V2 id and chart name should be provided")
-	}
-	// Waiting for the Catalog V2 is Downloaded
-	repo, err := c.WaitCatalogV2Downloaded(clusterID, repoName)
-	if err != nil {
-		return nil, nil, err
-	}
-	resource := types.Resource{
-		ID:      repo.ID,
-		Type:    repo.Type,
-		Links:   repo.Links,
-		Actions: repo.Actions,
-	}
-	link := "info"
-	if resource.Links == nil && len(resource.Links[link]) == 0 {
-		return nil, nil, fmt.Errorf("failed to get chart info %s:%s from catalog v2 %s", chartName, chartVersion, repoName)
-	}
-
-	resource.Links[link] = resource.Links[link] + "&chartName=" + url.QueryEscape(chartName)
-	if len(chartVersion) > 0 {
-		resource.Links[link] = resource.Links[link] + "&version=" + url.QueryEscape(chartVersion)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
-	defer cancel()
-	client, err := c.CatalogV2Client(clusterID)
-	if err != nil {
-		return nil, nil, err
-	}
-	resp := &types2.ChartInfo{}
-	for {
-		err = client.GetLink(resource, link, resp)
-		if err == nil {
-			return repo, resp, nil
-		}
-		if !IsServerError(err) && !IsNotFound(err) {
-			return nil, nil, fmt.Errorf("failed to get chart info %s:%s from catalog v2 %s: %v", chartName, chartVersion, repoName, err)
-		}
-		select {
-		case <-time.After(rancher2RetriesWait * time.Second):
-		case <-ctx.Done():
-			return nil, nil, fmt.Errorf("Timeout getting chart info %s:%s from catalog v2 %s: %v", chartName, chartVersion, repoName, err)
-		}
-	}
-}
-
-func (c *Config) InstallAppV2(clusterID string, repo *ClusterRepo, chartIntall *types2.ChartInstallAction) (*types2.ChartActionOutput, error) {
-	if repo == nil || chartIntall == nil {
-		return nil, fmt.Errorf("Catalog V2 id and chartIntall should be provided")
-	}
-
-	client, err := c.CatalogV2Client(clusterID)
-	if err != nil {
-		return nil, err
-	}
-	resource := &types.Resource{
-		ID:      repo.ID,
-		Type:    repo.Type,
-		Links:   repo.Links,
-		Actions: repo.Actions,
-	}
-	resp := &types2.ChartActionOutput{}
-	err = client.Action(catalogV2APIType, "install", resource, chartIntall, resp)
-	if err != nil {
-		return nil, fmt.Errorf("failed to install app v2: %v", err)
-	}
-	return resp, nil
-}
-
-func (c *Config) UpgradeAppV2(clusterID string, repo *ClusterRepo, chartUpgrade *types2.ChartUpgradeAction) (*types2.ChartActionOutput, error) {
-	if repo == nil || chartUpgrade == nil {
-		return nil, fmt.Errorf("Catalog V2 id and chartUpgrade should be provided")
-	}
-
-	client, err := c.CatalogV2Client(clusterID)
-	if err != nil {
-		return nil, err
-	}
-	resource := &types.Resource{
-		ID:      repo.ID,
-		Type:    repo.Type,
-		Links:   repo.Links,
-		Actions: repo.Actions,
-	}
-	resp := &types2.ChartActionOutput{}
-	err = client.Action(catalogV2APIType, "upgrade", resource, chartUpgrade, resp)
-	if err != nil {
-		return nil, fmt.Errorf("failed to upgrade app v2: %v", err)
-	}
-	return resp, nil
 }
 
 func (c *Config) UpdateClusterByID(cluster *managementClient.Cluster, update map[string]interface{}) (*managementClient.Cluster, error) {
@@ -1399,33 +1070,35 @@ func (c *Config) activateKontainerDriver(id string, interval time.Duration) erro
 		return err
 	}
 
-	driver, err := client.KontainerDriver.ByID(id)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Getting Node Driver %s: %v", id, err)
-	}
-
-	if driver.State == "active" {
-		return nil
-	}
-
-	err = client.KontainerDriver.ActionActivate(driver)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Activating Node Driver %s: %v", id, err)
-	}
-
-	timeout := int(interval.Seconds())
-	for i := 0; i <= timeout; i = i + rancher2RetriesWait {
-		if driver.State == "active" {
-			return nil
+	ctx, cancel := context.WithTimeout(context.Background(), interval)
+	defer cancel()
+	for updated := false; ; {
+		driver, err := client.KontainerDriver.ByID(id)
+		if err != nil && !IsServerError(err) && !IsUnknownSchemaType(err) && !IsNotFound(err) && !IsForbidden(err) {
+			return fmt.Errorf("[ERROR] Getting Node Driver %s: %v", id, err)
 		}
-		driver, err = client.KontainerDriver.ByID(id)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Waiting for activating Node Driver %s: %v", id, err)
-		}
-		time.Sleep(rancher2RetriesWait * time.Second)
-	}
+		if driver != nil {
+			if driver.State == "active" {
+				return nil
+			}
 
-	return fmt.Errorf("[ERROR] Timeout activating Node Driver %s", id)
+			if !updated {
+				err = client.KontainerDriver.ActionActivate(driver)
+				if err == nil {
+					updated = true
+					continue
+				}
+				if !IsServerError(err) && !IsUnknownSchemaType(err) {
+					return fmt.Errorf("[ERROR] Activating Node Driver %s: %v", id, err)
+				}
+			}
+		}
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return fmt.Errorf("Timeout activating Node Driver %s: %v", id, err)
+		}
+	}
 }
 
 func (c *Config) activateNodeDriver(id string, interval time.Duration) error {
@@ -1438,33 +1111,35 @@ func (c *Config) activateNodeDriver(id string, interval time.Duration) error {
 		return err
 	}
 
-	driver, err := client.NodeDriver.ByID(id)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Getting Node Driver %s: %v", id, err)
-	}
-
-	if driver.State == "active" {
-		return nil
-	}
-
-	driver, err = client.NodeDriver.ActionActivate(driver)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Activating Node Driver %s: %v", id, err)
-	}
-
-	timeout := int(interval.Seconds())
-	for i := 0; i <= timeout; i = i + rancher2RetriesWait {
-		if driver.State == "active" {
-			return nil
+	ctx, cancel := context.WithTimeout(context.Background(), interval)
+	defer cancel()
+	for updated := false; ; {
+		driver, err := client.NodeDriver.ByID(id)
+		if err != nil && !IsServerError(err) && !IsUnknownSchemaType(err) && !IsNotFound(err) && !IsForbidden(err) {
+			return fmt.Errorf("[ERROR] Getting Node Driver %s: %v", id, err)
 		}
-		driver, err = client.NodeDriver.ByID(id)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Waiting for activating Node Driver %s: %v", id, err)
-		}
-		time.Sleep(rancher2RetriesWait * time.Second)
-	}
+		if driver != nil {
+			if driver.State == "active" {
+				return nil
+			}
 
-	return fmt.Errorf("[ERROR] timeout activating Node Driver %s", id)
+			if !updated {
+				driver, err = client.NodeDriver.ActionActivate(driver)
+				if err == nil {
+					updated = true
+					continue
+				}
+				if !IsServerError(err) && !IsUnknownSchemaType(err) {
+					return fmt.Errorf("[ERROR] Activating Node Driver %s: %v", id, err)
+				}
+			}
+		}
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return fmt.Errorf("Timeout activating Node Driver %s: %v", id, err)
+		}
+	}
 }
 
 func (c *Config) UserPasswordChanged(user *managementClient.User, pass string) bool {

@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
@@ -233,6 +234,29 @@ func updateStorageClassV2(c *Config, clusterID, id string, obj *StorageClassV2) 
 		return nil, fmt.Errorf("Updating storageClass V2: StorageClass V2 is nil")
 	}
 	resp := &StorageClassV2{}
-	err := c.updateObjectV2(clusterID, id, storageClassV2APIType, obj, resp)
-	return resp, err
+	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
+	defer cancel()
+	for {
+		err := c.updateObjectV2(clusterID, id, storageClassV2APIType, obj, resp)
+		if err == nil {
+			return resp, err
+		}
+		if !IsServerError(err) && !IsUnknownSchemaType(err) && !IsConflict(err) {
+			return nil, err
+		}
+		if IsConflict(err) {
+			// Read storageClass again and update ObjectMeta.ResourceVersion before retry
+			newObj := &StorageClassV2{}
+			err = c.getObjectV2ByID(clusterID, id, storageClassV2APIType, newObj)
+			if err != nil {
+				return nil, err
+			}
+			obj.ObjectMeta.ResourceVersion = newObj.ObjectMeta.ResourceVersion
+		}
+		select {
+		case <-time.After(rancher2RetriesWait * time.Second):
+		case <-ctx.Done():
+			return nil, fmt.Errorf("Timeout updating storageClass V2 ID %s: %v", id, err)
+		}
+	}
 }

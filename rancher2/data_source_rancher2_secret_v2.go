@@ -59,7 +59,7 @@ func dataSourceRancher2SecretV2Read(d *schema.ResourceData, meta interface{}) er
 	rancherID := namespace + "/" + name
 	d.SetId(clusterID + secretV2ClusterIDsep + rancherID)
 
-	secret, err := meta.(*Config).GetSecretV2ByID(clusterID, rancherID)
+	secret, err := getSecretV2ByID(meta.(*Config), clusterID, rancherID)
 	if err != nil {
 		if IsNotFound(err) || IsForbidden(err) {
 			log.Printf("[INFO] Secret V2 %s not found at cluster %s", rancherID, clusterID)

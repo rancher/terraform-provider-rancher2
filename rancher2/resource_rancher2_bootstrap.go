@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -34,8 +33,7 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 	d.Set("user", bootstrapDefaultUser)
 
 	// Set rancher url
-	url := strings.TrimSuffix(meta.(*Config).URL, "/v3")
-	err = meta.(*Config).SetSetting(bootstrapSettingURL, url)
+	err = meta.(*Config).SetSetting(bootstrapSettingURL, meta.(*Config).URL)
 	if err != nil {
 		return err
 	}
@@ -169,8 +167,7 @@ func resourceRancher2BootstrapUpdate(d *schema.ResourceData, meta interface{}) e
 	d.Set("user", bootstrapDefaultUser)
 
 	// Set rancher url
-	url := strings.TrimSuffix(meta.(*Config).URL, "/v3")
-	err = meta.(*Config).SetSetting(bootstrapSettingURL, url)
+	err = meta.(*Config).SetSetting(bootstrapSettingURL, meta.(*Config).URL)
 	if err != nil {
 		return err
 	}
