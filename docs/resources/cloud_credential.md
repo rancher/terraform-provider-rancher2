@@ -34,6 +34,7 @@ The following arguments are supported:
 * `google_credential_config` - (Optional) Google config for the Cloud Credential (list maxitems:1)
 * `linode_credential_config` - (Optional) Linode config for the Cloud Credential (list maxitems:1)
 * `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
+* `s3_credential_config` - (Optional) S3 config for the Cloud Credential. Just for Rancher 2.6.0 and above (list maxitems:1)
 * `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
 * `annotations` - (Optional) Annotations for Cloud Credential object (map)
 * `labels` - (Optional/Computed) Labels for Cloud Credential object (map)
@@ -88,6 +89,19 @@ The following attributes are exported:
 #### Arguments
 
 * `password` - (Required/Sensitive) OpenStack password (string)
+
+### `s3_credential_config`
+
+#### Arguments
+
+* `access_key` - (Required/Sensitive) AWS access key (string)
+* `secret_key` - (Required/Sensitive) AWS secret key (string)
+* `default_bucket` - (Optional) AWS default bucket (string)
+* `default_endpoint` - (Optional) AWS default endpoint (string)
+* `default_endpoint_ca` - (Optional/Sensitive) AWS default endpoint CA (string)
+* `default_folder` - (Optional) AWS default folder (string)
+* `default_region` - (Optional) AWS default region (string)
+* `default_skip_ssl_verify` - (Optional) AWS default skip ssl verify. Default: `false` (bool)
 
 ### `vsphere_credential_config`
 

@@ -75,6 +75,15 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		if err != nil {
 			return err
 		}
+	case s3ConfigDriver:
+		v, ok := d.Get("s3_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err := d.Set("s3_credential_config", flattenCloudCredentialS3(in.S3CredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	case vmwarevsphereConfigDriver:
 		v, ok := d.Get("vsphere_credential_config").([]interface{})
 		if !ok {
@@ -150,6 +159,11 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	if v, ok := in.Get("openstack_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.OpenstackCredentialConfig = expandCloudCredentialOpenstack(v)
 		in.Set("driver", openstackConfigDriver)
+	}
+
+	if v, ok := in.Get("s3_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.S3CredentialConfig = expandCloudCredentialS3(v)
+		in.Set("driver", s3ConfigDriver)
 	}
 
 	if v, ok := in.Get("vsphere_credential_config").([]interface{}); ok && len(v) > 0 {

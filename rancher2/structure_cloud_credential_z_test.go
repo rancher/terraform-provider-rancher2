@@ -20,6 +20,8 @@ var (
 	testCloudCredentialInterfaceLinode       map[string]interface{}
 	testCloudCredentialConfOpenstack         *CloudCredential
 	testCloudCredentialInterfaceOpenstack    map[string]interface{}
+	testCloudCredentialConfS3                *CloudCredential
+	testCloudCredentialInterfaceS3           map[string]interface{}
 	testCloudCredentialConfVsphere           *CloudCredential
 	testCloudCredentialInterfaceVsphere      map[string]interface{}
 )
@@ -91,6 +93,18 @@ func init() {
 		"openstack_credential_config": testCloudCredentialOpenstackInterface,
 		"driver":                      openstackConfigDriver,
 	}
+
+	testCloudCredentialConfS3 = &CloudCredential{}
+	testCloudCredentialConfS3.S3CredentialConfig = testCloudCredentialS3Conf
+	testCloudCredentialConfS3.Name = "cloudCredential-test"
+	testCloudCredentialConfS3.Description = "description"
+	testCloudCredentialInterfaceS3 = map[string]interface{}{
+		"name":                 "cloudCredential-test",
+		"description":          "description",
+		"s3_credential_config": testCloudCredentialS3Interface,
+		"driver":               s3ConfigDriver,
+	}
+
 	testCloudCredentialConfVsphere = &CloudCredential{
 		VmwarevsphereCredentialConfig: testCloudCredentialVsphereConf,
 	}
@@ -133,6 +147,10 @@ func TestFlattenCloudCredential(t *testing.T) {
 		{
 			testCloudCredentialConfOpenstack,
 			testCloudCredentialInterfaceOpenstack,
+		},
+		{
+			testCloudCredentialConfS3,
+			testCloudCredentialInterfaceS3,
 		},
 		{
 			testCloudCredentialConfVsphere,
@@ -186,6 +204,10 @@ func TestExpandCloudCredential(t *testing.T) {
 		{
 			testCloudCredentialInterfaceOpenstack,
 			testCloudCredentialConfOpenstack,
+		},
+		{
+			testCloudCredentialInterfaceS3,
+			testCloudCredentialConfS3,
 		},
 		{
 			testCloudCredentialInterfaceVsphere,
