@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Argument:** `rancher2_cloud_credential.s3_credential_config` - (Optional) S3 config for the Cloud Credential. Just for Rancher 2.6.0 and above (list maxitems:1)
 
 ENHANCEMENTS:
 
