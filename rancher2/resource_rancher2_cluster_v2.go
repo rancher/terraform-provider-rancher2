@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -22,6 +23,24 @@ func resourceRancher2ClusterV2() *schema.Resource {
 			State: resourceRancher2ClusterV2Import,
 		},
 		Schema: clusterV2Fields(),
+		CustomizeDiff: func(d *schema.ResourceDiff, i interface{}) error {
+			if d.HasChange("rke_config") {
+				oldObj, newObj := d.GetChange("rke_config")
+				//return fmt.Errorf("\n%#v\n%#v\n", oldObj, newObj)
+				oldInterface, oldOk := oldObj.([]interface{})
+				newInterface, newOk := newObj.([]interface{})
+				if oldOk && newOk && len(newInterface) > 0 {
+					oldConfig := expandClusterV2RKEConfig(oldInterface)
+					newConfig := expandClusterV2RKEConfig(newInterface)
+					if reflect.DeepEqual(oldConfig, newConfig) {
+						d.Clear("rke_config")
+					} else {
+						d.SetNew("rke_config", flattenClusterV2RKEConfig(newConfig))
+					}
+				}
+			}
+			return nil
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),

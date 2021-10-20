@@ -25,6 +25,25 @@ resource "` + testAccRancher2ClusterV2Type + `" "foo" {
   kubernetes_version = "v1.21.4+k3s1"
   enable_network_policy = true
   default_cluster_role_for_project_members = "user"
+  rke_config {
+    registries {
+    	configs {
+        hostname = "zmy-domain.test"
+        insecure = true
+      }
+      configs {
+        hostname = "my-domain.test"
+      }
+      mirrors {
+        endpoints = ["https://amy-domain.com"]
+        hostname = "docker.io"
+      }
+      mirrors {
+        endpoints = ["https://xmy-domain.com"]
+        hostname = "bdocker.io"
+      }
+    }
+  }
 }
 `
 	testAccRancher2ClusterV2Update = `
@@ -33,6 +52,18 @@ resource "` + testAccRancher2ClusterV2Type + `" "foo" {
   kubernetes_version = "v1.21.4+k3s1"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user2"
+  rke_config {
+    registries {
+      mirrors {
+        endpoints = ["https://amy-domain.com"]
+        hostname = "docker.io"
+      }
+      mirrors {
+        endpoints = ["https://xmy-domain.com"]
+        hostname = "bdocker.io"
+      }
+    }
+  }
 }
  `
 	testAccRancher2ClusterV2Config = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2ClusterV2
