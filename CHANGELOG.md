@@ -1,3 +1,16 @@
+## 1.21.1 (Unreleased)
+
+FEATURES:
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix `rancher2_cluster_v2.rke_config.registries` sort to avoid false diff
+
 ## 1.21.0 (October 18, 2021)
 
 FEATURES:

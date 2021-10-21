@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"sort"
+
 	rkev1 "github.com/rancher/rancher/pkg/apis/rke.cattle.io/v1"
 )
 
@@ -10,9 +12,16 @@ func flattenClusterV2RKEConfigRegistryConfigs(p map[string]rkev1.RegistryConfig)
 	if p == nil {
 		return nil
 	}
-	out := make([]interface{}, len(p))
+	sorted := make([]string, len(p))
 	i := 0
-	for k, in := range p {
+	for k := range p {
+		sorted[i] = k
+		i++
+	}
+	sort.Strings(sorted)
+	out := make([]interface{}, len(p))
+	for i, k := range sorted {
+		in := p[k]
 		obj := map[string]interface{}{}
 
 		obj["hostname"] = k
@@ -28,7 +37,6 @@ func flattenClusterV2RKEConfigRegistryConfigs(p map[string]rkev1.RegistryConfig)
 		}
 		obj["insecure"] = in.InsecureSkipVerify
 		out[i] = obj
-		i++
 	}
 
 	return out
@@ -38,9 +46,16 @@ func flattenClusterV2RKEConfigRegistryMirrors(p map[string]rkev1.Mirror) []inter
 	if p == nil {
 		return nil
 	}
-	out := make([]interface{}, len(p))
+	sorted := make([]string, len(p))
 	i := 0
-	for k, in := range p {
+	for k := range p {
+		sorted[i] = k
+		i++
+	}
+	sort.Strings(sorted)
+	out := make([]interface{}, len(p))
+	for i, k := range sorted {
+		in := p[k]
 		obj := map[string]interface{}{}
 
 		obj["hostname"] = k
@@ -52,7 +67,6 @@ func flattenClusterV2RKEConfigRegistryMirrors(p map[string]rkev1.Mirror) []inter
 			obj["rewrites"] = toMapInterface(in.Rewrites)
 		}
 		out[i] = obj
-		i++
 	}
 
 	return out
