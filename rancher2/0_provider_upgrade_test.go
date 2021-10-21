@@ -277,6 +277,7 @@ provider "rancher2" {
 ` + testAccRancher2CloudCredentialConfigAzure + `
 ` + testAccRancher2CloudCredentialConfigDigitalocean + `
 ` + testAccRancher2CloudCredentialConfigOpenstack + `
+` + testAccRancher2CloudCredentialConfigS3 + `
 ` + testAccRancher2CloudCredentialConfigVsphere + `
 ` + testAccRancher2ClusterConfigRKE + `
 ` + testAccRancher2ClusterAlertGroup + `

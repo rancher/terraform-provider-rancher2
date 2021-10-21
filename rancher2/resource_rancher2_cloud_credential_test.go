@@ -18,8 +18,8 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-aws" {
   name = "foo-aws"
   description= "Terraform cloudCredential acceptance test"
   amazonec2_credential_config {
-	access_key = "XXXXXXXXXXXXXXXXXXXX"
-	secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    access_key = "XXXXXXXXXXXXXXXXXXXX"
+    secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   }
 }
 `
@@ -28,8 +28,8 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-aws" {
   name = "foo-aws"
   description= "Terraform cloudCredential acceptance test - updated"
   amazonec2_credential_config {
-	access_key = "YYYYYYYYYYYYYYYYYYYY"
-	secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    access_key = "YYYYYYYYYYYYYYYYYYYY"
+    secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   }
 }
  `
@@ -60,7 +60,7 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-do" {
   name = "foo-do"
   description= "Terraform cloudCredential acceptance test"
   digitalocean_credential_config {
-	access_token = "XXXXXXXXXXXXXXXXXXXX"
+    access_token = "XXXXXXXXXXXXXXXXXXXX"
   }
 }
 `
@@ -69,7 +69,7 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-do" {
   name = "foo-do"
   description= "Terraform cloudCredential acceptance test - updated"
   digitalocean_credential_config {
-	access_token = "YYYYYYYYYYYYYYYYYYYY"
+    access_token = "YYYYYYYYYYYYYYYYYYYY"
   }
 }
  `
@@ -78,7 +78,7 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-google" {
   name = "foo-google"
   description= "Terraform cloudCredential acceptance test"
   google_credential_config {
-	auth_encoded_json = "{\"auth_encoded_json\": true}"
+    auth_encoded_json = "{\"auth_encoded_json\": true}"
   }
 }
 `
@@ -87,7 +87,7 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-google" {
   name = "foo-google"
   description= "Terraform cloudCredential acceptance test - updated"
   google_credential_config {
-	auth_encoded_json = "{\"auth_encoded_json\": false}"
+    auth_encoded_json = "{\"auth_encoded_json\": false}"
   }
 }
 `
@@ -96,7 +96,7 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-openstack" {
   name = "foo-openstack"
   description= "Terraform cloudCredential acceptance test"
   openstack_credential_config {
-	password = "XXXXXXXXXXXXXXXXXXXX"
+    password = "XXXXXXXXXXXXXXXXXXXX"
   }
 }
 `
@@ -105,18 +105,43 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-openstack" {
   name = "foo-openstack"
   description= "Terraform cloudCredential acceptance test - updated"
   openstack_credential_config {
-	password = "YYYYYYYYYYYYYYYYYYYY"
+    password = "YYYYYYYYYYYYYYYYYYYY"
   }
 }
- `
+`
+	testAccRancher2CloudCredentialConfigS3 = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-s3" {
+  name = "foo-s3"
+  description= "Terraform cloudCredential acceptance test"
+  s3_credential_config {
+    access_key = "XXXXXXXXXXXXXXXXXXXX"
+    secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    default_bucket = "default_bucket"
+    default_folder = "default_folder"
+  }
+}
+`
+	testAccRancher2CloudCredentialUpdateConfigS3 = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-s3" {
+  name = "foo-s3"
+  description= "Terraform cloudCredential acceptance test - updated"
+  s3_credential_config {
+    access_key = "YYYYYYYYYYYYYYYYYYYY"
+    secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    default_bucket = "default_bucket_updated"
+    default_folder = "default_folder_updated"
+  }
+}
+`
+
 	testAccRancher2CloudCredentialConfigVsphere = `
 resource "` + testAccRancher2CloudCredentialType + `" "foo-vsphere" {
   name = "foo-vsphere"
   description= "Terraform cloudCredential acceptance test"
   vsphere_credential_config {
-	password = "XXXXXXXXXXXXXXXXXXXX"
-	username = "user"
-	vcenter = "vcenter"
+    password = "XXXXXXXXXXXXXXXXXXXX"
+    username = "user"
+    vcenter = "vcenter"
   }
 }
 `
@@ -125,9 +150,9 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-vsphere" {
   name = "foo-vsphere"
   description= "Terraform cloudCredential acceptance test - updated"
   vsphere_credential_config {
-	password = "YYYYYYYYYYYYYYYYYYYY"
-	username = "user"
-	vcenter = "vcenter2"
+    password = "YYYYYYYYYYYYYYYYYYYY"
+    username = "user"
+    vcenter = "vcenter2"
   }
 }
  `
@@ -435,6 +460,74 @@ func TestAccRancher2CloudCredential_disappears_Openstack(t *testing.T) {
 				Config: testAccRancher2CloudCredentialConfigOpenstack,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-openstack", cloudCredential),
+					testAccRancher2CloudCredentialDisappears(cloudCredential),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_basic_S3(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2CloudCredentialConfigS3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-s3", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "name", "foo-s3"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "driver", s3ConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "s3_credential_config.0.access_key", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "s3_credential_config.0.default_bucket", "default_bucket"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "s3_credential_config.0.default_folder", "default_folder"),
+				),
+			},
+			{
+				Config: testAccRancher2CloudCredentialUpdateConfigS3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-s3", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "name", "foo-s3"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "description", "Terraform cloudCredential acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "driver", s3ConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "s3_credential_config.0.access_key", "YYYYYYYYYYYYYYYYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "s3_credential_config.0.default_bucket", "default_bucket_updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "s3_credential_config.0.default_folder", "default_folder_updated"),
+				),
+			},
+			{
+				Config: testAccRancher2CloudCredentialConfigS3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-s3", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "name", "foo-s3"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "driver", s3ConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "s3_credential_config.0.access_key", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "s3_credential_config.0.default_bucket", "default_bucket"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-s3", "s3_credential_config.0.default_folder", "default_folder"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_disappears_S3(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2CloudCredentialConfigS3,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-s3", cloudCredential),
 					testAccRancher2CloudCredentialDisappears(cloudCredential),
 				),
 				ExpectNonEmptyPlan: true,
