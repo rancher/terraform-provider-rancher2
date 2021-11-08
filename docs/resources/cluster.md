@@ -643,6 +643,7 @@ The following attributes are exported:
 * `bastion_host` - (Optional/Computed) RKE bastion host (list maxitems:1)
 * `cloud_provider` - (Optional/Computed) RKE cloud provider [rke-cloud-providers](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/) (list maxitems:1)
 * `dns` - (Optional/Computed) RKE dns add-on. Just for Rancher v2.2.x (list maxitems:1)
+* `enable_cri_dockerd` - (Optional) Enable/disable using cri-dockerd. Deafult: `false` [enable_cri_dockerd](https://rancher.com/docs/rke/latest/en/config-options/#cri-dockerd) (bool)
 * `ignore_docker_version` - (Optional) Ignore docker version. Default `true` (bool)
 * `ingress` - (Optional/Computed) Kubernetes ingress configuration (list maxitems:1)
 * `kubernetes_version` - (Optional/Computed) K8s version to deploy. Default: `Rancher default` (string)

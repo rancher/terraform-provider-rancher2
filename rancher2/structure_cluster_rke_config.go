@@ -80,7 +80,12 @@ func flattenClusterRKEConfig(in *managementClient.RancherKubernetesEngineConfig,
 		obj["dns"] = dns
 	}
 
-	obj["ignore_docker_version"] = *in.IgnoreDockerVersion
+	if in.EnableCRIDockerd != nil {
+		obj["enable_cri_dockerd"] = *in.EnableCRIDockerd
+	}
+	if in.IgnoreDockerVersion != nil {
+		obj["ignore_docker_version"] = *in.IgnoreDockerVersion
+	}
 
 	if in.Ingress != nil {
 		ingress, err := flattenClusterRKEConfigIngress(in.Ingress)
@@ -238,6 +243,9 @@ func expandClusterRKEConfig(p []interface{}, name string) (*managementClient.Ran
 		obj.DNS = dns
 	}
 
+	if v, ok := in["enable_cri_dockerd"].(bool); ok {
+		obj.EnableCRIDockerd = &v
+	}
 	if v, ok := in["ignore_docker_version"].(bool); ok {
 		obj.IgnoreDockerVersion = &v
 	}
