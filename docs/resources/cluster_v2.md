@@ -220,6 +220,8 @@ The following arguments are supported:
 * `default_pod_security_policy_template_name` - (Optional) Cluster V2 default pod security policy template name (string)
 * `default_cluster_role_for_project_members` - (Optional) Cluster V2 default cluster role for project members (string)
 * `enable_network_policy` - (Optional) Enable k8s network policy at Cluster V2 (bool)
+* `annotations` - (Optional/Computed) Annotations for the Cluster V2 (map)
+* `labels` - (Optional/Computed) Labels for the Cluster V2 (map)
 
 ## Attributes Reference
 
