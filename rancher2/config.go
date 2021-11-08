@@ -880,14 +880,17 @@ func (c *Config) UpdateClusterByID(cluster *managementClient.Cluster, update map
 	return client.Cluster.Update(cluster, update)
 }
 
-func (c *Config) isClusterActive(id string) (bool, *managementClient.Cluster, error) {
+func (c *Config) checkClusterCondition(id, condition string) (bool, *managementClient.Cluster, error) {
+	if len(condition) == 0 {
+		return false, nil, fmt.Errorf("checkClusterCondition: Cluster condition is empty")
+	}
 	obj, err := c.GetClusterByID(id)
 	if err != nil {
 		return false, nil, err
 	}
 
 	for i := range obj.Conditions {
-		if obj.Conditions[i].Type == clusterActiveCondition {
+		if obj.Conditions[i].Type == condition {
 			if obj.Conditions[i].Status == "True" {
 				return true, obj, nil
 			}
@@ -896,42 +899,22 @@ func (c *Config) isClusterActive(id string) (bool, *managementClient.Cluster, er
 	}
 
 	return false, obj, nil
+}
+
+func (c *Config) isClusterActive(id string) (bool, *managementClient.Cluster, error) {
+	return c.checkClusterCondition(id, clusterActiveCondition)
+}
+
+func (c *Config) isClusterConnected(id string) (bool, *managementClient.Cluster, error) {
+	return c.checkClusterCondition(id, clusterConnectedCondition)
 }
 
 func (c *Config) isClusterMonitoringEnabledCondition(id string) (bool, *managementClient.Cluster, error) {
-	obj, err := c.GetClusterByID(id)
-	if err != nil {
-		return false, nil, err
-	}
-
-	for i := range obj.Conditions {
-		if obj.Conditions[i].Type == clusterMonitoringEnabledCondition {
-			if obj.Conditions[i].Status == "True" {
-				return true, obj, nil
-			}
-			return false, obj, nil
-		}
-	}
-
-	return false, obj, nil
+	return c.checkClusterCondition(id, clusterMonitoringEnabledCondition)
 }
 
 func (c *Config) isClusterAlertingEnabledCondition(id string) (bool, *managementClient.Cluster, error) {
-	obj, err := c.GetClusterByID(id)
-	if err != nil {
-		return false, nil, err
-	}
-
-	for i := range obj.Conditions {
-		if obj.Conditions[i].Type == clusterAlertingEnabledCondition {
-			if obj.Conditions[i].Status == "True" {
-				return true, obj, nil
-			}
-			return false, obj, nil
-		}
-	}
-
-	return false, obj, nil
+	return c.checkClusterCondition(id, clusterAlertingEnabledCondition)
 }
 
 func (c *Config) ClusterExist(id string) error {

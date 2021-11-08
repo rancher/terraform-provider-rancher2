@@ -531,14 +531,19 @@ func findFlattenClusterRegistrationToken(client *managementClient.Client, cluste
 func findClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
 	for i := range clusterRegistrationTokenNames {
 		regTokenID := clusterID + ":" + clusterRegistrationTokenNames[i]
-		regToken, err := client.ClusterRegistrationToken.ByID(regTokenID)
-		if err != nil {
-			if !IsNotFound(err) {
-				return nil, err
+		for retry, retries := 1, 10; retry <= retries; retry++ {
+			regToken, err := client.ClusterRegistrationToken.ByID(regTokenID)
+			if err != nil {
+				if !IsNotFound(err) {
+					return nil, err
+				}
+				break
 			}
-			continue
+			if (len(regToken.Command) > 0 && len(regToken.NodeCommand) > 0) || retry == retries {
+				return regToken, nil
+			}
+			time.Sleep(3 * time.Second)
 		}
-		return regToken, nil
 	}
 	return createClusterRegistrationToken(client, clusterID)
 }
@@ -591,19 +596,21 @@ func getClusterKubeconfig(c *Config, id string) (*managementClient.GenerateKubeC
 				return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
 			}
 		} else if len(cluster.Actions[action]) > 0 {
+			kubeConfig := &managementClient.GenerateKubeConfigOutput{}
+			if cluster.LocalClusterAuthEndpoint != nil && cluster.LocalClusterAuthEndpoint.Enabled {
+				if connected, _, _ := c.isClusterConnected(cluster.ID); !connected {
+					log.Printf("[WARN] Getting cluster Kubeconfig: kubeconfig is not yet available for cluster %s", cluster.Name)
+					return kubeConfig, nil
+				}
+			}
 			clusterResource := &norman.Resource{
 				ID:      cluster.ID,
 				Type:    cluster.Type,
 				Links:   cluster.Links,
 				Actions: cluster.Actions,
 			}
-			kubeConfig := &managementClient.GenerateKubeConfigOutput{}
 			err = client.APIBaseClient.Action(managementClient.ClusterType, action, clusterResource, nil, kubeConfig)
 			if err == nil {
-				return kubeConfig, nil
-			}
-			if cluster.LocalClusterAuthEndpoint != nil && cluster.LocalClusterAuthEndpoint.Enabled && IsServiceUnavailableError(err) {
-				log.Printf("[WARN] Getting cluster Kubeconfig: kubeconfig is not yet available for cluster %s", cluster.Name)
 				return kubeConfig, nil
 			}
 			if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
