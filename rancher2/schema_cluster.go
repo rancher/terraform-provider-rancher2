@@ -11,6 +11,7 @@ const (
 	clusterRegistrationTokenName      = "default-token"
 	clusterMonitoringV1Namespace      = "cattle-prometheus"
 	clusterActiveCondition            = "Updated"
+	clusterConnectedCondition         = "Connected"
 	clusterMonitoringEnabledCondition = "MonitoringEnabled"
 	clusterAlertingEnabledCondition   = "AlertingEnabled"
 )

@@ -258,6 +258,12 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 				Schema: clusterRKEConfigDNSFields(),
 			},
 		},
+		"enable_cri_dockerd": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable/disable using cri-dockerd",
+		},
 		"ignore_docker_version": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -441,6 +447,12 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigDNSFields(),
 			},
+		},
+		"enable_cri_dockerd": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable/disable using cri-dockerd",
 		},
 		"ignore_docker_version": {
 			Type:        schema.TypeBool,
