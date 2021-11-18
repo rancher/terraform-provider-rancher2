@@ -6,7 +6,7 @@ import (
 
 // Flatteners
 
-func flattenClusterEKSConfigV2NodeGroupsLaunchTemplate(in *managementClient.LaunchTemplate, p []interface{}) []interface{} {
+func flattenClusterEKSConfigV2NodeGroupsLaunchTemplate(in *managementClient.LaunchTemplate, p []interface{}) map[string]interface{} {
 	if in == nil {
 		return nil
 	}
@@ -21,7 +21,7 @@ func flattenClusterEKSConfigV2NodeGroupsLaunchTemplate(in *managementClient.Laun
 		obj["version"] = int(*in.Version)
 	}
 
-	return []interface{}{obj}
+	return obj
 }
 
 func flattenClusterEKSConfigV2NodeGroups(input []managementClient.NodeGroup, p []interface{}) []interface{} {
@@ -168,17 +168,16 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 
 // Expanders
 
-func expandClusterEKSConfigV2NodeGroupsLaunchTemplate(p []interface{}) *managementClient.LaunchTemplate {
+func expandClusterEKSConfigV2NodeGroupsLaunchTemplate(p map[string]interface{}) *managementClient.LaunchTemplate {
 	obj := &managementClient.LaunchTemplate{}
-	if len(p) == 0 || p[0] == nil {
+	if len(p) == 0 {
 		return nil
 	}
-	in := p[0].(map[string]interface{})
 
-	if v, ok := in["name"].(string); ok && len(v) > 0 {
+	if v, ok := p["name"].(string); ok && len(v) > 0 {
 		obj.Name = &v
 	}
-	if v, ok := in["version"].(int); ok {
+	if v, ok := p["version"].(int); ok {
 		ver := int64(v)
 		obj.Version = &ver
 	}
@@ -222,7 +221,7 @@ func expandClusterEKSConfigV2NodeGroups(p []interface{}, subnets []string, versi
 			labels := toMapString(v)
 			obj.Labels = &labels
 		}
-		if v, ok := in["launch_template"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := in["launch_template"].(map[string]interface{}); ok && len(v) > 0 {
 			obj.LaunchTemplate = expandClusterEKSConfigV2NodeGroupsLaunchTemplate(v)
 		}
 		if v, ok := in["max_size"].(int); ok {

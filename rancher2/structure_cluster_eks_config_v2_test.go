@@ -9,7 +9,7 @@ import (
 
 var (
 	testClusterEKSConfigV2NodeGroupLaunchTemplateConf      *managementClient.LaunchTemplate
-	testClusterEKSConfigV2NodeGroupLaunchTemplateInterface []interface{}
+	testClusterEKSConfigV2NodeGroupLaunchTemplateInterface map[string]interface{}
 	testClusterEKSConfigV2NodeGroupConf                    []managementClient.NodeGroup
 	testClusterEKSConfigV2NodeGroupInterface               []interface{}
 	testClusterEKSConfigV2Conf                             *managementClient.EKSClusterConfigSpec
@@ -22,11 +22,9 @@ func init() {
 		Name:    newString("launch_template"),
 		Version: &LtVersion,
 	}
-	testClusterEKSConfigV2NodeGroupLaunchTemplateInterface = []interface{}{
-		map[string]interface{}{
-			"name":    "launch_template",
-			"version": 1,
-		},
+	testClusterEKSConfigV2NodeGroupLaunchTemplateInterface = map[string]interface{}{
+		"name":    "launch_template",
+		"version": 1,
 	}
 	size := int64(3)
 	testClusterEKSConfigV2NodeGroupConf = []managementClient.NodeGroup{
