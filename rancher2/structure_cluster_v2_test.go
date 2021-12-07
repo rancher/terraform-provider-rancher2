@@ -52,6 +52,7 @@ func init() {
 		"label2": "two",
 	}
 	testClusterV2Conf.Spec.KubernetesVersion = "kubernetes_version"
+	testClusterV2Conf.Spec.LocalClusterAuthEndpoint = testClusterV2LocalAuthEndpointConf
 	testClusterV2Conf.Spec.RKEConfig = testClusterV2RKEConfigConf
 	testClusterV2Conf.Spec.AgentEnvVars = testClusterV2EnvVarConf
 	testClusterV2Conf.Spec.CloudCredentialSecretName = "cloud_credential_secret_name"
@@ -63,6 +64,7 @@ func init() {
 		"name":                         "name",
 		"fleet_namespace":              "fleet_namespace",
 		"kubernetes_version":           "kubernetes_version",
+		"local_auth_endpoint":          testClusterV2LocalAuthEndpointInterface,
 		"rke_config":                   testClusterV2RKEConfigInterface,
 		"agent_env_vars":               testClusterV2EnvVarInterface,
 		"cloud_credential_secret_name": "cloud_credential_secret_name",
@@ -101,6 +103,11 @@ func TestFlattenClusterV2(t *testing.T) {
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
+			if k == "rke_config" {
+				// This is a hack to remove the deprecated field because it is not being set.
+				rkeConfig := expectedOutput[k].([]interface{})[0].(map[string]interface{})
+				delete(rkeConfig, "local_auth_endpoint")
+			}
 		}
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",

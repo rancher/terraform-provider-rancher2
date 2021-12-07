@@ -8,18 +8,18 @@ import (
 )
 
 var (
-	testClusterV2RKEConfigLocalAuthEndpointConf      rkev1.LocalClusterAuthEndpoint
-	testClusterV2RKEConfigLocalAuthEndpointInterface []interface{}
+	testClusterV2LocalAuthEndpointConf      rkev1.LocalClusterAuthEndpoint
+	testClusterV2LocalAuthEndpointInterface []interface{}
 )
 
 func init() {
-	testClusterV2RKEConfigLocalAuthEndpointConf = rkev1.LocalClusterAuthEndpoint{
+	testClusterV2LocalAuthEndpointConf = rkev1.LocalClusterAuthEndpoint{
 		CACerts: "ca_certs",
 		Enabled: true,
 		FQDN:    "fqdn",
 	}
 
-	testClusterV2RKEConfigLocalAuthEndpointInterface = []interface{}{
+	testClusterV2LocalAuthEndpointInterface = []interface{}{
 		map[string]interface{}{
 			"ca_certs": "ca_certs",
 			"enabled":  true,
@@ -28,20 +28,20 @@ func init() {
 	}
 }
 
-func TestFlattenClusterV2RKEConfigLocalAuthEndpoint(t *testing.T) {
+func TestFlattenClusterV2LocalAuthEndpoint(t *testing.T) {
 
 	cases := []struct {
 		Input          rkev1.LocalClusterAuthEndpoint
 		ExpectedOutput []interface{}
 	}{
 		{
-			testClusterV2RKEConfigLocalAuthEndpointConf,
-			testClusterV2RKEConfigLocalAuthEndpointInterface,
+			testClusterV2LocalAuthEndpointConf,
+			testClusterV2LocalAuthEndpointInterface,
 		},
 	}
 
 	for _, tc := range cases {
-		output := flattenClusterV2RKEConfigLocalAuthEndpoint(tc.Input)
+		output := flattenClusterV2LocalAuthEndpoint(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -49,20 +49,20 @@ func TestFlattenClusterV2RKEConfigLocalAuthEndpoint(t *testing.T) {
 	}
 }
 
-func TestExpandClusterV2RKEConfigLocalAuthEndpoint(t *testing.T) {
+func TestExpandClusterV2LocalAuthEndpoint(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
 		ExpectedOutput rkev1.LocalClusterAuthEndpoint
 	}{
 		{
-			testClusterV2RKEConfigLocalAuthEndpointInterface,
-			testClusterV2RKEConfigLocalAuthEndpointConf,
+			testClusterV2LocalAuthEndpointInterface,
+			testClusterV2LocalAuthEndpointConf,
 		},
 	}
 
 	for _, tc := range cases {
-		output := expandClusterV2RKEConfigLocalAuthEndpoint(tc.Input)
+		output := expandClusterV2LocalAuthEndpoint(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

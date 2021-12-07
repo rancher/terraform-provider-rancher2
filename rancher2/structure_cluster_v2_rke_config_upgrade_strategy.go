@@ -1,14 +1,15 @@
 package rancher2
 
 import (
+	"reflect"
+
 	rkev1 "github.com/rancher/rancher/pkg/apis/rke.cattle.io/v1"
 )
 
 // Flatteners
 
 func flattenClusterV2RKEConfigUpgradeStrategyDrainOptions(in rkev1.DrainOptions) []interface{} {
-	empty := rkev1.DrainOptions{}
-	if in == empty {
+	if reflect.ValueOf(in).IsZero() {
 		return nil
 	}
 
@@ -36,8 +37,7 @@ func flattenClusterV2RKEConfigUpgradeStrategyDrainOptions(in rkev1.DrainOptions)
 }
 
 func flattenClusterV2RKEConfigUpgradeStrategy(in rkev1.ClusterUpgradeStrategy) []interface{} {
-	empty := rkev1.ClusterUpgradeStrategy{}
-	if in == empty {
+	if reflect.ValueOf(in).IsZero() {
 		return nil
 	}
 

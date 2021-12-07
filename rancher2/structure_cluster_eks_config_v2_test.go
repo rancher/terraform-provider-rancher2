@@ -19,11 +19,13 @@ var (
 func init() {
 	LtVersion := int64(1)
 	testClusterEKSConfigV2NodeGroupLaunchTemplateConf = &managementClient.LaunchTemplate{
+		ID:      newString("lt-abcdefghi"),
 		Name:    newString("launch_template"),
 		Version: &LtVersion,
 	}
 	testClusterEKSConfigV2NodeGroupLaunchTemplateInterface = []interface{}{
 		map[string]interface{}{
+			"id":      "lt-abcdefghi",
 			"name":    "launch_template",
 			"version": 1,
 		},

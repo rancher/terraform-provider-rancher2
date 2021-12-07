@@ -47,6 +47,7 @@ func flattenClusterV2(d *schema.ResourceData, in *ClusterV2) error {
 	if len(in.Spec.KubernetesVersion) > 0 {
 		d.Set("kubernetes_version", in.Spec.KubernetesVersion)
 	}
+	d.Set("local_auth_endpoint", flattenClusterV2LocalAuthEndpoint(in.Spec.LocalClusterAuthEndpoint))
 	if in.Spec.RKEConfig != nil {
 		d.Set("rke_config", flattenClusterV2RKEConfig(in.Spec.RKEConfig))
 	}
@@ -99,6 +100,9 @@ func expandClusterV2(in *schema.ResourceData) *ClusterV2 {
 	}
 	if v, ok := in.Get("kubernetes_version").(string); ok && len(v) > 0 {
 		obj.Spec.KubernetesVersion = v
+	}
+	if v, ok := in.Get("local_auth_endpoint").([]interface{}); ok && len(v) > 0 {
+		obj.Spec.LocalClusterAuthEndpoint = expandClusterV2LocalAuthEndpoint(v)
 	}
 	if v, ok := in.Get("rke_config").([]interface{}); ok {
 		obj.Spec.RKEConfig = expandClusterV2RKEConfig(v)

@@ -216,6 +216,7 @@ The following arguments are supported:
 * `kubernetes_version` - (Required) The kubernetes version of the Cluster v2 (list maxitems:1)
 * `agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent (list)
 * `rke_config` - (Optional/Computed) The RKE configuration for `k3s` and `rke2` Clusters v2. (list maxitems:1)
+* `local_auth_endpoint` - (Optional) Cluster V2 local auth endpoint (list maxitems:1)
 * `cloud_credential_secret_name` - (Optional) Cluster V2 cloud credential secret name (string)
 * `default_pod_security_policy_template_name` - (Optional) Cluster V2 default pod security policy template name (string)
 * `default_cluster_role_for_project_members` - (Optional) Cluster V2 default cluster role for project members (string)
@@ -247,7 +248,7 @@ The following attributes are exported:
 #### Arguments
 
 * `additional_manifest` - (Optional) Cluster V2 additional manifest (string)
-* `local_auth_endpoint` - (Optional) Cluster V2 local auth endpoint (list maxitems:1)
+* `local_auth_endpoint` - (Deprecated) Use rancher2_cluster_v2.local_auth_endpoint instead
 * `upgrade_strategy` - (Optional) Cluster V2 upgrade strategy (list maxitems:1)
 * `chart_values` - (Optional) Cluster V2 chart values. Must be in YAML format (string)
 * `machine_global_config` - (Optional) Cluster V2 machine global config. Must be in YAML format (string)

@@ -6,7 +6,7 @@ import (
 
 //Types
 
-func clusterV2RKEConfigLocalAuthEndpointFields() map[string]*schema.Schema {
+func clusterV2LocalAuthEndpointFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"ca_certs": {
 			Type:     schema.TypeString,

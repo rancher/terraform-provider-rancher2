@@ -6,24 +6,25 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.14.0
-	github.com/rancher/norman v0.0.0-20210608202517-59b3523c3133
-	github.com/rancher/rancher v0.0.0-20211008225128-9801a059cf23
+	github.com/rancher/norman v0.0.0-20211201154850-abe17976423e
+	github.com/rancher/rancher v0.0.0-20211201221120-ca431e84dbeb
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
-	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.21.3
-	k8s.io/apimachinery v0.21.3
-	k8s.io/apiserver v0.21.0
+	k8s.io/api v0.22.3
+	k8s.io/apimachinery v0.22.3
+	k8s.io/apiserver v0.22.3
 )
 
 replace (
 	github.com/crewjam/saml => github.com/crewjam/saml v0.4.1
 	github.com/docker/distribution => github.com/docker/distribution v0.0.0-20191216044856-a8371794149d
 	github.com/docker/docker => github.com/moby/moby v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible
-	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20211008225128-9801a059cf23
-	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20211008225128-9801a059cf23
+	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20211201221120-ca431e84dbeb
+	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20211201221120-ca431e84dbeb
+	github.com/spf13/afero => github.com/spf13/afero v1.2.2
 	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.5.4-rancher.1
 	k8s.io/api => k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.21.0
