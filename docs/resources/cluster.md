@@ -646,7 +646,7 @@ The following attributes are exported:
 * `enable_cri_dockerd` - (Optional) Enable/disable using cri-dockerd. Deafult: `false` [enable_cri_dockerd](https://rancher.com/docs/rke/latest/en/config-options/#cri-dockerd) (bool)
 * `ignore_docker_version` - (Optional) Ignore docker version. Default `true` (bool)
 * `ingress` - (Optional/Computed) Kubernetes ingress configuration (list maxitems:1)
-* `kubernetes_version` - (Optional/Computed) K8s version to deploy. Default: `Rancher default` (string) (Note - if rke_config is set, kubernetes_version must be set to the active cluster version so Rancher can clone the RKE template)
+* `kubernetes_version` - (Optional/Computed) K8s version to deploy. Default: `Rancher default` (string) (Note - if rke_config is set at cluster_template, kubernetes_version must be set to the active cluster version so Rancher can clone the RKE template)
 * `monitoring` - (Optional/Computed) Kubernetes cluster monitoring (list maxitems:1)
 * `network` - (Optional/Computed) Kubernetes cluster networking (list maxitems:1)
 * `nodes` - (Optional) RKE cluster nodes (list)
