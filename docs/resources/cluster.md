@@ -631,7 +631,7 @@ The following attributes are exported:
 
 ### `rke_config`
 
-**Note** `rke_config` works the same as within Rancher GUI; it will not _provision_ hosts when not using `node_pool` nor `node_driver`. It is expected that nodes are registered by having the `node_command` run on each node. Running the `node_command` is outside the scope of this provider. 
+**Note** `rke_config` works the same as within Rancher GUI; it will not _provision_ hosts when not using `node_pool` nor `node_driver`. It is expected that nodes are registered by having the `node_command` run on each node. Running the `node_command` is outside the scope of this provider.
 
 #### Arguments
 
@@ -646,7 +646,7 @@ The following attributes are exported:
 * `enable_cri_dockerd` - (Optional) Enable/disable using cri-dockerd. Deafult: `false` [enable_cri_dockerd](https://rancher.com/docs/rke/latest/en/config-options/#cri-dockerd) (bool)
 * `ignore_docker_version` - (Optional) Ignore docker version. Default `true` (bool)
 * `ingress` - (Optional/Computed) Kubernetes ingress configuration (list maxitems:1)
-* `kubernetes_version` - (Optional/Computed) K8s version to deploy. Default: `Rancher default` (string)
+* `kubernetes_version` - (Optional/Computed) K8s version to deploy. Default: `Rancher default` (string) (Note - if rke_config is set at cluster_template, kubernetes_version must be set to the active cluster version so Rancher can clone the RKE template)
 * `monitoring` - (Optional/Computed) Kubernetes cluster monitoring (list maxitems:1)
 * `network` - (Optional/Computed) Kubernetes cluster networking (list maxitems:1)
 * `nodes` - (Optional) RKE cluster nodes (list)
