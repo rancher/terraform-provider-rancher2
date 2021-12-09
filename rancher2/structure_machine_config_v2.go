@@ -106,6 +106,7 @@ func expandMachineConfigV2(in *schema.ResourceData) *MachineConfigV2 {
 	}
 	obj.ObjectMeta.GenerateName = "nc-" + in.Get("generate_name").(string) + "-"
 	obj.ObjectMeta.Namespace = in.Get("fleet_namespace").(string)
+	obj.ObjectMeta.Name = in.Get("name").(string)
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.ObjectMeta.Annotations = toMapString(v)
 	}

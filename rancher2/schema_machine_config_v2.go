@@ -82,6 +82,10 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 				Schema: machineConfigV2VmwarevsphereFields(),
 			},
 		},
+		"resource_version": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 	}
 
 	for k, v := range commonAnnotationLabelFields() {
