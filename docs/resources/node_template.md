@@ -335,7 +335,7 @@ The following attributes are exported:
 * `boot2docker_url` - (Optional) vSphere URL for boot2docker iso image. Default `https://releases.rancher.com/os/latest/rancheros-vmware.iso` (string)
 * `cfgparam` - (Optional) vSphere vm configuration parameters (used for guestinfo) (list)
 * `clone_from` - (Optional) If you choose creation type vm (clone vm) a name of what vm you want to clone is required. From Rancher v2.3.3 (string)
-* `cloud_config` - (Optional) Filepath to a cloud-config yaml file to put into the ISO user-data. From Rancher v2.3.3 (string)
+* `cloud_config` - (Optional) Cloud Config YAML content to inject as user-data. From Rancher v2.3.3 (string)
 * `cloudinit` - (Optional) vSphere cloud-init file or url to set in the guestinfo (string)
 * `content_library` - (Optional) If you choose to clone from a content library template specify the name of the library. From Rancher v2.3.3 (string)
 * `cpu_count` - (Optional) vSphere CPU number for docker VM. Default `2` (string)
