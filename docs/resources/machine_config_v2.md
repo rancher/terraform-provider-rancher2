@@ -31,8 +31,8 @@ resource "rancher2_machine_config_v2" "foo" {
 
 The following arguments are supported:
 
-* `generate_name` - (Required) Cluster V2 generate name. The pattern to generate machine config name. e.g  generate_name=\"prod-pool1\" will generate \"nc-prod-pool1-?????\" name computed at `name` attribute (string)
-* `fleet_namespace` - (Optional) Cluster V2 fleet namespace
+* `generate_name` - (Required/ForceNew) Cluster V2 generate name. The pattern to generate machine config name. e.g  generate_name=\"prod-pool1\" will generate \"nc-prod-pool1-?????\" name computed at `name` attribute (string)
+* `fleet_namespace` - (Optional/ForceNew) Cluster V2 fleet namespace
 * `amazonec2_config` - (Optional) AWS config for the Machine Config V2. Conflicts with `azure_config`, `digitalocean_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
 * `azure_config` - (Optional) Azure config for the Machine Config V2. Conflicts with `amazonec2_config`, `digitalocean_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
 * `digitalocean_config` - (Optional) Digitalocean config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
@@ -51,6 +51,7 @@ The following attributes are exported:
 * `id` - (Computed) The ID of the resource (string)
 * `kind` - (Computed) The machine config kind (string)
 * `name` - (Computed) The machine config name (string)
+* `resource_version` - (Computed) The machine config k8s resource version (string)
 
 ## Nested blocks
 
