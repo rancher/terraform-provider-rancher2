@@ -55,6 +55,10 @@ func flattenAzureConfig(in *azureConfig) []interface{} {
 		obj["nsg"] = in.NSG
 	}
 
+	if len(in.Plan) > 0 {
+		obj["plan"] = in.Plan
+	}
+
 	if len(in.OpenPort) > 0 {
 		obj["open_port"] = toArrayInterface(in.OpenPort)
 	}
@@ -167,6 +171,10 @@ func expandAzureConfig(p []interface{}) *azureConfig {
 
 	if v, ok := in["nsg"].(string); ok && len(v) > 0 {
 		obj.NSG = v
+	}
+
+	if v, ok := in["plan"].(string); ok && len(v) > 0 {
+		obj.Plan = v
 	}
 
 	if v, ok := in["open_port"].([]interface{}); ok && len(v) > 0 {
