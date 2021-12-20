@@ -23,6 +23,15 @@ func clusterV2Fields() map[string]*schema.Schema {
 			Required:    true,
 			Description: "Cluster V2 kubernetes version",
 		},
+		"local_auth_endpoint": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Description: "Cluster V2 local auth endpoint",
+			Elem: &schema.Resource{
+				Schema: clusterV2LocalAuthEndpointFields(),
+			},
+		},
 		"rke_config": {
 			Type:        schema.TypeList,
 			MaxItems:    1,

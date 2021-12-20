@@ -14,6 +14,9 @@ func flattenClusterEKSConfigV2NodeGroupsLaunchTemplate(in *managementClient.Laun
 	if len(p) != 0 && p[0] != nil {
 		obj = p[0].(map[string]interface{})
 	}
+	if in.ID != nil && len(*in.ID) > 0 {
+		obj["id"] = *in.ID
+	}
 	if in.Name != nil && len(*in.Name) > 0 {
 		obj["name"] = *in.Name
 	}
@@ -175,6 +178,9 @@ func expandClusterEKSConfigV2NodeGroupsLaunchTemplate(p []interface{}) *manageme
 	}
 	in := p[0].(map[string]interface{})
 
+	if v, ok := in["id"].(string); ok && len(v) > 0 {
+		obj.ID = &v
+	}
 	if v, ok := in["name"].(string); ok && len(v) > 0 {
 		obj.Name = &v
 	}

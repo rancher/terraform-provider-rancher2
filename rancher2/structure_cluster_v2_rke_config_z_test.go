@@ -18,7 +18,6 @@ func init() {
 		MachinePools: testClusterV2RKEConfigMachinePoolsConf,
 	}
 	testClusterV2RKEConfigConf.AdditionalManifest = "additional_manifest"
-	testClusterV2RKEConfigConf.LocalClusterAuthEndpoint = testClusterV2RKEConfigLocalAuthEndpointConf
 	testClusterV2RKEConfigConf.UpgradeStrategy = testClusterV2RKEConfigUpgradeStrategyConf
 	testClusterV2RKEConfigConf.ChartValues = rkev1.GenericMap{
 		Data: map[string]interface{}{
@@ -39,7 +38,6 @@ func init() {
 	testClusterV2RKEConfigInterface = []interface{}{
 		map[string]interface{}{
 			"additional_manifest":     "additional_manifest",
-			"local_auth_endpoint":     testClusterV2RKEConfigLocalAuthEndpointInterface,
 			"upgrade_strategy":        testClusterV2RKEConfigUpgradeStrategyInterface,
 			"chart_values":            "chart_one: one\nchart_two: two\n",
 			"machine_global_config":   "config_one: one\nconfig_two: two\n",

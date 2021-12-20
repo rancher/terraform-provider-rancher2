@@ -17,7 +17,6 @@ func flattenClusterV2RKEConfig(in *provisionv1.RKEConfig) []interface{} {
 		obj["additional_manifest"] = in.AdditionalManifest
 	}
 
-	obj["local_auth_endpoint"] = flattenClusterV2RKEConfigLocalAuthEndpoint(in.LocalClusterAuthEndpoint)
 	obj["upgrade_strategy"] = flattenClusterV2RKEConfigUpgradeStrategy(in.UpgradeStrategy)
 
 	if in.ChartValues.Data != nil && len(in.ChartValues.Data) > 0 {
@@ -58,9 +57,6 @@ func expandClusterV2RKEConfig(p []interface{}) *provisionv1.RKEConfig {
 		obj.AdditionalManifest = v
 	}
 
-	if v, ok := in["local_auth_endpoint"].([]interface{}); ok && len(v) > 0 {
-		obj.LocalClusterAuthEndpoint = expandClusterV2RKEConfigLocalAuthEndpoint(v)
-	}
 	if v, ok := in["upgrade_strategy"].([]interface{}); ok && len(v) > 0 {
 		obj.UpgradeStrategy = expandClusterV2RKEConfigUpgradeStrategy(v)
 	}

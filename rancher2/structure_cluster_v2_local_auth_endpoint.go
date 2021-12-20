@@ -6,7 +6,7 @@ import (
 
 // Flatteners
 
-func flattenClusterV2RKEConfigLocalAuthEndpoint(in rkev1.LocalClusterAuthEndpoint) []interface{} {
+func flattenClusterV2LocalAuthEndpoint(in rkev1.LocalClusterAuthEndpoint) []interface{} {
 	empty := rkev1.LocalClusterAuthEndpoint{}
 	if in == empty {
 		return nil
@@ -27,7 +27,7 @@ func flattenClusterV2RKEConfigLocalAuthEndpoint(in rkev1.LocalClusterAuthEndpoin
 
 // Expanders
 
-func expandClusterV2RKEConfigLocalAuthEndpoint(p []interface{}) rkev1.LocalClusterAuthEndpoint {
+func expandClusterV2LocalAuthEndpoint(p []interface{}) rkev1.LocalClusterAuthEndpoint {
 	if p == nil || len(p) == 0 || p[0] == nil {
 		return rkev1.LocalClusterAuthEndpoint{}
 	}

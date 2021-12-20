@@ -39,6 +39,21 @@ func resourceRancher2ClusterV2() *schema.Resource {
 					}
 				}
 			}
+			if d.HasChange("local_auth_endpoint") {
+				oldObj, newObj := d.GetChange("local_auth_endpoint")
+				//return fmt.Errorf("\n%#v\n%#v\n", oldObj, newObj)
+				oldInterface, oldOk := oldObj.([]interface{})
+				newInterface, newOk := newObj.([]interface{})
+				if oldOk && newOk && len(newInterface) > 0 {
+					oldConfig := expandClusterV2LocalAuthEndpoint(oldInterface)
+					newConfig := expandClusterV2LocalAuthEndpoint(newInterface)
+					if reflect.DeepEqual(oldConfig, newConfig) {
+						d.Clear("local_auth_endpoint")
+					} else {
+						d.SetNew("local_auth_endpoint", flattenClusterV2LocalAuthEndpoint(newConfig))
+					}
+				}
+			}
 			return nil
 		},
 		Timeouts: &schema.ResourceTimeout{
