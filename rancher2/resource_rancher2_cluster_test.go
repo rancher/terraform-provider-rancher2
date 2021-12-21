@@ -21,6 +21,16 @@ resource "` + testAccRancher2ClusterType + `" "foo" {
     network {
       plugin = "canal"
     }
+    private_registries {
+      is_default = false
+      password = "test_pass"
+      url= "test.local"
+      user = "test_user"
+      ecr_credential_plugin {
+        aws_access_key_id = "test_key"
+        aws_session_token = "test_secret"
+      }
+    }
     services {
       etcd {
         creation = "6h"

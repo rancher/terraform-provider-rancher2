@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Argument:** `rancher2_cloud_credential.s3_credential_config` - (Optional) S3 config for the Cloud Credential. Just for Rancher 2.6.0 and above (list maxitems:1)
 * **New Argument:** `rancher2_cluster.rke_config.enable_cri_dockerd` - (Optional) Enable/disable using cri-dockerd. Deafult: `false` (bool) https://github.com/rancher/terraform-provider-rancher2/issues/792
+* **New Argument:** `rancher2_cluster.rke_config.private_registries.ecr_credential_plugin` - (Optional) ECR credential plugin config (list maxitems:1)
 
 ENHANCEMENTS:
 

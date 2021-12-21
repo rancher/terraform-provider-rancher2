@@ -8,25 +8,41 @@ import (
 )
 
 var (
-	testClusterRKEConfigPrivateRegistriesConf      []managementClient.PrivateRegistry
-	testClusterRKEConfigPrivateRegistriesInterface []interface{}
+	testClusterRKEConfigPrivateRegistriesECRCredentialsConf      *managementClient.ECRCredentialPlugin
+	testClusterRKEConfigPrivateRegistriesECRCredentialsInterface []interface{}
+	testClusterRKEConfigPrivateRegistriesConf                    []managementClient.PrivateRegistry
+	testClusterRKEConfigPrivateRegistriesInterface               []interface{}
 )
 
 func init() {
+	testClusterRKEConfigPrivateRegistriesECRCredentialsConf = &managementClient.ECRCredentialPlugin{
+		AwsAccessKeyID:     "aws_access_key_id",
+		AwsSecretAccessKey: "aws_secret_access_key",
+		AwsSessionToken:    "aws_session_token",
+	}
+	testClusterRKEConfigPrivateRegistriesECRCredentialsInterface = []interface{}{
+		map[string]interface{}{
+			"aws_access_key_id":     "aws_access_key_id",
+			"aws_secret_access_key": "aws_secret_access_key",
+			"aws_session_token":     "aws_session_token",
+		},
+	}
 	testClusterRKEConfigPrivateRegistriesConf = []managementClient.PrivateRegistry{
 		{
-			IsDefault: true,
-			Password:  "XXXXXXXX",
-			URL:       "url.terraform.test",
-			User:      "user",
+			ECRCredentialPlugin: testClusterRKEConfigPrivateRegistriesECRCredentialsConf,
+			IsDefault:           true,
+			Password:            "XXXXXXXX",
+			URL:                 "url.terraform.test",
+			User:                "user",
 		},
 	}
 	testClusterRKEConfigPrivateRegistriesInterface = []interface{}{
 		map[string]interface{}{
-			"is_default": true,
-			"password":   "XXXXXXXX",
-			"url":        "url.terraform.test",
-			"user":       "user",
+			"ecr_credential_plugin": testClusterRKEConfigPrivateRegistriesECRCredentialsInterface,
+			"is_default":            true,
+			"password":              "XXXXXXXX",
+			"url":                   "url.terraform.test",
+			"user":                  "user",
 		},
 	}
 }

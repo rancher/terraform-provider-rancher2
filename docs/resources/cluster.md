@@ -1062,9 +1062,18 @@ The following attributes are exported:
 ##### Arguments
 
 * `url` - (Required) Registry URL (string)
+* `ecr_credential_plugin` - (Optional) ECR credential plugin config (list maxitems:1)
 * `is_default` - (Optional) Set as default registry. Default `false` (bool)
 * `password` - (Optional/Sensitive) Registry password (string)
 * `user` - (Optional/Sensitive) Registry user (string)
+
+##### `ecr_credential_plugin`
+
+###### Arguments
+
+* `aws_access_key_id` - (Optional) AWS access key ID (string)
+* `aws_secret_access_key` - (Optional/Sensitive) AWS secret access key (string)
+* `aws_session_token` - (Optional/Sensitive) AWS session token (string)
 
 #### `services`
 
