@@ -1,4 +1,4 @@
-## 1.21.1 (Unreleased)
+## 1.22.0 (Unreleased)
 
 FEATURES:
 
@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * Updated `rancher2_cluster_v2` docs adding labels and annotations arguments. https://github.com/rancher/terraform-provider-rancher2/issues/784
 * Updated `findClusterRegistrationToken` function checking for correct Cluster Registration Token https://github.com/rancher/terraform-provider-rancher2/issues/791
 * Updated `getClusterKubeconfig` function to properly delete a cluster if cluster not available https://github.com/rancher/terraform-provider-rancher2/issues/788
+* Updated `rancher2_machine_config_v2` resource to allow its use by Rancher standard users https://github.com/rancher/terraform-provider-rancher2/issues/824
 
 BUG FIXES:
 
