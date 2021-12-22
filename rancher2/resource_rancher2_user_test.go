@@ -24,7 +24,7 @@ func init() {
 resource "` + testAccRancher2UserType + `" "foo" {
   name = "Terraform user acceptance test"
   username = "foo"
-  password = "changeme"
+  password = "TestACC123456"
   enabled = true
 }
 `
@@ -32,7 +32,7 @@ resource "` + testAccRancher2UserType + `" "foo" {
 resource "` + testAccRancher2UserType + `" "foo" {
   name = "Terraform user acceptance test - Updated"
   username = "foo"
-  password = "changeme2"
+  password = "TestACC1234567"
   enabled = false
 }
  `
@@ -50,7 +50,7 @@ func TestAccRancher2User_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "name", "Terraform user acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "password", "changeme"),
+					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "password", "TestACC123456"),
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "enabled", "true"),
 				),
 			},
@@ -59,7 +59,7 @@ func TestAccRancher2User_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "name", "Terraform user acceptance test - Updated"),
-					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "password", "changeme2"),
+					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "password", "TestACC1234567"),
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "enabled", "false"),
 				),
 			},
@@ -68,7 +68,7 @@ func TestAccRancher2User_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "name", "Terraform user acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "password", "changeme"),
+					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "password", "TestACC123456"),
 					resource.TestCheckResourceAttr(testAccRancher2UserType+".foo", "enabled", "true"),
 				),
 			},
