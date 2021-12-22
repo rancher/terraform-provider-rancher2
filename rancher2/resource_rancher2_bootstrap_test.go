@@ -10,7 +10,7 @@ import (
 
 const (
 	testAccRancher2BootstrapType = "rancher2_bootstrap"
-	testAccRancher2BootstrapPass = "TestACC1234"
+	testAccRancher2BootstrapPass = "TestACC123456"
 )
 
 var (
