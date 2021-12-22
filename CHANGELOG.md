@@ -1,10 +1,12 @@
-## 1.22.0 (Unreleased)
+## 1.22.0 (December 22, 2021)
 
 FEATURES:
 
 * **New Argument:** `rancher2_cloud_credential.s3_credential_config` - (Optional) S3 config for the Cloud Credential. Just for Rancher 2.6.0 and above (list maxitems:1)
 * **New Argument:** `rancher2_cluster.rke_config.enable_cri_dockerd` - (Optional) Enable/disable using cri-dockerd. Deafult: `false` (bool) https://github.com/rancher/terraform-provider-rancher2/issues/792
 * **New Argument:** `rancher2_cluster.rke_config.private_registries.ecr_credential_plugin` - (Optional) ECR credential plugin config (list maxitems:1)
+* **New Argument:** `rancher2_cluster_v2.local_auth_endpoint` - - (Optional) Cluster V2 local auth endpoint (list maxitems:1)
+* **Deprecated Argument:** `rancher2_cluster_v2.rke_config.local_auth_endpoint` - (Deprecated) Use `rancher2_cluster_v2.local_auth` endpoint instead (list maxitems:1)
 
 ENHANCEMENTS:
 
@@ -12,6 +14,8 @@ ENHANCEMENTS:
 * Updated `findClusterRegistrationToken` function checking for correct Cluster Registration Token https://github.com/rancher/terraform-provider-rancher2/issues/791
 * Updated `getClusterKubeconfig` function to properly delete a cluster if cluster not available https://github.com/rancher/terraform-provider-rancher2/issues/788
 * Updated `rancher2_machine_config_v2` resource to allow its use by Rancher standard users https://github.com/rancher/terraform-provider-rancher2/issues/824
+* Updated `rancher2_cluster.eks_config_v2` argument to fix EKS launch template issue https://github.com/rancher/terraform-provider-rancher2/issues/820
+* Updated go modules and acceptance tests to support rancher v2.6.3
 
 BUG FIXES:
 
