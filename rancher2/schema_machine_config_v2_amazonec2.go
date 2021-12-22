@@ -93,7 +93,7 @@ func machineConfigV2Amazonec2Fields() map[string]*schema.Schema {
 		"instance_type": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "t2.micro",
+			Default:     "t3a.medium",
 			Description: "AWS instance type",
 		},
 		"keypair_name": {

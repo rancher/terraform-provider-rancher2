@@ -51,7 +51,7 @@ func resourceRancher2MachineConfigV2Create(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("[ERROR] waiting for machine config (%s) to be active: %s", newObj.ID, waitErr)
 	}
 
-	return resourceRancher2MachineConfigV2Read(d, meta)
+	return flattenMachineConfigV2(d, newObj)
 }
 
 func resourceRancher2MachineConfigV2Read(d *schema.ResourceData, meta interface{}) error {
@@ -60,7 +60,7 @@ func resourceRancher2MachineConfigV2Read(d *schema.ResourceData, meta interface{
 	kind := d.Get("kind").(string)
 	obj, err := getMachineConfigV2ByID(meta.(*Config), d.Id(), kind)
 	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
+		if IsNotFound(err) || IsForbidden(err) || IsNotLookForByID(err) {
 			log.Printf("[INFO] Machine Config V2 %s not found", d.Id())
 			d.SetId("")
 			return nil
@@ -79,6 +79,7 @@ func resourceRancher2MachineConfigV2Update(d *schema.ResourceData, meta interfac
 		return err
 	}
 	d.SetId(newObj.ID)
+	flattenMachineConfigV2(d, newObj)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
@@ -101,10 +102,11 @@ func resourceRancher2MachineConfigV2Delete(d *schema.ResourceData, meta interfac
 
 	obj, err := getMachineConfigV2ByID(meta.(*Config), d.Id(), kind)
 	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
+		if IsNotFound(err) || IsForbidden(err) || IsNotLookForByID(err) {
 			d.SetId("")
 			return nil
 		}
+		return err
 	}
 	err = deleteMachineConfigV2(meta.(*Config), obj)
 	if err != nil {
@@ -133,6 +135,10 @@ func machineConfigV2StateRefreshFunc(meta interface{}, objID, kind string) resou
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
+			}
+			// This is required to allow standard user to use this resource
+			if !IsNotLookForByID(err) {
+				return obj, "active", nil
 			}
 			return nil, "", err
 		}
@@ -358,7 +364,7 @@ func updateMachineConfigV2(c *Config, obj *MachineConfigV2) (*MachineConfigV2, e
 		return nil, fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("Creating Machine Config V2: %s", err)
+		return nil, fmt.Errorf("Updating Machine Config V2: %s", err)
 	}
 	return out, err
 }
