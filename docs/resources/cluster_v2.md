@@ -230,7 +230,7 @@ The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
 * `cluster_registration_token` - (Computed/Sensitive) Cluster Registration Token generated for the cluster v2 (list maxitems:1)
-* `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster v2 (string)
+* `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster v2. Note: When the cluster has `local_auth_endpoint` enabled, the kube_config will not be available until the cluster is `connected` (string)
 * `cluster_v1_id` - (Computed) Cluster v1 id for cluster v2. (e.g to be used with `rancher2_sync`) (string)
 * `resource_version` - (Computed) Cluster v2 k8s resource version (string)
 

@@ -1,3 +1,16 @@
+## 1.22.1 (December 23, 2021)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+BUG FIXES:
+
+* Fix `getClusterKubeconfig` function to properly generate kubeconfig when `rancher2_cluster.LocalClusterAuthEndpoint` is enabled for Rancher lower than v2.6.x https://github.com/rancher/terraform-provider-rancher2/issues/829
+
 ## 1.22.0 (December 22, 2021)
 
 FEATURES:

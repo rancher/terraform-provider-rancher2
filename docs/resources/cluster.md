@@ -616,7 +616,7 @@ The following attributes are exported:
 * `default_project_id` - (Computed) Default project ID for the cluster (string)
 * `driver` - (Computed) The driver used for the Cluster. `imported`, `azurekubernetesservice`, `amazonelasticcontainerservice`, `googlekubernetesengine` and `rancherKubernetesEngine` are supported (string)
 * `istio_enabled` - (Computed) Is istio enabled at cluster? Just for Rancher v2.3.x and above (bool)
-* `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster (string)
+* `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster. Note: For Rancher 2.6.0 and above, when the cluster has `cluster_auth_endpoint` enabled, the kube_config will not be available until the cluster is `connected` (string)
 * `ca_cert` - (Computed/Sensitive) K8s cluster ca cert (string)
 * `system_project_id` - (Computed) System project ID for the cluster (string)
 
