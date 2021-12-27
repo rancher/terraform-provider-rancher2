@@ -31,6 +31,15 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
+	if retries, ok := d.Get("state_confirm").(int); ok && retries > 1 {
+		for i := 1; i < retries; i++ {
+			time.Sleep(rancher2RetriesWait * time.Second)
+			cluster, err = meta.(*Config).WaitForClusterState(clusterID, clusterActiveCondition, d.Timeout(schema.TimeoutCreate))
+			if err != nil {
+				return err
+			}
+		}
+	}
 
 	if cluster.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
 		_, err := meta.(*Config).WaitForClusterState(clusterID, clusterMonitoringEnabledCondition, d.Timeout(schema.TimeoutCreate))
