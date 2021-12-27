@@ -17,6 +17,10 @@ const (
 	policyRuleVerbView             = "view"
 	policyRuleVerbWatch            = "watch"
 	policyRuleVerbOwn              = "own"
+	policyRuleVerbUse              = "use"
+	policyRuleVerbBind             = "bind"
+	policyRuleVerbEscalate         = "escalate"
+	policyRuleVerbImpersonate      = "impersonate"
 )
 
 var (
@@ -32,6 +36,10 @@ var (
 		policyRuleVerbView,
 		policyRuleVerbWatch,
 		policyRuleVerbOwn,
+		policyRuleVerbUse,
+		policyRuleVerbBind,
+		policyRuleVerbEscalate,
+		policyRuleVerbImpersonate,
 	}
 )
 
