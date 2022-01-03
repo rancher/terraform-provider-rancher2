@@ -1,3 +1,18 @@
+## 1.22.2 (Unreleased)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Added k8s specialized verbs `bind`, `escalate`, `impersonate` and `use` support, to `rancher2_global_role` and `rancher2_role_template` rules
+
+BUG FIXES:
+
+* Fix `rancher2_cluster_sync.state_confirm` behaviour https://github.com/rancher/terraform-provider-rancher2/issues/797
+* Fix `rancher2_cluster` monitoring flips on resource update https://github.com/rancher/terraform-provider-rancher2/issues/825
+
 ## 1.22.1 (December 23, 2021)
 
 FEATURES:
@@ -23,7 +38,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* Updated `rancher2_cluster_v2` docs adding labels and annotations arguments. https://github.com/rancher/terraform-provider-rancher2/issues/784
+* Updated `rancher2_cluster_v2` docs adding labels and annotations arguments https://github.com/rancher/terraform-provider-rancher2/issues/784
 * Updated `findClusterRegistrationToken` function checking for correct Cluster Registration Token https://github.com/rancher/terraform-provider-rancher2/issues/791
 * Updated `getClusterKubeconfig` function to properly delete a cluster if cluster not available https://github.com/rancher/terraform-provider-rancher2/issues/788
 * Updated `rancher2_machine_config_v2` resource to allow its use by Rancher standard users https://github.com/rancher/terraform-provider-rancher2/issues/824

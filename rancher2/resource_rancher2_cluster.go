@@ -281,12 +281,18 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"dockerRootDir":                      d.Get("docker_root_dir").(string),
 		"fleetWorkspaceName":                 d.Get("fleet_workspace_name").(string),
 		"enableClusterAlerting":              d.Get("enable_cluster_alerting").(bool),
+		"enableClusterMonitoring":            d.Get("enable_cluster_monitoring").(bool),
 		"enableNetworkPolicy":                &enableNetworkPolicy,
 		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
 		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
 		"scheduledClusterScan":               expandScheduledClusterScan(d.Get("scheduled_cluster_scan").([]interface{})),
 		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
+	}
+
+	// cluster_monitoring is not updated here. Setting old `enable_cluster_monitoring` value if it was updated
+	if d.HasChange("enable_cluster_monitoring") {
+		update["enableClusterMonitoring"] = !d.Get("enable_cluster_monitoring").(bool)
 	}
 
 	if clusterTemplateID, ok := d.Get("cluster_template_id").(string); ok && len(clusterTemplateID) > 0 {
@@ -373,6 +379,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr)
 	}
 
+	// cluster_monitoring is updated here
 	if d.HasChange("enable_cluster_monitoring") || d.HasChange("cluster_monitoring_input") {
 		clusterResource := &norman.Resource{
 			ID:      newCluster.ID,
@@ -381,12 +388,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			Actions: newCluster.Actions,
 		}
 		enableMonitoring := d.Get("enable_cluster_monitoring").(bool)
-		if !enableMonitoring && len(newCluster.Actions[monitoringActionDisable]) > 0 {
-			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, nil, nil)
-			if err != nil {
-				return err
-			}
-		}
 		if enableMonitoring {
 			monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
 			if len(newCluster.Actions[monitoringActionEnable]) > 0 {
@@ -430,6 +431,11 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 				if err != nil {
 					return err
 				}
+			}
+		} else if len(newCluster.Actions[monitoringActionDisable]) > 0 {
+			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, nil, nil)
+			if err != nil {
+				return err
 			}
 		}
 	}
