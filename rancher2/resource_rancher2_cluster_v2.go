@@ -342,7 +342,7 @@ func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
 		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
 	}
 
-	kubeConfig, err := getClusterKubeconfig(c, cluster.ID)
+	kubeConfig, err := getClusterKubeconfig(c, cluster.ID, d.Get("kube_config").(string))
 	if err != nil {
 		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
 	}

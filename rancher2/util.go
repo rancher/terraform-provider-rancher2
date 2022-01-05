@@ -24,6 +24,7 @@ import (
 	"github.com/rancher/norman/types"
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/yaml.v2"
+	kubeconfig "k8s.io/client-go/tools/clientcmd/api/v1"
 )
 
 const (
@@ -65,6 +66,82 @@ func Base64Decode(s string) (string, error) {
 func IsBase64(s string) bool {
 	_, err := base64.StdEncoding.DecodeString(s)
 	return err == nil
+}
+
+func getKubeConfigFromObj(kubeconfig *kubeconfig.Config) (string, error) {
+	if kubeconfig == nil {
+		return "", nil
+	}
+	config, err := interfaceToMap(kubeconfig)
+	if err != nil {
+		return "", err
+	}
+
+	return mapInterfaceToYAML(config)
+}
+
+func getObjFromKubeConfig(config string) (*kubeconfig.Config, error) {
+	kubeconfig := &kubeconfig.Config{}
+	if len(config) == 0 {
+		return kubeconfig, nil
+	}
+	kubeconfigMap, err := ghodssyamlToMapInterface(config)
+	if err != nil {
+		return nil, fmt.Errorf("Yaml unmarshall kube_config %v", err)
+	}
+	kubeconfigJSON, err := mapInterfaceToJSON(kubeconfigMap)
+	if err != nil {
+		return nil, fmt.Errorf("Json marshall kube_config: %v", err)
+	}
+	err = jsonToInterface(kubeconfigJSON, kubeconfig)
+	if err != nil {
+		return nil, fmt.Errorf("Json unmarshall kube_config: %v", err)
+	}
+
+	return kubeconfig, nil
+}
+
+func getTokenFromKubeConfig(config string) (string, error) {
+	if len(config) == 0 {
+		return "", nil
+	}
+	kubeconfig, err := getObjFromKubeConfig(config)
+	if err != nil {
+		return "", err
+	}
+	if kubeconfig == nil || kubeconfig.AuthInfos == nil || len(kubeconfig.AuthInfos) == 0 {
+		return "", nil
+	}
+
+	return kubeconfig.AuthInfos[0].AuthInfo.Token, nil
+}
+
+func getTokenIDFromKubeConfig(config string) (string, error) {
+	token, err := getTokenFromKubeConfig(config)
+	if err != nil {
+		return "", err
+	}
+	return splitTokenID(token), nil
+
+}
+
+func updateKubeConfigToken(config, token string) (string, error) {
+	if len(token) == 0 {
+		return config, nil
+	}
+	if len(config) == 0 {
+		return "", nil
+	}
+	kubeconfig := &kubeconfig.Config{}
+	err := jsonToInterface(config, kubeconfig)
+	if err != nil {
+		return "", err
+	}
+	if kubeconfig == nil || kubeconfig.AuthInfos == nil || len(kubeconfig.AuthInfos) == 0 {
+		return "", nil
+	}
+
+	return kubeconfig.AuthInfos[0].AuthInfo.Token, nil
 }
 
 func TrimSpace(val interface{}) string {

@@ -12,6 +12,8 @@ import (
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func resourceRancher2Cluster() *schema.Resource {
@@ -238,7 +240,7 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID)
+	kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
 	if err != nil && !IsForbidden(err) {
 		return err
 	}
@@ -584,9 +586,80 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 	return newRegToken, nil
 }
 
-func getClusterKubeconfig(c *Config, id string) (*managementClient.GenerateKubeConfigOutput, error) {
+func isKubeConfigValid(c *Config, config string) (string, bool, error) {
+	token, tokenValid, err := isKubeConfigTokenValid(c, config)
+	if err != nil {
+		return "", false, err
+	}
+	if !tokenValid {
+		return "", false, nil
+	}
+	kubeconfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(config))
+	if err != nil {
+		return "", false, fmt.Errorf("Checking Kubeconfig: %v", err)
+	}
+	_, err = kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		return token, false, nil
+	}
+
+	return token, true, nil
+}
+
+func isKubeConfigTokenValid(c *Config, config string) (string, bool, error) {
+	token, err := getTokenFromKubeConfig(config)
+	if err != nil {
+		return "", false, fmt.Errorf("Getting Kubeconfig token: %v", err)
+	}
+	isValid, err := isTokenValid(c, splitTokenID(token))
+	if err != nil {
+		return "", false, fmt.Errorf("Checking Kubeconfig token: %v", err)
+	}
+	return token, isValid, nil
+}
+
+func replaceKubeConfigToken(c *Config, config, token string) (string, error) {
+	if len(token) == 0 {
+		return config, nil
+	}
+	kubeconfig, err := getObjFromKubeConfig(config)
+	if err != nil {
+		return "", fmt.Errorf("Getting K8s config object: %v", err)
+	}
+	if kubeconfig == nil || kubeconfig.AuthInfos == nil || len(kubeconfig.AuthInfos) == 0 {
+		return config, nil
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return "", fmt.Errorf("Replacing cluster Kubeconfig token: %v", err)
+	}
+	removeToken, err := client.Token.ByID(splitTokenID(kubeconfig.AuthInfos[0].AuthInfo.Token))
+	if err != nil {
+		if !IsNotFound(err) && !IsForbidden(err) {
+			return "", err
+		}
+	}
+
+	err = client.Token.Delete(removeToken)
+	if err != nil {
+		return "", fmt.Errorf("Error removing Token: %s", err)
+	}
+	kubeconfig.AuthInfos[0].AuthInfo.Token = token
+	return getKubeConfigFromObj(kubeconfig)
+}
+
+func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.GenerateKubeConfigOutput, error) {
 	action := "generateKubeconfig"
 	cluster := &Cluster{}
+
+	token, kubeValid, err := isKubeConfigValid(c, origconfig)
+	if err != nil {
+		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+	}
+	if kubeValid {
+		return &managementClient.GenerateKubeConfigOutput{Config: origconfig}, nil
+	}
 
 	client, err := c.ManagementClient()
 	if err != nil {
@@ -621,6 +694,13 @@ func getClusterKubeconfig(c *Config, id string) (*managementClient.GenerateKubeC
 			}
 			err = client.APIBaseClient.Action(managementClient.ClusterType, action, clusterResource, nil, kubeConfig)
 			if err == nil {
+				if isRancher26 && len(token) > 0 {
+					newConfig, err := replaceKubeConfigToken(c, kubeConfig.Config, token)
+					if err != nil {
+						return nil, err
+					}
+					kubeConfig.Config = newConfig
+				}
 				return kubeConfig, nil
 			}
 			if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
