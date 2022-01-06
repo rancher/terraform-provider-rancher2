@@ -16,6 +16,7 @@ require (
 	k8s.io/api v0.22.3
 	k8s.io/apimachinery v0.22.3
 	k8s.io/apiserver v0.22.3
+	k8s.io/client-go v12.0.0+incompatible
 )
 
 replace (

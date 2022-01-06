@@ -88,11 +88,7 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("default_project_id", defaultProjectID)
 		d.Set("system_project_id", systemProjectID)
 
-		client, err := meta.(*Config).ManagementClient()
-		if err != nil {
-			return err
-		}
-		kubeConfig, err := client.Cluster.ActionGenerateKubeconfig(clus)
+		kubeConfig, err := getClusterKubeconfig(meta.(*Config), clusterID, d.Get("kube_config").(string))
 		if err != nil {
 			return err
 		}

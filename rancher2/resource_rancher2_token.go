@@ -117,3 +117,24 @@ func resourceRancher2TokenDelete(d *schema.ResourceData, meta interface{}) error
 	d.SetId("")
 	return nil
 }
+
+func isTokenValid(c *Config, id string) (bool, error) {
+	if len(id) == 0 {
+		return false, nil
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return false, err
+	}
+
+	token, err := client.Token.ByID(id)
+	if err != nil {
+		if !IsNotFound(err) && !IsForbidden(err) {
+			return false, err
+		}
+		return false, nil
+	}
+	// Token is valid if it's enabled and not expired
+	return (token.Enabled != nil && *token.Enabled && !token.Expired), nil
+}

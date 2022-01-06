@@ -1,4 +1,4 @@
-## 1.22.2 (Unreleased)
+## 1.22.2 (January 6, 2022)
 
 FEATURES:
 
@@ -12,6 +12,7 @@ BUG FIXES:
 
 * Fix `rancher2_cluster_sync.state_confirm` behaviour https://github.com/rancher/terraform-provider-rancher2/issues/797
 * Fix `rancher2_cluster` monitoring flips on resource update https://github.com/rancher/terraform-provider-rancher2/issues/825
+* Fix kube_config generation function at `rancher2_cluster`, `rancher2_cluster_v2` and `rancher2_cluster_sync` for Rancher 2.6.0 and above https://github.com/rancher/terraform-provider-rancher2/issues/789
 
 ## 1.22.1 (December 23, 2021)
 
