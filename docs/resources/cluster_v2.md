@@ -234,6 +234,8 @@ The following attributes are exported:
 * `cluster_v1_id` - (Computed) Cluster v1 id for cluster v2. (e.g to be used with `rancher2_sync`) (string)
 * `resource_version` - (Computed) Cluster v2 k8s resource version (string)
 
+**Note** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
+
 ## Nested blocks
 
 ### `agent_env_vars`

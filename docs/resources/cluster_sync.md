@@ -103,6 +103,8 @@ The following attributes are exported:
 * `nodes` - (Computed) The cluster nodes (list).
 * `system_project_id` - (Computed) System project ID for the cluster sync (string)
 
+**Note** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
+
 ## Nested blocks
 
 ### `nodes`
