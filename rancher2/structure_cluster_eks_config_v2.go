@@ -121,19 +121,11 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 	if in.KubernetesVersion != nil && len(*in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = *in.KubernetesVersion
 	}
-	if in.NodeGroups != nil && len(*in.NodeGroups) > 0 {
-		v, ok := obj["node_groups"].([]interface{})
-		if !ok {
-			v = []interface{}{}
-		}
-		obj["node_groups"] = flattenClusterEKSConfigV2NodeGroups(*in.NodeGroups, v)
-	}
+
 	obj["imported"] = in.Imported
+
 	if in.KmsKey != nil && len(*in.KmsKey) > 0 {
 		obj["kms_key"] = *in.KmsKey
-	}
-	if in.LoggingTypes != nil && len(*in.LoggingTypes) > 0 {
-		obj["logging_types"] = toArrayInterfaceSorted(*in.LoggingTypes)
 	}
 	if in.PrivateAccess != nil {
 		obj["private_access"] = *in.PrivateAccess
@@ -162,8 +154,23 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 	if in.Subnets != nil && len(*in.Subnets) > 0 {
 		obj["subnets"] = toArrayInterfaceSorted(*in.Subnets)
 	}
-	if in.Tags != nil && len(*in.Tags) > 0 {
-		obj["tags"] = toMapInterface(*in.Tags)
+
+	if !in.Imported {
+		if in.NodeGroups != nil && len(*in.NodeGroups) > 0 {
+			v, ok := obj["node_groups"].([]interface{})
+			if !ok {
+				v = []interface{}{}
+			}
+			obj["node_groups"] = flattenClusterEKSConfigV2NodeGroups(*in.NodeGroups, v)
+		}
+
+		if in.LoggingTypes != nil && len(*in.LoggingTypes) > 0 {
+			obj["logging_types"] = toArrayInterfaceSorted(*in.LoggingTypes)
+		}
+
+		if in.Tags != nil && len(*in.Tags) > 0 {
+			obj["tags"] = toMapInterface(*in.Tags)
+		}
 	}
 
 	return []interface{}{obj}
