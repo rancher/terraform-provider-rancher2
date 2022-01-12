@@ -78,6 +78,10 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.OpennebulaConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires opennebula_config", in.Driver)
 		}
+		err := d.Set("opennebula_config", flattenOpenNebulaConfig(in.OpennebulaConfig))
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on node template: %s", in.Driver)
 	}
