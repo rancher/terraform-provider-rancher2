@@ -17,7 +17,9 @@ func resourceRancher2CloudCredential() *schema.Resource {
 		Read:   resourceRancher2CloudCredentialRead,
 		Update: resourceRancher2CloudCredentialUpdate,
 		Delete: resourceRancher2CloudCredentialDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: resourceRancher2CloudCredentialsImport,
+		},
 		Schema: cloudCredentialFields(),
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
