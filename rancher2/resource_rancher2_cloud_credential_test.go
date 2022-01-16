@@ -12,7 +12,14 @@ import (
 )
 
 const (
-	testAccRancher2CloudCredentialType            = "rancher2_cloud_credential"
+	testAccRancher2CloudCredentialType   = "rancher2_cloud_credential"
+	testAccRancher2CloudCredentialConfig = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-import" {
+  name = "foo"
+  description= "Terraform cloudCredential acceptance test - import"
+}	  
+`
+
 	testAccRancher2CloudCredentialConfigAmazonec2 = `
 resource "` + testAccRancher2CloudCredentialType + `" "foo-aws" {
   name = "foo-aws"
@@ -601,6 +608,53 @@ func TestAccRancher2CloudCredential_disappears_Vsphere(t *testing.T) {
 	})
 }
 
+func TestAccRancher2CloudCredential_import_Vpshere(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
+		PreCheck:   func() { testAccPreCheck(t) },
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:   testAccRancher2CloudCredentialConfig,
+				PlanOnly: true,
+			},
+			{
+				ResourceName:      testAccRancher2CloudCredentialType + ".foo-vsphere",
+				ImportState:       true,
+				ImportStateCheck:  checkImport(testAccRancher2CloudCredentialType + ".foo-vsphere"),
+				ImportStateVerify: true,
+				// ImportStateId:      testAccRancher2CloudCredentialType + ".foo-vsphere",
+			},
+		},
+	})
+}
+
+func checkImport(tableName string) resource.ImportStateCheckFunc {
+	return func(s []*terraform.InstanceState) error {
+		if len(s) == 0 {
+			return fmt.Errorf("No Instance found")
+		}
+
+		if len(s) != 1 {
+			return fmt.Errorf("Expected one Instance: %d", len(s))
+		}
+
+		name := s[0].Attributes["name"]
+
+		if name != tableName {
+			return fmt.Errorf("Expected name %s: %s", tableName, name)
+		}
+
+		to := s[0].Attributes["to"]
+
+		if to != "ftp://192.168.1.1/" {
+			return fmt.Errorf("Expected to ftp://192.168.1.1/: %s", to)
+		}
+
+		return nil
+	}
+}
+
 func testAccRancher2CloudCredentialDisappears(cloudCredential *CloudCredential) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -676,6 +730,30 @@ func testAccCheckRancher2CloudCredentialExists(n string, cloudCredential *CloudC
 
 		return nil
 	}
+}
+
+func testAccCheckRancher2CloudCredentialCreate(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != testAccRancher2CloudCredentialType {
+			continue
+		}
+		client, err := testAccProvider.Meta().(*Config).ManagementClient()
+		if err != nil {
+			return err
+		}
+
+		cloudCredential := &CloudCredential{}
+		err = client.APIBaseClient.ByID(managementClient.CloudCredentialType, rs.Primary.ID, cloudCredential)
+		if err != nil {
+			if IsNotFound(err) {
+				return nil
+			}
+			return err
+		}
+		return fmt.Errorf("Cloud Credential still exists")
+	}
+	return nil
+
 }
 
 func testAccCheckRancher2CloudCredentialDestroy(s *terraform.State) error {
