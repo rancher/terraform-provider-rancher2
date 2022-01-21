@@ -217,7 +217,7 @@ The following attributes are exported:
 
 * `api_token` - (Required/Sensitive) Hetzner Cloud project API token (string)
 * `image` - (Optional) Hetzner Cloud server image. Default `ubuntu-18.04` (string)
-* `server_labels` - (Optional) Comma-separated list of labels which should be assigned to the server (string)
+* `server_labels` - (Optional) Comma-separated list of labels which will be assigned to the server (string)
 * `server_location` - (Optional) Hetzner Cloud datacenter. Default `nbg1` (string)
 * `server_type` - (Optional) Hetzner Cloud server type. Default `cx11` (string)
 * `networks` - (Optional) Comma-separated list of network IDs or names which should be attached to the server private network interface (string)
