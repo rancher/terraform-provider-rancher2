@@ -13,6 +13,7 @@ const (
 type hetznerConfig struct {
 	APIToken          string   `json:"apiToken,omitempty" yaml:"apiToken,omitempty"`
 	Image             string   `json:"image,omitempty" yaml:"image,omitempty"`
+	ServerLabels      []string `json:"serverLabels,omitempty" yaml:"serverLabels,omitempty"`
 	ServerLocation    string   `json:"serverLocation,omitempty" yaml:"serverLocation,omitempty"`
 	ServerType        string   `json:"serverType,omitempty" yaml:"serverType,omitempty"`
 	Networks          []string `json:"networks,omitempty" yaml:"networks,omitempty"`
@@ -36,6 +37,11 @@ func hetznerConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "ubuntu-18.04",
 			Description: "Hetzner Cloud server image",
+		},
+		"server_labels": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Comma-separated list of labels which should be assigned to the server",
 		},
 		"server_location": {
 			Type:        schema.TypeString,
