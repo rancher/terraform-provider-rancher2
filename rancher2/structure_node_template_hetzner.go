@@ -19,7 +19,7 @@ func flattenHetznerConfig(in *hetznerConfig) []interface{} {
 	}
 
 	if len(in.ServerLabels) > 0 {
-		obj["server_labels"] = strings.Join(in.ServerLabels, ",")
+		obj["server_labels"] = toMapInterface(in.ServerLabels)
 	}
 
 	if len(in.ServerLocation) > 0 {
@@ -64,8 +64,8 @@ func expandHetznercloudConfig(p []interface{}) *hetznerConfig {
 		obj.Image = v
 	}
 
-	if v, ok := in["server_labels"].(string); ok && len(v) > 0 {
-		obj.ServerLabels = strings.Split(v, ",")
+	if v, ok := in["server_labels"].(map[string]interface{}); ok && len(v) > 0 {
+		obj.ServerLabels = toMapString(v)
 	}
 
 	if v, ok := in["server_location"].(string); ok && len(v) > 0 {
