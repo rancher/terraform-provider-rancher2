@@ -6,33 +6,23 @@ import (
 )
 
 func resourceRancher2CloudCredentialsImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	cloudCredentialID, driver := splitID(d.Id())
+	d.Set("driver", driver)
+
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}
 
 	cloudCredential := &CloudCredential{}
-	err = client.APIBaseClient.ByID(managementClient.CloudCredentialType, d.Id(), cloudCredential)
+	err = client.APIBaseClient.ByID(managementClient.CloudCredentialType, cloudCredentialID, cloudCredential)
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}
 
-	drivers := []string{
-		amazonec2ConfigDriver,
-		azureConfigDriver,
-		digitaloceanConfigDriver,
-		googleConfigDriver,
-		s3ConfigDriver,
-		vmwarevsphereConfigDriver,
-	}
-
-	// Missing "driver" field in api.
-	for _, driver := range drivers {
-		d.Set("driver", driver)
-		err = flattenCloudCredential(d, cloudCredential)
-		if err != nil {
-			return []*schema.ResourceData{}, err
-		}
+	err = flattenCloudCredential(d, cloudCredential)
+	if err != nil {
+		return []*schema.ResourceData{}, err
 	}
 
 	return []*schema.ResourceData{d}, nil
