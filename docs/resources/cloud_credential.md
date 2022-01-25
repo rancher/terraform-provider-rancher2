@@ -126,7 +126,7 @@ The following attributes are exported:
 Node Template can be imported using the Rancher Node Template ID
 
 ```bash
-terraform import rancher2_cloud_credential.foo &lt;cloud_credential_id&gt.&lt;driver&gt;
+terraform import rancher2_cloud_credential.foo &lt;cloud_credential_id&gt;.&lt;driver&gt;
 ```
 
 ### Argument Reference
