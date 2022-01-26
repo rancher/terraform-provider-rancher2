@@ -123,20 +123,13 @@ The following attributes are exported:
 
 ## Import
 
-Node Template can be imported using the Rancher Node Template ID
+Cloud Credential can be imported using the Cloud Credential ID and the Driver name.
 
 ```bash
-terraform import rancher2_cloud_credential.foo &lt;cloud_credential_id&gt;.&lt;driver&gt;
+terraform import rancher2_cloud_credential.foo &lt;CLOUD_CREDENTIAL_ID&gt;.&lt;DRIVER&gt;
 ```
 
-### Argument Reference
-
-The following arguments are supported:
-
-* `cloud_credential_id` - (Required) The ID of the Cloud Credential (string)
-* `driver` - (Required) The driver of the Cloud Credential (string)
-
-Supported drivers:
+The following drivers are supported:
 
 * amazonec2
 * azure
