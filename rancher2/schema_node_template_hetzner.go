@@ -41,7 +41,7 @@ func hetznerConfigFields() map[string]*schema.Schema {
 		"server_labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,
-			Description: "Comma-separated list of labels which should be assigned to the server",
+			Description: "Map of the labels which will be assigned to the server",
 		},
 		"server_location": {
 			Type:        schema.TypeString,
