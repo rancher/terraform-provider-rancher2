@@ -300,19 +300,11 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 		subnets = toArrayStringSorted(v)
 		obj.Subnets = &subnets
 	}
-	if v, ok := in["node_groups"].([]interface{}); ok {
-		nodeGroups := expandClusterEKSConfigV2NodeGroups(v, subnets, k8sVersion)
-		obj.NodeGroups = &nodeGroups
-	}
 	if v, ok := in["imported"].(bool); ok {
 		obj.Imported = v
 	}
 	if v, ok := in["kms_key"].(string); ok && len(v) > 0 {
 		obj.KmsKey = newString(v)
-	}
-	if v, ok := in["logging_types"].([]interface{}); ok {
-		loggingTypes := toArrayStringSorted(v)
-		obj.LoggingTypes = &loggingTypes
 	}
 	if v, ok := in["private_access"].(bool); ok && !obj.Imported {
 		obj.PrivateAccess = &v
@@ -337,10 +329,23 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	if v, ok := in["service_role"].(string); ok {
 		obj.ServiceRole = newString(v)
 	}
-	obj.Tags = &map[string]string{}
-	if v, ok := in["tags"].(map[string]interface{}); ok {
-		tags := toMapString(v)
-		obj.Tags = &tags
+
+	if !obj.Imported {
+		if v, ok := in["node_groups"].([]interface{}); ok {
+			nodeGroups := expandClusterEKSConfigV2NodeGroups(v, subnets, k8sVersion)
+			obj.NodeGroups = &nodeGroups
+		}
+
+		if v, ok := in["logging_types"].([]interface{}); ok {
+			loggingTypes := toArrayStringSorted(v)
+			obj.LoggingTypes = &loggingTypes
+		}
+
+		obj.Tags = &map[string]string{}
+		if v, ok := in["tags"].(map[string]interface{}); ok {
+			tags := toMapString(v)
+			obj.Tags = &tags
+		}
 	}
 
 	return obj
