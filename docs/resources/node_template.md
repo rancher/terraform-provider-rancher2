@@ -64,7 +64,7 @@ resource "rancher2_node_driver" "hetzner_node_driver" {
   builtin  = false
   name     = "Hetzner"
   ui_url   = "https://storage.googleapis.com/hcloud-rancher-v2-ui-driver/component.js"
-  url      = "https://github.com/JonasProgrammer/docker-machine-driver-hetzner/releases/download/3.0.0/docker-machine-driver-hetzner_3.0.0_linux_amd64.tar.gz"
+  url      = "https://github.com/JonasProgrammer/docker-machine-driver-hetzner/releases/download/3.6.0/docker-machine-driver-hetzner_3.6.0_linux_amd64.tar.gz"
   whitelist_domains = ["storage.googleapis.com"]
 }
 
@@ -217,6 +217,7 @@ The following attributes are exported:
 
 * `api_token` - (Required/Sensitive) Hetzner Cloud project API token (string)
 * `image` - (Optional) Hetzner Cloud server image. Default `ubuntu-18.04` (string)
+* `server_labels` - (Optional) Map of the labels which will be assigned to the server. This argument is only available on [Hetzner Docker Node Driver:v3.6.0](https://github.com/JonasProgrammer/docker-machine-driver-hetzner/releases/tag/3.6.0) and above (map)
 * `server_location` - (Optional) Hetzner Cloud datacenter. Default `nbg1` (string)
 * `server_type` - (Optional) Hetzner Cloud server type. Default `cx11` (string)
 * `networks` - (Optional) Comma-separated list of network IDs or names which should be attached to the server private network interface (string)
