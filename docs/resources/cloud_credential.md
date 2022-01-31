@@ -120,3 +120,22 @@ The following attributes are exported:
 - `create` - (Default `10 minutes`) Used for creating cloud credentials.
 - `update` - (Default `10 minutes`) Used for cloud credential modifications.
 - `delete` - (Default `10 minutes`) Used for deleting cloud credentials.
+
+## Import
+
+Cloud Credential can be imported using the Cloud Credential ID and the Driver name.
+
+```bash
+terraform import rancher2_cloud_credential.foo &lt;CLOUD_CREDENTIAL_ID&gt;.&lt;DRIVER&gt;
+```
+
+The following drivers are supported:
+
+* amazonec2
+* azure
+* digitalocean
+* googlekubernetesengine
+* linode
+* openstack
+* s3
+* vmwarevsphere
