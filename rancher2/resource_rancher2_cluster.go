@@ -675,12 +675,12 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 				return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
 			}
 		} else if len(cluster.Actions[action]) > 0 {
-			isRancher26, _ := c.IsRancherVersionGreaterThanOrEqual("2.6.0")
+			isRancher26, err := c.IsRancherVersionGreaterThanOrEqual("2.6.0")
 			if err != nil {
 				return nil, err
 			}
 			kubeConfig := &managementClient.GenerateKubeConfigOutput{}
-			if cluster.LocalClusterAuthEndpoint != nil && cluster.LocalClusterAuthEndpoint.Enabled && isRancher26 {
+			if isRancher26 && cluster.LocalClusterAuthEndpoint != nil && cluster.LocalClusterAuthEndpoint.Enabled {
 				if connected, _, _ := c.isClusterConnected(cluster.ID); !connected {
 					log.Printf("[WARN] Getting cluster Kubeconfig: kubeconfig is not yet available for cluster %s", cluster.Name)
 					return kubeConfig, nil
