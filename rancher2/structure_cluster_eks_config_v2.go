@@ -121,8 +121,14 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 	if in.KubernetesVersion != nil && len(*in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = *in.KubernetesVersion
 	}
+	if len(in.Region) > 0 {
+		obj["region"] = in.Region
+	}
 
 	obj["imported"] = in.Imported
+	if in.Imported {
+		return []interface{}{obj}
+	}
 
 	if in.KmsKey != nil && len(*in.KmsKey) > 0 {
 		obj["kms_key"] = *in.KmsKey
@@ -139,9 +145,6 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 	if in.SecretsEncryption != nil {
 		obj["secrets_encryption"] = *in.SecretsEncryption
 	}
-	if len(in.Region) > 0 {
-		obj["region"] = in.Region
-	}
 	if in.SecretsEncryption != nil {
 		obj["secrets_encryption"] = *in.SecretsEncryption
 	}
@@ -155,24 +158,21 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 		obj["subnets"] = toArrayInterfaceSorted(*in.Subnets)
 	}
 
-	if !in.Imported {
-		if in.NodeGroups != nil && len(*in.NodeGroups) > 0 {
-			v, ok := obj["node_groups"].([]interface{})
-			if !ok {
-				v = []interface{}{}
-			}
-			obj["node_groups"] = flattenClusterEKSConfigV2NodeGroups(*in.NodeGroups, v)
+	if in.NodeGroups != nil && len(*in.NodeGroups) > 0 {
+		v, ok := obj["node_groups"].([]interface{})
+		if !ok {
+			v = []interface{}{}
 		}
-
-		if in.LoggingTypes != nil && len(*in.LoggingTypes) > 0 {
-			obj["logging_types"] = toArrayInterfaceSorted(*in.LoggingTypes)
-		}
-
-		if in.Tags != nil && len(*in.Tags) > 0 {
-			obj["tags"] = toMapInterface(*in.Tags)
-		}
+		obj["node_groups"] = flattenClusterEKSConfigV2NodeGroups(*in.NodeGroups, v)
 	}
 
+	if in.LoggingTypes != nil && len(*in.LoggingTypes) > 0 {
+		obj["logging_types"] = toArrayInterfaceSorted(*in.LoggingTypes)
+	}
+
+	if in.Tags != nil && len(*in.Tags) > 0 {
+		obj["tags"] = toMapInterface(*in.Tags)
+	}
 	return []interface{}{obj}
 }
 
@@ -291,17 +291,26 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	obj.AmazonCredentialSecret = in["cloud_credential_id"].(string)
 	obj.DisplayName = in["name"].(string)
 	k8sVersion := ""
+
 	if v, ok := in["kubernetes_version"].(string); ok && len(v) > 0 {
 		k8sVersion = v
 		obj.KubernetesVersion = &k8sVersion
 	}
+	if v, ok := in["region"].(string); ok {
+		obj.Region = v
+	}
+	if v, ok := in["imported"].(bool); ok {
+		obj.Imported = v
+	}
+
+	if obj.Imported {
+		return obj
+	}
+
 	subnets := []string{}
 	if v, ok := in["subnets"].([]interface{}); ok {
 		subnets = toArrayStringSorted(v)
 		obj.Subnets = &subnets
-	}
-	if v, ok := in["imported"].(bool); ok {
-		obj.Imported = v
 	}
 	if v, ok := in["kms_key"].(string); ok && len(v) > 0 {
 		obj.KmsKey = newString(v)
@@ -316,9 +325,6 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 		publicAccessSources := toArrayStringSorted(v)
 		obj.PublicAccessSources = &publicAccessSources
 	}
-	if v, ok := in["region"].(string); ok {
-		obj.Region = v
-	}
 	if v, ok := in["secrets_encryption"].(bool); ok && !obj.Imported {
 		obj.SecretsEncryption = &v
 	}
@@ -329,23 +335,18 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	if v, ok := in["service_role"].(string); ok {
 		obj.ServiceRole = newString(v)
 	}
-
-	if !obj.Imported {
-		if v, ok := in["node_groups"].([]interface{}); ok {
-			nodeGroups := expandClusterEKSConfigV2NodeGroups(v, subnets, k8sVersion)
-			obj.NodeGroups = &nodeGroups
-		}
-
-		if v, ok := in["logging_types"].([]interface{}); ok {
-			loggingTypes := toArrayStringSorted(v)
-			obj.LoggingTypes = &loggingTypes
-		}
-
-		obj.Tags = &map[string]string{}
-		if v, ok := in["tags"].(map[string]interface{}); ok {
-			tags := toMapString(v)
-			obj.Tags = &tags
-		}
+	if v, ok := in["node_groups"].([]interface{}); ok {
+		nodeGroups := expandClusterEKSConfigV2NodeGroups(v, subnets, k8sVersion)
+		obj.NodeGroups = &nodeGroups
+	}
+	if v, ok := in["logging_types"].([]interface{}); ok {
+		loggingTypes := toArrayStringSorted(v)
+		obj.LoggingTypes = &loggingTypes
+	}
+	obj.Tags = &map[string]string{}
+	if v, ok := in["tags"].(map[string]interface{}); ok {
+		tags := toMapString(v)
+		obj.Tags = &tags
 	}
 
 	return obj
