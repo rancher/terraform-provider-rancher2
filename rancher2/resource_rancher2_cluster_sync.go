@@ -41,6 +41,18 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
+	// Avoid race condition to generate kube_config for Rancher 2.6 clusters where cluster becomes active before connected
+	isRancher26, err := meta.(*Config).IsRancherVersionGreaterThanOrEqual("2.6.0")
+	if err != nil {
+		return err
+	}
+	if isRancher26 && cluster.LocalClusterAuthEndpoint != nil && cluster.LocalClusterAuthEndpoint.Enabled {
+		// Retrying until resource create timeout
+		for connected, _, _ := meta.(*Config).isClusterConnected(clusterID); !connected; connected, _, _ = meta.(*Config).isClusterConnected(clusterID) {
+			time.Sleep(rancher2RetriesWait * time.Second)
+		}
+	}
+
 	if cluster.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
 		_, err := meta.(*Config).WaitForClusterState(clusterID, clusterMonitoringEnabledCondition, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
@@ -88,6 +100,20 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("default_project_id", defaultProjectID)
 		d.Set("system_project_id", systemProjectID)
 
+		isRancher26, err := meta.(*Config).IsRancherVersionGreaterThanOrEqual("2.6.0")
+		if err != nil {
+			return err
+		}
+		if isRancher26 && clus.LocalClusterAuthEndpoint != nil && clus.LocalClusterAuthEndpoint.Enabled {
+			connected, _, err := meta.(*Config).isClusterConnected(clusterID)
+			if err != nil {
+				return err
+			}
+			if !connected {
+				d.Set("synced", false)
+				return nil
+			}
+		}
 		kubeConfig, err := getClusterKubeconfig(meta.(*Config), clusterID, d.Get("kube_config").(string))
 		if err != nil {
 			return err
