@@ -72,12 +72,12 @@ func init() {
 		NetworkPodCIDR:             newString("network_pod_cidr"),
 		NetworkPolicy:              newString("network_policy"),
 		NetworkServiceCIDR:         newString("network_service_cidr"),
-		NodePools:                  &testClusterAKSConfigV2NodePoolConf,
+		NodePools:                  testClusterAKSConfigV2NodePoolConf,
 		PrivateCluster:             newTrue(),
 		ResourceGroup:              "resource_group",
 		ResourceLocation:           "resource_location",
 		Subnet:                     newString("subnet"),
-		Tags: &map[string]string{
+		Tags: map[string]string{
 			"value1": "one",
 			"value2": "two",
 		},

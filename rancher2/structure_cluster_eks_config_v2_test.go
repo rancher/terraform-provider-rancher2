@@ -40,7 +40,7 @@ func init() {
 			Ec2SshKey:     newString("ec2_ssh_key"),
 			Gpu:           newTrue(),
 			ImageID:       newString("image_id"),
-			Labels: &map[string]string{
+			Labels: map[string]string{
 				"label1": "one",
 				"label2": "two",
 			},
@@ -48,13 +48,13 @@ func init() {
 			MaxSize:              &size,
 			MinSize:              &size,
 			RequestSpotInstances: newTrue(),
-			ResourceTags: &map[string]string{
+			ResourceTags: map[string]string{
 				"rstag1": "one",
 				"rstag2": "two",
 			},
-			SpotInstanceTypes: &[]string{"spot1", "spot2"},
-			Subnets:           &[]string{"net1", "net2"},
-			Tags: &map[string]string{
+			SpotInstanceTypes: []string{"spot1", "spot2"},
+			Subnets:           []string{"net1", "net2"},
+			Tags: map[string]string{
 				"tag1": "one",
 				"tag2": "two",
 			},
@@ -96,20 +96,20 @@ func init() {
 	testClusterEKSConfigV2Conf = &managementClient.EKSClusterConfigSpec{
 		AmazonCredentialSecret: "test",
 		DisplayName:            "eksimport",
-		LoggingTypes:           &[]string{"type1", "type2"},
-		NodeGroups:             &testClusterEKSConfigV2NodeGroupConf,
+		LoggingTypes:           []string{"type1", "type2"},
+		NodeGroups:             testClusterEKSConfigV2NodeGroupConf,
 		Region:                 "test",
 		KmsKey:                 newString("kms_key"),
 		Imported:               false,
 		KubernetesVersion:      newString("kubernetes_version"),
 		PrivateAccess:          newTrue(),
 		PublicAccess:           newTrue(),
-		PublicAccessSources:    &[]string{"access1", "access2"},
+		PublicAccessSources:    []string{"access1", "access2"},
 		SecretsEncryption:      newTrue(),
-		SecurityGroups:         &[]string{"sec1", "sec2"},
+		SecurityGroups:         []string{"sec1", "sec2"},
 		ServiceRole:            newString("service_role"),
-		Subnets:                &[]string{"net1", "net2"},
-		Tags: &map[string]string{
+		Subnets:                []string{"net1", "net2"},
+		Tags: map[string]string{
 			"value1": "one",
 			"value2": "two",
 		},
