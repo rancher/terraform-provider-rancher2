@@ -22,6 +22,7 @@ type machineConfigV2 struct {
 	Amazonec2Config     *MachineConfigV2Amazonec2     `json:"amazonec2Config,omitempty" yaml:"amazonec2Config,omitempty"`
 	AzureConfig         *MachineConfigV2Azure         `json:"azureConfig,omitempty" yaml:"azureConfig,omitempty"`
 	DigitaloceanConfig  *MachineConfigV2Digitalocean  `json:"digitaloceanConfig,omitempty" yaml:"digitaloceanConfig,omitempty"`
+	HarvesterConfig     *MachineConfigV2Harvester     `json:"harvesterConfig,omitempty" yaml:"harvesterConfig,omitempty"`
 	LinodeConfig        *MachineConfigV2Linode        `json:"linodeConfig,omitempty" yaml:"linodeConfig,omitempty"`
 	OpenstackConfig     *MachineConfigV2Openstack     `json:"openstackConfig,omitempty" yaml:"openstackConfig,omitempty"`
 	VmwarevsphereConfig *MachineConfigV2Vmwarevsphere `json:"vmwarevsphereConfig,omitempty" yaml:"vmwarevsphereConfig,omitempty"`
@@ -53,6 +54,11 @@ func flattenMachineConfigV2(d *schema.ResourceData, in *MachineConfigV2) error {
 		}
 	case machineConfigV2DigitaloceanKind:
 		err := d.Set("digitalocean_config", flattenMachineConfigV2Digitalocean(in.DigitaloceanConfig))
+		if err != nil {
+			return err
+		}
+	case machineConfigV2HarvesterKind:
+		err := d.Set("harvester_config", flattenMachineConfigV2Harvester(in.HarvesterConfig))
 		if err != nil {
 			return err
 		}
@@ -124,6 +130,9 @@ func expandMachineConfigV2(in *schema.ResourceData) *MachineConfigV2 {
 	}
 	if v, ok := in.Get("digitalocean_config").([]interface{}); ok && len(v) > 0 {
 		obj.DigitaloceanConfig = expandMachineConfigV2Digitalocean(v, obj)
+	}
+	if v, ok := in.Get("harvester_config").([]interface{}); ok && len(v) > 0 {
+		obj.HarvesterConfig = expandMachineConfigV2Harvester(v, obj)
 	}
 	if v, ok := in.Get("linode_config").([]interface{}); ok && len(v) > 0 {
 		obj.LinodeConfig = expandMachineConfigV2Linode(v, obj)

@@ -179,6 +179,13 @@ func createMachineConfigV2(c *Config, obj *MachineConfigV2) (*MachineConfigV2, e
 		out.ID = resp.ID
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2HarvesterKind:
+		resp := &MachineConfigV2Harvester{}
+		err = c.createObjectV2(rancher2DefaultLocalClusterID, machineConfigV2HarvesterAPIType, obj.HarvesterConfig, resp)
+		out.HarvesterConfig = resp
+		out.ID = resp.ID
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
 	case machineConfigV2LinodeKind:
 		resp := &MachineConfigV2Linode{}
 		err = c.createObjectV2(rancher2DefaultLocalClusterID, machineConfigV2LinodeAPIType, obj.LinodeConfig, resp)
@@ -265,6 +272,16 @@ func getMachineConfigV2ByID(c *Config, id, kind string) (*MachineConfigV2, error
 		out.Type = resp.Type
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2HarvesterKind:
+		resp := &MachineConfigV2Harvester{}
+		err = c.getObjectV2ByID(rancher2DefaultLocalClusterID, id, machineConfigV2HarvesterAPIType, resp)
+		out.HarvesterConfig = resp
+		out.ID = resp.ID
+		out.Links = resp.Links
+		out.Actions = resp.Actions
+		out.Type = resp.Type
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
 	case machineConfigV2LinodeKind:
 		resp := &MachineConfigV2Linode{}
 		err = c.getObjectV2ByID(rancher2DefaultLocalClusterID, id, machineConfigV2LinodeAPIType, resp)
@@ -336,6 +353,13 @@ func updateMachineConfigV2(c *Config, obj *MachineConfigV2) (*MachineConfigV2, e
 		resp := &MachineConfigV2Digitalocean{}
 		err = c.updateObjectV2(rancher2DefaultLocalClusterID, obj.ID, machineConfigV2DigitaloceanAPIType, obj.DigitaloceanConfig, resp)
 		out.DigitaloceanConfig = resp
+		out.ID = resp.ID
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2HarvesterKind:
+		resp := &MachineConfigV2Harvester{}
+		err = c.updateObjectV2(rancher2DefaultLocalClusterID, obj.ID, machineConfigV2HarvesterAPIType, obj.HarvesterConfig, resp)
+		out.HarvesterConfig = resp
 		out.ID = resp.ID
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
