@@ -6,7 +6,7 @@ page_title: "rancher2_node_template Resource"
 
 Provides a Rancher v2 Node Template resource. This can be used to create Node Template for Rancher v2 and retrieve their information.
 
-amazonec2, azure, digitalocean, linode, opennebula, openstack, hetzner, and vsphere drivers are supported for node templates.
+amazonec2, azure, digitalocean, harvester, linode, opennebula, openstack, hetzner, and vsphere drivers are supported for node templates.
 
 **Note** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
 
@@ -51,6 +51,41 @@ resource "rancher2_node_template" "foo" {
     subnet_id = "<SUBNET_ID>"
     vpc_id = "<VPC_ID>"
     zone = "<ZONE>"
+  }
+}
+```
+
+### Using the Harvester Node Driver
+
+```hcl
+# Get imported harvester cluster info
+data "rancher2_cluster_v2" "foo-harvester" {
+  name = "foo-harvester"
+}
+
+# Create a new Cloud Credential for an imported Harvester cluster
+resource "rancher2_cloud_credential" "foo-harvester" {
+  name = "foo-harvester"
+  harvester_credential_config {
+    cluster_id = data.rancher2_cluster_v2.foo-harvester.cluster_v1_id
+    cluster_type = "imported"
+    kubeconfig_content = data.rancher2_cluster_v2.foo-harvester.kube_config
+  }
+}
+
+# Create a new rancher2 Node Template using harvester node_driver
+resource "rancher2_node_template" "foo-harvester" {
+  name = "foo-harvester"
+  cloud_credential_id = rancher2_cloud_credential.foo-harvester.id
+  engine_install_url = "https://releases.rancher.com/install-docker/20.10.sh"
+  harvester_config {
+    vm_namespace = "default"
+    cpu_count = "2"
+    memory_size = "4"
+    disk_size = "40"
+    network_name = "harvester-public/vlan1"
+    image_name = "harvester-public/image-57hzg"
+    ssh_user = "ubuntu"
   }
 }
 ```
@@ -102,6 +137,7 @@ The following arguments are supported:
 * `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
 * `engine_storage_driver` - (Optional) Engine storage driver for the node template (string)
 * `node_taints` - (Optional) Node taints. For Rancher v2.3.3 or above (List)
+* `harvester_config` - (Optional) Harvester config for the Node Template (list maxitems:1)
 * `hetzner_config` - (Optional) Hetzner config for the Node Template (list maxitems:1)
 * `opennebula_config` - (Optional) Opennebula config for the Node Template (list maxitems:1)
 * `openstack_config` - (Optional) Openstack config for the Node Template (list maxitems:1)
@@ -210,6 +246,23 @@ The following attributes are exported:
 * `ssh_user` - (Optional) SSH username. Default `root` (string)
 * `tags` - (Optional) Comma-separated list of tags to apply to the Droplet (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
+
+### `harvester_config`
+
+#### Arguments
+
+* `vm_namespace` - (Required) Virtual machine namespace e.g. `default` (string)
+* `cpu_count` - (Optional) CPU count, Default `2` (string)
+* `memory_size` - (Optional) Memory size (in GiB), Default `4` (string)
+* `disk_size` - (Optional) Disk size (in GiB), Default `40` (string)
+* `disk_bus` - (Optional) Disk bus, Default `virtio` (string)
+* `image_name` - (Required) Image name e.g. `harvester-public/image-57hzg` (string)
+* `ssh_user` - (Required) SSH username e.g. `ubuntu` (string)
+* `ssh_password` - (Optional/Sensitive) SSH password (string)
+* `network_name` - (Required) Network name e.g. `harvester-public/vlan1` (string)
+* `network_model` - (Optional) Network model, Default `virtio` (string)
+* `user_data` - (Optional) UserData content of cloud-init, base64 is supported (string)
+* `network_data` - (Optional) NetworkData content of cloud-init, base64 is supported (string)
 
 ### `hetzner_config`
 
