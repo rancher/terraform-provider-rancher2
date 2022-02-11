@@ -6,8 +6,8 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.14.0
-	github.com/rancher/norman v0.0.0-20211201154850-abe17976423e
-	github.com/rancher/rancher v0.0.0-20211218171736-3c1d5fac3248
+	github.com/rancher/norman v0.0.0-20220107203912-4feb41eafabd
+	github.com/rancher/rancher v0.0.0-20220209172806-237289541582
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
@@ -23,8 +23,8 @@ replace (
 	github.com/crewjam/saml => github.com/crewjam/saml v0.4.1
 	github.com/docker/distribution => github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker => github.com/docker/docker v20.10.6+incompatible
-	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20211218171736-3c1d5fac3248
-	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20211218171736-3c1d5fac3248
+	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20220209172806-237289541582
+	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20220209172806-237289541582
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2
 	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.5.4-rancher.1
 	k8s.io/api => k8s.io/api v0.22.3

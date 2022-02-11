@@ -147,12 +147,12 @@ func flattenClusterAKSConfigV2(in *managementClient.AKSClusterConfigSpec, p []in
 	if in.NetworkServiceCIDR != nil && len(*in.NetworkServiceCIDR) > 0 {
 		obj["network_service_cidr"] = *in.NetworkServiceCIDR
 	}
-	if in.NodePools != nil && len(*in.NodePools) > 0 {
+	if in.NodePools != nil && len(in.NodePools) > 0 {
 		v, ok := obj["node_pools"].([]interface{})
 		if !ok {
 			v = []interface{}{}
 		}
-		obj["node_pools"] = flattenClusterAKSConfigV2NodePools(*in.NodePools, v)
+		obj["node_pools"] = flattenClusterAKSConfigV2NodePools(in.NodePools, v)
 	}
 	if in.PrivateCluster != nil {
 		obj["private_cluster"] = *in.PrivateCluster
@@ -160,8 +160,8 @@ func flattenClusterAKSConfigV2(in *managementClient.AKSClusterConfigSpec, p []in
 	if in.Subnet != nil && len(*in.Subnet) > 0 {
 		obj["subnet"] = *in.Subnet
 	}
-	if in.Tags != nil && len(*in.Tags) > 0 {
-		obj["tags"] = toMapInterface(*in.Tags)
+	if in.Tags != nil && len(in.Tags) > 0 {
+		obj["tags"] = toMapInterface(in.Tags)
 	}
 	if in.VirtualNetwork != nil && len(*in.VirtualNetwork) > 0 {
 		obj["virtual_network"] = *in.VirtualNetwork
@@ -324,14 +324,14 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	}
 	if v, ok := in["node_pools"].([]interface{}); ok && len(v) > 0 {
 		nodePools := expandClusterAKSConfigV2NodePools(v)
-		obj.NodePools = &nodePools
+		obj.NodePools = nodePools
 	}
 	if v, ok := in["subnet"].(string); ok && len(v) > 0 {
 		obj.Subnet = &v
 	}
 	if v, ok := in["tags"].(map[string]interface{}); ok && len(v) > 0 {
 		tags := toMapString(v)
-		obj.Tags = &tags
+		obj.Tags = tags
 	}
 	if v, ok := in["virtual_network"].(string); ok && len(v) > 0 {
 		obj.VirtualNetwork = &v
