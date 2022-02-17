@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * Added support to import `rancher2_cloud_credential` resources
 * Added support to `rancher2_node_template` resource for server labels in hetzner_config, https://github.com/rancher/terraform-provider-rancher2/issues/657
+* Updated `rancher2_role_template` and `rancher2_global_role` resources to retry on conflict (apierr 409) when deleting custom roles with inheritance https://github.com/rancher/terraform-provider-rancher2/pull/864
 
 BUG FIXES:
 
