@@ -224,6 +224,7 @@ The following attributes are exported:
 * `use_private_network` - (Optional) Use private network. Default `false` (bool)
 * `volumes` - (Optional) Comma-separated list of volume IDs or names which should be attached to the server (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
+* `firewalls` - (Optional) Comma-separated list of firewall IDs or names which should be attached to the server (string)
 
 > **Note**: You need to install the Hetzner Docker Machine Driver first as shown as in the [examples section](#using-the-hetzner-node-driver).
 
