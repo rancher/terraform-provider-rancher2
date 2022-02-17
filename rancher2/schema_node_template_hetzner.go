@@ -20,6 +20,7 @@ type hetznerConfig struct {
 	UsePrivateNetwork bool              `json:"usePrivateNetwork,omitempty" yaml:"usePrivateNetwork,omitempty"`
 	UserData          string            `json:"userData,omitempty" yaml:"userData,omitempty"`
 	Volumes           []string          `json:"volumes,omitempty" yaml:"volumes,omitempty"`
+	Firewalls         []string          `json:"firewalls,omitempty" yaml:"firewalls,omitempty"`
 }
 
 //Schemas
@@ -75,6 +76,11 @@ func hetznerConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Comma-separated list of volume IDs or names which should be attached to the server",
+		},
+		"firewalls": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Comma-separated list of firewall IDs or names which should be attached to the server",
 		},
 	}
 

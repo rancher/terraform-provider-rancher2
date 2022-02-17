@@ -44,6 +44,10 @@ func flattenHetznerConfig(in *hetznerConfig) []interface{} {
 		obj["volumes"] = strings.Join(in.Volumes, ",")
 	}
 
+	if len(in.Firewalls) > 0 {
+		obj["firewalls"] = strings.Join(in.Firewalls, ",")
+	}
+
 	return []interface{}{obj}
 }
 
@@ -90,6 +94,10 @@ func expandHetznercloudConfig(p []interface{}) *hetznerConfig {
 
 	if v, ok := in["volumes"].(string); ok && len(v) > 0 {
 		obj.Volumes = strings.Split(v, ",")
+	}
+
+	if v, ok := in["firewalls"].(string); ok && len(v) > 0 {
+		obj.Firewalls = strings.Split(v, ",")
 	}
 
 	return obj
