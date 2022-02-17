@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -109,23 +110,27 @@ func resourceRancher2GlobalRoleDelete(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	globalRole, err := client.GlobalRole.ByID(id)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Global role ID %s not found.", id)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if !globalRole.Builtin {
-		err = client.GlobalRole.Delete(globalRole)
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		globalRole, err := client.GlobalRole.ByID(id)
 		if err != nil {
-			return fmt.Errorf("Error removing global role: %s", err)
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Global role ID %s not found.", id)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-	}
 
-	d.SetId("")
-	return nil
+		if !globalRole.Builtin {
+			err = client.GlobalRole.Delete(globalRole)
+			if err != nil {
+				if IsConflict(err) {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(fmt.Errorf("Error removing global role: %s", err))
+			}
+		}
+		d.SetId("")
+		return nil
+	})
 }

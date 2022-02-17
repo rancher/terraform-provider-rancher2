@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -123,23 +124,27 @@ func resourceRancher2RoleTemplateDelete(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	roleTemplate, err := client.RoleTemplate.ByID(id)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Role template ID %s not found.", id)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if !roleTemplate.Builtin {
-		err = client.RoleTemplate.Delete(roleTemplate)
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		roleTemplate, err := client.RoleTemplate.ByID(id)
 		if err != nil {
-			return fmt.Errorf("Error removing role template: %s", err)
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Role template ID %s not found.", id)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-	}
 
-	d.SetId("")
-	return nil
+		if !roleTemplate.Builtin {
+			err = client.RoleTemplate.Delete(roleTemplate)
+			if err != nil {
+				if IsConflict(err) {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(fmt.Errorf("Error removing role template: %s", err))
+			}
+		}
+		d.SetId("")
+		return nil
+	})
 }
