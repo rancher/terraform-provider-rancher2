@@ -98,6 +98,12 @@ func machineConfigV2AzureFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
+		"private_address_only": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Only use a private IP address",
+		},
 		"private_ip_address": {
 			Type:        schema.TypeString,
 			Optional:    true,
