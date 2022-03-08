@@ -64,7 +64,6 @@ func init() {
 			WorkerRole:    true,
 		},
 	}
-	testClusterV2RKEConfigMachinePoolsConf[0].CloudCredentialSecretName = "cloud_credential_secret_name"
 	testClusterV2RKEConfigMachinePoolsConf[0].Taints = []corev1.Taint{
 		{
 			Key:    "key",
@@ -74,11 +73,10 @@ func init() {
 	}
 	testClusterV2RKEConfigMachinePoolsInterface = []interface{}{
 		map[string]interface{}{
-			"name":                         "test",
-			"cloud_credential_secret_name": "cloud_credential_secret_name",
-			"machine_config":               testClusterV2RKEConfigMachinePoolMachineConfigInterface,
-			"control_plane_role":           true,
-			"etcd_role":                    true,
+			"name":               "test",
+			"machine_config":     testClusterV2RKEConfigMachinePoolMachineConfigInterface,
+			"control_plane_role": true,
+			"etcd_role":          true,
 			"annotations": map[string]interface{}{
 				"anno_one": "one",
 				"anno_two": "two",

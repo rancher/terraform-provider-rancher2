@@ -47,9 +47,6 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		obj := map[string]interface{}{}
 
 		obj["name"] = in.Name
-		if len(in.CloudCredentialSecretName) > 0 {
-			obj["cloud_credential_secret_name"] = in.CloudCredentialSecretName
-		}
 		if in.NodeConfig != nil {
 			obj["machine_config"] = flattenClusterV2RKEConfigMachinePoolMachineConfig(in.NodeConfig)
 		}
@@ -134,9 +131,6 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		if v, ok := in["name"].(string); ok {
 			obj.Name = v
 			obj.DisplayName = v
-		}
-		if v, ok := in["cloud_credential_secret_name"].(string); ok && len(v) > 0 {
-			obj.CloudCredentialSecretName = v
 		}
 		if v, ok := in["machine_config"].([]interface{}); ok && len(v) > 0 {
 			obj.NodeConfig = expandClusterV2RKEConfigMachinePoolMachineConfig(v)

@@ -48,11 +48,6 @@ func clusterV2RKEConfigMachinePoolFields() map[string]*schema.Schema {
 			Required:    true,
 			Description: "Machine pool name",
 		},
-		"cloud_credential_secret_name": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Machine pool cloud credential secret name",
-		},
 		"machine_config": {
 			Type:        schema.TypeList,
 			Required:    true,

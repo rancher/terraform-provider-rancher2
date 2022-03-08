@@ -64,10 +64,10 @@ resource "rancher2_cluster_v2" "foo-rke2" {
   kubernetes_version = "v1.21.4+rke2r2"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
+  cloud_credential_secret_name = rancher2_cloud_credential.foo.id
   rke_config {
     machine_pools {
       name = "pool1"
-      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
       control_plane_role = true
       etcd_role = true
       worker_role = true
@@ -86,10 +86,10 @@ resource "rancher2_cluster_v2" "foo-k3s" {
   kubernetes_version = "v1.21.4+k3s1"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
+  cloud_credential_secret_name = rancher2_cloud_credential.foo.id
   rke_config {
     machine_pools {
       name = "pool1"
-      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
       control_plane_role = true
       etcd_role = true
       worker_role = true
@@ -130,10 +130,10 @@ resource "rancher2_cluster_v2" "foo" {
   name = "foo"
   kubernetes_version = "v1.21.4+k3s1"
   enable_network_policy = false
+  cloud_credential_secret_name = rancher2_cloud_credential.foo.id
   rke_config {
     machine_pools {
       name = "pool1"
-      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
       control_plane_role = true
       etcd_role = true
       worker_role = true
