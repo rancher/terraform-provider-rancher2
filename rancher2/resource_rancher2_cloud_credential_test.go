@@ -91,6 +91,28 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-google" {
   }
 }
 `
+	testAccRancher2CloudCredentialConfigHarvester = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-harvester" {
+  name = "foo-harvester"
+  description= "Terraform cloudCredential acceptance test"
+  harvester_credential_config {
+    cluster_id = "c-m-xb5qzqdk"
+    cluster_type = "imported"
+    kubeconfig_content = "XXXXXXXXXXXXXXXXXXXX"
+  }
+}
+`
+	testAccRancher2CloudCredentialUpdateConfigHarvester = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-harvester" {
+  name = "foo-harvester"
+  description= "Terraform cloudCredential acceptance test - updated"
+  harvester_credential_config {
+    cluster_id = "c-m-xb5qzqdk"
+    cluster_type = "imported"
+    kubeconfig_content = "YYYYYYYYYYYYYYYYYYYY"
+  }
+}
+`
 	testAccRancher2CloudCredentialConfigOpenstack = `
 resource "` + testAccRancher2CloudCredentialType + `" "foo-openstack" {
   name = "foo-openstack"
@@ -398,6 +420,68 @@ func TestAccRancher2CloudCredential_disappears_Google(t *testing.T) {
 				Config: testAccRancher2CloudCredentialConfigGoogle,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-google", cloudCredential),
+					testAccRancher2CloudCredentialDisappears(cloudCredential),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_basic_Harvester(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2CloudCredentialConfigHarvester,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-harvester", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "name", "foo-harvester"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "driver", harvesterConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "harvester_credential_config.0.kubeconfigContent", "XXXXXXXXXXXXXXXXXXXX"),
+				),
+			},
+			{
+				Config: testAccRancher2CloudCredentialUpdateConfigHarvester,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-harvester", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "name", "foo-harvester"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "description", "Terraform cloudCredential acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "driver", harvesterConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "harvester_credential_config.0.kubeconfigContent", "YYYYYYYYYYYYYYYYYYYY"),
+				),
+			},
+			{
+				Config: testAccRancher2CloudCredentialConfigHarvester,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-harvester", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "name", "foo-harvester"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "driver", harvesterConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "harvester_credential_config.0.kubeconfigContent", "XXXXXXXXXXXXXXXXXXXX"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_disappears_Harvester(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2CloudCredentialConfigHarvester,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-harvester", cloudCredential),
 					testAccRancher2CloudCredentialDisappears(cloudCredential),
 				),
 				ExpectNonEmptyPlan: true,

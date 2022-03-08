@@ -57,6 +57,15 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		if err != nil {
 			return err
 		}
+	case harvesterConfigDriver:
+		v, ok := d.Get("harvester_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err := d.Set("harvester_credential_config", flattenCloudCredentialHarvester(in.HarvesterCredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	case linodeConfigDriver:
 		v, ok := d.Get("linode_credential_config").([]interface{})
 		if !ok {
@@ -149,6 +158,11 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	if v, ok := in.Get("google_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.GoogleCredentialConfig = expandCloudCredentialGoogle(v)
 		in.Set("driver", googleConfigDriver)
+	}
+
+	if v, ok := in.Get("harvester_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.HarvesterCredentialConfig = expandCloudCredentialHarvester(v)
+		in.Set("driver", harvesterConfigDriver)
 	}
 
 	if v, ok := in.Get("linode_credential_config").([]interface{}); ok && len(v) > 0 {

@@ -4,6 +4,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+var allMachineDriverConfigFields = []string{
+	"amazonec2_config",
+	"azure_config",
+	"digitalocean_config",
+	"harvester_config",
+	"linode_config",
+	"openstack_config",
+	"vsphere_config",
+}
+
 //Schemas
 
 func machineConfigV2Fields() map[string]*schema.Schema {
@@ -24,7 +34,7 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"azure_config", "digitalocean_config", "linode_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "amazonec2_config"),
 			Elem: &schema.Resource{
 				Schema: machineConfigV2Amazonec2Fields(),
 			},
@@ -33,7 +43,7 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "digitalocean_config", "linode_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "azure_config"),
 			Elem: &schema.Resource{
 				Schema: machineConfigV2AzureFields(),
 			},
@@ -42,7 +52,7 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "linode_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "digitalocean_config"),
 			Elem: &schema.Resource{
 				Schema: machineConfigV2DigitaloceanFields(),
 			},
@@ -55,11 +65,20 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"harvester_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "harvester_config"),
+			Elem: &schema.Resource{
+				Schema: machineConfigV2HarvesterFields(),
+			},
+		},
 		"linode_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "openstack_config", "vsphere_config"},
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "linode_config"),
 			Elem: &schema.Resource{
 				Schema: machineConfigV2LinodeFields(),
 			},
@@ -68,7 +87,7 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "linode_config", "vsphere_config"},
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "openstack_config"),
 			Elem: &schema.Resource{
 				Schema: machineConfigV2OpenstackFields(),
 			},
@@ -77,7 +96,7 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_config", "azure_config", "digitalocean_config", "linode_config", "openstack_config"},
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "vsphere_config"),
 			Elem: &schema.Resource{
 				Schema: machineConfigV2VmwarevsphereFields(),
 			},

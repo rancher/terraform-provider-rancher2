@@ -42,6 +42,10 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.HetznerConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires hetzner_config", in.Driver)
 		}
+	case harvesterConfigDriver:
+		if in.HarvesterConfig == nil {
+			return fmt.Errorf("[ERROR] Node template driver %s requires harvester_config", in.Driver)
+		}
 	case vmwarevsphereConfigDriver:
 		if in.VmwarevsphereConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires vsphere_config", in.Driver)
@@ -227,6 +231,11 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 	if v, ok := in.Get("hetzner_config").([]interface{}); ok && len(v) > 0 {
 		obj.HetznerConfig = expandHetznercloudConfig(v)
 		obj.Driver = hetznerConfigDriver
+	}
+
+	if v, ok := in.Get("harvester_config").([]interface{}); ok && len(v) > 0 {
+		obj.HarvesterConfig = expandHarvestercloudConfig(v)
+		obj.Driver = harvesterConfigDriver
 	}
 
 	if v, ok := in.Get("use_internal_ip_address").(bool); ok {
