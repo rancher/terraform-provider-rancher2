@@ -120,6 +120,8 @@ func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interfac
 		update["digitaloceancredentialConfig"] = expandCloudCredentialDigitalocean(d.Get("digitalocean_credential_config").([]interface{}))
 	case googleConfigDriver:
 		update["googlecredentialConfig"] = expandCloudCredentialGoogle(d.Get("google_credential_config").([]interface{}))
+	case harvesterConfigDriver:
+		update["harvestercredentialConfig"] = expandCloudCredentialHarvester(d.Get("harvester_credential_config").([]interface{}))
 	case linodeConfigDriver:
 		update["linodecredentialConfig"] = expandCloudCredentialLinode(d.Get("linode_credential_config").([]interface{}))
 	case openstackConfigDriver:

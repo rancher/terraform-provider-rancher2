@@ -26,6 +26,38 @@ resource "rancher2_machine_config_v2" "foo" {
   }
 }
 ```
+### Using the Harvester Node Driver
+
+```hcl
+# Get imported harvester cluster info
+data "rancher2_cluster_v2" "foo-harvester" {
+  name = "foo-harvester"
+}
+
+# Create a new Cloud Credential for an imported Harvester cluster
+resource "rancher2_cloud_credential" "foo-harvester" {
+  name = "foo-harvester"
+  harvester_credential_config {
+    cluster_id = data.rancher2_cluster_v2.foo-harvester.cluster_v1_id
+    cluster_type = "imported"
+    kubeconfig_content = data.rancher2_cluster_v2.foo-harvester.kube_config
+  }
+}
+
+# Create a new rancher2 machine config v2 using harvester node_driver
+resource "rancher2_machine_config_v2" "foo-harvester-v2" {
+  generate_name = "foo-harvester-v2"
+  harvester_config {
+    vm_namespace = "default"
+    cpu_count = "2"
+    memory_size = "4"
+    disk_size = "40"
+    network_name = "harvester-public/vlan1"
+    image_name = "harvester-public/image-57hzg"
+    ssh_user = "ubuntu"
+  }
+}
+```
 
 ## Argument Reference
 
@@ -33,12 +65,13 @@ The following arguments are supported:
 
 * `generate_name` - (Required/ForceNew) Cluster V2 generate name. The pattern to generate machine config name. e.g  generate_name=\"prod-pool1\" will generate \"nc-prod-pool1-?????\" name computed at `name` attribute (string)
 * `fleet_namespace` - (Optional/ForceNew) Cluster V2 fleet namespace
-* `amazonec2_config` - (Optional) AWS config for the Machine Config V2. Conflicts with `azure_config`, `digitalocean_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
-* `azure_config` - (Optional) Azure config for the Machine Config V2. Conflicts with `amazonec2_config`, `digitalocean_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
-* `digitalocean_config` - (Optional) Digitalocean config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
-* `linode_config` - (Optional) Linode config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
-* `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `linode_config` and `vsphere_config` (list maxitems:1)
-* `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `linode_config` and `openstack_config` (list maxitems:1)
+* `amazonec2_config` - (Optional) AWS config for the Machine Config V2. Conflicts with `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `azure_config` - (Optional) Azure config for the Machine Config V2. Conflicts with `amazonec2_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `digitalocean_config` - (Optional) Digitalocean config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `harvester_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `harvester_config` - (Optional) Harvester config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `linode_config` - (Optional) Linode config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config` and `vsphere_config` (list maxitems:1)
+* `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config` and `openstack_config` (list maxitems:1)
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
@@ -145,6 +178,23 @@ The following attributes are exported:
 * `ssh_user` - (Optional) SSH username. Default `root` (string)
 * `tags` - (Optional) Comma-separated list of tags to apply to the Droplet (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
+
+### `harvester_config`
+
+#### Arguments
+
+* `vm_namespace` - (Required) Virtual machine namespace e.g. `default` (string)
+* `cpu_count` - (Optional) CPU count, Default `2` (string)
+* `memory_size` - (Optional) Memory size (in GiB), Default `4` (string)
+* `disk_size` - (Optional) Disk size (in GiB), Default `40` (string)
+* `disk_bus` - (Optional) Disk bus, Default `virtio` (string)
+* `image_name` - (Required) Image name e.g. `harvester-public/image-57hzg` (string)
+* `ssh_user` - (Required) SSH username e.g. `ubuntu` (string)
+* `ssh_password` - (Optional/Sensitive) SSH password (string)
+* `network_name` - (Required) Network name e.g. `harvester-public/vlan1` (string)
+* `network_model` - (Optional) Network model, Default `virtio` (string)
+* `user_data` - (Optional) UserData content of cloud-init, base64 is supported (string)
+* `network_data` - (Optional) NetworkData content of cloud-init, base64 is supported (string)
 
 ### `linode_config`
 
