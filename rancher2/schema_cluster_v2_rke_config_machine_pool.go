@@ -72,6 +72,12 @@ func clusterV2RKEConfigMachinePoolFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Machine pool etcd role",
 		},
+		"drain_before_delete": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Machine pool drain before delete",
+		},
 		"paused": {
 			Type:        schema.TypeBool,
 			Optional:    true,

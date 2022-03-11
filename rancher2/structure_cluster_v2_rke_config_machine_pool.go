@@ -55,6 +55,7 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		}
 		obj["control_plane_role"] = in.ControlPlaneRole
 		obj["etcd_role"] = in.EtcdRole
+		obj["drain_before_delete"] = in.DrainBeforeDelete
 
 		if len(in.MachineDeploymentAnnotations) > 0 {
 			obj["annotations"] = toMapInterface(in.MachineDeploymentAnnotations)
@@ -146,6 +147,9 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		}
 		if v, ok := in["etcd_role"].(bool); ok {
 			obj.EtcdRole = v
+		}
+		if v, ok := in["drain_before_delete"].(bool); ok {
+			obj.DrainBeforeDelete = v
 		}
 		if v, ok := in["annotations"].(map[string]interface{}); ok && len(v) > 0 {
 			obj.MachineDeploymentAnnotations = toMapString(v)
