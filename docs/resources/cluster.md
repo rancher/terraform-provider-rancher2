@@ -1456,7 +1456,7 @@ The following arguments are supported:
 * `cloud_credential_id` - (Required) The EKS cloud_credential id (string)
 * `imported` - (Optional) Set to `true` to import EKS cluster. Default: `false` (bool)
 * `name` - (Optional/Computed) The EKS cluster name to import. Required to import a cluster (string)
-* `kms_key` - (Optional) The AWS kms key to use (string)
+* `kms_key` - (Optional) The AWS kms label ARN to use (string, e.g. arn:aws:kms:<ZONE>:<123456789100>:alias/<NAME>)
 * `kubernetes_version` - (Optional/Computed) The EKS cluster kubernetes version. Required to create a new cluster (string)
 * `logging_types` - (Optional) The AWS cloudwatch logging types. `audit`, `api`, `scheduler`, `controllerManager` and `authenticator` values are allowed (list)
 * `node_groups` - (Optional/Computed) The EKS cluster name to import. Required to create a new cluster (list)
