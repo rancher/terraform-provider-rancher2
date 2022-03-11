@@ -22,7 +22,7 @@ func init() {
 		},
 	}
 	testCloudCredentialHarvesterConfImported = &harvesterCredentialConfig{
-		ClusterId:         "clusterId",
+		ClusterID:         "clusterId",
 		ClusterType:       "imported",
 		KubeconfigContent: "kubeconfigContent",
 	}

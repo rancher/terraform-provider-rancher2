@@ -20,7 +20,7 @@ steps:
   privileged: true
 
 - name: build-all-binaries
-  image: golang:1.16.5
+  image: golang:1.17.8
   environment:
     CROSS: 1
     VERSION: ${DRONE_TAG}

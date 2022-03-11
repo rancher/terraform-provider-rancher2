@@ -122,6 +122,15 @@ func clusterV2RKEConfigFields() map[string]*schema.Schema {
 				Schema: clusterV2RKEConfigETCDFields(),
 			},
 		},
+		"rotate_certificates": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Description: "Cluster V2 certificate rotation",
+			Elem: &schema.Resource{
+				Schema: clusterV2RKEConfigRotateCertificatesFields(),
+			},
+		},
 	}
 
 	return s

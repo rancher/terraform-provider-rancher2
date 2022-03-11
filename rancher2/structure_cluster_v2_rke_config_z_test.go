@@ -34,6 +34,7 @@ func init() {
 	testClusterV2RKEConfigConf.MachineSelectorConfig = testClusterV2RKEConfigSystemConfigConf
 	testClusterV2RKEConfigConf.Registries = testClusterV2RKEConfigRegistryConf
 	testClusterV2RKEConfigConf.ETCD = testClusterV2RKEConfigETCDConf
+	testClusterV2RKEConfigConf.RotateCertificates = testClusterV2RKEConfigRotateCertificatesConf
 
 	testClusterV2RKEConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -45,6 +46,7 @@ func init() {
 			"machine_selector_config": testClusterV2RKEConfigSystemConfigInterface,
 			"registries":              testClusterV2RKEConfigRegistryInterface,
 			"etcd":                    testClusterV2RKEConfigETCDInterface,
+			"rotate_certificates":     testClusterV2RKEConfigRotateCertificatesInterface,
 		},
 	}
 }
