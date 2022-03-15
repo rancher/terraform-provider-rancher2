@@ -14,8 +14,8 @@ func flattenCloudCredentialHarvester(in *harvesterCredentialConfig, p []interfac
 		return []interface{}{}
 	}
 
-	if len(in.ClusterId) > 0 {
-		obj["cluster_id"] = in.ClusterId
+	if len(in.ClusterID) > 0 {
+		obj["cluster_id"] = in.ClusterID
 	}
 
 	if len(in.ClusterType) > 0 {
@@ -39,7 +39,7 @@ func expandCloudCredentialHarvester(p []interface{}) *harvesterCredentialConfig 
 	in := p[0].(map[string]interface{})
 
 	if v, ok := in["cluster_id"].(string); ok && len(v) > 0 {
-		obj.ClusterId = v
+		obj.ClusterID = v
 	}
 
 	if v, ok := in["cluster_type"].(string); ok && len(v) > 0 {

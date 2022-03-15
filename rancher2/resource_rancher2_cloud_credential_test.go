@@ -443,7 +443,7 @@ func TestAccRancher2CloudCredential_basic_Harvester(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "name", "foo-harvester"),
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "description", "Terraform cloudCredential acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "driver", harvesterConfigDriver),
-					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "harvester_credential_config.0.kubeconfigContent", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "harvester_credential_config.0.kubeconfig_content", "XXXXXXXXXXXXXXXXXXXX"),
 				),
 			},
 			{
@@ -453,7 +453,7 @@ func TestAccRancher2CloudCredential_basic_Harvester(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "name", "foo-harvester"),
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "description", "Terraform cloudCredential acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "driver", harvesterConfigDriver),
-					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "harvester_credential_config.0.kubeconfigContent", "YYYYYYYYYYYYYYYYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "harvester_credential_config.0.kubeconfig_content", "YYYYYYYYYYYYYYYYYYYY"),
 				),
 			},
 			{
@@ -463,7 +463,7 @@ func TestAccRancher2CloudCredential_basic_Harvester(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "name", "foo-harvester"),
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "description", "Terraform cloudCredential acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "driver", harvesterConfigDriver),
-					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "harvester_credential_config.0.kubeconfigContent", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-harvester", "harvester_credential_config.0.kubeconfig_content", "XXXXXXXXXXXXXXXXXXXX"),
 				),
 			},
 		},
