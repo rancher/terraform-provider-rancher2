@@ -40,6 +40,10 @@ func flattenClusterV2RKEConfig(in *provisionv1.RKEConfig) []interface{} {
 		obj["etcd"] = flattenClusterV2RKEConfigETCD(in.ETCD)
 	}
 
+	if in.RotateCertificates != nil {
+		obj["rotate_certificates"] = flattenClusterV2RKEConfigRotateCertificates(in.RotateCertificates)
+	}
+
 	return []interface{}{obj}
 }
 
@@ -80,6 +84,10 @@ func expandClusterV2RKEConfig(p []interface{}) *provisionv1.RKEConfig {
 	}
 	if v, ok := in["etcd"].([]interface{}); ok && len(v) > 0 {
 		obj.ETCD = expandClusterV2RKEConfigETCD(v)
+	}
+
+	if v, ok := in["rotate_certificates"].([]interface{}); ok && len(v) > 0 {
+		obj.RotateCertificates = expandClusterV2RKEConfigRotateCertificates(v)
 	}
 
 	return obj
