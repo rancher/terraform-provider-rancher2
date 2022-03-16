@@ -17,7 +17,7 @@ var (
 //Types
 
 type harvesterCredentialConfig struct {
-	ClusterId         string `json:"clusterId,omitempty" yaml:"clusterId,omitempty"`
+	ClusterID         string `json:"clusterId,omitempty" yaml:"clusterId,omitempty"`
 	ClusterType       string `json:"clusterType,omitempty" yaml:"clusterType,omitempty"`
 	KubeconfigContent string `json:"kubeconfigContent,omitempty" yaml:"kubeconfigContent,omitempty"`
 }
