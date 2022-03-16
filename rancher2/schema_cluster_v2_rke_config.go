@@ -131,6 +131,15 @@ func clusterV2RKEConfigFields() map[string]*schema.Schema {
 				Schema: clusterV2RKEConfigRotateCertificatesFields(),
 			},
 		},
+		"rotate_encryption_keys": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Description: "Cluster V2 encryption key rotation",
+			Elem: &schema.Resource{
+				Schema: clusterV2RKEConfigRotateEncryptionKeysFields(),
+			},
+		},
 	}
 
 	return s

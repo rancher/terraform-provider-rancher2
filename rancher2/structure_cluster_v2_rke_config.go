@@ -44,6 +44,10 @@ func flattenClusterV2RKEConfig(in *provisionv1.RKEConfig) []interface{} {
 		obj["rotate_certificates"] = flattenClusterV2RKEConfigRotateCertificates(in.RotateCertificates)
 	}
 
+	if in.RotateEncryptionKeys != nil {
+		obj["rotate_encryption_keys"] = flattenClusterV2RKEConfigRotateEncryptionKeys(in.RotateEncryptionKeys)
+	}
+
 	return []interface{}{obj}
 }
 
@@ -88,6 +92,10 @@ func expandClusterV2RKEConfig(p []interface{}) *provisionv1.RKEConfig {
 
 	if v, ok := in["rotate_certificates"].([]interface{}); ok && len(v) > 0 {
 		obj.RotateCertificates = expandClusterV2RKEConfigRotateCertificates(v)
+	}
+
+	if v, ok := in["rotate_encryption_keys"].([]interface{}); ok && len(v) > 0 {
+		obj.RotateEncryptionKeys = expandClusterV2RKEConfigRotateEncryptionKeys(v)
 	}
 
 	return obj
