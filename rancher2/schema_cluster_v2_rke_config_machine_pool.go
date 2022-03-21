@@ -112,6 +112,26 @@ func clusterV2RKEConfigMachinePoolFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Machine pool worker role",
 		},
+		"node_startup_timeout_seconds": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "seconds a new node has to become active before it is replaced",
+		},
+		"unhealthy_node_timeout_seconds": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "seconds an unhealthy node has to become active before it is replaced",
+		},
+		"max_unhealthy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "max unhealthy nodes for automated replacement to be allowed",
+		},
+		"unhealthy_range": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "range of unhealthy nodes for automated replacement to be allowed",
+		},
 	}
 
 	for k, v := range commonAnnotationLabelFields() {
