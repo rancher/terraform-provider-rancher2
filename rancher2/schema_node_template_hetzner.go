@@ -45,7 +45,7 @@ func hetznerConfigFields() map[string]*schema.Schema {
 		"image_id": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "15512617",
+			Default:     "0",
 			Description: "Hetzner Cloud server image id",
 		},
 		"server_labels": {
