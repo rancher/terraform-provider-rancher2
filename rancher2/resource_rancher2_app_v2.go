@@ -161,7 +161,7 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    appV2StateRefreshFunc(meta, clusterID, app.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -194,7 +194,7 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 			Pending:    []string{},
 			Target:     []string{"removed"},
 			Refresh:    appV2StateRefreshFunc(meta, clusterID, app.ID),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Timeout:    d.Timeout(schema.TimeoutDelete),
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
