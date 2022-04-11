@@ -47,7 +47,7 @@ resource "rancher2_namespace" "testacc" {
   project_id = rancher2_cluster_sync.testacc.default_project_id
 }
 `
-	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.13", "v2.5.9", "v2.6.2"}
+	testAccCheckRancher2UpgradeVersion = []string{"v2.5.12", "v2.6.4"}
 	testAccCheckRancher2RunningVersionIndex = 0
 	testAccCheckRancher2UpgradeCluster = os.Getenv("RANCHER_ACC_CLUSTER_NAME")
 	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
@@ -337,44 +337,13 @@ func TestAccRancher2Upgrade(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRancher2BootstrapV23,
+				Config: testAccCheckRancher2BootstrapV24,
 				Check: resource.ComposeTestCheckFunc(
 					testAccRancher2UpgradeVars(),
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
-				),
-			},
-			{
-				Config: testAccCheckRancher2UpgradeConfigV23,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
-					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
-					testAccRancher2UpgradeRancher(),
-				),
-			},
-			{
-				Config: testAccCheckRancher2UpgradeConfigV24,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
-					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
-					testAccRancher2UpgradeRancher(),
 				),
 			},
 			{
@@ -406,6 +375,7 @@ func TestAccRancher2Upgrade(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
+					testAccRancher2UpgradeRancher(),
 				),
 			},
 		},
