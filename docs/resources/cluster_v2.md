@@ -461,11 +461,17 @@ The following attributes are exported:
 * `machine_config` - (Required) Machine pool node config (list)
 * `control_plane_role` - (Optional) Machine pool control plane role? (bool)
 * `etcd_role` - (Optional) Machine pool etcd role? (bool)
+* `drain_before_delete` - (Optional) Machine Pool Drain Before Delete? (bool)
+* `node_drain_timeout` - (Optional) Seconds a machine has to drain before deletion (int)
 * `paused` - (Optional) Machine pool paused? (bool)
 * `quantity` - (Optional) Machine pool quantity (int)
 * `rolling_update` - (Optional) Machine pool rolling update (List maxitems:1)
 * `taints` - (Optional) Machine pool taints (list)
 * `worker_role` - (Optional) Machine pool worker role? (bool)
+* `node_startup_timeout_seconds` - (Optional) Seconds a new node has to become active before it is replaced (int)
+* `unhealthy_node_timeout_seconds` - (Optional) Seconds an unhealthy node has to become active before it is replaced (int)
+* `max_unhealthy` - (Optional) Max unhealthy nodes for automated replacement to be allowed (string)
+* `unhealthy_range` - (Optional) Range of unhealthy nodes for automated replacement to be allowed (string)
 
 ##### `machine_config`
 

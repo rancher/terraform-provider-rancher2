@@ -84,6 +84,9 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		if in.UnhealthyNodeTimeout != nil {
 			obj["unhealthy_node_timeout_seconds"] = int(in.UnhealthyNodeTimeout.Seconds())
 		}
+		if in.DrainBeforeDeleteTimeout != nil {
+			obj["node_drain_timeout"] = int(in.DrainBeforeDeleteTimeout.Seconds())
+		}
 		if in.MaxUnhealthy != nil {
 			obj["max_unhealthy"] = *in.MaxUnhealthy
 		}
@@ -195,6 +198,10 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		if v, ok := in["unhealthy_node_timeout_seconds"].(int); ok && v > 0 {
 			d := metav1.Duration{Duration: time.Duration(v) * time.Second}
 			obj.UnhealthyNodeTimeout = &d
+		}
+		if v, ok := in["node_drain_timeout"].(int); ok && v > 0 {
+			d := metav1.Duration{Duration: time.Duration(v) * time.Second}
+			obj.DrainBeforeDeleteTimeout = &d
 		}
 		if v, ok := in["max_unhealthy"].(string); ok && len(v) > 0 {
 			obj.MaxUnhealthy = &v

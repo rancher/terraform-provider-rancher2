@@ -78,6 +78,12 @@ func clusterV2RKEConfigMachinePoolFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Machine pool drain before delete",
 		},
+		"node_drain_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
+			Description: "seconds to wait for machine pool drain to complete before machine deletion",
+		},
 		"paused": {
 			Type:        schema.TypeBool,
 			Optional:    true,
