@@ -47,12 +47,13 @@ func init() {
 	quantity := int32(10)
 	testClusterV2RKEConfigMachinePoolsConf = []provisionv1.RKEMachinePool{
 		{
-			Name:              "test",
-			DisplayName:       "test",
-			NodeConfig:        testClusterV2RKEConfigMachinePoolMachineConfigConf,
-			ControlPlaneRole:  true,
-			EtcdRole:          true,
-			DrainBeforeDelete: true,
+			Name:                     "test",
+			DisplayName:              "test",
+			NodeConfig:               testClusterV2RKEConfigMachinePoolMachineConfigConf,
+			ControlPlaneRole:         true,
+			EtcdRole:                 true,
+			DrainBeforeDelete:        true,
+			DrainBeforeDeleteTimeout: metav1DurationPtr(10),
 			MachineDeploymentAnnotations: map[string]string{
 				"anno_one": "one",
 				"anno_two": "two",
@@ -87,6 +88,7 @@ func init() {
 			"control_plane_role":           true,
 			"etcd_role":                    true,
 			"drain_before_delete":          true,
+			"node_drain_timeout":           10,
 			"annotations": map[string]interface{}{
 				"anno_one": "one",
 				"anno_two": "two",
