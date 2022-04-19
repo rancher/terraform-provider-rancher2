@@ -96,7 +96,7 @@ func resourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) err
 
 	cluster, err := getClusterV2ByID(meta.(*Config), d.Id())
 	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) || IsNotLookForByID(err) {
+		if IsNotFound(err) || IsForbidden(err) || IsNotAccessibleByID(err) {
 			log.Printf("[INFO] Cluster V2 %s not found", d.Id())
 			d.SetId("")
 			return nil
@@ -165,7 +165,7 @@ func clusterV2StateRefreshFunc(meta interface{}, objID string) resource.StateRef
 	return func() (interface{}, string, error) {
 		obj, err := getClusterV2ByID(meta.(*Config), objID)
 		if err != nil {
-			if IsNotFound(err) || IsForbidden(err) || IsNotLookForByID(err) {
+			if IsNotFound(err) || IsForbidden(err) || IsNotAccessibleByID(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err
@@ -273,10 +273,10 @@ func waitForClusterV2State(c *Config, id, state string, interval time.Duration) 
 		obj, err := getClusterV2ByID(c, id)
 		if err != nil {
 			log.Printf("[DEBUG] Retrying on error Refreshing Cluster V2 %s: %v", id, err)
-			if !IsNotFound(err) && !IsForbidden(err) && !IsNotLookForByID(err) {
+			if !IsNotFound(err) && !IsForbidden(err) && !IsNotAccessibleByID(err) {
 				return nil, fmt.Errorf("Getting cluster V2 ID (%s): %v", id, err)
 			}
-			if IsNotLookForByID(err) {
+			if IsNotAccessibleByID(err) {
 				// Restarting clients to update RBAC
 				c.RestartClients()
 			}
