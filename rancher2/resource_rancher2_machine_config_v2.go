@@ -84,7 +84,7 @@ func resourceRancher2MachineConfigV2Update(d *schema.ResourceData, meta interfac
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    machineConfigV2StateRefreshFunc(meta, newObj.ID, newObj.TypeMeta.Kind),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

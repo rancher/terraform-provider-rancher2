@@ -5,7 +5,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2Token() *schema.Resource {
@@ -49,6 +51,18 @@ func resourceRancher2TokenCreate(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return err
 	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"active"},
+		Refresh:    tokenStateRefreshFunc(client, d.Id()),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for token (%s) to be active: %s", d.Id(), waitErr)
+	}
 
 	return resourceRancher2TokenRead(d, meta)
 }
@@ -88,7 +102,27 @@ func resourceRancher2TokenRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRancher2TokenUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceRancher2TokenRead(d, meta)
+	err := resourceRancher2TokenRead(d, meta)
+
+	client, err := meta.(*Config).ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"active"},
+		Target:     []string{"active"},
+		Refresh:    tokenStateRefreshFunc(client, d.Id()),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for token (%s) to be updated: %s", d.Id(), waitErr)
+	}
+
+	return err
 }
 
 func resourceRancher2TokenDelete(d *schema.ResourceData, meta interface{}) error {
@@ -114,8 +148,34 @@ func resourceRancher2TokenDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error removing Token: %s", err)
 	}
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"removed"},
+		Refresh:    tokenStateRefreshFunc(client, d.Id()),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for token (%s) to be removed: %s", d.Id(), waitErr)
+	}
+
 	d.SetId("")
 	return nil
+}
+
+func tokenStateRefreshFunc(client *managementClient.Client, tokenID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := client.Token.ByID(tokenID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				return obj, "removed", nil
+			}
+			return nil, "", err
+		}
+		return obj, "active", nil
+	}
 }
 
 func isTokenValid(c *Config, id string) (bool, error) {

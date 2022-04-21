@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -48,6 +49,18 @@ func resourceRancher2RegistryCreate(d *schema.ResourceData, meta interface{}) er
 	err = flattenRegistry(d, newRegistry)
 	if err != nil {
 		return err
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"active"},
+		Refresh:    registryStateRefreshFunc(meta, d.Id(), projectID, d.Get("namespace_id").(string)),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for registry (%s) to be created: %s", d.Id(), waitErr)
 	}
 
 	return resourceRancher2RegistryRead(d, meta)
@@ -101,6 +114,18 @@ func resourceRancher2RegistryUpdate(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return err
 	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"active"},
+		Target:     []string{"active"},
+		Refresh:    registryStateRefreshFunc(meta, id, projectID, namespaceID),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for registry (%s) to be updated: %s", id, waitErr)
+	}
 
 	return resourceRancher2RegistryRead(d, meta)
 }
@@ -126,7 +151,32 @@ func resourceRancher2RegistryDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("Error removing Registry: %s", err)
 	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"removed"},
+		Refresh:    registryStateRefreshFunc(meta, id, projectID, namespaceID),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for registry (%s) to be removed: %s", id, waitErr)
+	}
 
 	d.SetId("")
 	return nil
+}
+
+func registryStateRefreshFunc(meta interface{}, id string, projectID string, namespaceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := meta.(*Config).GetRegistry(id, projectID, namespaceID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				return obj, "removed", nil
+			}
+			return nil, "", err
+		}
+		return obj, "exists", nil
+	}
 }

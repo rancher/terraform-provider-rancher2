@@ -92,7 +92,7 @@ func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) e
 		Pending:    []string{},
 		Target:     []string{"downloaded"},
 		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, newCatalog.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

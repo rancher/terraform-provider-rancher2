@@ -103,7 +103,7 @@ func resourceRancher2StorageClassV2Update(d *schema.ResourceData, meta interface
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    storageClassV2StateRefreshFunc(meta, clusterID, newStorageClass.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

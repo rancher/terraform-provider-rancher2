@@ -46,6 +46,21 @@ func resourceRancher2PodSecurityPolicyTemplateCreate(d *schema.ResourceData, met
 
 	d.SetId(newPodSecurityPolicyTemplate.ID)
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"active"},
+		Refresh:    podSecurityPolicyTemplateStateRefreshFunc(client, d.Id()),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf(
+			"[ERROR] waiting for PodSecurityPolicyTemplate (%s) to be created: %s", d.Id(), waitErr)
+	}
+
 	return resourceRancher2PodSecurityPolicyTemplateRead(d, meta)
 }
 
@@ -86,6 +101,20 @@ func resourceRancher2PodSecurityPolicyTemplateUpdate(d *schema.ResourceData, met
 	_, err = client.PodSecurityPolicyTemplate.Update(pspt, update)
 	if err != nil {
 		return err
+	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"active"},
+		Target:     []string{"active"},
+		Refresh:    podSecurityPolicyTemplateStateRefreshFunc(client, d.Id()),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf(
+			"[ERROR] waiting for PodSecurityPolicyTemplate (%s) to be updated: %s", d.Id(), waitErr)
 	}
 
 	return resourceRancher2PodSecurityPolicyTemplateRead(d, meta)

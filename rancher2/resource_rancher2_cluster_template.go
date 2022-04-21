@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
@@ -178,6 +179,19 @@ func resourceRancher2ClusterTemplateCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"exists"},
+		Refresh:    clusterTemplateStateRefreshFunc(client, d.Id()),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", newClusterTemplate.ID, waitErr)
+	}
+
 	return resourceRancher2ClusterTemplateRead(d, meta)
 }
 
@@ -258,6 +272,20 @@ func resourceRancher2ClusterTemplateUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"active"},
+		Target:     []string{"active"},
+		Refresh:    clusterTemplateStateRefreshFunc(client, newClusterTemplate.ID),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf(
+			"[ERROR] waiting for cloud credential (%s) to be updated: %s", newClusterTemplate.ID, waitErr)
+	}
+
 	return resourceRancher2ClusterTemplateRead(d, meta)
 }
 
@@ -284,8 +312,37 @@ func resourceRancher2ClusterTemplateDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error removing Cluster Template: %s", err)
 	}
 
+	log.Printf("[DEBUG] Waiting for Cluster Template (%s) to be removed", id)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"removed"},
+		Refresh:    clusterTemplateStateRefreshFunc(client, id),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for Cluster Template (%s) to be removed: %s", id, waitErr)
+	}
+
 	d.SetId("")
 	return nil
+}
+
+func clusterTemplateStateRefreshFunc(client *managementClient.Client, clusterTemplateID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := client.ClusterTemplate.ByID(clusterTemplateID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				return obj, "removed", nil
+			}
+			return nil, "", err
+		}
+		return obj, "active", nil
+	}
 }
 
 func clusterTemplateRevisionsCreate(client *managementClient.Client, ctID string, ctrs []managementClient.ClusterTemplateRevision) ([]managementClient.ClusterTemplateRevision, error) {

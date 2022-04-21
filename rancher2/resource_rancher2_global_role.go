@@ -5,7 +5,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2GlobalRole() *schema.Resource {
@@ -44,6 +46,20 @@ func resourceRancher2GlobalRoleCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(newGlobalRole.ID)
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"active"},
+		Refresh:    globalRoleStateRefreshFunc(client, newGlobalRole.ID),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for Global Role (%s) to be created: %s", newGlobalRole.ID, waitErr)
+	}
+
 	return resourceRancher2GlobalRoleRead(d, meta)
 }
 
@@ -73,13 +89,14 @@ func resourceRancher2GlobalRoleRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating global role ID %s", d.Id())
+	id := d.Id()
+	log.Printf("[INFO] Updating global role ID %s", id)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	globalRole, err := client.GlobalRole.ByID(d.Id())
+	globalRole, err := client.GlobalRole.ByID(id)
 	if err != nil {
 		return err
 	}
@@ -96,6 +113,20 @@ func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) 
 	_, err = client.GlobalRole.Update(globalRole, update)
 	if err != nil {
 		return err
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"active"},
+		Target:     []string{"active"},
+		Refresh:    globalRoleStateRefreshFunc(client, id),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for Global Role (%s) to be updated: %s", id, waitErr)
 	}
 
 	return resourceRancher2GlobalRoleRead(d, meta)
@@ -126,6 +157,33 @@ func resourceRancher2GlobalRoleDelete(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"removed"},
+		Refresh:    globalRoleStateRefreshFunc(client, id),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for Global Role (%s) to be removed: %s", id, waitErr)
+	}
+
 	d.SetId("")
 	return nil
+}
+
+func globalRoleStateRefreshFunc(client *managementClient.Client, globalRoleID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := client.GlobalRole.ByID(globalRoleID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				return obj, "removed", nil
+			}
+			return nil, "", err
+		}
+		return obj, "active", nil
+	}
 }

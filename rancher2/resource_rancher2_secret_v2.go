@@ -93,7 +93,7 @@ func resourceRancher2SecretV2Update(d *schema.ResourceData, meta interface{}) er
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    secretV2StateRefreshFunc(meta, clusterID, newSecret.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

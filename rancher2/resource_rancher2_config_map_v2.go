@@ -86,7 +86,7 @@ func resourceRancher2ConfigMapV2Update(d *schema.ResourceData, meta interface{})
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    configMapV2StateRefreshFunc(meta, clusterID, newConfigMap.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

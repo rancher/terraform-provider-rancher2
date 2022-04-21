@@ -5,7 +5,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2RoleTemplate() *schema.Resource {
@@ -43,6 +45,18 @@ func resourceRancher2RoleTemplateCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId(newRoleTemplate.ID)
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"active"},
+		Refresh:    roleTemplateStateRefreshFunc(client, d.Id()),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for role template (%s) to be active: %s", d.Id(), waitErr)
+	}
 
 	return resourceRancher2RoleTemplateRead(d, meta)
 }
@@ -111,6 +125,18 @@ func resourceRancher2RoleTemplateUpdate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"active"},
+		Target:     []string{"active"},
+		Refresh:    roleTemplateStateRefreshFunc(client, d.Id()),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for role template (%s) to be updated: %s", d.Id(), waitErr)
+	}
 
 	return resourceRancher2RoleTemplateRead(d, meta)
 }
@@ -140,6 +166,32 @@ func resourceRancher2RoleTemplateDelete(d *schema.ResourceData, meta interface{}
 		}
 	}
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{},
+		Target:     []string{"removed"},
+		Refresh:    roleTemplateStateRefreshFunc(client, id),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, waitErr := stateConf.WaitForState()
+	if waitErr != nil {
+		return fmt.Errorf("[ERROR] waiting for role template (%s) to be removed: %s", id, waitErr)
+	}
+
 	d.SetId("")
 	return nil
+}
+
+func roleTemplateStateRefreshFunc(client *managementClient.Client, roleTemplateID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		obj, err := client.RoleTemplate.ByID(roleTemplateID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				return obj, "removed", nil
+			}
+			return nil, "", err
+		}
+		return obj, "exists", nil
+	}
 }

@@ -182,7 +182,7 @@ func resourceRancher2MultiClusterAppUpdate(d *schema.ResourceData, meta interfac
 			Pending:    []string{},
 			Target:     []string{"active"},
 			Refresh:    multiClusterAppStateRefreshFunc(client, id),
-			Timeout:    d.Timeout(schema.TimeoutCreate),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
