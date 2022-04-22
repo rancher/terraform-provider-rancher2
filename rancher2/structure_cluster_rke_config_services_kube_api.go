@@ -86,6 +86,54 @@ func flattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(in *managemen
 	return []interface{}{obj}, nil
 }
 
+func flattenClusterRKEConfigServicesKubeAPIAdmissionConfigurationPlugins(in []interface{}) ([]interface{}, error) {
+	obj := []interface{}{}
+	if len(in) == 0 {
+		return []interface{}{}, nil
+	}
+
+	for _, plugin := range in {
+		pluginMap, ok := plugin.(map[string]interface{})
+		if !ok || len(pluginMap) == 0 {
+			continue // or return, if this is an error condition
+		}
+		var newObj = map[string]interface{}{}
+		newObj["name"] = pluginMap["name"].(string)
+		newObj["path"] = pluginMap["path"].(string)
+		configurationStr, err := mapInterfaceToYAML(pluginMap["configuration"].(map[string]interface{}))
+		if err != nil {
+			return []interface{}{}, fmt.Errorf("Marshalling plugin configuration to yaml for %v: %v", pluginMap["name"], err)
+		}
+		newObj["configuration"] = configurationStr
+		obj = append(obj, newObj)
+	}
+	return obj, nil
+}
+
+func flattenClusterRKEConfigServicesKubeAPIAdmissionConfiguration(in map[string]interface{}) ([]interface{}, error) {
+	obj := make(map[string]interface{})
+	if in == nil {
+		return []interface{}{}, nil
+	}
+
+	if v, ok := in["apiVersion"].(string); ok {
+		obj["api_version"] = v
+	}
+
+	if v, ok := in["kind"].(string); ok {
+		obj["kind"] = v
+	}
+
+	if v, ok := in["plugins"].([]interface{}); ok {
+		plugins, err := flattenClusterRKEConfigServicesKubeAPIAdmissionConfigurationPlugins(v)
+		if err != nil {
+			return []interface{}{}, err
+		}
+		obj["plugins"] = plugins
+	}
+	return []interface{}{obj}, nil
+}
+
 func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
@@ -93,7 +141,12 @@ func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService)
 	}
 
 	if len(in.AdmissionConfiguration) > 0 {
-		obj["admission_configuration"] = in.AdmissionConfiguration
+		admissionConfig, err := flattenClusterRKEConfigServicesKubeAPIAdmissionConfiguration(in.AdmissionConfiguration)
+		if err != nil {
+			return []interface{}{}, err
+		}
+
+		obj["admission_configuration"] = admissionConfig
 	}
 
 	obj["always_pull_images"] = in.AlwaysPullImages
@@ -210,6 +263,55 @@ func expandClusterRKEConfigServicesKubeAPIAuditLog(p []interface{}) (*management
 	return obj, nil
 }
 
+func expandClusterRKEConfigServicesKubeAPIAdmissionConfigurationPlugins(p []interface{}) ([]interface{}, error) {
+	obj := []interface{}{}
+	if len(p) == 0 || p[0] == nil {
+		return obj, nil
+	}
+	for _, plugin := range p {
+		pluginMap, ok := plugin.(map[string]interface{})
+		if !ok || len(pluginMap) == 0 {
+			continue // or return, if this is an error condition
+		}
+		var newObj = map[string]interface{}{}
+		newObj["name"] = pluginMap["name"].(string)
+		newObj["path"] = pluginMap["path"].(string)
+		configuration, err := ghodssyamlToMapInterface(pluginMap["configuration"].(string))
+		if err != nil {
+			return obj, fmt.Errorf("Unmarshalling plugin configuration from yaml for %v: %v", pluginMap["name"], err)
+		}
+		newObj["configuration"] = configuration
+		obj = append(obj, newObj)
+	}
+	return obj, nil
+}
+
+func expandClusterRKEConfigServicesKubeAPIAdmissionConfiguration(p []interface{}) (map[string]interface{}, error) {
+	obj := make(map[string]interface{})
+	if len(p) == 0 || p[0] == nil {
+		return obj, nil
+	}
+	in := p[0].(map[string]interface{})
+
+	if v, ok := in["api_version"].(string); ok && len(v) > 0 {
+		obj["apiVersion"] = v
+	}
+
+	if v, ok := in["kind"].(string); ok && len(v) > 0 {
+		obj["kind"] = v
+	}
+
+	if v, ok := in["plugins"].([]interface{}); ok && len(v) > 0 {
+		plugins, err := expandClusterRKEConfigServicesKubeAPIAdmissionConfigurationPlugins(v)
+		if err != nil {
+			return nil, err
+		}
+		obj["plugins"] = plugins
+	}
+
+	return obj, nil
+}
+
 func expandClusterRKEConfigServicesKubeAPIEventRateLimit(p []interface{}) *managementClient.EventRateLimit {
 	obj := &managementClient.EventRateLimit{}
 	if len(p) == 0 || p[0] == nil {
@@ -262,8 +364,12 @@ func expandClusterRKEConfigServicesKubeAPI(p []interface{}) (*managementClient.K
 	}
 	in := p[0].(map[string]interface{})
 
-	if v, ok := in["admission_configuration"].(map[string]interface{}); ok && len(v) > 0 {
-		obj.AdmissionConfiguration = v
+	if v, ok := in["admission_configuration"].([]interface{}); ok && len(v) > 0 {
+		admissionConfig, err := expandClusterRKEConfigServicesKubeAPIAdmissionConfiguration(v)
+		if err != nil {
+			return nil, err
+		}
+		obj.AdmissionConfiguration = admissionConfig
 	}
 
 	if v, ok := in["always_pull_images"].(bool); ok {
