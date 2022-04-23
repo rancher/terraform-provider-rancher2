@@ -6,7 +6,7 @@ page_title: "rancher2_cloud_credential Resource"
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2.x and retrieve their information.
 
-amazonec2, azure, digitalocean, linode, openstack and vsphere credentials config are supported for Cloud Credential.
+amazonec2, azure, digitalocean, harvester, linode, openstack and vsphere credentials config are supported for Cloud Credential.
 
 ## Example Usage
 
@@ -22,6 +22,23 @@ resource "rancher2_cloud_credential" "foo" {
 }
 ```
 
+```hcl
+# Get imported harvester cluster info
+data "rancher2_cluster_v2" "foo-harvester" {
+  name = "foo-harvester"
+}
+
+# Create a new Cloud Credential for an imported Harvester cluster
+resource "rancher2_cloud_credential" "foo-harvester" {
+  name = "foo-harvester"
+  harvester_credential_config {
+    cluster_id = data.rancher2_cluster_v2.foo-harvester.cluster_v1_id
+    cluster_type = "imported"
+    kubeconfig_content = data.rancher2_cluster_v2.foo-harvester.kube_config
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -32,6 +49,7 @@ The following arguments are supported:
 * `description` - (Optional) Description for the Cloud Credential (string)
 * `digitalocean_credential_config` - (Optional) DigitalOcean config for the Cloud Credential (list maxitems:1)
 * `google_credential_config` - (Optional) Google config for the Cloud Credential (list maxitems:1)
+* `harvester_credential_config` - (Optional) Harvester config for the Cloud Credential (list maxitems:1)
 * `linode_credential_config` - (Optional) Linode config for the Cloud Credential (list maxitems:1)
 * `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
 * `s3_credential_config` - (Optional) S3 config for the Cloud Credential. Just for Rancher 2.6.0 and above (list maxitems:1)
@@ -78,6 +96,14 @@ The following attributes are exported:
 
 * `auth_encoded_json` - (Required/Sensitive) Google auth encoded json (string)
 
+### `harvester_credential_config`
+
+#### Arguments
+
+* `cluster_id` - (Optional) Imported Harvester Cluster ID (string)
+* `cluster_type` - (Required) Harvester Cluster Type. Supported values : `"imported" | "external"` (string)
+* `kubeconfig_content` - (Required/Sensitive) Harvester Cluster KubeConfig Content (string)
+
 ### `linode_credential_config`
 
 #### Arguments
@@ -120,3 +146,22 @@ The following attributes are exported:
 - `create` - (Default `10 minutes`) Used for creating cloud credentials.
 - `update` - (Default `10 minutes`) Used for cloud credential modifications.
 - `delete` - (Default `10 minutes`) Used for deleting cloud credentials.
+
+## Import
+
+Cloud Credential can be imported using the Cloud Credential ID and the Driver name.
+
+```bash
+terraform import rancher2_cloud_credential.foo &lt;CLOUD_CREDENTIAL_ID&gt;.&lt;DRIVER&gt;
+```
+
+The following drivers are supported:
+
+* amazonec2
+* azure
+* digitalocean
+* googlekubernetesengine
+* linode
+* openstack
+* s3
+* vmwarevsphere

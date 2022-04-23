@@ -1,3 +1,24 @@
+## 1.23.0 (March 31, 2022)
+
+FEATURES:
+
+* The Harvester node driver is now supported. See [#861](https://github.com/rancher/terraform-provider-rancher2/pull/861).
+* Added support for KEv2 cluster certificate rotation. See [#882](https://github.com/rancher/terraform-provider-rancher2/pull/882).
+* Added support for node pool health checks on KEv2 clusters. See [#889](https://github.com/rancher/terraform-provider-rancher2/pull/889).
+
+
+ENHANCEMENTS:
+
+* `hetzner_node_driver` now supports specifying `server_labels`. See [#851](https://github.com/rancher/terraform-provider-rancher2/pull/851).
+* `drain_before_delete` can now be specified on `rancher2_cluster_v2` resources. See [#890](https://github.com/rancher/terraform-provider-rancher2/pull/890).
+* Added support for `rancher2_cloud_credential` imported resources.
+* Added `rancher2_node_template` label for server resources in `hetzner_config`. See [#657](https://github.com/rancher/terraform-provider-rancher2/issues/657).
+
+BUG FIXES:
+
+* Importing KEv2 clusters with the Rancher client have their config correctly rewritten. See [#36128](https://github.com/rancher/rancher/issues/36128).
+* Fix race condition for empty kubeconfig generation for `rancher2_cluster_sync` resource. See [#849](https://github.com/rancher/terraform-provider-rancher2/issues/849).
+
 ## 1.22.2 (January 6, 2022)
 
 FEATURES:

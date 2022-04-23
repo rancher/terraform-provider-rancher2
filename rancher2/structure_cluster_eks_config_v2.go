@@ -59,8 +59,8 @@ func flattenClusterEKSConfigV2NodeGroups(input []managementClient.NodeGroup, p [
 		if in.InstanceType != nil && len(*in.InstanceType) > 0 {
 			obj["instance_type"] = *in.InstanceType
 		}
-		if in.Labels != nil && len(*in.Labels) > 0 {
-			obj["labels"] = toMapInterface(*in.Labels)
+		if in.Labels != nil && len(in.Labels) > 0 {
+			obj["labels"] = toMapInterface(in.Labels)
 		}
 		if in.LaunchTemplate != nil {
 			v, ok := obj["launch_template"].([]interface{})
@@ -78,17 +78,17 @@ func flattenClusterEKSConfigV2NodeGroups(input []managementClient.NodeGroup, p [
 		if in.RequestSpotInstances != nil {
 			obj["request_spot_instances"] = *in.RequestSpotInstances
 		}
-		if in.ResourceTags != nil && len(*in.ResourceTags) > 0 {
-			obj["resource_tags"] = toMapInterface(*in.ResourceTags)
+		if in.ResourceTags != nil && len(in.ResourceTags) > 0 {
+			obj["resource_tags"] = toMapInterface(in.ResourceTags)
 		}
-		if in.SpotInstanceTypes != nil && len(*in.SpotInstanceTypes) > 0 {
-			obj["spot_instance_types"] = toArrayInterfaceSorted(*in.SpotInstanceTypes)
+		if in.SpotInstanceTypes != nil && len(in.SpotInstanceTypes) > 0 {
+			obj["spot_instance_types"] = toArrayInterfaceSorted(in.SpotInstanceTypes)
 		}
-		if in.Subnets != nil && len(*in.Subnets) > 0 {
-			obj["subnets"] = toArrayInterfaceSorted(*in.Subnets)
+		if in.Subnets != nil && len(in.Subnets) > 0 {
+			obj["subnets"] = toArrayInterfaceSorted(in.Subnets)
 		}
-		if in.Tags != nil && len(*in.Tags) > 0 {
-			obj["tags"] = toMapInterface(*in.Tags)
+		if in.Tags != nil && len(in.Tags) > 0 {
+			obj["tags"] = toMapInterface(in.Tags)
 		}
 		if in.UserData != nil && len(*in.UserData) > 0 {
 			obj["user_data"] = *in.UserData
@@ -121,19 +121,19 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 	if in.KubernetesVersion != nil && len(*in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = *in.KubernetesVersion
 	}
-	if in.NodeGroups != nil && len(*in.NodeGroups) > 0 {
+	if in.NodeGroups != nil && len(in.NodeGroups) > 0 {
 		v, ok := obj["node_groups"].([]interface{})
 		if !ok {
 			v = []interface{}{}
 		}
-		obj["node_groups"] = flattenClusterEKSConfigV2NodeGroups(*in.NodeGroups, v)
+		obj["node_groups"] = flattenClusterEKSConfigV2NodeGroups(in.NodeGroups, v)
 	}
 	obj["imported"] = in.Imported
 	if in.KmsKey != nil && len(*in.KmsKey) > 0 {
 		obj["kms_key"] = *in.KmsKey
 	}
-	if in.LoggingTypes != nil && len(*in.LoggingTypes) > 0 {
-		obj["logging_types"] = toArrayInterfaceSorted(*in.LoggingTypes)
+	if in.LoggingTypes != nil && len(in.LoggingTypes) > 0 {
+		obj["logging_types"] = toArrayInterfaceSorted(in.LoggingTypes)
 	}
 	if in.PrivateAccess != nil {
 		obj["private_access"] = *in.PrivateAccess
@@ -141,8 +141,8 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 	if in.PublicAccess != nil {
 		obj["public_access"] = *in.PublicAccess
 	}
-	if in.PublicAccessSources != nil && len(*in.PublicAccessSources) > 0 {
-		obj["public_access_sources"] = toArrayInterfaceSorted(*in.PublicAccessSources)
+	if in.PublicAccessSources != nil && len(in.PublicAccessSources) > 0 {
+		obj["public_access_sources"] = toArrayInterfaceSorted(in.PublicAccessSources)
 	}
 	if in.SecretsEncryption != nil {
 		obj["secrets_encryption"] = *in.SecretsEncryption
@@ -153,17 +153,17 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 	if in.SecretsEncryption != nil {
 		obj["secrets_encryption"] = *in.SecretsEncryption
 	}
-	if in.SecurityGroups != nil && len(*in.SecurityGroups) > 0 {
-		obj["security_groups"] = toArrayInterfaceSorted(*in.SecurityGroups)
+	if in.SecurityGroups != nil && len(in.SecurityGroups) > 0 {
+		obj["security_groups"] = toArrayInterfaceSorted(in.SecurityGroups)
 	}
 	if in.ServiceRole != nil && len(*in.ServiceRole) > 0 {
 		obj["service_role"] = *in.ServiceRole
 	}
-	if in.Subnets != nil && len(*in.Subnets) > 0 {
-		obj["subnets"] = toArrayInterfaceSorted(*in.Subnets)
+	if in.Subnets != nil && len(in.Subnets) > 0 {
+		obj["subnets"] = toArrayInterfaceSorted(in.Subnets)
 	}
-	if in.Tags != nil && len(*in.Tags) > 0 {
-		obj["tags"] = toMapInterface(*in.Tags)
+	if in.Tags != nil && len(in.Tags) > 0 {
+		obj["tags"] = toMapInterface(in.Tags)
 	}
 
 	return []interface{}{obj}
@@ -226,7 +226,7 @@ func expandClusterEKSConfigV2NodeGroups(p []interface{}, subnets []string, versi
 		}
 		if v, ok := in["labels"].(map[string]interface{}); ok {
 			labels := toMapString(v)
-			obj.Labels = &labels
+			obj.Labels = labels
 		}
 		if v, ok := in["launch_template"].([]interface{}); ok && len(v) > 0 {
 			obj.LaunchTemplate = expandClusterEKSConfigV2NodeGroupsLaunchTemplate(v)
@@ -244,23 +244,23 @@ func expandClusterEKSConfigV2NodeGroups(p []interface{}, subnets []string, versi
 		}
 		if v, ok := in["resource_tags"].(map[string]interface{}); ok {
 			resourceTags := toMapString(v)
-			obj.ResourceTags = &resourceTags
+			obj.ResourceTags = resourceTags
 		}
 		if v, ok := in["spot_instance_types"].([]interface{}); ok {
 			spotInstanceTypes := toArrayStringSorted(v)
-			obj.SpotInstanceTypes = &spotInstanceTypes
+			obj.SpotInstanceTypes = spotInstanceTypes
 		}
 		// setting objSubnets from subnet var or from tf argument
 		if subnets != nil {
-			obj.Subnets = &subnets
+			obj.Subnets = subnets
 		}
 		if v, ok := in["subnets"].([]interface{}); ok {
 			nets := toArrayStringSorted(v)
-			obj.Subnets = &nets
+			obj.Subnets = nets
 		}
 		if v, ok := in["tags"].(map[string]interface{}); ok {
 			tags := toMapString(v)
-			obj.Tags = &tags
+			obj.Tags = tags
 		}
 		if v, ok := in["user_data"].(string); ok {
 			obj.UserData = &v
@@ -291,11 +291,11 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	subnets := []string{}
 	if v, ok := in["subnets"].([]interface{}); ok {
 		subnets = toArrayStringSorted(v)
-		obj.Subnets = &subnets
+		obj.Subnets = subnets
 	}
 	if v, ok := in["node_groups"].([]interface{}); ok {
 		nodeGroups := expandClusterEKSConfigV2NodeGroups(v, subnets, k8sVersion)
-		obj.NodeGroups = &nodeGroups
+		obj.NodeGroups = nodeGroups
 	}
 	if v, ok := in["imported"].(bool); ok {
 		obj.Imported = v
@@ -305,7 +305,7 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	}
 	if v, ok := in["logging_types"].([]interface{}); ok {
 		loggingTypes := toArrayStringSorted(v)
-		obj.LoggingTypes = &loggingTypes
+		obj.LoggingTypes = loggingTypes
 	}
 	if v, ok := in["private_access"].(bool); ok && !obj.Imported {
 		obj.PrivateAccess = &v
@@ -315,7 +315,7 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	}
 	if v, ok := in["public_access_sources"].([]interface{}); ok {
 		publicAccessSources := toArrayStringSorted(v)
-		obj.PublicAccessSources = &publicAccessSources
+		obj.PublicAccessSources = publicAccessSources
 	}
 	if v, ok := in["region"].(string); ok {
 		obj.Region = v
@@ -325,15 +325,15 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	}
 	if v, ok := in["security_groups"].([]interface{}); ok {
 		securityGroups := toArrayStringSorted(v)
-		obj.SecurityGroups = &securityGroups
+		obj.SecurityGroups = securityGroups
 	}
 	if v, ok := in["service_role"].(string); ok {
 		obj.ServiceRole = newString(v)
 	}
-	obj.Tags = &map[string]string{}
+	obj.Tags = map[string]string{}
 	if v, ok := in["tags"].(map[string]interface{}); ok {
 		tags := toMapString(v)
-		obj.Tags = &tags
+		obj.Tags = tags
 	}
 
 	return obj

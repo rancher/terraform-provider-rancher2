@@ -341,7 +341,7 @@ func IsUnknownSchemaType(err error) bool {
 	return strings.Contains(err.Error(), "Unknown schema type")
 }
 
-func IsNotLookForByID(err error) bool {
+func IsNotAccessibleByID(err error) bool {
 	return strings.Contains(err.Error(), "can not be looked up by ID")
 }
 

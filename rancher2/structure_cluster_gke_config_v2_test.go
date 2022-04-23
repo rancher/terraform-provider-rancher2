@@ -205,11 +205,11 @@ func init() {
 		IPAllocationPolicy:     testClusterGKEConfigV2IPAllocationPolicyConf,
 		Imported:               false,
 		KubernetesVersion:      newString("kubernetes_version"),
-		Labels: &map[string]string{
+		Labels: map[string]string{
 			"label1": "value1",
 			"label2": "value2",
 		},
-		Locations:                      &[]string{"access1", "access2"},
+		Locations:                      []string{"access1", "access2"},
 		LoggingService:                 newString("logging_service"),
 		MaintenanceWindow:              newString("maintenance_window"),
 		MasterAuthorizedNetworksConfig: testClusterGKEConfigV2MasterAuthorizedNetworksConfigConf,

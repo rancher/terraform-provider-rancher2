@@ -3,7 +3,9 @@ package rancher2
 import (
 	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"time"
 )
 
 // Flatteners
@@ -55,6 +57,7 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		}
 		obj["control_plane_role"] = in.ControlPlaneRole
 		obj["etcd_role"] = in.EtcdRole
+		obj["drain_before_delete"] = in.DrainBeforeDelete
 
 		if len(in.MachineDeploymentAnnotations) > 0 {
 			obj["annotations"] = toMapInterface(in.MachineDeploymentAnnotations)
@@ -74,6 +77,22 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		}
 		obj["worker_role"] = in.WorkerRole
 		out[i] = obj
+
+		if in.NodeStartupTimeout != nil {
+			obj["node_startup_timeout_seconds"] = int(in.NodeStartupTimeout.Seconds())
+		}
+		if in.UnhealthyNodeTimeout != nil {
+			obj["unhealthy_node_timeout_seconds"] = int(in.UnhealthyNodeTimeout.Seconds())
+		}
+		if in.DrainBeforeDeleteTimeout != nil {
+			obj["node_drain_timeout"] = int(in.DrainBeforeDeleteTimeout.Seconds())
+		}
+		if in.MaxUnhealthy != nil {
+			obj["max_unhealthy"] = *in.MaxUnhealthy
+		}
+		if in.UnhealthyRange != nil {
+			obj["unhealthy_range"] = *in.UnhealthyRange
+		}
 	}
 
 	return out
@@ -147,6 +166,9 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		if v, ok := in["etcd_role"].(bool); ok {
 			obj.EtcdRole = v
 		}
+		if v, ok := in["drain_before_delete"].(bool); ok {
+			obj.DrainBeforeDelete = v
+		}
 		if v, ok := in["annotations"].(map[string]interface{}); ok && len(v) > 0 {
 			obj.MachineDeploymentAnnotations = toMapString(v)
 		}
@@ -169,6 +191,25 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		if v, ok := in["worker_role"].(bool); ok {
 			obj.WorkerRole = v
 		}
+		if v, ok := in["node_startup_timeout_seconds"].(int); ok && v > 0 {
+			d := metav1.Duration{Duration: time.Duration(v) * time.Second}
+			obj.NodeStartupTimeout = &d
+		}
+		if v, ok := in["unhealthy_node_timeout_seconds"].(int); ok && v > 0 {
+			d := metav1.Duration{Duration: time.Duration(v) * time.Second}
+			obj.UnhealthyNodeTimeout = &d
+		}
+		if v, ok := in["node_drain_timeout"].(int); ok && v > 0 {
+			d := metav1.Duration{Duration: time.Duration(v) * time.Second}
+			obj.DrainBeforeDeleteTimeout = &d
+		}
+		if v, ok := in["max_unhealthy"].(string); ok && len(v) > 0 {
+			obj.MaxUnhealthy = &v
+		}
+		if v, ok := in["unhealthy_range"].(string); ok && len(v) > 0 {
+			obj.UnhealthyRange = &v
+		}
+
 		out[i] = obj
 	}
 

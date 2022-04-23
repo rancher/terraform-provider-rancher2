@@ -138,14 +138,16 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 		update["azureConfig"] = expandAzureConfig(d.Get("azure_config").([]interface{}))
 	case digitaloceanConfigDriver:
 		update["digitaloceanConfig"] = expandDigitaloceanConfig(d.Get("digitalocean_config").([]interface{}))
+	case harvesterConfigDriver:
+		update["harvesterConfig"] = expandHarvestercloudConfig(d.Get("harvester_config").([]interface{}))
+	case hetznerConfigDriver:
+		update["hetznerConfig"] = expandHetznercloudConfig(d.Get("hetzner_config").([]interface{}))
 	case linodeConfigDriver:
 		update["linodeConfig"] = expandLinodeConfig(d.Get("linode_config").([]interface{}))
 	case openstackConfigDriver:
 		update["openstackConfig"] = expandOpenstackConfig(d.Get("openstack_config").([]interface{}))
 	case opennebulaConfigDriver:
 		update["opennebulaConfig"] = expandOpennebulaConfig(d.Get("opennebula_config").([]interface{}))
-	case hetznerConfigDriver:
-		update["hetznerConfig"] = expandHetznercloudConfig(d.Get("hetzner_config").([]interface{}))
 	case vmwarevsphereConfigDriver:
 		update["vmwarevsphereConfig"] = expandVsphereConfig(d.Get("vsphere_config").([]interface{}))
 	}

@@ -279,11 +279,11 @@ func flattenClusterGKEConfigV2(in *managementClient.GKEClusterConfigSpec, p []in
 	if in.KubernetesVersion != nil && len(*in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = *in.KubernetesVersion
 	}
-	if in.Labels != nil && len(*in.Labels) > 0 {
-		obj["labels"] = toMapInterface(*in.Labels)
+	if in.Labels != nil && len(in.Labels) > 0 {
+		obj["labels"] = toMapInterface(in.Labels)
 	}
-	if in.Locations != nil && len(*in.Locations) > 0 {
-		obj["locations"] = toArrayInterface(*in.Locations)
+	if in.Locations != nil && len(in.Locations) > 0 {
+		obj["locations"] = toArrayInterface(in.Locations)
 	}
 	if in.LoggingService != nil && len(*in.LoggingService) > 0 {
 		obj["logging_service"] = *in.LoggingService
@@ -571,7 +571,7 @@ func expandClusterGKEConfigV2PrivateClusterConfig(p []interface{}) *managementCl
 
 func expandClusterGKEConfigV2(p []interface{}) *managementClient.GKEClusterConfigSpec {
 	obj := &managementClient.GKEClusterConfigSpec{
-		Labels: &map[string]string{},
+		Labels: map[string]string{},
 	}
 	if len(p) == 0 || p[0] == nil {
 		return nil
@@ -618,11 +618,11 @@ func expandClusterGKEConfigV2(p []interface{}) *managementClient.GKEClusterConfi
 	}
 	if v, ok := in["labels"].(map[string]interface{}); ok {
 		labels := toMapString(v)
-		obj.Labels = &labels
+		obj.Labels = labels
 	}
 	if v, ok := in["locations"].([]interface{}); ok {
 		locations := toArrayString(v)
-		obj.Locations = &locations
+		obj.Locations = locations
 	}
 	if v, ok := in["logging_service"].(string); ok && len(v) > 0 {
 		obj.LoggingService = &v

@@ -13,10 +13,22 @@ type CloudCredential struct {
 	AzureCredentialConfig         *azureCredentialConfig         `json:"azurecredentialConfig,omitempty" yaml:"azurecredentialConfig,omitempty"`
 	DigitaloceanCredentialConfig  *digitaloceanCredentialConfig  `json:"digitaloceancredentialConfig,omitempty" yaml:"digitaloceancredentialConfig,omitempty"`
 	GoogleCredentialConfig        *googleCredentialConfig        `json:"googlecredentialConfig,omitempty" yaml:"googlecredentialConfig,omitempty"`
+	HarvesterCredentialConfig     *harvesterCredentialConfig     `json:"harvestercredentialConfig,omitempty" yaml:"harvestercredentialConfig,omitempty"`
 	LinodeCredentialConfig        *linodeCredentialConfig        `json:"linodecredentialConfig,omitempty" yaml:"linodecredentialConfig,omitempty"`
 	OpenstackCredentialConfig     *openstackCredentialConfig     `json:"openstackcredentialConfig,omitempty" yaml:"openstackcredentialConfig,omitempty"`
 	VmwarevsphereCredentialConfig *vmwarevsphereCredentialConfig `json:"vmwarevspherecredentialConfig,omitempty" yaml:"vmwarevspherecredentialConfig,omitempty"`
 }
+
+var allCloudCredentialDriverConfigFields = []string{
+	"amazonec2_credential_config",
+	"azure_credential_config",
+	"digitalocean_credential_config",
+	"google_credential_config",
+	"harvester_credential_config",
+	"linode_credential_config",
+	"openstack_credential_config",
+	"s3_credential_config",
+	"vsphere_credential_config"}
 
 //Schemas
 
@@ -30,7 +42,7 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"azure_credential_config", "digitalocean_credential_config", "google_credential_config", "linode_credential_config", "openstack_credential_config", "s3_credential_config", "vsphere_credential_config"},
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "amazonec2_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialAmazonec2Fields(),
 			},
@@ -39,7 +51,7 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_credential_config", "digitalocean_credential_config", "google_credential_config", "linode_credential_config", "openstack_credential_config", "s3_credential_config", "vsphere_credential_config"},
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "azure_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialAzureFields(),
 			},
@@ -52,7 +64,7 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_credential_config", "azure_credential_config", "google_credential_config", "linode_credential_config", "openstack_credential_config", "s3_credential_config", "vsphere_credential_config"},
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "digitalocean_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialDigitaloceanFields(),
 			},
@@ -65,16 +77,25 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_credential_config", "azure_credential_config", "digitalocean_credential_config", "linode_credential_config", "openstack_credential_config", "s3_credential_config", "vsphere_credential_config"},
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "google_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialGoogleFields(),
+			},
+		},
+		"harvester_credential_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "harvester_credential_config"),
+			Elem: &schema.Resource{
+				Schema: cloudCredentialHarvesterFields(),
 			},
 		},
 		"linode_credential_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_credential_config", "azure_credential_config", "google_credential_config", "digitalocean_credential_config", "openstack_credential_config", "s3_credential_config", "vsphere_credential_config"},
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "linode_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialLinodeFields(),
 			},
@@ -83,7 +104,7 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_credential_config", "azure_credential_config", "digitalocean_credential_config", "google_credential_config", "linode_credential_config", "s3_credential_config", "vsphere_credential_config"},
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "openstack_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialOpenstackFields(),
 			},
@@ -92,7 +113,7 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_credential_config", "azure_credential_config", "digitalocean_credential_config", "google_credential_config", "linode_credential_config", "openstack_credential_config", "vsphere_credential_config"},
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "s3_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialS3Fields(),
 			},
@@ -101,7 +122,7 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"amazonec2_credential_config", "azure_credential_config", "digitalocean_credential_config", "google_credential_config", "linode_credential_config", "openstack_credential_config", "s3_credential_config"},
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "vsphere_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialVsphereFields(),
 			},
