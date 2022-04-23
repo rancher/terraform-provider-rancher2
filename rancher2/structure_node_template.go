@@ -54,10 +54,6 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.OpenstackConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires openstack_config", in.Driver)
 		}
-		err := d.Set("openstack_config", flattenOpenstackConfig(in.OpenstackConfig))
-		if err != nil {
-			return err
-		}
 	case hetznerConfigDriver:
 		if in.HetznerConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires hetzner_config", in.Driver)
@@ -85,10 +81,6 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 	case opennebulaConfigDriver:
 		if in.OpennebulaConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires opennebula_config", in.Driver)
-		}
-		err := d.Set("opennebula_config", flattenOpenNebulaConfig(in.OpennebulaConfig))
-		if err != nil {
-			return err
 		}
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on node template: %s", in.Driver)

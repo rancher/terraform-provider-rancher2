@@ -32,6 +32,10 @@ func flattenAzureConfig(in *azureConfig) []interface{} {
 		obj["dns"] = in.DNS
 	}
 
+	if len(in.DockerPort) > 0 {
+		obj["docker_port"] = in.DockerPort
+	}
+
 	if len(in.Environment) > 0 {
 		obj["environment"] = in.Environment
 	}
@@ -62,8 +66,6 @@ func flattenAzureConfig(in *azureConfig) []interface{} {
 	if len(in.OpenPort) > 0 {
 		obj["open_port"] = toArrayInterface(in.OpenPort)
 	}
-
-	obj["private_address_only"] = in.PrivateAddressOnly
 
 	if len(in.PrivateIPAddress) > 0 {
 		obj["private_ip_address"] = in.PrivateIPAddress
@@ -179,10 +181,6 @@ func expandAzureConfig(p []interface{}) *azureConfig {
 
 	if v, ok := in["open_port"].([]interface{}); ok && len(v) > 0 {
 		obj.OpenPort = toArrayString(v)
-	}
-
-	if v, ok := in["private_address_only"].(bool); ok {
-		obj.PrivateAddressOnly = v
 	}
 
 	if v, ok := in["private_ip_address"].(string); ok && len(v) > 0 {

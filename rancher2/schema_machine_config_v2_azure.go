@@ -87,7 +87,6 @@ func machineConfigV2AzureFields() map[string]*schema.Schema {
 		"nsg": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "docker-machine-nsg",
 			Description: "Azure Network Security Group to assign this node to (accepts either a name or resource ID, default is to create a new NSG for each machine)",
 		},
 		"open_port": {
