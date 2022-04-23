@@ -1,8 +1,0 @@
-{
-    "go.testEnvVars": {
-        "TF_ACC": "1",
-        "RANCHER_URL": "https://rancher.172.18.0.2.nip.io",
-        "RANCHER_INSECURE": "true",
-        "RANCHER_VERSION": "v2.3.6",
-    },
-}
