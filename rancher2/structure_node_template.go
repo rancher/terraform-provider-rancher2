@@ -22,6 +22,10 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.Amazonec2Config == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires amazonec2_config", in.Driver)
 		}
+		err := d.Set("amazonec2_config", flattenAmazonec2Config(in.Amazonec2Config))
+		if err != nil {
+			return err
+		}
 	case azureConfigDriver:
 		if in.AzureConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires azure_config", in.Driver)
@@ -30,9 +34,17 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.DigitaloceanConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires digitalocean_config", in.Driver)
 		}
+		err := d.Set("digitalocean_config", flattenDigitaloceanConfig(in.DigitaloceanConfig))
+		if err != nil {
+			return err
+		}
 	case linodeConfigDriver:
 		if in.LinodeConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires linode_config", in.Driver)
+		}
+		err := d.Set("linode_config", flattenLinodeConfig(in.LinodeConfig))
+		if err != nil {
+			return err
 		}
 	case openstackConfigDriver:
 		if in.OpenstackConfig == nil {
@@ -42,13 +54,25 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.HetznerConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires hetzner_config", in.Driver)
 		}
+		err := d.Set("hetzner_config", flattenHetznerConfig(in.HetznerConfig))
+		if err != nil {
+			return err
+		}
 	case harvesterConfigDriver:
 		if in.HarvesterConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires harvester_config", in.Driver)
 		}
+		err := d.Set("harvester_config", flattenHarvesterConfig(in.HarvesterConfig))
+		if err != nil {
+			return err
+		}
 	case vmwarevsphereConfigDriver:
 		if in.VmwarevsphereConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires vsphere_config", in.Driver)
+		}
+		err := d.Set("vsphere_config", flattenVsphereConfig(in.VmwarevsphereConfig))
+		if err != nil {
+			return err
 		}
 	case opennebulaConfigDriver:
 		if in.OpennebulaConfig == nil {
