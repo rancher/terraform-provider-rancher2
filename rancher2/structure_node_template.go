@@ -26,6 +26,10 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.AzureConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires azure_config", in.Driver)
 		}
+		err := d.Set("azure_config", flattenAzureConfig(in.AzureConfig))
+		if err != nil {
+			return err
+		}
 	case digitaloceanConfigDriver:
 		if in.DigitaloceanConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires digitalocean_config", in.Driver)

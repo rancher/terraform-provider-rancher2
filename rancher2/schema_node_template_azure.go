@@ -11,34 +11,34 @@ const (
 //Types
 
 type azureConfig struct {
-	AvailabilitySet    string   `json:"availabilitySet,omitempty" yaml:"availabilitySet,omitempty"`
-	ClientID           string   `json:"clientId,omitempty" yaml:"clientId,omitempty"`
-	ClientSecret       string   `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
-	CustomData         string   `json:"customData,omitempty" yaml:"customData,omitempty"`
-	DiskSize           string   `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
-	DNS                string   `json:"dns,omitempty" yaml:"dns,omitempty"`
-	Environment        string   `json:"environment,omitempty" yaml:"environment,omitempty"`
-	FaultDomainCount   string   `json:"faultDomainCount,omitempty" yaml:"faultDomainCount,omitempty"`
-	Image              string   `json:"image,omitempty" yaml:"image,omitempty"`
-	Location           string   `json:"location,omitempty" yaml:"location,omitempty"`
-	ManagedDisks       bool     `json:"managedDisks,omitempty" yaml:"managedDisks,omitempty"`
-	NoPublicIP         bool     `json:"noPublicIp,omitempty" yaml:"noPublicIp,omitempty"`
-	NSG                string   `json:"nsg,omitempty" yaml:"nsg,omitempty"`
-	Plan               string   `json:"plan,omitempty" yaml:"plan,omitempty"`
-	OpenPort           []string `json:"openPort,omitempty" yaml:"openPort,omitempty"`
-	PrivateAddressOnly bool     `json:"privateAddressOnly,omitempty" yaml:"privateAddressOnly,omitempty"`
-	PrivateIPAddress   string   `json:"privateIpAddress,omitempty" yaml:"privateIpAddress,omitempty"`
-	ResourceGroup      string   `json:"resourceGroup,omitempty" yaml:"resourceGroup,omitempty"`
-	Size               string   `json:"size,omitempty" yaml:"size,omitempty"`
-	SSHUser            string   `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	StaticPublicIP     bool     `json:"staticPublicIp,omitempty" yaml:"staticPublicIp,omitempty"`
-	StorageType        string   `json:"storageType,omitempty" yaml:"storageType,omitempty"`
-	Subnet             string   `json:"subnet,omitempty" yaml:"subnet,omitempty"`
-	SubnetPrefix       string   `json:"subnetPrefix,omitempty" yaml:"subnetPrefix,omitempty"`
-	SubscriptionID     string   `json:"subscriptionId,omitempty" yaml:"subscriptionId,omitempty"`
-	UpdateDomainCount  string   `json:"updateDomainCount,omitempty" yaml:"updateDomainCount,omitempty"`
-	UsePrivateIP       bool     `json:"usePrivateIp,omitempty" yaml:"usePrivateIp,omitempty"`
-	Vnet               string   `json:"vnet,omitempty" yaml:"vnet,omitempty"`
+	AvailabilitySet   string   `json:"availabilitySet,omitempty" yaml:"availabilitySet,omitempty"`
+	ClientID          string   `json:"clientId,omitempty" yaml:"clientId,omitempty"`
+	ClientSecret      string   `json:"clientSecret,omitempty" yaml:"clientSecret,omitempty"`
+	CustomData        string   `json:"customData,omitempty" yaml:"customData,omitempty"`
+	DiskSize          string   `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
+	DNS               string   `json:"dns,omitempty" yaml:"dns,omitempty"`
+	DockerPort        string   `json:"dockerPort,omitempty" yaml:"dockerPort,omitempty"`
+	Environment       string   `json:"environment,omitempty" yaml:"environment,omitempty"`
+	FaultDomainCount  string   `json:"faultDomainCount,omitempty" yaml:"faultDomainCount,omitempty"`
+	Image             string   `json:"image,omitempty" yaml:"image,omitempty"`
+	Location          string   `json:"location,omitempty" yaml:"location,omitempty"`
+	ManagedDisks      bool     `json:"managedDisks,omitempty" yaml:"managedDisks,omitempty"`
+	NoPublicIP        bool     `json:"noPublicIp,omitempty" yaml:"noPublicIp,omitempty"`
+	NSG               string   `json:"nsg,omitempty" yaml:"nsg,omitempty"`
+	Plan              string   `json:"plan,omitempty" yaml:"plan,omitempty"`
+	OpenPort          []string `json:"openPort,omitempty" yaml:"openPort,omitempty"`
+	PrivateIPAddress  string   `json:"privateIpAddress,omitempty" yaml:"privateIpAddress,omitempty"`
+	ResourceGroup     string   `json:"resourceGroup,omitempty" yaml:"resourceGroup,omitempty"`
+	Size              string   `json:"size,omitempty" yaml:"size,omitempty"`
+	SSHUser           string   `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	StaticPublicIP    bool     `json:"staticPublicIp,omitempty" yaml:"staticPublicIp,omitempty"`
+	StorageType       string   `json:"storageType,omitempty" yaml:"storageType,omitempty"`
+	Subnet            string   `json:"subnet,omitempty" yaml:"subnet,omitempty"`
+	SubnetPrefix      string   `json:"subnetPrefix,omitempty" yaml:"subnetPrefix,omitempty"`
+	SubscriptionID    string   `json:"subscriptionId,omitempty" yaml:"subscriptionId,omitempty"`
+	UpdateDomainCount string   `json:"updateDomainCount,omitempty" yaml:"updateDomainCount,omitempty"`
+	UsePrivateIP      bool     `json:"usePrivateIp,omitempty" yaml:"usePrivateIp,omitempty"`
+	Vnet              string   `json:"vnet,omitempty" yaml:"vnet,omitempty"`
 }
 
 //Schemas
@@ -124,7 +124,6 @@ func azureConfigFields() map[string]*schema.Schema {
 		"nsg": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "docker-machine-nsg",
 			Description: "Azure Network Security Group to assign this node to (accepts either a name or resource ID, default is to create a new NSG for each machine)",
 		},
 		"plan": {
