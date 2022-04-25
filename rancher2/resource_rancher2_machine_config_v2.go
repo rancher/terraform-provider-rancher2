@@ -139,7 +139,7 @@ func resourceRancher2MachineConfigV2Delete(d *schema.ResourceData, meta interfac
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    machineConfigV2StateRefreshFunc(meta, obj.ID, obj.TypeMeta.Kind),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

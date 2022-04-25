@@ -148,7 +148,7 @@ func resourceRancher2ClusterV2Delete(d *schema.ResourceData, meta interface{}) e
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    clusterV2StateRefreshFunc(meta, cluster.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

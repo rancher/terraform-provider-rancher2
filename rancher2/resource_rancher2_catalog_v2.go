@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/rancher/norman/types"
-	"github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
+	v1 "github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -124,7 +124,7 @@ func resourceRancher2CatalogV2Delete(d *schema.ResourceData, meta interface{}) e
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, catalog.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

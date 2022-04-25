@@ -125,7 +125,7 @@ func resourceRancher2SecretV2Delete(d *schema.ResourceData, meta interface{}) er
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    secretV2StateRefreshFunc(meta, clusterID, secret.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
