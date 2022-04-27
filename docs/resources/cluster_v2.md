@@ -420,6 +420,9 @@ The following attributes are exported:
 * `machine_selector_config` - (Optional/Computed) Cluster V2 machine selector config (list)
 * `registries` - (Optional) Cluster V2 docker registries (list maxitems:1)
 * `etcd` - (Optional) Cluster V2 etcd (list maxitems:1)
+* `rotate_certificates` (Optional) Cluster V2 certificate rotation (list maxitems:1)
+* `etcd_snapshot_create` (Optional) Cluster V2 etcd snapshot create (list maxitems:1)
+* `etcd_snapshot_restore` (Optional) Cluster V2 etcd snapshot restore (list maxitems:1)
 
 #### `local_auth_endpoint`
 
@@ -562,6 +565,27 @@ The following attributes are exported:
 * `folder` - (Optional) ETCD snapshot S3 folder (string)
 * `region` - (Optional) ETCD snapshot S3 region (string)
 * `skip_ssl_verify` - (Optional) Disable ETCD skip ssl verify. Default: `false` (bool)
+
+##### `rotate_certificates`
+
+###### Arguments
+
+* `generation` - (Required) Desired certificate rotation generation (int)
+* `services` - (Optional) Service certificates to rotate with this generation (string)
+
+##### `etcd_snapshot_create`
+
+###### Arguments
+
+* `generation` - (Required) ETCD generation to initiate a snapshot (int)
+
+##### `etcd_snapshot_restore`
+
+###### Arguments
+
+* `name` - (Required) ETCD snapshot name to restore (string)
+* `generation` (Required) ETCD snapshot desired generation (int)
+* `restore_rke_config` (Optional) ETCD restore RKE config (set to none, all, or kubernetesVersion) (string)
 
 ### `cluster_registration_token`
 

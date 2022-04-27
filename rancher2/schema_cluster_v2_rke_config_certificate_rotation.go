@@ -10,7 +10,7 @@ func clusterV2RKEConfigRotateCertificatesFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"generation": {
 			Type:        schema.TypeInt,
-			Optional:    true,
+			Required:    true,
 			Description: "Desired certificate rotation generation.",
 		},
 		"services": {
