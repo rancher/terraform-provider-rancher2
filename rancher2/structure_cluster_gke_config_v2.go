@@ -669,7 +669,6 @@ func fixClusterGKEConfigV2(values map[string]interface{}) map[string]interface{}
 		"network":               newEmptyString(),
 		"subnetwork":            newEmptyString(),
 		"networkPolicyEnabled":  newFalse(),
-		"locations":             []string{},
 		"maintenanceWindow":     newEmptyString(),
 	}
 
