@@ -131,6 +131,24 @@ func clusterV2RKEConfigFields() map[string]*schema.Schema {
 				Schema: clusterV2RKEConfigRotateCertificatesFields(),
 			},
 		},
+		"etcd_snapshot_create": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Description: "Cluster V2 etcd snapshot create",
+			Elem: &schema.Resource{
+				Schema: clusterV2RKEConfigETCDSnapshotCreateFields(),
+			},
+		},
+		"etcd_snapshot_restore": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Description: "Cluster V2 etcd snapshot restore",
+			Elem: &schema.Resource{
+				Schema: clusterV2RKEConfigETCDSnapshotRestoreFields(),
+			},
+		},
 	}
 
 	return s
