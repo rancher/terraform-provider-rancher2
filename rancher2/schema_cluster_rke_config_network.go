@@ -32,11 +32,11 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"aep": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"apic_hosts": {
 			Type:     schema.TypeList,
-			Optional: true,
+			Required: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
@@ -46,16 +46,18 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"apic_user_crt": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"apic_user_key": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"apic_user_name": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"capic": {
 			Type:     schema.TypeString,
@@ -71,7 +73,7 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"extern_dynamic": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"enable_endpoint_slice": {
 			Type:     schema.TypeString,
@@ -79,7 +81,7 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"encap_type": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"ep_registry": {
 			Type:     schema.TypeString,
@@ -130,15 +132,15 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"kube_api_vlan": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"l3out": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"l3out_external_networks": {
 			Type:     schema.TypeList,
-			Optional: true,
+			Required: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
@@ -149,11 +151,11 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"mcast_range_end": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"mcast_range_start": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"no_priority_class": {
 			Type:     schema.TypeString,
@@ -161,7 +163,7 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"node_subnet": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"ovs_memory_limit": {
 			Type:     schema.TypeString,
@@ -205,7 +207,7 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"node_svc_subnet": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"service_monitor_interval": {
 			Type:     schema.TypeString,
@@ -213,7 +215,7 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"service_vlan": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"snat_contract_scope": {
 			Type:     schema.TypeString,
@@ -237,7 +239,7 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"extern_static": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"subnet_domain_name": {
 			Type:     schema.TypeString,
@@ -245,15 +247,16 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"system_id": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"tenant": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
 		"token": {
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
 		},
 		"use_aci_anywhere_crd": {
 			Type:     schema.TypeString,
@@ -277,11 +280,11 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 		},
 		"vrf_name": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"vrf_tenant": {
 			Type:     schema.TypeString,
-			Optional: true,
+			Required: true,
 		},
 		"vmm_controller": {
 			Type:     schema.TypeString,
