@@ -17,6 +17,7 @@ const (
 )
 
 var (
+	testAccProviderConfig                      *Config
 	testAccProviders                           map[string]terraform.ResourceProvider
 	testAccProvider                            *schema.Provider
 	testAccRancher2ClusterID                   string
@@ -79,7 +80,7 @@ func testAccCheck() error {
 			tokenKey = accessKey + ":" + secretKey
 		}
 
-		config := &Config{
+		testAccProviderConfig = &Config{
 			URL:       apiURL,
 			TokenKey:  tokenKey,
 			CACerts:   caCerts,
@@ -92,12 +93,12 @@ func testAccCheck() error {
 		}
 
 		if len(tokenKey) > 5 {
-			err := testAccClusterDefaultName(config)
+			err := testAccClusterDefaultName(testAccProviderConfig)
 			if err != nil {
 				return err
 			}
 
-			testAccRancher2ClusterRKEK8SDefaultVersion, err = config.getK8SDefaultVersion()
+			testAccRancher2ClusterRKEK8SDefaultVersion, err = testAccProviderConfig.getK8SDefaultVersion()
 			if err != nil {
 				return err
 			}

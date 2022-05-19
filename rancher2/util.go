@@ -193,7 +193,7 @@ func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (stri
 	}
 
 	if loginResp["type"].(string) != "token" || loginResp["token"] == nil {
-		return "", "", fmt.Errorf("Doing  user logging: %s %s", loginResp["type"].(string), loginResp["code"].(string))
+		return "", "", fmt.Errorf("Doing user login: %s %s", loginResp["type"].(string), loginResp["code"].(string))
 	}
 
 	return loginResp["id"].(string), loginResp["token"].(string), nil
@@ -347,6 +347,16 @@ func IsNotAccessibleByID(err error) bool {
 
 func IsNotFound(err error) bool {
 	return clientbase.IsNotFound(err)
+}
+
+// IsUnauthorized checks if the given APIError is a Unauthorized HTTP statuscode
+func IsUnauthorized(err error) bool {
+	apiError, ok := err.(*clientbase.APIError)
+	if !ok {
+		return false
+	}
+
+	return apiError.StatusCode == http.StatusUnauthorized
 }
 
 // IsForbidden checks if the given APIError is a Forbidden HTTP statuscode
