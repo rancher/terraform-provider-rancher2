@@ -1,3 +1,17 @@
+## 1.24.0 (May 25, 2022)
+
+FEATURES:
+
+* Add Drain Before Delete timeout to cluster_v2 resource. See [#903](https://github.com/rancher/terraform-provider-rancher2/pull/903)
+* Add k3s/rke2 etcd snapshot restore support for cluster v2. See [#920](https://github.com/rancher/terraform-provider-rancher2/pull/920)
+
+BUG FIXES:
+
+* Fixed RKE2 EC2 cluster creation with standard user token. See [#898](https://github.com/rancher/terraform-provider-rancher2/pull/898)
+* Fixed incorrect delete timeout values for cluster resources. See [#906](https://github.com/rancher/terraform-provider-rancher2/pull/906)
+* Fixed incorrect timeout variable used in the app delete function. See [#897](https://github.com/rancher/terraform-provider-rancher2/pull/897)
+
+
 ## 1.23.0 (March 31, 2022)
 
 FEATURES:
