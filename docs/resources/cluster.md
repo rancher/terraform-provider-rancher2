@@ -1708,6 +1708,7 @@ The following arguments are supported:
 * `node_pool_subnet_name` - (Optional) Name for node pool subnet. Default `nodedns` (string)
 * `node_public_key_contents` - (Optional) The contents of the SSH public key file to use for the nodes (string)
 * `node_shape` - (Required) The shape of the node (determines number of CPUs and  amount of memory on each OKE node) (string)
+* `node_user_data_contents` - (Optional) The contents of custom cloud-init / user_data for the nodes. String will be base64 encoded internally if it is not already. See [here](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengusingcustomcloudinitscripts.htm) for more information (string)
 * `pod_cidr` - (Optional) A CIDR IP range from which to assign Kubernetes Pod IPs (string)
 * `private_key_contents` - (Required/Sensitive) The private API key file contents for the specified user, in PEM format (string)
 * `private_key_passphrase` - (Optional/Sensitive) The passphrase (if any) of the private key for the OKE cluster (string)
