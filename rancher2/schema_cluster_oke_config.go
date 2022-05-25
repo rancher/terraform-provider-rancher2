@@ -31,6 +31,7 @@ type OracleKubernetesEngineConfig struct {
 	NodePoolSubnetName          string `json:"nodePoolSubnetName,omitempty" yaml:"nodePoolSubnetName,omitempty"`
 	NodePublicSSHKeyContents    string `json:"nodePublicKeyContents,omitempty" yaml:"nodePublicKeyContents,omitempty"`
 	NodeShape                   string `json:"nodeShape,omitempty" yaml:"nodeShape,omitempty"`
+	NodeUserDataContents        string `json:"nodeUserDataContents,omitempty" yaml:"nodeUserDataContents,omitempty"`
 	PrivateControlPlane         bool   `json:"enablePrivateControlPlane,omitempty" yaml:"enablePrivateControlPlane,omitempty"`
 	PrivateKeyContents          string `json:"privateKeyContents,omitempty" yaml:"privateKeyContents,omitempty"`
 	PrivateKeyPassphrase        string `json:"privateKeyPassphrase,omitempty" yaml:"privateKeyPassphrase,omitempty"`
@@ -85,7 +86,7 @@ func clusterOKEConfigFields() map[string]*schema.Schema {
 		"kubernetes_version": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "The Kubernetes version that will be used for your master *and* worker nodes e.g. v1.19.7",
+			Description: "The Kubernetes version that will be used for your master *and* worker nodes e.g. v1.22.5",
 		},
 		"limit_node_count": {
 			Type:        schema.TypeInt,
@@ -171,6 +172,11 @@ func clusterOKEConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "The contents of the SSH public key file to use for the nodes",
+		},
+		"node_user_data_contents": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The contents of custom cloud-init / user_data for the nodes - will be base64 encoded internally if it is not already",
 		},
 		"private_key_passphrase": {
 			Type:        schema.TypeString,

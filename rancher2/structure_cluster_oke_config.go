@@ -80,6 +80,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 		obj["node_shape"] = in.NodeShape
 	}
 
+	if len(in.NodeUserDataContents) > 0 {
+		obj["node_user_data_contents"] = in.NodeUserDataContents
+	}
+
 	if len(in.PodCidr) > 0 {
 		obj["pod_cidr"] = in.PodCidr
 	}
@@ -224,6 +228,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 
 	if v, ok := in["node_shape"].(string); ok && len(v) > 0 {
 		obj.NodeShape = v
+	}
+
+	if v, ok := in["node_user_data_contents"].(string); ok && len(v) > 0 {
+		obj.NodeUserDataContents = v
 	}
 
 	if v, ok := in["pod_cidr"].(string); ok && len(v) > 0 {
