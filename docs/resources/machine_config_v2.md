@@ -123,7 +123,7 @@ The following attributes are exported:
 * `tags` - (Optional) AWS Tags (e.g. key1,value1,key2,value2) (string)
 * `use_ebs_optimized_instance` - (Optional) Create an EBS optimized instance. Default `false` (bool)
 * `use_private_address` - (Optional) Force the usage of private IP address. Default `false` (bool)
-* `userdata` - (Optional) Path to file with cloud-init user data (string)
+* `userdata` - (Optional) UserData content of cloud-init (string)
 * `volume_type` - (Optional) Amazon EBS volume type. Default `gp2` (string)
 
 ### `azure_config`
