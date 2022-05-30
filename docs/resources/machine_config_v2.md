@@ -131,7 +131,6 @@ The following attributes are exported:
 * `iam_instance_profile` - (Optional) AWS IAM Instance Profile (string)
 * `insecure_transport` - (Optional) Disable SSL when sending requests (bool)
 * `instance_type` - (Optional) AWS instance type. Default `t3a.medium` (string)
-* `keypair_name` - (Optional) AWS keypair to use; requires --amazonec2-ssh-keypath (string)
 * `kms_key` - (Optional) Custom KMS key ID using the AWS Managed CMK (string)
 * `monitoring` - (Optional) Set this flag to enable CloudWatch monitoring. Deafult `false` (bool)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
