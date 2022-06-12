@@ -734,12 +734,12 @@ The following attributes are exported:
 
 ###### Arguments
 
-* `aad_client_id` - (Required/Sensitive) (string)
-* `aad_client_secret` - (Required/Sensitive) (string)
+* `aad_client_id` - (Optional/Computed/Sensitive) Conflicts with `aad_client_cert_password`, `aad_client_cert_path` and `user_assigned_identity_id` (string)
+* `aad_client_secret` - (Optional/Computed/Sensitive) Conflicts with `aad_client_cert_password`, `aad_client_cert_path` and `user_assigned_identity_id` (string)
 * `subscription_id` - (Required/Sensitive) (string)
 * `tenant_id` - (Required/Sensitive) (string)
-* `aad_client_cert_password` - (Optional/Computed/Sensitive) (string)
-* `aad_client_cert_path` - (Optional/Computed) (string)
+* `aad_client_cert_password` - (Optional/Computed/Sensitive) Conflicts with `aad_client_id`, `aad_client_secret` and `user_assigned_identity_id` (string)
+* `aad_client_cert_path` - (Optional/Computed) Conflicts with `aad_client_id`, `aad_client_secret` and `user_assigned_identity_id` (string)
 * `cloud` - (Optional/Computed) (string)
 * `cloud_provider_backoff` - (Optional/Computed) (bool)
 * `cloud_provider_backoff_duration` - (Optional/Computed) (int)
@@ -760,6 +760,7 @@ The following attributes are exported:
 * `subnet_name` - (Optional/Computed) (string)
 * `use_instance_metadata` - (Optional/Computed) (bool)
 * `use_managed_identity_extension` - (Optional/Computed) (bool)
+* `user_assigned_identity_id` - (Optional/Computed/Sensitive) Conflicts with `aad_client_id`, `aad_client_secret`, `aad_client_cert_password` and `aad_client_cert_path` (string)
 * `vm_type` - (Optional/Computed) (string)
 * `vnet_name` - (Optional/Computed) (string)
 * `vnet_resource_group` - (Optional/Computed) (string)

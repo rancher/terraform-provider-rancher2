@@ -23,12 +23,14 @@ func clusterRKEConfigCloudProviderAzureFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"aad_client_id": {
 			Type:      schema.TypeString,
-			Required:  true,
+			Optional:  true,
+			Computed:  true,
 			Sensitive: true,
 		},
 		"aad_client_secret": {
 			Type:      schema.TypeString,
-			Required:  true,
+			Optional:  true,
+			Computed:  true,
 			Sensitive: true,
 		},
 		"subscription_id": {
@@ -153,6 +155,12 @@ func clusterRKEConfigCloudProviderAzureFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
+		},
+		"user_assigned_identity_id": {
+			Type:      schema.TypeString,
+			Sensitive: true,
+			Optional:  true,
+			Computed:  true,
 		},
 		"vm_type": {
 			Type:     schema.TypeString,

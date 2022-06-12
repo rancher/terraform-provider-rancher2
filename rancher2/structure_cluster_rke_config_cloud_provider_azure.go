@@ -113,6 +113,10 @@ func flattenClusterRKEConfigCloudProviderAzure(in *managementClient.AzureCloudPr
 	obj["use_instance_metadata"] = in.UseInstanceMetadata
 	obj["use_managed_identity_extension"] = in.UseManagedIdentityExtension
 
+	if len(in.UserAssignedIdentityID) > 0 {
+		obj["user_assigned_identity_id"] = in.UserAssignedIdentityID
+	}
+
 	if len(in.VMType) > 0 {
 		obj["vm_type"] = in.VMType
 	}
@@ -239,6 +243,10 @@ func expandClusterRKEConfigCloudProviderAzure(p []interface{}) (*managementClien
 
 	if v, ok := in["use_managed_identity_extension"].(bool); ok {
 		obj.UseManagedIdentityExtension = v
+	}
+
+	if v, ok := in["user_assigned_identity_id"].(string); ok && len(v) > 0 {
+		obj.UserAssignedIdentityID = v
 	}
 
 	if v, ok := in["vm_type"].(string); ok && len(v) > 0 {
