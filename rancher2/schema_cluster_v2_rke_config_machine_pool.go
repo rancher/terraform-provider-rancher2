@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
@@ -137,6 +139,19 @@ func clusterV2RKEConfigMachinePoolFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "range of unhealthy nodes for automated replacement to be allowed",
+		},
+		"machine_labels": {
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Computed:    true,
+			Description: "Labels of the machine",
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				// Supressing diff for labels containing cattle.io/
+				if (strings.Contains(k, commonAnnotationLabelCattle) || strings.Contains(k, commonAnnotationLabelRancher)) && new == "" {
+					return true
+				}
+				return false
+			},
 		},
 	}
 

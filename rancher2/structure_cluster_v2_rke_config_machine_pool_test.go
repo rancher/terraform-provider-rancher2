@@ -1,12 +1,14 @@
 package rancher2
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
+	v1 "github.com/rancher/rancher/pkg/apis/rke.cattle.io/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -62,6 +64,12 @@ func init() {
 				"label_one": "one",
 				"label_two": "two",
 			},
+			RKECommonNodeConfig: v1.RKECommonNodeConfig{
+				Labels: map[string]string{
+					"machine_label_one": "one",
+					"machine_label_two": "two",
+				},
+			},
 			Quantity:             &quantity,
 			Paused:               true,
 			RollingUpdate:        testClusterV2RKEConfigMachinePoolRollingUpdateConf,
@@ -96,6 +104,10 @@ func init() {
 			"labels": map[string]interface{}{
 				"label_one": "one",
 				"label_two": "two",
+			},
+			"machine_labels": map[string]interface{}{
+				"machine_label_one": "one",
+				"machine_label_two": "two",
 			},
 			"quantity":       10,
 			"paused":         true,

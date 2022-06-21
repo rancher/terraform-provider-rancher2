@@ -1,11 +1,12 @@
 package rancher2
 
 import (
+	"time"
+
 	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"time"
 )
 
 // Flatteners
@@ -64,6 +65,9 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		}
 		if len(in.MachineDeploymentLabels) > 0 {
 			obj["labels"] = toMapInterface(in.MachineDeploymentLabels)
+		}
+		if len(in.Labels) > 0 {
+			obj["machine_labels"] = toMapInterface(in.Labels)
 		}
 		obj["paused"] = in.Paused
 		if in.Quantity != nil {
@@ -174,6 +178,9 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		}
 		if v, ok := in["labels"].(map[string]interface{}); ok && len(v) > 0 {
 			obj.MachineDeploymentLabels = toMapString(v)
+		}
+		if v, ok := in["machine_labels"].(map[string]interface{}); ok && len(v) > 0 {
+			obj.Labels = toMapString(v)
 		}
 		if v, ok := in["paused"].(bool); ok {
 			obj.Paused = v
