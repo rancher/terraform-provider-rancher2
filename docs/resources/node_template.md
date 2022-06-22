@@ -172,6 +172,8 @@ The following attributes are exported:
 * `device_name` - (Optional) AWS root device name. Default `/dev/sda1` (string)
 * `encrypt_ebs_volume` - (Optional) Encrypt EBS volume. Default `false` (bool)
 * `endpoint` - (Optional) Optional endpoint URL (hostname only or fully qualified URI) (string)
+* `http_endpoint` - (Optional) Enables or disables the HTTP metadata endpoint on your instances (string)
+* `http_tokens` - (Optional) The state of token usage for your instance metadata requests (string)
 * `iam_instance_profile` - (Optional) AWS IAM Instance Profile (string)
 * `insecure_transport` - (Optional) Disable SSL when sending requests (bool)
 * `instance_type` - (Optional) AWS instance type. Default `t2.micro` (string)
