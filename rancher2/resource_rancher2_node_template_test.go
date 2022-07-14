@@ -93,7 +93,40 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-do" {
 `
 	testAccRancher2NodeTemplateDigitaloceanConfig       = testAccRancher2CloudCredentialConfigDigitalocean + testAccRancher2NodeTemplateDigitalocean
 	testAccRancher2NodeTemplateDigitaloceanUpdateConfig = testAccRancher2CloudCredentialConfigDigitalocean + testAccRancher2NodeTemplateDigitaloceanUpdate
-	testAccRancher2NodeTemplateOpennebulaDriver         = `
+	testAccRancher2NodeTemplateHarvester                = `
+resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
+  name = "foo-harvester"
+  description = "Terraform node driver harvester acceptance test"
+  cloud_credential_id = rancher2_cloud_credential.foo-harvester.id
+  harvester_config {
+    cpu_count = "2"
+    memory_size = "4"
+	image_name = "foo"
+	network_name = "test-net"
+	ssh_user = "ubuntu"
+	vm_namespace = "test"
+  }
+}
+`
+	testAccRancher2NodeTemplateHarvesterUpdate = `
+resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
+  name = "foo-harvester2"
+  description = "Terraform node driver harvester acceptance test - updated"
+  cloud_credential_id = rancher2_cloud_credential.foo-harvester.id
+  harvester_config {
+    cpu_count = "4"
+    memory_size = "8"
+	image_name = "foo"
+	network_name = "test-net"
+	ssh_user = "ubuntu"
+	vm_namespace = "test"
+  }
+}
+`
+	testAccRancher2NodeTemplateHarvesterConfig       = testAccRancher2CloudCredentialConfigHarvester + testAccRancher2NodeTemplateHarvester
+	testAccRancher2NodeTemplateHarvesterUpdateConfig = testAccRancher2CloudCredentialConfigHarvester + testAccRancher2NodeTemplateHarvesterUpdate
+
+	testAccRancher2NodeTemplateOpennebulaDriver = `
 resource "rancher2_node_driver" "foo-opennebula" {
     active = true
     builtin = false
@@ -381,6 +414,72 @@ func TestAccRancher2NodeTemplate_disappears_Digitalocean(t *testing.T) {
 				Config: testAccRancher2NodeTemplateDigitaloceanConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-do", nodeTemplate),
+					testAccRancher2NodeTemplateDisappears(nodeTemplate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_basic_Harvester(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	name := testAccRancher2NodeTemplateType + ".foo-harvester"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NodeTemplateHarvesterConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo-harvester"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver harvester acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", harvesterConfigDriver),
+					resource.TestCheckResourceAttr(name, "harvester_config.0.cpu_count", "2"),
+					resource.TestCheckResourceAttr(name, "harvester_config.0.memory_size", "4"),
+				),
+			},
+			{
+				Config: testAccRancher2NodeTemplateHarvesterUpdateConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo-harvester2"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver harvester acceptance test - updated"),
+					resource.TestCheckResourceAttr(name, "driver", harvesterConfigDriver),
+					resource.TestCheckResourceAttr(name, "harvester_config.0.cpu_count", "4"),
+					resource.TestCheckResourceAttr(name, "harvester_config.0.memory_size", "8"),
+				),
+			},
+			{
+				Config: testAccRancher2NodeTemplateHarvesterConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo-harvester"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver harvester acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", harvesterConfigDriver),
+					resource.TestCheckResourceAttr(name, "harvester_config.0.cpu_count", "2"),
+					resource.TestCheckResourceAttr(name, "harvester_config.0.memory_size", "4"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_disappears_Harvester(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NodeTemplateHarvesterConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-harvester", nodeTemplate),
 					testAccRancher2NodeTemplateDisappears(nodeTemplate),
 				),
 				ExpectNonEmptyPlan: true,

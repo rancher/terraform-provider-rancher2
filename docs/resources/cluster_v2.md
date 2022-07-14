@@ -207,6 +207,168 @@ EOF
 }
 ```
 
+### Creating Rancher v2 harvester cluster v2 without harvester cloud provider
+
+```hcl
+# Get imported harvester cluster info
+data "rancher2_cluster_v2" "foo-harvester" {
+  name = "foo-harvester"
+}
+
+# Create a new Cloud Credential for an imported Harvester cluster
+resource "rancher2_cloud_credential" "foo-harvester" {
+  name = "foo-harvester"
+  harvester_credential_config {
+    cluster_id = data.rancher2_cluster_v2.foo-harvester.cluster_v1_id
+    cluster_type = "imported"
+    kubeconfig_content = data.rancher2_cluster_v2.foo-harvester.kube_config
+  }
+}
+
+# Create a new rancher2 machine config v2 using harvester node_driver
+resource "rancher2_machine_config_v2" "foo-harvester-v2" {
+  generate_name = "foo-harvester-v2"
+  harvester_config {
+    vm_namespace = "default"
+    cpu_count = "2"
+    memory_size = "4"
+    disk_size = "40"
+    network_name = "harvester-public/vlan1"
+    image_name = "harvester-public/image-57hzg"
+    ssh_user = "ubuntu"
+  }
+}
+
+resource "rancher2_cluster_v2" "foo-harvester-v2" {
+  name = "foo-harvester-v2"
+  kubernetes_version = "v1.22.6+rke2r1"
+  rke_config {
+    machine_pools {
+      name = "pool1"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo-harvester.id
+      control_plane_role = true
+      etcd_role = true
+      worker_role = true
+      quantity = 1
+      machine_config {
+        kind = rancher2_machine_config_v2.foo-harvester-v2.kind
+        name = rancher2_machine_config_v2.foo-harvester-v2.name
+      }
+    }
+    machine_selector_config {
+      config = {
+        cloud-provider-name = ""
+      }
+    }
+    machine_global_config = <<EOF
+cni: "calico"
+disable-kube-proxy: false
+etcd-expose-metrics: false
+EOF
+    upgrade_strategy {
+      control_plane_concurrency = "10%"
+      worker_concurrency = "10%"
+    }
+    etcd {
+      snapshot_schedule_cron = "0 */5 * * *"
+      snapshot_retention = 5
+    }
+    chart_values = ""
+  }
+}
+```
+
+### Creating Rancher v2 harvester cluster v2 with harvester cloud provider
+```hcl
+# Get imported harvester cluster info
+data "rancher2_cluster_v2" "foo-harvester" {
+  name = "foo-harvester"
+}
+```
+
+```bash
+# generate harvester cloud provider kubeconfig
+RANCHER_SERVER_URL="<RANCHER_SERVER_URL>"
+RANCHER_ACCESS_KEY="<RANCHER_ACCESS_KEY>"
+RANCHER_SECRET_KEY="<RANCHER_SECRET_KEY>"
+HARVESTER_CLUSTER_ID="<HARVESTER_CLUSTER_ID>"
+CLUSTER_NAME="foo-harvester-v2-cloud-provider"
+curl -k -X POST ${RANCHER_SERVER_URL}/k8s/clusters/${HARVESTER_CLUSTER_ID}/v1/harvester/kubeconfig \
+   -H 'Content-Type: application/json' \
+   -u ${RANCHER_ACCESS_KEY}:${RANCHER_SECRET_KEY} \
+   -d '{"clusterRoleName": "harvesterhci.io:cloudprovider", "namespace": "default", "serviceAccountName": "'${CLUSTER_NAME}'"}' | xargs | sed 's/\\n/\n/g' > ${CLUSTER_NAME}-kubeconfig
+```
+
+```hcl
+# Create a new Cloud Credential for an imported Harvester cluster
+resource "rancher2_cloud_credential" "foo-harvester" {
+  name = "foo-harvester"
+  harvester_credential_config {
+    cluster_id = data.rancher2_cluster_v2.foo-harvester.cluster_v1_id
+    cluster_type = "imported"
+    kubeconfig_content = data.rancher2_cluster_v2.foo-harvester.kube_config
+  }
+}
+
+# Create a new rancher2 machine config v2 using harvester node_driver
+resource "rancher2_machine_config_v2" "foo-harvester-v2-cloud-provider" {
+  generate_name = "foo-harvester-v2-cloud-provider"
+  harvester_config {
+    vm_namespace = "default"
+    cpu_count = "2"
+    memory_size = "4"
+    disk_size = "40"
+    network_name = "harvester-public/vlan1"
+    image_name = "harvester-public/image-57hzg"
+    ssh_user = "ubuntu"
+  }
+}
+
+# Create a new harvester rke2 cluster with harvester cloud provider
+resource "rancher2_cluster_v2" "foo-harvester-v2-cloud-provider" {
+  name = "foo-harvester-v2-cloud-provider"
+  kubernetes_version = "v1.22.6+rke2r1"
+  rke_config {
+    machine_pools {
+      name = "pool1"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo-harvester.id
+      control_plane_role = true
+      etcd_role = true
+      worker_role = true
+      quantity = 1
+      machine_config {
+        kind = rancher2_machine_config_v2.foo-harvester-v2-cloud-provider.kind
+        name = rancher2_machine_config_v2.foo-harvester-v2-cloud-provider.name
+      }
+    }
+    machine_selector_config {
+      config = {
+        cloud-provider-config = file("${path.module}/foo-harvester-v2-cloud-provider-kubeconfig")
+        cloud-provider-name = "harvester"
+      }
+    }
+    machine_global_config = <<EOF
+cni: "calico"
+disable-kube-proxy: false
+etcd-expose-metrics: false
+EOF
+    upgrade_strategy {
+      control_plane_concurrency = "10%"
+      worker_concurrency = "10%"
+    }
+    etcd {
+      snapshot_schedule_cron = "0 */5 * * *"
+      snapshot_retention = 5
+    }
+    chart_values = <<EOF
+harvester-cloud-provider:
+  clusterName: foo-harvester-v2-cloud-provider
+  cloudConfigPath: /var/lib/rancher/rke2/etc/config-files/cloud-provider-config
+EOF
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -258,6 +420,9 @@ The following attributes are exported:
 * `machine_selector_config` - (Optional/Computed) Cluster V2 machine selector config (list)
 * `registries` - (Optional) Cluster V2 docker registries (list maxitems:1)
 * `etcd` - (Optional) Cluster V2 etcd (list maxitems:1)
+* `rotate_certificates` (Optional) Cluster V2 certificate rotation (list maxitems:1)
+* `etcd_snapshot_create` (Optional) Cluster V2 etcd snapshot create (list maxitems:1)
+* `etcd_snapshot_restore` (Optional) Cluster V2 etcd snapshot restore (list maxitems:1)
 
 #### `local_auth_endpoint`
 
@@ -299,11 +464,17 @@ The following attributes are exported:
 * `machine_config` - (Required) Machine pool node config (list)
 * `control_plane_role` - (Optional) Machine pool control plane role? (bool)
 * `etcd_role` - (Optional) Machine pool etcd role? (bool)
+* `drain_before_delete` - (Optional) Machine Pool Drain Before Delete? (bool)
+* `node_drain_timeout` - (Optional) Seconds a machine has to drain before deletion (int)
 * `paused` - (Optional) Machine pool paused? (bool)
 * `quantity` - (Optional) Machine pool quantity (int)
 * `rolling_update` - (Optional) Machine pool rolling update (List maxitems:1)
 * `taints` - (Optional) Machine pool taints (list)
 * `worker_role` - (Optional) Machine pool worker role? (bool)
+* `node_startup_timeout_seconds` - (Optional) Seconds a new node has to become active before it is replaced (int)
+* `unhealthy_node_timeout_seconds` - (Optional) Seconds an unhealthy node has to become active before it is replaced (int)
+* `max_unhealthy` - (Optional) Max unhealthy nodes for automated replacement to be allowed (string)
+* `unhealthy_range` - (Optional) Range of unhealthy nodes for automated replacement to be allowed (string)
 
 ##### `machine_config`
 
@@ -394,6 +565,27 @@ The following attributes are exported:
 * `folder` - (Optional) ETCD snapshot S3 folder (string)
 * `region` - (Optional) ETCD snapshot S3 region (string)
 * `skip_ssl_verify` - (Optional) Disable ETCD skip ssl verify. Default: `false` (bool)
+
+##### `rotate_certificates`
+
+###### Arguments
+
+* `generation` - (Required) Desired certificate rotation generation (int)
+* `services` - (Optional) Service certificates to rotate with this generation (string)
+
+##### `etcd_snapshot_create`
+
+###### Arguments
+
+* `generation` - (Required) ETCD generation to initiate a snapshot (int)
+
+##### `etcd_snapshot_restore`
+
+###### Arguments
+
+* `name` - (Required) ETCD snapshot name to restore (string)
+* `generation` (Required) ETCD snapshot desired generation (int)
+* `restore_rke_config` (Optional) ETCD restore RKE config (set to none, all, or kubernetesVersion) (string)
 
 ### `cluster_registration_token`
 

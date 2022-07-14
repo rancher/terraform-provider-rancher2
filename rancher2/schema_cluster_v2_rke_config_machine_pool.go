@@ -72,6 +72,18 @@ func clusterV2RKEConfigMachinePoolFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Machine pool etcd role",
 		},
+		"drain_before_delete": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Machine pool drain before delete",
+		},
+		"node_drain_timeout": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     0,
+			Description: "seconds to wait for machine pool drain to complete before machine deletion",
+		},
 		"paused": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -105,6 +117,26 @@ func clusterV2RKEConfigMachinePoolFields() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Description: "Machine pool worker role",
+		},
+		"node_startup_timeout_seconds": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "seconds a new node has to become active before it is replaced",
+		},
+		"unhealthy_node_timeout_seconds": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "seconds an unhealthy node has to become active before it is replaced",
+		},
+		"max_unhealthy": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "max unhealthy nodes for automated replacement to be allowed",
+		},
+		"unhealthy_range": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "range of unhealthy nodes for automated replacement to be allowed",
 		},
 	}
 

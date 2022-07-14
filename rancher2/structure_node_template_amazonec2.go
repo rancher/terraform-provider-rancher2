@@ -30,6 +30,14 @@ func flattenAmazonec2Config(in *amazonec2Config) []interface{} {
 		obj["endpoint"] = in.Endpoint
 	}
 
+	if len(in.HTTPEndpoint) > 0 {
+		obj["http_endpoint"] = in.HTTPEndpoint
+	}
+
+	if len(in.HTTPTokens) > 0 {
+		obj["http_tokens"] = in.HTTPTokens
+	}
+
 	if len(in.IamInstanceProfile) > 0 {
 		obj["iam_instance_profile"] = in.IamInstanceProfile
 	}
@@ -158,6 +166,14 @@ func expandAmazonec2Config(p []interface{}) *amazonec2Config {
 
 	if v, ok := in["endpoint"].(string); ok && len(v) > 0 {
 		obj.Endpoint = v
+	}
+
+	if v, ok := in["http_endpoint"].(string); ok && len(v) > 0 {
+		obj.HTTPEndpoint = v
+	}
+
+	if v, ok := in["http_tokens"].(string); ok && len(v) > 0 {
+		obj.HTTPTokens = v
 	}
 
 	if v, ok := in["iam_instance_profile"].(string); ok && len(v) > 0 {

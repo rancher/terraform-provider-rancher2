@@ -1,8 +1,10 @@
 package rancher2
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
+	"time"
 
 	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -45,11 +47,13 @@ func init() {
 	quantity := int32(10)
 	testClusterV2RKEConfigMachinePoolsConf = []provisionv1.RKEMachinePool{
 		{
-			Name:             "test",
-			DisplayName:      "test",
-			NodeConfig:       testClusterV2RKEConfigMachinePoolMachineConfigConf,
-			ControlPlaneRole: true,
-			EtcdRole:         true,
+			Name:                     "test",
+			DisplayName:              "test",
+			NodeConfig:               testClusterV2RKEConfigMachinePoolMachineConfigConf,
+			ControlPlaneRole:         true,
+			EtcdRole:                 true,
+			DrainBeforeDelete:        true,
+			DrainBeforeDeleteTimeout: metav1DurationPtr(10),
 			MachineDeploymentAnnotations: map[string]string{
 				"anno_one": "one",
 				"anno_two": "two",
@@ -58,10 +62,14 @@ func init() {
 				"label_one": "one",
 				"label_two": "two",
 			},
-			Quantity:      &quantity,
-			Paused:        true,
-			RollingUpdate: testClusterV2RKEConfigMachinePoolRollingUpdateConf,
-			WorkerRole:    true,
+			Quantity:             &quantity,
+			Paused:               true,
+			RollingUpdate:        testClusterV2RKEConfigMachinePoolRollingUpdateConf,
+			WorkerRole:           true,
+			NodeStartupTimeout:   metav1DurationPtr(600),
+			UnhealthyNodeTimeout: metav1DurationPtr(60),
+			MaxUnhealthy:         stringPtr("2"),
+			UnhealthyRange:       stringPtr("[2,5]"),
 		},
 	}
 	testClusterV2RKEConfigMachinePoolsConf[0].CloudCredentialSecretName = "cloud_credential_secret_name"
@@ -79,6 +87,8 @@ func init() {
 			"machine_config":               testClusterV2RKEConfigMachinePoolMachineConfigInterface,
 			"control_plane_role":           true,
 			"etcd_role":                    true,
+			"drain_before_delete":          true,
+			"node_drain_timeout":           10,
 			"annotations": map[string]interface{}{
 				"anno_one": "one",
 				"anno_two": "two",
@@ -97,7 +107,11 @@ func init() {
 					"effect": "recipient",
 				},
 			},
-			"worker_role": true,
+			"worker_role":                    true,
+			"node_startup_timeout_seconds":   600,
+			"unhealthy_node_timeout_seconds": 60,
+			"max_unhealthy":                  "2",
+			"unhealthy_range":                "[2,5]",
 		},
 	}
 }
@@ -226,4 +240,12 @@ func TestExpandClusterV2RKEConfigMachinePools(t *testing.T) {
 				tc.ExpectedOutput, output)
 		}
 	}
+}
+
+func stringPtr(s string) *string {
+	return &s
+}
+
+func metav1DurationPtr(seconds int64) *metav1.Duration {
+	return &metav1.Duration{Duration: time.Duration(seconds) * time.Second}
 }

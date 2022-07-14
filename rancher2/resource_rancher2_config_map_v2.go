@@ -118,7 +118,7 @@ func resourceRancher2ConfigMapV2Delete(d *schema.ResourceData, meta interface{})
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    configMapV2StateRefreshFunc(meta, clusterID, configMap.ID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

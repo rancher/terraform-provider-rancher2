@@ -17,6 +17,8 @@ type amazonec2Config struct {
 	DeviceName              string   `json:"deviceName,omitempty" yaml:"deviceName,omitempty"`
 	EncryptEbsVolume        bool     `json:"encryptEbsVolume,omitempty" yaml:"encryptEbsVolume,omitempty"`
 	Endpoint                string   `json:"endpoint,omitempty" yaml:"endpoint,omitempty"`
+	HTTPEndpoint            string   `json:"httpEndpoint,omitempty" yaml:"httpEndpoint,omitempty"`
+	HTTPTokens              string   `json:"httpTokens,omitempty" yaml:"httpTokens,omitempty"`
 	IamInstanceProfile      string   `json:"iamInstanceProfile,omitempty" yaml:"iamInstanceProfile,omitempty"`
 	InsecureTransport       bool     `json:"insecureTransport,omitempty" yaml:"insecureTransport,omitempty"`
 	InstanceType            string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
@@ -111,6 +113,16 @@ func amazonec2ConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Optional endpoint URL (hostname only or fully qualified URI)",
+		},
+		"http_endpoint": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Enables or disables the HTTP metadata endpoint on your instances",
+		},
+		"http_tokens": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The state of token usage for your instance metadata requests",
 		},
 		"iam_instance_profile": {
 			Type:        schema.TypeString,

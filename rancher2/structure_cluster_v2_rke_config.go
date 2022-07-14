@@ -40,6 +40,16 @@ func flattenClusterV2RKEConfig(in *provisionv1.RKEConfig) []interface{} {
 		obj["etcd"] = flattenClusterV2RKEConfigETCD(in.ETCD)
 	}
 
+	if in.RotateCertificates != nil {
+		obj["rotate_certificates"] = flattenClusterV2RKEConfigRotateCertificates(in.RotateCertificates)
+	}
+	if in.ETCDSnapshotCreate != nil {
+		obj["etcd_snapshot_create"] = flattenClusterV2RKEConfigETCDSnapshotCreate(in.ETCDSnapshotCreate)
+	}
+	if in.ETCDSnapshotRestore != nil {
+		obj["etcd_snapshot_restore"] = flattenClusterV2RKEConfigETCDSnapshotRestore(in.ETCDSnapshotRestore)
+	}
+
 	return []interface{}{obj}
 }
 
@@ -80,6 +90,16 @@ func expandClusterV2RKEConfig(p []interface{}) *provisionv1.RKEConfig {
 	}
 	if v, ok := in["etcd"].([]interface{}); ok && len(v) > 0 {
 		obj.ETCD = expandClusterV2RKEConfigETCD(v)
+	}
+
+	if v, ok := in["rotate_certificates"].([]interface{}); ok && len(v) > 0 {
+		obj.RotateCertificates = expandClusterV2RKEConfigRotateCertificates(v)
+	}
+	if v, ok := in["etcd_snapshot_create"].([]interface{}); ok && len(v) > 0 {
+		obj.ETCDSnapshotCreate = expandClusterV2RKEConfigETCDSnapshotCreate(v)
+	}
+	if v, ok := in["etcd_snapshot_restore"].([]interface{}); ok && len(v) > 0 {
+		obj.ETCDSnapshotRestore = expandClusterV2RKEConfigETCDSnapshotRestore(v)
 	}
 
 	return obj

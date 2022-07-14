@@ -1,17 +1,37 @@
-## 1.22.3 (Unreleased)
+## 1.24.0 (May 25, 2022)
 
 FEATURES:
 
+* Add Drain Before Delete timeout to cluster_v2 resource. See [#903](https://github.com/rancher/terraform-provider-rancher2/pull/903)
+* Add k3s/rke2 etcd snapshot restore support for cluster v2. See [#920](https://github.com/rancher/terraform-provider-rancher2/pull/920)
+
+BUG FIXES:
+
+* Fixed RKE2 EC2 cluster creation with standard user token. See [#898](https://github.com/rancher/terraform-provider-rancher2/pull/898)
+* Fixed incorrect delete timeout values for cluster resources. See [#906](https://github.com/rancher/terraform-provider-rancher2/pull/906)
+* Fixed incorrect timeout variable used in the app delete function. See [#897](https://github.com/rancher/terraform-provider-rancher2/pull/897)
+
+
+## 1.23.0 (March 31, 2022)
+
+FEATURES:
+
+* The Harvester node driver is now supported. See [#861](https://github.com/rancher/terraform-provider-rancher2/pull/861).
+* Added support for KEv2 cluster certificate rotation. See [#882](https://github.com/rancher/terraform-provider-rancher2/pull/882).
+* Added support for node pool health checks on KEv2 clusters. See [#889](https://github.com/rancher/terraform-provider-rancher2/pull/889).
 
 
 ENHANCEMENTS:
 
-* Added support to import `rancher2_cloud_credential` resources
-* Added support to `rancher2_node_template` resource for server labels in hetzner_config, https://github.com/rancher/terraform-provider-rancher2/issues/657
+* `hetzner_node_driver` now supports specifying `server_labels`. See [#851](https://github.com/rancher/terraform-provider-rancher2/pull/851).
+* `drain_before_delete` can now be specified on `rancher2_cluster_v2` resources. See [#890](https://github.com/rancher/terraform-provider-rancher2/pull/890).
+* Added support for `rancher2_cloud_credential` imported resources.
+* Added `rancher2_node_template` label for server resources in `hetzner_config`. See [#657](https://github.com/rancher/terraform-provider-rancher2/issues/657).
 
 BUG FIXES:
 
-* Fix race condition for empty kubeconfig generation for `rancher2_cluster_sync` resource, https://github.com/rancher/terraform-provider-rancher2/issues/849
+* Importing KEv2 clusters with the Rancher client have their config correctly rewritten. See [#36128](https://github.com/rancher/rancher/issues/36128).
+* Fix race condition for empty kubeconfig generation for `rancher2_cluster_sync` resource. See [#849](https://github.com/rancher/terraform-provider-rancher2/issues/849).
 
 ## 1.22.2 (January 6, 2022)
 
