@@ -120,14 +120,17 @@ func flattenNamespace(d *schema.ResourceData, in *clusterClient.Namespace) error
 	d.Set("name", in.Name)
 	d.Set("description", in.Description)
 
-	containerLimit := flattenNamespaceContainerResourceLimit(in.ContainerDefaultResourceLimit)
-	err := d.Set("container_resource_limit", containerLimit)
-	if err != nil {
-		return err
+	emptyContainerResourceLimit := clusterClient.ContainerResourceLimit{}
+	if in.ContainerDefaultResourceLimit != nil && *in.ContainerDefaultResourceLimit != emptyContainerResourceLimit {
+		containerLimit := flattenNamespaceContainerResourceLimit(in.ContainerDefaultResourceLimit)
+		err := d.Set("container_resource_limit", containerLimit)
+		if err != nil {
+			return err
+		}
 	}
 
 	resourceQuota := flattenNamespaceResourceQuota(in.ResourceQuota)
-	err = d.Set("resource_quota", resourceQuota)
+	err := d.Set("resource_quota", resourceQuota)
 	if err != nil {
 		return err
 	}
