@@ -18,8 +18,14 @@ func flattenClusterRKEConfigNetworkAci(in *managementClient.AciNetworkProvider) 
 	if len(in.ApicHosts) > 0 {
 		obj["apic_hosts"] = toArrayInterface(in.ApicHosts)
 	}
+	if len(in.ApicRefreshTickerAdjust) > 0 {
+		obj["apic_refresh_ticker_adjust"] = in.ApicRefreshTickerAdjust
+	}
 	if len(in.ApicRefreshTime) > 0 {
 		obj["apic_refresh_time"] = in.ApicRefreshTime
+	}
+	if len(in.ApicSubscriptionDelay) > 0 {
+		obj["apic_subscription_delay"] = in.ApicSubscriptionDelay
 	}
 	if len(in.ApicUserCrt) > 0 {
 		obj["apic_user_crt"] = in.ApicUserCrt
@@ -36,8 +42,17 @@ func flattenClusterRKEConfigNetworkAci(in *managementClient.AciNetworkProvider) 
 	if len(in.ControllerLogLevel) > 0 {
 		obj["controller_log_level"] = in.ControllerLogLevel
 	}
+	if len(in.DisablePeriodicSnatGlobalInfoSync) > 0 {
+		obj["disable_periodic_snat_global_info_sync"] = in.DisablePeriodicSnatGlobalInfoSync
+	}
+	if len(in.DisableWaitForNetwork) > 0 {
+		obj["disable_wait_for_network"] = in.DisableWaitForNetwork
+	}
 	if len(in.DropLogEnable) > 0 {
 		obj["drop_log_enable"] = in.DropLogEnable
+	}
+	if len(in.DurationWaitForNetwork) > 0 {
+		obj["duration_wait_for_network"] = in.DurationWaitForNetwork
 	}
 	if len(in.DynamicExternalSubnet) > 0 {
 		obj["extern_dynamic"] = in.DynamicExternalSubnet
@@ -99,8 +114,17 @@ func flattenClusterRKEConfigNetworkAci(in *managementClient.AciNetworkProvider) 
 	if len(in.McastRangeStart) > 0 {
 		obj["mcast_range_start"] = in.McastRangeStart
 	}
+	if len(in.MTUHeadRoom) > 0 {
+		obj["mtu_head_room"] = in.MTUHeadRoom
+	}
+	if len(in.MultusDisable) > 0 {
+		obj["multus_disable"] = in.MultusDisable
+	}
 	if len(in.NoPriorityClass) > 0 {
 		obj["no_priority_class"] = in.NoPriorityClass
+	}
+	if len(in.NodePodIfEnable) > 0 {
+		obj["node_pod_if_enable"] = in.NodePodIfEnable
 	}
 	if len(in.NodeSubnet) > 0 {
 		obj["node_subnet"] = in.NodeSubnet
@@ -113,6 +137,9 @@ func flattenClusterRKEConfigNetworkAci(in *managementClient.AciNetworkProvider) 
 	}
 	if len(in.OpflexClientSSL) > 0 {
 		obj["opflex_client_ssl"] = in.OpflexClientSSL
+	}
+	if len(in.OpflexDeviceDeleteTimeout) > 0 {
+		obj["opflex_device_delete_timeout"] = in.OpflexDeviceDeleteTimeout
 	}
 	if len(in.OpflexMode) > 0 {
 		obj["opflex_mode"] = in.OpflexMode
@@ -159,6 +186,9 @@ func flattenClusterRKEConfigNetworkAci(in *managementClient.AciNetworkProvider) 
 	if len(in.SnatPortsPerNode) > 0 {
 		obj["snat_ports_per_node"] = in.SnatPortsPerNode
 	}
+	if len(in.SriovEnable) > 0 {
+		obj["sriov_enable"] = in.SriovEnable
+	}
 	if len(in.StaticExternalSubnet) > 0 {
 		obj["extern_static"] = in.StaticExternalSubnet
 	}
@@ -179,6 +209,9 @@ func flattenClusterRKEConfigNetworkAci(in *managementClient.AciNetworkProvider) 
 	}
 	if len(in.UseAciCniPriorityClass) > 0 {
 		obj["use_aci_cni_priority_class"] = in.UseAciCniPriorityClass
+	}
+	if len(in.UseClusterRole) > 0 {
+		obj["use_cluster_role"] = in.UseClusterRole
 	}
 	if len(in.UseHostNetnsVolume) > 0 {
 		obj["use_host_netns_volume"] = in.UseHostNetnsVolume
@@ -337,8 +370,14 @@ func expandClusterRKEConfigNetworkAci(p []interface{}) (*managementClient.AciNet
 	if v, ok := in["apic_hosts"].([]interface{}); ok && len(v) > 0 {
 		obj.ApicHosts = toArrayString(v)
 	}
+	if v, ok := in["apic_refresh_ticker_adjust"].(string); ok && len(v) > 0 {
+		obj.ApicRefreshTickerAdjust = v
+	}
 	if v, ok := in["apic_refresh_time"].(string); ok && len(v) > 0 {
 		obj.ApicRefreshTime = v
+	}
+	if v, ok := in["apic_subscription_delay"].(string); ok && len(v) > 0 {
+		obj.ApicSubscriptionDelay = v
 	}
 	if v, ok := in["apic_user_crt"].(string); ok && len(v) > 0 {
 		obj.ApicUserCrt = v
@@ -355,8 +394,17 @@ func expandClusterRKEConfigNetworkAci(p []interface{}) (*managementClient.AciNet
 	if v, ok := in["controller_log_level"].(string); ok && len(v) > 0 {
 		obj.ControllerLogLevel = v
 	}
+	if v, ok := in["disable_periodic_snat_global_info_sync"].(string); ok && len(v) > 0 {
+		obj.DisablePeriodicSnatGlobalInfoSync = v
+	}
+	if v, ok := in["disable_wait_for_network"].(string); ok && len(v) > 0 {
+		obj.DisableWaitForNetwork = v
+	}
 	if v, ok := in["drop_log_enable"].(string); ok && len(v) > 0 {
 		obj.DropLogEnable = v
+	}
+	if v, ok := in["duration_wait_for_network"].(string); ok && len(v) > 0 {
+		obj.DurationWaitForNetwork = v
 	}
 	if v, ok := in["extern_dynamic"].(string); ok && len(v) > 0 {
 		obj.DynamicExternalSubnet = v
@@ -418,8 +466,17 @@ func expandClusterRKEConfigNetworkAci(p []interface{}) (*managementClient.AciNet
 	if v, ok := in["mcast_range_start"].(string); ok && len(v) > 0 {
 		obj.McastRangeStart = v
 	}
+	if v, ok := in["mtu_head_room"].(string); ok && len(v) > 0 {
+		obj.MTUHeadRoom = v
+	}
+	if v, ok := in["multus_disable"].(string); ok && len(v) > 0 {
+		obj.MultusDisable = v
+	}
 	if v, ok := in["no_priority_class"].(string); ok && len(v) > 0 {
 		obj.NoPriorityClass = v
+	}
+	if v, ok := in["node_pod_if_enable"].(string); ok && len(v) > 0 {
+		obj.NodePodIfEnable = v
 	}
 	if v, ok := in["node_subnet"].(string); ok && len(v) > 0 {
 		obj.NodeSubnet = v
@@ -432,6 +489,9 @@ func expandClusterRKEConfigNetworkAci(p []interface{}) (*managementClient.AciNet
 	}
 	if v, ok := in["opflex_client_ssl"].(string); ok && len(v) > 0 {
 		obj.OpflexClientSSL = v
+	}
+	if v, ok := in["opflex_device_delete_timeout"].(string); ok && len(v) > 0 {
+		obj.OpflexDeviceDeleteTimeout = v
 	}
 	if v, ok := in["opflex_mode"].(string); ok && len(v) > 0 {
 		obj.OpflexMode = v
@@ -478,6 +538,9 @@ func expandClusterRKEConfigNetworkAci(p []interface{}) (*managementClient.AciNet
 	if v, ok := in["snat_ports_per_node"].(string); ok && len(v) > 0 {
 		obj.SnatPortsPerNode = v
 	}
+	if v, ok := in["sriov_enable"].(string); ok && len(v) > 0 {
+		obj.SriovEnable = v
+	}
 	if v, ok := in["extern_static"].(string); ok && len(v) > 0 {
 		obj.StaticExternalSubnet = v
 	}
@@ -498,6 +561,9 @@ func expandClusterRKEConfigNetworkAci(p []interface{}) (*managementClient.AciNet
 	}
 	if v, ok := in["use_aci_cni_priority_class"].(string); ok && len(v) > 0 {
 		obj.UseAciCniPriorityClass = v
+	}
+	if v, ok := in["use_cluster_role"].(string); ok && len(v) > 0 {
+		obj.UseClusterRole = v
 	}
 	if v, ok := in["use_host_netns_volume"].(string); ok && len(v) > 0 {
 		obj.UseHostNetnsVolume = v

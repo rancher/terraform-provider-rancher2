@@ -41,7 +41,15 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
+		"apic_refresh_ticker_adjust": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"apic_refresh_time": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"apic_subscription_delay": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -67,7 +75,19 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"disable_periodic_snat_global_info_sync": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"disable_wait_for_network": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"drop_log_enable": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"duration_wait_for_network": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -157,7 +177,19 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"mtu_head_room": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"multus_disable": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"no_priority_class": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"node_pod_if_enable": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -174,6 +206,10 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"opflex_client_ssl": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"opflex_device_delete_timeout": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -237,6 +273,10 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"sriov_enable": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"extern_static": {
 			Type:     schema.TypeString,
 			Required: true,
@@ -263,6 +303,10 @@ func clusterRKEConfigNetworkAciFields() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"use_aci_cni_priority_class": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"use_cluster_role": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
