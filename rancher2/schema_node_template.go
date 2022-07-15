@@ -18,6 +18,7 @@ type NodeTemplate struct {
 	OpennebulaConfig    *opennebulaConfig    `json:"opennebulaConfig,omitempty" yaml:"opennebulaConfig,omitempty"`
 	OpenstackConfig     *openstackConfig     `json:"openstackConfig,omitempty" yaml:"openstackConfig,omitempty"`
 	VmwarevsphereConfig *vmwarevsphereConfig `json:"vmwarevsphereConfig,omitempty" yaml:"vmwarevsphereConfig,omitempty"`
+	OutscaleConfig      *outscaleConfig      `json:"outscaleConfig,omitempty" yaml:"outscaleConfig,omitempty"`
 }
 
 //Schemas
@@ -31,7 +32,8 @@ var allNodeTemplateDriverConfigFields = []string{
 	"linode_config",
 	"opennebula_config",
 	"openstack_config",
-	"vsphere_config"}
+	"vsphere_config",
+	"outscale_config"}
 
 func getConflicts(fieldNames []string, fieldName string) []string {
 	conflicts := make([]string, 0, len(fieldNames)-1)
@@ -188,6 +190,15 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			ConflictsWith: getConflicts(allNodeTemplateDriverConfigFields, "openstack_config"),
 			Elem: &schema.Resource{
 				Schema: openstackConfigFields(),
+			},
+		},
+		"outscale_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: getConflicts(allNodeTemplateDriverConfigFields, "outscale_config"),
+			Elem: &schema.Resource{
+				Schema: outscaleConfigFields(),
 			},
 		},
 		"use_internal_ip_address": {

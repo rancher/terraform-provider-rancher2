@@ -6,7 +6,7 @@ page_title: "rancher2_node_template Resource"
 
 Provides a Rancher v2 Node Template resource. This can be used to create Node Template for Rancher v2 and retrieve their information.
 
-amazonec2, azure, digitalocean, harvester, linode, opennebula, openstack, hetzner, and vsphere drivers are supported for node templates.
+amazonec2, azure, digitalocean, harvester, linode, opennebula, openstack, outscale, hetzner and vsphere drivers are supported for node templates.
 
 **Note** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
 
@@ -141,6 +141,7 @@ The following arguments are supported:
 * `hetzner_config` - (Optional) Hetzner config for the Node Template (list maxitems:1)
 * `opennebula_config` - (Optional) Opennebula config for the Node Template (list maxitems:1)
 * `openstack_config` - (Optional) Openstack config for the Node Template (list maxitems:1)
+* `outscale_config` - (Optional) Outscale config for the Node Template (list maxitems:1)
 * `use_internal_ip_address` - (Optional) Engine storage driver for the node template (bool)
 * `vsphere_config` - (Optional) vSphere config for the Node Template (list maxitems:1)
 * `annotations` - (Optional) Annotations for Node Template object (map)
@@ -418,6 +419,22 @@ The following attributes are exported:
 * `vapp_transport` - (Optional) vSphere OVF environment transports to use for properties. Supported values are: `iso` and `com.vmware.guestInfo` (string)
 * `vcenter` - (Optional/Sensitive) vSphere IP/hostname for vCenter. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `vcenter_port` - (Optional/Sensitive) vSphere Port for vCenter. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x. Default `443` (string)
+
+### `outscale_config`
+
+#### Arguments
+
+* `source_omi` - (Optional) Outscale Machine Image to use as bootstrap for the VM. Default `ami-95dc8ac6` (string)
+* `region` - (Optional) AWS region. Default `eu-west-2` (string)
+* `security_group_ids` - (Optional) Ids of user defined Security Groups to add to the machine. (list)
+* `access_key` - (Required/Sensitive) Outscale Access Key (string)
+* `instance_type` - (Optional) Outscale VM type. Default `tinav2.c1r2p3` (string)
+* `secret_key` - (Required/Sensitive) Outscale Secret Key (string)
+* `extra_tags_all` - (Optional) Extra tags for all created resources (e.g. key1=value1,key2=value2) (list)
+* `extra_tags_instances` - (Optional) Extra tags only for instances (e.g. key1=value1,key2=value2) (list)
+* `root_disk_type` - (Optional) Type of the Root Disk. Possible values are :'standard', 'gp2' or 'io1'.
+* `root_disk_size` - (Optional) Size of the Root Disk (in GB). From 1 to 14901.
+* `root_disk_iops` - (Optional) Iops for io1 Root Disk. From 1 to 13000.
 
 ## Timeouts
 
