@@ -78,12 +78,6 @@ func machineConfigV2AzureFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Configures VM and availability set for managed disks",
 		},
-		"no_public_ip": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Do not create a public IP address for the machine",
-		},
 		"nsg": {
 			Type:        schema.TypeString,
 			Optional:    true,

@@ -143,7 +143,6 @@ The following attributes are exported:
 * `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:18.04-LTS:latest` (string)
 * `location` - (Optional) Azure region to create the virtual machine. Default `westus` (string)
 * `managed_disks` - (Optional) Configures VM and availability set for managed disks. Just for Rancher v2.3.x and above. Default `false` (bool)
-* `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false` (bool)
 * `nsg` - (Optional) Azure Network Security Group to assign this node to (accepts either a name or resource ID, default is to create a new NSG for each machine). Default `docker-machine-nsg` (string)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
 * `private_address_only` - (Optional) Only use a private IP address. Default `false` (bool)
