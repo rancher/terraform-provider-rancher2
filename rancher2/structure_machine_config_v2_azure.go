@@ -102,7 +102,6 @@ func flattenMachineConfigV2Azure(in *MachineConfigV2Azure) []interface{} {
 	}
 
 	obj["managed_disks"] = in.ManagedDisks
-	obj["no_public_ip"] = in.NoPublicIP
 
 	if len(in.NSG) > 0 {
 		obj["nsg"] = in.NSG
@@ -225,10 +224,6 @@ func expandMachineConfigV2Azure(p []interface{}, source *MachineConfigV2) *Machi
 
 	if v, ok := in["managed_disks"].(bool); ok {
 		obj.ManagedDisks = v
-	}
-
-	if v, ok := in["no_public_ip"].(bool); ok {
-		obj.NoPublicIP = v
 	}
 
 	if v, ok := in["nsg"].(string); ok && len(v) > 0 {
