@@ -28,7 +28,6 @@ type machineConfigV2Azure struct {
 	Image              string   `json:"image,omitempty" yaml:"image,omitempty"`
 	Location           string   `json:"location,omitempty" yaml:"location,omitempty"`
 	ManagedDisks       bool     `json:"managedDisks,omitempty" yaml:"managedDisks,omitempty"`
-	NoPublicIP         bool     `json:"noPublicIp,omitempty" yaml:"noPublicIp,omitempty"`
 	NSG                string   `json:"nsg,omitempty" yaml:"nsg,omitempty"`
 	OpenPort           []string `json:"openPort,omitempty" yaml:"openPort,omitempty"`
 	PrivateAddressOnly bool     `json:"privateAddressOnly,omitempty" yaml:"privateAddressOnly,omitempty"`
