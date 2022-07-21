@@ -424,7 +424,7 @@ The following attributes are exported:
 
 #### Arguments
 
-* `source_omi` - (Optional) Outscale Machine Image to use as bootstrap for the VM. Default `ami-95dc8ac6` (string)
+* `source_omi` - (Optional) Outscale Machine Image to use as bootstrap for the VM. Default `ami-2cf1fa3e` (string)
 * `region` - (Optional) AWS region. Default `eu-west-2` (string)
 * `security_group_ids` - (Optional) Ids of user defined Security Groups to add to the machine. (list)
 * `access_key` - (Required/Sensitive) Outscale Access Key (string)

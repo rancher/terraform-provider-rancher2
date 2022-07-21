@@ -31,7 +31,7 @@ func outscaleConfigFields() map[string]*schema.Schema {
 		"source_omi": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "ami-95dc8ac6",
+			Default:     "ami-2cf1fa3e",
 			Description: "Outscale Machine Image to use as bootstrap for the VM",
 		},
 		"region": {
