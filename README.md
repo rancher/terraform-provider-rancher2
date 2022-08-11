@@ -33,7 +33,7 @@ $ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-rancher2
 $ make build
 ```
 
-Using the provider
+Using the Provider
 ----------------------
 
 If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) After placing it into your plugins directory,  run `terraform init` to initialize it. Documentation about the provider specific configuration options can be found on the [provider's website](https://www.terraform.io/docs/providers/rancher2/index.html).
@@ -83,3 +83,22 @@ Due to [network limitation](https://docs.docker.com/docker-for-mac/networking/#k
 ```sh
 $ EXPOSE_HOST_PORTS=true make docker-testacc
 ```
+
+Releasing the Provider
+---------------------------
+
+* Create a draft of the [release](https://github.com/rancher/terraform-provider-rancher2/releases) and select create new tag for the version you are releasing
+* Create release notes by clicking `Generate release notes`
+* Copy the release notes to the CHANGELOG and update to the following format
+
+```
+# <tag version> (Month Day, Year)
+FEATURES:
+ENHANCEMENTS:
+BUG FIXES:
+```
+
+* Create a PR to update CHANGELOG
+* Copy the updated notes back to the draft release (DO NOT release with just the generated notes. Those are just a template to help you)
+* Publish the release (using the CL: git tag v0.0.0; git push -u origin v0.0.0)
+* Create an [EIO issue](https://github.com/rancherlabs/eio) for Hashicorp to publish the release
