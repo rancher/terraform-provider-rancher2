@@ -4,7 +4,7 @@ FEATURES:
 
 * **New Argument:** `amazonec2_config.http_endpoint` - (Optional) Enables or disables the HTTP metadata endpoint on your instances (string). See [#944](https://github.com/rancher/terraform-provider-rancher2/pull/944)
 * **New Argument:** `amazonec2_config.http_tokens` - (Optional) The state of token usage for your instance metadata requests (string). See [#944](https://github.com/rancher/terraform-provider-rancher2/pull/944)
-* **NewArgument:** `rke_config.aci_network_provider` - (Optional/Computed) ACI provider config for RKE network (list maxitems:63). See [#912](https://github.com/rancher/terraform-provider-rancher2/pull/912)
+* **New Argument:** `rke_config.aci_network_provider` - (Optional/Computed) ACI provider config for RKE network (list maxitems:63). See [#912](https://github.com/rancher/terraform-provider-rancher2/pull/912)
 
 ENHANCEMENTS:
 
