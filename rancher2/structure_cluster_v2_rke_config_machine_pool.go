@@ -174,6 +174,7 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		}
 		if v, ok := in["labels"].(map[string]interface{}); ok && len(v) > 0 {
 			obj.MachineDeploymentLabels = toMapString(v)
+			obj.Labels = toMapString(v)
 		}
 		if v, ok := in["paused"].(bool); ok {
 			obj.Paused = v
