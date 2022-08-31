@@ -73,6 +73,7 @@ func init() {
 		},
 	}
 	testClusterV2RKEConfigMachinePoolsConf[0].CloudCredentialSecretName = "cloud_credential_secret_name"
+	testClusterV2RKEConfigMachinePoolsConf[0].Labels = testClusterV2RKEConfigMachinePoolsConf[0].MachineDeploymentLabels
 	testClusterV2RKEConfigMachinePoolsConf[0].Taints = []corev1.Taint{
 		{
 			Key:    "key",
