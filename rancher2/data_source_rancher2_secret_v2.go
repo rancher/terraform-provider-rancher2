@@ -1,8 +1,6 @@
 package rancher2
 
 import (
-	"log"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -61,11 +59,6 @@ func dataSourceRancher2SecretV2Read(d *schema.ResourceData, meta interface{}) er
 
 	secret, err := getSecretV2ByID(meta.(*Config), clusterID, rancherID)
 	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Secret V2 %s not found at cluster %s", rancherID, clusterID)
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
