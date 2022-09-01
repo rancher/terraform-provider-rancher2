@@ -1,3 +1,23 @@
+## 1.24.1 (September 1, 2022)
+
+FEATURES:
+
+* **New Argument:** `amazonec2_config.http_endpoint` - (Optional) Enables or disables the HTTP metadata endpoint on your instances (string). See [#944](https://github.com/rancher/terraform-provider-rancher2/pull/944)
+* **New Argument:** `amazonec2_config.http_tokens` - (Optional) The state of token usage for your instance metadata requests (string). See [#944](https://github.com/rancher/terraform-provider-rancher2/pull/944)
+* **New Argument:** `rke_config.aci_network_provider` - (Optional/Computed) ACI provider config for RKE network (list maxitems:63). See [#912](https://github.com/rancher/terraform-provider-rancher2/pull/912)
+
+ENHANCEMENTS:
+
+* Add test coverage for amazonec2 node template. See [#952](https://github.com/rancher/terraform-provider-rancher2/pull/952)
+* Remove non working args from `amazonec2_config`. See [#960](https://github.com/rancher/terraform-provider-rancher2/pull/960)
+* Add release checklist to README. See [#971](https://github.com/rancher/terraform-provider-rancher2/pull/971)
+* Bump rancher/rancher and go client dependencies to support the ACI Network Provider. See [#959](https://github.com/rancher/terraform-provider-rancher2/pull/959)
+
+BUG FIXES:
+
+* Fix broken logo link in README. See [#924](https://github.com/rancher/terraform-provider-rancher2/pull/924)
+* Fix resource creation error on RKE2 cluster for Azure [#876](https://github.com/rancher/terraform-provider-rancher2/pull/876)
+
 ## 1.24.0 (May 25, 2022)
 
 FEATURES:
@@ -10,7 +30,6 @@ BUG FIXES:
 * Fixed RKE2 EC2 cluster creation with standard user token. See [#898](https://github.com/rancher/terraform-provider-rancher2/pull/898)
 * Fixed incorrect delete timeout values for cluster resources. See [#906](https://github.com/rancher/terraform-provider-rancher2/pull/906)
 * Fixed incorrect timeout variable used in the app delete function. See [#897](https://github.com/rancher/terraform-provider-rancher2/pull/897)
-
 
 ## 1.23.0 (March 31, 2022)
 
