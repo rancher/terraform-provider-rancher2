@@ -1,4 +1,4 @@
-## 1.24.1 (August 30, 2022)
+## 1.24.1 (September 1, 2022)
 
 FEATURES:
 
