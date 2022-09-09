@@ -256,7 +256,7 @@ The following attributes are exported:
 * `memory_size` - (Optional) Memory size (in GiB), Default `4` (string)
 * `disk_size` - (Optional) Disk size (in GiB), Default `40` (string)
 * `disk_bus` - (Optional) Disk bus, Default `virtio` (string)
-* `image_name` - (Required) Image name e.g. `harvester-public/image-57hzg` (string)
+* `image_name` - (Required) Image name from the API `id` field, *not* the human provided name e.g. `harvester-public/image-57hzg` (string)
 * `ssh_user` - (Required) SSH username e.g. `ubuntu` (string)
 * `ssh_password` - (Optional/Sensitive) SSH password (string)
 * `network_name` - (Required) Network name e.g. `harvester-public/vlan1` (string)
