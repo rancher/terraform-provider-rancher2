@@ -475,7 +475,8 @@ The following attributes are exported:
 * `unhealthy_node_timeout_seconds` - (Optional) Seconds an unhealthy node has to become active before it is replaced (int)
 * `max_unhealthy` - (Optional) Max unhealthy nodes for automated replacement to be allowed (string)
 * `unhealthy_range` - (Optional) Range of unhealthy nodes for automated replacement to be allowed (string)
-* `machine_labels` - (Optional) Machine pool labels. Node labels (list)
+* `machine_labels` - (Optional) Labels for Machine pool nodes (map)
+* `labels` - (Optional) Labels for Machine Deployment Resource (map)
 
 ##### `machine_config`
 
