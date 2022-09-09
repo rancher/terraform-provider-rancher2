@@ -617,7 +617,7 @@ The following attributes are exported:
 * `driver` - (Computed) The driver used for the Cluster. `imported`, `azurekubernetesservice`, `amazonelasticcontainerservice`, `googlekubernetesengine` and `rancherKubernetesEngine` are supported (string)
 * `istio_enabled` - (Computed) Is istio enabled at cluster? Just for Rancher v2.3.x and above (bool)
 * `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster. Note: For Rancher 2.6.0 and above, when the cluster has `cluster_auth_endpoint` enabled, the kube_config will not be available until the cluster is `connected` (string)
-* `ca_cert` - (Computed/Sensitive) K8s cluster ca cert (string)
+* `ca_cert` - (Computed) K8s cluster ca cert (string)
 * `system_project_id` - (Computed) System project ID for the cluster (string)
 
 **Note** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
@@ -1018,7 +1018,7 @@ The following attributes are exported:
 * `apic_refresh_ticker_adjust` - (Optional) APIC refresh ticker adjust amount (string)
 * `apic_refresh_time` - (Optional) APIC refresh time in seconds (string)
 * `apic_subscription_delay` - (Optional) APIC subscription delay amount (string)
-* `apic_user_crt` - (Required/Sensitive) APIC user certificate (string)
+* `apic_user_crt` - (Required) APIC user certificate (string)
 * `apic_user_key` - (Required/Sensitive) APIC user key (string)
 * `apic_user_name` - (Required) APIC user name (string)
 * `capic` - (Optional) cAPIC cloud (string)
@@ -1174,7 +1174,7 @@ The following attributes are exported:
 
 * `backup_config` - (Optional/Computed) Backup options for etcd service. Just for Rancher v2.2.x (list maxitems:1)
 * `ca_cert` - (Optional/Computed) TLS CA certificate for etcd service (string)
-* `cert` - (Optional/Computed/Sensitive) TLS certificate for etcd service (string)
+* `cert` - (Optional/Computed) TLS certificate for etcd service (string)
 * `creation` - (Optional/Computed) Creation option for etcd service (string)
 * `external_urls` - (Optional) External urls for etcd service (list)
 * `extra_args` - (Optional/Computed) Extra arguments for etcd service (map)

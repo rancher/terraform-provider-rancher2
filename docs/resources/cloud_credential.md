@@ -124,7 +124,7 @@ The following attributes are exported:
 * `secret_key` - (Required/Sensitive) AWS secret key (string)
 * `default_bucket` - (Optional) AWS default bucket (string)
 * `default_endpoint` - (Optional) AWS default endpoint (string)
-* `default_endpoint_ca` - (Optional/Sensitive) AWS default endpoint CA (string)
+* `default_endpoint_ca` - (Optional) AWS default endpoint CA (string)
 * `default_folder` - (Optional) AWS default folder (string)
 * `default_region` - (Optional) AWS default region (string)
 * `default_skip_ssl_verify` - (Optional) AWS default skip ssl verify. Default: `false` (bool)

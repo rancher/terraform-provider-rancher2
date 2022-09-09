@@ -121,7 +121,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the Node Template (string)
 * `amazonec2_config` - (Optional) AWS config for the Node Template (list maxitems:1)
-* `auth_certificate_authority` - (Optional/Sensitive) Auth certificate authority for the Node Template (string)
+* `auth_certificate_authority` - (Optional) Auth certificate authority for the Node Template (string)
 * `auth_key` - (Optional/Sensitive) Auth key for the Node Template (string)
 * `azure_config` - (Optional) Azure config for the Node Template (list maxitems:1)
 * `cloud_credential_id` - (Optional) Cloud credential ID for the Node Template. Required from Rancher v2.2.x (string)

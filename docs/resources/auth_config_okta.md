@@ -32,7 +32,7 @@ The following arguments are supported:
 * `groups_field` - (Required) OKTA group field (string)
 * `idp_metadata_content` - (Required/Sensitive) OKTA IDP metadata content (string)
 * `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
-* `sp_cert` - (Required/Sensitive) OKTA SP cert (string)
+* `sp_cert` - (Required) OKTA SP cert (string)
 * `sp_key` - (Required/Sensitive) OKTA SP key (string)
 * `uid_field` - (Required) OKTA UID field (string)
 * `user_name_field` - (Required) OKTA user name field (string)

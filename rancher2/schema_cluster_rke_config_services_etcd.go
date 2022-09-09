@@ -98,10 +98,9 @@ func clusterRKEConfigServicesEtcdFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"cert": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Computed:  true,
-			Sensitive: true,
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
 		},
 		"creation": {
 			Type:     schema.TypeString,

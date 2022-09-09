@@ -58,9 +58,8 @@ func loggingFluentdConfigFields() map[string]*schema.Schema {
 			},
 		},
 		"certificate": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Sensitive: true,
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"compress": {
 			Type:     schema.TypeBool,

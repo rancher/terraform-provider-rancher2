@@ -18,13 +18,11 @@ func loggingCustomTargetConfigFields() map[string]*schema.Schema {
 		"certificate": {
 			Type:      schema.TypeString,
 			Optional:  true,
-			Sensitive: true,
 			StateFunc: TrimSpace,
 		},
 		"client_cert": {
 			Type:      schema.TypeString,
 			Optional:  true,
-			Sensitive: true,
 			StateFunc: TrimSpace,
 		},
 		"client_key": {

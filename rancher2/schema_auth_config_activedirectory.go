@@ -43,7 +43,6 @@ func authConfigActiveDirectoryFields() map[string]*schema.Schema {
 		"certificate": {
 			Type:      schema.TypeString,
 			Optional:  true,
-			Sensitive: true,
 			StateFunc: TrimSpace,
 		},
 		"connection_timeout": {

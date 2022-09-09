@@ -32,9 +32,8 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed: true,
 			},
 			"ca_cert": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"rke_config": {
 				Type:     schema.TypeList,

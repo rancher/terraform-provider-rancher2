@@ -31,7 +31,6 @@ func authConfigPingFields() map[string]*schema.Schema {
 		"sp_cert": {
 			Type:      schema.TypeString,
 			Required:  true,
-			Sensitive: true,
 			StateFunc: TrimSpace,
 		},
 		"sp_key": {

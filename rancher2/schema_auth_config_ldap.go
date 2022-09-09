@@ -42,7 +42,6 @@ func authConfigLdapFields() map[string]*schema.Schema {
 		"certificate": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			Sensitive:    true,
 			ValidateFunc: validation.StringIsBase64,
 			StateFunc: func(val interface{}) string {
 				s, _ := Base64Decode(val.(string))

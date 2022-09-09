@@ -59,9 +59,8 @@ func nodeTemplateFields() map[string]*schema.Schema {
 			},
 		},
 		"auth_certificate_authority": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Sensitive: true,
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"auth_key": {
 			Type:      schema.TypeString,

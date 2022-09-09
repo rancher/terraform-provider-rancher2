@@ -32,7 +32,7 @@ The following arguments are supported:
 * `groups_field` - (Required) KeyCloak group field (string)
 * `idp_metadata_content` - (Required/Sensitive) KeyCloak IDP metadata content (string)
 * `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
-* `sp_cert` - (Required/Sensitive) KeyCloak SP cert (string)
+* `sp_cert` - (Required) KeyCloak SP cert (string)
 * `sp_key` - (Required/Sensitive) KeyCloak SP key (string)
 * `uid_field` - (Required) KeyCloak UID field (string)
 * `user_name_field` - (Required) KeyCloak user name field (string)

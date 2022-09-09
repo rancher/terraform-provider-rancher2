@@ -23,14 +23,12 @@ func loggingSyslogConfigFields() map[string]*schema.Schema {
 			Required: true,
 		},
 		"certificate": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Sensitive: true,
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"client_cert": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Sensitive: true,
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"client_key": {
 			Type:      schema.TypeString,

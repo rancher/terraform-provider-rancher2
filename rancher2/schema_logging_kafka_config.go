@@ -24,14 +24,12 @@ func loggingKafkaConfigFields() map[string]*schema.Schema {
 			},
 		},
 		"certificate": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Sensitive: true,
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"client_cert": {
-			Type:      schema.TypeString,
-			Optional:  true,
-			Sensitive: true,
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"client_key": {
 			Type:      schema.TypeString,

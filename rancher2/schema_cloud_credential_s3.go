@@ -33,7 +33,6 @@ func cloudCredentialS3Fields() map[string]*schema.Schema {
 		"default_endpoint_ca": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Sensitive:   true,
 			Description: "AWS default endpoint CA",
 		},
 		"default_folder": {

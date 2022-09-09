@@ -56,8 +56,8 @@ The following attributes are exported:
 #### Arguments
 
 * `content` - (Required) Custom target config content (string)
-* `certificate` - (Required/Sensitive) SSL CA certificate for the custom target service (string)
-* `client_cert` - (Optional/Sensitive) SSL client certificate for the custom target service (string)
+* `certificate` - (Required) SSL CA certificate for the custom target service (string)
+* `client_cert` - (Optional) SSL client certificate for the custom target service (string)
 * `client_key` - (Optional/Sensitive) SSL client key for the custom target service (string)
 
 ### `elasticsearch_config`
@@ -67,8 +67,8 @@ The following attributes are exported:
 * `endpoint` - (Required) Endpoint of the elascticsearch service. Must include protocol, `http://` or `https://` (string)
 * `auth_password` - (Optional/Sensitive) User password for the elascticsearch service (string)
 * `auth_username` - (Optional/Sensitive) Username for the elascticsearch service (string)
-* `certificate` - (Optional/Sensitive) SSL certificate for the elascticsearch service (string)
-* `client_cert` - (Optional/Sensitive) SSL client certificate for the elascticsearch service (string)
+* `certificate` - (Optional) SSL certificate for the elascticsearch service (string)
+* `client_cert` - (Optional) SSL client certificate for the elascticsearch service (string)
 * `client_key` - (Optional/Sensitive) SSL client key for the elascticsearch service (string)
 * `client_key_pass` - (Optional/Sensitive) SSL client key password for the elascticsearch service (string)
 * `date_format` - (Optional) Date format for the elascticsearch logs. Default: `YYYY-MM-DD` (string)
@@ -81,7 +81,7 @@ The following attributes are exported:
 #### Arguments
 
 * `fluent_servers` - (Required) Servers for the fluentd service (list)
-* `certificate` - (Optional/Sensitive) SSL certificate for the fluentd service (string)
+* `certificate` - (Optional) SSL certificate for the fluentd service (string)
 * `compress` - (Optional) Compress data for the fluentd service (bool)
 * `enable_tls` - (Optional) Enable TLS for the fluentd service (bool)
 
@@ -103,8 +103,8 @@ The following attributes are exported:
 
 * `topic` - (Required) Topic to publish on the kafka service (string)
 * `broker_endpoints` - (Optional) Kafka endpoints for kafka service. Conflicts with `zookeeper_endpoint` (list)
-* `certificate` - (Optional/Sensitive) SSL certificate for the kafka service (string)
-* `client_cert` - (Optional/Sensitive) SSL client certificate for the kafka service (string)
+* `certificate` - (Optional) SSL certificate for the kafka service (string)
+* `client_cert` - (Optional) SSL client certificate for the kafka service (string)
 * `client_key` - (Optional/Sensitive) SSL client key for the kafka service (string)
 * `zookeeper_endpoint` - (Optional) Zookeeper endpoint for kafka service. Conflicts with `broker_endpoints` (string)
 
@@ -114,8 +114,8 @@ The following attributes are exported:
 
 * `endpoint` - (Required) Endpoint of the splunk service. Must include protocol, `http://` or `https://` (string)
 * `token` - (Required/Sensitive) Token for the splunk service (string)
-* `certificate` - (Optional/Sensitive) SSL certificate for the splunk service (string)
-* `client_cert` - (Optional/Sensitive) SSL client certificate for the splunk service (string)
+* `certificate` - (Optional) SSL certificate for the splunk service (string)
+* `client_cert` - (Optional) SSL client certificate for the splunk service (string)
 * `client_key` - (Optional/Sensitive) SSL client key for the splunk service (string)
 * `client_key_pass` - (Optional/Sensitive) SSL client key password for the splunk service (string)
 * `index` - (Optional) Index prefix for the splunk logs (string)
@@ -127,8 +127,8 @@ The following attributes are exported:
 #### Arguments
 
 * `endpoint` - (Required) Endpoint of the syslog service (string)
-* `certificate` - (Optional/Sensitive) SSL certificate for the syslog service (string)
-* `client_cert` - (Optional/Sensitive) SSL client certificate for the syslog service (string)
+* `certificate` - (Optional) SSL certificate for the syslog service (string)
+* `client_cert` - (Optional) SSL client certificate for the syslog service (string)
 * `client_key` - (Optional/Sensitive) SSL client key for the syslog service (string)
 * `program` - (Optional) Program for the syslog service (string)
 * `protocol` - (Optional) Protocol for the syslog service. `tcp` and `udp` are supported. Default: `udp` (string)
