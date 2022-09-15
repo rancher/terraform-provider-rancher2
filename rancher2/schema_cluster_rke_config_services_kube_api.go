@@ -128,14 +128,16 @@ func clusterRKEConfigServicesKubeAPIAuditLogFields() map[string]*schema.Schema {
 func clusterRKEConfigServicesKubeAPIAdmissionConfigurationFieldsV0() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"api_version": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  clusterRKEConfigServicesKubeAPIAdmissionConfigAPIDefault,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     clusterRKEConfigServicesKubeAPIAdmissionConfigAPIDefault,
+			Description: "Admission configuration ApiVersion",
 		},
 		"kind": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  clusterRKEConfigServicesKubeAPIAdmissionConfigKindDefault,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     clusterRKEConfigServicesKubeAPIAdmissionConfigKindDefault,
+			Description: "Admission configuration Kind",
 		},
 		"plugins": {
 			Type:     schema.TypeList,
@@ -144,6 +146,7 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigurationFieldsV0() map[string]
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesKubeAPIAdmissionConfigPluginsFieldsV0(),
 			},
+			Description: "Admission configuration plugins",
 		},
 	}
 	return s
@@ -152,14 +155,16 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigurationFieldsV0() map[string]
 func clusterRKEConfigServicesKubeAPIAdmissionConfigurationFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"api_version": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  clusterRKEConfigServicesKubeAPIAdmissionConfigAPIDefault,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     clusterRKEConfigServicesKubeAPIAdmissionConfigAPIDefault,
+			Description: "Admission configuration ApiVersion",
 		},
 		"kind": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  clusterRKEConfigServicesKubeAPIAdmissionConfigKindDefault,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     clusterRKEConfigServicesKubeAPIAdmissionConfigKindDefault,
+			Description: "Admission configuration Kind",
 		},
 		"plugins": {
 			Type:     schema.TypeList,
@@ -168,6 +173,7 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigurationFields() map[string]*s
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesKubeAPIAdmissionConfigPluginsFields(),
 			},
+			Description: "Admission configuration plugins",
 		},
 	}
 	return s
@@ -176,19 +182,22 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigurationFields() map[string]*s
 func clusterRKEConfigServicesKubeAPIAdmissionConfigPluginsFieldsV0() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"name": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Plugin name",
 		},
 		"path": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Plugin path",
 		},
 		"configuration": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Plugin configuration",
 		},
 	}
 	return s
@@ -196,14 +205,16 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigPluginsFieldsV0() map[string]
 func clusterRKEConfigServicesKubeAPIAdmissionConfigPluginsFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"name": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Plugin name",
 		},
 		"path": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  "",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Plugin path",
 		},
 		"configuration": {
 			Type:     schema.TypeString,
@@ -229,6 +240,7 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigPluginsFields() map[string]*s
 				newMap, _ := ghodssyamlToMapInterface(new)
 				return reflect.DeepEqual(oldMap, newMap)
 			},
+			Description: "Plugin configuration",
 		},
 	}
 	return s
@@ -400,6 +412,7 @@ func clusterRKEConfigServicesKubeAPIFieldsV0() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesKubeAPIAdmissionConfigurationFieldsV0(),
 			},
+			Description: "Cluster admission configuration",
 		},
 		"always_pull_images": {
 			Type:     schema.TypeBool,
@@ -482,6 +495,7 @@ func clusterRKEConfigServicesKubeAPIFields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesKubeAPIAdmissionConfigurationFields(),
 			},
+			Description: "Cluster admission configuration",
 		},
 		"always_pull_images": {
 			Type:     schema.TypeBool,
@@ -565,6 +579,7 @@ func clusterRKEConfigServicesKubeAPIFieldsData() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesKubeAPIAdmissionConfigurationFields(),
 			},
+			Description: "Cluster admission configuration",
 		},
 		"always_pull_images": {
 			Type:     schema.TypeBool,
