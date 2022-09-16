@@ -222,6 +222,47 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-vsphere" {
 `
 	testAccRancher2NodeTemplateVsphereConfig       = testAccRancher2CloudCredentialConfigVsphere + testAccRancher2NodeTemplateVsphere
 	testAccRancher2NodeTemplateVsphereUpdateConfig = testAccRancher2CloudCredentialConfigVsphere + testAccRancher2NodeTemplateVsphereUpdate
+
+	testAccRancher2NodeTemplateOutscaleDriver = `
+resource "rancher2_node_driver" "foo-outscale" {
+	active = true
+	builtin = false
+	name = "outscale"
+	ui_url = "https://oos.eu-west-2.outscale.com/rancher-ui-driver-outscale/v0.0.2/component.js"
+	url = "https://github.com/outscale-dev/docker-machine-driver-outscale/releases/download/v0.0.2/docker-machine-driver-outscale_0.0.2_linux_amd64.zip"
+	whitelist_domains = ["oos.eu-west-2.outscale.com"]
+}
+`
+	testAccRancher2NodeTemplateOutscale = `
+resource "` + testAccRancher2NodeTemplateType + `" "foo-outscale" {
+	name = "foo-outscale"
+	description = "Terraform node driver outscale acceptance test"
+	driver_id = rancher2_node_driver.foo-outscale.id
+	outscale_config {
+		access_key = "access_key"
+		secret_key = "secret_key"
+		region = "eu-west-2"
+		instance_type = "tinav3.c4r8p2"
+	}
+}
+`
+
+	testAccRancher2NodeTemplateOutscaleUpdate = `
+resource "` + testAccRancher2NodeTemplateType + `" "foo-outscale" {
+	name = "foo-outscale"
+	description = "Terraform node driver outscale acceptance test"
+	driver_id = rancher2_node_driver.foo-outscale.id
+	outscale_config {
+		access_key = "access_key"
+		secret_key = "secret_key"
+		region = "eu-west-2"
+		instance_type = "tinav5.c2r8p2"
+	}
+}
+`
+
+	testAccRancher2NodeTemplateOutscaleConfig       = testAccRancher2NodeTemplateOutscaleDriver + testAccRancher2NodeTemplateOutscale
+	testAccRancher2NodeTemplateOutscaleUpdateConfig = testAccRancher2NodeTemplateOutscaleDriver + testAccRancher2NodeTemplateOutscaleUpdate
 )
 
 func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
@@ -681,6 +722,69 @@ func TestAccRancher2NodeTemplate_disappears_Vsphere(t *testing.T) {
 				Config: testAccRancher2NodeTemplateVsphereConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-vsphere", nodeTemplate),
+					testAccRancher2NodeTemplateDisappears(nodeTemplate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_basic_Outscale(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	name := testAccRancher2NodeTemplateType + ".foo-outscale"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NodeTemplateOutscaleConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo-outscale"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver outscale acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", outscaleConfigDriver),
+					resource.TestCheckResourceAttr(name, "outscale_config.0.instance_type", "tinav3.c4r8p2"),
+				),
+			},
+			{
+				Config: testAccRancher2NodeTemplateOutscaleUpdateConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo-outscale"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver outscale acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", outscaleConfigDriver),
+					resource.TestCheckResourceAttr(name, "outscale_config.0.instance_type", "tinav5.c2r8p2"),
+				),
+			},
+			{
+				Config: testAccRancher2NodeTemplateOutscaleConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo-outscale"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver outscale acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", outscaleConfigDriver),
+					resource.TestCheckResourceAttr(name, "outscale_config.0.instance_type", "tinav3.c4r8p2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_disappears_Outscale(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NodeTemplateOutscaleConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-outscale", nodeTemplate),
 					testAccRancher2NodeTemplateDisappears(nodeTemplate),
 				),
 				ExpectNonEmptyPlan: true,
