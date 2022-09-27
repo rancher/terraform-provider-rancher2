@@ -503,7 +503,7 @@ resource "rancher2_cluster" "foo" {
 ```
 
 
-### Importing AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 or above (Tech preview)
+### Importing AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 or above.
 
 ```hcl
 resource "rancher2_cloud_credential" "foo-aks" {
@@ -527,7 +527,7 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-### Creating AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 or above (Tech preview)
+### Creating AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 or above.
 
 ```hcl
 resource "rancher2_cloud_credential" "foo-aks" {

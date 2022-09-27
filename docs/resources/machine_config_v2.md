@@ -4,7 +4,7 @@ page_title: "rancher2_machine_config_v2 Resource"
 
 # rancher2\_machine\_config\_v2 Resource
 
-Provides a Rancher v2 Machine config v2 resource. This can be used to create Machine Config v2 for Rancher v2 and retrieve their information. This resource is supported as tech preview from Rancher v2.6.0 and above.
+Provides a Rancher v2 Machine config v2 resource. This can be used to create Machine Config v2 for Rancher v2 and retrieve their information. This resource is available from Rancher v2.6.0 and above.
 
 `amazonec2`, `azure`, `digitalocean`, `linode`, `openstack`, and `vsphere` cloud providers are supported for machine config V2
 
