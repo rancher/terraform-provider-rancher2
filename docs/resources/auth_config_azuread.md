@@ -8,6 +8,17 @@ Provides a Rancher v2 Auth Config AzureAD resource. This can be used to configur
 
 In addition to the built-in local auth, only one external auth config provider can be enabled at a time.
 
+**Important:** for existing Azure AD setups created in versions of Rancher before v2.6.7,
+admins need to perform an update to the AuthConfig resource if they upgrade to Rancher v2.6.7+.
+They need to first follow the documentation to set the proper [Application type permissions](https://rancher.com/docs/rancher/v2.6/en/admin-settings/authentication/azure-ad/#3-set-required-permissions-for-rancher) on the App registration on the Azure portal.
+
+Then they need to go to the UI, which will [prompt](https://rancher.com/docs/rancher/v2.6/en/admin-settings/authentication/azure-ad/#migrating-from-azure-ad-graph-api-to-microsoft-graph-api) them to update their configuration on every screen. If they had set the permissions
+properly in the previous step, then Rancher will perform the configuration migration successfully.
+
+Finally, to avoid state drift in the Terraform configuration, admins need to look up the new values of the updated AuthConfig and
+update the corresponding values in their `rancher2_auth_config_azuread` resource. They can then run `terraform plan` and ensure that
+Terraform has nothing to change.
+
 ## Example Usage
 
 ```hcl
