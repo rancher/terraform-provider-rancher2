@@ -54,6 +54,10 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		if in.OpennebulaConfig == nil {
 			return fmt.Errorf("[ERROR] Node template driver %s requires opennebula_config", in.Driver)
 		}
+	case outscaleConfigDriver:
+		if in.OutscaleConfig == nil {
+			return fmt.Errorf("[ERROR] Node template driver %s requires outscale_config", in.Driver)
+		}
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on node template: %s", in.Driver)
 	}
@@ -226,6 +230,11 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 	if v, ok := in.Get("opennebula_config").([]interface{}); ok && len(v) > 0 {
 		obj.OpennebulaConfig = expandOpennebulaConfig(v)
 		obj.Driver = opennebulaConfigDriver
+	}
+
+	if v, ok := in.Get("outscale_config").([]interface{}); ok && len(v) > 0 {
+		obj.OutscaleConfig = expandOutscaleConfig(v)
+		obj.Driver = outscaleConfigDriver
 	}
 
 	if v, ok := in.Get("hetzner_config").([]interface{}); ok && len(v) > 0 {
