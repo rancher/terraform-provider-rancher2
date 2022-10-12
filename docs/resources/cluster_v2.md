@@ -4,7 +4,7 @@ page_title: "rancher2_cluster_v2 Resource"
 
 # rancher2\_cluster\_v2 Resource
 
-Provides a Rancher v2 Cluster v2 resource. This can be used to create RKE2 and K3S Clusters for Rancher v2 environments and retrieve their information. This resource is supported as tech preview from Rancher v2.6.0 and above.
+Provides a Rancher v2 Cluster v2 resource. This can be used to create RKE2 and K3S Clusters for Rancher v2 environments and retrieve their information. This resource is available from Rancher v2.6.0 and above.
 
 ## Example Usage
 
