@@ -150,6 +150,8 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 		update["opennebulaConfig"] = expandOpennebulaConfig(d.Get("opennebula_config").([]interface{}))
 	case vmwarevsphereConfigDriver:
 		update["vmwarevsphereConfig"] = expandVsphereConfig(d.Get("vsphere_config").([]interface{}))
+	case outscaleConfigDriver:
+		update["outscaleConfig"] = expandOutscaleConfig(d.Get("outscale_config").([]interface{}))
 	}
 
 	newNodeTemplate := &NodeTemplate{}
