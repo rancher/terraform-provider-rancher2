@@ -52,7 +52,7 @@ if [ "${KUBECTL_BIN}" == "none" ] ; then
 fi
 ## docker
 DOCKER_NAME=docker
-DOCKER_URL="https://download.docker.com/linux/static/stable/x86_64/docker-20.10.14.tgz"
+DOCKER_URL="https://download.docker.com/linux/static/stable/x86_64/docker-20.10.17.tgz"
 DOCKER_BIN=$(which ${DOCKER_NAME} || echo none)
 if [ "${DOCKER_BIN}" == "none" ] ; then
   export DOCKER_BIN=${TESTACC_TEMP_DIR}/${DOCKER_NAME}
