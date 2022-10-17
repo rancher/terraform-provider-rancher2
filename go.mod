@@ -144,7 +144,7 @@ require (
 replace (
 	github.com/crewjam/saml => github.com/crewjam/saml v0.4.1
 	github.com/docker/distribution => github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker => github.com/docker/docker v20.10.6+incompatible
+	github.com/docker/docker => github.com/docker/docker v20.10.17+incompatible
 	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20220722231444-8b3c0513bc36
 	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20220722085125-e464ea405677
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2
