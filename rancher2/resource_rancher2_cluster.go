@@ -537,6 +537,7 @@ func findFlattenClusterRegistrationToken(client *managementClient.Client, cluste
 }
 
 func findClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
+	log.Printf("[TRACE] Finding cluster registration token for %s", clusterID)
 	for i := range clusterRegistrationTokenNames {
 		regTokenID := clusterID + ":" + clusterRegistrationTokenNames[i]
 		for retry, retries := 1, 10; retry <= retries; retry++ {
@@ -545,18 +546,24 @@ func findClusterRegistrationToken(client *managementClient.Client, clusterID str
 				if !IsNotFound(err) {
 					return nil, err
 				}
+				log.Printf("[TRACE] Cluster registration token %s not found for %s", regTokenID, clusterID)
 				break
 			}
 			if (len(regToken.Command) > 0 && len(regToken.NodeCommand) > 0) || retry == retries {
+				log.Printf("[INFO] Found existing cluster registration token for %s", clusterID)
 				return regToken, nil
 			}
+			log.Printf("[DEBUG] Sleeping for 3 seconds before checking cluster registration token for %s", clusterID)
 			time.Sleep(3 * time.Second)
 		}
 	}
+	log.Printf("[TRACE] Cluster registration token not found for %s", clusterID)
 	return createClusterRegistrationToken(client, clusterID)
 }
 
 func createClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
+	log.Printf("[DEBUG] Creating cluster registration token for %s", clusterID)
+
 	regToken, err := expandClusterRegistationToken([]interface{}{}, clusterID)
 	if err != nil {
 		return nil, err
@@ -564,6 +571,11 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 
 	newRegToken, err := client.ClusterRegistrationToken.Create(regToken)
 	if err != nil {
+		if IsConflict(err) {
+			log.Printf("[INFO] Found existing cluster registration token for %s", clusterID)
+			regTokenID := clusterID + ":" + clusterRegistrationTokenName
+			return client.ClusterRegistrationToken.ByID(regTokenID)
+		}
 		return nil, err
 	}
 
@@ -583,6 +595,7 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("[INFO] Created cluster registration token %s for %s", newRegToken.ID, clusterID)
 	return newRegToken, nil
 }
 
