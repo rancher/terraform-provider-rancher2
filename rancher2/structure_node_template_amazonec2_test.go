@@ -107,7 +107,7 @@ func init() {
 
 }
 
-func TestFlattenNodeTemplate(t *testing.T) {
+func TestFlattenAmazonEc2NodeTemplate(t *testing.T) {
 	cases := []struct {
 		Input          *NodeTemplate
 		ExpectedOutput map[string]interface{}
@@ -134,7 +134,7 @@ func TestFlattenNodeTemplate(t *testing.T) {
 	}
 }
 
-func TestExpandNodeTemplate(t *testing.T) {
+func TestExpandAmazonEc2NodeTemplate(t *testing.T) {
 	cases := []struct {
 		Input          map[string]interface{}
 		ExpectedOutput *NodeTemplate

@@ -43,6 +43,7 @@ func init() {
 		VMType:                       "vm_type",
 		VnetName:                     "vnet_name",
 		VnetResourceGroup:            "vnet_resource_group",
+		Tags:                         "key1,value1,key2,value2",
 	}
 	testClusterRKEConfigCloudProviderAzureInterface = []interface{}{
 		map[string]interface{}{
@@ -75,6 +76,7 @@ func init() {
 			"vm_type":                          "vm_type",
 			"vnet_name":                        "vnet_name",
 			"vnet_resource_group":              "vnet_resource_group",
+			"tags":                             "key1,value1,key2,value2",
 		},
 	}
 }

@@ -45,6 +45,7 @@ type machineConfigV2Azure struct {
 	UpdateDomainCount  string   `json:"updateDomainCount,omitempty" yaml:"updateDomainCount,omitempty"`
 	UsePrivateIP       bool     `json:"usePrivateIp,omitempty" yaml:"usePrivateIp,omitempty"`
 	Vnet               string   `json:"vnet,omitempty" yaml:"vnet,omitempty"`
+	Tags               string   `json:"tags,omitempty" yaml:"tags,omitempty"`
 }
 
 type MachineConfigV2Azure struct {
@@ -160,6 +161,10 @@ func flattenMachineConfigV2Azure(in *MachineConfigV2Azure) []interface{} {
 
 	if len(in.Vnet) > 0 {
 		obj["vnet"] = in.Vnet
+	}
+
+	if len(in.Tags) > 0 {
+		obj["tags"] = in.Tags
 	}
 
 	return []interface{}{obj}
@@ -293,6 +298,10 @@ func expandMachineConfigV2Azure(p []interface{}, source *MachineConfigV2) *Machi
 
 	if v, ok := in["vnet"].(string); ok && len(v) > 0 {
 		obj.Vnet = v
+	}
+
+	if v, ok := in["tags"].(string); ok && len(v) > 0 {
+		obj.Tags = v
 	}
 
 	return obj

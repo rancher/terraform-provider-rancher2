@@ -181,6 +181,12 @@ func machineConfigV2AzureFields() map[string]*schema.Schema {
 			Default:     "docker-machine-vnet",
 			Description: "Azure Virtual Network name to connect the virtual machine (in [resourcegroup:]name format)",
 		},
+		"tags": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Azure VM Instance Tags",
+		},
 	}
 
 	return s

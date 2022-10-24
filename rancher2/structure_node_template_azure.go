@@ -109,6 +109,10 @@ func flattenAzureConfig(in *azureConfig) []interface{} {
 		obj["vnet"] = in.Vnet
 	}
 
+	if len(in.Tags) > 0 {
+		obj["tags"] = in.Tags
+	}
+
 	return []interface{}{obj}
 }
 
@@ -231,6 +235,10 @@ func expandAzureConfig(p []interface{}) *azureConfig {
 
 	if v, ok := in["vnet"].(string); ok && len(v) > 0 {
 		obj.Vnet = v
+	}
+
+	if v, ok := in["tags"].(string); ok && len(v) > 0 {
+		obj.Tags = v
 	}
 
 	return obj

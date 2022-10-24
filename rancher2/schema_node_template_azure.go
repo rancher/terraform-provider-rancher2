@@ -39,6 +39,7 @@ type azureConfig struct {
 	UpdateDomainCount  string   `json:"updateDomainCount,omitempty" yaml:"updateDomainCount,omitempty"`
 	UsePrivateIP       bool     `json:"usePrivateIp,omitempty" yaml:"usePrivateIp,omitempty"`
 	Vnet               string   `json:"vnet,omitempty" yaml:"vnet,omitempty"`
+	Tags               string   `json:"tags,omitempty" yaml:"tags,omitempty"`
 }
 
 //Schemas
@@ -210,6 +211,12 @@ func azureConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "docker-machine-vnet",
 			Description: "Azure Virtual Network name to connect the virtual machine (in [resourcegroup:]name format)",
+		},
+		"tags": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Azure VM instance tags",
 		},
 	}
 
