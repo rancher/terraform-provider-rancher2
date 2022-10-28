@@ -87,9 +87,9 @@ $ EXPOSE_HOST_PORTS=true make docker-testacc
 Releasing the Provider
 ---------------------------
 
-The provider should be released 'out of band' from Rancher, but can be loosely tied to a Rancher release to track issues. For example: Terraform v2.6.9 should be released a few days after Rancher v2.6.9 and Terraform fixes/features in the release are said to be included in Rancher v2.6.9 (and will work if you provision with Terraform).
+The provider should be released 'out of band' from Rancher, but can be loosely tied to a Rancher release to track issues. For example: Terraform v2.6.9 should be released a few days after Rancher v2.6.9 and Terraform fixes or features in the release are said to be included in Rancher v2.6.9 (and will work if you provision with Terraform).
 
-The [RKE provider](https://github.com/rancher/terraform-provider-rke) should also be checked for changes and released 'out of band' along with Rancher. If there are no updates, do not release.
+The [RKE provider](https://github.com/rancher/terraform-provider-rke) should be released after every RKE/KDM release. For example: If RKE v1.3.15 was released, bump the RKE version to v1.3.15 and release the provider.
 
 To release the provider:
 
