@@ -83,51 +83,18 @@ func appV2Fields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"values": {
+			Type:             schema.TypeString,
+			Optional:         true,
+			Sensitive:        false,
+			Description:      "App v2 custom values yaml",
+			ValidateFunc:     validateAppSchema,
+			DiffSuppressFunc: suppressAppDiff,
+		},
+		"deployment_values": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Computed:    true,
 			Sensitive:   false,
-			Description: "App v2 custom values yaml",
-			ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-				v, ok := val.(string)
-				if !ok || len(v) == 0 {
-					return
-				}
-				_, err := ghodssyamlToMapInterface(v)
-				if err != nil {
-					errs = append(errs, fmt.Errorf("%q must be in yaml format, error: %v", key, err))
-					return
-				}
-				return
-			},
-			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				oldMap, _ := ghodssyamlToMapInterface(old)
-				newMap, _ := ghodssyamlToMapInterface(new)
-				// global.cattle info is added on creation containing cluster id
-				if newMap == nil {
-					newMap = map[string]interface{}{}
-				}
-				globalInfo := map[string]interface{}{
-					"systemDefaultRegistry": d.Get("system_default_registry").(string),
-					"cattle": map[string]interface{}{
-						"clusterId":             d.Get("cluster_id").(string),
-						"clusterName":           d.Get("cluster_name").(string),
-						"systemDefaultRegistry": d.Get("system_default_registry").(string),
-					},
-				}
-				if newGlobal, ok := newMap["global"].(map[string]interface{}); ok && len(newGlobal) > 0 {
-					newMap["global"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["systemDefaultRegistry"]
-					if newCattle, ok := newGlobal["cattle"].(map[string]interface{}); ok && len(newCattle) > 0 {
-						newMap["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
-						newMap["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
-						newMap["global"].(map[string]interface{})["cattle"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["cattle"].(map[string]interface{})["systemDefaultRegistry"]
-					} else {
-						newMap["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
-					}
-				} else {
-					newMap["global"] = globalInfo
-				}
-				return reflect.DeepEqual(oldMap, newMap)
-			},
+			Description: "App v2 computed values YAML file",
 		},
 		"cleanup_on_fail": {
 			Type:        schema.TypeBool,
@@ -166,4 +133,28 @@ func appV2Fields() map[string]*schema.Schema {
 	}
 
 	return s
+}
+
+func validateAppSchema(val interface{}, key string) (warns []string, errs []error) {
+	v, ok := val.(string)
+	if !ok || len(v) == 0 {
+		return
+	}
+	_, err := ghodssyamlToMapInterface(v)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("%q must be in yaml format, error: %v", key, err))
+		return
+	}
+	return
+}
+
+func suppressAppDiff(_, old, new string, d *schema.ResourceData) bool {
+	oldMap, _ := ghodssyamlToMapInterface(old)
+	newMap, _ := ghodssyamlToMapInterface(new)
+
+	if newMap == nil {
+		newMap = map[string]interface{}{}
+	}
+
+	return reflect.DeepEqual(oldMap, newMap)
 }
