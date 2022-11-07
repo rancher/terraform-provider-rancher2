@@ -18,7 +18,7 @@ type machineConfigV2Harvester struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	VMNamespace       string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
-	VMAffinity       string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
+	VMAffinity        string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
 	CPUCount          string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
 	MemorySize        string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
 	DiskSize          string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
