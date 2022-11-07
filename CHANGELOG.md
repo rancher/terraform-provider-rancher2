@@ -1,3 +1,21 @@
+## 1.24.2 (October 24, 2022)
+
+FEATURES:
+
+* **New Resource:** `admission_configuration` - Admission configuration plugins. Available at Rancher v2.6.9 and above. See [#909](https://github.com/rancher/terraform-provider-rancher2/pull/909)
+* Add Outscale support for node driver. See [#962](https://github.com/rancher/terraform-provider-rancher2/pull/962)
+* Allow setting labels on nodes with RKE2. See [#951](https://github.com/rancher/terraform-provider-rancher2/pull/951)
+
+ENHANCEMENTS:
+
+* [Docs] Add a note about Azure AD auth configuration migration. See [#983](https://github.com/rancher/terraform-provider-rancher2/pull/983)
+* [Docs] Remove tech preview reference for features that are already GA. See [#1000](https://github.com/rancher/terraform-provider-rancher2/pull/1000)
+* Bump docker url version to 20.10. See [#970](https://github.com/rancher/terraform-provider-rancher2/pull/970)
+
+BUG FIXES:
+
+* Use existing cluster registration token if conflict. See [#997](https://github.com/rancher/terraform-provider-rancher2/pull/997)
+
 ## 1.24.1 (September 1, 2022)
 
 FEATURES:
