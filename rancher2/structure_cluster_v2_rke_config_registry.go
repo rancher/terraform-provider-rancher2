@@ -61,7 +61,7 @@ func flattenClusterV2RKEConfigRegistryMirrors(p map[string]rkev1.Mirror) []inter
 		obj["hostname"] = k
 
 		if len(in.Endpoints) > 0 {
-			obj["endpoints"] = toArrayInterfaceSorted(in.Endpoints)
+			obj["endpoints"] = toArrayInterface(in.Endpoints)
 		}
 		if len(in.Rewrites) > 0 {
 			obj["rewrites"] = toMapInterface(in.Rewrites)
