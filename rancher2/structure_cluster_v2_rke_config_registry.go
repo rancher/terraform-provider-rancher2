@@ -129,7 +129,7 @@ func expandClusterV2RKEConfigRegistryMirrors(p []interface{}) map[string]rkev1.M
 		obj := rkev1.Mirror{}
 
 		if v, ok := in["endpoints"].([]interface{}); ok && len(v) > 0 {
-			obj.Endpoints = toArrayStringSorted(v)
+			obj.Endpoints = toArrayString(v)
 		}
 		if v, ok := in["rewrites"].(map[string]interface{}); ok && len(v) > 0 {
 			obj.Rewrites = toMapString(v)
