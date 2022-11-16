@@ -80,22 +80,28 @@ func resourceRancher2NodeTemplateRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	// Normalize node-template ID due to API change
-	d.SetId(meta.(*Config).fixNodeTemplateID(d.Id()))
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		// Normalize node-template ID due to API change
+		d.SetId(meta.(*Config).fixNodeTemplateID(d.Id()))
 
-	nodeTemplate := &NodeTemplate{}
+		nodeTemplate := &NodeTemplate{}
 
-	err = client.APIBaseClient.ByID(managementClient.NodeTemplateType, d.Id(), nodeTemplate)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Node template ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+		err = client.APIBaseClient.ByID(managementClient.NodeTemplateType, d.Id(), nodeTemplate)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Node template ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	return flattenNodeTemplate(d, nodeTemplate)
+		if err = flattenNodeTemplate(d, nodeTemplate); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}) error {

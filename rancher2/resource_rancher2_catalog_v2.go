@@ -63,17 +63,24 @@ func resourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) err
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing Catalog V2 %s", name)
 
-	_, rancherID := splitID(d.Id())
-	catalog, err := getCatalogV2ByID(meta.(*Config), clusterID, rancherID)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Catalog V2 %s not found", name)
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		_, rancherID := splitID(d.Id())
+		catalog, err := getCatalogV2ByID(meta.(*Config), clusterID, rancherID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Catalog V2 %s not found", name)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
-	return flattenCatalogV2(d, catalog)
+
+		if err = flattenCatalogV2(d, catalog); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) error {

@@ -77,18 +77,24 @@ func resourceRancher2CloudCredentialRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	cloudCredential := &CloudCredential{}
-	err = client.APIBaseClient.ByID(managementClient.CloudCredentialType, d.Id(), cloudCredential)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Cloud Credential ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		cloudCredential := &CloudCredential{}
+		err = client.APIBaseClient.ByID(managementClient.CloudCredentialType, d.Id(), cloudCredential)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cloud Credential ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	return flattenCloudCredential(d, cloudCredential)
+		if err = flattenCloudCredential(d, cloudCredential); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interface{}) error {

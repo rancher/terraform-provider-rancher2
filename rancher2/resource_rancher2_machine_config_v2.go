@@ -79,18 +79,24 @@ func waitForMachineConfigV2(d *schema.ResourceData, config *Config, interval tim
 
 func resourceRancher2MachineConfigV2Read(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Refreshing Machine Config V2 %s", d.Id())
-
 	kind := d.Get("kind").(string)
-	obj, err := getMachineConfigV2ByID(meta.(*Config), d.Id(), kind)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) || IsNotAccessibleByID(err) {
-			log.Printf("[INFO] Machine Config V2 %s not found", d.Id())
-			d.SetId("")
-			return nil
+
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		obj, err := getMachineConfigV2ByID(meta.(*Config), d.Id(), kind)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) || IsNotAccessibleByID(err) {
+				log.Printf("[INFO] Machine Config V2 %s not found", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
-	return flattenMachineConfigV2(d, obj)
+		if err = flattenMachineConfigV2(d, obj); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2MachineConfigV2Update(d *schema.ResourceData, meta interface{}) error {

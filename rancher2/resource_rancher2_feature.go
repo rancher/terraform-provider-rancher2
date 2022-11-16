@@ -35,22 +35,23 @@ func resourceRancher2FeatureRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	feature, err := client.Feature.ByID(name)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Feature ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		feature, err := client.Feature.ByID(name)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Feature ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(fmt.Errorf("[ERROR] refreshing feature %s: %v", d.Id(), err))
 		}
-		return fmt.Errorf("[ERROR] refreshing feature %s: %v", d.Id(), err)
-	}
 
-	err = flattenFeature(d, feature)
-	if err != nil {
-		return err
-	}
+		if err = flattenFeature(d, feature); err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func resourceRancher2FeatureUpdate(d *schema.ResourceData, meta interface{}) error {

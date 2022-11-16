@@ -94,21 +94,28 @@ func resourceRancher2ClusterV2Create(d *schema.ResourceData, meta interface{}) e
 func resourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Refreshing Cluster V2 %s", d.Id())
 
-	cluster, err := getClusterV2ByID(meta.(*Config), d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) || IsNotAccessibleByID(err) {
-			log.Printf("[INFO] Cluster V2 %s not found", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		cluster, err := getClusterV2ByID(meta.(*Config), d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) || IsNotAccessibleByID(err) {
+				log.Printf("[INFO] Cluster V2 %s not found", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
-	d.Set("cluster_v1_id", cluster.Status.ClusterName)
-	err = setClusterV2LegacyData(d, meta.(*Config))
-	if err != nil {
-		return err
-	}
-	return flattenClusterV2(d, cluster)
+		d.Set("cluster_v1_id", cluster.Status.ClusterName)
+		err = setClusterV2LegacyData(d, meta.(*Config))
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if err = flattenClusterV2(d, cluster); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ClusterV2Update(d *schema.ResourceData, meta interface{}) error {

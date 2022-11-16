@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"time"
 
@@ -31,26 +32,33 @@ func resourceRancher2SecretCreate(d *schema.ResourceData, meta interface{}) erro
 	_, projectID := splitProjectID(d.Get("project_id").(string))
 	name := d.Get("name").(string)
 
-	err := meta.(*Config).ProjectExist(projectID)
-	if err != nil {
-		return err
-	}
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		err := meta.(*Config).ProjectExist(projectID)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	secret := expandSecret(d)
+		secret := expandSecret(d)
 
-	log.Printf("[INFO] Creating Secret %s on Project ID %s", name, projectID)
+		log.Printf("[INFO] Creating Secret %s on Project ID %s", name, projectID)
 
-	newSecret, err := meta.(*Config).CreateSecret(secret)
-	if err != nil {
-		return err
-	}
+		newSecret, err := meta.(*Config).CreateSecret(secret)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	err = flattenSecret(d, newSecret)
-	if err != nil {
-		return err
-	}
+		err = flattenSecret(d, newSecret)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return resourceRancher2SecretRead(d, meta)
+		err = resourceRancher2SecretRead(d, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2SecretRead(d *schema.ResourceData, meta interface{}) error {
@@ -80,29 +88,36 @@ func resourceRancher2SecretUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[INFO] Updating Secret ID %s", id)
 
-	secret, err := meta.(*Config).GetSecret(id, projectID, namespaceID)
-	if err != nil {
-		return err
-	}
+	return resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		secret, err := meta.(*Config).GetSecret(id, projectID, namespaceID)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	update := map[string]interface{}{
-		"description": d.Get("description").(string),
-		"data":        toMapString(d.Get("data").(map[string]interface{})),
-		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
-	}
+		update := map[string]interface{}{
+			"description": d.Get("description").(string),
+			"data":        toMapString(d.Get("data").(map[string]interface{})),
+			"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
+			"labels":      toMapString(d.Get("labels").(map[string]interface{})),
+		}
 
-	newSecret, err := meta.(*Config).UpdateSecret(secret, update)
-	if err != nil {
-		return err
-	}
+		newSecret, err := meta.(*Config).UpdateSecret(secret, update)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	err = flattenSecret(d, newSecret)
-	if err != nil {
-		return err
-	}
+		err = flattenSecret(d, newSecret)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return resourceRancher2SecretRead(d, meta)
+		err = resourceRancher2SecretRead(d, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2SecretDelete(d *schema.ResourceData, meta interface{}) error {
@@ -112,21 +127,23 @@ func resourceRancher2SecretDelete(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[INFO] Deleting Secret ID %s", id)
 
-	secret, err := meta.(*Config).GetSecret(id, projectID, namespaceID)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Secret ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		secret, err := meta.(*Config).GetSecret(id, projectID, namespaceID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Secret ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	err = meta.(*Config).DeleteSecret(secret)
-	if err != nil {
-		return fmt.Errorf("Error removing Secret: %s", err)
-	}
+		err = meta.(*Config).DeleteSecret(secret)
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("[ERROR] Error removing Secret: %s", err))
+		}
 
-	d.SetId("")
-	return nil
+		d.SetId("")
+		return nil
+	})
 }

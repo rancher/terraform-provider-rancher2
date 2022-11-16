@@ -81,22 +81,23 @@ func resourceRancher2SettingRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	setting, err := client.Setting.ByID(name)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Setting ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		setting, err := client.Setting.ByID(name)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Setting ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	err = flattenSetting(d, setting)
-	if err != nil {
-		return err
-	}
+		if err = flattenSetting(d, setting); err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func resourceRancher2SettingUpdate(d *schema.ResourceData, meta interface{}) error {

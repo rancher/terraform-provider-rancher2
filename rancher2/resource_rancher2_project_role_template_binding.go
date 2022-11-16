@@ -80,17 +80,23 @@ func resourceRancher2ProjectRoleTemplateBindingRead(d *schema.ResourceData, meta
 		return err
 	}
 
-	projectRole, err := client.ProjectRoleTemplateBinding.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Project Role Template Binding ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		projectRole, err := client.ProjectRoleTemplateBinding.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Project Role Template Binding ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	return flattenProjectRoleTemplateBinding(d, projectRole)
+		if err = flattenProjectRoleTemplateBinding(d, projectRole); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ProjectRoleTemplateBindingUpdate(d *schema.ResourceData, meta interface{}) error {

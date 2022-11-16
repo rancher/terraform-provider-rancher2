@@ -72,16 +72,22 @@ func resourceRancher2ClusterAlertGroupRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	clusterAlertGroup, err := client.ClusterAlertGroup.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Cluster Alert Group ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		clusterAlertGroup, err := client.ClusterAlertGroup.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cluster Alert Group ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
 		}
-	}
 
-	return flattenClusterAlertGroup(d, clusterAlertGroup)
+		if err = flattenClusterAlertGroup(d, clusterAlertGroup); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ClusterAlertGroupUpdate(d *schema.ResourceData, meta interface{}) error {
