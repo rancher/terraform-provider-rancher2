@@ -2,7 +2,6 @@
 
 FEATURES:
 
-* **New Resource:** `admission_configuration` - Admission configuration plugins. Available at Rancher v2.6.9 and above. See [#909](https://github.com/rancher/terraform-provider-rancher2/pull/909)
 * Add Outscale support for node driver. See [#962](https://github.com/rancher/terraform-provider-rancher2/pull/962)
 * Allow setting labels on nodes with RKE2. See [#951](https://github.com/rancher/terraform-provider-rancher2/pull/951)
 
@@ -15,6 +14,10 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * Use existing cluster registration token if conflict. See [#997](https://github.com/rancher/terraform-provider-rancher2/pull/997)
+
+KNOWN BUG:
+
+* An update to the `admission_configuration` field within the kube-api service performed in [#909](https://github.com/rancher/terraform-provider-rancher2/pull/909) prevents provider upgrades from v1.24.1 to v1.24.2 in cases where `admission_configuration` was previously defined due to a type mismatch. See [#1011](https://github.com/rancher/terraform-provider-rancher2/issues/1011)
 
 ## 1.24.1 (September 1, 2022)
 
