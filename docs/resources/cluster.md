@@ -1228,41 +1228,6 @@ The following attributes are exported:
 * `service_cluster_ip_range` - (Optional/Computed) Service Cluster IP Range option for kube API service (string)
 * `service_node_port_range` - (Optional/Computed) Service Node Port Range option for kube API service (string)
 
-
-###### `admission_configuration`
-
-###### Arguments
-
-* `api_version` - (Optional) Admission configuration ApiVersion. Default: `apiserver.config.k8s.io/v1` (string)
-* `kind` - (Optional) Admission configuration Kind. Default: `AdmissionConfiguration` (string)
-* `plugins` - (Optional) Admission configuration plugins. (list `plugin`)
-
-###### `plugin`
-
-###### Arguments
-
-* `name` - (Optional) Plugin name. (string)
-* `path` - (Optional) Plugin path. Default: `""` (string)
-* `configuration` - (Optional) Plugin configuration. (string) Ex:
-
-```
-configuration = <<EOF
-apiVersion: pod-security.admission.config.k8s.io/v1alpha1
-kind: PodSecurityConfiguration
-defaults:
-  enforce: restricted
-  enforce-version: latest
-  audit: restricted
-  audit-version: latest
-  warn: restricted
-  warn-version: latest
-exemptions:
-  usernames: []
-  runtimeClasses: []
-  namespaces: []
-EOF
-
-
 ###### `audit_log`
 
 ###### Arguments
