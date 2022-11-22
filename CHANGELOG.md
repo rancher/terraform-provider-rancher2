@@ -1,3 +1,18 @@
+## 1.25.0 (November 22, 2022)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Update CHANGELOG with known bug info from #909. See [#1025](https://github.com/rancher/terraform-provider-rancher2/pull/1025)
+* Revert "Add admission_configuration configuration." See [#1026](https://github.com/rancher/terraform-provider-rancher2/pull/1026)
+
 ## 1.24.2 (October 24, 2022)
 
 FEATURES:
@@ -59,7 +74,6 @@ FEATURES:
 * The Harvester node driver is now supported. See [#861](https://github.com/rancher/terraform-provider-rancher2/pull/861).
 * Added support for KEv2 cluster certificate rotation. See [#882](https://github.com/rancher/terraform-provider-rancher2/pull/882).
 * Added support for node pool health checks on KEv2 clusters. See [#889](https://github.com/rancher/terraform-provider-rancher2/pull/889).
-
 
 ENHANCEMENTS:
 
