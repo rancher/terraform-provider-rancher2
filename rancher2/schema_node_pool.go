@@ -62,6 +62,14 @@ func nodePoolFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 		},
+		"autoscaling": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: nodePoolAutoscalingFields(),
+			},
+		},
 	}
 
 	for k, v := range commonAnnotationLabelFields() {

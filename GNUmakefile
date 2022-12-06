@@ -1,4 +1,4 @@
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
+GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor | grep -v '.history')
 PKG_NAME=rancher2
 TEST?="./${PKG_NAME}"
 PROVIDER_NAME=terraform-provider-rancher2
