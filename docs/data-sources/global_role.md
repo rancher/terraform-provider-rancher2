@@ -29,5 +29,6 @@ The following attributes are exported:
 * `description` - (Computed) Global role description (string)
 * `new_user_default` - (Computed) Whether or not this role should be added to new users (bool)
 * `rules` - (Computed) Global role policy rules (list)
+* `uuid` - (Computed) Global role uuid (string)
 * `annotations` - (Computed) Annotations for global role object (map)
 * `labels` - (Computed) Labels for global role object (map)

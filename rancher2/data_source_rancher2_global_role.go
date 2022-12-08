@@ -38,6 +38,11 @@ func dataSourceRancher2GlobalRole() *schema.Resource {
 					Schema: policyRuleFields(),
 				},
 			},
+			"uuid": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Global role uuid",
+			},
 			"annotations": {
 				Type:        schema.TypeMap,
 				Computed:    true,

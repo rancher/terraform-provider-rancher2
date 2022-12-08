@@ -28,6 +28,8 @@ func flattenGlobalRole(d *schema.ResourceData, in *managementClient.GlobalRole) 
 		return err
 	}
 
+	d.Set("uuid", in.UUID)
+
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -71,6 +73,8 @@ func expandGlobalRole(in *schema.ResourceData) *managementClient.GlobalRole {
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
 	}
+
+	obj.UUID = in.Get("uuid").(string)
 
 	return obj
 }
