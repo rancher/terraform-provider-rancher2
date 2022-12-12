@@ -477,6 +477,7 @@ The following attributes are exported:
 * `unhealthy_range` - (Optional) Range of unhealthy nodes for automated replacement to be allowed (string)
 * `machine_labels` - (Optional) Labels for Machine pool nodes (map)
 * `labels` - (Optional) Labels for Machine Deployment Resource (map)
+* `annotations` - (Optional) Annotations for Machine Deployment Resource (map) 
 
 ##### `machine_config`
 
