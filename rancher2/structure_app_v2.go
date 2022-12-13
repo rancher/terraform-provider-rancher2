@@ -71,7 +71,7 @@ func expandChartInstallV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 	globalInfo := generateGlobalInfoMap(in)
 	valuesData := v3.MapStringInterface{}
 	if v, ok := in.Get("values").(string); ok {
-		values, err := unmarshallValuesContent(v)
+		values, err := unmarshalValuesContent(v)
 		if err != nil {
 			return "", nil, err
 		}
@@ -201,7 +201,7 @@ func expandChartUpgradeV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 	globalInfo := generateGlobalInfoMap(in)
 	valuesData := v3.MapStringInterface{}
 	if v, ok := in.Get("values").(string); ok {
-		values, err := unmarshallValuesContent(v)
+		values, err := unmarshalValuesContent(v)
 		if err != nil {
 			return "", nil, err
 		}
@@ -257,10 +257,10 @@ func expandChartUpgradeV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 	return namespace, out, nil
 }
 
-func unmarshallValuesContent(v string) (map[string]interface{}, error) {
+func unmarshalValuesContent(v string) (map[string]interface{}, error) {
 	values, err := ghodssyamlToMapInterface(v)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal chart install values yaml: %#v", err)
+		return nil, fmt.Errorf("[ERROR] failed to unmarshal chart install values YAML: %#v", err)
 	}
 	if values == nil {
 		values = map[string]interface{}{}

@@ -91,10 +91,12 @@ func appV2Fields() map[string]*schema.Schema {
 			DiffSuppressFunc: suppressAppDiff,
 		},
 		"deployment_values": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Sensitive:   false,
-			Description: "App v2 computed values YAML file",
+			Type:      schema.TypeString,
+			Computed:  true,
+			Sensitive: false,
+			Description: "Values YAML file including computed values. This field prevents incorrect discrepancies from " +
+				"showing in the terraform plan output when files change but values stay the same, due to additional " +
+				"computed values included by the provider itself.",
 		},
 		"cleanup_on_fail": {
 			Type:        schema.TypeBool,
@@ -142,7 +144,7 @@ func validateAppSchema(val interface{}, key string) (warns []string, errs []erro
 	}
 	_, err := ghodssyamlToMapInterface(v)
 	if err != nil {
-		errs = append(errs, fmt.Errorf("%q must be in yaml format, error: %v", key, err))
+		errs = append(errs, fmt.Errorf("[ERROR] %q must be in YAML format, error: %v", key, err))
 		return
 	}
 	return
