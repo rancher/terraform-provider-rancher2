@@ -1525,6 +1525,7 @@ The following arguments are supported:
 * `launch_template` - (Optional) The EKS node groups launch template (list Maxitem: 1)
 * `max_size` - (Optional) The EKS node group maximum size. Default `2` (int)
 * `min_size` - (Optional) The EKS node group maximum size. Default `2` (int)
+* `node_role` - (Optional) The EKS node group node role. Default `""` (string)
 * `request_spot_instances` - (Optional) Enable EKS node group request spot instances (bool)
 * `resource_tags` - (Optional) The EKS node group resource tags (map)
 * `spot_instance_types` - (Optional) The EKS node group sport instace types (list string)
