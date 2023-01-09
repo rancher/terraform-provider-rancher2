@@ -207,6 +207,36 @@ EOF
 }
 ```
 
+### Creating Rancher V2 cluster using a cluster level authenticated `system-default-registry`
+
+```hcl
+resource "rancher2_cluster_v2" "foo_cluster_v2" {
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  name = "cluster-with-custom-registry"
+  rke_config {
+    machine_selector_config {
+      config = {
+        system-default-registry: "<CUSTOM_REGISTRY_HOSTNAME>"
+      }
+    }
+    registries {
+      configs {
+        hostname = "<CUSTOM_REGISTRY_HOSTNAME>"
+        auth_config_secret_name = "<AUTH_CONFIG_SECRET_NAME>"
+        insecure = <TLS_INSECURE_BOOL>
+        tls_secret_name = ""
+        ca_bundle = ""
+      }
+    }
+  }
+}
+```
+**Note**
+The `<AUTH_CONFIG_SECRET_NAME>` represents a generic kubernetes secret which contains two keys with base64 encoded values: the `username` and `password` for the specified custom registry. If the `system-default-registry` is not authenticated, no secret is required and the section within the `rke_config` can be omitted if not otherwise needed. 
+
+Many registries may be specified in the `rke_config`s `registries` section, however the `system-default-registry` from which core system images are pulled is always denoted via the `system-default-registry` key of the `machine_selector_config` or the `machine_global_config`. For more information on private registries, please refer to [the Rancher documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/global-default-private-registry#setting-a-private-registry-with-credentials-when-deploying-a-cluster) 
+
+
 ### Creating Rancher v2 harvester cluster v2 without harvester cloud provider
 
 ```hcl
