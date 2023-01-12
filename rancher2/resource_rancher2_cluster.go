@@ -287,7 +287,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"enableNetworkPolicy":                &enableNetworkPolicy,
 		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
 		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
-		"scheduledClusterScan":               expandScheduledClusterScan(d.Get("scheduled_cluster_scan").([]interface{})),
 		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
 	}
