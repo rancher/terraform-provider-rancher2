@@ -248,14 +248,6 @@ func clusterDataFieldsV0() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Enable project network isolation",
 		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Computed:    true,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
-			},
-		},
 		"annotations": {
 			Type:     schema.TypeMap,
 			Computed: true,
@@ -447,16 +439,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Enable project network isolation",
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
-			},
 		},
 		"windows_prefered_cluster": {
 			Type:        schema.TypeBool,
@@ -719,16 +701,6 @@ func clusterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Enable project network isolation",
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
-			},
 		},
 		"windows_prefered_cluster": {
 			Type:        schema.TypeBool,
