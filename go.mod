@@ -6,8 +6,8 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-version v1.3.0
 	github.com/hashicorp/terraform-plugin-sdk v1.14.0
-	github.com/rancher/norman v0.0.0-20221205184727-32ef2e185b99
-	github.com/rancher/rancher v0.0.0-20230112184107-7b424171ac40
+	github.com/rancher/norman v0.0.0-20230110004459-34230bb2787c
+	github.com/rancher/rancher v0.0.0-20230113190314-623addd2b1f0
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
@@ -106,9 +106,9 @@ require (
 	github.com/rancher/eks-operator v1.2.0-rc2 // indirect
 	github.com/rancher/fleet/pkg/apis v0.0.0-20221220171827-374ed17d8499 // indirect
 	github.com/rancher/gke-operator v1.1.5 // indirect
-	github.com/rancher/lasso v0.0.0-20221202205459-e7138f16489c // indirect
+	github.com/rancher/lasso v0.0.0-20221227210133-6ea88ca2fbcc // indirect
 	github.com/rancher/rke v1.4.3-rc3 // indirect
-	github.com/rancher/wrangler v1.0.1-0.20221202234327-1cafffeaa9a1 // indirect
+	github.com/rancher/wrangler v1.0.1-0.20230110004444-57f14d386afb // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -150,8 +150,8 @@ replace (
 	github.com/crewjam/saml => github.com/crewjam/saml v0.4.5
 	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/docker => github.com/docker/docker v20.10.17+incompatible
-	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20230112184107-7b424171ac40
-	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20230112184107-7b424171ac40
+	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20230113190314-623addd2b1f0
+	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20230113190314-623addd2b1f0
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2
 	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.9.0-rancher1
 	k8s.io/api => k8s.io/api v0.25.4
