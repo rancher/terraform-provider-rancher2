@@ -49,11 +49,31 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("cluster_name", cluster.Name)
 
+	serverURL, err := meta.(*Config).GetSettingV2ByID(bootstrapSettingURL)
+	if err != nil {
+		return err
+	}
+	d.Set("server_url", serverURL.Value)
+
 	systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
 	if err != nil {
 		return err
 	}
 	d.Set("system_default_registry", systemDefaultRegistry.Value)
+
+	_, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(clusterID)
+	if err != nil {
+		return err
+	}
+	d.Set("system_project_id", systemProjectID)
+
+	if cluster.RancherKubernetesEngineConfig != nil {
+		d.Set("rke_path_prefix", cluster.RancherKubernetesEngineConfig.PrefixPath)
+		d.Set("rke_windows_path_prefix", cluster.RancherKubernetesEngineConfig.WindowsPrefixPath)
+	}
+	if cluster.WindowsWorkerCount > 0 {
+		d.Set("windows_enabled", true)
+	}
 
 	repo, chartInfo, err := infoAppV2(meta.(*Config), clusterID, repoName, chartName, chartVersion)
 	if err != nil {
@@ -84,12 +104,12 @@ func resourceRancher2AppV2Read(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Refreshing App V2 %s at %s", name, clusterID)
 
 	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
-		if clusterName, ok := d.Get("cluster_name").(string); !ok || len(clusterName) == 0 {
-			cluster, err := meta.(*Config).GetClusterByID(clusterID)
+		if serverURL, ok := d.Get("server_url").(string); !ok || len(serverURL) == 0 {
+			serverURL, err := meta.(*Config).GetSettingV2ByID(bootstrapSettingURL)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
-			d.Set("cluster_name", cluster.Name)
+			d.Set("server_url", serverURL.Value)
 		}
 		if systemDefaultRegistry, ok := d.Get("system_default_registry").(string); !ok || len(systemDefaultRegistry) == 0 {
 			systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
@@ -98,6 +118,26 @@ func resourceRancher2AppV2Read(d *schema.ResourceData, meta interface{}) error {
 			}
 			d.Set("system_default_registry", systemDefaultRegistry.Value)
 		}
+
+		cluster, err := meta.(*Config).GetClusterByID(clusterID)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		if clusterName, ok := d.Get("cluster_name").(string); !ok || len(clusterName) == 0 {
+			d.Set("cluster_name", cluster.Name)
+		}
+		if rkePrefixPath, ok := d.Get("rke_path_prefix").(string); cluster.RancherKubernetesEngineConfig != nil && (!ok || len(rkePrefixPath) == 0) {
+			d.Set("rke_path_prefix", cluster.RancherKubernetesEngineConfig.PrefixPath)
+		}
+		if rkePrefixPath, ok := d.Get("rke_path_prefix").(string); cluster.RancherKubernetesEngineConfig != nil && (!ok || len(rkePrefixPath) == 0) {
+			d.Set("rke_windows_path_prefix", cluster.RancherKubernetesEngineConfig.WindowsPrefixPath)
+		}
+		if windowsEnabled, ok := d.Get("windows_enabled").(string); !ok || len(windowsEnabled) == 0 {
+			if cluster.WindowsWorkerCount > 0 {
+				d.Set("windows_enabled", true)
+			}
+		}
+
 		_, rancherID := splitID(d.Id())
 		app, err := getAppV2ByID(meta.(*Config), clusterID, rancherID)
 		if err != nil {

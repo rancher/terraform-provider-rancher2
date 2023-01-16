@@ -61,7 +61,11 @@ func init() {
 			"cattle": map[string]interface{}{
 				"clusterId":             "cluster_id",
 				"clusterName":           "",
+				"rkePathPrefix":         "",
+				"rkeWindowsPathPrefix":  "",
 				"systemDefaultRegistry": "",
+				"systemProjectId":       "",
+				"url":                   "",
 			},
 		},
 	}

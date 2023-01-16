@@ -46,8 +46,25 @@ func flattenAppV2(d *schema.ResourceData, in *AppV2) error {
 				if clusterName, ok := cattle["clusterName"].(string); ok && len(clusterName) > 0 {
 					d.Set("cluster_name", clusterName)
 				}
+				if rkePathPrefix, ok := cattle["rkePathPrefix"].(string); ok && len(rkePathPrefix) > 0 {
+					d.Set("rke_path_prefix", rkePathPrefix)
+				}
+				if rkeWindowsPathPrefix, ok := cattle["rkeWindowsPathPrefix"].(string); ok && len(rkeWindowsPathPrefix) > 0 {
+					d.Set("rke_windows_path_prefix", rkeWindowsPathPrefix)
+				}
 				if systemDefaultRegistry, ok := cattle["systemDefaultRegistry"].(string); ok && len(systemDefaultRegistry) > 0 {
 					d.Set("system_default_registry", systemDefaultRegistry)
+				}
+				if systemProjectID, ok := cattle["systemProjectId"].(string); ok && len(systemProjectID) > 0 {
+					d.Set("system_project_id", systemProjectID)
+				}
+				if serverURL, ok := cattle["url"].(string); ok && len(serverURL) > 0 {
+					d.Set("server_url", serverURL)
+				}
+				if windows, ok := cattle["windows"].(map[string]interface{}); ok && len(windows) > 0 {
+					if windowsEnabled, ok := windows["enabled"].(bool); ok {
+						d.Set("windows_enabled", windowsEnabled)
+					}
 				}
 			}
 		}
@@ -133,8 +150,11 @@ func mergeGlobalMaps(values map[string]interface{}, globalInfo map[string]interf
 		if globalCattle, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
 			globalCattle["clusterId"] = globalInfoCattle["clusterId"]
 			globalCattle["clusterName"] = globalInfoCattle["clusterName"]
+			globalCattle["rkePathPrefix"] = globalInfoCattle["rkePathPrefix"]
+			globalCattle["rkeWindowsPathPrefix"] = globalInfoCattle["rkeWindowsPathPrefix"]
 			globalCattle["systemDefaultRegistry"] = globalInfoCattle["systemDefaultRegistry"]
-
+			globalCattle["systemProjectId"] = globalInfoCattle["systemProjectId"]
+			globalCattle["url"] = globalInfoCattle["url"]
 		} else {
 			global["cattle"] = globalInfo["cattle"]
 		}
@@ -147,7 +167,17 @@ func generateGlobalInfoMap(in *schema.ResourceData) map[string]interface{} {
 	globalInfoCattle := map[string]interface{}{
 		"clusterId":             in.Get("cluster_id").(string),
 		"clusterName":           in.Get("cluster_name").(string),
+		"rkePathPrefix":         in.Get("rke_path_prefix").(string),
+		"rkeWindowsPathPrefix":  in.Get("rke_windows_path_prefix").(string),
 		"systemDefaultRegistry": in.Get("system_default_registry").(string),
+		"systemProjectId":       in.Get("system_project_id").(string),
+		"url":                   in.Get("server_url").(string),
+	}
+
+	if in.Get("windows_enabled").(bool) {
+		globalInfoCattle["windows"] = map[string]interface{}{
+			"enabled": true,
+		}
 	}
 
 	globalInfo := map[string]interface{}{

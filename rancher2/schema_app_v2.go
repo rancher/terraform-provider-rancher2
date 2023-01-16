@@ -78,8 +78,28 @@ func appV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Deploy app within project ID",
 		},
+		"server_url": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"system_default_registry": {
 			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"system_project_id": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"rke_path_prefix": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"rke_windows_path_prefix": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"windows_enabled": {
+			Type:     schema.TypeBool,
 			Computed: true,
 		},
 		"values": {
