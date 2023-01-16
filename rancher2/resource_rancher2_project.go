@@ -98,12 +98,22 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 		pspInput := &managementClient.SetPodSecurityPolicyTemplateInput{
 			PodSecurityPolicyTemplateName: pspID,
 		}
-		_, err = client.Project.ActionSetpodsecuritypolicytemplate(newProject, pspInput)
-		if err != nil {
-			// Checking error due to ActionSetpodsecuritypolicytemplate() issue
-			if error.Error(err) != "unexpected end of JSON input" {
-				return err
+		err = resource.Retry(3*time.Second, func() *resource.RetryError {
+			newProject, err = client.Project.ByID(newProject.ID)
+			if err != nil {
+				return resource.NonRetryableError(err)
 			}
+			_, err = client.Project.ActionSetpodsecuritypolicytemplate(newProject, pspInput)
+			if err != nil {
+				if IsConflict(err) || IsForbidden(err) {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 	}
 
