@@ -84,14 +84,29 @@ Due to [network limitation](https://docs.docker.com/docker-for-mac/networking/#k
 $ EXPOSE_HOST_PORTS=true make docker-testacc
 ```
 
+Branching the Provider
+---------------------------
+
+The provider is branched into two release lines that have major version alignment with Rancher 2.6 and 2.7. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6 and `master` with 3.0.0+ is aligned with Rancher 2.7. Terraform fixes and new features will be available on `master` but only bug fixes will be backported to `release/v2.`
+
+Aligning major provider releases with minor Rancher releases means,
+
+* We can follow semver 
+* We can cut patch/minor versions on an as-needed basis to fix bugs or add new resources 
+* We have 'out of band' flexibility and are only tied to releasing a new version of the provider when we get a new 2.x Rancher minor version.
+
+See the [compatibility matrix](https://github.com/rancher/terraform-provider-rancher2/tree/master/docs/compatibility-matrix.md) for details.
+
+If you are using Terraform to provision clusters on instances of Rancher 2.6 and 2.7, you must have a separate configuration in a separate dir for each provider. Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
+
 Releasing the Provider
 ---------------------------
 
-The provider should be released 'out of band' from Rancher, but can be loosely tied to a Rancher release to track issues. For example: Terraform v2.6.9 should be released a few days after Rancher v2.6.9 and Terraform fixes or features in the release are said to be included in Rancher v2.6.9 (and will work if you provision with Terraform).
+As of Terraform 2.0.0 and 3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version. For example, 3.0.0 will be released a few days after Rancher 2.7.x and fixes and features in the 3.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.7.x. A critical bug fix can be released 'out of band' as 3.0.1 and backported to `release/v2` as 2.0.1. A new feature can also be released 'out of band' as 3.1.0 but not backported. Terraform 4.0.0 must be released with Rancher 2.8.
 
-The [RKE provider](https://github.com/rancher/terraform-provider-rke) should be released after every RKE/KDM release. For example: If RKE v1.3.15 was released, bump the RKE version to v1.3.15 and release the provider.
+The [RKE provider](https://github.com/rancher/terraform-provider-rke) should be released after every RKE or KDM release. For example, if upstream RKE 1.3.15 was released, bump the RKE version to 1.3.15 and release the provider.
 
-To release the provider:
+To release the provider
 
 * Create a draft of the [release](https://github.com/rancher/terraform-provider-rancher2/releases) and select create new tag for the version you are releasing
 * Create release notes by clicking `Generate release notes`
@@ -105,13 +120,5 @@ BUG FIXES:
 ```
 
 * Create a PR to update CHANGELOG
-* Copy the updated notes back to the draft release (DO NOT release with just the generated notes. Those are just a template to help you)
-* Make sure the branch is up-to-date with the remote, in this example, the branch is master and the release tag is v1.24.0
-
-```
-git remote add upstream-release git@github.com:rancher/terraform-provider-rancher2.git
-git checkout upstream-release/master
-git push upstream-release v1.24.0
-```
-
+* Copy the updated notes back to the draft release and save (DO NOT release with just the generated notes. Those are just a template to help you)
 * Create an [EIO issue](https://github.com/rancherlabs/eio) for Hashicorp to publish the release
