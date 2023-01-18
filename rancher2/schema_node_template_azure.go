@@ -42,7 +42,7 @@ type azureConfig struct {
 	Tags                   string   `json:"tags,omitempty" yaml:"tags,omitempty"`
 	AcceleratedNetworking  bool     `json:"acceleratedNetworking,omitempty" yaml:"acceleratedNetworking,omitempty"`
 	AvailabilityZone       string   `json:"availabilityZone,omitempty" yaml:"availabilityZone,omitempty"`
-	UsePublicIPStandardSKU bool     `json:"usePublicIPStandardSKU,omitempty" yaml:"usePublicIPStandardSKU,omitempty"`
+	UsePublicIPStandardSKU bool     `json:"enablePublicIpStandardSku,omitempty" yaml:"enablePublicIpStandardSku,omitempty"`
 }
 
 //Schemas
