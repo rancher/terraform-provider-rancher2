@@ -28,6 +28,10 @@ assignees: ''
 - What is the role of the user logged in? (Admin/Cluster Owner/Cluster Member/Project Owner/Project Member/Custom)
   - If custom, define the set of permissions:
 
+### Provider Information
+- What is the version of the Rancher v2 Terraform Provider in use?
+- What is the version of Terraform in use?
+
 ### Describe the bug
 <!--A clear and concise description of what the bug is.-->
 
