@@ -317,39 +317,6 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-### Creating Rancher v2 RKE cluster with scheduled cluster scan. For Rancher v2.4.x or above.
-
-```hcl
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform custom cluster"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-    services {
-      etcd {
-        creation = "6h"
-        retention = "24h"
-      }
-    }
-  }
-  scheduled_cluster_scan {
-    enabled = true
-    scan_config {
-      cis_scan_config {
-        debug_master = true
-        debug_worker = true
-      }
-    }
-    schedule_config {
-      cron_schedule = "30 * * * *"
-      retention = 5
-    }
-  }
-}
-```
-
 ### Importing EKS cluster to Rancher v2, using `eks_config_v2`. For Rancher v2.5.x or above.
 
 ```hcl
@@ -592,19 +559,10 @@ The following arguments are supported:
 * `enable_cluster_monitoring` - (Optional/Computed) Enable built-in cluster monitoring (bool)
 * `enable_cluster_istio` - (Deprecated) Deploy istio on `system` project and `istio-system` namespace, using rancher2_app resource instead. See above example.
 * `enable_network_policy` - (Optional/Computed) Enable project network isolation (bool)
-* `scheduled_cluster_scan`- (Optional/Computed) Cluster scheduled cis scan. For Rancher v2.4.0 or above (List maxitems:1)
 * `fleet_workspace_name` - (Optional/Computed) Fleet workspace name (string)
 * `annotations` - (Optional/Computed) Annotations for the Cluster (map)
 * `labels` - (Optional/Computed) Labels for the Cluster (map)
 * `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
-
-
-#### `schedule_config`
-
-##### Arguments
-
-* `cron_schedule` - (Required) Crontab schedule. It should contains 5 fields `"<min> <hour> <month_day> <month> <week_day>"` (string)
-* `retention` - (Optional/Computed) Cluster scan retention (int)
 
 
 ## Attributes Reference
@@ -1852,29 +1810,6 @@ The following arguments are supported:
 * `annotations` - (Computed) Annotations for cluster registration token object (map)
 * `labels` - (Computed) Labels for cluster registration token object (map)
 
-### `scheduled_cluster_scan`
-
-#### Arguments
-
-* `scan_config` - (Required) Cluster scan config (List maxitems:1)
-* `schedule_config` - (Required) Cluster scan schedule config (list maxitems:1)
-* `enabled` - (Optional) Enable scheduled cluster scan. Default: `false` (bool)
-
-#### `scan_config`
-
-##### Arguments
-
-* `cis_scan_config` - (Optional/computed) Cluster Cis Scan config (List maxitems:1)
-
-##### `cis_scan_config`
-
-###### Arguments
-
-* `debug_master` - (Optional) Debug master. Default: `false` (bool)
-* `debug_worker` - (Optional) Debug worker. Default: `false` (bool)
-* `override_benchmark_version` - (Optional) Override benchmark version (string)
-* `override_skip` - (Optional) Override skip (string)
-* `profile` - (Optional) Cis scan profile. Allowed values: `"permissive" (default) || "hardened"` (string)
 
 ## Timeouts
 

@@ -27,8 +27,6 @@ data "` + testAccRancher2ClusterTemplateType + `" "foo" {
 					resource.TestCheckResourceAttr(name, "members.0.access_type", "owner"),
 					resource.TestCheckResourceAttr(name, "template_revisions.0.cluster_config.0.rke_config.0.network.0.plugin", "canal"),
 					resource.TestCheckResourceAttr(name, "template_revisions.0.cluster_config.0.rke_config.0.services.0.etcd.0.retention", "72h"),
-					resource.TestCheckResourceAttr(name, "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
-					resource.TestCheckResourceAttr(name, "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 		},

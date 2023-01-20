@@ -10,42 +10,38 @@ import (
 )
 
 var (
-	testClusterEnvVarsConf                         []managementClient.EnvVar
-	testClusterEnvVarsInterface                    []interface{}
-	testClusterAnswersConf                         *managementClient.Answer
-	testClusterAnswersInterface                    []interface{}
-	testClusterQuestionsConf                       []managementClient.Question
-	testClusterQuestionsInterface                  []interface{}
-	testLocalClusterAuthEndpointConf               *managementClient.LocalClusterAuthEndpoint
-	testLocalClusterAuthEndpointInterface          []interface{}
-	testClusterRegistrationTokenConf               *managementClient.ClusterRegistrationToken
-	testClusterRegistrationToken2Conf              *managementClient.ClusterRegistrationToken
-	testClusterRegistrationTokenInterface          []interface{}
-	testClusterGenerateKubeConfigOutput            *managementClient.GenerateKubeConfigOutput
-	testClusterScheduledClusterScanConfigConf      *managementClient.ScheduledClusterScanConfig
-	testClusterScheduledClusterScanConfigInterface []interface{}
-	testClusterScheduledClusterScanConf            *managementClient.ScheduledClusterScan
-	testClusterScheduledClusterScanInterface       []interface{}
-	testClusterConfAKS                             *Cluster
-	testClusterInterfaceAKS                        map[string]interface{}
-	testClusterConfEKS                             *Cluster
-	testClusterInterfaceEKS                        map[string]interface{}
-	testClusterConfEKSV2                           *Cluster
-	testClusterInterfaceEKSV2                      map[string]interface{}
-	testClusterConfGKE                             *Cluster
-	testClusterInterfaceGKE                        map[string]interface{}
-	testClusterConfK3S                             *Cluster
-	testClusterInterfaceK3S                        map[string]interface{}
-	testClusterConfGKEV2                           *Cluster
-	testClusterInterfaceGKEV2                      map[string]interface{}
-	testClusterConfOKE                             *Cluster
-	testClusterInterfaceOKE                        map[string]interface{}
-	testClusterConfRKE                             *Cluster
-	testClusterInterfaceRKE                        map[string]interface{}
-	testClusterConfRKE2                            *Cluster
-	testClusterInterfaceRKE2                       map[string]interface{}
-	testClusterConfTemplate                        *Cluster
-	testClusterInterfaceTemplate                   map[string]interface{}
+	testClusterEnvVarsConf                []managementClient.EnvVar
+	testClusterEnvVarsInterface           []interface{}
+	testClusterAnswersConf                *managementClient.Answer
+	testClusterAnswersInterface           []interface{}
+	testClusterQuestionsConf              []managementClient.Question
+	testClusterQuestionsInterface         []interface{}
+	testLocalClusterAuthEndpointConf      *managementClient.LocalClusterAuthEndpoint
+	testLocalClusterAuthEndpointInterface []interface{}
+	testClusterRegistrationTokenConf      *managementClient.ClusterRegistrationToken
+	testClusterRegistrationToken2Conf     *managementClient.ClusterRegistrationToken
+	testClusterRegistrationTokenInterface []interface{}
+	testClusterGenerateKubeConfigOutput   *managementClient.GenerateKubeConfigOutput
+	testClusterConfAKS                    *Cluster
+	testClusterInterfaceAKS               map[string]interface{}
+	testClusterConfEKS                    *Cluster
+	testClusterInterfaceEKS               map[string]interface{}
+	testClusterConfEKSV2                  *Cluster
+	testClusterInterfaceEKSV2             map[string]interface{}
+	testClusterConfGKE                    *Cluster
+	testClusterInterfaceGKE               map[string]interface{}
+	testClusterConfK3S                    *Cluster
+	testClusterInterfaceK3S               map[string]interface{}
+	testClusterConfGKEV2                  *Cluster
+	testClusterInterfaceGKEV2             map[string]interface{}
+	testClusterConfOKE                    *Cluster
+	testClusterInterfaceOKE               map[string]interface{}
+	testClusterConfRKE                    *Cluster
+	testClusterInterfaceRKE               map[string]interface{}
+	testClusterConfRKE2                   *Cluster
+	testClusterInterfaceRKE2              map[string]interface{}
+	testClusterConfTemplate               *Cluster
+	testClusterInterfaceTemplate          map[string]interface{}
 )
 
 func testCluster() {
@@ -197,28 +193,6 @@ func testCluster() {
 	testClusterGenerateKubeConfigOutput = &managementClient.GenerateKubeConfigOutput{
 		Config: "kube_config",
 	}
-	testClusterScheduledClusterScanConfigConf = &managementClient.ScheduledClusterScanConfig{
-		CronSchedule: "cron_schedule",
-		Retention:    5,
-	}
-	testClusterScheduledClusterScanConfigInterface = []interface{}{
-		map[string]interface{}{
-			"cron_schedule": "cron_schedule",
-			"retention":     5,
-		},
-	}
-	testClusterScheduledClusterScanConf = &managementClient.ScheduledClusterScan{
-		Enabled:        true,
-		ScanConfig:     testClusterScanConfigConf,
-		ScheduleConfig: testClusterScheduledClusterScanConfigConf,
-	}
-	testClusterScheduledClusterScanInterface = []interface{}{
-		map[string]interface{}{
-			"enabled":         true,
-			"scan_config":     testClusterScanConfigInterface,
-			"schedule_config": testClusterScheduledClusterScanConfigInterface,
-		},
-	}
 	testClusterConfAKS = &Cluster{
 		AzureKubernetesServiceConfig: testClusterAKSConfigConf,
 	}
@@ -336,7 +310,6 @@ func testCluster() {
 	testClusterConfK3S.EnableClusterMonitoring = true
 	testClusterConfK3S.EnableNetworkPolicy = newTrue()
 	testClusterConfK3S.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterConfK3S.ScheduledClusterScan = testClusterScheduledClusterScanConf
 	testClusterInterfaceK3S = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
@@ -351,7 +324,6 @@ func testCluster() {
 		"kube_config":                             "kube_config",
 		"driver":                                  clusterDriverK3S,
 		"k3s_config":                              testClusterK3SConfigInterface,
-		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
 		"system_project_id":                       "system_project_id",
 		"windows_prefered_cluster":                false,
 	}
@@ -419,7 +391,6 @@ func testCluster() {
 	testClusterConfRKE.EnableClusterMonitoring = true
 	testClusterConfRKE.EnableNetworkPolicy = newTrue()
 	testClusterConfRKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterConfRKE.ScheduledClusterScan = testClusterScheduledClusterScanConf
 	testClusterInterfaceRKE = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
@@ -435,7 +406,6 @@ func testCluster() {
 		"kube_config":                             "kube_config",
 		"driver":                                  clusterDriverRKE,
 		"rke_config":                              testClusterRKEConfigInterface,
-		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
 		"system_project_id":                       "system_project_id",
 		"windows_prefered_cluster":                false,
 	}
@@ -449,7 +419,6 @@ func testCluster() {
 	testClusterConfRKE2.EnableClusterMonitoring = true
 	testClusterConfRKE2.EnableNetworkPolicy = newTrue()
 	testClusterConfRKE2.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterConfRKE2.ScheduledClusterScan = testClusterScheduledClusterScanConf
 	testClusterInterfaceRKE2 = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
@@ -464,7 +433,6 @@ func testCluster() {
 		"kube_config":                             "kube_config",
 		"driver":                                  clusterDriverRKE2,
 		"rke2_config":                             testClusterRKE2ConfigInterface,
-		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
 		"system_project_id":                       "system_project_id",
 		"windows_prefered_cluster":                false,
 	}
@@ -482,7 +450,6 @@ func testCluster() {
 	testClusterConfTemplate.EnableClusterMonitoring = true
 	testClusterConfTemplate.EnableNetworkPolicy = newTrue()
 	testClusterConfTemplate.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterConfTemplate.ScheduledClusterScan = testClusterScheduledClusterScanConf
 	testClusterInterfaceTemplate = map[string]interface{}{
 		"id":                         "id",
 		"name":                       "test",
@@ -502,7 +469,6 @@ func testCluster() {
 		"cluster_template_questions":              testClusterQuestionsInterface,
 		"cluster_template_revision_id":            "cluster_template_revision_id",
 		"rke_config":                              []interface{}{},
-		"scheduled_cluster_scan":                  testClusterScheduledClusterScanInterface,
 		"system_project_id":                       "system_project_id",
 		"windows_prefered_cluster":                false,
 	}
