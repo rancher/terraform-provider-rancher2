@@ -110,7 +110,7 @@ func clusterEKSConfigV2NodeGroupsFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "",
-			Description: "The EKS node group node role",
+			Description: "The EKS node group node role ARN",
 		},
 		"request_spot_instances": {
 			Type:        schema.TypeBool,

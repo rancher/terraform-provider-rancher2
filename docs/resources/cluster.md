@@ -357,7 +357,7 @@ resource "rancher2_cluster" "foo" {
   eks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo.id
     region = "<EKS_REGION>"
-    kubernetes_version = "1.17"
+    kubernetes_version = "1.24"
     logging_types = ["audit", "api"]
     node_groups {
       name = "node_group1"
@@ -370,6 +370,7 @@ resource "rancher2_cluster" "foo" {
       instance_type = "m5.xlarge"
       desired_size = 2
       max_size = 3
+      node_role = "arn:aws:iam::role/test-NodeInstanceRole"
     }
     private_access = true
     public_access = false
@@ -394,7 +395,7 @@ resource "rancher2_cluster" "foo" {
   eks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo.id
     region = "<EKS_REGION>"
-    kubernetes_version = "1.17"
+    kubernetes_version = "1.24"
     logging_types = ["audit", "api"]
     node_groups {
       desired_size = 3
@@ -514,7 +515,7 @@ resource "rancher2_cluster" "foo" {
     resource_group = "<RESOURCE_GROUP>"
     resource_location = "<RESOURCE_LOCATION>"
     dns_prefix = "<DNS_PREFIX>"
-    kubernetes_version = "1.21.2"
+    kubernetes_version = "1.24.6"
     network_plugin = "<NETWORK_PLUGIN>"
     node_pools {
       availability_zones = ["1", "2", "3"]
@@ -1525,7 +1526,7 @@ The following arguments are supported:
 * `launch_template` - (Optional) The EKS node groups launch template (list Maxitem: 1)
 * `max_size` - (Optional) The EKS node group maximum size. Default `2` (int)
 * `min_size` - (Optional) The EKS node group maximum size. Default `2` (int)
-* `node_role` - (Optional) The EKS node group node role. Default `""` (string)
+* `node_role` - (Optional) The EKS node group node role ARN. Default `""` (string)
 * `request_spot_instances` - (Optional) Enable EKS node group request spot instances (bool)
 * `resource_tags` - (Optional) The EKS node group resource tags (map)
 * `spot_instance_types` - (Optional) The EKS node group sport instace types (list string)
