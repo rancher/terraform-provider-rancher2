@@ -87,15 +87,15 @@ $ EXPOSE_HOST_PORTS=true make docker-testacc
 Branching the Provider
 ---------------------------
 
-The provider is branched into two release lines that have major version alignment with Rancher 2.6 and 2.7. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6 and `master` with 3.0.0+ is aligned with Rancher 2.7. Terraform fixes and new features will be available on `master` but only bug fixes will be backported to `release/v2.`
+The provider is branched into two release lines that have major version alignment with Rancher 2.6 and 2.7. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6 and `master` with 3.0.0+ is aligned with Rancher 2.7. Terraform provider fixes and new features will be available on `master` but only bug fixes will be backported to `release/v2` as necessary.
 
 Aligning major provider releases with minor Rancher releases means,
 
-* We can follow semver 
+* We can follow semver
 * We can cut patch/minor versions on an as-needed basis to fix bugs or add new resources 
 * We have 'out of band' flexibility and are only tied to releasing a new version of the provider when we get a new 2.x Rancher minor version.
 
-See the [compatibility matrix](https://github.com/rancher/terraform-provider-rancher2/tree/master/docs/compatibility-matrix.md) for details.
+See the [compatibility matrix](docs/compatibility-matrix.md) for details.
 
 If you are using Terraform to provision clusters on instances of Rancher 2.6 and 2.7, you must have a separate configuration in a separate dir for each provider. Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
 

@@ -9,14 +9,14 @@ The version matrix specifies the Terraform provider version _recommended_ to use
 | Terraform provider version | Rancher |
 |----------------------------------------|:-------:|
 | 2.0.0                                  | 2.6.11  |
-| 2.0.1 (2.1.0 for features)             | 2.6.x   |
 
 #### Rancher 2.7
 
 | Terraform provider version | Rancher |
 |----------------------------------------|:-------:|
 | 3.0.0                                  | 2.7.2   |
-| 3.0.1 (3.1.0 for features)             | 2.7.x   |
+
+#### FAQ
 
 **Can I use an earlier Terraform version?** Yes, but Terraform may not support all features and fields supported in your Rancher version so provisioning may be limited.
 
