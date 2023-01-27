@@ -126,7 +126,7 @@ func clusterEKSConfigV2NodeGroupsFields() map[string]*schema.Schema {
 		"spot_instance_types": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Description: "The EKS node group spot instace types",
+			Description: "The EKS node group spot instance types",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
