@@ -36,6 +36,10 @@ func flattenHarvesterConfig(in *harvesterConfig) []interface{} {
 		obj["image_name"] = in.ImageName
 	}
 
+	if len(in.DiskInfo) > 0 {
+		obj["disk_info"] = in.DiskInfo
+	}
+
 	if len(in.SSHUser) > 0 {
 		obj["ssh_user"] = in.SSHUser
 	}
@@ -50,6 +54,10 @@ func flattenHarvesterConfig(in *harvesterConfig) []interface{} {
 
 	if len(in.NetworkModel) > 0 {
 		obj["network_model"] = in.NetworkModel
+	}
+
+	if len(in.NetworkInfo) > 0 {
+		obj["network_info"] = in.NetworkInfo
 	}
 
 	if len(in.UserData) > 0 {
@@ -100,6 +108,10 @@ func expandHarvestercloudConfig(p []interface{}) *harvesterConfig {
 		obj.ImageName = v
 	}
 
+	if v, ok := in["disk_info"].(string); ok && len(v) > 0 {
+		obj.DiskInfo = v
+	}
+
 	if v, ok := in["ssh_user"].(string); ok && len(v) > 0 {
 		obj.SSHUser = v
 	}
@@ -114,6 +126,10 @@ func expandHarvestercloudConfig(p []interface{}) *harvesterConfig {
 
 	if v, ok := in["network_model"].(string); ok && len(v) > 0 {
 		obj.NetworkModel = v
+	}
+
+	if v, ok := in["network_info"].(string); ok && len(v) > 0 {
+		obj.NetworkInfo = v
 	}
 
 	if v, ok := in["user_data"].(string); ok && len(v) > 0 {

@@ -101,8 +101,23 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
   harvester_config {
     cpu_count = "2"
     memory_size = "4"
-	image_name = "foo"
-	network_name = "test-net"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "foo",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "test-net",
+            "macAddress": ""
+        }]
+    }
+    EOF
 	ssh_user = "ubuntu"
 	vm_namespace = "test"
   }
@@ -116,8 +131,23 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
   harvester_config {
     cpu_count = "4"
     memory_size = "8"
-	image_name = "foo"
-	network_name = "test-net"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "foo",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "test-net",
+            "macAddress": ""
+        }]
+    }
+    EOF
 	ssh_user = "ubuntu"
 	vm_namespace = "test"
   }

@@ -262,9 +262,23 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
     vm_namespace = "default"
     cpu_count = "2"
     memory_size = "4"
-    disk_size = "40"
-    network_name = "harvester-public/vlan1"
-    image_name = "harvester-public/image-57hzg"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "harvester-public/image-57hzg",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "harvester-public/vlan1",
+            "macAddress": ""
+        }]
+    }
+    EOF
     ssh_user = "ubuntu"
   }
 }
@@ -347,9 +361,23 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2-cloud-provider" {
     vm_namespace = "default"
     cpu_count = "2"
     memory_size = "4"
-    disk_size = "40"
-    network_name = "harvester-public/vlan1"
-    image_name = "harvester-public/image-57hzg"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "harvester-public/image-57hzg",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "harvester-public/vlan1",
+            "macAddress": ""
+        }]
+    }
+    EOF
     ssh_user = "ubuntu"
   }
 }

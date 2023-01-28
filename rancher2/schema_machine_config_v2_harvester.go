@@ -2,7 +2,6 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 //Schemas
@@ -34,24 +33,25 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 		"disk_size": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "40",
 			Description: "Disk size (in GiB)",
+			Deprecated:  "Use disk_info instead",
 		},
 		"disk_bus": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  harvesterDiskBusVIRTIO,
-			ValidateFunc: validation.StringInSlice([]string{
-				harvesterDiskBusVIRTIO,
-				harvesterDiskBusSATA,
-				harvesterDiskBusSCSI,
-			}, false),
+			Type:        schema.TypeString,
+			Optional:    true,
 			Description: "Disk bus",
+			Deprecated:  "Use disk_info instead",
 		},
 		"image_name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Image name",
+			Deprecated:  "Use disk_info instead",
+		},
+		"disk_info": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "A JSON string specifying info for the disks e.g. `{\"disks\":[{\"imageName\":\"harvester-public/image-57hzg\",\"bootOrder\":1,\"size\":40},{\"storageClassName\":\"node-driver-test\",\"bootOrder\":2,\"size\":1}]}`",
 		},
 		"ssh_user": {
 			Type:        schema.TypeString,
@@ -66,22 +66,20 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 		},
 		"network_name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Network name",
+			Deprecated:  "Use network_info instead",
 		},
 		"network_model": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default:  harvesterNetworkModelVIRTIO,
-			ValidateFunc: validation.StringInSlice([]string{
-				harvesterNetworkModelVIRTIO,
-				harvesterNetworkModelE1000,
-				harvesterNetworkModelE1000E,
-				harvesterNetworkModelNE2KPCO,
-				harvesterNetworkModelPCNET,
-				harvesterNetworkModelRTL8139,
-			}, false),
+			Type:        schema.TypeString,
+			Optional:    true,
 			Description: "Network model",
+			Deprecated:  "Use network_info instead",
+		},
+		"network_info": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\",\"macAddress\":\"\"},{\"networkName\":\"harvester-public/vlan2\",\"macAddress\":\"5a:e7:c5:24:5b:44\"}]}`",
 		},
 		"user_data": {
 			Type:        schema.TypeString,
