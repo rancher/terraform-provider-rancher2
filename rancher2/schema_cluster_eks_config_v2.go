@@ -106,6 +106,12 @@ func clusterEKSConfigV2NodeGroupsFields() map[string]*schema.Schema {
 			Default:     2,
 			Description: "The EKS node group minimum size",
 		},
+		"node_role": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "The EKS node group node role ARN",
+		},
 		"request_spot_instances": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -120,7 +126,7 @@ func clusterEKSConfigV2NodeGroupsFields() map[string]*schema.Schema {
 		"spot_instance_types": {
 			Type:        schema.TypeList,
 			Optional:    true,
-			Description: "The EKS node group spot instace types",
+			Description: "The EKS node group spot instance types",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
