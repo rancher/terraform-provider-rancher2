@@ -24,6 +24,7 @@ const (
 
 type harvesterConfig struct {
 	VMNamespace  string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
+	VMAffinity   string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
 	CPUCount     string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
 	MemorySize   string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
 	DiskSize     string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
@@ -45,6 +46,11 @@ func harvesterConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Virtual machine namespace",
+		},
+		"vm_affinity": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "VM affinity, base64 is supported",
 		},
 		"cpu_count": {
 			Type:        schema.TypeString,
