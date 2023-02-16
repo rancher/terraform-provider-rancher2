@@ -12,6 +12,10 @@ func flattenHarvesterConfig(in *harvesterConfig) []interface{} {
 		obj["vm_namespace"] = in.VMNamespace
 	}
 
+	if len(in.VMAffinity) > 0 {
+		obj["vm_affinity"] = in.VMAffinity
+	}
+
 	if len(in.CPUCount) > 0 {
 		obj["cpu_count"] = in.CPUCount
 	}
@@ -70,6 +74,10 @@ func expandHarvestercloudConfig(p []interface{}) *harvesterConfig {
 
 	if v, ok := in["vm_namespace"].(string); ok && len(v) > 0 {
 		obj.VMNamespace = v
+	}
+
+	if v, ok := in["vm_affinity"].(string); ok && len(v) > 0 {
+		obj.VMAffinity = v
 	}
 
 	if v, ok := in["cpu_count"].(string); ok && len(v) > 0 {

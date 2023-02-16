@@ -14,6 +14,11 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 			Required:    true,
 			Description: "Virtual machine namespace",
 		},
+		"vm_affinity": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "VM affinity, base64 is supported",
+		},
 		"cpu_count": {
 			Type:        schema.TypeString,
 			Optional:    true,
