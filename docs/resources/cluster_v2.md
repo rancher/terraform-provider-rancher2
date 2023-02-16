@@ -285,7 +285,7 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
 
 resource "rancher2_cluster_v2" "foo-harvester-v2" {
   name = "foo-harvester-v2"
-  kubernetes_version = "v1.22.6+rke2r1"
+  kubernetes_version = "v1.24.10+rke2r1"
   rke_config {
     machine_pools {
       name = "pool1"
@@ -385,7 +385,7 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2-cloud-provider" {
 # Create a new harvester rke2 cluster with harvester cloud provider
 resource "rancher2_cluster_v2" "foo-harvester-v2-cloud-provider" {
   name = "foo-harvester-v2-cloud-provider"
-  kubernetes_version = "v1.22.6+rke2r1"
+  kubernetes_version = "v1.24.10+rke2r1"
   rke_config {
     machine_pools {
       name = "pool1"
