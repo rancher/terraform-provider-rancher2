@@ -460,7 +460,7 @@ The following attributes are exported:
 ##### Arguments
 
 * `name` - (Required) Machine pool name (string)
-* `cloud_credential_name` - (Required) Machine pool cloud credential secret name (string)
+* `cloud_credential_secret_name` - (Optional) Machine pool cloud credential secret name (string)
 * `machine_config` - (Required) Machine pool node config (list)
 * `control_plane_role` - (Optional) Machine pool control plane role? (bool)
 * `etcd_role` - (Optional) Machine pool etcd role? (bool)
