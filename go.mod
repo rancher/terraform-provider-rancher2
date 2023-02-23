@@ -112,7 +112,7 @@ require (
 	github.com/rancher/gke-operator v1.1.5 // indirect
 	github.com/rancher/lasso v0.0.0-20221227210133-6ea88ca2fbcc // indirect
 	github.com/rancher/rke v1.4.3-rc3 // indirect
-	github.com/rancher/wrangler v1.0.1-0.20230110004444-57f14d386afb // indirect
+	github.com/rancher/wrangler v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
