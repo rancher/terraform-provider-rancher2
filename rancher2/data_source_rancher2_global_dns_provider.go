@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2GlobalDNSProvider() *schema.Resource {
@@ -32,24 +32,24 @@ func dataSourceRancher2GlobalDNSProvider() *schema.Resource {
 				Computed: true,
 			},
 			"alidns_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderAliConfigSchema(),
 				},
 			},
 			"cloudflare_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderCloudFareConfigSchema(),
 				},
 			},
 			"route53_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderRoute53ConfigSchema(),

@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
@@ -25,7 +25,7 @@ func resourceRancher2Cluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceRancher2ClusterImport,
 		},
-		CustomizeDiff: func(d *schema.ResourceDiff, i interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, i interface{}) error {
 			if d.Get("driver") == clusterDriverEKSV2 && d.HasChange("eks_config_v2") {
 				old, new := d.GetChange("eks_config_v2")
 				oldObj := expandClusterEKSConfigV2(old.([]interface{}))
@@ -62,7 +62,7 @@ func resourceRancher2ClusterResourceV0() *schema.Resource {
 	}
 }
 
-func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceRancher2ClusterStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rkeConfigs, ok := rawState["rke_config"].([]interface{}); ok && len(rkeConfigs) > 0 {
 		for i1 := range rkeConfigs {
 			if rkeConfig, ok := rkeConfigs[i1].(map[string]interface{}); ok && len(rkeConfig) > 0 {

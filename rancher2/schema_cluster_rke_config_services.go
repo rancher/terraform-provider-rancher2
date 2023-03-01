@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 //Schemas
@@ -9,8 +9,8 @@ import (
 func clusterRKEConfigServicesFieldsV0() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"etcd": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -18,8 +18,8 @@ func clusterRKEConfigServicesFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"kube_api": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -27,8 +27,8 @@ func clusterRKEConfigServicesFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"kube_controller": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -36,8 +36,8 @@ func clusterRKEConfigServicesFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"kubelet": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -45,8 +45,8 @@ func clusterRKEConfigServicesFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"kubeproxy": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -54,8 +54,8 @@ func clusterRKEConfigServicesFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"scheduler": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -69,8 +69,8 @@ func clusterRKEConfigServicesFieldsV0() map[string]*schema.Schema {
 func clusterRKEConfigServicesFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"etcd": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -78,8 +78,8 @@ func clusterRKEConfigServicesFields() map[string]*schema.Schema {
 			},
 		},
 		"kube_api": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -87,8 +87,8 @@ func clusterRKEConfigServicesFields() map[string]*schema.Schema {
 			},
 		},
 		"kube_controller": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -96,8 +96,8 @@ func clusterRKEConfigServicesFields() map[string]*schema.Schema {
 			},
 		},
 		"kubelet": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -105,8 +105,8 @@ func clusterRKEConfigServicesFields() map[string]*schema.Schema {
 			},
 		},
 		"kubeproxy": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -114,8 +114,8 @@ func clusterRKEConfigServicesFields() map[string]*schema.Schema {
 			},
 		},
 		"scheduler": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -130,8 +130,8 @@ func clusterRKEConfigServicesFields() map[string]*schema.Schema {
 func clusterRKEConfigServicesFieldsData() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"etcd": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -139,8 +139,8 @@ func clusterRKEConfigServicesFieldsData() map[string]*schema.Schema {
 			},
 		},
 		"kube_api": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -148,8 +148,8 @@ func clusterRKEConfigServicesFieldsData() map[string]*schema.Schema {
 			},
 		},
 		"kube_controller": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -157,8 +157,8 @@ func clusterRKEConfigServicesFieldsData() map[string]*schema.Schema {
 			},
 		},
 		"kubelet": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -166,8 +166,8 @@ func clusterRKEConfigServicesFieldsData() map[string]*schema.Schema {
 			},
 		},
 		"kubeproxy": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -175,8 +175,8 @@ func clusterRKEConfigServicesFieldsData() map[string]*schema.Schema {
 			},
 		},
 		"scheduler": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{

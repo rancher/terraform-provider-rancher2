@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ClusterV2() *schema.Resource {
@@ -25,8 +25,8 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 				Description: "Cluster V2 kubernetes version",
 			},
 			"rke_config": {
-				Type:        schema.TypeList,
-				MaxItems:    1,
+				Type: schema.TypeList,
+				//MaxItems:    1,
 				Computed:    true,
 				Description: "Cluster V2 rke config",
 				Elem: &schema.Resource{
@@ -62,8 +62,8 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 				Description: "Enable k8s network policy",
 			},
 			"cluster_registration_token": {
-				Type:      schema.TypeList,
-				MaxItems:  1,
+				Type: schema.TypeList,
+				//MaxItems:  1,
 				Computed:  true,
 				Sensitive: true,
 				Elem: &schema.Resource{

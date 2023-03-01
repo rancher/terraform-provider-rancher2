@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 //Schemas
@@ -81,10 +81,10 @@ func multiClusterAppFields() map[string]*schema.Schema {
 			Description: "Multi cluster app template version ID",
 		},
 		"upgrade_strategy": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			//MaxItems:    1,
 			Description: "Multi cluster app upgrade strategy",
 			Elem: &schema.Resource{
 				Schema: upgradeStrategyFields(),

@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ProjectAlertRule() *schema.Resource {
@@ -22,8 +22,8 @@ func dataSourceRancher2ProjectAlertRule() *schema.Resource {
 				Description: "Alert rule name",
 			},
 			"metric_rule": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: metricRuleFields(),
@@ -31,8 +31,8 @@ func dataSourceRancher2ProjectAlertRule() *schema.Resource {
 				Description: "Alert metric rule",
 			},
 			"pod_rule": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: podRuleFields(),
@@ -40,8 +40,8 @@ func dataSourceRancher2ProjectAlertRule() *schema.Resource {
 				Description: "Alert pod rule",
 			},
 			"workload_rule": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: workloadRuleFields(),

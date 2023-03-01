@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -191,8 +191,8 @@ func clusterRKEConfigCloudProviderOpenstackFields() map[string]*schema.Schema {
 			},
 		},
 		"block_storage": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -200,8 +200,8 @@ func clusterRKEConfigCloudProviderOpenstackFields() map[string]*schema.Schema {
 			},
 		},
 		"load_balancer": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -209,8 +209,8 @@ func clusterRKEConfigCloudProviderOpenstackFields() map[string]*schema.Schema {
 			},
 		},
 		"metadata": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -218,8 +218,8 @@ func clusterRKEConfigCloudProviderOpenstackFields() map[string]*schema.Schema {
 			},
 		},
 		"route": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{

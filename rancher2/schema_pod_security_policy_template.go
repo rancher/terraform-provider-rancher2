@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 //Schemas
@@ -90,7 +90,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Description: "fsGroup is the strategy that will dictate what fs group is used by the SecurityContext.",
 			Optional:    true,
 			Computed:    true,
-			MaxItems:    1,
+			//MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicyAllowedFsGroupFields(),
 			},
@@ -145,7 +145,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Description: "runAsUser is the strategy that will dictate the allowable RunAsUser values that may be set.",
 			Optional:    true,
 			Computed:    true,
-			MaxItems:    1,
+			//MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicyRunAsUserFields(),
 			},
@@ -173,7 +173,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Description: "seLinux is the strategy that will dictate the allowable labels that may be set.",
 			Optional:    true,
 			Computed:    true,
-			MaxItems:    1,
+			//MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicySELinuxFields(),
 			},
@@ -183,7 +183,7 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 			Description: "supplementalGroups is the strategy that will dictate what supplemental groups are used by the SecurityContext.",
 			Optional:    true,
 			Computed:    true,
-			MaxItems:    1,
+			//MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: podSecurityPolicySupplementalGroupsFields(),
 			},

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 //Types
@@ -113,8 +113,8 @@ func clusterV2RKEConfigFields() map[string]*schema.Schema {
 			},
 		},
 		"etcd": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
+			Type: schema.TypeList,
+			//MaxItems:    1,
 			Optional:    true,
 			Computed:    true,
 			Description: "Cluster V2 etcd",

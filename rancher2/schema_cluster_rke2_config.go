@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -14,8 +14,8 @@ const (
 func clusterRKE2ConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"upgrade_strategy": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
+			Type: schema.TypeList,
+			//MaxItems:    1,
 			Optional:    true,
 			Computed:    true,
 			Description: "The RKE2 upgrade strategy",

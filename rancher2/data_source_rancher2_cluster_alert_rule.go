@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ClusterAlertRule() *schema.Resource {
@@ -22,8 +22,8 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 				Description: "Alert rule name",
 			},
 			"event_rule": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: eventRuleFields(),
@@ -31,8 +31,8 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 				Description: "Alert event rule",
 			},
 			"metric_rule": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: metricRuleFields(),
@@ -40,8 +40,8 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 				Description: "Alert metric rule",
 			},
 			"node_rule": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: nodeRuleFields(),
@@ -49,8 +49,8 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 				Description: "Alert node rule",
 			},
 			"system_service_rule": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: systemServiceRuleFields(),

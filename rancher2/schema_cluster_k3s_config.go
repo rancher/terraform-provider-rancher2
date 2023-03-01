@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -45,8 +45,8 @@ func clusterK3SUpgradeStrategyConfigFields() map[string]*schema.Schema {
 func clusterK3SConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"upgrade_strategy": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
+			Type: schema.TypeList,
+			//MaxItems:    1,
 			Optional:    true,
 			Computed:    true,
 			Description: "The K3S upgrade strategy",

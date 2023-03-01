@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -285,31 +285,31 @@ func clusterGKEConfigV2NodePoolConfigFields() map[string]*schema.Schema {
 			Description: "The GKE node pool config version",
 		},
 		"autoscaling": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			//MaxItems:    1,
 			Description: "The GKE node pool config autoscaling",
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigV2NodePoolConfigAutoscalingFields(),
 			},
 		},
 		"config": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			ForceNew:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			ForceNew: true,
+			//MaxItems:    1,
 			Description: "The GKE node pool node config",
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigV2NodeConfigFields(),
 			},
 		},
 		"management": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			//MaxItems:    1,
 			Description: "The GKE node pool config management",
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigV2NodePoolConfigManagementFields(),
@@ -371,10 +371,10 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Description: "The GKE project id",
 		},
 		"cluster_addons": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			//MaxItems:    1,
 			Description: "The GKE cluster addons",
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigV2ClusterAddonsFields(),
@@ -402,11 +402,11 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Description: "Enable Kubernetes alpha",
 		},
 		"ip_allocation_policy": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			ForceNew:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			ForceNew: true,
+			//MaxItems:    1,
 			Description: "The GKE ip allocation policy",
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigV2IPAllocationPolicyFields(),
@@ -453,11 +453,11 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Description: "The GKE cluster maintenance window",
 		},
 		"master_authorized_networks_config": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			ForceNew:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			ForceNew: true,
+			//MaxItems:    1,
 			Description: "The GKE cluster master authorized networks config",
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigV2MasterAuthorizedNetworksConfigFields(),
@@ -492,11 +492,11 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			},
 		},
 		"private_cluster_config": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			ForceNew:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			ForceNew: true,
+			//MaxItems:    1,
 			Description: "The GKE private cluster config",
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigV2PrivateClusterConfigFields(),

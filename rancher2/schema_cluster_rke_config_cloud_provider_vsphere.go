@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 //Schemas
@@ -146,8 +146,8 @@ func clusterRKEConfigCloudProviderVsphereFields() map[string]*schema.Schema {
 			},
 		},
 		"disk": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -155,8 +155,8 @@ func clusterRKEConfigCloudProviderVsphereFields() map[string]*schema.Schema {
 			},
 		},
 		"global": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -164,8 +164,8 @@ func clusterRKEConfigCloudProviderVsphereFields() map[string]*schema.Schema {
 			},
 		},
 		"network": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{

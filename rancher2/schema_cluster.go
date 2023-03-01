@@ -1,8 +1,8 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -124,8 +124,8 @@ func clusterDataFieldsV0() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"rke_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -133,32 +133,32 @@ func clusterDataFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"k3s_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterK3SConfigFields(),
 			},
 		},
 		"eks_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterEKSConfigFields(),
 			},
 		},
 		"aks_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterAKSConfigFields(),
 			},
 		},
 		"gke_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigFields(),
@@ -177,16 +177,16 @@ func clusterDataFieldsV0() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"cluster_auth_endpoint": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterAuthEndpoint(),
 			},
 		},
 		"cluster_monitoring_input": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
+			Type: schema.TypeList,
+			//MaxItems:    1,
 			Computed:    true,
 			Description: "Cluster monitoring configuration",
 			Elem: &schema.Resource{
@@ -194,17 +194,17 @@ func clusterDataFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"cluster_registration_token": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRegistationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {
-			Type:        schema.TypeList,
-			Computed:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Computed: true,
+			//MaxItems:    1,
 			Description: "Cluster template answers",
 			Elem: &schema.Resource{
 				Schema: answerFields(),
@@ -278,8 +278,8 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Sensitive: true,
 		},
 		"rke_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
+			Type: schema.TypeList,
+			//MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "k3s_config"},
@@ -288,8 +288,8 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"k3s_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
+			Type: schema.TypeList,
+			//MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "rke_config"},
@@ -337,8 +337,8 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"cluster_auth_endpoint": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -355,17 +355,17 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"cluster_registration_token": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRegistationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			//MaxItems:    1,
 			Computed:    true,
 			Description: "Cluster template answers",
 			Elem: &schema.Resource{
@@ -487,8 +487,8 @@ func clusterFields() map[string]*schema.Schema {
 			Sensitive: true,
 		},
 		"rke_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
+			Type: schema.TypeList,
+			//MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "eks_config_v2", "gke_config", "gke_config_v2", "k3s_config", "oke_config", "rke2_config"},
@@ -497,8 +497,8 @@ func clusterFields() map[string]*schema.Schema {
 			},
 		},
 		"rke2_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
+			Type: schema.TypeList,
+			//MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "eks_config_v2", "gke_config", "gke_config_v2", "k3s_config", "oke_config", "rke_config"},
@@ -507,8 +507,8 @@ func clusterFields() map[string]*schema.Schema {
 			},
 		},
 		"k3s_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
+			Type: schema.TypeList,
+			//MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "eks_config_v2", "gke_config", "gke_config_v2", "oke_config", "rke_config", "rke2_config"},
@@ -526,8 +526,8 @@ func clusterFields() map[string]*schema.Schema {
 			},
 		},
 		"eks_config_v2": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
+			Type: schema.TypeList,
+			//MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "gke_config", "gke_config_v2", "k3s_config", "oke_config", "rke_config", "rke2_config"},
@@ -593,8 +593,8 @@ func clusterFields() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"cluster_auth_endpoint": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -611,17 +611,17 @@ func clusterFields() map[string]*schema.Schema {
 			},
 		},
 		"cluster_registration_token": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRegistationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
+			Type:     schema.TypeList,
+			Optional: true,
+			//MaxItems:    1,
 			Computed:    true,
 			Description: "Cluster template answers",
 			Elem: &schema.Resource{

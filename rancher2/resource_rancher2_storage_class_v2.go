@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/rancher/norman/types"
 )
 
@@ -22,7 +22,7 @@ func resourceRancher2StorageClassV2() *schema.Resource {
 			State: resourceRancher2StorageClassV2Import,
 		},
 		Schema: storageClassV2Fields(),
-		CustomizeDiff: func(d *schema.ResourceDiff, i interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, i interface{}) error {
 			if d.HasChange("mount_options") {
 				old, new := d.GetChange("mount_options")
 				oldObj := toArrayStringSorted(old.([]interface{}))

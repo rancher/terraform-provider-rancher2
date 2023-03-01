@@ -1,8 +1,8 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -51,8 +51,8 @@ func questionFields() map[string]*schema.Schema {
 func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"cluster_auth_endpoint": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
+			Type: schema.TypeList,
+			//MaxItems:    1,
 			Optional:    true,
 			Computed:    true,
 			Description: "Local cluster auth endpoint",
@@ -131,8 +131,8 @@ func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 func clusterSpecBaseFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"cluster_auth_endpoint": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
+			Type: schema.TypeList,
+			//MaxItems:    1,
 			Optional:    true,
 			Computed:    true,
 			Description: "Local cluster auth endpoint",
@@ -212,8 +212,8 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 func clusterSpecBaseFieldsData() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"cluster_auth_endpoint": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
+			Type: schema.TypeList,
+			//MaxItems:    1,
 			Optional:    true,
 			Computed:    true,
 			Description: "Local cluster auth endpoint",

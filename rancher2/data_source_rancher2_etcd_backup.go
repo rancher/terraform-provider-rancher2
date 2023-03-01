@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2EtcdBackup() *schema.Resource {
@@ -20,8 +20,8 @@ func dataSourceRancher2EtcdBackup() *schema.Resource {
 				Required: true,
 			},
 			"backup_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterRKEConfigServicesEtcdBackupConfigFields(),

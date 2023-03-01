@@ -1,8 +1,8 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var (
@@ -117,8 +117,8 @@ func clusterRKEConfigNodeUpgradeStrategyFields() map[string]*schema.Schema {
 			Default:  false,
 		},
 		"drain_input": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{

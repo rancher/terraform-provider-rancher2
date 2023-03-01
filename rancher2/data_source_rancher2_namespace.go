@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2Namespace() *schema.Resource {
@@ -22,8 +22,8 @@ func dataSourceRancher2Namespace() *schema.Resource {
 				Description: "Name of the k8s namespace managed by rancher v2",
 			},
 			"container_resource_limit": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: containerResourceLimitFields(),
@@ -35,8 +35,8 @@ func dataSourceRancher2Namespace() *schema.Resource {
 				Description: "Description of the k8s namespace managed by rancher v2",
 			},
 			"resource_quota": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: namespaceResourceQuotaFields(),

@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2Cluster() *schema.Resource {
@@ -37,80 +37,80 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Sensitive: true,
 			},
 			"rke_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterRKEConfigFieldsData(),
 				},
 			},
 			"rke2_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterRKE2ConfigFields(),
 				},
 			},
 			"k3s_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterK3SConfigFields(),
 				},
 			},
 			"eks_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterEKSConfigFields(),
 				},
 			},
 			"eks_config_v2": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterEKSConfigV2Fields(),
 				},
 			},
 			"aks_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterAKSConfigFields(),
 				},
 			},
 			"aks_config_v2": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterAKSConfigV2Fields(),
 				},
 			},
 			"gke_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterGKEConfigFields(),
 				},
 			},
 			"gke_config_v2": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterGKEConfigV2Fields(),
 				},
 			},
 			"oke_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterOKEConfigFields(),
@@ -129,16 +129,16 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_auth_endpoint": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterAuthEndpoint(),
 				},
 			},
 			"cluster_monitoring_input": {
-				Type:        schema.TypeList,
-				MaxItems:    1,
+				Type: schema.TypeList,
+				//MaxItems:    1,
 				Computed:    true,
 				Description: "Cluster monitoring configuration",
 				Elem: &schema.Resource{
@@ -146,17 +146,17 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				},
 			},
 			"cluster_registration_token": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type: schema.TypeList,
+				//MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterRegistationTokenFields(),
 				},
 			},
 			"cluster_template_answers": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				MaxItems:    1,
+				Type:     schema.TypeList,
+				Computed: true,
+				//MaxItems:    1,
 				Description: "Cluster template answers",
 				Elem: &schema.Resource{
 					Schema: answerFields(),

@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/rancher/norman/types"
 )
 
@@ -22,7 +22,7 @@ func resourceRancher2SecretV2() *schema.Resource {
 			State: resourceRancher2SecretV2Import,
 		},
 		Schema: secretV2Fields(),
-		CustomizeDiff: customdiff.ForceNewIf("immutable", func(d *schema.ResourceDiff, m interface{}) bool {
+		CustomizeDiff: customdiff.ForceNewIf("immutable", func(ctx context.Context, d *schema.ResourceDiff, m interface{}) bool {
 			if d.HasChange("immutable") {
 				return !d.Get("immutable").(bool)
 			}

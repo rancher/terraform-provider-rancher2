@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func clusterV2Fields() map[string]*schema.Schema {
@@ -33,8 +33,8 @@ func clusterV2Fields() map[string]*schema.Schema {
 			},
 		},
 		"rke_config": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
+			Type: schema.TypeList,
+			//MaxItems:    1,
 			Optional:    true,
 			Computed:    true,
 			Description: "Cluster V2 rke config",
@@ -73,8 +73,8 @@ func clusterV2Fields() map[string]*schema.Schema {
 		},
 		// Computed attributes
 		"cluster_registration_token": {
-			Type:      schema.TypeList,
-			MaxItems:  1,
+			Type: schema.TypeList,
+			//MaxItems:  1,
 			Computed:  true,
 			Sensitive: true,
 			Elem: &schema.Resource{

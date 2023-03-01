@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
@@ -23,7 +23,7 @@ func resourceRancher2ClusterV2() *schema.Resource {
 			State: resourceRancher2ClusterV2Import,
 		},
 		Schema: clusterV2Fields(),
-		CustomizeDiff: func(d *schema.ResourceDiff, i interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, i interface{}) error {
 			if d.HasChange("rke_config") {
 				oldObj, newObj := d.GetChange("rke_config")
 				//return fmt.Errorf("\n%#v\n%#v\n", oldObj, newObj)

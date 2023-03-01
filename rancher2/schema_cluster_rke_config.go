@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -36,9 +36,9 @@ func clusterRKEConfigFieldsV0() map[string]*schema.Schema {
 		"authentication": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster authentication",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigAuthenticationFields(),
 			},
@@ -46,9 +46,9 @@ func clusterRKEConfigFieldsV0() map[string]*schema.Schema {
 		"authorization": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster authorization",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigAuthorizationFields(),
 			},
@@ -56,16 +56,16 @@ func clusterRKEConfigFieldsV0() map[string]*schema.Schema {
 		"bastion_host": {
 			Type:        schema.TypeList,
 			Description: "RKE bastion host",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigBastionHostFields(),
 			},
 		},
 		"cloud_provider": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -73,8 +73,8 @@ func clusterRKEConfigFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"dns": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -90,9 +90,9 @@ func clusterRKEConfigFieldsV0() map[string]*schema.Schema {
 		"ingress": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes ingress configuration",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigIngressFields(),
 			},
@@ -106,9 +106,9 @@ func clusterRKEConfigFieldsV0() map[string]*schema.Schema {
 		"monitoring": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster monitoring",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigMonitoringFields(),
 			},
@@ -116,9 +116,9 @@ func clusterRKEConfigFieldsV0() map[string]*schema.Schema {
 		"network": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster networking",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigNetworkFields(),
 			},
@@ -148,9 +148,9 @@ func clusterRKEConfigFieldsV0() map[string]*schema.Schema {
 		"services": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster services",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesFieldsV0(),
 			},
@@ -176,9 +176,9 @@ func clusterRKEConfigFieldsV0() map[string]*schema.Schema {
 		"upgrade_strategy": {
 			Type:        schema.TypeList,
 			Description: "RKE upgrade strategy",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigNodeUpgradeStrategyFields(),
 			},
@@ -213,9 +213,9 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 		"authentication": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster authentication",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigAuthenticationFields(),
 			},
@@ -223,9 +223,9 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 		"authorization": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster authorization",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigAuthorizationFields(),
 			},
@@ -233,16 +233,16 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 		"bastion_host": {
 			Type:        schema.TypeList,
 			Description: "RKE bastion host",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigBastionHostFields(),
 			},
 		},
 		"cloud_provider": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -250,8 +250,8 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 			},
 		},
 		"dns": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -273,9 +273,9 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 		"ingress": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes ingress configuration",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigIngressFields(),
 			},
@@ -289,9 +289,9 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 		"monitoring": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster monitoring",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigMonitoringFields(),
 			},
@@ -299,9 +299,9 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 		"network": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster networking",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigNetworkFields(),
 			},
@@ -337,9 +337,9 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 		"services": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster services",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesFields(),
 			},
@@ -365,9 +365,9 @@ func clusterRKEConfigFields() map[string]*schema.Schema {
 		"upgrade_strategy": {
 			Type:        schema.TypeList,
 			Description: "RKE upgrade strategy",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigNodeUpgradeStrategyFields(),
 			},
@@ -403,9 +403,9 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 		"authentication": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster authentication",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigAuthenticationFields(),
 			},
@@ -413,9 +413,9 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 		"authorization": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster authorization",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigAuthorizationFields(),
 			},
@@ -423,16 +423,16 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 		"bastion_host": {
 			Type:        schema.TypeList,
 			Description: "RKE bastion host",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigBastionHostFields(),
 			},
 		},
 		"cloud_provider": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -440,8 +440,8 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 			},
 		},
 		"dns": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -463,9 +463,9 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 		"ingress": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes ingress configuration",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigIngressFields(),
 			},
@@ -479,9 +479,9 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 		"monitoring": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster monitoring",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigMonitoringFields(),
 			},
@@ -489,9 +489,9 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 		"network": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster networking",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigNetworkFields(),
 			},
@@ -527,9 +527,9 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 		"services": {
 			Type:        schema.TypeList,
 			Description: "Kubernetes cluster services",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigServicesFieldsData(),
 			},
@@ -555,9 +555,9 @@ func clusterRKEConfigFieldsData() map[string]*schema.Schema {
 		"upgrade_strategy": {
 			Type:        schema.TypeList,
 			Description: "RKE upgrade strategy",
-			MaxItems:    1,
-			Optional:    true,
-			Computed:    true,
+			//MaxItems:    1,
+			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigNodeUpgradeStrategyFields(),
 			},

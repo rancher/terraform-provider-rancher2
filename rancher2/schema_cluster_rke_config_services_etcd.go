@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 //Schemas
@@ -84,8 +84,8 @@ func clusterRKEConfigServicesEtcdBackupConfigFields() map[string]*schema.Schema 
 func clusterRKEConfigServicesEtcdFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"backup_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{

@@ -1,8 +1,8 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -57,8 +57,8 @@ func clusterScanCisConfigFields() map[string]*schema.Schema {
 func clusterScanConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"cis_scan_config": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
+			Type: schema.TypeList,
+			//MaxItems:    1,
 			Optional:    true,
 			Computed:    true,
 			Description: "The cluster cis scan config",
@@ -91,8 +91,8 @@ func clusterScanFields() map[string]*schema.Schema {
 			Description: "The cluster scan run type",
 		},
 		"scan_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{

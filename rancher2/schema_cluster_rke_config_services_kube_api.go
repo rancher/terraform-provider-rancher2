@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	//"github.com/rancher/types/apis/management.cattle.io/v3"
 	auditv1 "k8s.io/apiserver/pkg/apis/audit/v1"
 )
@@ -106,8 +106,8 @@ func clusterRKEConfigServicesKubeAPIAuditLogConfigFields() map[string]*schema.Sc
 func clusterRKEConfigServicesKubeAPIAuditLogFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"configuration": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
+			Type: schema.TypeList,
+			//MaxItems: 1,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{

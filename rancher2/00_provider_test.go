@@ -6,8 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -17,7 +16,7 @@ const (
 )
 
 var (
-	testAccProviders                           map[string]terraform.ResourceProvider
+	testAccProviders                           map[string]*schema.Provider
 	testAccProvider                            *schema.Provider
 	testAccRancher2ClusterID                   string
 	testAccRancher2AdminPass                   string
@@ -25,8 +24,8 @@ var (
 )
 
 func init() {
-	testAccProvider = Provider().(*schema.Provider)
-	testAccProviders = map[string]terraform.ResourceProvider{
+	testAccProvider = Provider()
+	testAccProviders = map[string]*schema.Provider{
 		"rancher2": testAccProvider,
 	}
 	testAccRancher2ClusterID = testAccRancher2DefaultClusterID
@@ -38,13 +37,9 @@ func init() {
 }
 
 func TestProvider(t *testing.T) {
-	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
+	if err := Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
-}
-
-func TestProvider_impl(t *testing.T) {
-	var _ terraform.ResourceProvider = Provider()
 }
 
 func testAccPreCheck(t *testing.T) {
