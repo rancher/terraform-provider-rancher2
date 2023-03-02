@@ -11,12 +11,13 @@
 # Example
 # ./setup-provider.sh rancher2 v3.0.0-rc1
 
+set -e 
+
 # Validate user input
 
-if [ -z "$1" ] || [ -z "$2" ]; then
-    echo -e "Please specify a Terraform provider and version tag."
-    echo -e "./setup-provider.sh <provider> <version>"
-    exit 1
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <provider> <version>"
+  exit 1
 fi
 
 # Set global vars
@@ -24,51 +25,38 @@ fi
 PROVIDER=$1
 VERSION=$2
 VERSION_TAG=$(echo $2 | cut -c 2-)
-BASE=~/.terraform.d/plugins/terraform.example.com/local/${PROVIDER}/${VERSION_TAG}
 
 # Install gzip
 
-brew install gzip
+if ! command -v "gzip" &> /dev/null; then
+  echo "Missing gzip. Installing..."
+  brew install gzip
+fi
 
-# Pull and copy the binary
+# Download binary
 
-case $OSTYPE in
+OS_PLATFORM=$(uname -sp | tr '[:upper:] ' '[:lower:]_' | sed 's/x86_64/amd64/')
 
-  "linux-gnu"*)
-    curl -sfL https://github.com/rancher/terraform-provider-${PROVIDER}/releases/download/${VERSION}/terraform-provider-${PROVIDER}_${VERSION_TAG}_linux_amd64.zip | gunzip -c - > terraform-provider-${PROVIDER}_${VERSION}
-    if [ ! $? -eq 0 ]; then
-      echo "Error: incomplete download. Did you specify the correct provider and version?"
-      rm terraform-provider-${PROVIDER}_${VERSION}
-      exit 1
-    fi
-    DIR=${BASE}/linux_amd64
-    mkdir -p $DIR && cp terraform-provider-${PROVIDER}_${VERSION} $DIR/terraform-provider-${PROVIDER}
-    ;;
+if [[ $OS_PLATFORM == "darwin"* ]]
+then
+  OS_PLATFORM="darwin_amd64"
+elif [[ $OS_PLATFORM == "linux"* ]]
+then
+  OS_PLATFORM="linux_amd64"
+fi
 
-  "darwin"*)
-    curl -sfL https://github.com/rancher/terraform-provider-${PROVIDER}/releases/download/${VERSION}/terraform-provider-${PROVIDER}_${VERSION_TAG}_darwin_amd64.zip | gunzip -c - > terraform-provider-${PROVIDER}_${VERSION}
-    if [ ! $? -eq 0 ]; then
-      echo "Error: incomplete download. Did you specify the correct provider and version?"
-      rm terraform-provider-${PROVIDER}_${VERSION}
-      exit 1
-    fi
-    DIR=${BASE}/darwin_amd64
-    mkdir -p $DIR && cp terraform-provider-${PROVIDER}_${VERSION} $DIR/terraform-provider-${PROVIDER}
-    ;;
-esac
-
-# Clean up
-
-rm terraform-provider-${PROVIDER}_${VERSION}
+DIR=~/.terraform.d/plugins/terraform.local/local/${PROVIDER}/${VERSION_TAG}/${OS_PLATFORM}
+mkdir -p $DIR
+curl -sfL https://github.com/rancher/terraform-provider-${PROVIDER}/releases/download/${VERSION}/terraform-provider-${PROVIDER}_${VERSION_TAG}_${OS_PLATFORM}.zip | gunzip -c - > ${DIR}/terraform-provider-${PROVIDER}
 
 echo -e "Terraform provider ${PROVIDER} ${VERSION} is ready to test!
-Please update the required_providers block in your Terraform config file. Example:
+Please update the required_providers block in your Terraform config file
 
 terraform {
   required_providers {
     rancher2 = {
-      source = "terraform.example.com/local/rancher2"
-      version = "3.0.0-rc1"
+      source = "terraform.local/local/${PROVIDER}"
+      version = "${VERSION_TAG}"
     }
   }
 }"
