@@ -35,15 +35,7 @@ fi
 
 # Download binary
 
-OS_PLATFORM=$(uname -sp | tr '[:upper:] ' '[:lower:]_' | sed 's/x86_64/amd64/')
-
-if [[ $OS_PLATFORM == "darwin"* ]]
-then
-  OS_PLATFORM="darwin_amd64"
-elif [[ $OS_PLATFORM == "linux"* ]]
-then
-  OS_PLATFORM="linux_amd64"
-fi
+OS_PLATFORM=$(uname -sp | tr '[:upper:] ' '[:lower:]_' | sed 's/x86_64/amd64/' | sed 's/i386/amd64/' | sed 's/arm/arm64/')
 
 DIR=~/.terraform.d/plugins/terraform.local/local/${PROVIDER}/${VERSION_TAG}/${OS_PLATFORM}
 mkdir -p $DIR
