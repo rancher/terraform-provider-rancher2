@@ -280,6 +280,17 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
     }
     EOF
     ssh_user = "ubuntu"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 
@@ -379,6 +390,17 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2-cloud-provider" {
     }
     EOF
     ssh_user = "ubuntu"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 

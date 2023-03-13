@@ -120,6 +120,17 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
     EOF
 	ssh_user = "ubuntu"
 	vm_namespace = "test"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 `
@@ -150,6 +161,17 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
     EOF
 	ssh_user = "ubuntu"
 	vm_namespace = "test"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 `

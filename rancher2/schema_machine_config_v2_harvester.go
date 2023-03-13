@@ -84,7 +84,7 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 		"user_data": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "UserData content of cloud-init, base64 is supported",
+			Description: "UserData content of cloud-init, base64 is supported. If the image does not contain the qemu-guest-agent package, you must install and start qemu-guest-agent using userdata",
 		},
 		"network_data": {
 			Type:        schema.TypeString,
