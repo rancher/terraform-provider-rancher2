@@ -84,28 +84,22 @@ func resourceRancher2MultiClusterAppRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
-		multiClusterApp, err := client.MultiClusterApp.ByID(id)
-		if err != nil {
-			if IsNotFound(err) || IsForbidden(err) {
-				log.Printf("[INFO] multi cluster app ID %s not found.", id)
-				d.SetId("")
-				return nil
-			}
-			return resource.NonRetryableError(err)
+	multiClusterApp, err := client.MultiClusterApp.ByID(id)
+	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) {
+			log.Printf("[INFO] multi cluster app ID %s not found.", id)
+			d.SetId("")
+			return nil
 		}
+		return err
+	}
 
-		templateVersion, err := client.TemplateVersion.ByID(multiClusterApp.TemplateVersionID)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
+	templateVersion, err := client.TemplateVersion.ByID(multiClusterApp.TemplateVersionID)
+	if err != nil {
+		return err
+	}
 
-		if err = flattenMultiClusterApp(d, multiClusterApp, templateVersion.ExternalID); err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
+	return flattenMultiClusterApp(d, multiClusterApp, templateVersion.ExternalID)
 }
 
 func resourceRancher2MultiClusterAppUpdate(d *schema.ResourceData, meta interface{}) error {

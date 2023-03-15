@@ -100,38 +100,32 @@ func resourceRancher2AppRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Refreshing App ID %s", id)
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
-		err := meta.(*Config).ProjectExist(projectID)
-		if err != nil {
-			if IsNotFound(err) || IsForbidden(err) {
-				log.Printf("[INFO] Project ID %s not found.", projectID)
-				d.SetId("")
-				return nil
-			}
-			return resource.NonRetryableError(err)
+	err := meta.(*Config).ProjectExist(projectID)
+	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) {
+			log.Printf("[INFO] Project ID %s not found.", projectID)
+			d.SetId("")
+			return nil
 		}
+		return err
+	}
 
-		client, err := meta.(*Config).ProjectClient(projectID)
-		if err != nil {
-			return resource.NonRetryableError(err)
+	client, err := meta.(*Config).ProjectClient(projectID)
+	if err != nil {
+		return err
+	}
+
+	app, err := client.App.ByID(id)
+	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) {
+			log.Printf("[INFO] App ID %s not found.", id)
+			d.SetId("")
+			return nil
 		}
+		return err
+	}
 
-		app, err := client.App.ByID(id)
-		if err != nil {
-			if IsNotFound(err) || IsForbidden(err) {
-				log.Printf("[INFO] App ID %s not found.", id)
-				d.SetId("")
-				return nil
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		if err = flattenApp(d, app); err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
+	return flattenApp(d, app)
 }
 
 func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
