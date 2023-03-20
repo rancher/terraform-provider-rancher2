@@ -262,16 +262,41 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
     vm_namespace = "default"
     cpu_count = "2"
     memory_size = "4"
-    disk_size = "40"
-    network_name = "harvester-public/vlan1"
-    image_name = "harvester-public/image-57hzg"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "harvester-public/image-57hzg",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "harvester-public/vlan1",
+            "macAddress": ""
+        }]
+    }
+    EOF
     ssh_user = "ubuntu"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 
 resource "rancher2_cluster_v2" "foo-harvester-v2" {
   name = "foo-harvester-v2"
-  kubernetes_version = "v1.22.6+rke2r1"
+  kubernetes_version = "v1.24.10+rke2r1"
   rke_config {
     machine_pools {
       name = "pool1"
@@ -347,17 +372,42 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2-cloud-provider" {
     vm_namespace = "default"
     cpu_count = "2"
     memory_size = "4"
-    disk_size = "40"
-    network_name = "harvester-public/vlan1"
-    image_name = "harvester-public/image-57hzg"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "harvester-public/image-57hzg",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "harvester-public/vlan1",
+            "macAddress": ""
+        }]
+    }
+    EOF
     ssh_user = "ubuntu"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 
 # Create a new harvester rke2 cluster with harvester cloud provider
 resource "rancher2_cluster_v2" "foo-harvester-v2-cloud-provider" {
   name = "foo-harvester-v2-cloud-provider"
-  kubernetes_version = "v1.22.6+rke2r1"
+  kubernetes_version = "v1.24.10+rke2r1"
   rke_config {
     machine_pools {
       name = "pool1"

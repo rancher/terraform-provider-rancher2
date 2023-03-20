@@ -82,10 +82,35 @@ resource "rancher2_node_template" "foo-harvester" {
     vm_namespace = "default"
     cpu_count = "2"
     memory_size = "4"
-    disk_size = "40"
-    network_name = "harvester-public/vlan1"
-    image_name = "harvester-public/image-57hzg"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "harvester-public/image-57hzg",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "harvester-public/vlan1",
+            "macAddress": ""
+        }]
+    }
+    EOF
     ssh_user = "ubuntu"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 ```
@@ -255,14 +280,16 @@ The following attributes are exported:
 * `vm_namespace` - (Required) Virtual machine namespace e.g. `default` (string)
 * `cpu_count` - (Optional) CPU count, Default `2` (string)
 * `memory_size` - (Optional) Memory size (in GiB), Default `4` (string)
-* `disk_size` - (Optional) Disk size (in GiB), Default `40` (string)
-* `disk_bus` - (Optional) Disk bus, Default `virtio` (string)
-* `image_name` - (Required) Image name e.g. `harvester-public/image-57hzg` (string)
+* `disk_size` - (Deprecated) Use `disk_info` instead
+* `disk_bus` - (Deprecated) Use `disk_info` instead
+* `image_name` - (Deprecated) Use `disk_info` instead
+* `disk_info` - (Required) A JSON string specifying info for the disks e.g. `{\"disks\":[{\"imageName\":\"harvester-public/image-57hzg\",\"bootOrder\":1,\"size\":40},{\"storageClassName\":\"node-driver-test\",\"bootOrder\":2,\"size\":1}]}` (string)
 * `ssh_user` - (Required) SSH username e.g. `ubuntu` (string)
 * `ssh_password` - (Optional/Sensitive) SSH password (string)
-* `network_name` - (Required) Network name e.g. `harvester-public/vlan1` (string)
-* `network_model` - (Optional) Network model, Default `virtio` (string)
-* `user_data` - (Optional) UserData content of cloud-init, base64 is supported (string)
+* `network_name` - (Deprecated) Use `network_info` instead
+* `network_model` - (Deprecated) Use `network_info` instead
+* `network_info` - (Required) A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\",\"macAddress\":\"\"},{\"networkName\":\"harvester-public/vlan2\",\"macAddress\":\"5a:e7:c5:24:5b:44\"}]}` (string)
+* `user_data` - (Optional) UserData content of cloud-init, base64 is supported. If the image does not contain the qemu-guest-agent package, you must install and start qemu-guest-agent using userdata (string)
 * `network_data` - (Optional) NetworkData content of cloud-init, base64 is supported (string)
 * `vm_affinity` - (Optional) Virtual machine affinity, base64 is supported. For Rancher v2.6.7 or above (string)
 
