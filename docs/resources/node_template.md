@@ -94,8 +94,7 @@ resource "rancher2_node_template" "foo-harvester" {
     network_info = <<EOF
     {
         "interfaces": [{
-            "networkName": "harvester-public/vlan1",
-            "macAddress": ""
+            "networkName": "harvester-public/vlan1"
         }]
     }
     EOF
@@ -288,7 +287,7 @@ The following attributes are exported:
 * `ssh_password` - (Optional/Sensitive) SSH password (string)
 * `network_name` - (Deprecated) Use `network_info` instead
 * `network_model` - (Deprecated) Use `network_info` instead
-* `network_info` - (Required) A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\",\"macAddress\":\"\"},{\"networkName\":\"harvester-public/vlan2\",\"macAddress\":\"5a:e7:c5:24:5b:44\"}]}` (string)
+* `network_info` - (Required) A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\"},{\"networkName\":\"harvester-public/vlan2\"}]}` (string)
 * `user_data` - (Optional) UserData content of cloud-init, base64 is supported. If the image does not contain the qemu-guest-agent package, you must install and start qemu-guest-agent using userdata (string)
 * `network_data` - (Optional) NetworkData content of cloud-init, base64 is supported (string)
 * `vm_affinity` - (Optional) Virtual machine affinity, base64 is supported. For Rancher v2.6.7 or above (string)

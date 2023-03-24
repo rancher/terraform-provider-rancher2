@@ -113,8 +113,7 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
     network_info = <<EOF
     {
         "interfaces": [{
-            "networkName": "test-net",
-            "macAddress": ""
+            "networkName": "test-net"
         }]
     }
     EOF
@@ -154,8 +153,7 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
     network_info = <<EOF
     {
         "interfaces": [{
-            "networkName": "test-net",
-            "macAddress": ""
+            "networkName": "test-net"
         }]
     }
     EOF
