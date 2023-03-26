@@ -674,7 +674,7 @@ The following attributes are exported:
 
 #### Attributes
 
-* `cluster_id` - (Computed) Cluster ID (string)
+* `id` - (Computed) Cluster ID (string)
 * `name` - (Computed) Name of cluster registration token (string)
 * `command` - (Computed) Command to execute in a imported k8s cluster (string)
 * `insecure_command` - (Computed) Insecure command to execute in a imported k8s cluster (string)
