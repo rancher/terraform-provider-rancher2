@@ -274,8 +274,7 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
     network_info = <<EOF
     {
         "interfaces": [{
-            "networkName": "harvester-public/vlan1",
-            "macAddress": ""
+            "networkName": "harvester-public/vlan1"
         }]
     }
     EOF
@@ -384,8 +383,7 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2-cloud-provider" {
     network_info = <<EOF
     {
         "interfaces": [{
-            "networkName": "harvester-public/vlan1",
-            "macAddress": ""
+            "networkName": "harvester-public/vlan1"
         }]
     }
     EOF

@@ -114,7 +114,7 @@ func harvesterConfigFields() map[string]*schema.Schema {
 		"network_info": {
 			Type:        schema.TypeString,
 			Required:    true,
-			Description: "A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\",\"macAddress\":\"\"},{\"networkName\":\"harvester-public/vlan2\",\"macAddress\":\"5a:e7:c5:24:5b:44\"}]}`",
+			Description: "A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\"},{\"networkName\":\"harvester-public/vlan2\"}]}`",
 		},
 		"user_data": {
 			Type:        schema.TypeString,
