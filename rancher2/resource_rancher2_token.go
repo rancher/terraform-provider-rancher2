@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"time"
 
@@ -40,17 +41,24 @@ func resourceRancher2TokenCreate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	newToken, err := client.Token.Create(token)
-	if err != nil {
-		return err
-	}
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		newToken, err := client.Token.Create(token)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	err = flattenToken(d, newToken, patch)
-	if err != nil {
-		return err
-	}
+		err = flattenToken(d, newToken, patch)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return resourceRancher2TokenRead(d, meta)
+		err = resourceRancher2TokenRead(d, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2TokenRead(d *schema.ResourceData, meta interface{}) error {
@@ -60,31 +68,33 @@ func resourceRancher2TokenRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	token, err := client.Token.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Token ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		token, err := client.Token.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Token ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	renew := d.Get("renew").(bool)
-	if (!*token.Enabled || token.Expired) && renew {
-		d.Set("renew", false)
-	}
+		renew := d.Get("renew").(bool)
+		if (!*token.Enabled || token.Expired) && renew {
+			d.Set("renew", false)
+		}
 
-	patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqualAndLessThan(rancher2TokeTTLMinutesVersion, rancher2TokeTTLMilisVersion)
-	if err != nil {
-		return err
-	}
-	err = flattenToken(d, token, patch)
-	if err != nil {
-		return err
-	}
+		patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqualAndLessThan(rancher2TokeTTLMinutesVersion, rancher2TokeTTLMilisVersion)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		err = flattenToken(d, token, patch)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func resourceRancher2TokenUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -99,23 +109,25 @@ func resourceRancher2TokenDelete(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	token, err := client.Token.ByID(id)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Token ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		token, err := client.Token.ByID(id)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Token ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	err = client.Token.Delete(token)
-	if err != nil {
-		return fmt.Errorf("Error removing Token: %s", err)
-	}
+		err = client.Token.Delete(token)
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("[ERROR] Error removing Token: %s", err))
+		}
 
-	d.SetId("")
-	return nil
+		d.SetId("")
+		return nil
+	})
 }
 
 func isTokenValid(c *Config, id string) (bool, error) {

@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"time"
 
@@ -33,18 +34,25 @@ func resourceRancher2GlobalRoleCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	globalRole := expandGlobalRole(d)
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		globalRole := expandGlobalRole(d)
 
-	log.Printf("[INFO] Creating global role")
+		log.Printf("[INFO] Creating global role")
 
-	newGlobalRole, err := client.GlobalRole.Create(globalRole)
-	if err != nil {
-		return err
-	}
+		newGlobalRole, err := client.GlobalRole.Create(globalRole)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	d.SetId(newGlobalRole.ID)
+		d.SetId(newGlobalRole.ID)
 
-	return resourceRancher2GlobalRoleRead(d, meta)
+		err = resourceRancher2GlobalRoleRead(d, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2GlobalRoleRead(d *schema.ResourceData, meta interface{}) error {
@@ -54,22 +62,23 @@ func resourceRancher2GlobalRoleRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	globalRole, err := client.GlobalRole.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] global role ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		globalRole, err := client.GlobalRole.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] global role ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	err = flattenGlobalRole(d, globalRole)
-	if err != nil {
-		return err
-	}
+		if err = flattenGlobalRole(d, globalRole); err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -79,26 +88,31 @@ func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	globalRole, err := client.GlobalRole.ByID(d.Id())
-	if err != nil {
-		return err
-	}
+	return resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		globalRole, err := client.GlobalRole.ByID(d.Id())
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	update := map[string]interface{}{
-		"description":    d.Get("description").(string),
-		"name":           d.Get("name").(string),
-		"newUserDefault": d.Get("new_user_default").(bool),
-		"rules":          expandPolicyRules(d.Get("rules").([]interface{})),
-		"annotations":    toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":         toMapString(d.Get("labels").(map[string]interface{})),
-	}
+		update := map[string]interface{}{
+			"description":    d.Get("description").(string),
+			"name":           d.Get("name").(string),
+			"newUserDefault": d.Get("new_user_default").(bool),
+			"rules":          expandPolicyRules(d.Get("rules").([]interface{})),
+			"annotations":    toMapString(d.Get("annotations").(map[string]interface{})),
+			"labels":         toMapString(d.Get("labels").(map[string]interface{})),
+		}
 
-	_, err = client.GlobalRole.Update(globalRole, update)
-	if err != nil {
-		return err
-	}
+		if _, err = client.GlobalRole.Update(globalRole, update); err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return resourceRancher2GlobalRoleRead(d, meta)
+		if err = resourceRancher2GlobalRoleRead(d, meta); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2GlobalRoleDelete(d *schema.ResourceData, meta interface{}) error {
@@ -109,23 +123,24 @@ func resourceRancher2GlobalRoleDelete(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	globalRole, err := client.GlobalRole.ByID(id)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Global role ID %s not found.", id)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if !globalRole.Builtin {
-		err = client.GlobalRole.Delete(globalRole)
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		globalRole, err := client.GlobalRole.ByID(id)
 		if err != nil {
-			return fmt.Errorf("Error removing global role: %s", err)
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Global role ID %s not found.", id)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-	}
 
-	d.SetId("")
-	return nil
+		if !globalRole.Builtin {
+			if err = client.GlobalRole.Delete(globalRole); err != nil {
+				return resource.NonRetryableError(fmt.Errorf("[ERROR] Error removing global role: %s", err))
+			}
+		}
+
+		d.SetId("")
+		return nil
+	})
 }

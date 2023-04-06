@@ -88,37 +88,38 @@ func resourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Refreshing Namespace ID %s", d.Id())
 
-	_, _, err := meta.(*Config).isClusterActive(clusterID)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Cluster ID %s not found.", clusterID)
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		_, _, err := meta.(*Config).isClusterActive(clusterID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cluster ID %s not found.", clusterID)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	client, err := meta.(*Config).ClusterClient(clusterID)
-	if err != nil {
-		return err
-	}
-
-	ns, err := client.Namespace.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Namespace ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+		client, err := meta.(*Config).ClusterClient(clusterID)
+		if err != nil {
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	err = flattenNamespace(d, ns)
-	if err != nil {
-		return err
-	}
+		ns, err := client.Namespace.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Namespace ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
+		}
 
-	return nil
+		if err = flattenNamespace(d, ns); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2NamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
