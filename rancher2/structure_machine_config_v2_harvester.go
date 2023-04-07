@@ -18,7 +18,6 @@ type machineConfigV2Harvester struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	VMNamespace       string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
-	VMAffinity        string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
 	CPUCount          string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
 	MemorySize        string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
 	DiskSize          string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
@@ -48,10 +47,6 @@ func flattenMachineConfigV2Harvester(in *MachineConfigV2Harvester) []interface{}
 
 	if len(in.VMNamespace) > 0 {
 		obj["vm_namespace"] = in.VMNamespace
-	}
-
-	if len(in.VMAffinity) > 0 {
-		obj["vm_affinity"] = in.VMAffinity
 	}
 
 	if len(in.CPUCount) > 0 {
@@ -121,10 +116,6 @@ func expandMachineConfigV2Harvester(p []interface{}, source *MachineConfigV2) *M
 
 	if v, ok := in["vm_namespace"].(string); ok && len(v) > 0 {
 		obj.VMNamespace = v
-	}
-
-	if v, ok := in["vm_affinity"].(string); ok && len(v) > 0 {
-		obj.VMAffinity = v
 	}
 
 	if v, ok := in["cpu_count"].(string); ok && len(v) > 0 {
