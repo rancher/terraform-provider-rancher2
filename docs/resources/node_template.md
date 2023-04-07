@@ -264,7 +264,6 @@ The following attributes are exported:
 * `network_model` - (Optional) Network model, Default `virtio` (string)
 * `user_data` - (Optional) UserData content of cloud-init, base64 is supported (string)
 * `network_data` - (Optional) NetworkData content of cloud-init, base64 is supported (string)
-* `vm_affinity` - (Optional) Virtual machine affinity, base64 is supported. For Rancher v2.6.7 or above (string)
 
 ### `hetzner_config`
 
