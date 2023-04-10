@@ -1,3 +1,19 @@
+## 2.0.0 (April 10, 2023)
+
+FEATURES:
+
+* Add and revert Harvester VM node affinity support. New features will now only be available in provider 3.0.x for Rancher 2.7.2+ clusters. See [#1102](https://github.com/rancher/terraform-provider-rancher2/pull/1102) for more details.
+
+ENHANCEMENTS:
+
+* Add 'annotations' property to docs. See [#1041](https://github.com/rancher/terraform-provider-rancher2/pull/1041)
+* Add mac/unix and windows automation to test RCs locally. See [#1100](https://github.com/rancher/terraform-provider-rancher2/pull/1100)
+
+BUG FIXES:
+
+* Remove sort from v2 mirror endpoints. See [#1091](https://github.com/rancher/terraform-provider-rancher2/pull/1091)
+* Fix TF inconsistent plan bug. See [#1099](https://github.com/rancher/terraform-provider-rancher2/pull/1099)
+
 ## 1.25.0 (November 22, 2022)
 
 FEATURES:
