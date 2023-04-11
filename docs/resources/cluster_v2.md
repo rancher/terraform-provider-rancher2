@@ -37,11 +37,15 @@ resource "rancher2_cluster_v2" "foo" {
 
 ```hcl
 # Create amazonec2 cloud credential
+# As a good practice, you should never hardcode 
+# secrets in your code, so first export the needed variables
+#  `export TF_VAR_aws_access_key = <ACCESS_KEY>`
+#  `export TF_VAR_aws_secret_key = <SECRET_KEY>`
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   amazonec2_credential_config {
-    access_key = "<ACCESS_KEY>"
-    secret_key = "<SECRET_KEY>"
+    access_key = var.aws_access_key
+    secret_key = var.aws_secret_key
   }
 }
 
@@ -105,11 +109,15 @@ resource "rancher2_cluster_v2" "foo-k3s" {
 
 ```hcl
 # Create amazonec2 cloud credential
+# As a good practice, you should never hardcode 
+# secrets in your code, so first export the needed variables
+#  `export TF_VAR_aws_access_key = <ACCESS_KEY>`
+#  `export TF_VAR_aws_secret_key = <SECRET_KEY>`
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   amazonec2_credential_config {
-    access_key = "<ACCESS_KEY>"
-    secret_key = "<SECRET_KEY>"
+    access_key = var.aws_access_key
+    secret_key = var.aws_secret_key
   }
 }
 
