@@ -108,12 +108,15 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 				if IsConflict(err) || IsForbidden(err) {
 					return resource.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				// Checking error due to ActionSetpodsecuritypolicytemplate() issue
+				if error.Error(err) != "unexpected end of JSON input" {
+					return resource.NonRetryableError(err)
+				}
 			}
 			return nil
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("[ERROR] waiting for pod_security_policy_template_id (%s) to be set on project (%s): %s", pspID, newProject.ID, err)
 		}
 	}
 
