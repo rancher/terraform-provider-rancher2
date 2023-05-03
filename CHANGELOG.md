@@ -1,3 +1,33 @@
+## 3.0.0 (May 1, 2023)
+
+FEATURES:
+
+* Add support for new Azure features - node template tags, network interface, availability zone, and option to enable standard SKU. See [#1023](https://github.com/rancher/terraform-provider-rancher2/pull/1023) and [#1062](https://github.com/rancher/terraform-provider-rancher2/pull/1062)
+* Add support for node group node role on EKS clusters. See [#1049](https://github.com/rancher/terraform-provider-rancher2/pull/1049)
+* Allow setting vmAffinity for Harvester clusters. See [#1024](https://github.com/rancher/terraform-provider-rancher2/pull/1024) and [#1110](https://github.com/rancher/terraform-provider-rancher2/pull/1110)
+* Update Harvester node driver to support multi nics and disks. See [#1051](https://github.com/rancher/terraform-provider-rancher2/pull/1051)
+
+ENHANCEMENTS:
+
+* [Docs] Update branching strategy and compatibility matrix. See [#1060](https://github.com/rancher/terraform-provider-rancher2/pull/1060)
+* [Docs] Add example for authenticated cluster level private registry. See [#1055](https://github.com/rancher/terraform-provider-rancher2/pull/1055)
+* [Docs] Remove macAddress in Harvester node driver. See [#1089](https://github.com/rancher/terraform-provider-rancher2/pull/1089)
+* Add k8s 1.25 support | Remove logging cis v1 support. See [#1056](https://github.com/rancher/terraform-provider-rancher2/pull/1056)
+* Add issue and pull request templates. See [#1063](https://github.com/rancher/terraform-provider-rancher2/pull/1063)
+* Update Wrangler to v1.1.0. See [#1079](https://github.com/rancher/terraform-provider-rancher2/pull/1079)
+* Bump golang.org/x/net from 0.2.0 to 0.7.0. See [#1078](https://github.com/rancher/terraform-provider-rancher2/pull/1078)
+* Bump github.com/hashicorp/go-getter from 1.4.0 to 1.7.0. See [#1077](https://github.com/rancher/terraform-provider-rancher2/pull/1077)
+* Add script to test Terraform RCs locally on darwin/unix and windows. See [#1082](https://github.com/rancher/terraform-provider-rancher2/pull/1082) and [#1085](https://github.com/rancher/terraform-provider-rancher2/pull/1085)
+* Implement retry logic to enforce timeouts. See [#1033](https://github.com/rancher/terraform-provider-rancher2/pull/1033)
+
+BUG FIXES:
+
+* [Docs] Add machine_pool `annotations` property. See [#1041](https://github.com/rancher/terraform-provider-rancher2/pull/1041)
+* Add new field for computed values in App v2 resource. See [#1021](https://github.com/rancher/terraform-provider-rancher2/pull/1021)
+* Do not sort mirror endpoints. See [#1029](https://github.com/rancher/terraform-provider-rancher2/pull/1029)
+* Update SDK and make machine pool `cloud_credential_secret_name optional` to fix plan bug. See [#1070](https://github.com/rancher/terraform-provider-rancher2/pull/1070)
+* Fix intermittent 409 conflict when creating new `rancher2_project` with PSPTID. See [#1058](https://github.com/rancher/terraform-provider-rancher2/pull/1058)
+
 ## 1.25.0 (November 22, 2022)
 
 FEATURES:
