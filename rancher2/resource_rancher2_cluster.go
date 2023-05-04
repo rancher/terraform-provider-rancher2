@@ -129,14 +129,14 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Cluster %s", cluster.Name)
 
-	expectedState := "active"
+	expectedState := []string{"active"}
 
 	if cluster.Driver == clusterDriverImported || (cluster.Driver == clusterDriverEKSV2 && cluster.EKSConfig.Imported) {
-		expectedState = "pending"
+		expectedState = append(expectedState, "pending")
 	}
 
 	if cluster.Driver == clusterDriverRKE || cluster.Driver == clusterDriverK3S || cluster.Driver == clusterDriverRKE2 {
-		expectedState = "provisioning"
+		expectedState = append(expectedState, "provisioning")
 	}
 
 	// Creating cluster with monitoring disabled
@@ -164,7 +164,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{expectedState},
+		Target:     expectedState,
 		Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
