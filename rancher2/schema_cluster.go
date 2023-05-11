@@ -233,6 +233,12 @@ func clusterDataFieldsV0() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Default pod security policy template id",
 		},
+		"default_pod_security_admission_configuration_template_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster default pod security admission configuration template name",
+		},
 		"enable_cluster_alerting": {
 			Type:        schema.TypeBool,
 			Computed:    true,
@@ -395,6 +401,12 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Default pod security policy template id",
+		},
+		"default_pod_security_admission_configuration_template_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:     schema.TypeString,
@@ -668,6 +680,12 @@ func clusterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Default pod security policy template id",
+		},
+		"default_pod_security_admission_configuration_template_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:     schema.TypeString,

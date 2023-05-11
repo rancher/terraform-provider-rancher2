@@ -64,6 +64,10 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 		obj["default_pod_security_policy_template_id"] = in.DefaultPodSecurityPolicyTemplateID
 	}
 
+	if len(in.DefaultPodSecurityAdmissionConfigurationTemplateName) > 0 {
+		obj["default_pod_security_admission_configuration_template_name"] = in.DefaultPodSecurityAdmissionConfigurationTemplateName
+	}
+
 	if len(in.DesiredAgentImage) > 0 {
 		obj["desired_agent_image"] = in.DesiredAgentImage
 	}
@@ -294,6 +298,10 @@ func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, 
 
 	if v, ok := in["default_pod_security_policy_template_id"].(string); ok && len(v) > 0 {
 		obj.DefaultPodSecurityPolicyTemplateID = v
+	}
+
+	if v, ok := in["default_pod_security_admission_configuration_template_name"].(string); ok && len(v) > 0 {
+		obj.DefaultPodSecurityAdmissionConfigurationTemplateName = v
 	}
 
 	if v, ok := in["desired_agent_image"].(string); ok && len(v) > 0 {
