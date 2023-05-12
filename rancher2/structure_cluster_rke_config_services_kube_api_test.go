@@ -106,14 +106,14 @@ func init() {
 		},
 	}
 	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationConf = map[string]interface{}{
-		"apiVersion": clusterRKEConfigServicesKubeAPIAdmissionConfigAPIDefault,
-		"kind":       clusterRKEConfigServicesKubeAPIAdmissionConfigKindDefault,
+		"apiVersion": clusterRKEConfigServicesKubeAPIAdmissionConfigurationAPIDefault,
+		"kind":       clusterRKEConfigServicesKubeAPIAdmissionConfigurationKindDefault,
 		"plugins":    testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsConf,
 	}
 	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationInterface = []interface{}{
 		map[string]interface{}{
-			"api_version": clusterRKEConfigServicesKubeAPIAdmissionConfigAPIDefault,
-			"kind":        clusterRKEConfigServicesKubeAPIAdmissionConfigKindDefault,
+			"api_version": clusterRKEConfigServicesKubeAPIAdmissionConfigurationAPIDefault,
+			"kind":        clusterRKEConfigServicesKubeAPIAdmissionConfigurationKindDefault,
 			"plugins":     testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsInterface,
 		},
 	}
