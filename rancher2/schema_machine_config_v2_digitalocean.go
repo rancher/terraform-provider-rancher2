@@ -88,7 +88,6 @@ func machineConfigV2DigitaloceanFields() map[string]*schema.Schema {
 		"userdata": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "docker-user",
 			Description: "Path to file with cloud-init user-data",
 		},
 	}
