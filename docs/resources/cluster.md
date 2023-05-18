@@ -519,11 +519,27 @@ resource "rancher2_cluster" "foo" {
     network_plugin = "<NETWORK_PLUGIN>"
     node_pools {
       availability_zones = ["1", "2", "3"]
-      name = "<NODEPOOL_NAME>"
+      name = "<NODEPOOL_NAME_1>"
+      mode = "System"
       count = 1
       orchestrator_version = "1.21.2"
       os_disk_size_gb = 128
       vm_size = "Standard_DS2_v2"
+    }
+    node_pools {
+      availability_zones = ["1", "2", "3"]
+      name = "<NODEPOOL_NAME_2>"
+      count = 1
+      mode = "User"
+      orchestrator_version = "1.21.2"
+      os_disk_size_gb = 128
+      vm_size = "Standard_DS2_v2"
+      max_surge = "25%"
+      labels = {
+        "test1" = "data1"
+        "test2" = "data2"
+      }
+      taints = [ "none:PreferNoSchedule" ]
     }
   }
 }
@@ -1439,7 +1455,7 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `network_service_cidr` - (Optional/Computed) The AKS network service cidr (string)
 * `private_cluster` - (Optional/Computed) Is AKS cluster private? (bool)
 * `subnet` - (Optional/Computed) The AKS subnet (string)
-* `tags` - (Optional/Computed) The AKS cluster tags" (map)
+* `tags` - (Optional/Computed) The AKS cluster tags (map)
 * `virtual_network` - (Optional/Computed) The AKS virtual network (string)
 * `virtual_network_resource_group` - (Optional/Computed) The AKS virtual network resource group (string)
 
@@ -1460,6 +1476,10 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `os_disk_type` - (Optional) The AKS node pool os disk type. Default: `Managed` (string)
 * `os_type` - (Optional) The AKS node pool os type. Default: `Linux` (string)
 * `vm_size` - (Optional/computed) The AKS node pool orchestrator version (string)
+* `max_surge` - (Optional) The AKS node pool max surge (string), example value: `25%`
+* `labels` - (Optional) The AKS node pool labels (map)
+* `taints` - (Optonal) The AKS node pool taints (list)
+
 
 ### `eks_config`
 
