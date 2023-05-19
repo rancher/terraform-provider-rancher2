@@ -143,6 +143,9 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	cluster.EnableClusterMonitoring = false
 	newCluster := &Cluster{}
 	if cluster.EKSConfig != nil && !cluster.EKSConfig.Imported {
+		if !checkClusterEKSConfigV2NodeGroupsDesiredSize(cluster) {
+			return fmt.Errorf("[ERROR] can't create %s EKS cluster with node group desired_size = 0", cluster.Name)
+		}
 		clusterStr, _ := interfaceToJSON(cluster)
 		clusterMap, _ := jsonToMapInterface(clusterStr)
 		clusterMap["eksConfig"] = fixClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}), structToMap(cluster.EKSConfig))

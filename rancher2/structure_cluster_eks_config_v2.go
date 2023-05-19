@@ -398,3 +398,16 @@ func fixClusterEKSConfigV2NodeGroupsLaunchTemplate(p []interface{}) map[string]i
 
 	return obj
 }
+
+func checkClusterEKSConfigV2NodeGroupsDesiredSize(cluster *Cluster) bool {
+	if len(cluster.EKSConfig.NodeGroups) == 0 {
+		return false
+	}
+
+	for _, v := range cluster.EKSConfig.NodeGroups {
+		if *v.DesiredSize == 0 {
+			return false
+		}
+	}
+	return true
+}
