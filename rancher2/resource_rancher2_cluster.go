@@ -219,43 +219,56 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	cluster := &Cluster{}
-	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Cluster ID %s not found.", cluster.ID)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
-	if err != nil && !IsForbidden(err) {
-		return err
-	}
-
-	defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
-	if err != nil && !IsForbidden(err) {
-		return err
-	}
-
-	kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
-	if err != nil && !IsForbidden(err) {
-		return err
-	}
-
-	var monitoringInput *managementClient.MonitoringInput
-	if len(cluster.Annotations[monitoringInputAnnotation]) > 0 {
-		monitoringInput = &managementClient.MonitoringInput{}
-		err = jsonToInterface(cluster.Annotations[monitoringInputAnnotation], monitoringInput)
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		cluster := &Cluster{}
+		err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 		if err != nil {
-			return err
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cluster ID %s not found.", cluster.ID)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
 
-	}
+		clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
+		if err != nil && !IsForbidden(err) {
+			return resource.NonRetryableError(err)
+		}
 
-	return flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID, monitoringInput)
+		defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
+		if err != nil && !IsForbidden(err) {
+			return resource.NonRetryableError(err)
+		}
+
+		kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
+		if err != nil && !IsForbidden(err) {
+			return resource.NonRetryableError(err)
+		}
+
+		var monitoringInput *managementClient.MonitoringInput
+		if len(cluster.Annotations[monitoringInputAnnotation]) > 0 {
+			monitoringInput = &managementClient.MonitoringInput{}
+			err = jsonToInterface(cluster.Annotations[monitoringInputAnnotation], monitoringInput)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+		}
+
+		if err = flattenCluster(
+			d,
+			cluster,
+			clusterRegistrationToken,
+			kubeConfig,
+			defaultProjectID,
+			systemProjectID,
+			monitoringInput); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -287,7 +300,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"enableNetworkPolicy":                &enableNetworkPolicy,
 		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
 		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
-		"scheduledClusterScan":               expandScheduledClusterScan(d.Get("scheduled_cluster_scan").([]interface{})),
 		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
 	}

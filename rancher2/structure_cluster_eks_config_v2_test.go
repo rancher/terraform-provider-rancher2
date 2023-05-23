@@ -47,6 +47,7 @@ func init() {
 			LaunchTemplate:       testClusterEKSConfigV2NodeGroupLaunchTemplateConf,
 			MaxSize:              &size,
 			MinSize:              &size,
+			NodeRole:             newString(""),
 			RequestSpotInstances: newTrue(),
 			ResourceTags: map[string]string{
 				"rstag1": "one",
@@ -78,6 +79,7 @@ func init() {
 			"launch_template":        testClusterEKSConfigV2NodeGroupLaunchTemplateInterface,
 			"max_size":               3,
 			"min_size":               3,
+			"node_role":              "",
 			"request_spot_instances": true,
 			"resource_tags": map[string]interface{}{
 				"rstag1": "one",

@@ -204,14 +204,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"scheduled_cluster_scan": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "Cluster scheduled scan",
-				Elem: &schema.Resource{
-					Schema: scheduledClusterScanFields(),
-				},
-			},
 			"annotations": {
 				Type:     schema.TypeMap,
 				Computed: true,

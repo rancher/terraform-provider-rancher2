@@ -31,6 +31,12 @@ func init() {
 			OsDiskType:          "os_disk_type",
 			OsType:              "os_type",
 			VMSize:              "vm_size",
+			MaxSurge:            "max_surge",
+			NodeLabels: map[string]string{
+				"value1": "one",
+				"value2": "two",
+			},
+			NodeTaints: []string{"test1:NoSchedule", "test2:PreferNoSchedule"},
 		},
 	}
 	testClusterAKSConfigV2NodePoolInterface = []interface{}{
@@ -48,6 +54,12 @@ func init() {
 			"os_disk_type":         "os_disk_type",
 			"os_type":              "os_type",
 			"vm_size":              "vm_size",
+			"max_surge":            "max_surge",
+			"labels": map[string]string{
+				"value1": "one",
+				"value2": "two",
+			},
+			"taints": []string{"test1:NoSchedule", "test2:PreferNoSchedule"},
 		},
 	}
 	testClusterAKSConfigV2Conf = &managementClient.AKSClusterConfigSpec{

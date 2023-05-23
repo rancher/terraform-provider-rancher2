@@ -83,31 +83,38 @@ func resourceRancher2AppV2Read(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing App V2 %s at %s", name, clusterID)
 
-	if clusterName, ok := d.Get("cluster_name").(string); !ok || len(clusterName) == 0 {
-		cluster, err := meta.(*Config).GetClusterByID(clusterID)
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		if clusterName, ok := d.Get("cluster_name").(string); !ok || len(clusterName) == 0 {
+			cluster, err := meta.(*Config).GetClusterByID(clusterID)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			d.Set("cluster_name", cluster.Name)
+		}
+		if systemDefaultRegistry, ok := d.Get("system_default_registry").(string); !ok || len(systemDefaultRegistry) == 0 {
+			systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			d.Set("system_default_registry", systemDefaultRegistry.Value)
+		}
+		_, rancherID := splitID(d.Id())
+		app, err := getAppV2ByID(meta.(*Config), clusterID, rancherID)
 		if err != nil {
-			return err
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] App V2 %s not found at %s", name, clusterID)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		d.Set("cluster_name", cluster.Name)
-	}
-	if systemDefaultRegistry, ok := d.Get("system_default_registry").(string); !ok || len(systemDefaultRegistry) == 0 {
-		systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
-		if err != nil {
-			return err
+
+		if err = flattenAppV2(d, app); err != nil {
+			return resource.NonRetryableError(err)
 		}
-		d.Set("system_default_registry", systemDefaultRegistry.Value)
-	}
-	_, rancherID := splitID(d.Id())
-	app, err := getAppV2ByID(meta.(*Config), clusterID, rancherID)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] App V2 %s not found at %s", name, clusterID)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-	return flattenAppV2(d, app)
+
+		return nil
+	})
 }
 
 func resourceRancher2AppV2Update(d *schema.ResourceData, meta interface{}) error {

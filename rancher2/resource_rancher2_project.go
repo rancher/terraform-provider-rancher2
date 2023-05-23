@@ -98,12 +98,22 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 		pspInput := &managementClient.SetPodSecurityPolicyTemplateInput{
 			PodSecurityPolicyTemplateName: pspID,
 		}
-		_, err = client.Project.ActionSetpodsecuritypolicytemplate(newProject, pspInput)
-		if err != nil {
-			// Checking error due to ActionSetpodsecuritypolicytemplate() issue
-			if error.Error(err) != "unexpected end of JSON input" {
-				return err
+		err = resource.Retry(3*time.Second, func() *resource.RetryError {
+			newProject, err = client.Project.ByID(newProject.ID)
+			if err != nil {
+				return resource.NonRetryableError(err)
 			}
+			_, err = client.Project.ActionSetpodsecuritypolicytemplate(newProject, pspInput)
+			if err != nil {
+				if IsConflict(err) || IsForbidden(err) {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 	}
 
@@ -117,27 +127,33 @@ func resourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	project, err := client.Project.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Project ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	var monitoringInput *managementClient.MonitoringInput
-	if len(project.Annotations[monitoringInputAnnotation]) > 0 {
-		monitoringInput = &managementClient.MonitoringInput{}
-		err = jsonToInterface(project.Annotations[monitoringInputAnnotation], monitoringInput)
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		project, err := client.Project.ByID(d.Id())
 		if err != nil {
-			return err
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Project ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
 
-	}
+		var monitoringInput *managementClient.MonitoringInput
+		if len(project.Annotations[monitoringInputAnnotation]) > 0 {
+			monitoringInput = &managementClient.MonitoringInput{}
+			err = jsonToInterface(project.Annotations[monitoringInputAnnotation], monitoringInput)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
 
-	return flattenProject(d, project, monitoringInput)
+		}
+
+		if err = flattenProject(d, project, monitoringInput); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) error {

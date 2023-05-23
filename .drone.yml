@@ -4,7 +4,7 @@ name: default
 
 steps:
 - name: build
-  image: docker:19.03.12-dind
+  image: docker:20.10.17-dind
   environment:
     GOPATH: /go
     PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/go/bin
@@ -20,7 +20,7 @@ steps:
   privileged: true
 
 - name: build-all-binaries
-  image: golang:1.17.3
+  image: golang:1.19.4
   environment:
     CROSS: 1
     VERSION: ${DRONE_TAG}

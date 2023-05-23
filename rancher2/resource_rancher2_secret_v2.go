@@ -67,16 +67,23 @@ func resourceRancher2SecretV2Read(d *schema.ResourceData, meta interface{}) erro
 	clusterID, rancherID := splitID(d.Id())
 	log.Printf("[INFO] Refreshing Secret V2 %s at Cluster ID %s", rancherID, clusterID)
 
-	secret, err := getSecretV2ByID(meta.(*Config), clusterID, rancherID)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Secret V2 %s not found at cluster ID %s", rancherID, clusterID)
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		secret, err := getSecretV2ByID(meta.(*Config), clusterID, rancherID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Secret V2 %s not found at cluster ID %s", rancherID, clusterID)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
-	return flattenSecretV2(d, secret)
+
+		if err = flattenSecretV2(d, secret); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2SecretV2Update(d *schema.ResourceData, meta interface{}) error {

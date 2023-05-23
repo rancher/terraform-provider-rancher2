@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"time"
 
@@ -82,81 +83,83 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 
-	active, clus, err := meta.(*Config).isClusterActive(clusterID)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Cluster ID %s not found.", clusterID)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if active {
-		defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(clusterID)
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		active, clus, err := meta.(*Config).isClusterActive(clusterID)
 		if err != nil {
-			return err
-		}
-		d.Set("default_project_id", defaultProjectID)
-		d.Set("system_project_id", systemProjectID)
-
-		isRancher26, err := meta.(*Config).IsRancherVersionGreaterThanOrEqual("2.6.0")
-		if err != nil {
-			return err
-		}
-		if isRancher26 && clus.LocalClusterAuthEndpoint != nil && clus.LocalClusterAuthEndpoint.Enabled {
-			connected, _, err := meta.(*Config).isClusterConnected(clusterID)
-			if err != nil {
-				return err
-			}
-			if !connected {
-				d.Set("synced", false)
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cluster ID %s not found.", clusterID)
+				d.SetId("")
 				return nil
 			}
+			return resource.NonRetryableError(err)
 		}
-		kubeConfig, err := getClusterKubeconfig(meta.(*Config), clusterID, d.Get("kube_config").(string))
-		if err != nil {
-			return err
-		}
-		d.Set("kube_config", kubeConfig.Config)
-		nodes, err := meta.(*Config).GetClusterNodes(clusterID)
-		if err != nil {
-			return err
-		}
-		d.Set("nodes", flattenClusterNodes(nodes))
 
-		if clus.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
-			monitor, _, err := meta.(*Config).isClusterMonitoringEnabledCondition(clusterID)
+		if active {
+			defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(clusterID)
 			if err != nil {
-				return err
+				return resource.NonRetryableError(err)
 			}
-			if !monitor {
-				d.Set("synced", false)
-				return nil
-			}
-		}
+			d.Set("default_project_id", defaultProjectID)
+			d.Set("system_project_id", systemProjectID)
 
-		if clus.EnableClusterAlerting && d.Get("wait_alerting").(bool) {
-			alert, _, err := meta.(*Config).isClusterAlertingEnabledCondition(clusterID)
+			isRancher26, err := meta.(*Config).IsRancherVersionGreaterThanOrEqual("2.6.0")
 			if err != nil {
-				return err
+				return resource.NonRetryableError(err)
 			}
-			if !alert {
-				d.Set("synced", false)
-				return nil
+			if isRancher26 && clus.LocalClusterAuthEndpoint != nil && clus.LocalClusterAuthEndpoint.Enabled {
+				connected, _, err := meta.(*Config).isClusterConnected(clusterID)
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				if !connected {
+					d.Set("synced", false)
+					return nil
+				}
 			}
-		}
-
-		if d.Get("wait_catalogs").(bool) {
-			_, err := waitAllCatalogV2Downloaded(meta.(*Config), clusterID)
+			kubeConfig, err := getClusterKubeconfig(meta.(*Config), clusterID, d.Get("kube_config").(string))
 			if err != nil {
-				return err
+				return resource.NonRetryableError(err)
+			}
+			d.Set("kube_config", kubeConfig.Config)
+			nodes, err := meta.(*Config).GetClusterNodes(clusterID)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			d.Set("nodes", flattenClusterNodes(nodes))
+
+			if clus.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
+				monitor, _, err := meta.(*Config).isClusterMonitoringEnabledCondition(clusterID)
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				if !monitor {
+					d.Set("synced", false)
+					return nil
+				}
+			}
+
+			if clus.EnableClusterAlerting && d.Get("wait_alerting").(bool) {
+				alert, _, err := meta.(*Config).isClusterAlertingEnabledCondition(clusterID)
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				if !alert {
+					d.Set("synced", false)
+					return nil
+				}
+			}
+
+			if d.Get("wait_catalogs").(bool) {
+				_, err := waitAllCatalogV2Downloaded(meta.(*Config), clusterID)
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
 			}
 		}
-	}
 
-	d.Set("synced", active)
-	return nil
+		d.Set("synced", active)
+		return nil
+	})
 }
 
 func resourceRancher2ClusterSyncUpdate(d *schema.ResourceData, meta interface{}) error {

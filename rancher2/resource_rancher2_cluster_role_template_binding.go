@@ -80,17 +80,23 @@ func resourceRancher2ClusterRoleTemplateBindingRead(d *schema.ResourceData, meta
 		return err
 	}
 
-	clusterRole, err := client.ClusterRoleTemplateBinding.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Cluster Role Template Binding ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		clusterRole, err := client.ClusterRoleTemplateBinding.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cluster Role Template Binding ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	return flattenClusterRoleTemplateBinding(d, clusterRole)
+		if err = flattenClusterRoleTemplateBinding(d, clusterRole); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ClusterRoleTemplateBindingUpdate(d *schema.ResourceData, meta interface{}) error {

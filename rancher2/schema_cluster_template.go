@@ -117,15 +117,6 @@ func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 				Schema: clusterRKEConfigFieldsV0(),
 			},
 		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
-			},
-		},
 		"windows_prefered_cluster": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -204,15 +195,6 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 			Description: "Rancher Kubernetes Engine Config",
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigFields(),
-			},
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
 			},
 		},
 		"windows_prefered_cluster": {
@@ -294,15 +276,6 @@ func clusterSpecBaseFieldsData() map[string]*schema.Schema {
 			Description: "Rancher Kubernetes Engine Config",
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigFieldsData(),
-			},
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
 			},
 		},
 		"windows_prefered_cluster": {

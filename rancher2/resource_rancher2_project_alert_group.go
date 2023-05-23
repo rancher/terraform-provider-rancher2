@@ -72,16 +72,23 @@ func resourceRancher2ProjectAlertGroupRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	projectAlertGroup, err := client.ProjectAlertGroup.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Project Alert Group ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		projectAlertGroup, err := client.ProjectAlertGroup.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Project Alert Group ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-	}
 
-	return flattenProjectAlertGroup(d, projectAlertGroup)
+		if err = flattenProjectAlertGroup(d, projectAlertGroup); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ProjectAlertGroupUpdate(d *schema.ResourceData, meta interface{}) error {

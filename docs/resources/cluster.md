@@ -317,39 +317,6 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-### Creating Rancher v2 RKE cluster with scheduled cluster scan. For Rancher v2.4.x or above.
-
-```hcl
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform custom cluster"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-    services {
-      etcd {
-        creation = "6h"
-        retention = "24h"
-      }
-    }
-  }
-  scheduled_cluster_scan {
-    enabled = true
-    scan_config {
-      cis_scan_config {
-        debug_master = true
-        debug_worker = true
-      }
-    }
-    schedule_config {
-      cron_schedule = "30 * * * *"
-      retention = 5
-    }
-  }
-}
-```
-
 ### Importing EKS cluster to Rancher v2, using `eks_config_v2`. For Rancher v2.5.x or above.
 
 ```hcl
@@ -390,7 +357,7 @@ resource "rancher2_cluster" "foo" {
   eks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo.id
     region = "<EKS_REGION>"
-    kubernetes_version = "1.17"
+    kubernetes_version = "1.24"
     logging_types = ["audit", "api"]
     node_groups {
       name = "node_group1"
@@ -403,6 +370,7 @@ resource "rancher2_cluster" "foo" {
       instance_type = "m5.xlarge"
       desired_size = 2
       max_size = 3
+      node_role = "arn:aws:iam::role/test-NodeInstanceRole"
     }
     private_access = true
     public_access = false
@@ -427,7 +395,7 @@ resource "rancher2_cluster" "foo" {
   eks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo.id
     region = "<EKS_REGION>"
-    kubernetes_version = "1.17"
+    kubernetes_version = "1.24"
     logging_types = ["audit", "api"]
     node_groups {
       desired_size = 3
@@ -547,15 +515,31 @@ resource "rancher2_cluster" "foo" {
     resource_group = "<RESOURCE_GROUP>"
     resource_location = "<RESOURCE_LOCATION>"
     dns_prefix = "<DNS_PREFIX>"
-    kubernetes_version = "1.21.2"
+    kubernetes_version = "1.24.6"
     network_plugin = "<NETWORK_PLUGIN>"
     node_pools {
       availability_zones = ["1", "2", "3"]
-      name = "<NODEPOOL_NAME>"
+      name = "<NODEPOOL_NAME_1>"
+      mode = "System"
       count = 1
       orchestrator_version = "1.21.2"
       os_disk_size_gb = 128
       vm_size = "Standard_DS2_v2"
+    }
+    node_pools {
+      availability_zones = ["1", "2", "3"]
+      name = "<NODEPOOL_NAME_2>"
+      count = 1
+      mode = "User"
+      orchestrator_version = "1.21.2"
+      os_disk_size_gb = 128
+      vm_size = "Standard_DS2_v2"
+      max_surge = "25%"
+      labels = {
+        "test1" = "data1"
+        "test2" = "data2"
+      }
+      taints = [ "none:PreferNoSchedule" ]
     }
   }
 }
@@ -592,19 +576,10 @@ The following arguments are supported:
 * `enable_cluster_monitoring` - (Optional/Computed) Enable built-in cluster monitoring (bool)
 * `enable_cluster_istio` - (Deprecated) Deploy istio on `system` project and `istio-system` namespace, using rancher2_app resource instead. See above example.
 * `enable_network_policy` - (Optional/Computed) Enable project network isolation (bool)
-* `scheduled_cluster_scan`- (Optional/Computed) Cluster scheduled cis scan. For Rancher v2.4.0 or above (List maxitems:1)
 * `fleet_workspace_name` - (Optional/Computed) Fleet workspace name (string)
 * `annotations` - (Optional/Computed) Annotations for the Cluster (map)
 * `labels` - (Optional/Computed) Labels for the Cluster (map)
 * `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
-
-
-#### `schedule_config`
-
-##### Arguments
-
-* `cron_schedule` - (Required) Crontab schedule. It should contains 5 fields `"<min> <hour> <month_day> <month> <week_day>"` (string)
-* `retention` - (Optional/Computed) Cluster scan retention (int)
 
 
 ## Attributes Reference
@@ -1480,7 +1455,7 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `network_service_cidr` - (Optional/Computed) The AKS network service cidr (string)
 * `private_cluster` - (Optional/Computed) Is AKS cluster private? (bool)
 * `subnet` - (Optional/Computed) The AKS subnet (string)
-* `tags` - (Optional/Computed) The AKS cluster tags" (map)
+* `tags` - (Optional/Computed) The AKS cluster tags (map)
 * `virtual_network` - (Optional/Computed) The AKS virtual network (string)
 * `virtual_network_resource_group` - (Optional/Computed) The AKS virtual network resource group (string)
 
@@ -1501,6 +1476,10 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `os_disk_type` - (Optional) The AKS node pool os disk type. Default: `Managed` (string)
 * `os_type` - (Optional) The AKS node pool os type. Default: `Linux` (string)
 * `vm_size` - (Optional/computed) The AKS node pool orchestrator version (string)
+* `max_surge` - (Optional) The AKS node pool max surge (string), example value: `25%`
+* `labels` - (Optional) The AKS node pool labels (map)
+* `taints` - (Optonal) The AKS node pool taints (list)
+
 
 ### `eks_config`
 
@@ -1567,6 +1546,7 @@ The following arguments are supported:
 * `launch_template` - (Optional) The EKS node groups launch template (list Maxitem: 1)
 * `max_size` - (Optional) The EKS node group maximum size. Default `2` (int)
 * `min_size` - (Optional) The EKS node group maximum size. Default `2` (int)
+* `node_role` - (Optional) The EKS node group node role ARN. Default `""` (string)
 * `request_spot_instances` - (Optional) Enable EKS node group request spot instances (bool)
 * `resource_tags` - (Optional) The EKS node group resource tags (map)
 * `spot_instance_types` - (Optional) The EKS node group sport instace types (list string)
@@ -1852,29 +1832,6 @@ The following arguments are supported:
 * `annotations` - (Computed) Annotations for cluster registration token object (map)
 * `labels` - (Computed) Labels for cluster registration token object (map)
 
-### `scheduled_cluster_scan`
-
-#### Arguments
-
-* `scan_config` - (Required) Cluster scan config (List maxitems:1)
-* `schedule_config` - (Required) Cluster scan schedule config (list maxitems:1)
-* `enabled` - (Optional) Enable scheduled cluster scan. Default: `false` (bool)
-
-#### `scan_config`
-
-##### Arguments
-
-* `cis_scan_config` - (Optional/computed) Cluster Cis Scan config (List maxitems:1)
-
-##### `cis_scan_config`
-
-###### Arguments
-
-* `debug_master` - (Optional) Debug master. Default: `false` (bool)
-* `debug_worker` - (Optional) Debug worker. Default: `false` (bool)
-* `override_benchmark_version` - (Optional) Override benchmark version (string)
-* `override_skip` - (Optional) Override skip (string)
-* `profile` - (Optional) Cis scan profile. Allowed values: `"permissive" (default) || "hardened"` (string)
 
 ## Timeouts
 
