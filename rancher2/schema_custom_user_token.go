@@ -6,19 +6,19 @@ import (
 
 //Schemas
 
-func serviceAccountTokenFields() map[string]*schema.Schema {
+func customUserTokenFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"password": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
-			Description: "The user username",
+			Description: "The user password",
 		},
 		"username": {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
-			Description: "The user password",
+			Description: "The user username",
 		},
 		"access_key": {
 			Type:        schema.TypeString,

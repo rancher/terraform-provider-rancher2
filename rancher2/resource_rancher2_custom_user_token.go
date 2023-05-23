@@ -10,14 +10,25 @@ import (
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
-func resourceRancher2ServiceAccountToken() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceRancher2ServiceAccountTokenCreate,
-		Read:   resourceRancher2ServiceAccountTokenRead,
-		Update: resourceRancher2ServiceAccountTokenUpdate,
-		Delete: resourceRancher2ServiceAccountTokenDelete,
+/*
+The Rancher API can only create tokens for the user owning the token used to authenticate the API call. To acquire
+the initial token to connect to the Rancher API a username+password login is needed. The lifespan of this token is
+controlled by Rancher.
 
-		Schema: serviceAccountTokenFields(),
+The following steps are used to create a Terraform controlled Rancher API token:
+1) Acquire a temporarily Rancher API token for the custom user by doing a username+password login
+2) Create a Terraform controlled token by authenticating using the (temporarily) token from step 1
+3) Logout the temporarilu token acquired in step 1
+*/
+
+func resourceRancher2CustomUserToken() *schema.Resource {
+	return &schema.Resource{
+		Create: resourceRancher2CustomUserTokenCreate,
+		Read:   resourceRancher2CustomUserTokenRead,
+		Update: resourceRancher2CustomUserTokenUpdate,
+		Delete: resourceRancher2CustomUserTokenDelete,
+
+		Schema: customUserTokenFields(),
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
@@ -26,8 +37,8 @@ func resourceRancher2ServiceAccountToken() *schema.Resource {
 	}
 }
 
-func resourceRancher2ServiceAccountTokenCreate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Creating Service Account Token")
+func resourceRancher2CustomUserTokenCreate(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[INFO] Creating Custom User Account Token")
 	patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqualAndLessThan(rancher2TokeTTLMinutesVersion, rancher2TokeTTLMilisVersion)
 	if err != nil {
 		return err
@@ -54,10 +65,10 @@ func resourceRancher2ServiceAccountTokenCreate(d *schema.ResourceData, meta inte
 		return err
 	}
 
-	return resourceRancher2ServiceAccountTokenRead(d, meta)
+	return resourceRancher2CustomUserTokenRead(d, meta)
 }
 
-func resourceRancher2ServiceAccountTokenRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CustomUserTokenRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Refreshing Token ID %s", d.Id())
 	client, err := doUserLogin(d, meta)
 	if err != nil {
@@ -92,11 +103,11 @@ func resourceRancher2ServiceAccountTokenRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceRancher2ServiceAccountTokenUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CustomUserTokenUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceRancher2TokenRead(d, meta)
 }
 
-func resourceRancher2ServiceAccountTokenDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CustomUserTokenDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Deleting Token ID %s", d.Id())
 	id := d.Id()
 	client, err := doUserLogin(d, meta)

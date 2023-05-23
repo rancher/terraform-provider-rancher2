@@ -1,13 +1,13 @@
 ---
-page_title: "rancher2_service_account_token Resource"
+page_title: "rancher2_custom_user_token Resource"
 ---
 
-# rancher2\_service\_account\_token Resource
+# rancher2\_custom\_user\_token Resource
 
-Provides a Rancher v2 Token resource, specifically to create service account tokens. Service accounts tokens are tokens for other users (service accounts) than the Rancher v2 provider user. To create a service account token the username/password for the Rancher User must be known.
+Provides a Rancher v2 Token resource, specifically to create tokens for custom users (i.e. not the 'admin' user configured with the provider config). Custom user tokens can f.e. be used as service account tokens with the Rancher v2 API having limited permissions. To create a custom user token the username/password for the Rancher User must be known.
 
 There are 2 kind of tokens:
-- no scoped: valid for global system.
+- not scoped: valid for global system.
 - scoped: valid for just a specific cluster (`cluster_id` should be provided).
 
 Tokens can only be created for a Rancher User with at least the `user-base` global role binding in order to enable user login.
@@ -31,7 +31,7 @@ resource "rancher2_global_role_binding" "foo-login" {
   user_id = rancher2_user.foo.id
 }
 
-resource "rancher2_service_account_token" "foo" {
+resource "rancher2_custom_user_token" "foo" {
   username = rancher2_user.foo.username
   password = rancher2_user.foo.password
   description = "foo token"
@@ -75,7 +75,7 @@ The following attributes are exported:
 
 ## Timeouts
 
-`rancher2_service_account_token` provides the following
+`rancher2_custom_user_token` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
 
 - `create` - (Default `5 minutes`) Used for creating tokens.

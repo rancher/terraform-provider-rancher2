@@ -10,30 +10,30 @@ import (
 )
 
 const (
-	testAccRancher2ServiceAccountTokenType = "rancher2_service_account_token"
+	testAccRancher2CustomUserTokenType = "rancher2_custom_user_token"
 )
 
 var (
-	testAccRancher2ServiceAccountToken       string
-	testAccRancher2ServiceAccountTokenUpdate string
+	testAccRancher2CustomUserToken       string
+	testAccRancher2CustomUserTokenUpdate string
 )
 
 func init() {
-	testAccRancher2ServiceAccountToken = `
-resource "` + testAccRancher2ServiceAccountTokenType + `" "foo" {
+	testAccRancher2CustomUserToken = `
+resource "` + testAccRancher2CustomUserTokenType + `" "foo" {
   username = "foo"
   password = "TestACC123456"
-  description = "Terraform service account token acceptance test"
+  description = "Terraform custom user token acceptance test"
   depends_on = [
     rancher2_global_role_binding.foo
   ]
 }
 `
-	testAccRancher2ServiceAccountTokenUpdate = `
-resource "` + testAccRancher2ServiceAccountTokenType + `" "foo" {
+	testAccRancher2CustomUserTokenUpdate = `
+resource "` + testAccRancher2CustomUserTokenType + `" "foo" {
   username = "foo"
   password = "TestACC123456"
-  description = "Terraform service account token acceptance test - updated"
+  description = "Terraform custom user token acceptance test - updated"
   ttl = 120
   depends_on = [
     rancher2_global_role_binding.foo
@@ -42,51 +42,51 @@ resource "` + testAccRancher2ServiceAccountTokenType + `" "foo" {
 `
 }
 
-func TestAccRancher2ServiceAccountToken_basic(t *testing.T) {
+func TestAccRancher2CustomUserToken_basic(t *testing.T) {
 	var user *managementClient.User
 	var globalRole *managementClient.GlobalRoleBinding
 	var token *managementClient.Token
 
-	testAccRancher2ServiceAccountToken = testAccRancher2User + testAccRancher2GlobalRoleBinding + testAccRancher2ServiceAccountToken
-	testAccRancher2ServiceAccountTokenUpdate = testAccRancher2User + testAccRancher2GlobalRoleBinding + testAccRancher2ServiceAccountTokenUpdate
+	testAccRancher2CustomUserToken = testAccRancher2User + testAccRancher2GlobalRoleBinding + testAccRancher2CustomUserToken
+	testAccRancher2CustomUserTokenUpdate = testAccRancher2User + testAccRancher2GlobalRoleBinding + testAccRancher2CustomUserTokenUpdate
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2UserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRancher2ServiceAccountToken,
+				Config: testAccRancher2CustomUserToken,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
 					testAccCheckRancher2GlobalRoleBindingExists(testAccRancher2GlobalRoleBindingType+".foo", globalRole),
-					testAccCheckRancher2ServiceAccountTokenExists(testAccRancher2ServiceAccountTokenType+".foo", token),
-					resource.TestCheckResourceAttr(testAccRancher2ServiceAccountTokenType+".foo", "description", "Terraform service account token acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2ServiceAccountTokenType+".foo", "ttl", "0"),
-					resource.TestCheckResourceAttr(testAccRancher2ServiceAccountTokenType+".foo", "enabled", "true"),
+					testAccCheckRancher2CustomUserTokenExists(testAccRancher2CustomUserTokenType+".foo", token),
+					resource.TestCheckResourceAttr(testAccRancher2CustomUserTokenType+".foo", "description", "Terraform custom user token acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CustomUserTokenType+".foo", "ttl", "0"),
+					resource.TestCheckResourceAttr(testAccRancher2CustomUserTokenType+".foo", "enabled", "true"),
 				),
 			},
 			{
-				Config: testAccRancher2ServiceAccountTokenUpdate,
+				Config: testAccRancher2CustomUserTokenUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2UserExists(testAccRancher2UserType+".foo", user),
 					testAccCheckRancher2GlobalRoleBindingExists(testAccRancher2GlobalRoleBindingType+".foo", globalRole),
-					testAccCheckRancher2ServiceAccountTokenExists(testAccRancher2ServiceAccountTokenType+".foo", token),
-					resource.TestCheckResourceAttr(testAccRancher2ServiceAccountTokenType+".foo", "description", "Terraform service account token acceptance test - updated"),
-					resource.TestCheckResourceAttr(testAccRancher2ServiceAccountTokenType+".foo", "ttl", "120"),
-					resource.TestCheckResourceAttr(testAccRancher2ServiceAccountTokenType+".foo", "enabled", "true"),
+					testAccCheckRancher2CustomUserTokenExists(testAccRancher2CustomUserTokenType+".foo", token),
+					resource.TestCheckResourceAttr(testAccRancher2CustomUserTokenType+".foo", "description", "Terraform custom user token acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CustomUserTokenType+".foo", "ttl", "120"),
+					resource.TestCheckResourceAttr(testAccRancher2CustomUserTokenType+".foo", "enabled", "true"),
 				),
 			},
 			{
-				Config: testAccRancher2ServiceAccountToken,
+				Config: testAccRancher2CustomUserToken,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2ServiceAccountTokenExists(testAccRancher2ServiceAccountTokenType+".foo", token),
+					testAccCheckRancher2CustomUserTokenExists(testAccRancher2CustomUserTokenType+".foo", token),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRancher2ServiceAccountToken_disappears(t *testing.T) {
+func TestAccRancher2CustomUserToken_disappears(t *testing.T) {
 	var user *managementClient.User
 
 	resource.Test(t, resource.TestCase{
@@ -105,7 +105,7 @@ func TestAccRancher2ServiceAccountToken_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRancher2ServiceAccountTokenExists(n string, token *managementClient.Token) resource.TestCheckFunc {
+func testAccCheckRancher2CustomUserTokenExists(n string, token *managementClient.Token) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
