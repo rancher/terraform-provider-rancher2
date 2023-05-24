@@ -132,6 +132,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_cluster_sync":                  resourceRancher2ClusterSync(),
 			"rancher2_cluster_template":              resourceRancher2ClusterTemplate(),
 			"rancher2_config_map_v2":                 resourceRancher2ConfigMapV2(),
+			"rancher2_custom_user_token":             resourceRancher2CustomUserToken(),
 			"rancher2_etcd_backup":                   resourceRancher2EtcdBackup(),
 			"rancher2_feature":                       resourceRancher2Feature(),
 			"rancher2_global_dns":                    resourceRancher2GlobalDNS(),
