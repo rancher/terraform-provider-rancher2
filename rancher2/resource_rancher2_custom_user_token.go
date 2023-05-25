@@ -16,9 +16,9 @@ the initial token to connect to the Rancher API a username+password login is nee
 controlled by Rancher.
 
 The following steps are used to create a Terraform controlled Rancher API token:
-1) Acquire a temporarily Rancher API token for the custom user by doing a username+password login
-2) Create a Terraform controlled token by authenticating using the (temporarily) token from step 1
-3) Logout the temporarilu token acquired in step 1
+1) Acquire a temporary Rancher API token for the custom user by doing a username+password login
+2) Create a Terraform controlled token by authenticating using the (temporary) token from step 1
+3) Logout the temporary token acquired in step 1
 */
 
 func resourceRancher2CustomUserToken() *schema.Resource {
