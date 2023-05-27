@@ -66,26 +66,43 @@ func harvesterConfigFields() map[string]*schema.Schema {
 			Description: "Memory size (in GiB)",
 		},
 		"disk_size": {
-			Type:        schema.TypeString,
-			Optional:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			ConflictsWith: []string{
+				"harvester_config.0.disk_info",
+			},
 			Description: "Disk size (in GiB)",
 			Deprecated:  "Use disk_info instead",
 		},
 		"disk_bus": {
-			Type:        schema.TypeString,
-			Optional:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			ConflictsWith: []string{
+				"harvester_config.0.disk_info",
+			},
 			Description: "Disk bus",
 			Deprecated:  "Use disk_info instead",
 		},
 		"image_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			ConflictsWith: []string{
+				"harvester_config.0.disk_info",
+			},
 			Description: "Image name",
 			Deprecated:  "Use disk_info instead",
 		},
 		"disk_info": {
-			Type:        schema.TypeString,
-			Required:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			AtLeastOneOf: []string{
+				"harvester_config.0.image_name",
+			},
+			ConflictsWith: []string{
+				"harvester_config.0.disk_size",
+				"harvester_config.0.disk_bus",
+				"harvester_config.0.image_name",
+			},
 			Description: "A JSON string specifying info for the disks e.g. `{\"disks\":[{\"imageName\":\"harvester-public/image-57hzg\",\"bootOrder\":1,\"size\":40},{\"storageClassName\":\"node-driver-test\",\"bootOrder\":2,\"size\":1}]}`",
 		},
 		"ssh_user": {
@@ -100,20 +117,33 @@ func harvesterConfigFields() map[string]*schema.Schema {
 			Description: "SSH password",
 		},
 		"network_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			ConflictsWith: []string{
+				"harvester_config.0.network_info",
+			},
 			Description: "Network name",
 			Deprecated:  "Use network_info instead",
 		},
 		"network_model": {
-			Type:        schema.TypeString,
-			Optional:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			ConflictsWith: []string{
+				"harvester_config.0.network_info",
+			},
 			Description: "Network model",
 			Deprecated:  "Use network_info instead",
 		},
 		"network_info": {
-			Type:        schema.TypeString,
-			Required:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			AtLeastOneOf: []string{
+				"harvester_config.0.network_name",
+			},
+			ConflictsWith: []string{
+				"harvester_config.0.network_name",
+				"harvester_config.0.network_model",
+			},
 			Description: "A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\"},{\"networkName\":\"harvester-public/vlan2\"}]}`",
 		},
 		"user_data": {
