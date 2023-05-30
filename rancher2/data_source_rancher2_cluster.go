@@ -150,7 +150,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: clusterRegistationTokenFields(),
+					Schema: clusterRegistrationTokenFields(),
 				},
 			},
 			"cluster_template_answers": {

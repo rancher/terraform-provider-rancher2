@@ -33,7 +33,7 @@ type Cluster struct {
 
 // Schemas
 
-func clusterRegistationTokenFields() map[string]*schema.Schema {
+func clusterRegistrationTokenFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"id": {
 			Type:     schema.TypeString,
@@ -198,7 +198,7 @@ func clusterDataFieldsV0() map[string]*schema.Schema {
 			MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
+				Schema: clusterRegistrationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {
@@ -359,7 +359,7 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
+				Schema: clusterRegistrationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {
@@ -615,7 +615,7 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
+				Schema: clusterRegistrationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {

@@ -545,7 +545,7 @@ func findFlattenClusterRegistrationToken(client *managementClient.Client, cluste
 		return []interface{}{}, err
 	}
 
-	return flattenClusterRegistationToken(clusterReg)
+	return flattenClusterRegistrationToken(clusterReg)
 }
 
 func findClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
@@ -576,7 +576,7 @@ func findClusterRegistrationToken(client *managementClient.Client, clusterID str
 func createClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
 	log.Printf("[DEBUG] Creating cluster registration token for %s", clusterID)
 
-	regToken, err := expandClusterRegistationToken([]interface{}{}, clusterID)
+	regToken, err := expandClusterRegistrationToken([]interface{}{}, clusterID)
 	if err != nil {
 		return nil, err
 	}

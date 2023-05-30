@@ -78,7 +78,7 @@ func clusterV2Fields() map[string]*schema.Schema {
 			Computed:  true,
 			Sensitive: true,
 			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
+				Schema: clusterRegistrationTokenFields(),
 			},
 		},
 		"kube_config": {

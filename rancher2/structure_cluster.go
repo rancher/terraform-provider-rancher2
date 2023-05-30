@@ -9,7 +9,7 @@ import (
 
 // Flatteners
 
-func flattenClusterRegistationToken(in *managementClient.ClusterRegistrationToken) ([]interface{}, error) {
+func flattenClusterRegistrationToken(in *managementClient.ClusterRegistrationToken) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
 		return []interface{}{}, nil
@@ -127,7 +127,7 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	if err != nil {
 		return err
 	}
-	regToken, err := flattenClusterRegistationToken(clusterRegToken)
+	regToken, err := flattenClusterRegistrationToken(clusterRegToken)
 	if err != nil {
 		return err
 	}
@@ -346,7 +346,7 @@ func flattenNodeInfo(in *managementClient.NodeInfo) map[string]string {
 
 // Expanders
 
-func expandClusterRegistationToken(p []interface{}, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
+func expandClusterRegistrationToken(p []interface{}, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
 	if len(clusterID) == 0 {
 		return nil, fmt.Errorf("[ERROR] Expanding Cluster Registration Token: Cluster id is nil")
 	}

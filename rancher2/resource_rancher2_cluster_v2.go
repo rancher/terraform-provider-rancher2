@@ -336,7 +336,7 @@ func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
 	if err != nil && !IsForbidden(err) {
 		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
 	}
-	regToken, _ := flattenClusterRegistationToken(clusterRegistrationToken)
+	regToken, _ := flattenClusterRegistrationToken(clusterRegistrationToken)
 	err = d.Set("cluster_registration_token", regToken)
 	if err != nil {
 		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)

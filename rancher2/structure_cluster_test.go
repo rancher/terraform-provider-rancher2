@@ -474,7 +474,7 @@ func testCluster() {
 	}
 }
 
-func TestFlattenClusterRegistationToken(t *testing.T) {
+func TestFlattenClusterRegistrationToken(t *testing.T) {
 	testCluster()
 	cases := []struct {
 		Input          *managementClient.ClusterRegistrationToken
@@ -488,7 +488,7 @@ func TestFlattenClusterRegistationToken(t *testing.T) {
 
 	for _, tc := range cases {
 		tc.Input.ID = "id"
-		output, err := flattenClusterRegistationToken(tc.Input)
+		output, err := flattenClusterRegistrationToken(tc.Input)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
@@ -589,7 +589,7 @@ func TestFlattenCluster(t *testing.T) {
 	}
 }
 
-func TestExpandClusterRegistationToken(t *testing.T) {
+func TestExpandClusterRegistrationToken(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
@@ -602,7 +602,7 @@ func TestExpandClusterRegistationToken(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output, err := expandClusterRegistationToken(tc.Input, tc.ExpectedOutput.ClusterID)
+		output, err := expandClusterRegistrationToken(tc.Input, tc.ExpectedOutput.ClusterID)
 		tc.ExpectedOutput.ID = "id"
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
