@@ -470,6 +470,22 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: envVarFields(),
 			},
 		},
+		"cluster_agent_deployment_customization": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional customization for cluster agent",
+			Elem: &schema.Resource{
+				Schema: agentDeploymentCustomizationFields(),
+			},
+		},
+		"fleet_agent_deployment_customization": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional customization for fleet agent",
+			Elem: &schema.Resource{
+				Schema: agentDeploymentCustomizationFields(),
+			},
+		},
 		"driver": {
 			Type:         schema.TypeString,
 			Optional:     true,

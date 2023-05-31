@@ -70,6 +70,14 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 
+	if in.ClusterAgentDeploymentCustomization != nil {
+		d.Set("cluster_agent_deployment_customization", flattenAgentDeploymentCustomization(in.ClusterAgentDeploymentCustomization))
+	}
+
+	if in.FleetAgentDeploymentCustomization != nil {
+		d.Set("fleet_agent_deployment_customization", flattenAgentDeploymentCustomization(in.FleetAgentDeploymentCustomization))
+	}
+
 	if len(in.ClusterTemplateID) > 0 {
 		d.Set("cluster_template_id", in.ClusterTemplateID)
 		if len(in.ClusterTemplateRevisionID) > 0 {
@@ -107,6 +115,7 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	if len(in.DockerRootDir) > 0 {
 		d.Set("docker_root_dir", in.DockerRootDir)
 	}
+
 	if len(in.FleetWorkspaceName) > 0 {
 		d.Set("fleet_workspace_name", in.FleetWorkspaceName)
 	}
@@ -416,6 +425,22 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if v, ok := in.Get("cluster_auth_endpoint").([]interface{}); ok && len(v) > 0 {
 		obj.LocalClusterAuthEndpoint = expandClusterAuthEndpoint(v)
+	}
+
+	if v, ok := in.Get("cluster_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
+		clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v)
+		if err != nil {
+			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
+		}
+		obj.ClusterAgentDeploymentCustomization = clusterAgentDeploymentCustomization
+	}
+
+	if v, ok := in.Get("fleet_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
+		fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v)
+		if err != nil {
+			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
+		}
+		obj.FleetAgentDeploymentCustomization = fleetAgentDeploymentCustomization
 	}
 
 	if v, ok := in.Get("cluster_template_id").(string); ok && len(v) > 0 {
