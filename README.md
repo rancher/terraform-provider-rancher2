@@ -61,33 +61,43 @@ $ terraform plan
 $ terraform apply
 ```
 
+See [development process](docs/development-process.md) for more details.
+
 Testing the Provider
 ---------------------------
 
-In order to test the provider, you can simply run `make test`.
+In order to test the provider, simply run `make test`.
 
 ```sh
 $ make test
 ```
 
-In order to run the full suite of Acceptance tests, a running rancher system, a rancher API key and a working k8s cluster imported are needed. Also, acceptance tests are covering Rancher server upgrade, v2.3.6 and v2.4.2
+In order to run the full suite of Acceptance tests, a running rancher system, a rancher API key and a working k8s cluster imported are needed. Acceptance tests cover a Rancher server upgrade, v2.3.6 and v2.4.2.
 
-To run acceptance tests, you can simply run `make testacc`. `scripts/gotestacc.sh` will be run, deploying all needed requirements, running acceptance tests and cleanup.
+To run the Acceptance tests, simply run `make testacc`. `scripts/gotestacc.sh` will be run, deploying all needed requirements, running tests and cleanup.
 
 ```sh
 $ make testacc
 ```
 
-Due to [network limitation](https://docs.docker.com/docker-for-mac/networking/#known-limitations-use-cases-and-workarounds) on docker for osx and/or windows, there is a way to run dockerized acceptance test.
+Due to [network limitations](https://docs.docker.com/docker-for-mac/networking/#known-limitations-use-cases-and-workarounds) on Docker for osx and/or windows, there is a way to run dockerized acceptance test.
 
 ```sh
 $ EXPOSE_HOST_PORTS=true make docker-testacc
 ```
 
+To run the structure tests, run
+
+```sh
+$ go clean --testcache && go test -v ./rancher2
+```
+
+See [test process](docs/test-process.md) for details on release testing (_Terraform Maintainers Only_).
+
 Branching the Provider
 ---------------------------
 
-The provider is branched into two release lines that have major version alignment with Rancher 2.6 and 2.7. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6 and `master` with 3.0.0+ is aligned with Rancher 2.7. Terraform provider fixes and new features will be available on `master` but only bug fixes will be backported to `release/v2` as necessary.
+The provider is branched into two release lines that have major version alignment with Rancher 2.6 and 2.7. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6 and `master` with 3.0.0+ is aligned with Rancher 2.7. Terraform provider fixes and new features will be available on `master` but only critical bug fixes will be backported to `release/v2`.
 
 Aligning major provider releases with minor Rancher releases means,
 
