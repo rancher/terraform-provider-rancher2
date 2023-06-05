@@ -55,6 +55,22 @@ func clusterV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Cluster V2 cloud credential secret name",
 		},
+		"cluster_agent_deployment_customization": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional customization for cluster agent",
+			Elem: &schema.Resource{
+				Schema: agentDeploymentCustomizationFields(),
+			},
+		},
+		"fleet_agent_deployment_customization": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional customization for fleet agent",
+			Elem: &schema.Resource{
+				Schema: agentDeploymentCustomizationFields(),
+			},
+		},
 		"default_pod_security_policy_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,

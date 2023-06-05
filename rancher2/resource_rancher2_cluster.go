@@ -286,22 +286,34 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	enableNetworkPolicy := d.Get("enable_network_policy").(bool)
+
+	clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("cluster_agent_deployment_customization").([]interface{}))
+	if err != nil {
+		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
+	}
+	fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("fleet_agent_deployment_customization").([]interface{}))
+	if err != nil {
+		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
+	}
+
 	update := map[string]interface{}{
-		"name":                               d.Get("name").(string),
-		"agentEnvVars":                       expandEnvVars(d.Get("agent_env_vars").([]interface{})),
-		"description":                        d.Get("description").(string),
-		"defaultPodSecurityPolicyTemplateId": d.Get("default_pod_security_policy_template_id").(string),
-		"desiredAgentImage":                  d.Get("desired_agent_image").(string),
-		"desiredAuthImage":                   d.Get("desired_auth_image").(string),
-		"dockerRootDir":                      d.Get("docker_root_dir").(string),
-		"fleetWorkspaceName":                 d.Get("fleet_workspace_name").(string),
-		"enableClusterAlerting":              d.Get("enable_cluster_alerting").(bool),
-		"enableClusterMonitoring":            d.Get("enable_cluster_monitoring").(bool),
-		"enableNetworkPolicy":                &enableNetworkPolicy,
-		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
-		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
-		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
+		"name":                                d.Get("name").(string),
+		"agentEnvVars":                        expandEnvVars(d.Get("agent_env_vars").([]interface{})),
+		"clusterAgentDeploymentCustomization": clusterAgentDeploymentCustomization,
+		"fleetAgentDeploymentCustomization":   fleetAgentDeploymentCustomization,
+		"description":                         d.Get("description").(string),
+		"defaultPodSecurityPolicyTemplateId":  d.Get("default_pod_security_policy_template_id").(string),
+		"desiredAgentImage":                   d.Get("desired_agent_image").(string),
+		"desiredAuthImage":                    d.Get("desired_auth_image").(string),
+		"dockerRootDir":                       d.Get("docker_root_dir").(string),
+		"fleetWorkspaceName":                  d.Get("fleet_workspace_name").(string),
+		"enableClusterAlerting":               d.Get("enable_cluster_alerting").(bool),
+		"enableClusterMonitoring":             d.Get("enable_cluster_monitoring").(bool),
+		"enableNetworkPolicy":                 &enableNetworkPolicy,
+		"istioEnabled":                        d.Get("enable_cluster_istio").(bool),
+		"localClusterAuthEndpoint":            expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
+		"annotations":                         toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":                              toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	// cluster_monitoring is not updated here. Setting old `enable_cluster_monitoring` value if it was updated

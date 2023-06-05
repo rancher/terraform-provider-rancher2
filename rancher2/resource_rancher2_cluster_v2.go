@@ -66,7 +66,10 @@ func resourceRancher2ClusterV2() *schema.Resource {
 
 func resourceRancher2ClusterV2Create(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
-	cluster := expandClusterV2(d)
+	cluster, err := expandClusterV2(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[INFO] Creating Cluster V2 %s", name)
 
@@ -112,7 +115,11 @@ func resourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceRancher2ClusterV2Update(d *schema.ResourceData, meta interface{}) error {
-	cluster := expandClusterV2(d)
+	cluster, err := expandClusterV2(d)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] Updating Cluster V2 %s", d.Id())
 
 	newCluster, err := updateClusterV2(meta.(*Config), d.Id(), cluster)

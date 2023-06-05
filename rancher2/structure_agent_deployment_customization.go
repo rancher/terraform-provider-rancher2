@@ -2,7 +2,6 @@ package rancher2
 
 import (
 	"encoding/json"
-	"fmt"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
@@ -67,7 +66,7 @@ func expandAgentDeploymentCustomizationOverrideResourceRequirements(p []interfac
 func expandAgentDeploymentCustomization(p []interface{}) (*managementClient.AgentDeploymentCustomization, error) {
 	obj := &managementClient.AgentDeploymentCustomization{}
 	if len(p) == 0 || p[0] == nil {
-		return obj, fmt.Errorf("agent deployment customization was nil")
+		return nil, nil
 	}
 
 	in := p[0].(map[string]interface{})

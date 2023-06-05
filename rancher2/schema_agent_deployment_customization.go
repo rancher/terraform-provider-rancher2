@@ -20,7 +20,7 @@ func agentDeploymentCustomizationOverrideResourceRequirementFields() map[string]
 		},
 		"memory_limit": {
 			Type:        schema.TypeString,
-			Description: "The maximum CPU limit for agent",
+			Description: "The maximum memory limit for agent",
 			Optional:    true,
 		},
 		"memory_request": {
