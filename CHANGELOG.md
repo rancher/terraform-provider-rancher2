@@ -1,3 +1,17 @@
+## 3.0.1 (June 7, 2023)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Support old version HarvesterConfig. See [#1132](https://github.com/rancher/terraform-provider-rancher2/pull/1132)
+
 ## 3.0.0 (May 1, 2023)
 
 FEATURES:
