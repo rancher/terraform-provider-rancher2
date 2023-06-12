@@ -36,5 +36,6 @@ The following attributes are exported:
 * `rke_config` - (Computed) The RKE configuration for `k3s` and `rke2` Clusters v2. (list maxitems:1)
 * `cloud_credential_secret_name` - (Computed) Cluster V2 cloud credential secret name (string)
 * `default_pod_security_policy_template_name` - (Computed) Cluster V2 default pod security policy template name (string)
+* `default_pod_security_admission_configuration_template_name` - (Computed) Cluster V2 default pod security admission configuration template name (string)
 * `default_cluster_role_for_project_members` - (Computed) Cluster V2 default cluster role for project members (string)
 * `enable_network_policy` - (Computed) Enable k8s network policy at Cluster V2 (bool)

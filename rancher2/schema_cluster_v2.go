@@ -60,6 +60,11 @@ func clusterV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Cluster V2 default pod security policy template name",
 		},
+		"default_pod_security_admission_configuration_template_name": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Cluster V2 default pod security admission configuration template name",
+		},
 		"default_cluster_role_for_project_members": {
 			Type:        schema.TypeString,
 			Optional:    true,

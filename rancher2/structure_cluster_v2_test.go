@@ -57,6 +57,7 @@ func init() {
 	testClusterV2Conf.Spec.AgentEnvVars = testClusterV2EnvVarConf
 	testClusterV2Conf.Spec.CloudCredentialSecretName = "cloud_credential_secret_name"
 	testClusterV2Conf.Spec.DefaultPodSecurityPolicyTemplateName = "default_pod_security_policy_template_name"
+	testClusterV2Conf.Spec.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterV2Conf.Spec.DefaultClusterRoleForProjectMembers = "default_cluster_role_for_project_members"
 	testClusterV2Conf.Spec.EnableNetworkPolicy = newTrue()
 
@@ -68,9 +69,10 @@ func init() {
 		"rke_config":                   testClusterV2RKEConfigInterface,
 		"agent_env_vars":               testClusterV2EnvVarInterface,
 		"cloud_credential_secret_name": "cloud_credential_secret_name",
-		"default_pod_security_policy_template_name": "default_pod_security_policy_template_name",
-		"default_cluster_role_for_project_members":  "default_cluster_role_for_project_members",
-		"enable_network_policy":                     true,
+		"default_pod_security_policy_template_name":                  "default_pod_security_policy_template_name",
+		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
+		"default_cluster_role_for_project_members":                   "default_cluster_role_for_project_members",
+		"enable_network_policy":                                      true,
 		"annotations": map[string]interface{}{
 			"value1": "one",
 			"value2": "two",

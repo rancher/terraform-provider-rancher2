@@ -459,6 +459,7 @@ The following arguments are supported:
 * `local_auth_endpoint` - (Optional) Cluster V2 local auth endpoint (list maxitems:1)
 * `cloud_credential_secret_name` - (Optional) Cluster V2 cloud credential secret name (string)
 * `default_pod_security_policy_template_name` - (Optional) Cluster V2 default pod security policy template name (string)
+* `default_pod_security_admission_configuration_template_name` - (Optional) Cluster V2 default pod security admission configuration template name (string)
 * `default_cluster_role_for_project_members` - (Optional) Cluster V2 default cluster role for project members (string)
 * `enable_network_policy` - (Optional) Enable k8s network policy at Cluster V2 (bool)
 * `annotations` - (Optional/Computed) Annotations for the Cluster V2 (map)

@@ -60,6 +60,9 @@ func flattenClusterV2(d *schema.ResourceData, in *ClusterV2) error {
 	if len(in.Spec.DefaultPodSecurityPolicyTemplateName) > 0 {
 		d.Set("default_pod_security_policy_template_name", in.Spec.DefaultPodSecurityPolicyTemplateName)
 	}
+	if len(in.Spec.DefaultPodSecurityAdmissionConfigurationTemplateName) > 0 {
+		d.Set("default_pod_security_admission_configuration_template_name", in.Spec.DefaultPodSecurityAdmissionConfigurationTemplateName)
+	}
 	if len(in.Spec.DefaultClusterRoleForProjectMembers) > 0 {
 		d.Set("default_cluster_role_for_project_members", in.Spec.DefaultClusterRoleForProjectMembers)
 	}
@@ -115,6 +118,9 @@ func expandClusterV2(in *schema.ResourceData) *ClusterV2 {
 	}
 	if v, ok := in.Get("default_pod_security_policy_template_name").(string); ok && len(v) > 0 {
 		obj.Spec.DefaultPodSecurityPolicyTemplateName = v
+	}
+	if v, ok := in.Get("default_pod_security_admission_configuration_template_name").(string); ok && len(v) > 0 {
+		obj.Spec.DefaultPodSecurityAdmissionConfigurationTemplateName = v
 	}
 	if v, ok := in.Get("default_cluster_role_for_project_members").(string); ok && len(v) > 0 {
 		obj.Spec.DefaultClusterRoleForProjectMembers = v
