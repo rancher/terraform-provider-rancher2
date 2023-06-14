@@ -35,9 +35,12 @@ func agentDeploymentCustomizationOverrideResourceRequirementFields() map[string]
 func agentDeploymentCustomizationFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"append_tolerations": {
-			Type:        schema.TypeString,
+			Type:        schema.TypeList,
 			Description: "User defined tolerations to append to agent",
 			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: tolerationFields(),
+			},
 		},
 		"override_affinity": {
 			Type:        schema.TypeString,

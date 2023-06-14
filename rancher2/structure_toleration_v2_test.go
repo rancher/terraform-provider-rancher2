@@ -4,26 +4,26 @@ import (
 	"reflect"
 	"testing"
 
-	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var (
-	testTolerationsConf      []managementClient.Toleration
-	testTolerationsInterface []interface{}
+	testTolerationsV2Conf      []corev1.Toleration
+	testTolerationsV2Interface []interface{}
 )
 
 func init() {
 	seconds := int64(10)
-	testTolerationsConf = []managementClient.Toleration{
+	testTolerationsV2Conf = []corev1.Toleration{
 		{
 			Key:               "key",
 			Value:             "value",
-			Effect:            "NoSchedule",
-			Operator:          "Equal",
+			Effect:            corev1.TaintEffectNoSchedule,
+			Operator:          corev1.TolerationOpEqual,
 			TolerationSeconds: &seconds,
 		},
 	}
-	testTolerationsInterface = []interface{}{
+	testTolerationsV2Interface = []interface{}{
 		map[string]interface{}{
 			"key":      "key",
 			"value":    "value",
@@ -34,20 +34,20 @@ func init() {
 	}
 }
 
-func TestFlattenTolerations(t *testing.T) {
+func TestFlattenTolerationsV2(t *testing.T) {
 
 	cases := []struct {
-		Input          []managementClient.Toleration
+		Input          []corev1.Toleration
 		ExpectedOutput []interface{}
 	}{
 		{
-			testTolerationsConf,
-			testTolerationsInterface,
+			testTolerationsV2Conf,
+			testTolerationsV2Interface,
 		},
 	}
 
 	for _, tc := range cases {
-		output := flattenTolerations(tc.Input)
+		output := flattenTolerationsV2(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
@@ -55,20 +55,20 @@ func TestFlattenTolerations(t *testing.T) {
 	}
 }
 
-func TestExpandTolerations(t *testing.T) {
+func TestExpandTolerationsV2(t *testing.T) {
 
 	cases := []struct {
 		Input          []interface{}
-		ExpectedOutput []managementClient.Toleration
+		ExpectedOutput []corev1.Toleration
 	}{
 		{
-			testTolerationsInterface,
-			testTolerationsConf,
+			testTolerationsV2Interface,
+			testTolerationsV2Conf,
 		},
 	}
 
 	for _, tc := range cases {
-		output := expandTolerations(tc.Input)
+		output := expandTolerationsV2(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

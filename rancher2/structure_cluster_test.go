@@ -10,38 +10,40 @@ import (
 )
 
 var (
-	testClusterEnvVarsConf                []managementClient.EnvVar
-	testClusterEnvVarsInterface           []interface{}
-	testClusterAnswersConf                *managementClient.Answer
-	testClusterAnswersInterface           []interface{}
-	testClusterQuestionsConf              []managementClient.Question
-	testClusterQuestionsInterface         []interface{}
-	testLocalClusterAuthEndpointConf      *managementClient.LocalClusterAuthEndpoint
-	testLocalClusterAuthEndpointInterface []interface{}
-	testClusterRegistrationTokenConf      *managementClient.ClusterRegistrationToken
-	testClusterRegistrationToken2Conf     *managementClient.ClusterRegistrationToken
-	testClusterRegistrationTokenInterface []interface{}
-	testClusterGenerateKubeConfigOutput   *managementClient.GenerateKubeConfigOutput
-	testClusterConfAKS                    *Cluster
-	testClusterInterfaceAKS               map[string]interface{}
-	testClusterConfEKS                    *Cluster
-	testClusterInterfaceEKS               map[string]interface{}
-	testClusterConfEKSV2                  *Cluster
-	testClusterInterfaceEKSV2             map[string]interface{}
-	testClusterConfGKE                    *Cluster
-	testClusterInterfaceGKE               map[string]interface{}
-	testClusterConfK3S                    *Cluster
-	testClusterInterfaceK3S               map[string]interface{}
-	testClusterConfGKEV2                  *Cluster
-	testClusterInterfaceGKEV2             map[string]interface{}
-	testClusterConfOKE                    *Cluster
-	testClusterInterfaceOKE               map[string]interface{}
-	testClusterConfRKE                    *Cluster
-	testClusterInterfaceRKE               map[string]interface{}
-	testClusterConfRKE2                   *Cluster
-	testClusterInterfaceRKE2              map[string]interface{}
-	testClusterConfTemplate               *Cluster
-	testClusterInterfaceTemplate          map[string]interface{}
+	testClusterEnvVarsConf                           []managementClient.EnvVar
+	testClusterEnvVarsInterface                      []interface{}
+	testClusterAgentDeploymentCustomizationConf      *managementClient.AgentDeploymentCustomization
+	testClusterAgentDeploymentCustomizationInterface []interface{}
+	testClusterAnswersConf                           *managementClient.Answer
+	testClusterAnswersInterface                      []interface{}
+	testClusterQuestionsConf                         []managementClient.Question
+	testClusterQuestionsInterface                    []interface{}
+	testLocalClusterAuthEndpointConf                 *managementClient.LocalClusterAuthEndpoint
+	testLocalClusterAuthEndpointInterface            []interface{}
+	testClusterRegistrationTokenConf                 *managementClient.ClusterRegistrationToken
+	testClusterRegistrationToken2Conf                *managementClient.ClusterRegistrationToken
+	testClusterRegistrationTokenInterface            []interface{}
+	testClusterGenerateKubeConfigOutput              *managementClient.GenerateKubeConfigOutput
+	testClusterConfAKS                               *Cluster
+	testClusterInterfaceAKS                          map[string]interface{}
+	testClusterConfEKS                               *Cluster
+	testClusterInterfaceEKS                          map[string]interface{}
+	testClusterConfEKSV2                             *Cluster
+	testClusterInterfaceEKSV2                        map[string]interface{}
+	testClusterConfGKE                               *Cluster
+	testClusterInterfaceGKE                          map[string]interface{}
+	testClusterConfK3S                               *Cluster
+	testClusterInterfaceK3S                          map[string]interface{}
+	testClusterConfGKEV2                             *Cluster
+	testClusterInterfaceGKEV2                        map[string]interface{}
+	testClusterConfOKE                               *Cluster
+	testClusterInterfaceOKE                          map[string]interface{}
+	testClusterConfRKE                               *Cluster
+	testClusterInterfaceRKE                          map[string]interface{}
+	testClusterConfRKE2                              *Cluster
+	testClusterInterfaceRKE2                         map[string]interface{}
+	testClusterConfTemplate                          *Cluster
+	testClusterInterfaceTemplate                     map[string]interface{}
 )
 
 func testCluster() {
@@ -65,6 +67,69 @@ func testCluster() {
 			"value": "value2",
 		},
 	}
+
+	// cluster and fleet agent customization
+	testClusterAppendTolerations := []managementClient.Toleration{{
+		Effect:   "NoSchedule",
+		Key:      "tolerate/test",
+		Operator: "Equal",
+		Value:    "true",
+	},
+	}
+	testClusterOverrideAffinity := &managementClient.Affinity{
+		NodeAffinity: &managementClient.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &managementClient.NodeSelector{
+				NodeSelectorTerms: []managementClient.NodeSelectorTerm{
+					{
+						MatchExpressions: []managementClient.NodeSelectorRequirement{
+							{
+								Key:      "not.this/nodepool",
+								Operator: "NotIn",
+								Values:   []string{"true"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	testClusterOverrideResourceRequirements := &managementClient.ResourceRequirements{
+		Limits: map[string]string{
+			"cpu":    "500",
+			"memory": "500",
+		},
+		Requests: map[string]string{
+			"cpu":    "500",
+			"memory": "500",
+		},
+	}
+	testClusterAgentDeploymentCustomizationConf = &managementClient.AgentDeploymentCustomization{
+		AppendTolerations:            testClusterAppendTolerations,
+		OverrideAffinity:             testClusterOverrideAffinity,
+		OverrideResourceRequirements: testClusterOverrideResourceRequirements,
+	}
+	testClusterAgentDeploymentCustomizationInterface = []interface{}{
+		map[string]interface{}{
+			"append_tolerations": []interface{}{
+				map[string]interface{}{
+					"effect":   "NoSchedule",
+					"key":      "tolerate/test",
+					"operator": "Equal",
+					"value":    "true",
+				},
+			},
+			"override_affinity": "{\"nodeAffinity\":{\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"not.this/nodepool\",\"operator\":\"NotIn\",\"values\":[\"true\"]}]}]}}}",
+			"override_resource_requirements": []interface{}{
+				map[string]interface{}{
+					"cpu_limit":      "500",
+					"cpu_request":    "500",
+					"memory_limit":   "500",
+					"memory_request": "500",
+				},
+			},
+		},
+	}
+
 	testClusterAnswersConf = &managementClient.Answer{
 		ClusterID: "cluster_id",
 		ProjectID: "project_id",
@@ -253,18 +318,22 @@ func testCluster() {
 	testClusterConfEKSV2.Description = "description"
 	testClusterConfEKSV2.Driver = clusterDriverEKSV2
 	testClusterConfEKSV2.AgentEnvVars = testClusterEnvVarsConf
+	testClusterConfEKSV2.ClusterAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
+	testClusterConfEKSV2.FleetAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
 	testClusterConfEKSV2.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfEKSV2.EnableClusterMonitoring = true
 	testClusterConfEKSV2.EnableNetworkPolicy = newTrue()
 	testClusterConfEKSV2.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceEKSV2 = map[string]interface{}{
-		"id":                         "id",
-		"name":                       "test",
-		"agent_env_vars":             testClusterEnvVarsInterface,
-		"default_project_id":         "default_project_id",
-		"description":                "description",
-		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token": testClusterRegistrationTokenInterface,
+		"id":                                      "id",
+		"name":                                    "test",
+		"agent_env_vars":                          testClusterEnvVarsInterface,
+		"cluster_agent_deployment_customization":  testClusterAgentDeploymentCustomizationInterface,
+		"fleet_agent_deployment_customization":    testClusterAgentDeploymentCustomizationInterface,
+		"default_project_id":                      "default_project_id",
+		"description":                             "description",
+		"cluster_auth_endpoint":                   testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token":              testClusterRegistrationTokenInterface,
 		"default_pod_security_policy_template_id": "restricted",
 		"enable_cluster_monitoring":               true,
 		"enable_network_policy":                   true,
@@ -386,19 +455,23 @@ func testCluster() {
 	testClusterConfRKE.RancherKubernetesEngineConfig = testClusterRKEConfigConf
 	testClusterConfRKE.Driver = clusterDriverRKE
 	testClusterConfRKE.AgentEnvVars = testClusterEnvVarsConf
+	testClusterConfRKE.ClusterAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
+	testClusterConfRKE.FleetAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
 	testClusterConfRKE.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfRKE.FleetWorkspaceName = "fleet-test"
 	testClusterConfRKE.EnableClusterMonitoring = true
 	testClusterConfRKE.EnableNetworkPolicy = newTrue()
 	testClusterConfRKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceRKE = map[string]interface{}{
-		"id":                         "id",
-		"name":                       "test",
-		"agent_env_vars":             testClusterEnvVarsInterface,
-		"default_project_id":         "default_project_id",
-		"description":                "description",
-		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token": testClusterRegistrationTokenInterface,
+		"id":                                      "id",
+		"name":                                    "test",
+		"agent_env_vars":                          testClusterEnvVarsInterface,
+		"cluster_agent_deployment_customization":  testClusterAgentDeploymentCustomizationInterface,
+		"fleet_agent_deployment_customization":    testClusterAgentDeploymentCustomizationInterface,
+		"default_project_id":                      "default_project_id",
+		"description":                             "description",
+		"cluster_auth_endpoint":                   testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token":              testClusterRegistrationTokenInterface,
 		"default_pod_security_policy_template_id": "restricted",
 		"enable_cluster_monitoring":               true,
 		"enable_network_policy":                   true,
@@ -415,18 +488,22 @@ func testCluster() {
 	testClusterConfRKE2.Rke2Config = testClusterRKE2ConfigConf
 	testClusterConfRKE2.Driver = clusterDriverRKE2
 	testClusterConfRKE2.AgentEnvVars = testClusterEnvVarsConf
+	testClusterConfRKE2.ClusterAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
+	testClusterConfRKE2.FleetAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
 	testClusterConfRKE2.DefaultPodSecurityPolicyTemplateID = "restricted"
 	testClusterConfRKE2.EnableClusterMonitoring = true
 	testClusterConfRKE2.EnableNetworkPolicy = newTrue()
 	testClusterConfRKE2.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceRKE2 = map[string]interface{}{
-		"id":                         "id",
-		"name":                       "test",
-		"agent_env_vars":             testClusterEnvVarsInterface,
-		"default_project_id":         "default_project_id",
-		"description":                "description",
-		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token": testClusterRegistrationTokenInterface,
+		"id":                                      "id",
+		"name":                                    "test",
+		"agent_env_vars":                          testClusterEnvVarsInterface,
+		"cluster_agent_deployment_customization":  testClusterAgentDeploymentCustomizationInterface,
+		"fleet_agent_deployment_customization":    testClusterAgentDeploymentCustomizationInterface,
+		"default_project_id":                      "default_project_id",
+		"description":                             "description",
+		"cluster_auth_endpoint":                   testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token":              testClusterRegistrationTokenInterface,
 		"default_pod_security_policy_template_id": "restricted",
 		"enable_cluster_monitoring":               true,
 		"enable_network_policy":                   true,
@@ -500,7 +577,7 @@ func TestFlattenClusterRegistrationToken(t *testing.T) {
 }
 
 func TestFlattenCluster(t *testing.T) {
-
+	testCluster()
 	cases := []struct {
 		Input          *Cluster
 		InputToken     *managementClient.ClusterRegistrationToken
@@ -581,6 +658,12 @@ func TestFlattenCluster(t *testing.T) {
 		if tc.ExpectedOutput["driver"] == clusterDriverAKS {
 			expectedOutput["aks_config"], _ = flattenClusterAKSConfig(tc.Input.AzureKubernetesServiceConfig, []interface{}{})
 		}
+		if tc.ExpectedOutput["cluster_agent_deployment_customization"] != nil {
+			expectedOutput["cluster_agent_deployment_customization"] = flattenAgentDeploymentCustomization(tc.Input.ClusterAgentDeploymentCustomization)
+		}
+		if tc.ExpectedOutput["fleet_agent_deployment_customization"] != nil {
+			expectedOutput["fleet_agent_deployment_customization"] = flattenAgentDeploymentCustomization(tc.Input.FleetAgentDeploymentCustomization)
+		}
 		expectedOutput["id"] = "id"
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
@@ -590,7 +673,7 @@ func TestFlattenCluster(t *testing.T) {
 }
 
 func TestExpandClusterRegistrationToken(t *testing.T) {
-
+	testCluster()
 	cases := []struct {
 		Input          []interface{}
 		ExpectedOutput *managementClient.ClusterRegistrationToken
@@ -615,7 +698,7 @@ func TestExpandClusterRegistrationToken(t *testing.T) {
 }
 
 func TestExpandCluster(t *testing.T) {
-
+	testCluster()
 	cases := []struct {
 		Input          map[string]interface{}
 		ExpectedOutput *Cluster
@@ -676,7 +759,7 @@ func TestExpandCluster(t *testing.T) {
 }
 
 func TestFlattenClusterWithPreservedClusterTemplateAnswers(t *testing.T) {
-
+	testCluster()
 	testClusterInterfaceTemplate["cluster_template_answers"] = []interface{}{
 		map[string]interface{}{
 			"cluster_id": "cluster_id",
