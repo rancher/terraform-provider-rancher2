@@ -25,6 +25,7 @@ func init() {
 			"chart_two": "two",
 		},
 	}
+	testClusterV2RKEConfigConf.MachinePoolDefaults = testClusterV2RKEConfigMachinePoolDefaultsConf
 	testClusterV2RKEConfigConf.MachineGlobalConfig = rkev1.GenericMap{
 		Data: map[string]interface{}{
 			"config_one": "one",
@@ -45,6 +46,7 @@ func init() {
 			"chart_values":            "chart_one: one\nchart_two: two\n",
 			"machine_global_config":   "config_one: one\nconfig_two: two\n",
 			"machine_pools":           testClusterV2RKEConfigMachinePoolsInterface,
+			"machine_pool_defaults":   testClusterV2RKEConfigMachinePoolDefaultsInterface,
 			"machine_selector_config": testClusterV2RKEConfigSystemConfigInterface,
 			"registries":              testClusterV2RKEConfigRegistryInterface,
 			"etcd":                    testClusterV2RKEConfigETCDInterface,

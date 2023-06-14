@@ -78,6 +78,7 @@ func init() {
 			UnhealthyNodeTimeout: metav1DurationPtr(60),
 			MaxUnhealthy:         stringPtr("2"),
 			UnhealthyRange:       stringPtr("[2,5]"),
+			HostnameLengthLimit:  16,
 		},
 	}
 	testClusterV2RKEConfigMachinePoolsConf[0].CloudCredentialSecretName = "cloud_credential_secret_name"
@@ -124,6 +125,7 @@ func init() {
 			"unhealthy_node_timeout_seconds": 60,
 			"max_unhealthy":                  "2",
 			"unhealthy_range":                "[2,5]",
+			"hostname_length_limit":          16,
 		},
 	}
 }

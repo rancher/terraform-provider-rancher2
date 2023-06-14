@@ -94,6 +94,15 @@ func clusterV2RKEConfigFields() map[string]*schema.Schema {
 				Schema: clusterV2RKEConfigMachinePoolFields(),
 			},
 		},
+		"machine_pool_defaults": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "Default values for machine pool configurations if unset",
+			Elem: &schema.Resource{
+				Schema: clusterV2RKEConfigMachinePoolDefaultFields(),
+			},
+		},
 		"machine_selector_config": {
 			Type:        schema.TypeList,
 			Optional:    true,
