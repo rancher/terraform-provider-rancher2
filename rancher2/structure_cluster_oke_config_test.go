@@ -59,7 +59,7 @@ func init() {
 			"enable_private_nodes":         false,
 			"fingerprint":                  "fingerprint",
 			"flex_ocpus":                   0,
-			"kms_key_id":                   "ocid1.key.oc1.phx.xxxxxxxxxxxxxxxxxx",
+			"kms_key_id":                   "ocid1.key.oc1.reg.xxxxxxxxxxxxxxxxxx",
 			"kubernetes_version":           "version",
 			"limit_node_count":             0,
 			"node_image":                   "image",

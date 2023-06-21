@@ -33,7 +33,7 @@ type Cluster struct {
 
 // Schemas
 
-func clusterRegistationTokenFields() map[string]*schema.Schema {
+func clusterRegistrationTokenFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"id": {
 			Type:     schema.TypeString,
@@ -198,7 +198,7 @@ func clusterDataFieldsV0() map[string]*schema.Schema {
 			MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
+				Schema: clusterRegistrationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {
@@ -359,7 +359,7 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
+				Schema: clusterRegistrationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {
@@ -468,6 +468,22 @@ func clusterFields() map[string]*schema.Schema {
 			Description: "Optional Agent Env Vars for Rancher agent",
 			Elem: &schema.Resource{
 				Schema: envVarFields(),
+			},
+		},
+		"cluster_agent_deployment_customization": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional customization for cluster agent",
+			Elem: &schema.Resource{
+				Schema: agentDeploymentCustomizationFields(),
+			},
+		},
+		"fleet_agent_deployment_customization": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional customization for fleet agent",
+			Elem: &schema.Resource{
+				Schema: agentDeploymentCustomizationFields(),
 			},
 		},
 		"driver": {
@@ -615,7 +631,7 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
+				Schema: clusterRegistrationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {

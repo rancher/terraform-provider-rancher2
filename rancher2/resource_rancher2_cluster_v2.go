@@ -66,7 +66,10 @@ func resourceRancher2ClusterV2() *schema.Resource {
 
 func resourceRancher2ClusterV2Create(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
-	cluster := expandClusterV2(d)
+	cluster, err := expandClusterV2(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[INFO] Creating Cluster V2 %s", name)
 
@@ -112,7 +115,11 @@ func resourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceRancher2ClusterV2Update(d *schema.ResourceData, meta interface{}) error {
-	cluster := expandClusterV2(d)
+	cluster, err := expandClusterV2(d)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] Updating Cluster V2 %s", d.Id())
 
 	newCluster, err := updateClusterV2(meta.(*Config), d.Id(), cluster)
@@ -336,7 +343,7 @@ func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
 	if err != nil && !IsForbidden(err) {
 		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
 	}
-	regToken, _ := flattenClusterRegistationToken(clusterRegistrationToken)
+	regToken, _ := flattenClusterRegistrationToken(clusterRegistrationToken)
 	err = d.Set("cluster_registration_token", regToken)
 	if err != nil {
 		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
