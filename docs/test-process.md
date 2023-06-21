@@ -14,23 +14,23 @@ To cut an RC, tag the latest commit. Bump the minor version for new features and
 
 For example, if the latest tag on `master` is `v3.0.0` and the commits since that tag contain a new feature,
 
-```
-git tag v3.1.0-rc1
-git push upstream v3.1.0-rc1
+```sh
+$ git tag v3.1.0-rc1
+$ git push upstream v3.1.0-rc1
 ```
 
 If all commits since the latest tag are only bug fixes,
 
-```
-git tag v3.0.1-rc1
-git push upstream v3.0.1-rc1
+```sh
+$ git tag v3.0.1-rc1
+$ git push upstream v3.0.1-rc1
 ```
 
 If the latest tag is already an RC, say `v3.0.1-rc1`,
 
-```
-git tag v3.0.1-rc2
-git push upstream v3.0.1-rc2
+```sh
+$ git tag v3.0.1-rc2
+$ git push upstream v3.0.1-rc2
 ```
 
 2. Move the issue To Test
@@ -38,9 +38,8 @@ git push upstream v3.0.1-rc2
 
 QA will test using a downloaded binary from the RC. Using an RC asset enables us to quickly test features and bugs without waiting for Hashicorp to publish a pre-release. This script sets up the correct binary using a defined `<provider> <version>` to test updates locally.
 
-
-```azure
-./setup-provider.sh <provider> <version>
+```sh
+$ ./setup-provider.sh <provider> <version>
 ```
 
  Example
@@ -50,13 +49,13 @@ $ ./setup-provider.sh rancher2 v3.0.0-rc1
 
 There is also a [windows script](https://github.com/rancher/terraform-provider-rancher2/blob/master/setup-provider-windows.ps1) for cross-platform support.
 
-```azure
-./setup-provider-windows.ps1 <provider> <version>
+```powershell
+PS /> ./setup-provider-windows.ps1 <provider> <version>
 ```
 
 Example
-```azure
-./setup-provider-windows.ps1 rancher2 v3.0.0-rc1
+```powershell
+PS /> ./setup-provider-windows.ps1 rancher2 v3.0.0-rc1
 ```
 
 4. If test validation passes, issue is closed. If not, it is reopened.
