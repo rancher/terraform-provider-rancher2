@@ -68,6 +68,7 @@ func harvesterConfigFields() map[string]*schema.Schema {
 		"disk_size": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Default:  "0",
 			ConflictsWith: []string{
 				"harvester_config.0.disk_info",
 			},
