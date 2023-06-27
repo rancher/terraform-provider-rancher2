@@ -97,6 +97,9 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		if in.UnhealthyRange != nil {
 			obj["unhealthy_range"] = *in.UnhealthyRange
 		}
+		if in.HostnameLengthLimit != 0 {
+			obj["hostname_length_limit"] = in.HostnameLengthLimit
+		}
 	}
 
 	return out
@@ -215,6 +218,10 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		}
 		if v, ok := in["unhealthy_range"].(string); ok && len(v) > 0 {
 			obj.UnhealthyRange = &v
+		}
+
+		if v, ok := in["hostname_length_limit"].(int); ok && v != 0 {
+			obj.HostnameLengthLimit = v
 		}
 
 		out[i] = obj
