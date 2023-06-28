@@ -1,3 +1,17 @@
+## 3.0.2 (June 28, 2023)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Fix Harvester disk_size default value. See [#1149](https://github.com/rancher/terraform-provider-rancher2/pull/1149)
+
 ## 3.0.1 (June 7, 2023)
 
 FEATURES:
