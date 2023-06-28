@@ -313,6 +313,47 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-outscale" {
 
 	testAccRancher2NodeTemplateOutscaleConfig       = testAccRancher2NodeTemplateOutscaleDriver + testAccRancher2NodeTemplateOutscale
 	testAccRancher2NodeTemplateOutscaleUpdateConfig = testAccRancher2NodeTemplateOutscaleDriver + testAccRancher2NodeTemplateOutscaleUpdate
+
+	testAccRancher2NodeTemplateHetznerDriver = `
+resource "rancher2_node_driver" "foo-hetzner" {
+	active = true
+	builtin = false
+	name     = "Hetzner"
+    ui_url   = "https://storage.googleapis.com/hcloud-rancher-v2-ui-driver/component.js"
+    url      = "https://github.com/JonasProgrammer/docker-machine-driver-hetzner/releases/download/4.1.0/docker-machine-driver-hetzner_4.1.0_linux_amd64.tar.gz"
+    whitelist_domains = ["storage.googleapis.com"]
+}
+`
+	testAccRancher2NodeTemplateHetzner = `
+resource "` + testAccRancher2NodeTemplateType + `" "foo-hetzner" {
+	name = "foo-hetzner"
+	description = "Terraform node driver hetzner acceptance test"
+	driver_id = rancher2_node_driver.foo-hetzner.id
+	hetzner_config {
+		api_token = "XXXXXXXXXX"
+		image = "ubuntu-18.04"
+    	server_location = "nbg1"
+    	server_type = "cx21"
+	}
+}
+`
+
+	testAccRancher2NodeTemplateHetznerUpdate = `
+resource "` + testAccRancher2NodeTemplateType + `" "foo-hetzner" {
+	name = "foo-hetzner"
+	description = "Terraform node driver hetzner acceptance test"
+	driver_id = rancher2_node_driver.foo-hetzner.id
+	hetzner_config {
+		api_token = "XXXXXXXXXX"
+		image = "ubuntu-18.04"
+    	server_location = "nbg1"
+    	server_type = "cx31"
+	}
+}
+`
+
+	testAccRancher2NodeTemplateHetznerConfig       = testAccRancher2NodeTemplateHetznerDriver + testAccRancher2NodeTemplateHetzner
+	testAccRancher2NodeTemplateHetznerUpdateConfig = testAccRancher2NodeTemplateHetznerDriver + testAccRancher2NodeTemplateHetznerUpdate
 )
 
 func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
@@ -835,6 +876,69 @@ func TestAccRancher2NodeTemplate_disappears_Outscale(t *testing.T) {
 				Config: testAccRancher2NodeTemplateOutscaleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-outscale", nodeTemplate),
+					testAccRancher2NodeTemplateDisappears(nodeTemplate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_basic_Hetzner(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	name := testAccRancher2NodeTemplateType + ".foo-hetzner"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NodeTemplateHetznerConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo-hetzner"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver hetzner acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", hetznerConfigDriver),
+					resource.TestCheckResourceAttr(name, "hetzner_config.0.instance_type", "cx21"),
+				),
+			},
+			{
+				Config: testAccRancher2NodeTemplateHetznerUpdateConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo-hetzner"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver hetzner acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", hetznerConfigDriver),
+					resource.TestCheckResourceAttr(name, "hetzner_config.0.instance_type", "cx31"),
+				),
+			},
+			{
+				Config: testAccRancher2NodeTemplateHetznerConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(name, nodeTemplate),
+					resource.TestCheckResourceAttr(name, "name", "foo-hetzner"),
+					resource.TestCheckResourceAttr(name, "description", "Terraform node driver hetzner acceptance test"),
+					resource.TestCheckResourceAttr(name, "driver", hetznerConfigDriver),
+					resource.TestCheckResourceAttr(name, "hetzner_config.0.instance_type", "cx21"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2NodeTemplate_disappears_Hetzner(t *testing.T) {
+	var nodeTemplate *NodeTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2NodeTemplateOutscaleConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2NodeTemplateExists(testAccRancher2NodeTemplateType+".foo-hetzner", nodeTemplate),
 					testAccRancher2NodeTemplateDisappears(nodeTemplate),
 				),
 				ExpectNonEmptyPlan: true,

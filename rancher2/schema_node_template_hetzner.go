@@ -13,6 +13,7 @@ const (
 type hetznerConfig struct {
 	APIToken          string            `json:"apiToken,omitempty" yaml:"apiToken,omitempty"`
 	Image             string            `json:"image,omitempty" yaml:"image,omitempty"`
+	ImageID           string            `json:"imageId,omitempty" yaml:"imageId,omitempty"`
 	ServerLabels      map[string]string `json:"serverLabels,omitempty" yaml:"serverLabels,omitempty"`
 	ServerLocation    string            `json:"serverLocation,omitempty" yaml:"serverLocation,omitempty"`
 	ServerType        string            `json:"serverType,omitempty" yaml:"serverType,omitempty"`
@@ -20,6 +21,9 @@ type hetznerConfig struct {
 	UsePrivateNetwork bool              `json:"usePrivateNetwork,omitempty" yaml:"usePrivateNetwork,omitempty"`
 	UserData          string            `json:"userData,omitempty" yaml:"userData,omitempty"`
 	Volumes           []string          `json:"volumes,omitempty" yaml:"volumes,omitempty"`
+	Firewalls         []string          `json:"firewalls,omitempty" yaml:"firewalls,omitempty"`
+	AdditionalKeys    []string          `json:"additionalKey,omitempty" yaml:"additionalKey,omitempty"`
+	PlacementGroup    string            `json:"placementGroup,omitempty" yaml:"placementGroup,omitempty"`
 }
 
 //Schemas
@@ -35,8 +39,14 @@ func hetznerConfigFields() map[string]*schema.Schema {
 		"image": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "ubuntu-18.04",
+			Default:     "ubuntu-22.04",
 			Description: "Hetzner Cloud server image",
+		},
+		"image_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "0", // 0 is set to use image name as they are mutually exclusive (see: https://github.com/JonasProgrammer/docker-machine-driver-hetzner/blob/32908bba927a2449675fc46d14278abff59b460c/driver/flag_processing.go#L25)
+			Description: "Hetzner Cloud server image id",
 		},
 		"server_labels": {
 			Type:        schema.TypeMap,
@@ -75,6 +85,23 @@ func hetznerConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Comma-separated list of volume IDs or names which should be attached to the server",
+		},
+		"firewalls": {
+			Type:        schema.TypeList,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Optional:    true,
+			Description: "List of firewall IDs or names which should be attached to the server",
+		},
+		"additional_keys": {
+			Type:        schema.TypeList,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+			Optional:    true,
+			Description: "List of ssh keys which should be used to provision the machine with",
+		},
+		"placement_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Placement group string",
 		},
 	}
 
