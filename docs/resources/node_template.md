@@ -297,7 +297,7 @@ The following attributes are exported:
 #### Arguments
 
 - `api_token` - (Required/Sensitive) Hetzner Cloud project API token (string)
-- `image` - (Optional) Hetzner Cloud server image. Set to empty string if image_id should be used instead. Default `ubuntu-22.04` (string)
+- `image` - (Optional) Hetzner Cloud server image. Default `ubuntu-22.04` (string)
 - `image_id` - (Optional) Hetzner Cloud server image id. If set to 0 uses image name. Default `0` (string)
 - `server_labels` - (Optional) Map of the labels which will be assigned to the server. This argument is only available on [Hetzner Docker Node Driver:v3.6.0](https://github.com/JonasProgrammer/docker-machine-driver-hetzner/releases/tag/3.6.0) and above (map)
 - `server_location` - (Optional) Hetzner Cloud datacenter. Default `nbg1` (string)
@@ -308,7 +308,7 @@ The following attributes are exported:
 - `userdata` - (Optional) Path to file with cloud-init user-data (string)
 - `firewalls` - (Optional) List of firewall IDs or names which should be attached to the server (list)
 - `additional_keys` - (Optional) List of ssh keys which should be used to provision the machine with (list)
-- `placement_group` - (Optional) Placement group string (string)
+- `placement_group` - (Optional) Placement group ID or name (string)
 
 > **Note**: You need to install the Hetzner Docker Machine Driver first as shown as in the [examples section](#using-the-hetzner-node-driver).
 
