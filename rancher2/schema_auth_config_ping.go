@@ -50,7 +50,7 @@ func authConfigPingFields() map[string]*schema.Schema {
 		},
 		"entity_id_field": {
 			Type:     schema.TypeString,
-			Required: false,
+			Optional: true,
 		},
 	}
 
