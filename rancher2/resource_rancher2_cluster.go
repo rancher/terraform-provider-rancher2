@@ -697,10 +697,21 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 	if err != nil {
 		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
 	}
+	// kubeconfig is not valid due to an invalid token. Use the cached kubeconfig
+	// and replace the token
+	if !kubeValid && len(token) == 0 {
+		newConfig, err := replaceKubeConfigToken(c, origconfig, token)
+		if err != nil {
+			return nil, err
+		}
+		origconfig = newConfig
+		kubeValid = true
+	}
 	if kubeValid {
 		return &managementClient.GenerateKubeConfigOutput{Config: origconfig}, nil
 	}
 
+	// kubeconfig is not valid for other reasons, download a new one
 	client, err := c.ManagementClient()
 	if err != nil {
 		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
@@ -734,17 +745,12 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 			}
 			err = client.APIBaseClient.Action(managementClient.ClusterType, action, clusterResource, nil, kubeConfig)
 			if err == nil {
-				if isRancher26 && len(token) > 0 {
-					newConfig, err := replaceKubeConfigToken(c, kubeConfig.Config, token)
-					if err != nil {
-						return nil, err
-					}
-					kubeConfig.Config = newConfig
-				}
 				return kubeConfig, nil
 			}
-			if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
-				return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+			if err != nil {
+				if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
+					return nil, fmt.Errorf("Getting cluster Kubeconfig: %w", err)
+				}
 			}
 		}
 		select {
