@@ -528,9 +528,9 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 			// The IsForbidden check is used in the case the user performing the action does not have the
 			// right to retrieve the full list of clusters. If the user tries to retrieve the cluster that
 			// just got deleted, instead of getting a 404 not found response it will get a 403 forbidden
-			// eventhough it had the right to access the cluster before it was deleted. If we reach this
+			// even though it had the right to access the cluster before it was deleted. If we reach this
 			// code path, it means that the user had the right to access the cluster, delete it, hence
-			// meaning that the delete was successful.
+			// meaning that delete was successful.
 			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
@@ -636,7 +636,7 @@ func isKubeConfigValid(c *Config, config string) (string, bool, error) {
 	}
 	kubeconfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(config))
 	if err != nil {
-		return "", false, fmt.Errorf("Checking Kubeconfig: %v", err)
+		return "", false, fmt.Errorf("checking Kubeconfig: %v", err)
 	}
 	_, err = kubernetes.NewForConfig(kubeconfig)
 	if err != nil {
@@ -649,22 +649,19 @@ func isKubeConfigValid(c *Config, config string) (string, bool, error) {
 func isKubeConfigTokenValid(c *Config, config string) (string, bool, error) {
 	token, err := getTokenFromKubeConfig(config)
 	if err != nil {
-		return "", false, fmt.Errorf("Getting Kubeconfig token: %v", err)
+		return "", false, fmt.Errorf("getting Kubeconfig token: %v", err)
 	}
 	isValid, err := isTokenValid(c, splitTokenID(token))
 	if err != nil {
-		return "", false, fmt.Errorf("Checking Kubeconfig token: %v", err)
+		return "", false, fmt.Errorf("checking Kubeconfig token: %v", err)
 	}
 	return token, isValid, nil
 }
 
-func replaceKubeConfigToken(c *Config, config, token string) (string, error) {
-	if len(token) == 0 {
-		return config, nil
-	}
+func replaceKubeConfigToken(c *Config, config string) (string, error) {
 	kubeconfig, err := getObjFromKubeConfig(config)
 	if err != nil {
-		return "", fmt.Errorf("Getting K8s config object: %v", err)
+		return "", fmt.Errorf("getting K8s config object: %v", err)
 	}
 	if kubeconfig == nil || kubeconfig.AuthInfos == nil || len(kubeconfig.AuthInfos) == 0 {
 		return config, nil
@@ -672,20 +669,24 @@ func replaceKubeConfigToken(c *Config, config, token string) (string, error) {
 
 	client, err := c.ManagementClient()
 	if err != nil {
-		return "", fmt.Errorf("Replacing cluster Kubeconfig token: %v", err)
+		return "", fmt.Errorf("replacing cluster Kubeconfig token: %v", err)
 	}
-	removeToken, err := client.Token.ByID(splitTokenID(kubeconfig.AuthInfos[0].AuthInfo.Token))
-	if err != nil {
+
+	// if cached token is corrupt, ByID will fail and the token can't be
+	// retrieved or cleaned up
+	currentToken, err := client.Token.ByID(splitTokenID(kubeconfig.AuthInfos[0].AuthInfo.Token))
+	if err != nil || currentToken.Expired {
 		if !IsNotFound(err) && !IsForbidden(err) {
 			return "", err
 		}
+		// client can't find the token or token has expired, so create
+		// a new one
+		currentToken, err = client.Token.Create(currentToken)
+		if err != nil {
+			return "", fmt.Errorf("error creating Token: %s", err)
+		}
 	}
-
-	err = client.Token.Delete(removeToken)
-	if err != nil {
-		return "", fmt.Errorf("Error removing Token: %s", err)
-	}
-	kubeconfig.AuthInfos[0].AuthInfo.Token = token
+	kubeconfig.AuthInfos[0].AuthInfo.Token = currentToken.Token
 	return getKubeConfigFromObj(kubeconfig)
 }
 
@@ -693,28 +694,29 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 	action := "generateKubeconfig"
 	cluster := &Cluster{}
 
-	token, kubeValid, err := isKubeConfigValid(c, origconfig)
-	if err != nil {
-		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
-	}
-	// kubeconfig is not valid due to an invalid token. Use the cached kubeconfig
-	// and replace the token
-	if !kubeValid && len(token) == 0 {
-		newConfig, err := replaceKubeConfigToken(c, origconfig, token)
+	// kubeconfig already exists in the cache
+	if len(origconfig) > 0 {
+		token, kubeValid, err := isKubeConfigValid(c, origconfig)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
 		}
-		origconfig = newConfig
-		kubeValid = true
-	}
-	if kubeValid {
-		return &managementClient.GenerateKubeConfigOutput{Config: origconfig}, nil
+		if kubeValid {
+			return &managementClient.GenerateKubeConfigOutput{Config: origconfig}, nil
+		} else if len(token) == 0 {
+			// if token is zero length, token is not valid or expired so replace it
+			// in the cached kubeconfig
+			newConfig, err := replaceKubeConfigToken(c, origconfig)
+			if err != nil {
+				return nil, err
+			}
+			return &managementClient.GenerateKubeConfigOutput{Config: newConfig}, nil
+		}
 	}
 
-	// kubeconfig is not valid for other reasons, download a new one
+	// kubeconfig is not cached or invalid for other reasons, download a new one
 	client, err := c.ManagementClient()
 	if err != nil {
-		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+		return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
@@ -723,7 +725,7 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 		err = client.APIBaseClient.ByID(managementClient.ClusterType, id, cluster)
 		if err != nil {
 			if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
-				return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+				return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
 			}
 		} else if len(cluster.Actions[action]) > 0 {
 			isRancher26, err := c.IsRancherVersionGreaterThanOrEqual("2.6.0")
@@ -749,7 +751,7 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 			}
 			if err != nil {
 				if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
-					return nil, fmt.Errorf("Getting cluster Kubeconfig: %w", err)
+					return nil, fmt.Errorf("getting cluster Kubeconfig: %w", err)
 				}
 			}
 		}
