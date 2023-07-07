@@ -27,6 +27,7 @@ func init() {
 		SpCert:              "sp_cert",
 		UIDField:            "uid_field",
 		UserNameField:       "user_name_field",
+		EntityID:            "entity_id_field",
 	}
 	testAuthConfigPingInterface = map[string]interface{}{
 		"name":                  AuthConfigPingName,
@@ -41,6 +42,7 @@ func init() {
 		"sp_cert":               "sp_cert",
 		"uid_field":             "uid_field",
 		"user_name_field":       "user_name_field",
+		"entity_id_field":       "entity_id_field",
 	}
 }
 

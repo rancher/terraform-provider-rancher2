@@ -38,6 +38,7 @@ func flattenAuthConfigPing(d *schema.ResourceData, in *managementClient.PingConf
 	d.Set("sp_cert", in.SpCert)
 	d.Set("uid_field", in.UIDField)
 	d.Set("user_name_field", in.UserNameField)
+	d.Set("entity_id_field", in.EntityID)
 
 	return nil
 }
@@ -107,6 +108,10 @@ func expandAuthConfigPing(in *schema.ResourceData) (*managementClient.PingConfig
 
 	if v, ok := in.Get("user_name_field").(string); ok && len(v) > 0 {
 		obj.UserNameField = v
+	}
+
+	if v, ok := in.Get("entity_id_field").(string); ok && len(v) > 0 {
+		obj.EntityID = v
 	}
 
 	return obj, nil
