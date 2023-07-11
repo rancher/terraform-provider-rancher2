@@ -65,6 +65,7 @@ func clusterV2RKEConfigSystemConfigFields() map[string]*schema.Schema {
 		"config": {
 			Type:        schema.TypeMap,
 			Optional:    true,
+			Computed:    true,
 			Description: "Machine selector config",
 		},
 	}

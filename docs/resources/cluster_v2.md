@@ -584,7 +584,7 @@ The following attributes are exported:
 ##### Arguments
 
 * `machine_label_selector` - (Optional) Machine selector label (list maxitems:1)
-* `config` - (Optional) Machine selector config (map)
+* `config` - (Optional/Computed) Machine selector config (map)
 
 ##### `machine_label_selector`
 

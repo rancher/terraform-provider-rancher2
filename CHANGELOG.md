@@ -6,7 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
-
+* Updated `rancher2_cluster_v2.rke_config.machine_selector_config.config` argument as optional/computed
 
 BUG FIXES:
 
