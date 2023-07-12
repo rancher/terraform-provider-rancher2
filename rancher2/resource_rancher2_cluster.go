@@ -129,14 +129,14 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Cluster %s", cluster.Name)
 
-	expectedState := "active"
+	expectedState := []string{"active"}
 
 	if cluster.Driver == clusterDriverImported || (cluster.Driver == clusterDriverEKSV2 && cluster.EKSConfig.Imported) {
-		expectedState = "pending"
+		expectedState = append(expectedState, "pending")
 	}
 
 	if cluster.Driver == clusterDriverRKE || cluster.Driver == clusterDriverK3S || cluster.Driver == clusterDriverRKE2 {
-		expectedState = "provisioning"
+		expectedState = append(expectedState, "provisioning")
 	}
 
 	// Creating cluster with monitoring disabled
@@ -167,7 +167,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{expectedState},
+		Target:     expectedState,
 		Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
@@ -289,22 +289,34 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	enableNetworkPolicy := d.Get("enable_network_policy").(bool)
+
+	clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("cluster_agent_deployment_customization").([]interface{}))
+	if err != nil {
+		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
+	}
+	fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("fleet_agent_deployment_customization").([]interface{}))
+	if err != nil {
+		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
+	}
+
 	update := map[string]interface{}{
-		"name":                               d.Get("name").(string),
-		"agentEnvVars":                       expandEnvVars(d.Get("agent_env_vars").([]interface{})),
-		"description":                        d.Get("description").(string),
-		"defaultPodSecurityPolicyTemplateId": d.Get("default_pod_security_policy_template_id").(string),
-		"desiredAgentImage":                  d.Get("desired_agent_image").(string),
-		"desiredAuthImage":                   d.Get("desired_auth_image").(string),
-		"dockerRootDir":                      d.Get("docker_root_dir").(string),
-		"fleetWorkspaceName":                 d.Get("fleet_workspace_name").(string),
-		"enableClusterAlerting":              d.Get("enable_cluster_alerting").(bool),
-		"enableClusterMonitoring":            d.Get("enable_cluster_monitoring").(bool),
-		"enableNetworkPolicy":                &enableNetworkPolicy,
-		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
-		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
-		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
+		"name":                                d.Get("name").(string),
+		"agentEnvVars":                        expandEnvVars(d.Get("agent_env_vars").([]interface{})),
+		"clusterAgentDeploymentCustomization": clusterAgentDeploymentCustomization,
+		"fleetAgentDeploymentCustomization":   fleetAgentDeploymentCustomization,
+		"description":                         d.Get("description").(string),
+		"defaultPodSecurityPolicyTemplateId":  d.Get("default_pod_security_policy_template_id").(string),
+		"desiredAgentImage":                   d.Get("desired_agent_image").(string),
+		"desiredAuthImage":                    d.Get("desired_auth_image").(string),
+		"dockerRootDir":                       d.Get("docker_root_dir").(string),
+		"fleetWorkspaceName":                  d.Get("fleet_workspace_name").(string),
+		"enableClusterAlerting":               d.Get("enable_cluster_alerting").(bool),
+		"enableClusterMonitoring":             d.Get("enable_cluster_monitoring").(bool),
+		"enableNetworkPolicy":                 &enableNetworkPolicy,
+		"istioEnabled":                        d.Get("enable_cluster_istio").(bool),
+		"localClusterAuthEndpoint":            expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
+		"annotations":                         toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":                              toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	// cluster_monitoring is not updated here. Setting old `enable_cluster_monitoring` value if it was updated
@@ -548,7 +560,7 @@ func findFlattenClusterRegistrationToken(client *managementClient.Client, cluste
 		return []interface{}{}, err
 	}
 
-	return flattenClusterRegistationToken(clusterReg)
+	return flattenClusterRegistrationToken(clusterReg)
 }
 
 func findClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
@@ -579,7 +591,7 @@ func findClusterRegistrationToken(client *managementClient.Client, clusterID str
 func createClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
 	log.Printf("[DEBUG] Creating cluster registration token for %s", clusterID)
 
-	regToken, err := expandClusterRegistationToken([]interface{}{}, clusterID)
+	regToken, err := expandClusterRegistrationToken([]interface{}{}, clusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -685,10 +697,21 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 	if err != nil {
 		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
 	}
+	// kubeconfig is not valid due to an invalid token. Use the cached kubeconfig
+	// and replace the token
+	if !kubeValid && len(token) == 0 {
+		newConfig, err := replaceKubeConfigToken(c, origconfig, token)
+		if err != nil {
+			return nil, err
+		}
+		origconfig = newConfig
+		kubeValid = true
+	}
 	if kubeValid {
 		return &managementClient.GenerateKubeConfigOutput{Config: origconfig}, nil
 	}
 
+	// kubeconfig is not valid for other reasons, download a new one
 	client, err := c.ManagementClient()
 	if err != nil {
 		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
@@ -722,17 +745,12 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 			}
 			err = client.APIBaseClient.Action(managementClient.ClusterType, action, clusterResource, nil, kubeConfig)
 			if err == nil {
-				if isRancher26 && len(token) > 0 {
-					newConfig, err := replaceKubeConfigToken(c, kubeConfig.Config, token)
-					if err != nil {
-						return nil, err
-					}
-					kubeConfig.Config = newConfig
-				}
 				return kubeConfig, nil
 			}
-			if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
-				return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+			if err != nil {
+				if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
+					return nil, fmt.Errorf("Getting cluster Kubeconfig: %w", err)
+				}
 			}
 		}
 		select {

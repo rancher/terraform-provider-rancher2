@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
 	provisioningV1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
@@ -26,7 +28,7 @@ type ClusterV2 struct {
 
 func flattenClusterV2(d *schema.ResourceData, in *ClusterV2) error {
 	if in == nil {
-		return nil
+		return fmt.Errorf("[ERROR] flattening cluster: Input cluster is nil")
 	}
 
 	if len(in.ID) > 0 {
@@ -57,6 +59,12 @@ func flattenClusterV2(d *schema.ResourceData, in *ClusterV2) error {
 	if len(in.Spec.CloudCredentialSecretName) > 0 {
 		d.Set("cloud_credential_secret_name", in.Spec.CloudCredentialSecretName)
 	}
+	if in.Spec.ClusterAgentDeploymentCustomization != nil {
+		d.Set("cluster_agent_deployment_customization", flattenAgentDeploymentCustomizationV2(in.Spec.ClusterAgentDeploymentCustomization))
+	}
+	if in.Spec.FleetAgentDeploymentCustomization != nil {
+		d.Set("fleet_agent_deployment_customization", flattenAgentDeploymentCustomizationV2(in.Spec.FleetAgentDeploymentCustomization))
+	}
 	if len(in.Spec.DefaultPodSecurityPolicyTemplateName) > 0 {
 		d.Set("default_pod_security_policy_template_name", in.Spec.DefaultPodSecurityPolicyTemplateName)
 	}
@@ -78,9 +86,9 @@ func flattenClusterV2(d *schema.ResourceData, in *ClusterV2) error {
 
 // Expanders
 
-func expandClusterV2(in *schema.ResourceData) *ClusterV2 {
+func expandClusterV2(in *schema.ResourceData) (*ClusterV2, error) {
 	if in == nil {
-		return nil
+		return nil, fmt.Errorf("[ERROR] expanding cluster: Input cluster is nil")
 	}
 	obj := &ClusterV2{}
 
@@ -92,6 +100,7 @@ func expandClusterV2(in *schema.ResourceData) *ClusterV2 {
 
 	obj.ObjectMeta.Name = in.Get("name").(string)
 	obj.ObjectMeta.Namespace = in.Get("fleet_namespace").(string)
+
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
 		obj.ObjectMeta.Annotations = toMapString(v)
 	}
@@ -113,6 +122,23 @@ func expandClusterV2(in *schema.ResourceData) *ClusterV2 {
 	if v, ok := in.Get("agent_env_vars").([]interface{}); ok {
 		obj.Spec.AgentEnvVars = expandEnvVarsV2(v)
 	}
+
+	if v, ok := in.Get("cluster_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
+		clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomizationV2(v)
+		if err != nil {
+			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
+		}
+		obj.Spec.ClusterAgentDeploymentCustomization = clusterAgentDeploymentCustomization
+	}
+
+	if v, ok := in.Get("fleet_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
+		fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomizationV2(v)
+		if err != nil {
+			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
+		}
+		obj.Spec.FleetAgentDeploymentCustomization = fleetAgentDeploymentCustomization
+	}
+
 	if v, ok := in.Get("cloud_credential_secret_name").(string); ok && len(v) > 0 {
 		obj.Spec.CloudCredentialSecretName = v
 	}
@@ -129,5 +155,5 @@ func expandClusterV2(in *schema.ResourceData) *ClusterV2 {
 		obj.Spec.EnableNetworkPolicy = &v
 	}
 
-	return obj
+	return obj, nil
 }

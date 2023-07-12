@@ -5,14 +5,19 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	rkev1 "github.com/rancher/rancher/pkg/apis/rke.cattle.io/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 var (
-	testClusterV2EnvVarConf      []rkev1.EnvVar
-	testClusterV2EnvVarInterface []interface{}
-	testClusterV2Conf            *ClusterV2
-	testClusterV2Interface       map[string]interface{}
+	testClusterV2EnvVarConf                       []rkev1.EnvVar
+	testClusterV2EnvVarInterface                  []interface{}
+	testClusterV2AgentDeploymentCustomizationConf *provisionv1.AgentDeploymentCustomization
+	testClusterV2AgentCustomizationInterface      []interface{}
+	testClusterV2Conf                             *ClusterV2
+	testClusterV2Interface                        map[string]interface{}
 )
 
 func init() {
@@ -61,14 +66,102 @@ func init() {
 	testClusterV2Conf.Spec.DefaultClusterRoleForProjectMembers = "default_cluster_role_for_project_members"
 	testClusterV2Conf.Spec.EnableNetworkPolicy = newTrue()
 
+	// cluster and fleet agent customization
+	testClusterV2AppendTolerations := []corev1.Toleration{{
+		Effect:   corev1.TaintEffectNoSchedule,
+		Key:      "tolerate/test",
+		Operator: corev1.TolerationOpEqual,
+		Value:    "true",
+	},
+	}
+	testClusterV2OverrideAffinity := &corev1.Affinity{
+		NodeAffinity: &corev1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+				NodeSelectorTerms: []corev1.NodeSelectorTerm{
+					{
+						MatchExpressions: []corev1.NodeSelectorRequirement{
+							{
+								Key:      "not.this/nodepool",
+								Operator: corev1.NodeSelectorOpNotIn,
+								Values:   []string{"true"},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	testVal := "500"
+	testQuantity, _ := resource.ParseQuantity(testVal)
+	testClusterV2OverrideResourceRequirements := &corev1.ResourceRequirements{
+		Limits: map[corev1.ResourceName]resource.Quantity{
+			corev1.ResourceCPU:    testQuantity,
+			corev1.ResourceMemory: testQuantity,
+		},
+		Requests: map[corev1.ResourceName]resource.Quantity{
+			corev1.ResourceCPU:    testQuantity,
+			corev1.ResourceMemory: testQuantity,
+		},
+	}
+	testClusterV2AgentDeploymentCustomizationConf = &provisionv1.AgentDeploymentCustomization{
+		AppendTolerations:            testClusterV2AppendTolerations,
+		OverrideAffinity:             testClusterV2OverrideAffinity,
+		OverrideResourceRequirements: testClusterV2OverrideResourceRequirements,
+	}
+	testClusterV2Conf.Spec.ClusterAgentDeploymentCustomization = testClusterV2AgentDeploymentCustomizationConf
+	testClusterV2Conf.Spec.FleetAgentDeploymentCustomization = testClusterV2AgentDeploymentCustomizationConf
+
+	testClusterV2AgentCustomizationInterface = []interface{}{
+		map[string]interface{}{
+			"append_tolerations": []interface{}{
+				map[string]interface{}{
+					"effect":   "NoSchedule",
+					"key":      "tolerate/test",
+					"operator": "Equal",
+					"seconds":  0,
+					"value":    "true",
+				},
+			},
+			"override_affinity": `{
+  				"nodeAffinity": {
+    				"requiredDuringSchedulingIgnoredDuringExecution": {
+      					"nodeSelectorTerms": [
+        					{
+          						"matchExpressions": [
+            						{
+              							"key": "not.this/nodepool",
+              							"operator": "NotIn",
+              							"values": [
+                							"true"
+              							]
+            						}
+          						]
+        					}
+      					]
+    				}
+  				}
+			}`,
+			"override_resource_requirements": []interface{}{
+				map[string]interface{}{
+					"cpu_limit":      "500",
+					"cpu_request":    "500",
+					"memory_limit":   "500",
+					"memory_request": "500",
+				},
+			},
+		},
+	}
+
 	testClusterV2Interface = map[string]interface{}{
-		"name":                         "name",
-		"fleet_namespace":              "fleet_namespace",
-		"kubernetes_version":           "kubernetes_version",
-		"local_auth_endpoint":          testClusterV2LocalAuthEndpointInterface,
-		"rke_config":                   testClusterV2RKEConfigInterface,
-		"agent_env_vars":               testClusterV2EnvVarInterface,
-		"cloud_credential_secret_name": "cloud_credential_secret_name",
+		"name":                                                       "name",
+		"fleet_namespace":                                            "fleet_namespace",
+		"kubernetes_version":                                         "kubernetes_version",
+		"local_auth_endpoint":                                        testClusterV2LocalAuthEndpointInterface,
+		"rke_config":                                                 testClusterV2RKEConfigInterface,
+		"agent_env_vars":                                             testClusterV2EnvVarInterface,
+		"cluster_agent_deployment_customization":                     testClusterV2AgentCustomizationInterface,
+		"fleet_agent_deployment_customization":                       testClusterV2AgentCustomizationInterface,
+		"cloud_credential_secret_name":                               "cloud_credential_secret_name",
 		"default_pod_security_policy_template_name":                  "default_pod_security_policy_template_name",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
 		"default_cluster_role_for_project_members":                   "default_cluster_role_for_project_members",
@@ -132,7 +225,10 @@ func TestExpandClusterV2(t *testing.T) {
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, clusterV2Fields(), tc.Input)
-		output := expandClusterV2(inputResourceData)
+		output, err := expandClusterV2(inputResourceData)
+		if err != nil {
+			t.Fatalf("[ERROR] on expander: %#v", err)
+		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)

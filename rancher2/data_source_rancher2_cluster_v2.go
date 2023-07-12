@@ -72,7 +72,7 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 				Elem: &schema.Resource{
-					Schema: clusterRegistationTokenFields(),
+					Schema: clusterRegistrationTokenFields(),
 				},
 			},
 			"kube_config": {
