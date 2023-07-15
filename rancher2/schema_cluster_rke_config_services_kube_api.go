@@ -98,7 +98,6 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsFieldsV0() map[
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "",
 			Description: "Plugin path",
 		},
 		"configuration": {
@@ -121,7 +120,6 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsFields() map[st
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "",
 			Description: "Plugin path",
 		},
 		"configuration": {
@@ -271,7 +269,6 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigPluginsFieldsV0() map[string]
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "",
 			Description: "Plugin path",
 		},
 		"configuration": {
@@ -294,7 +291,6 @@ func clusterRKEConfigServicesKubeAPIAdmissionConfigPluginsFields() map[string]*s
 		"path": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "",
 			Description: "Plugin path",
 		},
 		"configuration": {
