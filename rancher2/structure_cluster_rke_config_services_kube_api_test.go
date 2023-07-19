@@ -8,16 +8,20 @@ import (
 )
 
 var (
-	testClusterRKEConfigServicesKubeAPIAuditLogConfigConf               *managementClient.AuditLogConfig
-	testClusterRKEConfigServicesKubeAPIAuditLogConfigInterface          []interface{}
-	testClusterRKEConfigServicesKubeAPIAuditLogConf                     *managementClient.AuditLog
-	testClusterRKEConfigServicesKubeAPIAuditLogInterface                []interface{}
-	testClusterRKEConfigServicesKubeAPIEventRateLimitConf               *managementClient.EventRateLimit
-	testClusterRKEConfigServicesKubeAPIEventRateLimitInterface          []interface{}
-	testClusterRKEConfigServicesKubeAPISecretsEncryptionConfigConf      *managementClient.SecretsEncryptionConfig
-	testClusterRKEConfigServicesKubeAPISecretsEncryptionConfigInterface []interface{}
-	testClusterRKEConfigServicesKubeAPIConf                             *managementClient.KubeAPIService
-	testClusterRKEConfigServicesKubeAPIInterface                        []interface{}
+	testClusterRKEConfigServicesKubeAPIAuditLogConfigConf                     *managementClient.AuditLogConfig
+	testClusterRKEConfigServicesKubeAPIAuditLogConfigInterface                []interface{}
+	testClusterRKEConfigServicesKubeAPIAuditLogConf                           *managementClient.AuditLog
+	testClusterRKEConfigServicesKubeAPIAuditLogInterface                      []interface{}
+	testClusterRKEConfigServicesKubeAPIEventRateLimitConf                     *managementClient.EventRateLimit
+	testClusterRKEConfigServicesKubeAPIEventRateLimitInterface                []interface{}
+	testClusterRKEConfigServicesKubeAPISecretsEncryptionConfigConf            *managementClient.SecretsEncryptionConfig
+	testClusterRKEConfigServicesKubeAPISecretsEncryptionConfigInterface       []interface{}
+	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationConf             map[string]interface{}
+	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationInterface        []interface{}
+	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsConf      []interface{}
+	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsInterface []interface{}
+	testClusterRKEConfigServicesKubeAPIConf                                   *managementClient.KubeAPIService
+	testClusterRKEConfigServicesKubeAPIInterface                              []interface{}
 )
 
 func init() {
@@ -81,10 +85,43 @@ func init() {
 			"custom_config": "apiVersion: " + clusterRKEConfigServicesKubeAPIEncryptionConfigAPIDefault + "\nkind: " + clusterRKEConfigServicesKubeAPIEncryptionConfigKindDefault + "\nresources:\n- {}\n",
 		},
 	}
+	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsConf = []interface{}{
+		map[string]interface{}{
+			"name": "EventRateLimit",
+			"path": "",
+			"configuration": map[string]interface{}{
+				"apiVersion": clusterRKEConfigServicesKubeAPIEventRateLimitConfigAPIDefault,
+				"kind":       clusterRKEConfigServicesKubeAPIEventRateLimitConfigKindDefault,
+				"limits": []interface{}{
+					map[string]interface{}{},
+				},
+			},
+		},
+	}
+	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsInterface = []interface{}{
+		map[string]interface{}{
+			"name":          "EventRateLimit",
+			"path":          "",
+			"configuration": "apiVersion: " + clusterRKEConfigServicesKubeAPIEventRateLimitConfigAPIDefault + "\nkind: " + clusterRKEConfigServicesKubeAPIEventRateLimitConfigKindDefault + "\nlimits:\n- {}\n",
+		},
+	}
+	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationConf = map[string]interface{}{
+		"apiVersion": clusterRKEConfigServicesKubeAPIAdmissionConfigurationAPIDefault,
+		"kind":       clusterRKEConfigServicesKubeAPIAdmissionConfigurationKindDefault,
+		"plugins":    testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsConf,
+	}
+	testClusterRKEConfigServicesKubeAPIAdmissionConfigurationInterface = []interface{}{
+		map[string]interface{}{
+			"api_version": clusterRKEConfigServicesKubeAPIAdmissionConfigurationAPIDefault,
+			"kind":        clusterRKEConfigServicesKubeAPIAdmissionConfigurationKindDefault,
+			"plugins":     testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsInterface,
+		},
+	}
 	testClusterRKEConfigServicesKubeAPIConf = &managementClient.KubeAPIService{
-		AlwaysPullImages: true,
-		AuditLog:         testClusterRKEConfigServicesKubeAPIAuditLogConf,
-		EventRateLimit:   testClusterRKEConfigServicesKubeAPIEventRateLimitConf,
+		AlwaysPullImages:       true,
+		AuditLog:               testClusterRKEConfigServicesKubeAPIAuditLogConf,
+		EventRateLimit:         testClusterRKEConfigServicesKubeAPIEventRateLimitConf,
+		AdmissionConfiguration: testClusterRKEConfigServicesKubeAPIAdmissionConfigurationConf,
 		ExtraArgs: map[string]string{
 			"arg_one": "one",
 			"arg_two": "two",
@@ -99,9 +136,10 @@ func init() {
 	}
 	testClusterRKEConfigServicesKubeAPIInterface = []interface{}{
 		map[string]interface{}{
-			"always_pull_images": true,
-			"audit_log":          testClusterRKEConfigServicesKubeAPIAuditLogInterface,
-			"event_rate_limit":   testClusterRKEConfigServicesKubeAPIEventRateLimitInterface,
+			"always_pull_images":      true,
+			"admission_configuration": testClusterRKEConfigServicesKubeAPIAdmissionConfigurationInterface,
+			"audit_log":               testClusterRKEConfigServicesKubeAPIAuditLogInterface,
+			"event_rate_limit":        testClusterRKEConfigServicesKubeAPIEventRateLimitInterface,
 			"extra_args": map[string]interface{}{
 				"arg_one": "one",
 				"arg_two": "two",
@@ -234,6 +272,54 @@ func TestFlattenClusterRKEConfigServicesKubeAPI(t *testing.T) {
 	}
 }
 
+func TestFlattenClusterRKEConfigServicesKubeAPIAdmissionConfigurationPlugins(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsConf,
+			testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output, err := flattenClusterRKEConfigServicesKubeAPIAdmissionConfigurationPlugins(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestFlattenClusterRKEConfigServicesKubeAPIAdmissionConfiguration(t *testing.T) {
+
+	cases := []struct {
+		Input          map[string]interface{}
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterRKEConfigServicesKubeAPIAdmissionConfigurationConf,
+			testClusterRKEConfigServicesKubeAPIAdmissionConfigurationInterface,
+		},
+	}
+
+	for _, tc := range cases {
+		output, err := flattenClusterRKEConfigServicesKubeAPIAdmissionConfiguration(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
 func TestExpandClusterRKEConfigServicesKubeAPIAuditLogConfig(t *testing.T) {
 
 	cases := []struct {
@@ -343,6 +429,54 @@ func TestExpandClusterRKEConfigServicesKubeAPI(t *testing.T) {
 		}
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
 			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestExpandClusterRKEConfigServicesKubeAPIAdmissionConfigurationPlugins(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput []interface{}
+	}{
+		{
+			testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsInterface,
+			testClusterRKEConfigServicesKubeAPIAdmissionConfigurationPluginsConf,
+		},
+	}
+
+	for _, tc := range cases {
+		output, err := expandClusterRKEConfigServicesKubeAPIAdmissionConfigurationPlugins(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+				tc.ExpectedOutput, output)
+		}
+	}
+}
+
+func TestExpandClusterRKEConfigServicesKubeAPIAdmissionConfiguration(t *testing.T) {
+
+	cases := []struct {
+		Input          []interface{}
+		ExpectedOutput map[string]interface{}
+	}{
+		{
+			testClusterRKEConfigServicesKubeAPIAdmissionConfigurationInterface,
+			testClusterRKEConfigServicesKubeAPIAdmissionConfigurationConf,
+		},
+	}
+
+	for _, tc := range cases {
+		output, err := expandClusterRKEConfigServicesKubeAPIAdmissionConfiguration(tc.Input)
+		if err != nil {
+			t.Fatalf("[ERROR] on flattener: %#v", err)
+		}
+		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, output)
 		}
 	}

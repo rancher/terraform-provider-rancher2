@@ -39,12 +39,12 @@ func resourceRancher2Cluster() *schema.Resource {
 			return nil
 		},
 		Schema:        clusterFields(),
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceRancher2ClusterResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: resourceRancher2ClusterStateUpgradeV0,
-				Version: 0,
+				Version: 1,
 			},
 		},
 		// Setting default timeouts to be liberal in order to accommodate managed Kubernetes providers like EKS, GKE, and AKS
@@ -103,6 +103,11 @@ func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta
 													}
 												}
 											}
+										}
+										if admissionConfig, ok := kubeAPI["admission_configuration"].(map[string]interface{}); ok {
+											newValue := []map[string]interface{}{}
+											newValue = append(newValue, admissionConfig)
+											rawState["rke_config"].([]interface{})[i1].(map[string]interface{})["services"].([]interface{})[i2].(map[string]interface{})["kube_api"].([]interface{})[i3].(map[string]interface{})["admission_configuration"] = newValue
 										}
 									}
 								}
@@ -306,17 +311,18 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"fleetAgentDeploymentCustomization":   fleetAgentDeploymentCustomization,
 		"description":                         d.Get("description").(string),
 		"defaultPodSecurityPolicyTemplateId":  d.Get("default_pod_security_policy_template_id").(string),
-		"desiredAgentImage":                   d.Get("desired_agent_image").(string),
-		"desiredAuthImage":                    d.Get("desired_auth_image").(string),
-		"dockerRootDir":                       d.Get("docker_root_dir").(string),
-		"fleetWorkspaceName":                  d.Get("fleet_workspace_name").(string),
-		"enableClusterAlerting":               d.Get("enable_cluster_alerting").(bool),
-		"enableClusterMonitoring":             d.Get("enable_cluster_monitoring").(bool),
-		"enableNetworkPolicy":                 &enableNetworkPolicy,
-		"istioEnabled":                        d.Get("enable_cluster_istio").(bool),
-		"localClusterAuthEndpoint":            expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
-		"annotations":                         toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":                              toMapString(d.Get("labels").(map[string]interface{})),
+		"defaultPodSecurityAdmissionConfigurationTemplateName": d.Get("default_pod_security_admission_configuration_template_name").(string),
+		"desiredAgentImage":        d.Get("desired_agent_image").(string),
+		"desiredAuthImage":         d.Get("desired_auth_image").(string),
+		"dockerRootDir":            d.Get("docker_root_dir").(string),
+		"fleetWorkspaceName":       d.Get("fleet_workspace_name").(string),
+		"enableClusterAlerting":    d.Get("enable_cluster_alerting").(bool),
+		"enableClusterMonitoring":  d.Get("enable_cluster_monitoring").(bool),
+		"enableNetworkPolicy":      &enableNetworkPolicy,
+		"istioEnabled":             d.Get("enable_cluster_istio").(bool),
+		"localClusterAuthEndpoint": expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
+		"annotations":              toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	// cluster_monitoring is not updated here. Setting old `enable_cluster_monitoring` value if it was updated
