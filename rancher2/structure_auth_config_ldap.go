@@ -33,7 +33,6 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	}
 
 	d.Set("service_account_distinguished_name", in.ServiceAccountDistinguishedName)
-	d.Set("user_search_base", in.UserSearchBase)
 	d.Set("certificate", Base64Encode(in.Certificate))
 	d.Set("connection_timeout", int(in.ConnectionTimeout))
 	d.Set("group_dn_attribute", in.GroupDNAttribute)
@@ -43,9 +42,11 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	d.Set("group_object_class", in.GroupObjectClass)
 	d.Set("group_search_attribute", in.GroupSearchAttribute)
 	d.Set("group_search_base", in.GroupSearchBase)
+	d.Set("group_search_filter", in.GroupSearchFilter)
 	d.Set("nested_group_membership_enabled", in.NestedGroupMembershipEnabled)
 	d.Set("port", int(in.Port))
 	d.Set("tls", in.TLS)
+	d.Set("start_tls", in.StartTLS)
 	d.Set("user_disabled_bit_mask", int(in.UserDisabledBitMask))
 	d.Set("user_enabled_attribute", in.UserEnabledAttribute)
 	d.Set("user_login_attribute", in.UserLoginAttribute)
@@ -53,6 +54,8 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	d.Set("user_name_attribute", in.UserNameAttribute)
 	d.Set("user_object_class", in.UserObjectClass)
 	d.Set("user_search_attribute", in.UserSearchAttribute)
+	d.Set("user_search_base", in.UserSearchBase)
+	d.Set("user_search_filter", in.UserSearchFilter)
 
 	return nil
 }
@@ -105,6 +108,10 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 		obj.UserSearchBase = v
 	}
 
+	if v, ok := in.Get("user_search_filter").(string); ok && len(v) > 0 {
+		obj.UserSearchFilter = v
+	}
+
 	if v, ok := in.Get("certificate").(string); ok && len(v) > 0 {
 		cert, err := Base64Decode(v)
 		if err != nil {
@@ -145,6 +152,10 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 		obj.GroupSearchBase = v
 	}
 
+	if v, ok := in.Get("group_search_filter").(string); ok && len(v) > 0 {
+		obj.GroupSearchFilter = v
+	}
+
 	if v, ok := in.Get("nested_group_membership_enabled").(bool); ok {
 		obj.NestedGroupMembershipEnabled = v
 	}
@@ -155,6 +166,10 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 
 	if v, ok := in.Get("tls").(bool); ok {
 		obj.TLS = v
+	}
+
+	if v, ok := in.Get("start_tls").(bool); ok {
+		obj.StartTLS = v
 	}
 
 	if v, ok := in.Get("user_disabled_bit_mask").(int); ok && v > 0 {
