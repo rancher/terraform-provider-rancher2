@@ -317,6 +317,50 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
+### Creating Rancher v2 RKE cluster with cluster agent customization. For Rancher v2.7.x or above.
+
+```hcl
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform cluster with agent customization"
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+  }
+  cluster_agent_deployment_customization {
+    append_tolerations {
+      effect = "NoSchedule"
+      key    = "tolerate/control-plane"
+      value  = "true"
+}
+    override_affinity = <<EOF
+{
+  "nodeAffinity": {
+    "requiredDuringSchedulingIgnoredDuringExecution": {
+      "nodeSelectorTerms": [{
+        "matchExpressions": [{
+          "key": "not.this/nodepool",
+          "operator": "In",
+          "values": [
+            "true"
+          ]
+        }]
+      }]
+    }
+  }
+}
+EOF
+    override_resource_requirements {
+      cpu_limit      = "800"
+      cpu_request    = "500"
+      memory_limit   = "800"
+      memory_request = "500"
+    }
+  }
+}
+```
+
 ### Importing EKS cluster to Rancher v2, using `eks_config_v2`. For Rancher v2.5.x or above.
 
 ```hcl
@@ -551,6 +595,8 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
 * `agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. Just for Rancher v2.5.6 and above (list)
+* `cluster_agent_deployment_customization` - (Optional) Optional customization for cluster agent. Just for Rancher v2.7.5 and above (list)
+* `fleet_agent_deployment_customization` - (Optional) Optional customization for fleet agent. Just for Rancher v2.7.5 and above (list)
 * `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `k3s_config` (list maxitems:1)
 * `rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
 * `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `rke_config` (list maxitems:1)
@@ -569,6 +615,7 @@ The following arguments are supported:
 * `cluster_template_questions` - (Optional/Computed) Cluster template questions. Just for Rancher v2.3.x and above (list)
 * `cluster_template_revision_id` - (Optional) Cluster template revision ID. Just for Rancher v2.3.x and above (string)
 * `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support) (string)
+* `default_pod_security_admission_configuration_template_name` - (Optional/Computed) Cluster default pod security admission configuration template name (string)
 * `desired_agent_image` - (Optional/Computed) Desired agent image. Just for Rancher v2.3.x and above (string)
 * `desired_auth_image` - (Optional/Computed) Desired auth image. Just for Rancher v2.3.x and above (string)
 * `docker_root_dir` - (Optional/Computed) Desired auth image. Just for Rancher v2.3.x and above (string)
@@ -605,6 +652,33 @@ The following attributes are exported:
 
 * `name` - (Required) Rancher agent env var name (string)
 * `value` - (Required) Rancher agent env var value (string)
+
+### `agent_deployment_customization`
+
+#### Arguments
+
+* `append_tolerations` - (Optional) User defined tolerations to append to agent (list)
+* `override_affinity` - (Optional) User defined affinity to override default agent affinity (string)
+* `override_resource_requirements` - (Optional) User defined resource requirements to set on the agent (list)
+
+#### `append_tolerations`
+
+#### Arguments
+
+* `key` - (Required) The toleration key (string)
+* `effect` - (Optional) The toleration effect. Default: `\"NoSchedule\"` (string)
+* `operator` - (Optional) The toleration operator (string)
+* `seconds` - (Optional) The number of seconds a pod will stay bound to a node with a matching taint (int)
+* `value` - (Optional) The toleration value (string)
+
+#### `override_resource_requirements`
+
+#### Arguments
+
+* `cpu_limit` - (Optional) The maximum CPU limit for agent (string) 
+* `cpu_request` - (Optional) The minimum CPU required for agent (string)
+* `memory_limit` - (Optional) The maximum memory limit for agent (string)
+* `memory_request` - (Optional) The minimum memory required for agent (string)
 
 ### `rke_config`
 

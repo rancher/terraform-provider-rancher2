@@ -236,6 +236,95 @@ The `<AUTH_CONFIG_SECRET_NAME>` represents a generic kubernetes secret which con
 
 Many registries may be specified in the `rke_config`s `registries` section, however the `system-default-registry` from which core system images are pulled is always denoted via the `system-default-registry` key of the `machine_selector_config` or the `machine_global_config`. For more information on private registries, please refer to [the Rancher documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/global-default-private-registry#setting-a-private-registry-with-credentials-when-deploying-a-cluster) 
 
+### Creating Rancher V2 cluster with cluster agent customization. For Rancher v2.7.x or above.
+
+```hcl
+resource "rancher2_cluster_v2" "foo" {
+  name = "foo"
+  enable_network_policy = false
+  rke_config {
+    machine_pools {
+      name = "pool1"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
+      control_plane_role = true
+      etcd_role = true
+      worker_role = true
+      quantity = 1
+      machine_config {
+        kind = rancher2_machine_config_v2.foo.kind
+        name = rancher2_machine_config_v2.foo.name
+      }
+    }
+  }
+  cluster_agent_deployment_customization {
+    append_tolerations {
+      effect = "NoSchedule"
+      key    = "tolerate/control-plane"
+      value  = "true"
+}
+    override_affinity = <<EOF
+{
+  "nodeAffinity": {
+    "requiredDuringSchedulingIgnoredDuringExecution": {
+      "nodeSelectorTerms": [{
+        "matchExpressions": [{
+          "key": "not.this/nodepool",
+          "operator": "In",
+          "values": [
+            "true"
+          ]
+        }]
+      }]
+    }
+  }
+}
+EOF
+    override_resource_requirements {
+      cpu_limit      = "800"
+      cpu_request    = "500"
+      memory_limit   = "800"
+      memory_request = "500"
+    }
+  }
+}
+```
+
+### Creating Rancher V2 cluster with Pod Security Policy Admission Configuration Template (PSACT). For Rancher v2.7.x or above.
+
+**Note** When PSACT is enabled in RKE2, Rancher webhook sets the `kube-apiserver-arg` to the Pod Security Admission mount path. To suppress Terraform constantly trying to reconcile that arg, it must be set locally.
+
+```hcl
+locals {
+  rancher_psact_mount_path = "/etc/rancher/rke2/config/rancher-psact.yaml"
+  kube_apiserver_arg = var.default_psa_template != null && var.default_psa_template != "" ? ["admission-control-config-file=${local.rancher_psact_mount_path}"] : []
+}
+
+resource "rancher2_cluster_v2" "foo" {
+  name = "foo"
+  enable_network_policy = false
+  default_pod_security_admission_configuration_template_name = "rancher-restricted"
+  rke_config {
+    machine_global_config = yamlencode({
+      cni = "calico"
+      disable-kube-proxy = false
+      etcd-expose-metrics = false
+      kube-apiserver-arg = local.kube_apiserver_arg
+    })
+    machine_pools {
+      name = "pool1"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
+      control_plane_role = true
+      etcd_role = true
+      worker_role = true
+      quantity = 1
+      machine_config {
+        kind = rancher2_machine_config_v2.foo.kind
+        name = rancher2_machine_config_v2.foo.name
+      }
+    }
+  }
+}
+```
 
 ### Creating Rancher v2 harvester cluster v2 without harvester cloud provider
 
@@ -455,6 +544,8 @@ The following arguments are supported:
 * `fleet_namespace` - (Optional/ForceNew) The fleet namespace of the Cluster v2. Default: `\"fleet-default\"` (string)
 * `kubernetes_version` - (Required) The kubernetes version of the Cluster v2 (list maxitems:1)
 * `agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent (list)
+* `cluster_agent_deployment_customization` - (Optional) Optional customization for cluster agent (list)
+* `fleet_agent_deployment_customization` - (Optional) Optional customization for fleet agent (list)
 * `rke_config` - (Optional/Computed) The RKE configuration for `k3s` and `rke2` Clusters v2. (list maxitems:1)
 * `local_auth_endpoint` - (Optional) Cluster V2 local auth endpoint (list maxitems:1)
 * `cloud_credential_secret_name` - (Optional) Cluster V2 cloud credential secret name (string)
@@ -485,6 +576,33 @@ The following attributes are exported:
 
 * `name` - (Required) Rancher agent env var name (string)
 * `value` - (Required) Rancher agent env var value (string)
+
+### `agent_deployment_customization`
+
+#### Arguments
+
+* `append_tolerations` - (Optional) User defined tolerations to append to agent (list)
+* `override_affinity` - (Optional) User defined affinity to override default agent affinity (string)
+* `override_resource_requirements` - (Optional) User defined resource requirements to set on the agent (list)
+
+#### `append_tolerations`
+
+#### Arguments
+
+* `key` - (Required) The toleration key (string)
+* `effect` - (Optional) The toleration effect. Default: `\"NoSchedule\"` (string)
+* `operator` - (Optional) The toleration operator (string)
+* `seconds` - (Optional) The number of seconds a pod will stay bound to a node with a matching taint (int)
+* `value` - (Optional) The toleration value (string)
+
+#### `override_resource_requirements`
+
+#### Arguments
+
+* `cpu_limit` - (Optional) The maximum CPU limit for agent (string)
+* `cpu_request` - (Optional) The minimum CPU required for agent (string)
+* `memory_limit` - (Optional) The maximum memory limit for agent (string)
+* `memory_request` - (Optional) The minimum memory required for agent (string)
 
 ### `rke_config`
 
