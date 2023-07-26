@@ -590,15 +590,6 @@ func ghodssyamlToInterface(in string, out interface{}) error {
 	return err
 }
 
-func yamlToMapInterface(in string) (map[string]interface{}, error) {
-	out := make(map[string]interface{})
-	err := yaml.Unmarshal([]byte(in), &out)
-	if err != nil {
-		return nil, err
-	}
-	return out, err
-}
-
 func yamlToInterface(in string, out interface{}) error {
 	if out == nil {
 		return nil

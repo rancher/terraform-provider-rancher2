@@ -22,11 +22,18 @@ func resourceRancher2ClusterV2() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceRancher2ClusterV2Import,
 		},
-		Schema: clusterV2Fields(),
+		Schema:        clusterV2Fields(),
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceRancher2ClusterV2Resource().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceRancher2ClusterV2StateV0,
+				Version: 0,
+			},
+		},
 		CustomizeDiff: func(d *schema.ResourceDiff, i interface{}) error {
 			if d.HasChange("rke_config") {
 				oldObj, newObj := d.GetChange("rke_config")
-				//return fmt.Errorf("\n%#v\n%#v\n", oldObj, newObj)
 				oldInterface, oldOk := oldObj.([]interface{})
 				newInterface, newOk := newObj.([]interface{})
 				if oldOk && newOk && len(newInterface) > 0 {
@@ -41,7 +48,6 @@ func resourceRancher2ClusterV2() *schema.Resource {
 			}
 			if d.HasChange("local_auth_endpoint") {
 				oldObj, newObj := d.GetChange("local_auth_endpoint")
-				//return fmt.Errorf("\n%#v\n%#v\n", oldObj, newObj)
 				oldInterface, oldOk := oldObj.([]interface{})
 				newInterface, newOk := newObj.([]interface{})
 				if oldOk && newOk && len(newInterface) > 0 {
@@ -62,6 +68,37 @@ func resourceRancher2ClusterV2() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 	}
+}
+
+func resourceRancher2ClusterV2Resource() *schema.Resource {
+	return &schema.Resource{
+		Schema: clusterV2FieldsV0(),
+	}
+}
+
+func resourceRancher2ClusterV2StateV0(rawState map[string]any, meta interface{}) (map[string]any, error) {
+	if rkeConfigs, ok := rawState["rke_config"].([]any); ok && len(rkeConfigs) > 0 {
+		for i := range rkeConfigs {
+			if rkeConfig, ok := rkeConfigs[i].(map[string]any); ok && len(rkeConfig) > 0 {
+				if machineSelectorConfigs, ok := rkeConfig["machine_selector_config"].([]any); ok && len(machineSelectorConfigs) > 0 {
+
+					// upgrade all machine selector configs
+					for m := range machineSelectorConfigs {
+						if machineSelectorConfig, ok := machineSelectorConfigs[m].(map[string]any); ok && len(machineSelectorConfig) > 0 {
+
+							// machine selector config data found. Migrate state from map -> list
+							if config, ok := machineSelectorConfig["config"].([]any); ok {
+								var newValue []any
+								newValue = append(newValue, config)
+								rawState["rke_config"].([]interface{})[i].(map[string]any)["machine_selector_config"].([]any)[m].(map[string]any)["config"] = newValue
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return rawState, nil
 }
 
 func resourceRancher2ClusterV2Create(d *schema.ResourceData, meta interface{}) error {
