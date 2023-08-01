@@ -15,8 +15,8 @@ Provides a Rancher v2 Cluster v2 resource. This can be used to create RKE2 and K
 # Create a new rancher v2 RKE2 custom Cluster v2
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   fleet_namespace = "fleet-ns"
-  kubernetes_version = "v1.21.4+rke2r2"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
 }
@@ -25,13 +25,13 @@ resource "rancher2_cluster_v2" "foo" {
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
   fleet_namespace = "fleet-ns"
-  kubernetes_version = "v1.21.4+k3s1"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
 }
 ```
 
-**Note** Once created, get the node command from `rancher2_cluster_v2.foo.cluster_registration_token`
+**Note:** Once created, get the node command from `rancher2_cluster_v2.foo.cluster_registration_token`
 
 ### Creating Rancher v2 amazonec2 cluster v2
 
@@ -61,7 +61,7 @@ resource "rancher2_machine_config_v2" "foo" {
 # Create a new rancher v2 amazonec2 RKE2 Cluster v2
 resource "rancher2_cluster_v2" "foo-rke2" {
   name = "foo-rke2"
-  kubernetes_version = "v1.21.4+rke2r2"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
   rke_config {
@@ -83,7 +83,7 @@ resource "rancher2_cluster_v2" "foo-rke2" {
 # Create a new rancher v2 amazonec2 K3S Cluster v2
 resource "rancher2_cluster_v2" "foo-k3s" {
   name = "foo-k3s"
-  kubernetes_version = "v1.21.4+k3s1"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
   rke_config {
@@ -128,7 +128,7 @@ resource "rancher2_machine_config_v2" "foo" {
 
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
-  kubernetes_version = "v1.21.4+k3s1"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   enable_network_policy = false
   rke_config {
     machine_pools {
@@ -211,8 +211,8 @@ EOF
 
 ```hcl
 resource "rancher2_cluster_v2" "foo_cluster_v2" {
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   name = "cluster-with-custom-registry"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   rke_config {
     machine_selector_config {
       config = {
@@ -231,7 +231,7 @@ resource "rancher2_cluster_v2" "foo_cluster_v2" {
   }
 }
 ```
-**Note**
+**Note:**
 The `<AUTH_CONFIG_SECRET_NAME>` represents a generic kubernetes secret which contains two keys with base64 encoded values: the `username` and `password` for the specified custom registry. If the `system-default-registry` is not authenticated, no secret is required and the section within the `rke_config` can be omitted if not otherwise needed. 
 
 Many registries may be specified in the `rke_config`s `registries` section, however the `system-default-registry` from which core system images are pulled is always denoted via the `system-default-registry` key of the `machine_selector_config` or the `machine_global_config`. For more information on private registries, please refer to [the Rancher documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/global-default-private-registry#setting-a-private-registry-with-credentials-when-deploying-a-cluster) 
@@ -241,6 +241,7 @@ Many registries may be specified in the `rke_config`s `registries` section, howe
 ```hcl
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   enable_network_policy = false
   rke_config {
     machine_pools {
@@ -291,7 +292,7 @@ EOF
 
 ### Creating Rancher V2 cluster with Pod Security Policy Admission Configuration Template (PSACT). For Rancher v2.7.2 and above.
 
-**Note** When PSACT is enabled in RKE2 or K3s, Rancher webhook sets the `kube-apiserver-arg` to the Pod Security Admission mount path. To suppress Terraform constantly trying to reconcile that arg, it must be set locally.
+**Note:** When PSACT is enabled in RKE2 or K3s, Rancher webhook sets the `kube-apiserver-arg` to the Pod Security Admission mount path. To suppress Terraform constantly trying to reconcile that arg, it must be set locally.
 
 ```hcl
 locals {
@@ -302,6 +303,7 @@ locals {
 
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   enable_network_policy = false
   default_pod_security_admission_configuration_template_name = "rancher-restricted"
   rke_config {
@@ -385,7 +387,7 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
 
 resource "rancher2_cluster_v2" "foo-harvester-v2" {
   name = "foo-harvester-v2"
-  kubernetes_version = "v1.24.10+rke2r1"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   rke_config {
     machine_pools {
       name = "pool1"
@@ -495,7 +497,7 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2-cloud-provider" {
 # Create a new harvester rke2 cluster with harvester cloud provider
 resource "rancher2_cluster_v2" "foo-harvester-v2-cloud-provider" {
   name = "foo-harvester-v2-cloud-provider"
-  kubernetes_version = "v1.24.10+rke2r1"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
   rke_config {
     machine_pools {
       name = "pool1"
@@ -567,7 +569,7 @@ The following attributes are exported:
 * `cluster_v1_id` - (Computed) Cluster v1 id for cluster v2. (e.g to be used with `rancher2_sync`) (string)
 * `resource_version` - (Computed) Cluster v2 k8s resource version (string)
 
-**Note** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
+**Note:** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
 
 ## Nested blocks
 

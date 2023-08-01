@@ -8,7 +8,7 @@ Provides a Rancher v2 Node Template resource. This can be used to create Node Te
 
 amazonec2, azure, digitalocean, harvester, linode, opennebula, openstack, outscale, hetzner and vsphere drivers are supported for node templates.
 
-**Note** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
+**Note:** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
 
 ## Example Usage
 
@@ -171,7 +171,7 @@ The following arguments are supported:
 * `annotations` - (Optional) Annotations for Node Template object (map)
 * `labels` - (Optional/Computed) Labels for Node Template object (map)
 
-**Note** `labels` and `node_taints` will be applied to nodes deployed using the Node Template
+**Note:** `labels` and `node_taints` will be applied to nodes deployed using the Node Template
 
 ## Attributes Reference
 
@@ -306,7 +306,7 @@ The following attributes are exported:
 * `volumes` - (Optional) Comma-separated list of volume IDs or names which should be attached to the server (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
 
-> **Note**: You need to install the Hetzner Docker Machine Driver first as shown as in the [examples section](#using-the-hetzner-node-driver).
+> **Note:**: You need to install the Hetzner Docker Machine Driver first as shown as in the [examples section](#using-the-hetzner-node-driver).
 
 ### `linode_config`
 
@@ -362,7 +362,7 @@ The following attributes are exported:
 * `ssh_user` - (Optional) Set the name of the SSH user. Defaults to docker (string)
 * `vcpu` - (Optional) VCPUs for the VM (string)
 
-> **Note**: `Required*` denotes that one of image_name / image_id or template_name / template_id is required but you cannot combine them.
+> **Note:**: `Required*` denotes that one of image_name / image_id or template_name / template_id is required but you cannot combine them.
 
 ### `openstack_config`
 
@@ -407,9 +407,9 @@ The following attributes are exported:
 * `volume_name` - (Optional) OpenStack volume name of existing volume. Applicable only when `boot_from_volume` is `true` (string)
 * `volume_device_path` - (Optional) OpenStack volume device path (attaching). Applicable only when `boot_from_volume` is `true`. Omit for auto `/dev/vdb`. (string)
 
-> **Note**: `Required*` denotes that either the _name or _id is required but you cannot use both.
+> **Note:**: `Required*` denotes that either the _name or _id is required but you cannot use both.
 
-> **Note**: `Required**` denotes that either the _name or _id is required unless `application_credential_id` is defined.
+> **Note:**: `Required**` denotes that either the _name or _id is required unless `application_credential_id` is defined.
 
 ### `vsphere_config`
 

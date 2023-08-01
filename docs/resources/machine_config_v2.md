@@ -8,7 +8,7 @@ Provides a Rancher v2 Machine config v2 resource. This can be used to create Mac
 
 `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `openstack`, and `vsphere` cloud providers are supported for machine config V2
 
-**Note** This resource is used by 
+**Note:** This resource is used by 
 
 ## Example Usage
 
@@ -99,7 +99,7 @@ The following arguments are supported:
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
-**Note** `labels` and `node_taints` will be applied to nodes deployed using the Machine Config V2
+**Note:** `labels` and `node_taints` will be applied to nodes deployed using the Machine Config V2
 
 ## Attributes Reference
 
@@ -291,8 +291,8 @@ The following attributes are exported:
 * `volume_id` - (Optional) OpenStack volume id of existing volume. Applicable only when `boot_from_volume` is `true` (string)
 * `volume_name` - (Optional) OpenStack volume name of existing volume. Applicable only when `boot_from_volume` is `true` (string)
 * `volume_device_path` - (Optional) OpenStack volume device path (attaching). Applicable only when `boot_from_volume` is `true`. Omit for auto `/dev/vdb`. (string)
-> **Note**: `Required+` denotes that either the _name or _id is required but you cannot use both.
-> **Note**: `Required++` denotes that either the _name or _id is required unless `application_credential_id` is defined.
+> **Note:**: `Required+` denotes that either the _name or _id is required but you cannot use both.
+> **Note:**: `Required++` denotes that either the _name or _id is required unless `application_credential_id` is defined.
 
 ### `vsphere_config`
 

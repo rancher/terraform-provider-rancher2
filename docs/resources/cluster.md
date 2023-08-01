@@ -62,7 +62,7 @@ resource "rancher2_cluster" "foo-custom" {
 
 ### Creating Rancher v2 RKE cluster enabling and customizing monitoring
 
-**Note** Cluster monitoring version `0.2.0` and above, can't be enabled until cluster is fully deployed as [`kubeVersion`](https://github.com/rancher/system-charts/blob/52be656700468904b9bf15c3f39cd7112e1f8c9b/charts/rancher-monitoring/v0.2.0/Chart.yaml#L12) requirement has been introduced to helm chart 
+**Note:** Cluster monitoring version `0.2.0` and above, can't be enabled until cluster is fully deployed as [`kubeVersion`](https://github.com/rancher/system-charts/blob/52be656700468904b9bf15c3f39cd7112e1f8c9b/charts/rancher-monitoring/v0.2.0/Chart.yaml#L12) requirement has been introduced to helm chart 
 
 ```hcl
 # Create a new rancher2 RKE Cluster
@@ -482,7 +482,7 @@ resource "rancher2_cluster" "foo" {
 
 ### Creating GKE cluster from Rancher v2, using `gke_config_v2`. For Rancher v2.5.8 and above.
 
-**Note** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585]](https://github.com/rancher/rancher/issues/32585)
+**Note:** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585]](https://github.com/rancher/rancher/issues/32585)
 
 ```hcl
 resource "rancher2_cloud_credential" "foo-google" {
@@ -642,7 +642,7 @@ The following attributes are exported:
 * `ca_cert` - (Computed/Sensitive) K8s cluster ca cert (string)
 * `system_project_id` - (Computed) System project ID for the cluster (string)
 
-**Note** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
+**Note:** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
 
 ## Nested blocks
 
@@ -682,7 +682,7 @@ The following attributes are exported:
 
 ### `rke_config`
 
-**Note** `rke_config` works the same as within Rancher GUI; it will not _provision_ hosts when not using `node_pool` nor `node_driver`. It is expected that nodes are registered by having the `node_command` run on each node. Running the `node_command` is outside the scope of this provider.
+**Note:** `rke_config` works the same as within Rancher GUI; it will not _provision_ hosts when not using `node_pool` nor `node_driver`. It is expected that nodes are registered by having the `node_command` run on each node. Running the `node_command` is outside the scope of this provider.
 
 #### Arguments
 
@@ -1862,7 +1862,7 @@ The following arguments are supported:
 * `compartment_id` - (Required) The OCID of the compartment in which to create resources OKE cluster and related resources (string)
 * `custom_boot_volume_size` - (Optional) Optional custom boot volume size (GB) for all nodes. If you specify 0, it will apply the default according to the `node_image` specified. Default `0` (int)
 * `description` - (Optional) An optional description of this cluster (string)
-* `enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` For Rancher v2.5.10 and above (bool)
+* `enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` for Rancher v2.5.10 and above (bool)
 * `enable_kubernetes_dashboard` - (Optional) Specifies whether to enable the Kubernetes dashboard. Default `false` (bool)
 * `enable_private_nodes` - (Optional) Specifies whether worker nodes will be deployed into a new, private, subnet. Default `false` (bool)
 * `fingerprint` - (Required) The fingerprint corresponding to the specified user's private API Key (string)

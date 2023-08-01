@@ -34,7 +34,7 @@ The following arguments are supported:
 * `annotations` - (Optional/Computed) Annotations for global role binding (map)
 * `labels` - (Optional/Computed) Labels for global role binding (map)
 
-**Note** user `user_id` OR group `group_principal_id` must be defined
+**Note:** user `user_id` OR group `group_principal_id` must be defined
 
 ## Attributes Reference
 
