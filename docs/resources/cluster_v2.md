@@ -236,7 +236,7 @@ The `<AUTH_CONFIG_SECRET_NAME>` represents a generic kubernetes secret which con
 
 Many registries may be specified in the `rke_config`s `registries` section, however the `system-default-registry` from which core system images are pulled is always denoted via the `system-default-registry` key of the `machine_selector_config` or the `machine_global_config`. For more information on private registries, please refer to [the Rancher documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/global-default-private-registry#setting-a-private-registry-with-credentials-when-deploying-a-cluster) 
 
-### Creating Rancher V2 cluster with cluster agent customization. For Rancher v2.7.x or above.
+### Creating Rancher V2 cluster with cluster agent customization. For Rancher v2.7.5 and above.
 
 ```hcl
 resource "rancher2_cluster_v2" "foo" {
@@ -289,13 +289,14 @@ EOF
 }
 ```
 
-### Creating Rancher V2 cluster with Pod Security Policy Admission Configuration Template (PSACT). For Rancher v2.7.x or above.
+### Creating Rancher V2 cluster with Pod Security Policy Admission Configuration Template (PSACT). For Rancher v2.7.2 and above.
 
-**Note** When PSACT is enabled in RKE2, Rancher webhook sets the `kube-apiserver-arg` to the Pod Security Admission mount path. To suppress Terraform constantly trying to reconcile that arg, it must be set locally.
+**Note** When PSACT is enabled in RKE2 or K3s, Rancher webhook sets the `kube-apiserver-arg` to the Pod Security Admission mount path. To suppress Terraform constantly trying to reconcile that arg, it must be set locally.
 
 ```hcl
 locals {
-  rancher_psact_mount_path = "/etc/rancher/rke2/config/rancher-psact.yaml"
+  version = "rke2" // will be k3s for K3s clusters
+  rancher_psact_mount_path = "/etc/rancher/${local.version}/config/rancher-psact.yaml"
   kube_apiserver_arg = var.default_psa_template != null && var.default_psa_template != "" ? ["admission-control-config-file=${local.rancher_psact_mount_path}"] : []
 }
 
