@@ -27,7 +27,7 @@ func resourceRancher2ClusterV2() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceRancher2ClusterV2Resource().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceRancher2ClusterV2StateV0,
+				Upgrade: resourceRancher2ClusterV2StateUpgradeV0,
 				Version: 0,
 			},
 		},
@@ -76,7 +76,7 @@ func resourceRancher2ClusterV2Resource() *schema.Resource {
 	}
 }
 
-func resourceRancher2ClusterV2StateV0(rawState map[string]any, meta interface{}) (map[string]any, error) {
+func resourceRancher2ClusterV2StateUpgradeV0(rawState map[string]any, meta interface{}) (map[string]any, error) {
 	if rkeConfigs, ok := rawState["rke_config"].([]any); ok && len(rkeConfigs) > 0 {
 		for i := range rkeConfigs {
 			if rkeConfig, ok := rkeConfigs[i].(map[string]any); ok && len(rkeConfig) > 0 {
@@ -86,10 +86,12 @@ func resourceRancher2ClusterV2StateV0(rawState map[string]any, meta interface{})
 					for m := range machineSelectorConfigs {
 						if machineSelectorConfig, ok := machineSelectorConfigs[m].(map[string]any); ok && len(machineSelectorConfig) > 0 {
 
-							// machine selector config data found. Migrate state from map -> list
-							if config, ok := machineSelectorConfig["config"].([]any); ok {
-								var newValue []any
-								newValue = append(newValue, config)
+							// machine selector config data found. Migrate state from map -> string
+							if config, ok := machineSelectorConfig["config"].(map[string]any); ok {
+								newValue := ""
+								if conf, err := mapInterfaceToYAML(config); err == nil {
+									newValue = conf
+								}
 								rawState["rke_config"].([]interface{})[i].(map[string]any)["machine_selector_config"].([]any)[m].(map[string]any)["config"] = newValue
 							}
 						}
