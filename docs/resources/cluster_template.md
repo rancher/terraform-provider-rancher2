@@ -39,7 +39,7 @@ resource "rancher2_cluster_template" "foo" {
 }
 ```
 
-Creating Rancher v2 RKE cluster template with upgrade strategy. For Rancher v2.4.x or above.
+Creating Rancher v2 RKE cluster template with upgrade strategy. For Rancher v2.4.x and above.
 
 ```hcl
 # Create a new rancher2 Cluster Template
