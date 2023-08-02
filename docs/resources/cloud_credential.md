@@ -52,7 +52,7 @@ The following arguments are supported:
 * `harvester_credential_config` - (Optional) Harvester config for the Cloud Credential (list maxitems:1)
 * `linode_credential_config` - (Optional) Linode config for the Cloud Credential (list maxitems:1)
 * `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
-* `s3_credential_config` - (Optional) S3 config for the Cloud Credential. Just for Rancher 2.6.0 and above (list maxitems:1)
+* `s3_credential_config` - (Optional) S3 config for the Cloud Credential. For Rancher 2.6.0 and above (list maxitems:1)
 * `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
 * `annotations` - (Optional) Annotations for Cloud Credential object (map)
 * `labels` - (Optional/Computed) Labels for Cloud Credential object (map)

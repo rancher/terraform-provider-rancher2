@@ -8,7 +8,7 @@ Provides a Rancher v2 Node Template resource. This can be used to create Node Te
 
 amazonec2, azure, digitalocean, harvester, linode, opennebula, openstack, outscale, hetzner and vsphere drivers are supported for node templates.
 
-**Note** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
+**Note:** If you are upgrading to Rancher v2.3.3, please take a look to [final section](#Upgrading-to-Rancher-v2.3.3)
 
 ## Example Usage
 
@@ -160,7 +160,7 @@ The following arguments are supported:
 * `engine_opt` - (Optional) Engine options for the node template (map)
 * `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
 * `engine_storage_driver` - (Optional) Engine storage driver for the node template (string)
-* `node_taints` - (Optional) Node taints. For Rancher v2.3.3 or above (List)
+* `node_taints` - (Optional) Node taints. For Rancher v2.3.3 and above (List)
 * `harvester_config` - (Optional) Harvester config for the Node Template (list maxitems:1)
 * `hetzner_config` - (Optional) Hetzner config for the Node Template (list maxitems:1)
 * `opennebula_config` - (Optional) Opennebula config for the Node Template (list maxitems:1)
@@ -171,7 +171,7 @@ The following arguments are supported:
 * `annotations` - (Optional) Annotations for Node Template object (map)
 * `labels` - (Optional/Computed) Labels for Node Template object (map)
 
-**Note** `labels` and `node_taints` will be applied to nodes deployed using the Node Template
+**Note:** `labels` and `node_taints` will be applied to nodes deployed using the Node Template
 
 ## Attributes Reference
 
@@ -229,17 +229,17 @@ The following attributes are exported:
 * `subscription_id` - (Optional/Sensitive) Azure Subscription ID. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `availability_set` - (Optional) Azure Availability Set to place the virtual machine into. Default `docker-machine` (string)
 * `custom_data` - (Optional) Path to file with custom-data (string)
-* `disk_size` - (Optional) Disk size if using managed disk. Just for Rancher v2.3.x and above. Default `30` (string)
+* `disk_size` - (Optional) Disk size if using managed disk. For Rancher v2.3.x and above. Default `30` (string)
 * `dns` - (Optional) A unique DNS label for the public IP adddress (string)
 * `docker_port` - (Optional) Port number for Docker engine. Default `2376` (string)
 * `environment` - (Optional) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud). Default `AzurePublicCloud` (string)
 * `fault_domain_count` - (Optional) Fault domain count to use for availability set. Default `3` (string)
 * `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:18.04-LTS:latest` (string)
 * `location` - (Optional) Azure region to create the virtual machine. Default `westus` (string)
-* `managed_disks` - (Optional) Configures VM and availability set for managed disks. Just for Rancher v2.3.x and above. Default `false` (bool)
+* `managed_disks` - (Optional) Configures VM and availability set for managed disks. For Rancher v2.3.x and above. Default `false` (bool)
 * `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false` (bool)
 * `nsg` - (Optional) Azure Network Security Group to assign this node to (accepts either a name or resource ID, default is to create a new NSG for each machine). Default `docker-machine-nsg` (string)
-* `plan` - (Optional) Azure marketplace purchase plan for Azure Virtual Machine. Format is `<publisher>:<product>:<plan>`. Just for Rancher v2.6.3 and above. (string)
+* `plan` - (Optional) Azure marketplace purchase plan for Azure Virtual Machine. Format is `<publisher>:<product>:<plan>`. For Rancher v2.6.3 and above. (string)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
 * `private_ip_address` - (Optional) Specify a static private IP address for the machine. (string)
 * `resource_group` - (Optional) Azure Resource Group name (will be created if missing). Default `docker-machine` (string)
@@ -290,7 +290,7 @@ The following attributes are exported:
 * `network_info` - (Required) A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\"},{\"networkName\":\"harvester-public/vlan2\"}]}` (string)
 * `user_data` - (Optional) UserData content of cloud-init, base64 is supported. If the image does not contain the qemu-guest-agent package, you must install and start qemu-guest-agent using userdata (string)
 * `network_data` - (Optional) NetworkData content of cloud-init, base64 is supported (string)
-* `vm_affinity` - (Optional) Virtual machine affinity, only base64 format is supported. For Rancher v2.6.7 or above (string)
+* `vm_affinity` - (Optional) Virtual machine affinity, only base64 format is supported. For Rancher v2.6.7 and above (string)
 
 ### `hetzner_config`
 
@@ -306,7 +306,7 @@ The following attributes are exported:
 * `volumes` - (Optional) Comma-separated list of volume IDs or names which should be attached to the server (string)
 * `userdata` - (Optional) Path to file with cloud-init user-data (string)
 
-> **Note**: You need to install the Hetzner Docker Machine Driver first as shown as in the [examples section](#using-the-hetzner-node-driver).
+> **Note:**: You need to install the Hetzner Docker Machine Driver first as shown as in the [examples section](#using-the-hetzner-node-driver).
 
 ### `linode_config`
 
@@ -362,7 +362,7 @@ The following attributes are exported:
 * `ssh_user` - (Optional) Set the name of the SSH user. Defaults to docker (string)
 * `vcpu` - (Optional) VCPUs for the VM (string)
 
-> **Note**: `Required*` denotes that one of image_name / image_id or template_name / template_id is required but you cannot combine them.
+> **Note:**: `Required*` denotes that one of image_name / image_id or template_name / template_id is required but you cannot combine them.
 
 ### `openstack_config`
 
@@ -407,9 +407,9 @@ The following attributes are exported:
 * `volume_name` - (Optional) OpenStack volume name of existing volume. Applicable only when `boot_from_volume` is `true` (string)
 * `volume_device_path` - (Optional) OpenStack volume device path (attaching). Applicable only when `boot_from_volume` is `true`. Omit for auto `/dev/vdb`. (string)
 
-> **Note**: `Required*` denotes that either the _name or _id is required but you cannot use both.
+> **Note:**: `Required*` denotes that either the _name or _id is required but you cannot use both.
 
-> **Note**: `Required**` denotes that either the _name or _id is required unless `application_credential_id` is defined.
+> **Note:**: `Required**` denotes that either the _name or _id is required unless `application_credential_id` is defined.
 
 ### `vsphere_config`
 
