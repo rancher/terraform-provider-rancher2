@@ -8,7 +8,7 @@ Provides a Rancher v2 Machine config v2 resource. This can be used to create Mac
 
 `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `openstack`, and `vsphere` cloud providers are supported for machine config V2
 
-**Note** This resource is used by 
+**Note:** This resource is used by 
 
 ## Example Usage
 
@@ -99,7 +99,7 @@ The following arguments are supported:
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
-**Note** `labels` and `node_taints` will be applied to nodes deployed using the Machine Config V2
+**Note:** `labels` and `node_taints` will be applied to nodes deployed using the Machine Config V2
 
 ## Attributes Reference
 
@@ -159,14 +159,14 @@ The following attributes are exported:
 * `subscription_id` - (Optional/Sensitive) Azure Subscription ID. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `availability_set` - (Optional) Azure Availability Set to place the virtual machine into. Default `docker-machine` (string)
 * `custom_data` - (Optional) Path to file with custom-data (string)
-* `disk_size` - (Optional) Disk size if using managed disk. Just for Rancher v2.3.x and above. Default `30` (string)
+* `disk_size` - (Optional) Disk size if using managed disk. For Rancher v2.3.x and above. Default `30` (string)
 * `dns` - (Optional) A unique DNS label for the public IP adddress (string)
 * `docker_port` - (Optional) Port number for Docker engine. Default `2376` (string)
 * `environment` - (Optional) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud). Default `AzurePublicCloud` (string)
 * `fault_domain_count` - (Optional) Fault domain count to use for availability set. Default `3` (string)
 * `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:18.04-LTS:latest` (string)
 * `location` - (Optional) Azure region to create the virtual machine. Default `westus` (string)
-* `managed_disks` - (Optional) Configures VM and availability set for managed disks. Just for Rancher v2.3.x and above. Default `false` (bool)
+* `managed_disks` - (Optional) Configures VM and availability set for managed disks. For Rancher v2.3.x and above. Default `false` (bool)
 * `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false` (bool)
 * `nsg` - (Optional) Azure Network Security Group to assign this node to (accepts either a name or resource ID, default is to create a new NSG for each machine). Default `docker-machine-nsg` (string)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
@@ -222,7 +222,7 @@ The following attributes are exported:
 * `network_info` - (Required) A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\"},{\"networkName\":\"harvester-public/vlan2\"}]}` (string)
 * `user_data` - (Optional) UserData content of cloud-init, base64 is supported. If the image does not contain the qemu-guest-agent package, you must install and start qemu-guest-agent using userdata (string)
 * `network_data` - (Optional) NetworkData content of cloud-init, base64 is supported (string)
-* `vm_affinity` - (Optional) Virtual machine affinity, only base64 format is supported. For Rancher v2.6.7 or above (string)
+* `vm_affinity` - (Optional) Virtual machine affinity, only base64 format is supported. For Rancher v2.6.7 and above (string)
 
 ### `linode_config`
 
@@ -291,8 +291,8 @@ The following attributes are exported:
 * `volume_id` - (Optional) OpenStack volume id of existing volume. Applicable only when `boot_from_volume` is `true` (string)
 * `volume_name` - (Optional) OpenStack volume name of existing volume. Applicable only when `boot_from_volume` is `true` (string)
 * `volume_device_path` - (Optional) OpenStack volume device path (attaching). Applicable only when `boot_from_volume` is `true`. Omit for auto `/dev/vdb`. (string)
-> **Note**: `Required+` denotes that either the _name or _id is required but you cannot use both.
-> **Note**: `Required++` denotes that either the _name or _id is required unless `application_credential_id` is defined.
+> **Note:**: `Required+` denotes that either the _name or _id is required but you cannot use both.
+> **Note:**: `Required++` denotes that either the _name or _id is required unless `application_credential_id` is defined.
 
 ### `vsphere_config`
 

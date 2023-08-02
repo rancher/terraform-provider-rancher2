@@ -109,163 +109,6 @@ func clusterAuthEndpoint() map[string]*schema.Schema {
 	return s
 }
 
-func clusterDataFieldsV0() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"driver": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"kube_config": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"rke_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterRKEConfigFieldsV0(),
-			},
-		},
-		"k3s_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterK3SConfigFields(),
-			},
-		},
-		"eks_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterEKSConfigFields(),
-			},
-		},
-		"aks_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterAKSConfigFields(),
-			},
-		},
-		"gke_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterGKEConfigFields(),
-			},
-		},
-		"default_project_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"system_project_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"description": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"cluster_auth_endpoint": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterAuthEndpoint(),
-			},
-		},
-		"cluster_monitoring_input": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Computed:    true,
-			Description: "Cluster monitoring configuration",
-			Elem: &schema.Resource{
-				Schema: monitoringInputFields(),
-			},
-		},
-		"cluster_registration_token": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterRegistrationTokenFields(),
-			},
-		},
-		"cluster_template_answers": {
-			Type:        schema.TypeList,
-			Computed:    true,
-			MaxItems:    1,
-			Description: "Cluster template answers",
-			Elem: &schema.Resource{
-				Schema: answerFields(),
-			},
-		},
-		"cluster_template_id": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Cluster template ID",
-		},
-		"cluster_template_questions": {
-			Type:        schema.TypeList,
-			Computed:    true,
-			Description: "Cluster template questions",
-			Elem: &schema.Resource{
-				Schema: questionFields(),
-			},
-		},
-		"cluster_template_revision_id": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Cluster template revision ID",
-		},
-		"default_pod_security_policy_template_id": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Default pod security policy template id",
-		},
-		"default_pod_security_admission_configuration_template_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Cluster default pod security admission configuration template name",
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Computed:    true,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Computed:    true,
-			Description: "Enable built-in cluster monitoring",
-		},
-		"enable_network_policy": {
-			Type:        schema.TypeBool,
-			Computed:    true,
-			Description: "Enable project network isolation",
-		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Computed: true,
-		},
-	}
-	return s
-}
-
 func clusterFieldsV0() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"name": {
@@ -400,13 +243,13 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Default pod security policy template id",
+			Description: "Default pod security policy template ID",
 		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Cluster default pod security admission configuration template name",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:     schema.TypeString,
@@ -679,13 +522,13 @@ func clusterFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Default pod security policy template id",
+			Description: "Default pod security policy template ID",
 		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Cluster default pod security admission configuration template name",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:     schema.TypeString,

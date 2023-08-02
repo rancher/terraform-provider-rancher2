@@ -76,7 +76,7 @@ func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Cluster default pod security admission configuration template name",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:        schema.TypeString,
@@ -162,7 +162,7 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Cluster default pod security admission configuration template name",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:        schema.TypeString,
@@ -249,7 +249,7 @@ func clusterSpecBaseFieldsData() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Cluster default pod security admission configuration template name",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:        schema.TypeString,
