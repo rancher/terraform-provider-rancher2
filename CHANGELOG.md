@@ -1,3 +1,39 @@
+## 3.1.0 (June 25, 2023)
+
+FEATURES:
+
+* **New Resource** `rancher2_custom_user_token` - Provides configuration options to create, modify, and delete a user token. See [#932](https://github.com/rancher/terraform-provider-rancher2/pull/932) and [#1130](https://github.com/rancher/terraform-provider-rancher2/pull/1130)
+* Add Cluster and Fleet Agent Deployment Customization support for users to customize the tolerations, affinity, and resources of a downstream agent.  See [#1137](https://github.com/rancher/terraform-provider-rancher2/pull/1137)
+  * **New Argument** `cluster_agent_deployment_customization` - (Optional) Optional customization for cluster agent. For Rancher v2.7.5 and above (list)
+  * **New Argument** `fleet_agent_deployment_customization` - (Optional) Optional customization for fleet agent. For Rancher v2.7.5 and above (list)
+  * **New Argument** `append_tolerations` - (Optional) User defined tolerations to append to agent (list)
+  * **New Argument** `override_affinity` - (Optional) User defined affinity to override default agent affinity (string)
+  * **New Argument** `override_resource_requirements` - (Optional) User defined resource requirements to set on the agent (list)
+* Add Pod Security Admission Configuration Template (PSACT) support with state migration logic for 1.25+ RKE and v2 prov clusters. See [#1119](https://github.com/rancher/terraform-provider-rancher2/pull/1119) and [#1117](https://github.com/rancher/terraform-provider-rancher2/pull/1117)
+  * **New Argument** `default_pod_security_admission_configuration_template_name` - (Optional) Cluster default pod security admission configuration template name (string)
+  * **New Argument** `default_pod_security_admission_configuration_template_name` - (Computed) Cluster V2 default pod security admission configuration template name (string)
+  
+ENHANCEMENTS:
+
+* **New Argument** `entity_id_field` - (Optional) Entity ID for authentication config (string). See [#1163](https://github.com/rancher/terraform-provider-rancher2/pull/1163)
+* [Docs] Add dev process and rc docs. See [#1138](https://github.com/rancher/terraform-provider-rancher2/pull/1138)
+* Rancher machine hostname truncation. See [#1147](https://github.com/rancher/terraform-provider-rancher2/pull/1147)
+* Refactor kubeconfig logic to use token from cached kubeconfig and replace invalid/expired tokens properly. [See #1158](https://github.com/rancher/terraform-provider-rancher2/pull/1158) and [#1165](https://github.com/rancher/terraform-provider-rancher2/pull/1165)
+* Bump go-getter to 1.7.1. See [#1118](https://github.com/rancher/terraform-provider-rancher2/pull/1118)
+* Bump google.golang.org/grpc to 1.53.0. See [#1167](https://github.com/rancher/terraform-provider-rancher2/pull/1167)
+
+BUG FIXES:
+
+* Add missing AKS node pool options. See [#1122](https://github.com/rancher/terraform-provider-rancher2/pull/1122)
+* Verify `desired_size` in EKS node groups. See [#1126](https://github.com/rancher/terraform-provider-rancher2/pull/1126)
+* Set DO userdata default empty for v2prov. See [#1121](https://github.com/rancher/terraform-provider-rancher2/pull/1121)
+* Support old version HarvesterConfig. See [#1132](https://github.com/rancher/terraform-provider-rancher2/pull/1132)
+* Fix 'unexpected end of JSON input' error when setting Pod Security Policy Template on new project. See [#1113](https://github.com/rancher/terraform-provider-rancher2/pull/1113)
+* Fix Harvester `disk_size` default value. See [#1149](https://github.com/rancher/terraform-provider-rancher2/pull/1149)
+* Consider all possible cluster states before passing them to StateChangeConf. See [#1114](https://github.com/rancher/terraform-provider-rancher2/pull/1114)
+
+Your open source contributions are invaluable to us.
+
 ## 3.0.1 (June 7, 2023)
 
 FEATURES:
