@@ -4,8 +4,8 @@ FEATURES:
 
 * **New Resource** `rancher2_custom_user_token` - Provides configuration options to create, modify, and delete a user token. See [#932](https://github.com/rancher/terraform-provider-rancher2/pull/932) and [#1130](https://github.com/rancher/terraform-provider-rancher2/pull/1130)
 * Add Cluster and Fleet Agent Deployment Customization support for users to customize the tolerations, affinity, and resources of a downstream agent.  See [#1137](https://github.com/rancher/terraform-provider-rancher2/pull/1137)
-  * **New Argument** `cluster_agent_deployment_customization` - (Optional) Optional customization for cluster agent. Just for Rancher v2.7.5 and above (list)
-  * **New Argument** `fleet_agent_deployment_customization` - (Optional) Optional customization for fleet agent. Just for Rancher v2.7.5 and above (list)
+  * **New Argument** `cluster_agent_deployment_customization` - (Optional) Optional customization for cluster agent. For Rancher v2.7.5 and above (list)
+  * **New Argument** `fleet_agent_deployment_customization` - (Optional) Optional customization for fleet agent. For Rancher v2.7.5 and above (list)
   * **New Argument** `append_tolerations` - (Optional) User defined tolerations to append to agent (list)
   * **New Argument** `override_affinity` - (Optional) User defined affinity to override default agent affinity (string)
   * **New Argument** `override_resource_requirements` - (Optional) User defined resource requirements to set on the agent (list)
@@ -200,7 +200,7 @@ BUG FIXES:
 
 FEATURES:
 
-* **New Argument:** `rancher2_cloud_credential.s3_credential_config` - (Optional) S3 config for the Cloud Credential. Just for Rancher 2.6.0 and above (list maxitems:1)
+* **New Argument:** `rancher2_cloud_credential.s3_credential_config` - (Optional) S3 config for the Cloud Credential. For Rancher 2.6.0 and above (list maxitems:1)
 * **New Argument:** `rancher2_cluster.rke_config.enable_cri_dockerd` - (Optional) Enable/disable using cri-dockerd. Deafult: `false` (bool) https://github.com/rancher/terraform-provider-rancher2/issues/792
 * **New Argument:** `rancher2_cluster.rke_config.private_registries.ecr_credential_plugin` - (Optional) ECR credential plugin config (list maxitems:1)
 * **New Argument:** `rancher2_cluster_v2.local_auth_endpoint` - - (Optional) Cluster V2 local auth endpoint (list maxitems:1)
@@ -264,7 +264,7 @@ BUG FIXES:
 
 FEATURES:
 
-* **New Argument:** `rancher2_cluster.aks_config_v2` - (Optional) The Azure AKS v2 configuration for creating/import `aks` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config`. Just for Rancher v2.6.0 and above (list maxitems:1)
+* **New Argument:** `rancher2_cluster.aks_config_v2` - (Optional) The Azure AKS v2 configuration for creating/import `aks` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config`. For Rancher v2.6.0 and above (list maxitems:1)
 * **New Argument:** `rancher2_cloud_credential.azure_credential_config.environment` - (Optional/Computed) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud) (string)
 * **New Argument:** `rancher2_cloud_credential.azure_credential_config.tenant_id` - (Optional/Computed) Azure Tenant ID (string)
 * **New Attribute:** `rancher2_cluster.cluster_registration_token.insecure_node_command` - (Computed) Insecure node command to execute in a imported k8s cluster (string)
@@ -330,7 +330,7 @@ FEATURES:
 * **New Argument:** `rancher2_cluster.rke_config.network.tolerations` - (Optional) Network add-on tolerations (list)
 * **New Argument:** `rancher2_cluster.rke_config.dns.options` - (Optional) DNS add-on options (map)
 * **New Argument:** `rancher2_cluster.rke_config.dns.tolerations` - (Optional) DNS add-on tolerations (list)
-* **New Argument:** `rancher2_cluster.oke_config.enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` Just for Rancher v2.5.10 or above (bool)
+* **New Argument:** `rancher2_cluster.oke_config.enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` for Rancher v2.5.10 and above (bool)
 * **New Data Source:** `rancher2_storage_class_v2` - Provides Rancher Storage Class v2 data source. Available at Rancher v2.5.x and above.
 * **New Resource:** `rancher2_storage_class_v2` - Provides Rancher Storage Class v2 resource. Available at Rancher v2.5.x and above.
 
@@ -392,7 +392,7 @@ FEATURES:
 
 * **Deprecated Argument:** `rancher2_cluster.aks_config.tag` - (Deprecated) Use `tags` argument instead as []string
 * **New Argument:** `rancher2_cluster.aks_config.tags` - (Optional/Computed) Tags for Kubernetes cluster. For example, `["foo=bar","bar=foo"]` (list)
-* **New Argument:** `rancher2_cluster.agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. Just for Rancher v2.5.6 and above (list)
+* **New Argument:** `rancher2_cluster.agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. For Rancher v2.5.6 and above (list)
 * **Deprecated provider Argument:** `retries` - (Deprecated) Use timeout instead
 * **New provider Argument:** `timeout` - (Optional) Timeout duration to retry for Rancher connectivity and resource operations. Default: `"120s"`
 * **New Argument:** `rancher2_cluster.oke_config.pod_cidr` - (Optional) A CIDR IP range from which to assign Kubernetes Pod IPs (string)
@@ -418,7 +418,7 @@ FEATURES:
 * **New Argument:** `rancher2_cluster.rke_config.ingress.update_strategy` - (Optional) RKE ingress update strategy (list Maxitems: 1)
 * **New Argument:** `rancher2_cluster.rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
 * **New Argument:** `rancher2_cluster_sync.wait_alerting` - (Optional) Wait until alerting is up and running. Default: `false` (bool)
-* **New Argument:** `rancher2_cluster.gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 or above (list maxitems:1)
+* **New Argument:** `rancher2_cluster.gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 and above (list maxitems:1)
 * **New Argument:** `rancher2_cloud_credential.google_credential_config` - (Optional) Google config for the Cloud Credential (list maxitems:1)
 
 ENHANCEMENTS:
@@ -472,12 +472,12 @@ BUG FIXES:
 
 FEATURES:
 
-* **New Argument:** `rancher2_node_template.node_taints` - (Optional) Node taints. For Rancher v2.3.3 or above (List)
+* **New Argument:** `rancher2_node_template.node_taints` - (Optional) Node taints. For Rancher v2.3.3 and above (List)
 * **New Argument:** `rancher2_cluster.aks_config.load_balancer_sku` - (Optional/Computed) Load balancer type (basic | standard). Must be standard for auto-scaling
-* **New Argument:** `rancher2_cluster.rke_config.services.etc.backup_config.timeout` - (Optional/Computed) Set timeout in seconds for etcd backup. Just for Rancher v2.5.6 and above
+* **New Argument:** `rancher2_cluster.rke_config.services.etc.backup_config.timeout` - (Optional/Computed) Set timeout in seconds for etcd backup. For Rancher v2.5.6 and above
 * **New Data Source:** `rancher2_global_role` - Provides a Rancher V2 Global Role data source
 * **New Resource:** `rancher2_global_role` - Provides a Rancher V2 Global Role resource
-* **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. Just for Rancher v2.5.0 and above
+* **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. For Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 
@@ -544,8 +544,8 @@ BUG FIXES:
 
 FEATURES:
 
-* **Deprecated Argument:** `rancher2_cluster.eks_import` - (Optional) Use `rancher2_cluster.eks_config_v2` instead. Just for Rancher v2.5.0 and above
-* **New Argument:** `rancher2_cluster.eks_config_v2` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above
+* **Deprecated Argument:** `rancher2_cluster.eks_import` - (Optional) Use `rancher2_cluster.eks_config_v2` instead. For Rancher v2.5.0 and above
+* **New Argument:** `rancher2_cluster.eks_config_v2` - (Optional) EKS cluster import and new management support. For Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 
@@ -574,11 +574,11 @@ FEATURES:
 * **New Argument:** `rancher2_node_template.openstack_config.application_credential_secret` - (Optional) OpenStack application credential secret
 * **New Argument:** `rancher2_notifier.dingtal_config` - (Optional) Dingtalk config for notifier. For Rancher v2.4.0 and above (list maxitems:1)
 * **New Argument:** `rancher2_notifier.msteams_config` - (Optional) MSTeams config for notifier. For Rancher v2.4.0 and above (list maxitems:1)
-* **New Argument:** `rancher2_cluster.eks_import` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above
-* **New Argument:** `rancher2_bootstrap.ui_default_landing` - (Optional) Set default ui landing on Rancher bootstrap. Just for Rancher v2.5.0 and above
-* **New Data Source:** `rancher2_catalog_v2` - Support new Rancher catalog V2 datasource. Just for Rancher v2.5.0 and above
-* **New Resource:** `rancher2_catalog_v2` - Support new Rancher catalog V2 resource. Just for Rancher v2.5.0 and above
-* **New Resource:** `rancher2_app_v2` - Support new Rancher app V2 resource. Just for Rancher v2.5.0 and above
+* **New Argument:** `rancher2_cluster.eks_import` - (Optional) EKS cluster import and new management support. For Rancher v2.5.0 and above
+* **New Argument:** `rancher2_bootstrap.ui_default_landing` - (Optional) Set default ui landing on Rancher bootstrap. For Rancher v2.5.0 and above
+* **New Data Source:** `rancher2_catalog_v2` - Support new Rancher catalog V2 datasource. For Rancher v2.5.0 and above
+* **New Resource:** `rancher2_catalog_v2` - Support new Rancher catalog V2 resource. For Rancher v2.5.0 and above
+* **New Resource:** `rancher2_app_v2` - Support new Rancher app V2 resource. For Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 
