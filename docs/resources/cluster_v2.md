@@ -58,6 +58,43 @@ resource "rancher2_machine_config_v2" "foo" {
   }
 }
 
+# Create a new rancher v2 Cluster with multiple machine pools
+resource "rancher2_cluster_v2" "foo-rke2" {
+  name = "foo-rke2"
+  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  enable_network_policy = false
+  default_cluster_role_for_project_members = "user"
+  rke_config {
+    machine_pools {
+      name = "pool1"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
+      control_plane_role = true
+      etcd_role = true
+      worker_role = false
+      quantity = 1
+      drain_before_delete = true
+      machine_config {
+        kind = rancher2_machine_config_v2.foo.kind
+        name = rancher2_machine_config_v2.foo.name
+      }
+    }
+    # Each machine pool must be passed separately
+    machine_pools {
+      name = "pool2"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
+      control_plane_role = false
+      etcd_role = false
+      worker_role = true
+      quantity = 2
+      drain_before_delete = true
+      machine_config {
+        kind = rancher2_machine_config_v2.foo.kind
+        name = rancher2_machine_config_v2.foo.name
+      }
+    }
+  }
+}
+
 # Create a new rancher v2 amazonec2 RKE2 Cluster v2
 resource "rancher2_cluster_v2" "foo-rke2" {
   name = "foo-rke2"
