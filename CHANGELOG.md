@@ -1,3 +1,20 @@
+## 3.1.1 (August 3, 2023)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* [Docs] Add Terraform docs for cluster and fleet agent customization, PSACT support, and authentication ping `entity_field_id` for the v3.1.1 patch release. See [#1175](https://github.com/rancher/terraform-provider-rancher2/pull/1175)
+* [Docs] Fix broken markdown in `rancher2_cluster` resource. See [#1180](https://github.com/rancher/terraform-provider-rancher2/pull/1180)
+* [Docs] Update wording in registry resource. See [#1185](https://github.com/rancher/terraform-provider-rancher2/pull/1185)
+* [Docs] Add example for multiple machine pools in RKE2. See [#957](https://github.com/rancher/terraform-provider-rancher2/pull/957)
+
+BUG FIXES:
+
+
+
 ## 3.1.0 (June 25, 2023)
 
 FEATURES:
