@@ -396,7 +396,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		if err != nil {
 			if IsServerError(err) {
-				return nil
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
@@ -419,7 +419,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			err = updateClusterMonitoring(client, d, meta, *newCluster)
 			if err != nil {
 				if IsServerError(err) {
-					return nil
+					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
 			}
