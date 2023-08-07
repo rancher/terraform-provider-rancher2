@@ -197,7 +197,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 			Links:   newCluster.Links,
 			Actions: newCluster.Actions,
 		}
-		// Retry enabling monitoring until timeout if got apierr 500 https://github.com/rancher/rancher/issues/30188
+		// Retry enable monitoring until timeout if got api error 500
 		ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
 		defer cancel()
 		for {
@@ -391,93 +391,57 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		update["rke2Config"] = expandClusterRKE2Config(d.Get("rke2_config").([]interface{}))
 	}
 
-	newCluster := &Cluster{}
-	if replace {
-		err = client.APIBaseClient.Replace(managementClient.ClusterType, cluster, update, newCluster)
-	} else {
-		err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
-	}
-	if err != nil {
-		return err
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"active", "provisioning", "pending", "updating", "upgrading"},
-		Target:     []string{"active", "provisioning", "pending"},
-		Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
-		Delay:      1 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, waitErr := stateConf.WaitForState()
-	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr)
-	}
-
-	// cluster_monitoring is updated here
-	if d.HasChange("enable_cluster_monitoring") || d.HasChange("cluster_monitoring_input") {
-		clusterResource := &norman.Resource{
-			ID:      newCluster.ID,
-			Type:    newCluster.Type,
-			Links:   newCluster.Links,
-			Actions: newCluster.Actions,
+	// update the cluster; retry til timeout or non retryable error is returned. If api 500 error is received,
+	// retry to see if update will go through
+	return resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		newCluster := &Cluster{}
+		if replace {
+			err = client.APIBaseClient.Replace(managementClient.ClusterType, cluster, update, newCluster)
+		} else {
+			err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
 		}
-		enableMonitoring := d.Get("enable_cluster_monitoring").(bool)
-		if enableMonitoring {
-			monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
-			if len(newCluster.Actions[monitoringActionEnable]) > 0 {
-				err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
-				if err != nil {
-					return err
-				}
-			} else {
-				monitorVersionChanged := false
-				if d.HasChange("cluster_monitoring_input") {
-					old, new := d.GetChange("cluster_monitoring_input")
-					oldInput := old.([]interface{})
-					oldInputLen := len(oldInput)
-					oldVersion := ""
-					if oldInputLen > 0 {
-						oldRow, oldOK := oldInput[0].(map[string]interface{})
-						if oldOK {
-							oldVersion = oldRow["version"].(string)
-						}
-					}
-					newInput := new.([]interface{})
-					newInputLen := len(newInput)
-					newVersion := ""
-					if newInputLen > 0 {
-						newRow, newOK := newInput[0].(map[string]interface{})
-						if newOK {
-							newVersion = newRow["version"].(string)
-						}
-					}
-					if oldVersion != newVersion {
-						monitorVersionChanged = true
-					}
-				}
-				if monitorVersionChanged && monitoringInput != nil {
-					err = updateClusterMonitoringApps(meta, d.Get("system_project_id").(string), monitoringInput.Version)
-					if err != nil {
-						return err
-					}
-				}
-				err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEdit, clusterResource, monitoringInput, nil)
-				if err != nil {
-					return err
-				}
+		if err != nil {
+			if IsServerError(err) {
+				return resource.RetryableError(err)
 			}
-		} else if len(newCluster.Actions[monitoringActionDisable]) > 0 {
-			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, nil, nil)
+			return resource.NonRetryableError(err)
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"active", "provisioning", "pending", "updating", "upgrading"},
+			Target:     []string{"active", "provisioning", "pending"},
+			Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return resource.NonRetryableError(fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr))
+		}
+
+		// update cluster monitoring if it has changed
+		if d.HasChange("enable_cluster_monitoring") || d.HasChange("cluster_monitoring_input") {
+			err = updateClusterMonitoring(client, d, meta, *newCluster)
 			if err != nil {
-				return err
+				if IsServerError(err) {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
 			}
 		}
-	}
 
-	d.SetId(newCluster.ID)
+		d.SetId(newCluster.ID)
 
-	return resourceRancher2ClusterRead(d, meta)
+		// read cluster after update. If an error is returned then the read failed and is non retryable, else
+		// it was successful
+		err = resourceRancher2ClusterRead(d, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) error {
@@ -767,6 +731,68 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 			return nil, fmt.Errorf("Timeout getting cluster Kubeconfig: %v", err)
 		}
 	}
+}
+
+func updateClusterMonitoring(client *managementClient.Client, d *schema.ResourceData, meta interface{}, newCluster Cluster) error {
+	clusterResource := &norman.Resource{
+		ID:      newCluster.ID,
+		Type:    newCluster.Type,
+		Links:   newCluster.Links,
+		Actions: newCluster.Actions,
+	}
+	enableMonitoring := d.Get("enable_cluster_monitoring").(bool)
+
+	if enableMonitoring {
+		monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
+		if len(newCluster.Actions[monitoringActionEnable]) > 0 {
+			err := client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
+			if err != nil {
+				return err
+			}
+		} else {
+			monitorVersionChanged := false
+			if d.HasChange("cluster_monitoring_input") {
+				old, new := d.GetChange("cluster_monitoring_input")
+				oldInput := old.([]interface{})
+				oldInputLen := len(oldInput)
+				oldVersion := ""
+				if oldInputLen > 0 {
+					oldRow, oldOK := oldInput[0].(map[string]interface{})
+					if oldOK {
+						oldVersion = oldRow["version"].(string)
+					}
+				}
+				newInput := new.([]interface{})
+				newInputLen := len(newInput)
+				newVersion := ""
+				if newInputLen > 0 {
+					newRow, newOK := newInput[0].(map[string]interface{})
+					if newOK {
+						newVersion = newRow["version"].(string)
+					}
+				}
+				if oldVersion != newVersion {
+					monitorVersionChanged = true
+				}
+			}
+			if monitorVersionChanged && monitoringInput != nil {
+				err := updateClusterMonitoringApps(meta, d.Get("system_project_id").(string), monitoringInput.Version)
+				if err != nil {
+					return err
+				}
+			}
+			err := client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEdit, clusterResource, monitoringInput, nil)
+			if err != nil {
+				return err
+			}
+		}
+	} else if len(newCluster.Actions[monitoringActionDisable]) > 0 {
+		err := client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, nil, nil)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func updateClusterMonitoringApps(meta interface{}, systemProjectID, version string) error {
