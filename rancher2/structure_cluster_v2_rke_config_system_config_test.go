@@ -21,7 +21,7 @@ func init() {
 	testClusterV2RKEConfigSystemConfigLabelSelectorExpressionConf = []metav1.LabelSelectorRequirement{
 		{
 			Key:      "key",
-			Operator: metav1.LabelSelectorOperator("operator"),
+			Operator: "operator",
 			Values:   []string{"value1", "value2"},
 		},
 	}
@@ -63,10 +63,7 @@ func init() {
 	testClusterV2RKEConfigSystemConfigInterface = []interface{}{
 		map[string]interface{}{
 			"machine_label_selector": testClusterV2RKEConfigSystemConfigLabelSelectorInterface,
-			"config": map[string]interface{}{
-				"config_one": "one",
-				"config_two": "two",
-			},
+			"config":                 "config_one: one\nconfig_two: two\n",
 		},
 	}
 }

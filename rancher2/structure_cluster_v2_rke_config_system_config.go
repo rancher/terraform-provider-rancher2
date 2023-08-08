@@ -59,7 +59,8 @@ func flattenClusterV2RKEConfigSystemConfig(p []rkev1.RKESystemConfig) []interfac
 			obj["machine_label_selector"] = flattenClusterV2RKEConfigSystemConfigLabelSelector(in.MachineLabelSelector)
 		}
 		if len(in.Config.Data) > 0 {
-			obj["config"] = in.Config.Data
+			values, _ := interfaceToGhodssyaml(in.Config.Data)
+			obj["config"] = values
 		}
 		out[i] = obj
 	}
@@ -126,8 +127,9 @@ func expandClusterV2RKEConfigSystemConfig(p []interface{}) []rkev1.RKESystemConf
 		if v, ok := in["machine_label_selector"].([]interface{}); ok && len(v) > 0 {
 			obj.MachineLabelSelector = expandClusterV2RKEConfigSystemConfigLabelSelector(v)
 		}
-		if v, ok := in["config"].(map[string]interface{}); ok && len(v) > 0 {
-			obj.Config.Data = v
+		if v, ok := in["config"].(string); ok && len(v) > 0 {
+			values, _ := ghodssyamlToMapInterface(v)
+			obj.Config.Data = values
 		}
 		out[i] = obj
 	}
