@@ -97,7 +97,7 @@ See [test process](docs/test-process.md) for details on release testing (_Terraf
 Branching the Provider
 ---------------------------
 
-The provider is branched into two release lines that have major version alignment with Rancher 2.6 and 2.7. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6 and `master` with 3.0.0+ is aligned with Rancher 2.7. Terraform provider fixes and new features will be available on `master` but only critical bug fixes will be backported to `release/v2`.
+The provider is branched into two release lines that have major version alignment with Rancher 2.6, 2.7 and 2.8. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6, the `release/v3` branch with 3.0.0+ is aligned with Rancher 2.7, and `master` with 4.0.0+ is aligned with Rancher 2.8. Terraform provider fixes and new features will be available on `master` but only critical bug fixes will be backported to `release/v3` and `release/v2`.
 
 Aligning major provider releases with minor Rancher releases means,
 
@@ -107,7 +107,7 @@ Aligning major provider releases with minor Rancher releases means,
 
 See the [compatibility matrix](docs/compatibility-matrix.md) for details.
 
-If you are using Terraform to provision clusters on instances of Rancher 2.6 and 2.7, you must have a separate configuration in a separate dir for each provider. Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
+If you are using Terraform to provision clusters on instances of Rancher 2.7 and 2.8, you must have a separate configuration in a separate dir for each provider. Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
 
 Releasing the Provider
 ---------------------------
