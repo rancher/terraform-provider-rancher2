@@ -106,6 +106,5 @@ func TestExpandCatalogV2(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, catalogV2Fields(), tc.Input)
 		output := expandCatalogV2(inputResourceData)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

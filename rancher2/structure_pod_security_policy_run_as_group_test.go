@@ -64,6 +64,5 @@ func TestExpandPodSecurityPolicyRunAsGroup(t *testing.T) {
 	for _, tc := range cases {
 		output := expandPodSecurityPolicyRunAsGroup(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

@@ -68,6 +68,5 @@ func TestExpandPodSecurityPolicySELinuxOptions(t *testing.T) {
 	for _, tc := range cases {
 		output := expandPodSecurityPolicySELinuxOptions(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

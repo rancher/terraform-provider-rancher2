@@ -94,6 +94,5 @@ func TestExpandConfigMapV2(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, configMapV2Fields(), tc.Input)
 		output := expandConfigMapV2(inputResourceData)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

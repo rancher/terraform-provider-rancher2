@@ -118,6 +118,5 @@ func TestExpandNodePool(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, nodePoolFields(), tc.Input)
 		output := expandNodePool(inputResourceData)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

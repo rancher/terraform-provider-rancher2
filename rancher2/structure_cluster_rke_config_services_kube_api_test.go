@@ -318,7 +318,6 @@ func TestExpandClusterRKEConfigServicesKubeAPIAuditLogConfig(t *testing.T) {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -340,7 +339,6 @@ func TestExpandClusterRKEConfigServicesKubeAPIAuditLog(t *testing.T) {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -377,7 +375,6 @@ func TestExpandClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(t *testing
 	for _, tc := range cases {
 		output := expandClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -399,7 +396,6 @@ func TestExpandClusterRKEConfigServicesKubeAPI(t *testing.T) {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -442,6 +438,5 @@ func TestExpandClusterRKEConfigServicesKubeAPIAdmissionConfiguration(t *testing.
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

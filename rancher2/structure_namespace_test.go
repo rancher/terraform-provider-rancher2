@@ -186,7 +186,6 @@ func TestExpandNamespaceContainerResourceLimit(t *testing.T) {
 	for _, tc := range cases {
 		output := expandNamespaceContainerResourceLimit(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -205,7 +204,6 @@ func TestExpandNamespaceResourceQuotaLimit(t *testing.T) {
 	for _, tc := range cases {
 		output := expandNamespaceResourceQuotaLimit(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -224,7 +222,6 @@ func TestExpandNamespaceResourceQuota(t *testing.T) {
 	for _, tc := range cases {
 		output := expandNamespaceResourceQuota(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -244,6 +241,5 @@ func TestExpandNamespace(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, namespaceFields(), tc.Input)
 		output := expandNamespace(inputResourceData)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

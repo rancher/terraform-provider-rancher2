@@ -74,6 +74,5 @@ func TestExpandPodSecurityPolicyHostPortRanges(t *testing.T) {
 	for _, tc := range cases {
 		output := expandPodSecurityPolicyHostPortRanges(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

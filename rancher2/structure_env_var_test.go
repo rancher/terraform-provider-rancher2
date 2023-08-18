@@ -66,6 +66,5 @@ func TestExpandEnvVars(t *testing.T) {
 	for _, tc := range cases {
 		output := expandEnvVars(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

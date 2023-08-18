@@ -138,7 +138,6 @@ func TestExpandClusterV2RKEConfigSystemConfigLabelSelectorExpression(t *testing.
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigSystemConfigLabelSelectorExpression(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -157,7 +156,6 @@ func TestExpandClusterV2RKEConfigSystemConfigLabelSelector(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigSystemConfigLabelSelector(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -176,6 +174,5 @@ func TestExpandClusterV2RKEConfigSystemConfig(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigSystemConfig(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

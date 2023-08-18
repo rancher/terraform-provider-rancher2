@@ -143,6 +143,5 @@ func TestExpandRegistry(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, registryFields(), tc.Input)
 		output := expandRegistry(inputResourceData)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

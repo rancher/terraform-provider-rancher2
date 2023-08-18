@@ -148,6 +148,5 @@ func TestExpandNodeTemplate(t *testing.T) {
 		inputData := schema.TestResourceDataRaw(t, nodeTemplateFields(), tc.Input)
 		output := expandNodeTemplate(inputData)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

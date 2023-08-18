@@ -378,7 +378,6 @@ func TestExpandClusterGKEConfigV2ClusterAddons(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2ClusterAddons(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -397,7 +396,6 @@ func TestExpandClusterGKEConfigV2IPAllocationPolicy(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2IPAllocationPolicy(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -416,7 +414,6 @@ func TestExpandClusterGKEConfigV2MasterAuthorizedNetworksConfig(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2MasterAuthorizedNetworksConfig(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -435,7 +432,6 @@ func TestExpandClusterGKEConfigV2NodePoolsConfig(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2NodePoolsConfig(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -453,7 +449,6 @@ func TestExpandClusterGKEConfigV2PrivateClusterConfig(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2PrivateClusterConfig(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -471,6 +466,5 @@ func TestExpandClusterGKEConfigV2(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

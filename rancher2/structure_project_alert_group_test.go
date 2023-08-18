@@ -93,6 +93,5 @@ func TestExpandProjectAlertGroup(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, projectAlertGroupFields(), tc.Input)
 		output := expandProjectAlertGroup(inputResourceData)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

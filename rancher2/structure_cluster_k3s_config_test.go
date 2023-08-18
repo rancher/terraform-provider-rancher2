@@ -92,7 +92,6 @@ func TestExpandClusterK3SUpgradeStrategyConfig(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterK3SUpgradeStrategyConfig(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -111,6 +110,5 @@ func TestExpandClusterK3SConfig(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterK3SConfig(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

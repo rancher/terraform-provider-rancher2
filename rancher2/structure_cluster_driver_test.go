@@ -78,6 +78,5 @@ func TestExpandClusterDriver(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, clusterDriverFields(), tc.Input)
 		output := expandClusterDriver(inputResourceData)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

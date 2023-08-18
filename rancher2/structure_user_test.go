@@ -68,6 +68,5 @@ func TestExpandUser(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, userFields(), tc.Input)
 		output := expandUser(inputResourceData)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

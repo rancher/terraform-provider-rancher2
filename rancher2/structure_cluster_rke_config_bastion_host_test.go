@@ -72,6 +72,5 @@ func TestExpandClusterRKEConfigBastionHost(t *testing.T) {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

@@ -61,6 +61,5 @@ func TestExpandClusterV2RKEConfigRotateCertificates(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigRotateCertificates(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

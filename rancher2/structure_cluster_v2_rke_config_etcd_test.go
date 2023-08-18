@@ -104,7 +104,6 @@ func TestExpandClusterV2RKEConfigETCDSnapshotS3(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigETCDSnapshotS3(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -123,6 +122,5 @@ func TestExpandClusterV2RKEConfigETCD(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigETCD(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }

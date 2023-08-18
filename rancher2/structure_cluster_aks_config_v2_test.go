@@ -185,7 +185,6 @@ func TestExpandClusterAKSConfigV2NodePools(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterAKSConfigV2NodePools(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
 
@@ -204,6 +203,5 @@ func TestExpandClusterAKSConfigV2(t *testing.T) {
 	for _, tc := range cases {
 		output := expandClusterAKSConfigV2(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-
 	}
 }
