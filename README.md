@@ -97,17 +97,19 @@ See [test process](docs/test-process.md) for details on release testing (_Terraf
 Branching the Provider
 ---------------------------
 
-The provider is branched into two release lines that have major version alignment with Rancher 2.6 and 2.7. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6 and `master` with 3.0.0+ is aligned with Rancher 2.7. Terraform provider fixes and new features will be available on `master` but only critical bug fixes will be backported to `release/v2`.
+The provider is branched into three release lines with major version alignment with Rancher 2.6, 2.7, and 2.8. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6, the `release/v3` branch with 3.0.0+ is aligned with Rancher 2.7, and the `master` branch with 4.0.0+ is aligned with Rancher 2.8. The lifecycle of each major provider version is aligned with the lifecycle of each Rancher minor version. For example, provider versions 4.0.x which are aligned with Rancher 2.8.x will only be actively maintained until the EOM for Rancher 2.8.x and supported until EOL for Rancher 2.8.x.
+
+See the [Rancher support matrix](https://www.suse.com/lifecycle/#rancher) for details.
 
 Aligning major provider releases with minor Rancher releases means,
 
 * We can follow semver
-* We can cut patch/minor versions on an as-needed basis to fix bugs or add new resources 
+* We can cut patch/minor versions on an as-needed basis to fix bugs or add new resources
 * We have 'out of band' flexibility and are only tied to releasing a new version of the provider when we get a new 2.x Rancher minor version.
 
 See the [compatibility matrix](docs/compatibility-matrix.md) for details.
 
-If you are using Terraform to provision clusters on instances of Rancher 2.6 and 2.7, you must have a separate configuration in a separate dir for each provider. Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
+If you are using Terraform to provision clusters on instances of Rancher 2.7 and 2.8, you must have a separate configuration in a separate dir for each provider. Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
 
 Releasing the Provider
 ---------------------------
