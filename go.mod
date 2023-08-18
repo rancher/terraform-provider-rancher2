@@ -115,6 +115,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pkg/sftp v1.13.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.52.0 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
