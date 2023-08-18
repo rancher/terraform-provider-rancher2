@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -198,9 +199,6 @@ func TestExpandGlobalDnsProvider(t *testing.T) {
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, globalDNSProviderFields(), tc.Input[0].(map[string]interface{}))
 		output := expandGlobalDNSProvider(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

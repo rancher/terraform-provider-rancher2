@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	rkev1 "github.com/rancher/rancher/pkg/apis/rke.cattle.io/v1"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -67,10 +67,7 @@ func TestFlattenClusterV2RKEConfigETCDSnapshotS3(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfigETCDSnapshotS3(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -88,10 +85,7 @@ func TestFlattenClusterV2RKEConfigETCD(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfigETCD(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -109,10 +103,8 @@ func TestExpandClusterV2RKEConfigETCDSnapshotS3(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigETCDSnapshotS3(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
 
@@ -130,9 +122,7 @@ func TestExpandClusterV2RKEConfigETCD(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigETCD(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }

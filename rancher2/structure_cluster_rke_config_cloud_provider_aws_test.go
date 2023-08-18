@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -89,10 +89,7 @@ func TestFlattenClusterRKEConfigCloudProviderAwsGlobal(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterRKEConfigCloudProviderAwsGlobal(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -110,10 +107,7 @@ func TestFlattenClusterRKEConfigCloudProviderAwsServiceOverride(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterRKEConfigCloudProviderAwsServiceOverride(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -134,10 +128,7 @@ func TestFlattenClusterRKEConfigCloudProviderAws(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -155,10 +146,7 @@ func TestExpandClusterRKEConfigCloudProviderAwsGlobal(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterRKEConfigCloudProviderAwsGlobal(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -176,10 +164,7 @@ func TestExpandClusterRKEConfigCloudProviderAwsServiceOverride(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterRKEConfigCloudProviderAwsServiceOverride(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -200,9 +185,6 @@ func TestExpandClusterRKEConfigCloudProviderAws(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

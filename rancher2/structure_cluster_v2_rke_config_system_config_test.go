@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	rkev1 "github.com/rancher/rancher/pkg/apis/rke.cattle.io/v1"
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -82,10 +82,7 @@ func TestFlattenClusterV2RKEConfigSystemConfigLabelSelectorExpression(t *testing
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfigSystemConfigLabelSelectorExpression(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -103,10 +100,7 @@ func TestFlattenClusterV2RKEConfigSystemConfigLabelSelector(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfigSystemConfigLabelSelector(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -124,10 +118,8 @@ func TestFlattenClusterV2RKEConfigSystemConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfigSystemConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -145,10 +137,8 @@ func TestExpandClusterV2RKEConfigSystemConfigLabelSelectorExpression(t *testing.
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigSystemConfigLabelSelectorExpression(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
 
@@ -166,10 +156,8 @@ func TestExpandClusterV2RKEConfigSystemConfigLabelSelector(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigSystemConfigLabelSelector(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
 
@@ -187,9 +175,7 @@ func TestExpandClusterV2RKEConfigSystemConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigSystemConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }

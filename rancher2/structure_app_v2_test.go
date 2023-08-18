@@ -2,13 +2,13 @@ package rancher2
 
 import (
 	"log"
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/rancher/rancher/pkg/api/steve/catalog/types"
 	v1 "github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 	v3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -177,10 +177,7 @@ func TestFlattenAppV2(t *testing.T) {
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, expectedOutput)
-		}
+		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
@@ -204,10 +201,7 @@ func TestExpandChartInstallV2(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -232,10 +226,7 @@ func TestExpandChartInstallActionV2(t *testing.T) {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
 		tc.ExpectedOutput.Timeout = output.Timeout
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -259,10 +250,7 @@ func TestExpandChartUpgradeV2(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -287,9 +275,6 @@ func TestExpandChartUpgradeActionV2(t *testing.T) {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
 		tc.ExpectedOutput.Timeout = output.Timeout
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

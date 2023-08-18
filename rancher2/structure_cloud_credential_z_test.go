@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -218,9 +219,6 @@ func TestExpandCloudCredential(t *testing.T) {
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, cloudCredentialFields(), tc.Input)
 		output := expandCloudCredential(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -193,10 +194,7 @@ func TestFlattenQuestions(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenQuestions(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -217,10 +215,7 @@ func TestFlattenClusterSpecBase(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -241,10 +236,7 @@ func TestFlattenClusterTemplateRevisions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -295,10 +287,7 @@ func TestExpandQuestions(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandQuestions(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -319,10 +308,7 @@ func TestExpandClusterSpecBase(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -343,10 +329,7 @@ func TestExpandClusterTemplateRevisions(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -368,9 +351,6 @@ func TestExpandClusterTemplate(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expnader: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

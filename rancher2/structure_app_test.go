@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -274,9 +275,6 @@ func TestExpandApp(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -55,10 +55,7 @@ func TestFlattenClusterK3SUpgradeStrategyConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterK3SUpgradeStrategyConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -76,10 +73,7 @@ func TestFlattenClusterK3SConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterK3SConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -97,10 +91,8 @@ func TestExpandClusterK3SUpgradeStrategyConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterK3SUpgradeStrategyConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
 
@@ -118,9 +110,7 @@ func TestExpandClusterK3SConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterK3SConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }

@@ -1,9 +1,9 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -40,13 +40,9 @@ func TestFlattenTaintsV2(t *testing.T) {
 			testTaintsV2Interface,
 		},
 	}
-
 	for _, tc := range cases {
 		output := flattenTaintsV2(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -64,9 +60,7 @@ func TestExpandTaintsV2(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandTaintsV2(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }

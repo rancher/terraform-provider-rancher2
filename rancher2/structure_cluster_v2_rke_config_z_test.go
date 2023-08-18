@@ -1,11 +1,11 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	rkev1 "github.com/rancher/rancher/pkg/apis/rke.cattle.io/v1"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -71,10 +71,7 @@ func TestFlattenClusterV2RKEConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -92,9 +89,7 @@ func TestExpandClusterV2RKEConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }

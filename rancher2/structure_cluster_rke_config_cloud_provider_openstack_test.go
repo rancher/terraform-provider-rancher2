@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -142,10 +142,7 @@ func TestFlattenClusterRKEConfigCloudProviderOpenstackBlockStorage(t *testing.T)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -166,10 +163,7 @@ func TestFlattenClusterRKEConfigCloudProviderOpenstackGlobal(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -190,10 +184,7 @@ func TestFlattenClusterRKEConfigCloudProviderOpenstackLoadBalancer(t *testing.T)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -214,10 +205,7 @@ func TestFlattenClusterRKEConfigCloudProviderOpenstackMetadata(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -238,10 +226,7 @@ func TestFlattenClusterRKEConfigCloudProviderOpenstackRoute(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -262,10 +247,7 @@ func TestFlattenClusterRKEConfigCloudProviderOpenstack(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -286,10 +268,7 @@ func TestExpandClusterRKEConfigCloudProviderOpenstackBlockStorage(t *testing.T) 
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -310,10 +289,7 @@ func TestExpandClusterRKEConfigCloudProviderOpenstackGlobal(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -334,10 +310,7 @@ func TestExpandClusterRKEConfigCloudProviderOpenstackLoadBalancer(t *testing.T) 
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -358,10 +331,7 @@ func TestExpandClusterRKEConfigCloudProviderOpenstackMetadata(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -382,10 +352,7 @@ func TestExpandClusterRKEConfigCloudProviderOpenstackRoute(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -406,9 +373,6 @@ func TestExpandClusterRKEConfigCloudProviderOpenstack(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

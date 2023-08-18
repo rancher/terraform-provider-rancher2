@@ -1,8 +1,9 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -32,13 +33,9 @@ func TestFlattenCloudCredentialDigitalocean(t *testing.T) {
 			testCloudCredentialDigitaloceanInterface,
 		},
 	}
-
 	for _, tc := range cases {
 		output := flattenCloudCredentialDigitalocean(tc.Input, tc.ExpectedOutput)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -53,12 +50,9 @@ func TestExpandCloudCredentialDigitalocean(t *testing.T) {
 			testCloudCredentialDigitaloceanConf,
 		},
 	}
-
 	for _, tc := range cases {
 		output := expandCloudCredentialDigitalocean(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }

@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -108,13 +108,9 @@ func TestFlattenClusterRKEConfigServicesEtcdBackupConfigS3(t *testing.T) {
 			testClusterRKEConfigServicesETCDBackupS3Interface,
 		},
 	}
-
 	for _, tc := range cases {
 		output := flattenClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input, testClusterRKEConfigServicesETCDBackupS3Interface)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -132,10 +128,7 @@ func TestFlattenClusterRKEConfigServicesEtcdBackupConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterRKEConfigServicesEtcdBackupConfig(tc.Input, testClusterRKEConfigServicesETCDBackupInterface)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -150,16 +143,12 @@ func TestFlattenClusterRKEConfigServicesEtcd(t *testing.T) {
 			testClusterRKEConfigServicesETCDInterface,
 		},
 	}
-
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigServicesEtcd(tc.Input, testClusterRKEConfigServicesETCDInterface)
 		if err != nil {
 			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -174,16 +163,13 @@ func TestExpandClusterRKEConfigServicesEtcdBackupConfigS3(t *testing.T) {
 			testClusterRKEConfigServicesETCDBackupS3Conf,
 		},
 	}
-
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigServicesEtcdBackupConfigS3(tc.Input)
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
 
@@ -198,16 +184,13 @@ func TestExpandClusterRKEConfigServicesEtcdBackupConfig(t *testing.T) {
 			testClusterRKEConfigServicesETCDBackupConf,
 		},
 	}
-
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigServicesEtcdBackupConfig(tc.Input)
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
 
@@ -228,9 +211,7 @@ func TestExpandClusterRKEConfigServicesEtcd(t *testing.T) {
 		if err != nil {
 			t.Fatalf("[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }

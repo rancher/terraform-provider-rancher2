@@ -1,11 +1,11 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -48,10 +48,7 @@ func TestFlattenUser(t *testing.T) {
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				expectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
@@ -70,9 +67,7 @@ func TestExpandUser(t *testing.T) {
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, userFields(), tc.Input)
 		output := expandUser(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }

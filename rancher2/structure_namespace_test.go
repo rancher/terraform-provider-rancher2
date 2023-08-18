@@ -1,11 +1,11 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -104,10 +104,7 @@ func TestFlattenNamespaceContainerResourceLimit(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenNamespaceContainerResourceLimit(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -125,10 +122,7 @@ func TestFlattenNamespaceResourceQuotaLimit(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenNamespaceResourceQuotaLimit(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -146,10 +140,7 @@ func TestFlattenNamespaceResourceQuota(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenNamespaceResourceQuota(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -175,10 +166,8 @@ func TestFlattenNamespace(t *testing.T) {
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				expectedOutput, output)
-		}
+
+		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
@@ -196,9 +185,8 @@ func TestExpandNamespaceContainerResourceLimit(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandNamespaceContainerResourceLimit(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven: %#v", tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
 
@@ -216,10 +204,8 @@ func TestExpandNamespaceResourceQuotaLimit(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandNamespaceResourceQuotaLimit(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
 
@@ -237,10 +223,8 @@ func TestExpandNamespaceResourceQuota(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandNamespaceResourceQuota(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
 
@@ -259,9 +243,7 @@ func TestExpandNamespace(t *testing.T) {
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, namespaceFields(), tc.Input)
 		output := expandNamespace(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+
 	}
 }
