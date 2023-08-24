@@ -1,13 +1,19 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+	"errors"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceRancher2ClusterV2Import(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	err := resourceRancher2ClusterV2Read(d, meta)
-	if err != nil || d.Id() == "" {
-		return []*schema.ResourceData{}, err
+func resourceRancher2ClusterV2Import(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	diag := resourceRancher2ClusterV2Read(ctx, d, meta)
+	if diag.HasError() {
+		return []*schema.ResourceData{}, errors.New(diag[0].Summary)
+	}
+	if d.Id() == "" {
+		return []*schema.ResourceData{}, nil
 	}
 
 	return []*schema.ResourceData{d}, nil

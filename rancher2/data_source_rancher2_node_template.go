@@ -1,15 +1,16 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func dataSourceRancher2NodeTemplate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2NodeTemplateRead,
+		ReadContext: dataSourceRancher2NodeTemplateRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -82,14 +83,22 @@ func dataSourceRancher2NodeTemplate() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			"auth_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auth_certificate_authority": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceRancher2NodeTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2NodeTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -101,18 +110,18 @@ func dataSourceRancher2NodeTemplateRead(d *schema.ResourceData, meta interface{}
 
 	nodeTemplates, err := client.NodeTemplate.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(nodeTemplates.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] node template with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] node template with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d node template with name \"%s\" ", count, name)
+		return diag.Errorf("[ERROR] found %d node template with name \"%s\" ", count, name)
 	}
 
-	return flattenDataSourceNodeTemplate(d, &nodeTemplates.Data[0])
+	return diag.FromErr(flattenDataSourceNodeTemplate(d, &nodeTemplates.Data[0]))
 }
 
 func flattenDataSourceNodeTemplate(d *schema.ResourceData, in *managementClient.NodeTemplate) error {

@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -40,9 +42,9 @@ func TestAccRancher2ClusterDriver_basic(t *testing.T) {
 	var clusterDriver *managementClient.KontainerDriver
 	name := testAccRancher2ClusterDriverType + ".foo"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterDriverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterDriverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterDriver,
@@ -92,9 +94,9 @@ func TestAccRancher2ClusterDriver_disappears(t *testing.T) {
 	var clusterDriver *managementClient.KontainerDriver
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterDriverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterDriverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterDriver,
@@ -132,7 +134,7 @@ func testAccRancher2ClusterDriverDisappears(clusterDriver *managementClient.Kont
 				return fmt.Errorf("Error removing Cluster Driver: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"removing"},
 				Target:     []string{"removed"},
 				Refresh:    clusterDriverStateRefreshFunc(client, clusterDriver.ID),
@@ -141,7 +143,7 @@ func testAccRancher2ClusterDriverDisappears(clusterDriver *managementClient.Kont
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for cluster driver (%s) to be removed: %s", clusterDriver.ID, waitErr)

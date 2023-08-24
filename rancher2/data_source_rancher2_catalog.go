@@ -1,16 +1,18 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func dataSourceRancher2Catalog() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2CatalogRead,
+		ReadContext: dataSourceRancher2CatalogRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,36 +75,36 @@ func dataSourceRancher2Catalog() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2CatalogRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2CatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	scope := d.Get("scope").(string)
 
 	catalogs, err := meta.(*Config).GetCatalogByName(name, scope)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	switch scope {
 	case catalogScopeCluster:
 		err = dataSourceRancher2CatalogCheck(len(catalogs.(*managementClient.ClusterCatalogCollection).Data), scope, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		return flattenCatalog(d, &catalogs.(*managementClient.ClusterCatalogCollection).Data[0])
+		return diag.FromErr(flattenCatalog(d, &catalogs.(*managementClient.ClusterCatalogCollection).Data[0]))
 	case catalogScopeGlobal:
 		err = dataSourceRancher2CatalogCheck(len(catalogs.(*managementClient.CatalogCollection).Data), scope, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		return flattenCatalog(d, &catalogs.(*managementClient.CatalogCollection).Data[0])
+		return diag.FromErr(flattenCatalog(d, &catalogs.(*managementClient.CatalogCollection).Data[0]))
 	case catalogScopeProject:
 		err = dataSourceRancher2CatalogCheck(len(catalogs.(*managementClient.ProjectCatalogCollection).Data), scope, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		return flattenCatalog(d, &catalogs.(*managementClient.ProjectCatalogCollection).Data[0])
+		return diag.FromErr(flattenCatalog(d, &catalogs.(*managementClient.ProjectCatalogCollection).Data[0]))
 	default:
-		return fmt.Errorf("[ERROR] Unsupported scope on catalog: %s", scope)
+		return diag.Errorf("[ERROR] Unsupported scope on catalog: %s", scope)
 	}
 
 }

@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2NodePool() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2NodePoolRead,
+		ReadContext: dataSourceRancher2NodePoolRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -63,14 +64,18 @@ func dataSourceRancher2NodePool() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			"drain_before_delete": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceRancher2NodePoolRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2NodePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterID := d.Get("cluster_id").(string)
@@ -88,16 +93,16 @@ func dataSourceRancher2NodePoolRead(d *schema.ResourceData, meta interface{}) er
 
 	nodePools, err := client.NodePool.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(nodePools.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] node pool with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
+		return diag.Errorf("[ERROR] node pool with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d node pool with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
+		return diag.Errorf("[ERROR] found %d node pool with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
 	}
 
-	return flattenNodePool(d, &nodePools.Data[0])
+	return diag.FromErr(flattenNodePool(d, &nodePools.Data[0]))
 }

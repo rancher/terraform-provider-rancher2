@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccRancher2ConfigMapV2Type = "rancher2_config_map_v2"
@@ -49,9 +51,9 @@ func TestAccRancher2ConfigMapV2_basic(t *testing.T) {
 	var configMap *ConfigMapV2
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ConfigMapV2Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ConfigMapV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ConfigMapV2Config,
@@ -90,9 +92,9 @@ func TestAccRancher2ConfigMapV2_disappears(t *testing.T) {
 	var configMap *ConfigMapV2
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ConfigMapV2Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ConfigMapV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ConfigMapV2Config,
@@ -125,7 +127,7 @@ func testAccRancher2ConfigMapV2Disappears(cat *ConfigMapV2) resource.TestCheckFu
 			if err != nil {
 				return fmt.Errorf("testAccRancher2ConfigMapV2Disappears-delete: %v", err)
 			}
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{},
 				Target:     []string{"removed"},
 				Refresh:    configMapV2StateRefreshFunc(testAccProvider.Meta(), clusterID, configMap.ID),
@@ -133,7 +135,7 @@ func testAccRancher2ConfigMapV2Disappears(cat *ConfigMapV2) resource.TestCheckFu
 				Delay:      1 * time.Second,
 				MinTimeout: 3 * time.Second,
 			}
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf("[ERROR] waiting for configMap (%s) to be deleted: %s", configMap.ID, waitErr)
 			}

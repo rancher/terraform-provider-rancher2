@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ProjectAlertRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2ProjectAlertRuleRead,
+		ReadContext: dataSourceRancher2ProjectAlertRuleRead,
 
 		Schema: map[string]*schema.Schema{
 			"project_id": {
@@ -23,7 +24,6 @@ func dataSourceRancher2ProjectAlertRule() *schema.Resource {
 			},
 			"metric_rule": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: metricRuleFields(),
@@ -32,7 +32,6 @@ func dataSourceRancher2ProjectAlertRule() *schema.Resource {
 			},
 			"pod_rule": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: podRuleFields(),
@@ -41,7 +40,6 @@ func dataSourceRancher2ProjectAlertRule() *schema.Resource {
 			},
 			"workload_rule": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: workloadRuleFields(),
@@ -90,10 +88,10 @@ func dataSourceRancher2ProjectAlertRule() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2ProjectAlertRuleRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ProjectAlertRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	projectID := d.Get("project_id").(string)
@@ -107,16 +105,16 @@ func dataSourceRancher2ProjectAlertRuleRead(d *schema.ResourceData, meta interfa
 
 	alertRules, err := client.ProjectAlertRule.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(alertRules.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] project alert rule with name \"%s\" on project ID \"%s\" not found", name, projectID)
+		return diag.Errorf("[ERROR] project alert rule with name \"%s\" on project ID \"%s\" not found", name, projectID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d project alert rule with name \"%s\" on project ID \"%s\"", count, name, projectID)
+		return diag.Errorf("[ERROR] found %d project alert rule with name \"%s\" on project ID \"%s\"", count, name, projectID)
 	}
 
-	return flattenProjectAlertRule(d, &alertRules.Data[0])
+	return diag.FromErr(flattenProjectAlertRule(d, &alertRules.Data[0]))
 }

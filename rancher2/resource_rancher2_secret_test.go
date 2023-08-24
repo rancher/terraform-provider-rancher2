@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
@@ -83,8 +83,8 @@ func TestAccRancher2Secret_basic_Project(t *testing.T) {
 	testAccRancher2SecretUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2SecretUpdate
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2SecretDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2SecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2SecretConfig,
@@ -124,8 +124,8 @@ func TestAccRancher2Secret_disappears_Project(t *testing.T) {
 	var reg interface{}
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2SecretDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2SecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2SecretConfig,
@@ -146,8 +146,8 @@ func TestAccRancher2Secret_basic_Namespaced(t *testing.T) {
 	testAccRancher2SecretNsUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccCheckRancher2NamespaceTestacc + testAccRancher2SecretNsUpdate
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2SecretDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2SecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2SecretNsConfig,
@@ -187,8 +187,8 @@ func TestAccRancher2Secret_disappears_Namespaced(t *testing.T) {
 	var reg interface{}
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2SecretDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2SecretDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2SecretNsConfig,

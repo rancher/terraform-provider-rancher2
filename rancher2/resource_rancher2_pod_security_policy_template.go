@@ -1,23 +1,24 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2PodSecurityPolicyTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2PodSecurityPolicyTemplateCreate,
-		Read:   resourceRancher2PodSecurityPolicyTemplateRead,
-		Update: resourceRancher2PodSecurityPolicyTemplateUpdate,
-		Delete: resourceRancher2PodSecurityPolicyTemplateDelete,
+		CreateContext: resourceRancher2PodSecurityPolicyTemplateCreate,
+		ReadContext:   resourceRancher2PodSecurityPolicyTemplateRead,
+		UpdateContext: resourceRancher2PodSecurityPolicyTemplateUpdate,
+		DeleteContext: resourceRancher2PodSecurityPolicyTemplateDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2PodSecurityPolicyTemplateImport,
+			StateContext: resourceRancher2PodSecurityPolicyTemplateImport,
 		},
 
 		Schema: podSecurityPolicyTemplateFields(),
@@ -29,34 +30,34 @@ func resourceRancher2PodSecurityPolicyTemplate() *schema.Resource {
 	}
 }
 
-func resourceRancher2PodSecurityPolicyTemplateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2PodSecurityPolicyTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	podSecurityPolicyTemplate := expandPodSecurityPolicyTemplate(d)
 
 	log.Printf("[INFO] Creating PodSecurityPolicyTemplate %s", podSecurityPolicyTemplate.Name)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	newPodSecurityPolicyTemplate, err := client.PodSecurityPolicyTemplate.Create(podSecurityPolicyTemplate)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newPodSecurityPolicyTemplate.ID)
 
-	return resourceRancher2PodSecurityPolicyTemplateRead(d, meta)
+	return resourceRancher2PodSecurityPolicyTemplateRead(ctx, d, meta)
 }
 
-func resourceRancher2PodSecurityPolicyTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2PodSecurityPolicyTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing PodSecurityPolicyTemplate with ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		pspt, err := client.PodSecurityPolicyTemplate.ByID(d.Id())
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -64,45 +65,45 @@ func resourceRancher2PodSecurityPolicyTemplateRead(d *schema.ResourceData, meta 
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenPodSecurityPolicyTemplate(d, pspt); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2PodSecurityPolicyTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2PodSecurityPolicyTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating PodSecurityPolicyTemplate with ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	pspt, err := client.PodSecurityPolicyTemplate.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	update := expandPodSecurityPolicyTemplate(d)
 
 	_, err = client.PodSecurityPolicyTemplate.Update(pspt, update)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceRancher2PodSecurityPolicyTemplateRead(d, meta)
+	return resourceRancher2PodSecurityPolicyTemplateRead(ctx, d, meta)
 }
 
-func resourceRancher2PodSecurityPolicyTemplateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2PodSecurityPolicyTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	id := d.Id()
 	log.Printf("[INFO] Deleting PodSecurityPolicyTemplate with ID %s", id)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	pspt, err := client.PodSecurityPolicyTemplate.ByID(id)
@@ -112,15 +113,15 @@ func resourceRancher2PodSecurityPolicyTemplateDelete(d *schema.ResourceData, met
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.PodSecurityPolicyTemplate.Delete(pspt)
 	if err != nil {
-		return fmt.Errorf("Error removing PodSecurityPolicyTemplate: %s", err)
+		return diag.Errorf("Error removing PodSecurityPolicyTemplate: %s", err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"removed"},
 		Refresh:    podSecurityPolicyTemplateStateRefreshFunc(client, id),
@@ -129,9 +130,9 @@ func resourceRancher2PodSecurityPolicyTemplateDelete(d *schema.ResourceData, met
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for PodSecurityPolicyTemplate (%s) to be removed: %s", id, waitErr)
 	}
 
@@ -139,8 +140,8 @@ func resourceRancher2PodSecurityPolicyTemplateDelete(d *schema.ResourceData, met
 	return nil
 }
 
-// podSecurityPolicyTemplateStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher PodSecurityPolicyTemplate
-func podSecurityPolicyTemplateStateRefreshFunc(client *managementClient.Client, pspID string) resource.StateRefreshFunc {
+// podSecurityPolicyTemplateStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher PodSecurityPolicyTemplate
+func podSecurityPolicyTemplateStateRefreshFunc(client *managementClient.Client, pspID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.PodSecurityPolicyTemplate.ByID(pspID)
 		if err != nil {

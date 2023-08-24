@@ -1,10 +1,11 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -19,7 +20,7 @@ var (
 
 func dataSourceRancher2Principal() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2PrincipalRead,
+		ReadContext: dataSourceRancher2PrincipalRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,10 +37,10 @@ func dataSourceRancher2Principal() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2PrincipalRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2PrincipalRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -47,7 +48,7 @@ func dataSourceRancher2PrincipalRead(d *schema.ResourceData, meta interface{}) e
 
 	collection, err := client.Principal.List(nil)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	principals, err := client.Principal.CollectionActionSearch(collection, &managementClient.SearchPrincipalsInput{
@@ -55,15 +56,15 @@ func dataSourceRancher2PrincipalRead(d *schema.ResourceData, meta interface{}) e
 		PrincipalType: principalType,
 	})
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(principals.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] principal \"%s\" of type \"%s\" not found", name, principalType)
+		return diag.Errorf("[ERROR] principal \"%s\" of type \"%s\" not found", name, principalType)
 	}
 
-	return flattenDataSourcePrincipal(d, &principals.Data[0])
+	return diag.FromErr(flattenDataSourcePrincipal(d, &principals.Data[0]))
 }
 
 func flattenDataSourcePrincipal(d *schema.ResourceData, in *managementClient.Principal) error {

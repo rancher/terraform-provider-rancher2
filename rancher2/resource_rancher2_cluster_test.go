@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
@@ -163,9 +165,9 @@ func TestAccRancher2Cluster_basic_RKE(t *testing.T) {
 	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterConfigRKE,
@@ -220,9 +222,9 @@ func TestAccRancher2Cluster_disappears_RKE(t *testing.T) {
 	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterConfigRKE,
@@ -240,9 +242,9 @@ func TestAccRancher2Cluster_basic_Imported(t *testing.T) {
 	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterConfigImported,
@@ -279,9 +281,9 @@ func TestAccRancher2Cluster_disappears_Imported(t *testing.T) {
 	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterConfigImported,
@@ -299,9 +301,9 @@ func TestAccRancher2Cluster_basic_K3S(t *testing.T) {
 	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterConfigK3S,
@@ -341,9 +343,9 @@ func TestAccRancher2Cluster_disappears_K3S(t *testing.T) {
 	var cluster *Cluster
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterConfigK3S,
@@ -382,7 +384,7 @@ func testAccRancher2ClusterDisappears(pro *Cluster) resource.TestCheckFunc {
 				return fmt.Errorf("Error removing Cluster: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"active", "removing"},
 				Target:     []string{"removed"},
 				Refresh:    clusterStateRefreshFunc(client, pro.ID),
@@ -391,7 +393,7 @@ func testAccRancher2ClusterDisappears(pro *Cluster) resource.TestCheckFunc {
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for Cluster (%s) to be removed: %s", pro.ID, waitErr)

@@ -1,48 +1,49 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2AuthConfigFreeIpa() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2AuthConfigFreeIpaCreate,
-		Read:   resourceRancher2AuthConfigFreeIpaRead,
-		Update: resourceRancher2AuthConfigFreeIpaUpdate,
-		Delete: resourceRancher2AuthConfigFreeIpaDelete,
+		CreateContext: resourceRancher2AuthConfigFreeIpaCreate,
+		ReadContext:   resourceRancher2AuthConfigFreeIpaRead,
+		UpdateContext: resourceRancher2AuthConfigFreeIpaUpdate,
+		DeleteContext: resourceRancher2AuthConfigFreeIpaDelete,
 
 		Schema: authConfigFreeIpaFields(),
 	}
 }
 
-func resourceRancher2AuthConfigFreeIpaCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AuthConfigFreeIpaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	auth, err := client.AuthConfig.ByID(AuthConfigFreeIpaName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigFreeIpaName, err)
+		return diag.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigFreeIpaName, err)
 	}
 
 	log.Printf("[INFO] Creating Auth Config %s %s", AuthConfigFreeIpaName, auth.Name)
 
 	authFreeIpa, err := expandAuthConfigFreeIpa(d)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigFreeIpaName, err)
+		return diag.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigFreeIpaName, err)
 	}
 
 	// Checking if other auth config is enabled
 	if authFreeIpa.Enabled {
 		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigFreeIpaName)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigFreeIpaName, err)
+			return diag.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigFreeIpaName, err)
 		}
 		// Updated auth config
 		authResource := &norman.Resource{
@@ -58,30 +59,30 @@ func resourceRancher2AuthConfigFreeIpaCreate(d *schema.ResourceData, meta interf
 		}
 		err = client.APIBaseClient.Action(managementClient.FreeIpaConfigType, "testAndApply", authResource, testInput, nil)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		if len(auth.Actions["disable"]) > 0 {
 			err = client.Post(auth.Actions["disable"], nil, nil)
 			if err != nil {
-				return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigFreeIpaName, err)
+				return diag.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigFreeIpaName, err)
 			}
 		}
 		newAuth := &managementClient.FreeIpaConfig{}
 		err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authFreeIpa, newAuth)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigFreeIpaName, err)
+			return diag.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigFreeIpaName, err)
 		}
 	}
 
-	return resourceRancher2AuthConfigFreeIpaRead(d, meta)
+	return resourceRancher2AuthConfigFreeIpaRead(ctx, d, meta)
 }
 
-func resourceRancher2AuthConfigFreeIpaRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AuthConfigFreeIpaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigFreeIpaName)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	auth, err := client.AuthConfig.ByID(AuthConfigFreeIpaName)
@@ -91,34 +92,34 @@ func resourceRancher2AuthConfigFreeIpaRead(d *schema.ResourceData, meta interfac
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	authFreeIpa, err := meta.(*Config).GetAuthConfig(auth)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = flattenAuthConfigFreeIpa(d, authFreeIpa.(*managementClient.LdapConfig))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceRancher2AuthConfigFreeIpaUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AuthConfigFreeIpaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Auth Config %s", AuthConfigFreeIpaName)
 
-	return resourceRancher2AuthConfigFreeIpaCreate(d, meta)
+	return resourceRancher2AuthConfigFreeIpaCreate(ctx, d, meta)
 }
 
-func resourceRancher2AuthConfigFreeIpaDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AuthConfigFreeIpaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigFreeIpaName)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	auth, err := client.AuthConfig.ByID(AuthConfigFreeIpaName)
@@ -128,13 +129,13 @@ func resourceRancher2AuthConfigFreeIpaDelete(d *schema.ResourceData, meta interf
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	if auth.Enabled == true {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigFreeIpaName, err)
+			return diag.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigFreeIpaName, err)
 		}
 	}
 

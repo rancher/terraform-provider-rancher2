@@ -6,8 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/rancher/norman/types"
 	v1 "github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 	"golang.org/x/sync/errgroup"
@@ -15,12 +16,12 @@ import (
 
 func resourceRancher2CatalogV2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2CatalogV2Create,
-		Read:   resourceRancher2CatalogV2Read,
-		Update: resourceRancher2CatalogV2Update,
-		Delete: resourceRancher2CatalogV2Delete,
+		CreateContext: resourceRancher2CatalogV2Create,
+		ReadContext:   resourceRancher2CatalogV2Read,
+		UpdateContext: resourceRancher2CatalogV2Update,
+		DeleteContext: resourceRancher2CatalogV2Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2CatalogV2Import,
+			StateContext: resourceRancher2CatalogV2Import,
 		},
 		Schema: catalogV2Fields(),
 		Timeouts: &schema.ResourceTimeout{
@@ -31,7 +32,7 @@ func resourceRancher2CatalogV2() *schema.Resource {
 	}
 }
 
-func resourceRancher2CatalogV2Create(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CatalogV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	catalog := expandCatalogV2(d)
@@ -40,10 +41,10 @@ func resourceRancher2CatalogV2Create(d *schema.ResourceData, meta interface{}) e
 
 	newCatalog, err := createCatalogV2(meta.(*Config), clusterID, catalog)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(clusterID + catalogV2ClusterIDsep + newCatalog.ID)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"downloaded"},
 		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, newCatalog.ID),
@@ -51,19 +52,19 @@ func resourceRancher2CatalogV2Create(d *schema.ResourceData, meta interface{}) e
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", newCatalog.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", newCatalog.ID, waitErr)
 	}
-	return resourceRancher2CatalogV2Read(d, meta)
+	return resourceRancher2CatalogV2Read(ctx, d, meta)
 }
 
-func resourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CatalogV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing Catalog V2 %s", name)
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		_, rancherID := splitID(d.Id())
 		catalog, err := getCatalogV2ByID(meta.(*Config), clusterID, rancherID)
 		if err != nil {
@@ -72,18 +73,18 @@ func resourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) err
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenCatalogV2(d, catalog); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CatalogV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	catalog := expandCatalogV2(d)
@@ -92,10 +93,10 @@ func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) e
 	_, rancherID := splitID(d.Id())
 	newCatalog, err := updateCatalogV2(meta.(*Config), clusterID, rancherID, catalog)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(clusterID + catalogV2ClusterIDsep + newCatalog.ID)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"downloaded"},
 		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, newCatalog.ID),
@@ -103,14 +104,14 @@ func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) e
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", newCatalog.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for catalog (%s) to be active: %s", newCatalog.ID, waitErr)
 	}
-	return resourceRancher2CatalogV2Read(d, meta)
+	return resourceRancher2CatalogV2Read(ctx, d, meta)
 }
 
-func resourceRancher2CatalogV2Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CatalogV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Catalog V2 %s", name)
@@ -125,9 +126,9 @@ func resourceRancher2CatalogV2Delete(d *schema.ResourceData, meta interface{}) e
 	}
 	err = deleteCatalogV2(meta.(*Config), clusterID, catalog)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, catalog.ID),
@@ -135,16 +136,16 @@ func resourceRancher2CatalogV2Delete(d *schema.ResourceData, meta interface{}) e
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for catalog (%s) to be deleted: %s", catalog.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for catalog (%s) to be deleted: %s", catalog.ID, waitErr)
 	}
 	d.SetId("")
 	return nil
 }
 
-// catalogV2StateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Catalog v2.
-func catalogV2StateRefreshFunc(meta interface{}, clusterID, catalogID string) resource.StateRefreshFunc {
+// catalogV2StateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Catalog v2.
+func catalogV2StateRefreshFunc(meta interface{}, clusterID, catalogID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := getCatalogV2ByID(meta.(*Config), clusterID, catalogID)
 		if err != nil {

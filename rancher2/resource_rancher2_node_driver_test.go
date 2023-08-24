@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -44,9 +46,9 @@ func TestAccRancher2NodeDriver_basic(t *testing.T) {
 	var nodeDriver *managementClient.NodeDriver
 	name := testAccRancher2NodeDriverType + ".foo"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeDriverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeDriverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeDriver,
@@ -102,9 +104,9 @@ func TestAccRancher2NodeDriver_disappears(t *testing.T) {
 	var nodeDriver *managementClient.NodeDriver
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeDriverDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeDriverDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeDriver,
@@ -142,7 +144,7 @@ func testAccRancher2NodeDriverDisappears(nodeDriver *managementClient.NodeDriver
 				return fmt.Errorf("Error removing Node Driver: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"removing"},
 				Target:     []string{"removed"},
 				Refresh:    nodeDriverStateRefreshFunc(client, nodeDriver.ID),
@@ -151,7 +153,7 @@ func testAccRancher2NodeDriverDisappears(nodeDriver *managementClient.NodeDriver
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for node driver (%s) to be removed: %s", nodeDriver.ID, waitErr)

@@ -1,11 +1,12 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -32,7 +33,7 @@ type CLIConfig struct {
 }
 
 // Provider returns a terraform.ResourceProvider.
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"api_url": {
@@ -200,7 +201,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_user":                          dataSourceRancher2User(),
 		},
 
-		ConfigureFunc: providerConfigure,
+		ConfigureContextFunc: providerConfigure,
 	}
 }
 
@@ -218,7 +219,7 @@ func init() {
 	}
 }
 
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	apiURL := d.Get("api_url").(string)
 	accessKey := d.Get("access_key").(string)
 	secretKey := d.Get("secret_key").(string)
@@ -229,7 +230,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	timeout, err := time.ParseDuration(d.Get("timeout").(string))
 	if err != nil {
-		return nil, fmt.Errorf("[ERROR] timeout must be in golang duration format, error: %v", err)
+		return nil, diag.Errorf("[ERROR] timeout must be in golang duration format, error: %v", err)
 	}
 
 	// Set tokenKey based on accessKey and secretKey if needed
@@ -246,7 +247,8 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Timeout:   timeout,
 	}
 
-	return providerValidateConfig(config)
+	validConfig, err := providerValidateConfig(config)
+	return validConfig, diag.FromErr(err)
 }
 
 func providerValidateConfig(config *Config) (*Config, error) {

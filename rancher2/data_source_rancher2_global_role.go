@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2GlobalRole() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2GlobalRoleRead,
+		ReadContext: dataSourceRancher2GlobalRoleRead,
 		Schema: map[string]*schema.Schema{
 			"builtin": {
 				Type:        schema.TypeBool,
@@ -60,10 +61,10 @@ func dataSourceRancher2GlobalRole() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2GlobalRoleRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2GlobalRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -75,16 +76,16 @@ func dataSourceRancher2GlobalRoleRead(d *schema.ResourceData, meta interface{}) 
 
 	globalRoles, err := client.GlobalRole.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(globalRoles.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] global role with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] global role with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d global role with name \"%s\"", count, name)
+		return diag.Errorf("[ERROR] found %d global role with name \"%s\"", count, name)
 	}
 
-	return flattenGlobalRole(d, &globalRoles.Data[0])
+	return diag.FromErr(flattenGlobalRole(d, &globalRoles.Data[0]))
 }

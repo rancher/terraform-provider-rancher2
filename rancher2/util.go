@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -204,7 +204,7 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return response, err
@@ -276,7 +276,7 @@ func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte
 	// Timings recorded as part of internal metrics
 	log.Println("Time to get req: ", float64((time.Since(start))/time.Millisecond), " ms")
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 
 }
 

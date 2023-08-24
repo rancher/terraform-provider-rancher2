@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -44,8 +46,8 @@ func TestAccRancher2GlobalRoleBinding_basic(t *testing.T) {
 	testAccRancher2GlobalRoleBindingConfig = testAccRancher2User + testAccRancher2GlobalRoleBinding
 	testAccRancher2GlobalRoleBindingUpdateConfig = testAccRancher2User + testAccRancher2GlobalRoleBindingUpdate
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2GlobalRoleBindingDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2GlobalRoleBindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2GlobalRoleBindingConfig,
@@ -79,8 +81,8 @@ func TestAccRancher2GlobalRoleBinding_disappears(t *testing.T) {
 	var globalRole *managementClient.GlobalRoleBinding
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2GlobalRoleBindingDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2GlobalRoleBindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2GlobalRoleBindingConfig,
@@ -118,7 +120,7 @@ func testAccRancher2GlobalRoleBindingDisappears(pro *managementClient.GlobalRole
 				return fmt.Errorf("Error removing Global Role Binding: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"active"},
 				Target:     []string{"removed"},
 				Refresh:    globalRoleBindingStateRefreshFunc(client, pro.ID),
@@ -127,7 +129,7 @@ func testAccRancher2GlobalRoleBindingDisappears(pro *managementClient.GlobalRole
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for Global Role Binding (%s) to be removed: %s", pro.ID, waitErr)

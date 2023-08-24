@@ -1,14 +1,16 @@
 package rancher2
 
 import (
+	"context"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2Setting() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2SettingRead,
+		ReadContext: dataSourceRancher2SettingRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -23,18 +25,18 @@ func dataSourceRancher2Setting() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2SettingRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2SettingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing Rancher2 Setting: %s", name)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	setting, err := client.Setting.ByID(name)
 	if err != nil || setting == nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(name)

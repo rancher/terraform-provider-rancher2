@@ -1,23 +1,24 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2NodePool() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2NodePoolCreate,
-		Read:   resourceRancher2NodePoolRead,
-		Update: resourceRancher2NodePoolUpdate,
-		Delete: resourceRancher2NodePoolDelete,
+		CreateContext: resourceRancher2NodePoolCreate,
+		ReadContext:   resourceRancher2NodePoolRead,
+		UpdateContext: resourceRancher2NodePoolUpdate,
+		DeleteContext: resourceRancher2NodePoolDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2NodePoolImport,
+			StateContext: resourceRancher2NodePoolImport,
 		},
 
 		Schema: nodePoolFields(),
@@ -29,29 +30,29 @@ func resourceRancher2NodePool() *schema.Resource {
 	}
 }
 
-func resourceRancher2NodePoolCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NodePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	nodePool := expandNodePool(d)
 
 	log.Printf("[INFO] Creating Node Pool %s", nodePool.Name)
 
 	err := meta.(*Config).ClusterExist(nodePool.ClusterID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	newNodePool, err := client.NodePool.Create(nodePool)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newNodePool.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    nodePoolStateRefreshFunc(client, newNodePool.ID),
@@ -59,22 +60,22 @@ func resourceRancher2NodePoolCreate(d *schema.ResourceData, meta interface{}) er
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for node pool (%s) to be created: %s", newNodePool.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for node pool (%s) to be created: %s", newNodePool.ID, waitErr)
 	}
 
-	return resourceRancher2NodePoolRead(d, meta)
+	return resourceRancher2NodePoolRead(ctx, d, meta)
 }
 
-func resourceRancher2NodePoolRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NodePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Node Pool ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		nodePool, err := client.NodePool.ByID(d.Id())
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -82,27 +83,27 @@ func resourceRancher2NodePoolRead(d *schema.ResourceData, meta interface{}) erro
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenNodePool(d, nodePool); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NodePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Node Pool ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	nodePool, err := client.NodePool.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	update := map[string]interface{}{
@@ -121,10 +122,10 @@ func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) er
 
 	newNodePool, err := client.NodePool.Update(nodePool, update)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    nodePoolStateRefreshFunc(client, newNodePool.ID),
@@ -132,21 +133,21 @@ func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) er
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for node pool (%s) to be updated: %s", newNodePool.ID, waitErr)
 	}
 
-	return resourceRancher2NodePoolRead(d, meta)
+	return resourceRancher2NodePoolRead(ctx, d, meta)
 }
 
-func resourceRancher2NodePoolDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NodePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Node Pool ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	nodePool, err := client.NodePool.ByID(id)
@@ -156,17 +157,17 @@ func resourceRancher2NodePoolDelete(d *schema.ResourceData, meta interface{}) er
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.NodePool.Delete(nodePool)
 	if err != nil {
-		return fmt.Errorf("Error removing Node Pool: %s", err)
+		return diag.Errorf("Error removing Node Pool: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for node pool (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
 		Refresh:    nodePoolStateRefreshFunc(client, id),
@@ -175,9 +176,9 @@ func resourceRancher2NodePoolDelete(d *schema.ResourceData, meta interface{}) er
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for node pool (%s) to be removed: %s", id, waitErr)
 	}
 
@@ -185,8 +186,8 @@ func resourceRancher2NodePoolDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-// nodePoolStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher NodePool.
-func nodePoolStateRefreshFunc(client *managementClient.Client, nodePoolID string) resource.StateRefreshFunc {
+// nodePoolStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher NodePool.
+func nodePoolStateRefreshFunc(client *managementClient.Client, nodePoolID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.NodePool.ByID(nodePoolID)
 		if err != nil {

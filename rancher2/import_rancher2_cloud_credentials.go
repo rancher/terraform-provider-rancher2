@@ -1,11 +1,13 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
-func resourceRancher2CloudCredentialsImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRancher2CloudCredentialsImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	cloudCredentialID, driver := splitID(d.Id())
 	d.Set("driver", driver)
 

@@ -1,23 +1,24 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2GlobalRoleBinding() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2GlobalRoleBindingCreate,
-		Read:   resourceRancher2GlobalRoleBindingRead,
-		Update: resourceRancher2GlobalRoleBindingUpdate,
-		Delete: resourceRancher2GlobalRoleBindingDelete,
+		CreateContext: resourceRancher2GlobalRoleBindingCreate,
+		ReadContext:   resourceRancher2GlobalRoleBindingRead,
+		UpdateContext: resourceRancher2GlobalRoleBindingUpdate,
+		DeleteContext: resourceRancher2GlobalRoleBindingDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2GlobalRoleBindingImport,
+			StateContext: resourceRancher2GlobalRoleBindingImport,
 		},
 
 		Schema: globalRoleBindingFields(),
@@ -29,29 +30,29 @@ func resourceRancher2GlobalRoleBinding() *schema.Resource {
 	}
 }
 
-func resourceRancher2GlobalRoleBindingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2GlobalRoleBindingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	globalRole := expandGlobalRoleBinding(d)
 
 	err := meta.(*Config).GlobalRoleExist(globalRole.GlobalRoleID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating Global Role Binding %s", globalRole.Name)
 
 	newGlobalRole, err := client.GlobalRoleBinding.Create(globalRole)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newGlobalRole.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    globalRoleBindingStateRefreshFunc(client, newGlobalRole.ID),
@@ -59,23 +60,23 @@ func resourceRancher2GlobalRoleBindingCreate(d *schema.ResourceData, meta interf
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for global role binding (%s) to be created: %s", newGlobalRole.ID, waitErr)
 	}
 
-	return resourceRancher2GlobalRoleBindingRead(d, meta)
+	return resourceRancher2GlobalRoleBindingRead(ctx, d, meta)
 }
 
-func resourceRancher2GlobalRoleBindingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2GlobalRoleBindingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Global Role Binding ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		globalRole, err := client.GlobalRoleBinding.ByID(d.Id())
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -83,27 +84,27 @@ func resourceRancher2GlobalRoleBindingRead(d *schema.ResourceData, meta interfac
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenGlobalRoleBinding(d, globalRole); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2GlobalRoleBindingUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2GlobalRoleBindingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Global Role Binding ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	globalRole, err := client.GlobalRoleBinding.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	update := map[string]interface{}{
@@ -113,10 +114,10 @@ func resourceRancher2GlobalRoleBindingUpdate(d *schema.ResourceData, meta interf
 
 	newGlobalRole, err := client.GlobalRoleBinding.Update(globalRole, update)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    globalRoleBindingStateRefreshFunc(client, newGlobalRole.ID),
@@ -124,21 +125,21 @@ func resourceRancher2GlobalRoleBindingUpdate(d *schema.ResourceData, meta interf
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for global role binding (%s) to be updated: %s", newGlobalRole.ID, waitErr)
 	}
 
-	return resourceRancher2GlobalRoleBindingRead(d, meta)
+	return resourceRancher2GlobalRoleBindingRead(ctx, d, meta)
 }
 
-func resourceRancher2GlobalRoleBindingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2GlobalRoleBindingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Global Role Binding ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	globalRole, err := client.GlobalRoleBinding.ByID(id)
@@ -148,17 +149,17 @@ func resourceRancher2GlobalRoleBindingDelete(d *schema.ResourceData, meta interf
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.GlobalRoleBinding.Delete(globalRole)
 	if err != nil {
-		return fmt.Errorf("Error removing Global Role Binding: %s", err)
+		return diag.Errorf("Error removing Global Role Binding: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for global role binding (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"removed"},
 		Refresh:    globalRoleBindingStateRefreshFunc(client, id),
@@ -167,9 +168,9 @@ func resourceRancher2GlobalRoleBindingDelete(d *schema.ResourceData, meta interf
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for global role binding (%s) to be removed: %s", id, waitErr)
 	}
 
@@ -177,8 +178,8 @@ func resourceRancher2GlobalRoleBindingDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-// globalRoleBindingStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Global Role Binding.
-func globalRoleBindingStateRefreshFunc(client *managementClient.Client, globalRoleID string) resource.StateRefreshFunc {
+// globalRoleBindingStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Global Role Binding.
+func globalRoleBindingStateRefreshFunc(client *managementClient.Client, globalRoleID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.GlobalRoleBinding.ByID(globalRoleID)
 		if err != nil {

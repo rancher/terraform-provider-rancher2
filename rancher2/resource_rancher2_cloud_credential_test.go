@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
@@ -184,9 +186,9 @@ func TestAccRancher2CloudCredential_basic_Amazonec2(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigAmazonec2,
@@ -226,9 +228,9 @@ func TestAccRancher2CloudCredential_disappears_Amazonec2(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigAmazonec2,
@@ -246,9 +248,9 @@ func TestAccRancher2CloudCredential_basic_Azure(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigAzure,
@@ -288,9 +290,9 @@ func TestAccRancher2CloudCredential_disappears_Azure(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigAzure,
@@ -308,9 +310,9 @@ func TestAccRancher2CloudCredential_basic_Digitalocean(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigDigitalocean,
@@ -350,9 +352,9 @@ func TestAccRancher2CloudCredential_disappears_Digitalocean(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigDigitalocean,
@@ -370,9 +372,9 @@ func TestAccRancher2CloudCredential_basic_Google(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigGoogle,
@@ -412,9 +414,9 @@ func TestAccRancher2CloudCredential_disappears_Google(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigGoogle,
@@ -432,9 +434,9 @@ func TestAccRancher2CloudCredential_basic_Harvester(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigHarvester,
@@ -474,9 +476,9 @@ func TestAccRancher2CloudCredential_disappears_Harvester(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigHarvester,
@@ -494,9 +496,9 @@ func TestAccRancher2CloudCredential_basic_Openstack(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigOpenstack,
@@ -536,9 +538,9 @@ func TestAccRancher2CloudCredential_disappears_Openstack(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigOpenstack,
@@ -556,9 +558,9 @@ func TestAccRancher2CloudCredential_basic_S3(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigS3,
@@ -604,9 +606,9 @@ func TestAccRancher2CloudCredential_disappears_S3(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigS3,
@@ -624,9 +626,9 @@ func TestAccRancher2CloudCredential_basic_Vsphere(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigVsphere,
@@ -669,9 +671,9 @@ func TestAccRancher2CloudCredential_disappears_Vsphere(t *testing.T) {
 	var cloudCredential *CloudCredential
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CloudCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CloudCredentialConfigVsphere,
@@ -710,7 +712,7 @@ func testAccRancher2CloudCredentialDisappears(cloudCredential *CloudCredential) 
 				return fmt.Errorf("Error removing Cloud Credential: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"active"},
 				Target:     []string{"removed"},
 				Refresh:    cloudCredentialStateRefreshFunc(client, cloudCredential.ID),
@@ -719,7 +721,7 @@ func testAccRancher2CloudCredentialDisappears(cloudCredential *CloudCredential) 
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for Cloud Credential (%s) to be removed: %s", cloudCredential.ID, waitErr)

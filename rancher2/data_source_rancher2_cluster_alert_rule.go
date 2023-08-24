@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2ClusterAlertRuleRead,
+		ReadContext: dataSourceRancher2ClusterAlertRuleRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -23,7 +24,6 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 			},
 			"event_rule": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: eventRuleFields(),
@@ -32,7 +32,6 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 			},
 			"metric_rule": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: metricRuleFields(),
@@ -41,7 +40,6 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 			},
 			"node_rule": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: nodeRuleFields(),
@@ -50,7 +48,6 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 			},
 			"system_service_rule": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: systemServiceRuleFields(),
@@ -99,10 +96,10 @@ func dataSourceRancher2ClusterAlertRule() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2ClusterAlertRuleRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ClusterAlertRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterID := d.Get("cluster_id").(string)
@@ -116,16 +113,16 @@ func dataSourceRancher2ClusterAlertRuleRead(d *schema.ResourceData, meta interfa
 
 	alertRules, err := client.ClusterAlertRule.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(alertRules.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] cluster alert rule with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
+		return diag.Errorf("[ERROR] cluster alert rule with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d cluster alert rule with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
+		return diag.Errorf("[ERROR] found %d cluster alert rule with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
 	}
 
-	return flattenClusterAlertRule(d, &alertRules.Data[0])
+	return diag.FromErr(flattenClusterAlertRule(d, &alertRules.Data[0]))
 }

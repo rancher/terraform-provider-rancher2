@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 var (
@@ -53,15 +53,14 @@ resource "rancher2_namespace" "testacc" {
 	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
 	testAccCheckRancher2UpgradeCertificateV24 = testAccRancher2Certificate + testAccRancher2CertificateNs
 	testAccCheckRancher2BootstrapV23 = `
-provider "rancher2" {
-  alias = "bootstrap"
+provider "bootstrap" {
 
   bootstrap = true
   insecure = true
   token_key = "` + providerDefaultEmptyString + `"
 }
 resource "rancher2_bootstrap" "foo" {
-  provider = rancher2.bootstrap
+  provider = bootstrap
 
   password = "` + testAccRancher2DefaultAdminPass + `"
   telemetry = true
@@ -76,15 +75,14 @@ provider "rancher2" {
 `
 
 	testAccCheckRancher2Bootstrap = `
-provider "rancher2" {
-  alias = "bootstrap"
+provider "bootstrap" {
 
   bootstrap = true
   insecure = true
   token_key = "` + providerDefaultEmptyString + `"
 }
 resource "rancher2_bootstrap" "foo" {
-  provider = rancher2.bootstrap
+  provider = bootstrap
 
   password = "` + testAccRancher2DefaultAdminPass + `"
   telemetry = true
@@ -325,8 +323,8 @@ provider "rancher2" {
 
 func TestAccRancher2Upgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckRancher2BootstrapV23,
@@ -427,17 +425,19 @@ func testAccRancher2UpgradeRancher() resource.TestCheckFunc {
 
 func testAccRancher2UpgradeVars() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
+		for k, rs := range s.RootModule().Resources {
 			if rs.Type != "rancher2_bootstrap" {
 				continue
 			}
-
 			token := rs.Primary.Attributes["token"]
-			os.Setenv("RANCHER_TOKEN_KEY", token)
+			if err := os.Setenv("RANCHER_TOKEN_KEY", token); err != nil {
+				fmt.Printf("Failed to update RANCHER_TOKEN_KEY on resource %s with err: %s", k, err.Error())
+			}
 			currentPassword := rs.Primary.Attributes["current_password"]
-			os.Setenv("RANCHER_ADMIN_PASS", currentPassword)
+			if err := os.Setenv("RANCHER_ADMIN_PASS", currentPassword); err != nil {
+				fmt.Printf("Failed to update RANCHER_ADMIN_PASS on resource %s with err: %s", k, err.Error())
+			}
 		}
 		return nil
-
 	}
 }

@@ -7,20 +7,21 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2ClusterV2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2ClusterV2Create,
-		Read:   resourceRancher2ClusterV2Read,
-		Update: resourceRancher2ClusterV2Update,
-		Delete: resourceRancher2ClusterV2Delete,
+		CreateContext: resourceRancher2ClusterV2Create,
+		ReadContext:   resourceRancher2ClusterV2Read,
+		UpdateContext: resourceRancher2ClusterV2Update,
+		DeleteContext: resourceRancher2ClusterV2Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2ClusterV2Import,
+			StateContext: resourceRancher2ClusterV2Import,
 		},
 		Schema:        clusterV2Fields(),
 		SchemaVersion: 1,
@@ -31,7 +32,7 @@ func resourceRancher2ClusterV2() *schema.Resource {
 				Version: 0,
 			},
 		},
-		CustomizeDiff: func(d *schema.ResourceDiff, i interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, i interface{}) error {
 			if d.HasChange("rke_config") {
 				oldObj, newObj := d.GetChange("rke_config")
 				oldInterface, oldOk := oldObj.([]interface{})
@@ -76,7 +77,7 @@ func resourceRancher2ClusterV2Resource() *schema.Resource {
 	}
 }
 
-func resourceRancher2ClusterV2StateUpgradeV0(rawState map[string]any, meta interface{}) (map[string]any, error) {
+func resourceRancher2ClusterV2StateUpgradeV0(ctx context.Context, rawState map[string]any, meta interface{}) (map[string]any, error) {
 	if rkeConfigs, ok := rawState["rke_config"].([]any); ok && len(rkeConfigs) > 0 {
 		for i := range rkeConfigs {
 			if rkeConfig, ok := rkeConfigs[i].(map[string]any); ok && len(rkeConfig) > 0 {
@@ -103,37 +104,37 @@ func resourceRancher2ClusterV2StateUpgradeV0(rawState map[string]any, meta inter
 	return rawState, nil
 }
 
-func resourceRancher2ClusterV2Create(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	cluster, err := expandClusterV2(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating Cluster V2 %s", name)
 
 	newCluster, err := createClusterV2(meta.(*Config), cluster)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(newCluster.ID)
 	newCluster, err = waitForClusterV2State(meta.(*Config), newCluster.ID, clusterV2CreatedCondition, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Waiting for cluster v2 active if it has machine pools defined
 	if newCluster.Spec.RKEConfig != nil && newCluster.Spec.RKEConfig.MachinePools != nil && len(newCluster.Spec.RKEConfig.MachinePools) > 0 {
 		newCluster, err = waitForClusterV2State(meta.(*Config), newCluster.ID, clusterV2ActiveCondition, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return resourceRancher2ClusterV2Read(d, meta)
+	return resourceRancher2ClusterV2Read(ctx, d, meta)
 }
 
-func resourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Cluster V2 %s", d.Id())
 
 	cluster, err := getClusterV2ByID(meta.(*Config), d.Id())
@@ -143,39 +144,39 @@ func resourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) err
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 	d.Set("cluster_v1_id", cluster.Status.ClusterName)
-	err = setClusterV2LegacyData(d, meta.(*Config))
+	err = setClusterV2LegacyData(ctx, d, meta.(*Config))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	return flattenClusterV2(d, cluster)
+	return diag.FromErr(flattenClusterV2(d, cluster))
 }
 
-func resourceRancher2ClusterV2Update(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	cluster, err := expandClusterV2(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Updating Cluster V2 %s", d.Id())
 
 	newCluster, err := updateClusterV2(meta.(*Config), d.Id(), cluster)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	// Waiting for cluster v2 active if it has machine pools defined
 	if newCluster.Spec.RKEConfig != nil && newCluster.Spec.RKEConfig.MachinePools != nil && len(newCluster.Spec.RKEConfig.MachinePools) > 0 {
 		newCluster, err = waitForClusterV2State(meta.(*Config), newCluster.ID, clusterV2ActiveCondition, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
-	return resourceRancher2ClusterV2Read(d, meta)
+	return resourceRancher2ClusterV2Read(ctx, d, meta)
 }
 
-func resourceRancher2ClusterV2Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Cluster V2 %s", name)
 
@@ -188,9 +189,9 @@ func resourceRancher2ClusterV2Delete(d *schema.ResourceData, meta interface{}) e
 	}
 	err = deleteClusterV2(meta.(*Config), cluster)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    clusterV2StateRefreshFunc(meta, cluster.ID),
@@ -198,16 +199,16 @@ func resourceRancher2ClusterV2Delete(d *schema.ResourceData, meta interface{}) e
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be removed: %s", cluster.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for cluster (%s) to be removed: %s", cluster.ID, waitErr)
 	}
 	d.SetId("")
 	return nil
 }
 
-// clusterV2StateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Cluster v2.
-func clusterV2StateRefreshFunc(meta interface{}, objID string) resource.StateRefreshFunc {
+// clusterV2StateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Cluster v2.
+func clusterV2StateRefreshFunc(meta interface{}, objID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := getClusterV2ByID(meta.(*Config), objID)
 		if err != nil {
@@ -354,7 +355,7 @@ func waitForClusterV2State(c *Config, id, state string, interval time.Duration) 
 	}
 }
 
-func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
+func setClusterV2LegacyData(ctx context.Context, d *schema.ResourceData, c *Config) error {
 	if c == nil {
 		return fmt.Errorf("Setting cluster V2 legacy data: Provider config is nil")
 	}
@@ -378,7 +379,7 @@ func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
 		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
 	}
 
-	clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
+	clusterRegistrationToken, err := findClusterRegistrationToken(ctx, client, cluster.ID)
 	if err != nil && !IsForbidden(err) {
 		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
 	}

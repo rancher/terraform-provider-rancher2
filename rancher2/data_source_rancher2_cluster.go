@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2Cluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2ClusterRead,
+		ReadContext: dataSourceRancher2ClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -38,7 +39,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"rke_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterRKEConfigFieldsData(),
@@ -46,7 +46,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"rke2_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterRKE2ConfigFields(),
@@ -54,7 +53,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"k3s_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterK3SConfigFields(),
@@ -62,7 +60,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"eks_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterEKSConfigFields(),
@@ -70,7 +67,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"eks_config_v2": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterEKSConfigV2Fields(),
@@ -78,7 +74,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"aks_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterAKSConfigFields(),
@@ -86,7 +81,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"aks_config_v2": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterAKSConfigV2Fields(),
@@ -94,7 +88,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"gke_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterGKEConfigFields(),
@@ -102,7 +95,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"gke_config_v2": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterGKEConfigV2Fields(),
@@ -110,7 +102,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"oke_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterOKEConfigFields(),
@@ -130,7 +121,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"cluster_auth_endpoint": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterAuthEndpoint(),
@@ -138,7 +128,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"cluster_monitoring_input": {
 				Type:        schema.TypeList,
-				MaxItems:    1,
 				Computed:    true,
 				Description: "Cluster monitoring configuration",
 				Elem: &schema.Resource{
@@ -147,7 +136,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			},
 			"cluster_registration_token": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterRegistrationTokenFields(),
@@ -156,7 +144,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			"cluster_template_answers": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				MaxItems:    1,
 				Description: "Cluster template answers",
 				Elem: &schema.Resource{
 					Schema: answerFields(),
@@ -218,14 +205,51 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+
+			"cluster_agent_deployment_customization": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Optional customization for cluster agent",
+				Elem: &schema.Resource{
+					Schema: agentDeploymentCustomizationFields(),
+				},
+			},
+			"fleet_agent_deployment_customization": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Optional customization for fleet agent",
+				Elem: &schema.Resource{
+					Schema: agentDeploymentCustomizationFields(),
+				},
+			},
+			"desired_agent_image": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"desired_auth_image": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"docker_root_dir": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"istio_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"windows_prefered_cluster": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -237,18 +261,18 @@ func dataSourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) err
 
 	clusters, err := client.Cluster.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(clusters.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] cluster with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] cluster with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d cluster with name \"%s\"", count, name)
+		return diag.Errorf("[ERROR] found %d cluster with name \"%s\"", count, name)
 	}
 
 	d.SetId(clusters.Data[0].ID)
 
-	return resourceRancher2ClusterRead(d, meta)
+	return resourceRancher2ClusterRead(ctx, d, meta)
 }

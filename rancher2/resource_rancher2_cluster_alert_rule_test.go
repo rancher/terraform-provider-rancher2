@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -49,8 +51,8 @@ func TestAccRancher2ClusterAlertRule_basic(t *testing.T) {
 	var ar *managementClient.ClusterAlertRule
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterAlertRuleDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterAlertRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterAlertRuleConfig,
@@ -90,8 +92,8 @@ func TestAccRancher2ClusterAlertRule_disappears(t *testing.T) {
 	var ar *managementClient.ClusterAlertRule
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterAlertRuleDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterAlertRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterAlertRuleConfig,
@@ -129,7 +131,7 @@ func testAccRancher2ClusterAlertRuleDisappears(ar *managementClient.ClusterAlert
 				return fmt.Errorf("Error removing Cluster Alert Rule: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"removing"},
 				Target:     []string{"removed"},
 				Refresh:    clusterAlertRuleStateRefreshFunc(client, rs.Primary.ID),
@@ -138,7 +140,7 @@ func testAccRancher2ClusterAlertRuleDisappears(ar *managementClient.ClusterAlert
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for cluster alert rule (%s) to be removed: %s", rs.Primary.ID, waitErr)

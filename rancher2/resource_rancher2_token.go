@@ -1,20 +1,24 @@
 package rancher2
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceRancher2Token() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2TokenCreate,
-		Read:   resourceRancher2TokenRead,
-		Update: resourceRancher2TokenUpdate,
-		Delete: resourceRancher2TokenDelete,
+		CreateContext: resourceRancher2TokenCreate,
+		ReadContext:   resourceRancher2TokenRead,
+		UpdateContext: resourceRancher2TokenUpdate,
+		DeleteContext: resourceRancher2TokenDelete,
 
 		Schema: tokenFields(),
 		Timeouts: &schema.ResourceTimeout{
@@ -25,50 +29,51 @@ func resourceRancher2Token() *schema.Resource {
 	}
 }
 
-func resourceRancher2TokenCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2TokenCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Creating Token")
 	patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqualAndLessThan(rancher2TokeTTLMinutesVersion, rancher2TokeTTLMilisVersion)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	token, err := expandToken(d, patch)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		newToken, err := client.Token.Create(token)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		err = flattenToken(d, newToken, patch)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
-		err = resourceRancher2TokenRead(d, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
+		diagnostics := resourceRancher2TokenRead(ctx, d, meta)
+		if diagnostics.HasError() {
+			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
 		}
 
 		return nil
 	})
+	return diag.FromErr(err)
 }
 
-func resourceRancher2TokenRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2TokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Token ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		token, err := client.Token.ByID(d.Id())
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -76,7 +81,7 @@ func resourceRancher2TokenRead(d *schema.ResourceData, meta interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		renew := d.Get("renew").(bool)
@@ -86,30 +91,31 @@ func resourceRancher2TokenRead(d *schema.ResourceData, meta interface{}) error {
 
 		patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqualAndLessThan(rancher2TokeTTLMinutesVersion, rancher2TokeTTLMilisVersion)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		err = flattenToken(d, token, patch)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
+	return diag.FromErr(err)
 }
 
-func resourceRancher2TokenUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceRancher2TokenRead(d, meta)
+func resourceRancher2TokenUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return resourceRancher2TokenRead(ctx, d, meta)
 }
 
-func resourceRancher2TokenDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2TokenDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Token ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		token, err := client.Token.ByID(id)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -117,17 +123,18 @@ func resourceRancher2TokenDelete(d *schema.ResourceData, meta interface{}) error
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		err = client.Token.Delete(token)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("[ERROR] Error removing Token: %s", err))
+			return retry.NonRetryableError(fmt.Errorf("[ERROR] Error removing Token: %s", err))
 		}
 
 		d.SetId("")
 		return nil
 	})
+	return diag.FromErr(err)
 }
 
 func isTokenValid(c *Config, id string) (bool, error) {

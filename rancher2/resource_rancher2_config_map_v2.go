@@ -6,19 +6,20 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/rancher/norman/types"
 )
 
 func resourceRancher2ConfigMapV2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2ConfigMapV2Create,
-		Read:   resourceRancher2ConfigMapV2Read,
-		Update: resourceRancher2ConfigMapV2Update,
-		Delete: resourceRancher2ConfigMapV2Delete,
+		CreateContext: resourceRancher2ConfigMapV2Create,
+		ReadContext:   resourceRancher2ConfigMapV2Read,
+		UpdateContext: resourceRancher2ConfigMapV2Update,
+		DeleteContext: resourceRancher2ConfigMapV2Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2ConfigMapV2Import,
+			StateContext: resourceRancher2ConfigMapV2Import,
 		},
 		Schema: configMapV2Fields(),
 		Timeouts: &schema.ResourceTimeout{
@@ -29,7 +30,7 @@ func resourceRancher2ConfigMapV2() *schema.Resource {
 	}
 }
 
-func resourceRancher2ConfigMapV2Create(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ConfigMapV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	configMap := expandConfigMapV2(d)
@@ -38,10 +39,10 @@ func resourceRancher2ConfigMapV2Create(d *schema.ResourceData, meta interface{})
 
 	newConfigMap, err := createConfigMapV2(meta.(*Config), clusterID, configMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(clusterID + configMapV2ClusterIDsep + newConfigMap.ID)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    configMapV2StateRefreshFunc(meta, clusterID, newConfigMap.ID),
@@ -49,18 +50,18 @@ func resourceRancher2ConfigMapV2Create(d *schema.ResourceData, meta interface{})
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for configMap (%s) to be active: %s", newConfigMap.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for configMap (%s) to be active: %s", newConfigMap.ID, waitErr)
 	}
-	return resourceRancher2ConfigMapV2Read(d, meta)
+	return resourceRancher2ConfigMapV2Read(ctx, d, meta)
 }
 
-func resourceRancher2ConfigMapV2Read(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ConfigMapV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID, rancherID := splitID(d.Id())
 	log.Printf("[INFO] Refreshing ConfigMap V2 %s at Cluster ID %s", rancherID, clusterID)
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		configMap, err := getConfigMapV2ByID(meta.(*Config), clusterID, rancherID)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -68,27 +69,27 @@ func resourceRancher2ConfigMapV2Read(d *schema.ResourceData, meta interface{}) e
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		if err = flattenConfigMapV2(d, configMap); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2ConfigMapV2Update(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ConfigMapV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID, rancherID := splitID(d.Id())
 	configMap := expandConfigMapV2(d)
 	log.Printf("[INFO] Updating ConfigMap V2 %s at Cluster ID %s", rancherID, clusterID)
 
 	newConfigMap, err := updateConfigMapV2(meta.(*Config), clusterID, rancherID, configMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(clusterID + configMapV2ClusterIDsep + newConfigMap.ID)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    configMapV2StateRefreshFunc(meta, clusterID, newConfigMap.ID),
@@ -96,14 +97,14 @@ func resourceRancher2ConfigMapV2Update(d *schema.ResourceData, meta interface{})
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for configMap (%s) to be active: %s", newConfigMap.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for configMap (%s) to be active: %s", newConfigMap.ID, waitErr)
 	}
-	return resourceRancher2ConfigMapV2Read(d, meta)
+	return resourceRancher2ConfigMapV2Read(ctx, d, meta)
 }
 
-func resourceRancher2ConfigMapV2Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ConfigMapV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting ConfigMap V2 %s", name)
@@ -118,9 +119,9 @@ func resourceRancher2ConfigMapV2Delete(d *schema.ResourceData, meta interface{})
 	}
 	err = deleteConfigMapV2(meta.(*Config), clusterID, configMap)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    configMapV2StateRefreshFunc(meta, clusterID, configMap.ID),
@@ -128,16 +129,16 @@ func resourceRancher2ConfigMapV2Delete(d *schema.ResourceData, meta interface{})
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for configMap (%s) to be removed: %s", configMap.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for configMap (%s) to be removed: %s", configMap.ID, waitErr)
 	}
 	d.SetId("")
 	return nil
 }
 
-// configMapV2StateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher ConfigMap v2.
-func configMapV2StateRefreshFunc(meta interface{}, clusterID, configMapID string) resource.StateRefreshFunc {
+// configMapV2StateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher ConfigMap v2.
+func configMapV2StateRefreshFunc(meta interface{}, clusterID, configMapID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := getConfigMapV2ByID(meta.(*Config), clusterID, configMapID)
 		if err != nil {

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -52,8 +52,8 @@ func TestAccRancher2RoleTemplate_basic(t *testing.T) {
 	var roleTemplate *managementClient.RoleTemplate
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2RoleTemplateDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2RoleTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2RoleTemplateConfig,
@@ -96,8 +96,8 @@ func TestAccRancher2RoleTemplate_disappears(t *testing.T) {
 	var roleTemplate *managementClient.RoleTemplate
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2RoleTemplateDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2RoleTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2RoleTemplateConfig,

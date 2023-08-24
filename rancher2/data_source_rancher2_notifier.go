@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2Notifier() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2NotifierRead,
+		ReadContext: dataSourceRancher2NotifierRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -45,46 +46,36 @@ func dataSourceRancher2Notifier() *schema.Resource {
 				},
 			},
 			"pagerduty_config": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Computed:      true,
-				ConflictsWith: []string{"dingtalk_config", "msteams_config", "smtp_config", "slack_config", "webhook_config", "wechat_config"},
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: notifierPagerdutyConfigFields(),
 				},
 			},
 			"slack_config": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Computed:      true,
-				ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "webhook_config", "wechat_config"},
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: notifierSlackConfigFields(),
 				},
 			},
 			"smtp_config": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Computed:      true,
-				ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "slack_config", "webhook_config", "wechat_config"},
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: notifierSMTPConfigFields(),
 				},
 			},
 			"webhook_config": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Computed:      true,
-				ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "slack_config", "wechat_config"},
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: notifierWebhookConfigFields(),
 				},
 			},
 			"wechat_config": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Computed:      true,
-				ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "slack_config", "webhook_config"},
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: notifierWechatConfigFields(),
 				},
@@ -97,14 +88,18 @@ func dataSourceRancher2Notifier() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			"send_resolved": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceRancher2NotifierRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2NotifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -118,16 +113,16 @@ func dataSourceRancher2NotifierRead(d *schema.ResourceData, meta interface{}) er
 
 	notifiers, err := client.Notifier.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(notifiers.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] notifier with name \"%s\" and cluster ID \"%s\" not found", name, clusterID)
+		return diag.Errorf("[ERROR] notifier with name \"%s\" and cluster ID \"%s\" not found", name, clusterID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d notifier with name \"%s\" and cluster ID \"%s\"", count, name, clusterID)
+		return diag.Errorf("[ERROR] found %d notifier with name \"%s\" and cluster ID \"%s\"", count, name, clusterID)
 	}
 
-	return flattenNotifier(d, &notifiers.Data[0])
+	return diag.FromErr(flattenNotifier(d, &notifiers.Data[0]))
 }

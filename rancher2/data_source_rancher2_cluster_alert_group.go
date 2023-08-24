@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ClusterAlertGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2ClusterAlertGroupRead,
+		ReadContext: dataSourceRancher2ClusterAlertGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -61,10 +62,10 @@ func dataSourceRancher2ClusterAlertGroup() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2ClusterAlertGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ClusterAlertGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterID := d.Get("cluster_id").(string)
@@ -78,16 +79,16 @@ func dataSourceRancher2ClusterAlertGroupRead(d *schema.ResourceData, meta interf
 
 	alertGroups, err := client.ClusterAlertGroup.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(alertGroups.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] cluster alert group with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
+		return diag.Errorf("[ERROR] cluster alert group with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d cluster alert group with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
+		return diag.Errorf("[ERROR] found %d cluster alert group with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
 	}
 
-	return flattenClusterAlertGroup(d, &alertGroups.Data[0])
+	return diag.FromErr(flattenClusterAlertGroup(d, &alertGroups.Data[0]))
 }

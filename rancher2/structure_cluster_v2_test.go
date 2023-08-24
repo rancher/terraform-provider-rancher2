@@ -1,9 +1,11 @@
 package rancher2
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	rkev1 "github.com/rancher/rancher/pkg/apis/rke.cattle.io/v1"
 	"github.com/stretchr/testify/assert"
@@ -111,18 +113,8 @@ func init() {
 	testClusterV2Conf.Spec.ClusterAgentDeploymentCustomization = testClusterV2AgentDeploymentCustomizationConf
 	testClusterV2Conf.Spec.FleetAgentDeploymentCustomization = testClusterV2AgentDeploymentCustomizationConf
 
-	testClusterV2AgentCustomizationInterface = []interface{}{
-		map[string]interface{}{
-			"append_tolerations": []interface{}{
-				map[string]interface{}{
-					"effect":   "NoSchedule",
-					"key":      "tolerate/test",
-					"operator": "Equal",
-					"seconds":  0,
-					"value":    "true",
-				},
-			},
-			"override_affinity": `{
+	overrideAffinityBuffer := bytes.Buffer{}
+	_ = json.Compact(&overrideAffinityBuffer, []byte(`{
   				"nodeAffinity": {
     				"requiredDuringSchedulingIgnoredDuringExecution": {
       					"nodeSelectorTerms": [
@@ -140,7 +132,20 @@ func init() {
       					]
     				}
   				}
-			}`,
+			}`))
+
+	testClusterV2AgentCustomizationInterface = []interface{}{
+		map[string]interface{}{
+			"append_tolerations": []interface{}{
+				map[string]interface{}{
+					"effect":   "NoSchedule",
+					"key":      "tolerate/test",
+					"operator": "Equal",
+					"seconds":  0,
+					"value":    "true",
+				},
+			},
+			"override_affinity": overrideAffinityBuffer.String(),
 			"override_resource_requirements": []interface{}{
 				map[string]interface{}{
 					"cpu_limit":      "500",

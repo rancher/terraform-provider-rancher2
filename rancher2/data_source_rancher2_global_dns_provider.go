@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2GlobalDNSProvider() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2GlobalDNSProviderRead,
+		ReadContext: dataSourceRancher2GlobalDNSProviderRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,7 +34,6 @@ func dataSourceRancher2GlobalDNSProvider() *schema.Resource {
 			},
 			"alidns_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderAliConfigSchema(),
@@ -41,7 +41,6 @@ func dataSourceRancher2GlobalDNSProvider() *schema.Resource {
 			},
 			"cloudflare_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderCloudFareConfigSchema(),
@@ -49,7 +48,6 @@ func dataSourceRancher2GlobalDNSProvider() *schema.Resource {
 			},
 			"route53_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: globalDNSProviderRoute53ConfigSchema(),
@@ -59,10 +57,10 @@ func dataSourceRancher2GlobalDNSProvider() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2GlobalDNSProviderRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2GlobalDNSProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	name := d.Get("name").(string)
 
@@ -74,20 +72,16 @@ func dataSourceRancher2GlobalDNSProviderRead(d *schema.ResourceData, meta interf
 
 	globalDNSProvider, err := client.GlobalDnsProvider.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(globalDNSProvider.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] global dns provider with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] global dns provider with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d global dns provider with name \"%s\"", count, name)
+		return diag.Errorf("[ERROR] found %d global dns provider with name \"%s\"", count, name)
 	}
 
-	flattenGlobalDNSProvider(d, &globalDNSProvider.Data[0])
-
-	//return fmt.Errorf("[ERROR] %#v\n%#v", d.Get("route53_config"), globalDNSProvider.Data[0].Route53ProviderConfig)
-
-	return flattenGlobalDNSProvider(d, &globalDNSProvider.Data[0])
+	return diag.FromErr(flattenGlobalDNSProvider(d, &globalDNSProvider.Data[0]))
 }

@@ -1,23 +1,24 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2ClusterDriver() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2ClusterDriverCreate,
-		Read:   resourceRancher2ClusterDriverRead,
-		Update: resourceRancher2ClusterDriverUpdate,
-		Delete: resourceRancher2ClusterDriverDelete,
+		CreateContext: resourceRancher2ClusterDriverCreate,
+		ReadContext:   resourceRancher2ClusterDriverRead,
+		UpdateContext: resourceRancher2ClusterDriverUpdate,
+		DeleteContext: resourceRancher2ClusterDriverDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2ClusterDriverImport,
+			StateContext: resourceRancher2ClusterDriverImport,
 		},
 		Schema: clusterDriverFields(),
 		Timeouts: &schema.ResourceTimeout{
@@ -28,24 +29,24 @@ func resourceRancher2ClusterDriver() *schema.Resource {
 	}
 }
 
-func resourceRancher2ClusterDriverCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterDriverCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterDriver := expandClusterDriver(d)
 
 	log.Printf("[INFO] Creating Cluster Driver %s", clusterDriver.Name)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	newClusterDriver, err := client.KontainerDriver.Create(clusterDriver)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newClusterDriver.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"downloading", "activating"},
 		Target:     []string{"active", "inactive"},
 		Refresh:    clusterDriverStateRefreshFunc(client, newClusterDriver.ID),
@@ -53,22 +54,22 @@ func resourceRancher2ClusterDriverCreate(d *schema.ResourceData, meta interface{
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cluster driver (%s) to be created: %s", newClusterDriver.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for cluster driver (%s) to be created: %s", newClusterDriver.ID, waitErr)
 	}
 
-	return resourceRancher2ClusterDriverRead(d, meta)
+	return resourceRancher2ClusterDriverRead(ctx, d, meta)
 }
 
-func resourceRancher2ClusterDriverRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterDriverRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Cluster Driver ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		clusterDriver, err := client.KontainerDriver.ByID(d.Id())
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -76,28 +77,27 @@ func resourceRancher2ClusterDriverRead(d *schema.ResourceData, meta interface{})
 				d.SetId("")
 				return nil
 			}
-
-			resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenClusterDriver(d, clusterDriver); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2ClusterDriverUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterDriverUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Cluster Driver ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterDriver, err := client.KontainerDriver.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	update := map[string]interface{}{
@@ -115,10 +115,10 @@ func resourceRancher2ClusterDriverUpdate(d *schema.ResourceData, meta interface{
 
 	newClusterDriver, err := client.KontainerDriver.Update(clusterDriver, update)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active", "inactive", "downloading", "activating", "deactivating"},
 		Target:     []string{"active", "inactive"},
 		Refresh:    clusterDriverStateRefreshFunc(client, newClusterDriver.ID),
@@ -126,21 +126,21 @@ func resourceRancher2ClusterDriverUpdate(d *schema.ResourceData, meta interface{
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for cluster driver (%s) to be updated: %s", newClusterDriver.ID, waitErr)
 	}
 
-	return resourceRancher2ClusterDriverRead(d, meta)
+	return resourceRancher2ClusterDriverRead(ctx, d, meta)
 }
 
-func resourceRancher2ClusterDriverDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterDriverDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Cluster Driver ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterDriver, err := client.KontainerDriver.ByID(id)
@@ -150,18 +150,18 @@ func resourceRancher2ClusterDriverDelete(d *schema.ResourceData, meta interface{
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	if !clusterDriver.BuiltIn {
 		err = client.KontainerDriver.Delete(clusterDriver)
 		if err != nil {
-			return fmt.Errorf("Error removing Cluster Driver: %s", err)
+			return diag.Errorf("Error removing Cluster Driver: %s", err)
 		}
 
 		log.Printf("[DEBUG] Waiting for cluster driver (%s) to be removed", id)
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{"removing"},
 			Target:     []string{"removed"},
 			Refresh:    clusterDriverStateRefreshFunc(client, id),
@@ -170,9 +170,9 @@ func resourceRancher2ClusterDriverDelete(d *schema.ResourceData, meta interface{
 			MinTimeout: 3 * time.Second,
 		}
 
-		_, waitErr := stateConf.WaitForState()
+		_, waitErr := stateConf.WaitForStateContext(ctx)
 		if waitErr != nil {
-			return fmt.Errorf(
+			return diag.Errorf(
 				"[ERROR] waiting for cluster driver (%s) to be removed: %s", id, waitErr)
 		}
 	}
@@ -181,8 +181,8 @@ func resourceRancher2ClusterDriverDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-// clusterDriverStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher ClusterDriver.
-func clusterDriverStateRefreshFunc(client *managementClient.Client, clusterDriverID string) resource.StateRefreshFunc {
+// clusterDriverStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher ClusterDriver.
+func clusterDriverStateRefreshFunc(client *managementClient.Client, clusterDriverID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.KontainerDriver.ByID(clusterDriverID)
 		if err != nil {
