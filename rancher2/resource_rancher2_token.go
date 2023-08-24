@@ -56,9 +56,9 @@ func resourceRancher2TokenCreate(ctx context.Context, d *schema.ResourceData, me
 			return retry.NonRetryableError(err)
 		}
 
-		diagnostics := resourceRancher2TokenRead(ctx, d, meta)
-		if diagnostics.HasError() {
-			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
+		diag2 := resourceRancher2TokenRead(ctx, d, meta)
+		if diag2.HasError() {
+			return retry.NonRetryableError(errors.New(diag2[0].Summary))
 		}
 
 		return nil

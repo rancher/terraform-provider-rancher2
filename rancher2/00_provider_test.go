@@ -45,7 +45,7 @@ func TestProvider(t *testing.T) {
 	}
 }
 
-func TestProvider_impl(t *testing.T) {
+func TestProvider_impl(t *testing.T) { // TODO - This just execut without checking, can it be removed?
 	var _ = Provider()
 }
 

@@ -33,9 +33,9 @@ func resourceRancher2MultiClusterApp() *schema.Resource {
 func resourceRancher2MultiClusterAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 
-	diagnostics := resourceRancher2AppGetVersion(ctx, d, meta)
-	if diagnostics.HasError() {
-		return diagnostics
+	diag2 := resourceRancher2AppGetVersion(ctx, d, meta)
+	if diag2.HasError() {
+		return diag2
 	}
 
 	multiClusterApp, err := expandMultiClusterApp(d)

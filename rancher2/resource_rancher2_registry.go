@@ -56,9 +56,9 @@ func resourceRancher2RegistryCreate(ctx context.Context, d *schema.ResourceData,
 			return retry.NonRetryableError(err)
 		}
 
-		diagnostics := resourceRancher2RegistryRead(ctx, d, meta)
-		if diagnostics.HasError() {
-			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
+		diag2 := resourceRancher2RegistryRead(ctx, d, meta)
+		if diag2.HasError() {
+			return retry.NonRetryableError(errors.New(diag2[0].Summary))
 		}
 
 		return nil
@@ -121,9 +121,9 @@ func resourceRancher2RegistryUpdate(ctx context.Context, d *schema.ResourceData,
 			return retry.NonRetryableError(err)
 		}
 
-		diagnostics := resourceRancher2RegistryRead(ctx, d, meta)
-		if diagnostics.HasError() {
-			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
+		diag2 := resourceRancher2RegistryRead(ctx, d, meta)
+		if diag2.HasError() {
+			return retry.NonRetryableError(errors.New(diag2[0].Summary))
 		}
 
 		return nil

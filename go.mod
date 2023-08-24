@@ -10,6 +10,9 @@ require (
 	github.com/rancher/rancher v0.0.0-20230525094739-ff2e09449efc
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
+	golang.org/x/crypto v0.10.0
+	github.com/rancher/tfp-automation v0.0.0-20230809214753-73e576db407e
+	github.com/stretchr/testify v1.8.3
 	golang.org/x/crypto v0.6.0
 	golang.org/x/sync v0.2.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -20,6 +23,21 @@ require (
 )
 
 require (
+	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
+	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 // indirect
+	github.com/hashicorp/hc-install v0.5.2 // indirect
+	github.com/hashicorp/terraform-plugin-go v0.16.0 // indirect
+	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
+	github.com/hashicorp/terraform-registry-address v0.2.1 // indirect
+	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
+	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
+	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
+)
+
+require (
+	github.com/agext/levenshtein v1.2.2 // indirect
 	cloud.google.com/go v0.107.0 // indirect
 	cloud.google.com/go/compute v1.15.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect

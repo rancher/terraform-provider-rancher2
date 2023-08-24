@@ -12,11 +12,8 @@ func resourceRancher2SecretV2Import(ctx context.Context, d *schema.ResourceData,
 	d.Set("cluster_id", clusterID)
 
 	diag := resourceRancher2SecretV2Read(ctx, d, meta)
-	if diag.HasError() {
-		return []*schema.ResourceData{}, errors.New(diag[0].Summary)
-	}
-	if d.Id() == "" {
-		return []*schema.ResourceData{}, nil
+	if diag.HasError() || d.Id() == "" {
+		return []*schema.ResourceData{}, errors.New(diag[0].Summary) // TODO - Provavelmente va quebrar se não tem ero
 	}
 
 	return []*schema.ResourceData{d}, nil

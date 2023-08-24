@@ -54,9 +54,9 @@ func resourceRancher2RoleTemplateCreate(ctx context.Context, d *schema.ResourceD
 
 		d.SetId(newRoleTemplate.ID)
 
-		diagnostics := resourceRancher2RoleTemplateRead(ctx, d, meta)
-		if diagnostics.HasError() {
-			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
+		diag2 := resourceRancher2RoleTemplateRead(ctx, d, meta)
+		if diag2.HasError() {
+			return retry.NonRetryableError(errors.New(diag2[0].Summary))
 		}
 
 		return nil
@@ -130,9 +130,9 @@ func resourceRancher2RoleTemplateUpdate(ctx context.Context, d *schema.ResourceD
 			return retry.NonRetryableError(err)
 		}
 
-		diagnostics := resourceRancher2RoleTemplateRead(ctx, d, meta)
-		if diagnostics.HasError() {
-			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
+		diag2 := resourceRancher2RoleTemplateRead(ctx, d, meta)
+		if diag2.HasError() {
+			return retry.NonRetryableError(errors.New(diag2[0].Summary))
 		}
 
 		return nil

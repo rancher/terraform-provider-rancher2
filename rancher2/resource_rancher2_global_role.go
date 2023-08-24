@@ -50,9 +50,9 @@ func resourceRancher2GlobalRoleCreate(ctx context.Context, d *schema.ResourceDat
 
 		d.SetId(newGlobalRole.ID)
 
-		diagnostics := resourceRancher2GlobalRoleRead(ctx, d, meta)
-		if diagnostics.HasError() {
-			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
+		diag2 := resourceRancher2GlobalRoleRead(ctx, d, meta)
+		if diag2.HasError() {
+			return retry.NonRetryableError(errors.New(diag2[0].Summary))
 		}
 
 		return nil
@@ -111,8 +111,8 @@ func resourceRancher2GlobalRoleUpdate(ctx context.Context, d *schema.ResourceDat
 			return retry.NonRetryableError(err)
 		}
 
-		if diagnostics := resourceRancher2GlobalRoleRead(ctx, d, meta); diagnostics.HasError() {
-			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
+		if diag2 := resourceRancher2GlobalRoleRead(ctx, d, meta); diag2.HasError() {
+			return retry.NonRetryableError(errors.New(diag2[0].Summary))
 		}
 
 		return nil
