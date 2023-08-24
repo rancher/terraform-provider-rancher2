@@ -1,15 +1,17 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 )
 
 func dataSourceRancher2Secret() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2SecretRead,
+		ReadContext: dataSourceRancher2SecretRead,
 
 		Schema: map[string]*schema.Schema{
 			"project_id": {
@@ -51,7 +53,7 @@ func dataSourceRancher2Secret() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2SecretRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2SecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	_, projectID := splitProjectID(d.Get("project_id").(string))
 	name := d.Get("name").(string)
 	namespaceID := d.Get("namespace_id").(string)
@@ -67,24 +69,24 @@ func dataSourceRancher2SecretRead(d *schema.ResourceData, meta interface{}) erro
 
 	secrets, err := meta.(*Config).GetSecretByFilters(filters)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	switch t := secrets.(type) {
 	case *projectClient.NamespacedSecretCollection:
 		err = dataSourceRancher2SecretCheck(len(secrets.(*projectClient.NamespacedSecretCollection).Data), projectID, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		return flattenSecret(d, &secrets.(*projectClient.NamespacedSecretCollection).Data[0])
+		return diag.FromErr(flattenSecret(d, &secrets.(*projectClient.NamespacedSecretCollection).Data[0]))
 	case *projectClient.SecretCollection:
 		err = dataSourceRancher2SecretCheck(len(secrets.(*projectClient.SecretCollection).Data), projectID, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		return flattenSecret(d, &secrets.(*projectClient.SecretCollection).Data[0])
+		return diag.FromErr(flattenSecret(d, &secrets.(*projectClient.SecretCollection).Data[0]))
 	default:
-		return fmt.Errorf("[ERROR] secret type %s isn't supported", t)
+		return diag.Errorf("[ERROR] secret type %s isn't supported", t)
 	}
 }
 

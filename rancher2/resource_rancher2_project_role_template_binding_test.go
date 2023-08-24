@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -47,8 +49,8 @@ func TestAccRancher2ProjectRoleTemplateBinding_basic(t *testing.T) {
 	testAccRancher2ProjectRoleTemplateBindingUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2User + testAccRancher2ProjectRoleTemplateBindingUpdate
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ProjectRoleTemplateBindingConfig,
@@ -83,8 +85,8 @@ func TestAccRancher2ProjectRoleTemplateBinding_disappears(t *testing.T) {
 	var projectRole *managementClient.ProjectRoleTemplateBinding
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ProjectRoleTemplateBindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ProjectRoleTemplateBindingConfig,
@@ -122,7 +124,7 @@ func testAccRancher2ProjectRoleTemplateBindingDisappears(pro *managementClient.P
 				return fmt.Errorf("Error removing Project Role Template Binding: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"active"},
 				Target:     []string{"removed"},
 				Refresh:    projectRoleTemplateBindingStateRefreshFunc(client, pro.ID),
@@ -131,7 +133,7 @@ func testAccRancher2ProjectRoleTemplateBindingDisappears(pro *managementClient.P
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for Project Role Template Binding (%s) to be removed: %s", pro.ID, waitErr)

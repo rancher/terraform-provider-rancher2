@@ -1,14 +1,16 @@
 package rancher2
 
 import (
+	"context"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2SecretV2() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2SecretV2Read,
+		ReadContext: dataSourceRancher2SecretV2Read,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -52,7 +54,7 @@ func dataSourceRancher2SecretV2() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2SecretV2Read(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2SecretV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	namespace := d.Get("namespace").(string)
@@ -66,8 +68,8 @@ func dataSourceRancher2SecretV2Read(d *schema.ResourceData, meta interface{}) er
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
-	return flattenSecretV2(d, secret)
+	return diag.FromErr(flattenSecretV2(d, secret))
 }

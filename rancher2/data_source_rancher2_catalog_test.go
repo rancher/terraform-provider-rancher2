@@ -3,7 +3,7 @@ package rancher2
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccRancher2CatalogDataSource_Cluster(t *testing.T) {
@@ -15,8 +15,8 @@ data "` + testAccRancher2CatalogType + `" "library" {
 `
 	name := "data." + testAccRancher2CatalogType + ".library"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckRancher2CatalogClusterDataSourceConfig,
@@ -39,8 +39,8 @@ data "` + testAccRancher2CatalogType + `" "library" {
 `
 	name := "data." + testAccRancher2CatalogType + ".library"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckRancher2CatalogGlobalDataSourceConfig,
@@ -63,8 +63,8 @@ data "` + testAccRancher2CatalogType + `" "library" {
 `
 	name := "data." + testAccRancher2CatalogType + ".library"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckRancher2CatalogProjectDataSourceConfig,

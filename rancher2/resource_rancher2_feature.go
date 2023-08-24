@@ -1,38 +1,39 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceRancher2Feature() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2FeatureCreate,
-		Read:   resourceRancher2FeatureRead,
-		Update: resourceRancher2FeatureUpdate,
-		Delete: resourceRancher2FeatureDelete,
-		Schema: featureFields(),
+		CreateContext: resourceRancher2FeatureCreate,
+		ReadContext:   resourceRancher2FeatureRead,
+		UpdateContext: resourceRancher2FeatureUpdate,
+		DeleteContext: resourceRancher2FeatureDelete,
+		Schema:        featureFields(),
 	}
 }
 
-func resourceRancher2FeatureCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2FeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// New features can't be created from the Rancher API just update existing
 	d.SetId(d.Get("name").(string))
 
-	return resourceRancher2FeatureUpdate(d, meta)
+	return resourceRancher2FeatureUpdate(ctx, d, meta)
 }
 
-func resourceRancher2FeatureRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2FeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing Rancher2 Feature ID %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	feature, err := client.Feature.ByID(name)
@@ -42,27 +43,27 @@ func resourceRancher2FeatureRead(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("[ERROR] refreshing feature %s: %v", d.Id(), err)
+		return diag.Errorf("[ERROR] refreshing feature %s: %v", d.Id(), err)
 	}
 
 	err = flattenFeature(d, feature)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceRancher2FeatureUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2FeatureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Feature ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	feature, err := client.Feature.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	featValue := d.Get("value").(bool)
@@ -76,11 +77,11 @@ func resourceRancher2FeatureUpdate(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		// Bad gateway or service unavailable error may be fine if Rancher is restarted
 		if !IsBadGatewayError(err) && !IsServiceUnavailableError(err) {
-			return fmt.Errorf("[ERROR] updating feature %s: %v", d.Id(), err)
+			return diag.Errorf("[ERROR] updating feature %s: %v", d.Id(), err)
 		}
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active", "rebooting"},
 		Target:     []string{"active"},
 		Refresh:    featureStateRefreshFunc(meta, newFeature.ID),
@@ -88,24 +89,24 @@ func resourceRancher2FeatureUpdate(d *schema.ResourceData, meta interface{}) err
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for feature (%s) to be updated: %s", newFeature.ID, waitErr)
 	}
 
-	return resourceRancher2FeatureRead(d, meta)
+	return resourceRancher2FeatureRead(ctx, d, meta)
 }
 
-func resourceRancher2FeatureDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2FeatureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Feature ID %s", d.Id())
 	// Not removing feature from Rancher just from tfstate
 	d.SetId("")
 	return nil
 }
 
-// featureStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project.
-func featureStateRefreshFunc(meta interface{}, featureID string) resource.StateRefreshFunc {
+// featureStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Project.
+func featureStateRefreshFunc(meta interface{}, featureID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		err := meta.(*Config).isRancherReady()
 		if err != nil {

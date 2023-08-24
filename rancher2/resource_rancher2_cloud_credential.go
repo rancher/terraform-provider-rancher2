@@ -1,24 +1,25 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2CloudCredential() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2CloudCredentialCreate,
-		Read:   resourceRancher2CloudCredentialRead,
-		Update: resourceRancher2CloudCredentialUpdate,
-		Delete: resourceRancher2CloudCredentialDelete,
+		CreateContext: resourceRancher2CloudCredentialCreate,
+		ReadContext:   resourceRancher2CloudCredentialRead,
+		UpdateContext: resourceRancher2CloudCredentialUpdate,
+		DeleteContext: resourceRancher2CloudCredentialDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2CloudCredentialsImport,
+			StateContext: resourceRancher2CloudCredentialsImport,
 		},
 		Schema: cloudCredentialFields(),
 		Timeouts: &schema.ResourceTimeout{
@@ -29,32 +30,32 @@ func resourceRancher2CloudCredential() *schema.Resource {
 	}
 }
 
-func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CloudCredentialCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	cloudCredential := expandCloudCredential(d)
 
 	log.Printf("[INFO] Creating Cloud Credential %s", cloudCredential.Name)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if nodeDriver, ok := d.Get("driver").(string); ok && nodeDriver != s3ConfigDriver {
 		err = meta.(*Config).activateDriver(nodeDriver, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	newCloudCredential := &CloudCredential{}
 	err = client.APIBaseClient.Create(managementClient.CloudCredentialType, cloudCredential, newCloudCredential)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newCloudCredential.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    cloudCredentialStateRefreshFunc(client, newCloudCredential.ID),
@@ -62,22 +63,22 @@ func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interfac
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cloud credential (%s) to be created: %s", newCloudCredential.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for cloud credential (%s) to be created: %s", newCloudCredential.ID, waitErr)
 	}
 
-	return resourceRancher2CloudCredentialRead(d, meta)
+	return resourceRancher2CloudCredentialRead(ctx, d, meta)
 }
 
-func resourceRancher2CloudCredentialRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CloudCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Cloud Credential ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		cloudCredential := &CloudCredential{}
 		err = client.APIBaseClient.ByID(managementClient.CloudCredentialType, d.Id(), cloudCredential)
 		if err != nil {
@@ -86,28 +87,28 @@ func resourceRancher2CloudCredentialRead(d *schema.ResourceData, meta interface{
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenCloudCredential(d, cloudCredential); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CloudCredentialUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Cloud Credential ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	cloudCredential := &norman.Resource{}
 	err = client.APIBaseClient.ByID(managementClient.CloudCredentialType, d.Id(), cloudCredential)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	update := map[string]interface{}{
@@ -137,16 +138,16 @@ func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interfac
 	case vmwarevsphereConfigDriver:
 		update["vmwarevspherecredentialConfig"] = expandCloudCredentialVsphere(d.Get("vsphere_credential_config").([]interface{}))
 	default:
-		return fmt.Errorf("[ERROR] updating cloud credential: Unsupported driver \"%s\"", driver)
+		return diag.Errorf("[ERROR] updating cloud credential: Unsupported driver \"%s\"", driver)
 	}
 
 	newCloudCredential := &CloudCredential{}
 	err = client.APIBaseClient.Update(managementClient.CloudCredentialType, cloudCredential, update, newCloudCredential)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    cloudCredentialStateRefreshFunc(client, newCloudCredential.ID),
@@ -154,21 +155,21 @@ func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interfac
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for cloud credential (%s) to be updated: %s", newCloudCredential.ID, waitErr)
 	}
 
-	return resourceRancher2CloudCredentialRead(d, meta)
+	return resourceRancher2CloudCredentialRead(ctx, d, meta)
 }
 
-func resourceRancher2CloudCredentialDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CloudCredentialDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Cloud Credential ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	cloudCredential := &norman.Resource{}
@@ -179,17 +180,17 @@ func resourceRancher2CloudCredentialDelete(d *schema.ResourceData, meta interfac
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.APIBaseClient.Delete(cloudCredential)
 	if err != nil {
-		return fmt.Errorf("Error removing Cloud Credential: %s", err)
+		return diag.Errorf("Error removing Cloud Credential: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for cloud credential (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    cloudCredentialStateRefreshFunc(client, id),
@@ -198,17 +199,17 @@ func resourceRancher2CloudCredentialDelete(d *schema.ResourceData, meta interfac
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cloud credential (%s) to be removed: %s", id, waitErr)
+		return diag.Errorf("[ERROR] waiting for cloud credential (%s) to be removed: %s", id, waitErr)
 	}
 
 	d.SetId("")
 	return nil
 }
 
-// cloudCredentialStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher CloudCredential.
-func cloudCredentialStateRefreshFunc(client *managementClient.Client, credentialID string) resource.StateRefreshFunc {
+// cloudCredentialStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher CloudCredential.
+func cloudCredentialStateRefreshFunc(client *managementClient.Client, credentialID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj := &CloudCredential{}
 		err := client.APIBaseClient.ByID(managementClient.CloudCredentialType, credentialID, obj)

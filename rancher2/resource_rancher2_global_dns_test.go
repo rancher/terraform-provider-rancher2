@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -60,8 +62,8 @@ func TestAccRancher2GlobalDNS_basic(t *testing.T) {
 	var globalDNS *managementClient.GlobalDns
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2GlobalDNSDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2GlobalDNSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2GlobalDNSConfig,
@@ -98,8 +100,8 @@ func TestAccRancher2GlobalDNS_disappears(t *testing.T) {
 	var globalDNS *managementClient.GlobalDns
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2GlobalDNSProviderDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2GlobalDNSProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2GlobalDNSConfig,
@@ -137,7 +139,7 @@ func testAccRancher2GlobalDNSDisappears(pro *managementClient.GlobalDns) resourc
 				return fmt.Errorf("Error removing Global DNS registry: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"active"},
 				Target:     []string{"removed"},
 				Refresh:    globalDNSStateRefreshFunc(client, pro.ID),
@@ -146,7 +148,7 @@ func testAccRancher2GlobalDNSDisappears(pro *managementClient.GlobalDns) resourc
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for Global DNS registry (%s) to be removed: %s", pro.ID, waitErr)

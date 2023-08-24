@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -163,14 +163,14 @@ func TestFlattenCloudCredential(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, cloudCredentialFields(), tc.ExpectedOutput)
 		err := flattenCloudCredential(output, tc.Input)
 		if err != nil {
-			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
+			t.Fatalf("[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, expectedOutput)
 		}
 	}

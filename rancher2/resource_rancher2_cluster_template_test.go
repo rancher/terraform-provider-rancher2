@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -189,9 +189,9 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 	var clusterTemplate *managementClient.ClusterTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterTemplateConfig,
@@ -240,9 +240,9 @@ func TestAccRancher2ClusterTemplate_disappears(t *testing.T) {
 	var clusterTemplate *managementClient.ClusterTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ClusterTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ClusterTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ClusterTemplateConfig,

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -51,8 +51,8 @@ func TestAccRancher2CustomUserToken_basic(t *testing.T) {
 	testAccRancher2CustomUserTokenUpdate = testAccRancher2User + testAccRancher2GlobalRoleBinding + testAccRancher2CustomUserTokenUpdate
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2UserDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2UserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CustomUserToken,
@@ -90,8 +90,8 @@ func TestAccRancher2CustomUserToken_disappears(t *testing.T) {
 	var user *managementClient.User
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2UserDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2UserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2User,

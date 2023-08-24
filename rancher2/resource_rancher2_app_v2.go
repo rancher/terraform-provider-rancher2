@@ -7,20 +7,21 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/rancher/norman/types"
 	types2 "github.com/rancher/rancher/pkg/api/steve/catalog/types"
 )
 
 func resourceRancher2AppV2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2AppV2Create,
-		Read:   resourceRancher2AppV2Read,
-		Update: resourceRancher2AppV2Update,
-		Delete: resourceRancher2AppV2Delete,
+		CreateContext: resourceRancher2AppV2Create,
+		ReadContext:   resourceRancher2AppV2Read,
+		UpdateContext: resourceRancher2AppV2Update,
+		DeleteContext: resourceRancher2AppV2Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2AppV2Import,
+			StateContext: resourceRancher2AppV2Import,
 		},
 		Schema: appV2Fields(),
 		Timeouts: &schema.ResourceTimeout{
@@ -31,7 +32,7 @@ func resourceRancher2AppV2() *schema.Resource {
 	}
 }
 
-func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AppV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	repoName := d.Get("repo_name").(string)
@@ -42,59 +43,59 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 
 	active, cluster, err := meta.(*Config).isClusterActive(clusterID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if !active {
-		return fmt.Errorf("[ERROR] creating App V2 %s at cluster ID %s: Cluster is not active", name, clusterID)
+		return diag.Errorf("[ERROR] creating App V2 %s at cluster ID %s: Cluster is not active", name, clusterID)
 	}
 	d.Set("cluster_name", cluster.Name)
 
 	systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.Set("system_default_registry", systemDefaultRegistry.Value)
 
 	repo, chartInfo, err := infoAppV2(meta.(*Config), clusterID, repoName, chartName, chartVersion)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	chartInstallAction, err := expandChartInstallActionV2(d, chartInfo)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	chartOperation, err := createAppV2(meta.(*Config), clusterID, repo, chartInstallAction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = appV2OperationWait(meta, clusterID, chartOperation.OperationNamespace+"/"+chartOperation.OperationName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] installing App V2: %s", err)
+		return diag.Errorf("[ERROR] installing App V2: %s", err)
 	}
 	d.SetId(clusterID + appV2ClusterIDsep + chartInstallAction.Namespace + "/" + d.Get("name").(string))
 
-	return resourceRancher2AppV2Read(d, meta)
+	return resourceRancher2AppV2Read(ctx, d, meta)
 }
 
-func resourceRancher2AppV2Read(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AppV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing App V2 %s at %s", name, clusterID)
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		if clusterName, ok := d.Get("cluster_name").(string); !ok || len(clusterName) == 0 {
 			cluster, err := meta.(*Config).GetClusterByID(clusterID)
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			d.Set("cluster_name", cluster.Name)
 		}
 		if systemDefaultRegistry, ok := d.Get("system_default_registry").(string); !ok || len(systemDefaultRegistry) == 0 {
 			systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			d.Set("system_default_registry", systemDefaultRegistry.Value)
 		}
@@ -106,18 +107,18 @@ func resourceRancher2AppV2Read(d *schema.ResourceData, meta interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenAppV2(d, app); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2AppV2Update(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AppV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	repoName := d.Get("repo_name").(string)
@@ -127,25 +128,25 @@ func resourceRancher2AppV2Update(d *schema.ResourceData, meta interface{}) error
 
 	repo, chartInfo, err := infoAppV2(meta.(*Config), clusterID, repoName, chartName, chartVersion)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	chartUpgradeAction, err := expandChartUpgradeActionV2(d, chartInfo)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	chartOperation, err := upgradeAppV2(meta.(*Config), clusterID, repo, chartUpgradeAction)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = appV2OperationWait(meta, clusterID, chartOperation.OperationNamespace+"/"+chartOperation.OperationName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] upgrading App V2: %s", err)
+		return diag.Errorf("[ERROR] upgrading App V2: %s", err)
 	}
-	return resourceRancher2AppV2Read(d, meta)
+	return resourceRancher2AppV2Read(ctx, d, meta)
 }
 
-func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AppV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting App V2 %s at %s", name, clusterID)
@@ -158,13 +159,13 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 	err = deleteAppV2(meta.(*Config), clusterID, app)
 	if err != nil {
-		return fmt.Errorf("Error removing App V2 %s: %s", name, err)
+		return diag.Errorf("Error removing App V2 %s: %s", name, err)
 	}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    appV2StateRefreshFunc(meta, clusterID, app.ID),
@@ -172,9 +173,9 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for app (%s) to be deleted: %s", app.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for app (%s) to be deleted: %s", app.ID, waitErr)
 	}
 	if app.Spec.Chart.Metadata != nil && app.Spec.Chart.Metadata.Annotations != nil && len(app.Spec.Chart.Metadata.Annotations) > 0 && len(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"]) > 0 {
 		namespace := d.Get("namespace").(string)
@@ -183,7 +184,7 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 		}
 		chartAuto := splitBySep(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"], "=")
 		if len(chartAuto) != 2 {
-			return fmt.Errorf("bad format on chart annotation catalog.cattle.io/auto-install: %s", app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"])
+			return diag.Errorf("bad format on chart annotation catalog.cattle.io/auto-install: %s", app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"])
 		}
 		name := chartAuto[0]
 		app, err = getAppV2ByID(meta.(*Config), clusterID, namespace+"/"+name)
@@ -191,13 +192,13 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 			if IsNotFound(err) || IsForbidden(err) {
 				return nil
 			}
-			return err
+			return diag.FromErr(err)
 		}
 		err = deleteAppV2(meta.(*Config), clusterID, app)
 		if err != nil {
-			return fmt.Errorf("Error removing App V2 %s: %s", name, err)
+			return diag.Errorf("Error removing App V2 %s: %s", name, err)
 		}
-		stateConf = &resource.StateChangeConf{
+		stateConf = &retry.StateChangeConf{
 			Pending:    []string{},
 			Target:     []string{"removed"},
 			Refresh:    appV2StateRefreshFunc(meta, clusterID, app.ID),
@@ -205,17 +206,17 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
-		_, waitErr = stateConf.WaitForState()
+		_, waitErr = stateConf.WaitForStateContext(ctx)
 		if waitErr != nil {
-			return fmt.Errorf("[ERROR] waiting for app (%s) to be deleted: %s", app.ID, waitErr)
+			return diag.Errorf("[ERROR] waiting for app (%s) to be deleted: %s", app.ID, waitErr)
 		}
 
 	}
 	return nil
 }
 
-// appV2StateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher App.
-func appV2StateRefreshFunc(meta interface{}, clusterID, appID string) resource.StateRefreshFunc {
+// appV2StateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher App.
+func appV2StateRefreshFunc(meta interface{}, clusterID, appID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := getAppV2ByID(meta.(*Config), clusterID, appID)
 		if err != nil {

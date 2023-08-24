@@ -1,19 +1,22 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+	"errors"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceRancher2RegistryImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRancher2RegistryImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	namespaceID, projectID, resourceID := splitRegistryID(d.Id())
 
 	d.SetId(resourceID)
 	d.Set("project_id", projectID)
 	d.Set("namespace_id", namespaceID)
 
-	err := resourceRancher2RegistryRead(d, meta)
-	if err != nil {
-		return []*schema.ResourceData{}, err
+	diag := resourceRancher2RegistryRead(ctx, d, meta)
+	if diag.HasError() {
+		return []*schema.ResourceData{}, errors.New(diag[0].Summary)
 	}
 
 	return []*schema.ResourceData{d}, nil

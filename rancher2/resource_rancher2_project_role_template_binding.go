@@ -1,23 +1,24 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2ProjectRoleTemplateBinding() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2ProjectRoleTemplateBindingCreate,
-		Read:   resourceRancher2ProjectRoleTemplateBindingRead,
-		Update: resourceRancher2ProjectRoleTemplateBindingUpdate,
-		Delete: resourceRancher2ProjectRoleTemplateBindingDelete,
+		CreateContext: resourceRancher2ProjectRoleTemplateBindingCreate,
+		ReadContext:   resourceRancher2ProjectRoleTemplateBindingRead,
+		UpdateContext: resourceRancher2ProjectRoleTemplateBindingUpdate,
+		DeleteContext: resourceRancher2ProjectRoleTemplateBindingDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2ProjectRoleTemplateBindingImport,
+			StateContext: resourceRancher2ProjectRoleTemplateBindingImport,
 		},
 
 		Schema: projectRoleTemplateBindingFields(),
@@ -29,34 +30,34 @@ func resourceRancher2ProjectRoleTemplateBinding() *schema.Resource {
 	}
 }
 
-func resourceRancher2ProjectRoleTemplateBindingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectRoleTemplateBindingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	projectRole := expandProjectRoleTemplateBinding(d)
 
 	err := meta.(*Config).ProjectExist(projectRole.ProjectID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = meta.(*Config).RoleTemplateExist(projectRole.RoleTemplateID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating Project Role Template Binding %s", projectRole.Name)
 
 	newProjectRole, err := client.ProjectRoleTemplateBinding.Create(projectRole)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newProjectRole.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    projectRoleTemplateBindingStateRefreshFunc(client, newProjectRole.ID),
@@ -64,20 +65,20 @@ func resourceRancher2ProjectRoleTemplateBindingCreate(d *schema.ResourceData, me
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for project role template binding (%s) to be created: %s", newProjectRole.ID, waitErr)
 	}
 
-	return resourceRancher2ProjectRoleTemplateBindingRead(d, meta)
+	return resourceRancher2ProjectRoleTemplateBindingRead(ctx, d, meta)
 }
 
-func resourceRancher2ProjectRoleTemplateBindingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectRoleTemplateBindingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Project Role Template Binding ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	projectRole, err := client.ProjectRoleTemplateBinding.ByID(d.Id())
@@ -87,22 +88,22 @@ func resourceRancher2ProjectRoleTemplateBindingRead(d *schema.ResourceData, meta
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
-	return flattenProjectRoleTemplateBinding(d, projectRole)
+	return diag.FromErr(flattenProjectRoleTemplateBinding(d, projectRole))
 }
 
-func resourceRancher2ProjectRoleTemplateBindingUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectRoleTemplateBindingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Project Role Template Binding ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	projectRole, err := client.ProjectRoleTemplateBinding.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	update := map[string]interface{}{
@@ -117,10 +118,10 @@ func resourceRancher2ProjectRoleTemplateBindingUpdate(d *schema.ResourceData, me
 
 	newProjectRole, err := client.ProjectRoleTemplateBinding.Update(projectRole, update)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    projectRoleTemplateBindingStateRefreshFunc(client, newProjectRole.ID),
@@ -128,21 +129,21 @@ func resourceRancher2ProjectRoleTemplateBindingUpdate(d *schema.ResourceData, me
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for project role template binding (%s) to be updated: %s", newProjectRole.ID, waitErr)
 	}
 
-	return resourceRancher2ProjectRoleTemplateBindingRead(d, meta)
+	return resourceRancher2ProjectRoleTemplateBindingRead(ctx, d, meta)
 }
 
-func resourceRancher2ProjectRoleTemplateBindingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ProjectRoleTemplateBindingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Project Role Template Binding ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	projectRole, err := client.ProjectRoleTemplateBinding.ByID(id)
@@ -152,17 +153,17 @@ func resourceRancher2ProjectRoleTemplateBindingDelete(d *schema.ResourceData, me
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.ProjectRoleTemplateBinding.Delete(projectRole)
 	if err != nil {
-		return fmt.Errorf("Error removing Project Role Template Binding: %s", err)
+		return diag.Errorf("Error removing Project Role Template Binding: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for project role template binding (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"removed"},
 		Refresh:    projectRoleTemplateBindingStateRefreshFunc(client, id),
@@ -171,9 +172,9 @@ func resourceRancher2ProjectRoleTemplateBindingDelete(d *schema.ResourceData, me
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for project role template binding (%s) to be removed: %s", id, waitErr)
 	}
 
@@ -181,8 +182,8 @@ func resourceRancher2ProjectRoleTemplateBindingDelete(d *schema.ResourceData, me
 	return nil
 }
 
-// PpojectRoleTemplateBindingStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project Role Template Binding.
-func projectRoleTemplateBindingStateRefreshFunc(client *managementClient.Client, projectRoleID string) resource.StateRefreshFunc {
+// PpojectRoleTemplateBindingStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Project Role Template Binding.
+func projectRoleTemplateBindingStateRefreshFunc(client *managementClient.Client, projectRoleID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.ProjectRoleTemplateBinding.ByID(projectRoleID)
 		if err != nil {

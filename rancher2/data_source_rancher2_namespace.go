@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2Namespace() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2NamespaceRead,
+		ReadContext: dataSourceRancher2NamespaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"project_id": {
@@ -23,7 +24,6 @@ func dataSourceRancher2Namespace() *schema.Resource {
 			},
 			"container_resource_limit": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: containerResourceLimitFields(),
@@ -36,7 +36,6 @@ func dataSourceRancher2Namespace() *schema.Resource {
 			},
 			"resource_quota": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: namespaceResourceQuotaFields(),
@@ -56,17 +55,17 @@ func dataSourceRancher2Namespace() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2NamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	projectID := d.Get("project_id").(string)
 	clusterID, err := clusterIDFromProjectID(projectID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	name := d.Get("name").(string)
 
 	client, err := meta.(*Config).ClusterClient(clusterID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	filters := map[string]interface{}{
@@ -77,16 +76,16 @@ func dataSourceRancher2NamespaceRead(d *schema.ResourceData, meta interface{}) e
 
 	namespaces, err := client.Namespace.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(namespaces.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] namespace with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
+		return diag.Errorf("[ERROR] namespace with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d namespace with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
+		return diag.Errorf("[ERROR] found %d namespace with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
 	}
 
-	return flattenNamespace(d, &namespaces.Data[0])
+	return diag.FromErr(flattenNamespace(d, &namespaces.Data[0]))
 }

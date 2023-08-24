@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2App() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2AppRead,
+		ReadContext: dataSourceRancher2AppRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -81,7 +82,7 @@ func dataSourceRancher2App() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2AppRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2AppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	projectID := d.Get("project_id").(string)
 	name := d.Get("name").(string)
 	targetNamespace := d.Get("target_namespace").(string)
@@ -99,21 +100,21 @@ func dataSourceRancher2AppRead(d *schema.ResourceData, meta interface{}) error {
 
 	client, err := meta.(*Config).ProjectClient(projectID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	apps, err := client.App.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(apps.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] app with name \"%s\" on project ID \"%s\" not found", name, projectID)
+		return diag.Errorf("[ERROR] app with name \"%s\" on project ID \"%s\" not found", name, projectID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d app with name \"%s\" on project ID \"%s\"", count, name, projectID)
+		return diag.Errorf("[ERROR] found %d app with name \"%s\" on project ID \"%s\"", count, name, projectID)
 	}
 
-	return flattenApp(d, &apps.Data[0])
+	return diag.FromErr(flattenApp(d, &apps.Data[0]))
 }

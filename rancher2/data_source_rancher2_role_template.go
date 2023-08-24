@@ -1,15 +1,16 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceRancher2RoleTemplate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2RoleTemplateRead,
+		ReadContext: dataSourceRancher2RoleTemplateRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -89,10 +90,10 @@ func dataSourceRancher2RoleTemplate() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2RoleTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2RoleTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -108,16 +109,16 @@ func dataSourceRancher2RoleTemplateRead(d *schema.ResourceData, meta interface{}
 
 	roleTemplates, err := client.RoleTemplate.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(roleTemplates.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] role template with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] role template with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d role template with name \"%s\"", count, name)
+		return diag.Errorf("[ERROR] found %d role template with name \"%s\"", count, name)
 	}
 
-	return flattenRoleTemplate(d, &roleTemplates.Data[0])
+	return diag.FromErr(flattenRoleTemplate(d, &roleTemplates.Data[0]))
 }

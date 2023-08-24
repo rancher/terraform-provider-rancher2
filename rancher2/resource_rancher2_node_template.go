@@ -2,24 +2,24 @@ package rancher2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2NodeTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2NodeTemplateCreate,
-		Read:   resourceRancher2NodeTemplateRead,
-		Update: resourceRancher2NodeTemplateUpdate,
-		Delete: resourceRancher2NodeTemplateDelete,
+		CreateContext: resourceRancher2NodeTemplateCreate,
+		ReadContext:   resourceRancher2NodeTemplateRead,
+		UpdateContext: resourceRancher2NodeTemplateUpdate,
+		DeleteContext: resourceRancher2NodeTemplateDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2NodeTemplateImport,
+			StateContext: resourceRancher2NodeTemplateImport,
 		},
 
 		Schema: nodeTemplateFields(),
@@ -31,33 +31,33 @@ func resourceRancher2NodeTemplate() *schema.Resource {
 	}
 }
 
-func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NodeTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	nodeTemplate := expandNodeTemplate(d)
 
 	log.Printf("[INFO] Creating Node Template %s", nodeTemplate.Name)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	driverID := d.Get("driver_id").(string)
 
 	err = meta.(*Config).activateNodeDriver(driverID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	newNodeTemplate := &NodeTemplate{}
 
 	err = client.APIBaseClient.Create(managementClient.NodeTemplateType, nodeTemplate, newNodeTemplate)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newNodeTemplate.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    nodeTemplateStateRefreshFunc(client, newNodeTemplate.ID),
@@ -65,22 +65,22 @@ func resourceRancher2NodeTemplateCreate(d *schema.ResourceData, meta interface{}
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for node template (%s) to be created: %s", newNodeTemplate.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for node template (%s) to be created: %s", newNodeTemplate.ID, waitErr)
 	}
 
-	return resourceRancher2NodeTemplateRead(d, meta)
+	return resourceRancher2NodeTemplateRead(ctx, d, meta)
 }
 
-func resourceRancher2NodeTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NodeTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Node Template ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		// Normalize node-template ID due to API change
 		d.SetId(meta.(*Config).fixNodeTemplateID(d.Id()))
 
@@ -93,28 +93,28 @@ func resourceRancher2NodeTemplateRead(d *schema.ResourceData, meta interface{}) 
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenNodeTemplate(d, nodeTemplate); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NodeTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Node Template ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	nodeTemplate := &norman.Resource{}
 	err = client.APIBaseClient.ByID(managementClient.NodeTemplateType, d.Id(), nodeTemplate)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	useInternalIPAddress := d.Get("use_internal_ip_address").(bool)
@@ -163,10 +163,10 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 	newNodeTemplate := &NodeTemplate{}
 	err = client.APIBaseClient.Update(managementClient.NodeTemplateType, nodeTemplate, update, newNodeTemplate)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    nodeTemplateStateRefreshFunc(client, newNodeTemplate.ID),
@@ -174,21 +174,21 @@ func resourceRancher2NodeTemplateUpdate(d *schema.ResourceData, meta interface{}
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for node template (%s) to be updated: %s", newNodeTemplate.ID, waitErr)
 	}
 
-	return resourceRancher2NodeTemplateRead(d, meta)
+	return resourceRancher2NodeTemplateRead(ctx, d, meta)
 }
 
-func resourceRancher2NodeTemplateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NodeTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Node Template ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	nodeTemplate := &norman.Resource{}
@@ -199,7 +199,7 @@ func resourceRancher2NodeTemplateDelete(d *schema.ResourceData, meta interface{}
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
@@ -210,18 +210,18 @@ func resourceRancher2NodeTemplateDelete(d *schema.ResourceData, meta interface{}
 			break
 		}
 		if !IsNotAllowed(err) {
-			return fmt.Errorf("[ERROR] removing Node Template: %s", err)
+			return diag.Errorf("[ERROR] removing Node Template: %s", err)
 		}
 		select {
 		case <-time.After(rancher2RetriesWait * time.Second):
 		case <-ctx.Done():
-			return fmt.Errorf("[ERROR] timeout removing Node Template: %s", err)
+			return diag.Errorf("[ERROR] timeout removing Node Template: %s", err)
 		}
 	}
 
 	log.Printf("[DEBUG] Waiting for node template (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
 		Refresh:    nodeTemplateStateRefreshFunc(client, id),
@@ -230,17 +230,17 @@ func resourceRancher2NodeTemplateDelete(d *schema.ResourceData, meta interface{}
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for node template (%s) to be removed: %s", id, waitErr)
+		return diag.Errorf("[ERROR] waiting for node template (%s) to be removed: %s", id, waitErr)
 	}
 
 	d.SetId("")
 	return nil
 }
 
-// nodeTemplateStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher NodeTemplate.
-func nodeTemplateStateRefreshFunc(client *managementClient.Client, nodePoolID string) resource.StateRefreshFunc {
+// nodeTemplateStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher NodeTemplate.
+func nodeTemplateStateRefreshFunc(client *managementClient.Client, nodePoolID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj := &NodeTemplate{}
 		err := client.APIBaseClient.ByID(managementClient.NodeTemplateType, nodePoolID, obj)

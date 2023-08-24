@@ -1,15 +1,16 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2User() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2UserRead,
+		ReadContext: dataSourceRancher2UserRead,
 
 		Schema: map[string]*schema.Schema{
 			"username": {
@@ -50,7 +51,7 @@ func dataSourceRancher2User() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2UserRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2UserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	username := d.Get("username").(string)
 	name := d.Get("name").(string)
 	externalUser := d.Get("is_external").(bool)
@@ -62,7 +63,7 @@ func dataSourceRancher2UserRead(d *schema.ResourceData, meta interface{}) error 
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	filters := map[string]interface{}{}
@@ -82,16 +83,16 @@ func dataSourceRancher2UserRead(d *schema.ResourceData, meta interface{}) error 
 
 	users, err := client.User.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(users.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] user with username \"%s\" and/or name \"%s\" not found", username, name)
+		return diag.Errorf("[ERROR] user with username \"%s\" and/or name \"%s\" not found", username, name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d users username \"%s\" and/or name \"%s\"", count, username, name)
+		return diag.Errorf("[ERROR] found %d users username \"%s\" and/or name \"%s\"", count, username, name)
 	}
 
-	return flattenUser(d, &users.Data[0])
+	return diag.FromErr(flattenUser(d, &users.Data[0]))
 }

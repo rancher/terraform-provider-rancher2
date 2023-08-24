@@ -1,23 +1,24 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2GlobalDNSProvider() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2GlobalDNSProviderCreate,
-		Read:   resourceRancher2GlobalDNSProviderRead,
-		Update: resourceRancher2GlobalDNSProviderUpdate,
-		Delete: resourceRancher2GlobalDNSProviderDelete,
+		CreateContext: resourceRancher2GlobalDNSProviderCreate,
+		ReadContext:   resourceRancher2GlobalDNSProviderRead,
+		UpdateContext: resourceRancher2GlobalDNSProviderUpdate,
+		DeleteContext: resourceRancher2GlobalDNSProviderDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2GlobalDNSProviderImport,
+			StateContext: resourceRancher2GlobalDNSProviderImport,
 		},
 
 		Schema: globalDNSProviderFields(),
@@ -29,22 +30,22 @@ func resourceRancher2GlobalDNSProvider() *schema.Resource {
 	}
 }
 
-func resourceRancher2GlobalDNSProviderCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2GlobalDNSProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	globalDNSProvider := expandGlobalDNSProvider(d)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating Global DNS Provider %s", globalDNSProvider.Name)
 
 	newGlobalDNSProvider, err := client.GlobalDnsProvider.Create(globalDNSProvider)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    globalDNSProviderStateRefreshFunc(client, newGlobalDNSProvider.ID),
@@ -52,28 +53,28 @@ func resourceRancher2GlobalDNSProviderCreate(d *schema.ResourceData, meta interf
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for global dns provider (%s) to be created: %s", newGlobalDNSProvider.ID, waitErr)
 	}
 
 	err = flattenGlobalDNSProvider(d, newGlobalDNSProvider)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceRancher2GlobalDNSProviderRead(d, meta)
+	return resourceRancher2GlobalDNSProviderRead(ctx, d, meta)
 }
 
-func resourceRancher2GlobalDNSProviderRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2GlobalDNSProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Global DNS Provider ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		globalDNSProvider, err := client.GlobalDnsProvider.ByID(d.Id())
 		if err != nil {
 			if IsNotFound(err) {
@@ -81,27 +82,27 @@ func resourceRancher2GlobalDNSProviderRead(d *schema.ResourceData, meta interfac
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenGlobalDNSProvider(d, globalDNSProvider); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2GlobalDNSProviderUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2GlobalDNSProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Global DNS Provider ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	globalDNSProvider, err := client.GlobalDnsProvider.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	update := map[string]interface{}{
@@ -111,10 +112,10 @@ func resourceRancher2GlobalDNSProviderUpdate(d *schema.ResourceData, meta interf
 
 	newGlobalDNSProvider, err := client.GlobalDnsProvider.Update(globalDNSProvider, update)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    globalDNSProviderStateRefreshFunc(client, newGlobalDNSProvider.ID),
@@ -122,21 +123,21 @@ func resourceRancher2GlobalDNSProviderUpdate(d *schema.ResourceData, meta interf
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for global dns provider (%s) to be updated: %s", newGlobalDNSProvider.ID, waitErr)
 	}
 
-	return resourceRancher2GlobalDNSProviderRead(d, meta)
+	return resourceRancher2GlobalDNSProviderRead(ctx, d, meta)
 }
 
-func resourceRancher2GlobalDNSProviderDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2GlobalDNSProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Global DNS Provider ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	globalDNSProvider, err := client.GlobalDnsProvider.ByID(id)
@@ -146,17 +147,17 @@ func resourceRancher2GlobalDNSProviderDelete(d *schema.ResourceData, meta interf
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.GlobalDnsProvider.Delete(globalDNSProvider)
 	if err != nil {
-		return fmt.Errorf("Error removing Global DNS Provider: %s", err)
+		return diag.Errorf("Error removing Global DNS Provider: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for global dns provider (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"removed"},
 		Refresh:    globalDNSProviderStateRefreshFunc(client, id),
@@ -165,9 +166,9 @@ func resourceRancher2GlobalDNSProviderDelete(d *schema.ResourceData, meta interf
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for global dns provider (%s) to be removed: %s", id, waitErr)
 	}
 
@@ -175,8 +176,8 @@ func resourceRancher2GlobalDNSProviderDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-// globalDNSProviderStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Global DNS Provider.
-func globalDNSProviderStateRefreshFunc(client *managementClient.Client, globalDNSProviderID string) resource.StateRefreshFunc {
+// globalDNSProviderStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Global DNS Provider.
+func globalDNSProviderStateRefreshFunc(client *managementClient.Client, globalDNSProviderID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.GlobalDnsProvider.ByID(globalDNSProviderID)
 		if err != nil {

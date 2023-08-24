@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 //Schemas
@@ -107,7 +107,6 @@ func namespaceFields() map[string]*schema.Schema {
 		},
 		"container_resource_limit": {
 			Type:     schema.TypeList,
-			MaxItems: 1,
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: containerResourceLimitFields(),

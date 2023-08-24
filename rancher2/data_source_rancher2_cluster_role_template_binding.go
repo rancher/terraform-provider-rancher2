@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ClusterRoleTemplateBinding() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2ClusterRoleTemplateBindingRead,
+		ReadContext: dataSourceRancher2ClusterRoleTemplateBindingRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -52,10 +53,10 @@ func dataSourceRancher2ClusterRoleTemplateBinding() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2ClusterRoleTemplateBindingRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ClusterRoleTemplateBindingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterID := d.Get("cluster_id").(string)
@@ -73,16 +74,16 @@ func dataSourceRancher2ClusterRoleTemplateBindingRead(d *schema.ResourceData, me
 
 	clusterRoleTemplateBindings, err := client.ClusterRoleTemplateBinding.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(clusterRoleTemplateBindings.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] cluster role template binding with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
+		return diag.Errorf("[ERROR] cluster role template binding with name \"%s\" on cluster ID \"%s\" not found", name, clusterID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d cluster role template binding with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
+		return diag.Errorf("[ERROR] found %d cluster role template binding with name \"%s\" on cluster ID \"%s\"", count, name, clusterID)
 	}
 
-	return flattenClusterRoleTemplateBinding(d, &clusterRoleTemplateBindings.Data[0])
+	return diag.FromErr(flattenClusterRoleTemplateBinding(d, &clusterRoleTemplateBindings.Data[0]))
 }

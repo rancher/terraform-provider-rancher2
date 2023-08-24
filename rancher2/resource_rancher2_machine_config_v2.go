@@ -6,18 +6,19 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 )
 
 func resourceRancher2MachineConfigV2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2MachineConfigV2Create,
-		Read:   resourceRancher2MachineConfigV2Read,
-		Update: resourceRancher2MachineConfigV2Update,
-		Delete: resourceRancher2MachineConfigV2Delete,
-		Schema: machineConfigV2Fields(),
+		CreateContext: resourceRancher2MachineConfigV2Create,
+		ReadContext:   resourceRancher2MachineConfigV2Read,
+		UpdateContext: resourceRancher2MachineConfigV2Update,
+		DeleteContext: resourceRancher2MachineConfigV2Delete,
+		Schema:        machineConfigV2Fields(),
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(3 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -26,7 +27,7 @@ func resourceRancher2MachineConfigV2() *schema.Resource {
 	}
 }
 
-func resourceRancher2MachineConfigV2Create(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2MachineConfigV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	obj := expandMachineConfigV2(d)
 
@@ -34,7 +35,7 @@ func resourceRancher2MachineConfigV2Create(d *schema.ResourceData, meta interfac
 
 	newObj, err := createMachineConfigV2(meta.(*Config), obj)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newObj.ID)
@@ -42,10 +43,10 @@ func resourceRancher2MachineConfigV2Create(d *schema.ResourceData, meta interfac
 
 	err = waitForMachineConfigV2(d, meta.(*Config), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("[ERROR] waiting for machine config (%s) to be active: %s", newObj.ID, err)
+		return diag.Errorf("[ERROR] waiting for machine config (%s) to be active: %s", newObj.ID, err)
 	}
 
-	return flattenMachineConfigV2(d, newObj)
+	return diag.FromErr(flattenMachineConfigV2(d, newObj))
 }
 
 func waitForMachineConfigV2(d *schema.ResourceData, config *Config, interval time.Duration) error {
@@ -77,7 +78,7 @@ func waitForMachineConfigV2(d *schema.ResourceData, config *Config, interval tim
 	}
 }
 
-func resourceRancher2MachineConfigV2Read(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2MachineConfigV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Machine Config V2 %s", d.Id())
 
 	kind := d.Get("kind").(string)
@@ -88,22 +89,22 @@ func resourceRancher2MachineConfigV2Read(d *schema.ResourceData, meta interface{
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
-	return flattenMachineConfigV2(d, obj)
+	return diag.FromErr(flattenMachineConfigV2(d, obj))
 }
 
-func resourceRancher2MachineConfigV2Update(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2MachineConfigV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	obj := expandMachineConfigV2(d)
 	log.Printf("[INFO] Updating Machine Config V2 %s", d.Id())
 
 	newObj, err := updateMachineConfigV2(meta.(*Config), obj)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(newObj.ID)
 	flattenMachineConfigV2(d, newObj)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    machineConfigV2StateRefreshFunc(meta, newObj.ID, newObj.TypeMeta.Kind),
@@ -111,14 +112,14 @@ func resourceRancher2MachineConfigV2Update(d *schema.ResourceData, meta interfac
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for machine config (%s) to be active: %s", newObj.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for machine config (%s) to be active: %s", newObj.ID, waitErr)
 	}
-	return resourceRancher2MachineConfigV2Read(d, meta)
+	return resourceRancher2MachineConfigV2Read(ctx, d, meta)
 }
 
-func resourceRancher2MachineConfigV2Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2MachineConfigV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	kind := d.Get("kind").(string)
 	log.Printf("[INFO] Deleting Machine Config V2 %s", name)
@@ -129,13 +130,13 @@ func resourceRancher2MachineConfigV2Delete(d *schema.ResourceData, meta interfac
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 	err = deleteMachineConfigV2(meta.(*Config), obj)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    machineConfigV2StateRefreshFunc(meta, obj.ID, obj.TypeMeta.Kind),
@@ -143,16 +144,16 @@ func resourceRancher2MachineConfigV2Delete(d *schema.ResourceData, meta interfac
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for machine config v2 (%s) to be removed: %s", obj.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for machine config v2 (%s) to be removed: %s", obj.ID, waitErr)
 	}
 	d.SetId("")
 	return nil
 }
 
-// machineConfigV2StateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Machine Config v2.
-func machineConfigV2StateRefreshFunc(meta interface{}, objID, kind string) resource.StateRefreshFunc {
+// machineConfigV2StateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Machine Config v2.
+func machineConfigV2StateRefreshFunc(meta interface{}, objID, kind string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := getMachineConfigV2ByID(meta.(*Config), objID, kind)
 		if err != nil {

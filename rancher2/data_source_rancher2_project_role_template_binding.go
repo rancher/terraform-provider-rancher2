@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ProjectRoleTemplateBinding() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2ProjectRoleTemplateBindingRead,
+		ReadContext: dataSourceRancher2ProjectRoleTemplateBindingRead,
 
 		Schema: map[string]*schema.Schema{
 			"project_id": {
@@ -52,10 +53,10 @@ func dataSourceRancher2ProjectRoleTemplateBinding() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2ProjectRoleTemplateBindingRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ProjectRoleTemplateBindingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	projectID := d.Get("project_id").(string)
@@ -73,16 +74,16 @@ func dataSourceRancher2ProjectRoleTemplateBindingRead(d *schema.ResourceData, me
 
 	projectRoleTemplateBindings, err := client.ProjectRoleTemplateBinding.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(projectRoleTemplateBindings.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] project role template binding with name \"%s\" on project ID \"%s\" not found", name, projectID)
+		return diag.Errorf("[ERROR] project role template binding with name \"%s\" on project ID \"%s\" not found", name, projectID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d project role template binding with name \"%s\" on project ID \"%s\"", count, name, projectID)
+		return diag.Errorf("[ERROR] found %d project role template binding with name \"%s\" on project ID \"%s\"", count, name, projectID)
 	}
 
-	return flattenProjectRoleTemplateBinding(d, &projectRoleTemplateBindings.Data[0])
+	return diag.FromErr(flattenProjectRoleTemplateBinding(d, &projectRoleTemplateBindings.Data[0]))
 }

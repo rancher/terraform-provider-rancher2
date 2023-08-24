@@ -1,13 +1,16 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+	"errors"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceRancher2GlobalDNSProviderImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	err := resourceRancher2GlobalDNSProviderRead(d, meta)
-	if err != nil {
-		return []*schema.ResourceData{}, err
+func resourceRancher2GlobalDNSProviderImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	diag := resourceRancher2GlobalDNSProviderRead(ctx, d, meta)
+	if diag.HasError() {
+		return []*schema.ResourceData{}, errors.New(diag[0].Summary)
 	}
 
 	return []*schema.ResourceData{d}, nil

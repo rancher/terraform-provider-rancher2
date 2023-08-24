@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -70,8 +72,8 @@ func TestAccRancher2EtcdBackup_basic(t *testing.T) {
 	var etcdBackup *managementClient.EtcdBackup
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2EtcdBackupDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2EtcdBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2EtcdBackupConfig,
@@ -108,8 +110,8 @@ func TestAccRancher2EtcdBackup_disappears(t *testing.T) {
 	var etcdBackup *managementClient.EtcdBackup
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2EtcdBackupDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2EtcdBackupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2EtcdBackupConfig,
@@ -148,7 +150,7 @@ func testAccRancher2EtcdBackupDisappears(backup *managementClient.EtcdBackup) re
 				return fmt.Errorf("Error removing Etcd Backup: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{},
 				Target:     []string{"removed"},
 				Refresh:    etcdBackupStateRefreshFunc(client, backup.ID),
@@ -157,7 +159,7 @@ func testAccRancher2EtcdBackupDisappears(backup *managementClient.EtcdBackup) re
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for Etcd Backup (%s) to be removed: %s", backup.ID, waitErr)

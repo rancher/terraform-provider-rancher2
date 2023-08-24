@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -48,8 +50,8 @@ func TestAccRancher2ProjectAlertGroup_basic(t *testing.T) {
 	var ag *managementClient.ProjectAlertGroup
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ProjectAlertGroupDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ProjectAlertGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ProjectAlertGroupConfig,
@@ -89,8 +91,8 @@ func TestAccRancher2ProjectAlertGroup_disappears(t *testing.T) {
 	var ag *managementClient.ProjectAlertGroup
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2ProjectAlertGroupDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2ProjectAlertGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2ProjectAlertGroupConfig,
@@ -128,7 +130,7 @@ func testAccRancher2ProjectAlertGroupDisappears(ag *managementClient.ProjectAler
 				return fmt.Errorf("Error removing Project Alert Group: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"removing"},
 				Target:     []string{"removed"},
 				Refresh:    projectAlertGroupStateRefreshFunc(client, rs.Primary.ID),
@@ -137,7 +139,7 @@ func testAccRancher2ProjectAlertGroupDisappears(ag *managementClient.ProjectAler
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for project alert group (%s) to be removed: %s", rs.Primary.ID, waitErr)

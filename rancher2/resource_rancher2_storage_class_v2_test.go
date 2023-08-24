@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccRancher2StorageClassV2Type = "rancher2_storage_class_v2"
@@ -53,9 +55,9 @@ func TestAccRancher2StorageClassV2_basic(t *testing.T) {
 	var storageClass *StorageClassV2
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2StorageClassV2Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2StorageClassV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2StorageClassV2Config,
@@ -101,9 +103,9 @@ func TestAccRancher2StorageClassV2_disappears(t *testing.T) {
 	var storageClass *StorageClassV2
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2StorageClassV2Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2StorageClassV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2StorageClassV2Config,
@@ -136,7 +138,7 @@ func testAccRancher2StorageClassV2Disappears(cat *StorageClassV2) resource.TestC
 			if err != nil {
 				return fmt.Errorf("testAccRancher2StorageClassV2Disappears-delete: %v", err)
 			}
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{},
 				Target:     []string{"removed"},
 				Refresh:    storageClassV2StateRefreshFunc(testAccProvider.Meta(), clusterID, storageClass.ID),
@@ -144,7 +146,7 @@ func testAccRancher2StorageClassV2Disappears(cat *StorageClassV2) resource.TestC
 				Delay:      1 * time.Second,
 				MinTimeout: 3 * time.Second,
 			}
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf("[ERROR] waiting for storageClass (%s) to be deleted: %s", storageClass.ID, waitErr)
 			}

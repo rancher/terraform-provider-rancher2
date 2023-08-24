@@ -6,23 +6,24 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/rancher/norman/types"
 )
 
 func resourceRancher2SecretV2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2SecretV2Create,
-		Read:   resourceRancher2SecretV2Read,
-		Update: resourceRancher2SecretV2Update,
-		Delete: resourceRancher2SecretV2Delete,
+		CreateContext: resourceRancher2SecretV2Create,
+		ReadContext:   resourceRancher2SecretV2Read,
+		UpdateContext: resourceRancher2SecretV2Update,
+		DeleteContext: resourceRancher2SecretV2Delete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2SecretV2Import,
+			StateContext: resourceRancher2SecretV2Import,
 		},
 		Schema: secretV2Fields(),
-		CustomizeDiff: customdiff.ForceNewIf("immutable", func(d *schema.ResourceDiff, m interface{}) bool {
+		CustomizeDiff: customdiff.ForceNewIf("immutable", func(ctx context.Context, d *schema.ResourceDiff, m interface{}) bool {
 			if d.HasChange("immutable") {
 				return !d.Get("immutable").(bool)
 			}
@@ -36,7 +37,7 @@ func resourceRancher2SecretV2() *schema.Resource {
 	}
 }
 
-func resourceRancher2SecretV2Create(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SecretV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	secret := expandSecretV2(d)
@@ -45,10 +46,10 @@ func resourceRancher2SecretV2Create(d *schema.ResourceData, meta interface{}) er
 
 	newSecret, err := createSecretV2(meta.(*Config), clusterID, secret)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(clusterID + secretV2ClusterIDsep + newSecret.ID)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    secretV2StateRefreshFunc(meta, clusterID, newSecret.ID),
@@ -56,18 +57,18 @@ func resourceRancher2SecretV2Create(d *schema.ResourceData, meta interface{}) er
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for secret (%s) to be active: %s", newSecret.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for secret (%s) to be active: %s", newSecret.ID, waitErr)
 	}
-	return resourceRancher2SecretV2Read(d, meta)
+	return resourceRancher2SecretV2Read(ctx, d, meta)
 }
 
-func resourceRancher2SecretV2Read(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SecretV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID, rancherID := splitID(d.Id())
 	log.Printf("[INFO] Refreshing Secret V2 %s at Cluster ID %s", rancherID, clusterID)
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		secret, err := getSecretV2ByID(meta.(*Config), clusterID, rancherID)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -75,28 +76,29 @@ func resourceRancher2SecretV2Read(d *schema.ResourceData, meta interface{}) erro
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenSecretV2(d, secret); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
+	return diag.FromErr(err)
 }
 
-func resourceRancher2SecretV2Update(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SecretV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID, rancherID := splitID(d.Id())
 	secret := expandSecretV2(d)
 	log.Printf("[INFO] Updating Secret V2 %s at Cluster ID %s", rancherID, clusterID)
 
 	newSecret, err := updateSecretV2(meta.(*Config), clusterID, rancherID, secret)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(clusterID + secretV2ClusterIDsep + newSecret.ID)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    secretV2StateRefreshFunc(meta, clusterID, newSecret.ID),
@@ -104,14 +106,14 @@ func resourceRancher2SecretV2Update(d *schema.ResourceData, meta interface{}) er
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for secret (%s) to be active: %s", newSecret.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for secret (%s) to be active: %s", newSecret.ID, waitErr)
 	}
-	return resourceRancher2SecretV2Read(d, meta)
+	return resourceRancher2SecretV2Read(ctx, d, meta)
 }
 
-func resourceRancher2SecretV2Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SecretV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Secret V2 %s", name)
@@ -126,9 +128,9 @@ func resourceRancher2SecretV2Delete(d *schema.ResourceData, meta interface{}) er
 	}
 	err = deleteSecretV2(meta.(*Config), clusterID, secret)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"removed"},
 		Refresh:    secretV2StateRefreshFunc(meta, clusterID, secret.ID),
@@ -136,16 +138,16 @@ func resourceRancher2SecretV2Delete(d *schema.ResourceData, meta interface{}) er
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for secret (%s) to be active: %s", secret.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for secret (%s) to be active: %s", secret.ID, waitErr)
 	}
 	d.SetId("")
 	return nil
 }
 
-// secretV2StateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Secret v2.
-func secretV2StateRefreshFunc(meta interface{}, clusterID, secretID string) resource.StateRefreshFunc {
+// secretV2StateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Secret v2.
+func secretV2StateRefreshFunc(meta interface{}, clusterID, secretID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := getSecretV2ByID(meta.(*Config), clusterID, secretID)
 		if err != nil {

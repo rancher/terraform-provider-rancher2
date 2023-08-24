@@ -3,7 +3,7 @@ package rancher2
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
 	"github.com/stretchr/testify/assert"
 )

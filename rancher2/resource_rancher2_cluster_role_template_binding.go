@@ -1,23 +1,24 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2ClusterRoleTemplateBinding() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2ClusterRoleTemplateBindingCreate,
-		Read:   resourceRancher2ClusterRoleTemplateBindingRead,
-		Update: resourceRancher2ClusterRoleTemplateBindingUpdate,
-		Delete: resourceRancher2ClusterRoleTemplateBindingDelete,
+		CreateContext: resourceRancher2ClusterRoleTemplateBindingCreate,
+		ReadContext:   resourceRancher2ClusterRoleTemplateBindingRead,
+		UpdateContext: resourceRancher2ClusterRoleTemplateBindingUpdate,
+		DeleteContext: resourceRancher2ClusterRoleTemplateBindingDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2ClusterRoleTemplateBindingImport,
+			StateContext: resourceRancher2ClusterRoleTemplateBindingImport,
 		},
 
 		Schema: clusterRoleTemplateBindingFields(),
@@ -29,34 +30,34 @@ func resourceRancher2ClusterRoleTemplateBinding() *schema.Resource {
 	}
 }
 
-func resourceRancher2ClusterRoleTemplateBindingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterRoleTemplateBindingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterRole := expandClusterRoleTemplateBinding(d)
 
 	err := meta.(*Config).ClusterExist(clusterRole.ClusterID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = meta.(*Config).RoleTemplateExist(clusterRole.RoleTemplateID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating Cluster Role Template Binding %s", clusterRole.Name)
 
 	newClusterRole, err := client.ClusterRoleTemplateBinding.Create(clusterRole)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newClusterRole.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    clusterRoleTemplateBindingStateRefreshFunc(client, newClusterRole.ID),
@@ -64,23 +65,23 @@ func resourceRancher2ClusterRoleTemplateBindingCreate(d *schema.ResourceData, me
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for cluster role template binding (%s) to be created: %s", newClusterRole.ID, waitErr)
 	}
 
-	return resourceRancher2ClusterRoleTemplateBindingRead(d, meta)
+	return resourceRancher2ClusterRoleTemplateBindingRead(ctx, d, meta)
 }
 
-func resourceRancher2ClusterRoleTemplateBindingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterRoleTemplateBindingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Cluster Role Template Binding ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		clusterRole, err := client.ClusterRoleTemplateBinding.ByID(d.Id())
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -88,27 +89,27 @@ func resourceRancher2ClusterRoleTemplateBindingRead(d *schema.ResourceData, meta
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenClusterRoleTemplateBinding(d, clusterRole); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2ClusterRoleTemplateBindingUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterRoleTemplateBindingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Cluster Role Template Binding ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterRole, err := client.ClusterRoleTemplateBinding.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	update := map[string]interface{}{
@@ -123,10 +124,10 @@ func resourceRancher2ClusterRoleTemplateBindingUpdate(d *schema.ResourceData, me
 
 	newClusterRole, err := client.ClusterRoleTemplateBinding.Update(clusterRole, update)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    clusterRoleTemplateBindingStateRefreshFunc(client, newClusterRole.ID),
@@ -134,21 +135,21 @@ func resourceRancher2ClusterRoleTemplateBindingUpdate(d *schema.ResourceData, me
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for cluster role template binding (%s) to be updated: %s", newClusterRole.ID, waitErr)
 	}
 
-	return resourceRancher2ClusterRoleTemplateBindingRead(d, meta)
+	return resourceRancher2ClusterRoleTemplateBindingRead(ctx, d, meta)
 }
 
-func resourceRancher2ClusterRoleTemplateBindingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterRoleTemplateBindingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Cluster Role Template Binding ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterRole, err := client.ClusterRoleTemplateBinding.ByID(id)
@@ -158,17 +159,17 @@ func resourceRancher2ClusterRoleTemplateBindingDelete(d *schema.ResourceData, me
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.ClusterRoleTemplateBinding.Delete(clusterRole)
 	if err != nil {
-		return fmt.Errorf("Error removing Cluster Role Template Binding: %s", err)
+		return diag.Errorf("Error removing Cluster Role Template Binding: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for cluster role template binding (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"removed"},
 		Refresh:    clusterRoleTemplateBindingStateRefreshFunc(client, id),
@@ -177,9 +178,9 @@ func resourceRancher2ClusterRoleTemplateBindingDelete(d *schema.ResourceData, me
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for cluster role template binding (%s) to be removed: %s", id, waitErr)
 	}
 
@@ -187,8 +188,8 @@ func resourceRancher2ClusterRoleTemplateBindingDelete(d *schema.ResourceData, me
 	return nil
 }
 
-// clusterRoleTemplateBindingStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Cluster Role Template Binding.
-func clusterRoleTemplateBindingStateRefreshFunc(client *managementClient.Client, clusterRoleID string) resource.StateRefreshFunc {
+// clusterRoleTemplateBindingStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Cluster Role Template Binding.
+func clusterRoleTemplateBindingStateRefreshFunc(client *managementClient.Client, clusterRoleID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.ClusterRoleTemplateBinding.ByID(clusterRoleID)
 		if err != nil {

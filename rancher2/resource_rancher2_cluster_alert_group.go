@@ -1,23 +1,24 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2ClusterAlertGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2ClusterAlertGroupCreate,
-		Read:   resourceRancher2ClusterAlertGroupRead,
-		Update: resourceRancher2ClusterAlertGroupUpdate,
-		Delete: resourceRancher2ClusterAlertGroupDelete,
+		CreateContext: resourceRancher2ClusterAlertGroupCreate,
+		ReadContext:   resourceRancher2ClusterAlertGroupRead,
+		UpdateContext: resourceRancher2ClusterAlertGroupUpdate,
+		DeleteContext: resourceRancher2ClusterAlertGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2ClusterAlertGroupImport,
+			StateContext: resourceRancher2ClusterAlertGroupImport,
 		},
 		Schema: clusterAlertGroupFields(),
 		Timeouts: &schema.ResourceTimeout{
@@ -28,10 +29,10 @@ func resourceRancher2ClusterAlertGroup() *schema.Resource {
 	}
 }
 
-func resourceRancher2ClusterAlertGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	err := resourceRancher2ClusterAlertGroupRecients(d, meta)
-	if err != nil {
-		return err
+func resourceRancher2ClusterAlertGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	diag2 := resourceRancher2ClusterAlertGroupRecients(ctx, d, meta)
+	if diag2.HasError() {
+		return diag2
 	}
 	clusterAlertGroup := expandClusterAlertGroup(d)
 
@@ -39,17 +40,17 @@ func resourceRancher2ClusterAlertGroupCreate(d *schema.ResourceData, meta interf
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	newClusterAlertGroup, err := client.ClusterAlertGroup.Create(clusterAlertGroup)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newClusterAlertGroup.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    clusterAlertGroupStateRefreshFunc(client, newClusterAlertGroup.ID),
@@ -57,22 +58,22 @@ func resourceRancher2ClusterAlertGroupCreate(d *schema.ResourceData, meta interf
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cluster alert group (%s) to be created: %s", newClusterAlertGroup.ID, waitErr)
+		return diag.Errorf("[ERROR] waiting for cluster alert group (%s) to be created: %s", newClusterAlertGroup.ID, waitErr)
 	}
 
-	return resourceRancher2ClusterAlertGroupRead(d, meta)
+	return resourceRancher2ClusterAlertGroupRead(ctx, d, meta)
 }
 
-func resourceRancher2ClusterAlertGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterAlertGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Cluster Alert Group ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		clusterAlertGroup, err := client.ClusterAlertGroup.ByID(d.Id())
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -83,29 +84,29 @@ func resourceRancher2ClusterAlertGroupRead(d *schema.ResourceData, meta interfac
 		}
 
 		if err = flattenClusterAlertGroup(d, clusterAlertGroup); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2ClusterAlertGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterAlertGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Cluster Alert Group ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterAlertGroup, err := client.ClusterAlertGroup.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.HasChange("recipients") {
-		err = resourceRancher2ClusterAlertGroupRecients(d, meta)
-		if err != nil {
-			return err
+		diag2 := resourceRancher2ClusterAlertGroupRecients(ctx, d, meta)
+		if diag2.HasError() {
+			return diag2
 		}
 	}
 
@@ -123,10 +124,10 @@ func resourceRancher2ClusterAlertGroupUpdate(d *schema.ResourceData, meta interf
 
 	newClusterAlertGroup, err := client.ClusterAlertGroup.Update(clusterAlertGroup, update)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    clusterAlertGroupStateRefreshFunc(client, newClusterAlertGroup.ID),
@@ -134,21 +135,21 @@ func resourceRancher2ClusterAlertGroupUpdate(d *schema.ResourceData, meta interf
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for cluster alert group (%s) to be updated: %s", newClusterAlertGroup.ID, waitErr)
 	}
 
-	return resourceRancher2ClusterAlertGroupRead(d, meta)
+	return resourceRancher2ClusterAlertGroupRead(ctx, d, meta)
 }
 
-func resourceRancher2ClusterAlertGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterAlertGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Cluster Alert Group ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	clusterAlertGroup, err := client.ClusterAlertGroup.ByID(id)
@@ -158,17 +159,17 @@ func resourceRancher2ClusterAlertGroupDelete(d *schema.ResourceData, meta interf
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.ClusterAlertGroup.Delete(clusterAlertGroup)
 	if err != nil {
-		return fmt.Errorf("Error removing Cluster Alert Group: %s", err)
+		return diag.Errorf("Error removing Cluster Alert Group: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for cluster alert group (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
 		Refresh:    clusterAlertGroupStateRefreshFunc(client, id),
@@ -177,9 +178,9 @@ func resourceRancher2ClusterAlertGroupDelete(d *schema.ResourceData, meta interf
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for cluster alert group (%s) to be removed: %s", id, waitErr)
 	}
 
@@ -187,10 +188,10 @@ func resourceRancher2ClusterAlertGroupDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceRancher2ClusterAlertGroupRecients(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2ClusterAlertGroupRecients(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	recipients, ok := d.Get("recipients").([]interface{})
 	if !ok {
-		return fmt.Errorf("[ERROR] Getting Cluster Alert Group Recipients")
+		return diag.Errorf("[ERROR] Getting Cluster Alert Group Recipients")
 	}
 
 	if len(recipients) > 0 {
@@ -201,7 +202,7 @@ func resourceRancher2ClusterAlertGroupRecients(d *schema.ResourceData, meta inte
 
 			recipient, err := meta.(*Config).GetRecipientByNotifier(in["notifier_id"].(string))
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 
 			in["notifier_type"] = recipient.NotifierType
@@ -217,8 +218,8 @@ func resourceRancher2ClusterAlertGroupRecients(d *schema.ResourceData, meta inte
 	return nil
 }
 
-// clusterAlertGroupStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher ClusterAlertGroup.
-func clusterAlertGroupStateRefreshFunc(client *managementClient.Client, clusterAlertGroupID string) resource.StateRefreshFunc {
+// clusterAlertGroupStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher ClusterAlertGroup.
+func clusterAlertGroupStateRefreshFunc(client *managementClient.Client, clusterAlertGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.ClusterAlertGroup.ByID(clusterAlertGroupID)
 		if err != nil {

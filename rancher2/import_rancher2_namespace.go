@@ -1,13 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
 )
 
-func resourceRancher2NamespaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRancher2NamespaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	projectID, resourceID := splitID(d.Id())
 
 	clusterID, projectID := splitProjectID(projectID)

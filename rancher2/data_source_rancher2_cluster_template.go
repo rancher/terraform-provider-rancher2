@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ClusterTemplate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2ClusterTemplateRead,
+		ReadContext: dataSourceRancher2ClusterTemplateRead,
 
 		Schema: map[string]*schema.Schema{
 			"default_revision_id": {
@@ -57,10 +58,10 @@ func dataSourceRancher2ClusterTemplate() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2ClusterTemplateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ClusterTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -76,18 +77,18 @@ func dataSourceRancher2ClusterTemplateRead(d *schema.ResourceData, meta interfac
 
 	clusterTemplates, err := client.ClusterTemplate.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(clusterTemplates.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] cluster template with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] cluster template with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d cluster template with name \"%s\"", count, name)
+		return diag.Errorf("[ERROR] found %d cluster template with name \"%s\"", count, name)
 	}
 
 	d.SetId(clusterTemplates.Data[0].ID)
 
-	return resourceRancher2ClusterTemplateRead(d, meta)
+	return resourceRancher2ClusterTemplateRead(ctx, d, meta)
 }
