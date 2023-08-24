@@ -1,23 +1,24 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2Notifier() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2NotifierCreate,
-		Read:   resourceRancher2NotifierRead,
-		Update: resourceRancher2NotifierUpdate,
-		Delete: resourceRancher2NotifierDelete,
+		CreateContext: resourceRancher2NotifierCreate,
+		ReadContext:   resourceRancher2NotifierRead,
+		UpdateContext: resourceRancher2NotifierUpdate,
+		DeleteContext: resourceRancher2NotifierDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2NotifierImport,
+			StateContext: resourceRancher2NotifierImport,
 		},
 
 		Schema: notifierFields(),
@@ -29,27 +30,27 @@ func resourceRancher2Notifier() *schema.Resource {
 	}
 }
 
-func resourceRancher2NotifierCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NotifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	notifier, err := expandNotifier(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating Notifier %s", notifier.Name)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	newNotifier, err := client.Notifier.Create(notifier)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newNotifier.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{"active"},
 		Refresh:    notifierStateRefreshFunc(client, newNotifier.ID),
@@ -57,23 +58,23 @@ func resourceRancher2NotifierCreate(d *schema.ResourceData, meta interface{}) er
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for notifier (%s) to be created: %s", newNotifier.ID, waitErr)
 	}
 
-	return resourceRancher2NotifierRead(d, meta)
+	return resourceRancher2NotifierRead(ctx, d, meta)
 }
 
-func resourceRancher2NotifierRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NotifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Notifier ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *retry.RetryError {
 		notifier, err := client.Notifier.ByID(d.Id())
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -81,40 +82,40 @@ func resourceRancher2NotifierRead(d *schema.ResourceData, meta interface{}) erro
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenNotifier(d, notifier); err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2NotifierUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NotifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Notifier ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	notifier, err := client.Notifier.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	newNotifier, err := expandNotifier(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	newNotifier.Links = notifier.Links
 	newNotifier, err = client.Notifier.Replace(newNotifier)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    notifierStateRefreshFunc(client, newNotifier.ID),
@@ -122,21 +123,21 @@ func resourceRancher2NotifierUpdate(d *schema.ResourceData, meta interface{}) er
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for notifier (%s) to be updated: %s", newNotifier.ID, waitErr)
 	}
 
-	return resourceRancher2NotifierRead(d, meta)
+	return resourceRancher2NotifierRead(ctx, d, meta)
 }
 
-func resourceRancher2NotifierDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2NotifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Notifier ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	notifier, err := client.Notifier.ByID(id)
@@ -146,17 +147,17 @@ func resourceRancher2NotifierDelete(d *schema.ResourceData, meta interface{}) er
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.Notifier.Delete(notifier)
 	if err != nil {
-		return fmt.Errorf("Error removing Notifier: %s", err)
+		return diag.Errorf("Error removing Notifier: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for notifier (%s) to be removed", id)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
 		Refresh:    notifierStateRefreshFunc(client, id),
@@ -165,9 +166,9 @@ func resourceRancher2NotifierDelete(d *schema.ResourceData, meta interface{}) er
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for notifier (%s) to be removed: %s", id, waitErr)
 	}
 
@@ -175,8 +176,8 @@ func resourceRancher2NotifierDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-// notifierStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Notifier.
-func notifierStateRefreshFunc(client *managementClient.Client, notifierID string) resource.StateRefreshFunc {
+// notifierStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Notifier.
+func notifierStateRefreshFunc(client *managementClient.Client, notifierID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.Notifier.ByID(notifierID)
 		if err != nil {

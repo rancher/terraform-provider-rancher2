@@ -1,13 +1,15 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	v3 "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"
 )
 
@@ -77,9 +79,9 @@ func TestAccRancher2AppV2_basic(t *testing.T) {
 	var app *AppV2
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2AppV2Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2AppV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2AppV2Config,
@@ -119,9 +121,9 @@ func TestAccRancher2AppV2_disappears(t *testing.T) {
 	var app *AppV2
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2AppV2Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2AppV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2AppV2Config,
@@ -156,7 +158,7 @@ func testAccRancher2AppV2Disappears(cat *AppV2) resource.TestCheckFunc {
 			if err != nil {
 				return fmt.Errorf("Error removing App V2 %s: %s", name, err)
 			}
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{},
 				Target:     []string{"removed"},
 				Refresh:    appV2StateRefreshFunc(testAccProvider.Meta(), clusterID, app.ID),
@@ -164,7 +166,7 @@ func testAccRancher2AppV2Disappears(cat *AppV2) resource.TestCheckFunc {
 				Delay:      1 * time.Second,
 				MinTimeout: 3 * time.Second,
 			}
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf("[ERROR] waiting for app (%s) to be deleted: %s", app.ID, waitErr)
 			}

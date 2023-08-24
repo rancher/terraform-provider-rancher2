@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ProjectAlertGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2ProjectAlertGroupRead,
+		ReadContext: dataSourceRancher2ProjectAlertGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -61,10 +62,10 @@ func dataSourceRancher2ProjectAlertGroup() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2ProjectAlertGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ProjectAlertGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	projectID := d.Get("project_id").(string)
@@ -78,16 +79,16 @@ func dataSourceRancher2ProjectAlertGroupRead(d *schema.ResourceData, meta interf
 
 	alertGroups, err := client.ProjectAlertGroup.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(alertGroups.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] project alert group with name \"%s\" on project ID \"%s\" not found", name, projectID)
+		return diag.Errorf("[ERROR] project alert group with name \"%s\" on project ID \"%s\" not found", name, projectID)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d project alert group with name \"%s\" on project ID \"%s\"", count, name, projectID)
+		return diag.Errorf("[ERROR] found %d project alert group with name \"%s\" on project ID \"%s\"", count, name, projectID)
 	}
 
-	return flattenProjectAlertGroup(d, &alertGroups.Data[0])
+	return diag.FromErr(flattenProjectAlertGroup(d, &alertGroups.Data[0]))
 }

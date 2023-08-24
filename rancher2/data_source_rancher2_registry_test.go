@@ -3,7 +3,7 @@ package rancher2
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccRancher2RegistryDataSource_Project(t *testing.T) {
@@ -15,8 +15,8 @@ data "` + testAccRancher2RegistryType + `" "foo" {
 `
 	name := "data." + testAccRancher2RegistryType + ".foo"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckRancher2RegistryProjectDataSourceConfig,
@@ -41,8 +41,8 @@ data "` + testAccRancher2RegistryType + `" "foo-ns" {
 `
 	name := "data." + testAccRancher2RegistryType + ".foo-ns"
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckRancher2RegistryNsDataSourceConfig,

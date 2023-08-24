@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2GlobalRoleBinding() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2GlobalRoleBindingRead,
+		ReadContext: dataSourceRancher2GlobalRoleBindingRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,10 +41,10 @@ func dataSourceRancher2GlobalRoleBinding() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2GlobalRoleBindingRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2GlobalRoleBindingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	globalRole := d.Get("global_role_id").(string)
@@ -59,16 +60,16 @@ func dataSourceRancher2GlobalRoleBindingRead(d *schema.ResourceData, meta interf
 
 	globalRoleBindings, err := client.GlobalRoleBinding.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(globalRoleBindings.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] global role binding with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] global role binding with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d global role binding with name \"%s\"", count, name)
+		return diag.Errorf("[ERROR] found %d global role binding with name \"%s\"", count, name)
 	}
 
-	return flattenGlobalRoleBinding(d, &globalRoleBindings.Data[0])
+	return diag.FromErr(flattenGlobalRoleBinding(d, &globalRoleBindings.Data[0]))
 }

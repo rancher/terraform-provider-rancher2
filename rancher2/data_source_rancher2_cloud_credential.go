@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2CloudCredential() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2CloudCredentialRead,
+		ReadContext: dataSourceRancher2CloudCredentialRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -27,10 +28,10 @@ func dataSourceRancher2CloudCredential() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2CloudCredentialRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2CloudCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -39,15 +40,15 @@ func dataSourceRancher2CloudCredentialRead(d *schema.ResourceData, meta interfac
 
 	credentials, err := client.CloudCredential.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(credentials.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] catalog with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] catalog with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d catalogs with name \"%s\"", count, name)
+		return diag.Errorf("[ERROR] found %d catalogs with name \"%s\"", count, name)
 	}
 
 	credential := credentials.Data[0]
@@ -56,11 +57,11 @@ func dataSourceRancher2CloudCredentialRead(d *schema.ResourceData, meta interfac
 	d.Set("name", credential.Name)
 	err = d.Set("annotations", toMapInterface(credential.Annotations))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = d.Set("labels", toMapInterface(credential.Labels))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

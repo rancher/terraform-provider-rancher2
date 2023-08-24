@@ -1,24 +1,25 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 )
 
 func resourceRancher2App() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2AppCreate,
-		Read:   resourceRancher2AppRead,
-		Update: resourceRancher2AppUpdate,
-		Delete: resourceRancher2AppDelete,
+		CreateContext: resourceRancher2AppCreate,
+		ReadContext:   resourceRancher2AppRead,
+		UpdateContext: resourceRancher2AppUpdate,
+		DeleteContext: resourceRancher2AppDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2AppImport,
+			StateContext: resourceRancher2AppImport,
 		},
 
 		Schema: appFields(),
@@ -30,39 +31,39 @@ func resourceRancher2App() *schema.Resource {
 	}
 }
 
-func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	projectID := d.Get("project_id").(string)
 	name := d.Get("name").(string)
 
 	err := meta.(*Config).ProjectExist(projectID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	err = resourceRancher2AppGetVersion(d, meta)
-	if err != nil {
-		return err
+	diag2 := resourceRancher2AppGetVersion(ctx, d, meta)
+	if diag2.HasError() {
+		return diag2
 	}
 
 	app, err := expandApp(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating App %s on Project ID %s", name, projectID)
 
 	client, err := meta.(*Config).ProjectClient(projectID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	newApp, err := client.App.Create(app)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.Get("wait").(bool) {
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{},
 			Target:     []string{"no"},
 			Refresh:    appTransitionRefreshFunc(client, newApp.ID),
@@ -70,12 +71,12 @@ func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
-		_, waitErr := stateConf.WaitForState()
+		_, waitErr := stateConf.WaitForStateContext(ctx)
 		if waitErr != nil {
 			client.App.Delete(newApp)
-			return fmt.Errorf("[ERROR] waiting for app (%s) to finish transitioning: %s", newApp.ID, waitErr)
+			return diag.Errorf("[ERROR] waiting for app (%s) to finish transitioning: %s", newApp.ID, waitErr)
 		}
-		stateConf = &resource.StateChangeConf{
+		stateConf = &retry.StateChangeConf{
 			Pending:    []string{},
 			Target:     []string{"active"},
 			Refresh:    appStateRefreshFunc(client, newApp.ID),
@@ -83,18 +84,18 @@ func resourceRancher2AppCreate(d *schema.ResourceData, meta interface{}) error {
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
-		_, waitErr = stateConf.WaitForState()
+		_, waitErr = stateConf.WaitForStateContext(ctx)
 		if waitErr != nil {
 			client.App.Delete(newApp)
-			return fmt.Errorf("[ERROR] waiting for app (%s) to be active: %s", newApp.ID, waitErr)
+			return diag.Errorf("[ERROR] waiting for app (%s) to be active: %s", newApp.ID, waitErr)
 		}
 	}
 	d.SetId(newApp.ID)
 
-	return resourceRancher2AppRead(d, meta)
+	return resourceRancher2AppRead(ctx, d, meta)
 }
 
-func resourceRancher2AppRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	projectID := d.Get("project_id").(string)
 	id := d.Id()
 
@@ -107,12 +108,12 @@ func resourceRancher2AppRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	client, err := meta.(*Config).ProjectClient(projectID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	app, err := client.App.ByID(id)
@@ -122,24 +123,24 @@ func resourceRancher2AppRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
-	return flattenApp(d, app)
+	return diag.FromErr(flattenApp(d, app))
 }
 
-func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	projectID := d.Get("project_id").(string)
 	id := d.Id()
 
 	client, err := meta.(*Config).ProjectClient(projectID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	app, err := client.App.ByID(id)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.HasChange("description") || d.HasChange("annotations") || d.HasChange("labels") {
@@ -150,7 +151,7 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 		app.Labels = toMapString(d.Get("labels").(map[string]interface{}))
 		_, err := client.App.Replace(app)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -165,14 +166,14 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		err = client.App.ActionRollback(app, rollback)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else if d.HasChange("answers") || d.HasChange("catalog_name") || d.HasChange("template_name") || d.HasChange("template_version") || d.HasChange("values_yaml") {
 		log.Printf("[INFO] Upgrading App ID %s", id)
 
 		values, err := Base64Decode(d.Get("values_yaml").(string))
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		upgrade := &projectClient.AppUpgradeConfig{
@@ -184,12 +185,12 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err = client.App.ActionUpgrade(app, upgrade)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if d.Get("wait").(bool) {
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{"yes"},
 			Target:     []string{"no"},
 			Refresh:    appTransitionRefreshFunc(client, id),
@@ -197,11 +198,11 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
-		_, waitErr := stateConf.WaitForState()
+		_, waitErr := stateConf.WaitForStateContext(ctx)
 		if waitErr != nil {
-			return fmt.Errorf("[ERROR] waiting for app (%s) to finish transitioning: %s", id, waitErr)
+			return diag.Errorf("[ERROR] waiting for app (%s) to finish transitioning: %s", id, waitErr)
 		}
-		stateConf = &resource.StateChangeConf{
+		stateConf = &retry.StateChangeConf{
 			Pending:    []string{},
 			Target:     []string{"active"},
 			Refresh:    appStateRefreshFunc(client, id),
@@ -209,17 +210,17 @@ func resourceRancher2AppUpdate(d *schema.ResourceData, meta interface{}) error {
 			Delay:      1 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
-		_, waitErr = stateConf.WaitForState()
+		_, waitErr = stateConf.WaitForStateContext(ctx)
 		if waitErr != nil {
-			return fmt.Errorf(
+			return diag.Errorf(
 				"[ERROR] waiting for app (%s) to be updated: %s", id, waitErr)
 		}
 	}
 
-	return resourceRancher2AppRead(d, meta)
+	return resourceRancher2AppRead(ctx, d, meta)
 }
 
-func resourceRancher2AppDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	projectID := d.Get("project_id").(string)
 	id := d.Id()
 
@@ -227,7 +228,7 @@ func resourceRancher2AppDelete(d *schema.ResourceData, meta interface{}) error {
 
 	client, err := meta.(*Config).ProjectClient(projectID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	app, err := client.App.ByID(id)
@@ -237,15 +238,15 @@ func resourceRancher2AppDelete(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.App.Delete(app)
 	if err != nil {
-		return fmt.Errorf("[ERROR] removing App: %s", err)
+		return diag.Errorf("[ERROR] removing App: %s", err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"removing"},
 		Target:     []string{"removed"},
 		Refresh:    appStateRefreshFunc(client, id),
@@ -254,9 +255,9 @@ func resourceRancher2AppDelete(d *schema.ResourceData, meta interface{}) error {
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for App (%s) to be removed: %s", id, waitErr)
 	}
 
@@ -264,7 +265,7 @@ func resourceRancher2AppDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceRancher2AppGetVersion(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AppGetVersion(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	catalogName := d.Get("catalog_name").(string)
 	appName := d.Get("template_name").(string)
 	appVersion := d.Get("template_version").(string)
@@ -281,17 +282,17 @@ func resourceRancher2AppGetVersion(d *schema.ResourceData, meta interface{}) err
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	template, err := client.Template.ByID(appID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	appVersion, err = getLatestVersion(template.VersionLinks)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("template_version", appVersion)
@@ -299,8 +300,8 @@ func resourceRancher2AppGetVersion(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-// appStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher App.
-func appStateRefreshFunc(client *projectClient.Client, appID string) resource.StateRefreshFunc {
+// appStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher App.
+func appStateRefreshFunc(client *projectClient.Client, appID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.App.ByID(appID)
 		if err != nil {
@@ -313,8 +314,8 @@ func appStateRefreshFunc(client *projectClient.Client, appID string) resource.St
 	}
 }
 
-// appTransitionRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher App.
-func appTransitionRefreshFunc(client *projectClient.Client, appID string) resource.StateRefreshFunc {
+// appTransitionRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher App.
+func appTransitionRefreshFunc(client *projectClient.Client, appID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.App.ByID(appID)
 		if err != nil {

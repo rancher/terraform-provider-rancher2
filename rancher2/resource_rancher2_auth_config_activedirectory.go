@@ -1,41 +1,42 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2AuthConfigActiveDirectory() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2AuthConfigActiveDirectoryCreate,
-		Read:   resourceRancher2AuthConfigActiveDirectoryRead,
-		Update: resourceRancher2AuthConfigActiveDirectoryUpdate,
-		Delete: resourceRancher2AuthConfigActiveDirectoryDelete,
+		CreateContext: resourceRancher2AuthConfigActiveDirectoryCreate,
+		ReadContext:   resourceRancher2AuthConfigActiveDirectoryRead,
+		UpdateContext: resourceRancher2AuthConfigActiveDirectoryUpdate,
+		DeleteContext: resourceRancher2AuthConfigActiveDirectoryDelete,
 
 		Schema: authConfigActiveDirectoryFields(),
 	}
 }
 
-func resourceRancher2AuthConfigActiveDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AuthConfigActiveDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	auth, err := client.AuthConfig.ByID(AuthConfigActiveDirectoryName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+		return diag.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
 	}
 
 	log.Printf("[INFO] Creating Auth Config %s %s", AuthConfigActiveDirectoryName, auth.Name)
 
 	authActiveDirectory, err := expandAuthConfigActiveDirectory(d)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+		return diag.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
 	}
 
 	log.Printf("[INFO] +++ %v", authActiveDirectory)
@@ -44,7 +45,7 @@ func resourceRancher2AuthConfigActiveDirectoryCreate(d *schema.ResourceData, met
 	if authActiveDirectory.Enabled {
 		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigActiveDirectoryName)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+			return diag.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
 		}
 		// Updated auth config
 		authResource := &norman.Resource{
@@ -61,30 +62,30 @@ func resourceRancher2AuthConfigActiveDirectoryCreate(d *schema.ResourceData, met
 		}
 		err = client.APIBaseClient.Action(managementClient.ActiveDirectoryConfigType, "testAndApply", authResource, testInput, nil)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		if len(auth.Actions["disable"]) > 0 {
 			err = client.Post(auth.Actions["disable"], nil, nil)
 			if err != nil {
-				return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+				return diag.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
 			}
 		}
 		newAuth := &managementClient.ActiveDirectoryConfig{}
 		err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authActiveDirectory, newAuth)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+			return diag.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
 		}
 	}
 
-	return resourceRancher2AuthConfigActiveDirectoryRead(d, meta)
+	return resourceRancher2AuthConfigActiveDirectoryRead(ctx, d, meta)
 }
 
-func resourceRancher2AuthConfigActiveDirectoryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AuthConfigActiveDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigActiveDirectoryName)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	auth, err := client.AuthConfig.ByID(AuthConfigActiveDirectoryName)
@@ -94,34 +95,34 @@ func resourceRancher2AuthConfigActiveDirectoryRead(d *schema.ResourceData, meta 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	authActiveDirectory, err := meta.(*Config).GetAuthConfig(auth)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = flattenAuthConfigActiveDirectory(d, authActiveDirectory.(*managementClient.ActiveDirectoryConfig))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceRancher2AuthConfigActiveDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AuthConfigActiveDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Auth Config %s", AuthConfigActiveDirectoryName)
 
-	return resourceRancher2AuthConfigActiveDirectoryCreate(d, meta)
+	return resourceRancher2AuthConfigActiveDirectoryCreate(ctx, d, meta)
 }
 
-func resourceRancher2AuthConfigActiveDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2AuthConfigActiveDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigActiveDirectoryName)
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	auth, err := client.AuthConfig.ByID(AuthConfigActiveDirectoryName)
@@ -131,13 +132,13 @@ func resourceRancher2AuthConfigActiveDirectoryDelete(d *schema.ResourceData, met
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	if auth.Enabled == true {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+			return diag.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
 		}
 	}
 

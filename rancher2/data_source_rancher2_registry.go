@@ -1,15 +1,17 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 )
 
 func dataSourceRancher2Registry() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2RegistryRead,
+		ReadContext: dataSourceRancher2RegistryRead,
 
 		Schema: map[string]*schema.Schema{
 			"project_id": {
@@ -53,7 +55,7 @@ func dataSourceRancher2Registry() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2RegistryRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2RegistryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	_, projectID := splitProjectID(d.Get("project_id").(string))
 	name := d.Get("name").(string)
 	namespaceID := d.Get("namespace_id").(string)
@@ -69,24 +71,24 @@ func dataSourceRancher2RegistryRead(d *schema.ResourceData, meta interface{}) er
 
 	registries, err := meta.(*Config).GetRegistryByFilters(filters)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	switch t := registries.(type) {
 	case *projectClient.NamespacedDockerCredentialCollection:
 		err = dataSourceRancher2RegistryCheck(len(registries.(*projectClient.NamespacedDockerCredentialCollection).Data), projectID, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		return flattenRegistry(d, &registries.(*projectClient.NamespacedDockerCredentialCollection).Data[0])
+		return diag.FromErr(flattenRegistry(d, &registries.(*projectClient.NamespacedDockerCredentialCollection).Data[0]))
 	case *projectClient.DockerCredentialCollection:
 		err = dataSourceRancher2RegistryCheck(len(registries.(*projectClient.DockerCredentialCollection).Data), projectID, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		return flattenRegistry(d, &registries.(*projectClient.DockerCredentialCollection).Data[0])
+		return diag.FromErr(flattenRegistry(d, &registries.(*projectClient.DockerCredentialCollection).Data[0]))
 	default:
-		return fmt.Errorf("[ERROR] Registry type %s isn't supported", t)
+		return diag.Errorf("[ERROR] Registry type %s isn't supported", t)
 	}
 }
 

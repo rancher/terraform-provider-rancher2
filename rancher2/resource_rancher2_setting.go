@@ -1,61 +1,62 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func resourceRancher2Setting() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2SettingCreate,
-		Read:   resourceRancher2SettingRead,
-		Update: resourceRancher2SettingUpdate,
-		Delete: resourceRancher2SettingDelete,
+		CreateContext: resourceRancher2SettingCreate,
+		ReadContext:   resourceRancher2SettingRead,
+		UpdateContext: resourceRancher2SettingUpdate,
+		DeleteContext: resourceRancher2SettingDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2SettingImport,
+			StateContext: resourceRancher2SettingImport,
 		},
 		Schema: settingFields(),
 	}
 }
 
-func resourceRancher2SettingCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SettingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Checking if setting already exist, updating if already exist. setting id = setting name
 	exist, err := client.Setting.ByID(d.Get("name").(string))
 	if err == nil {
 		d.SetId(exist.ID)
-		return resourceRancher2SettingUpdate(d, meta)
+		return resourceRancher2SettingUpdate(ctx, d, meta)
 	}
 	if err != nil {
 		if !IsNotFound(err) || IsForbidden(err) {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	setting, err := expandSetting(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating Setting %s", setting.Name)
 
 	newSetting, err := client.Setting.Create(setting)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(newSetting.ID)
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    settingStateRefreshFunc(client, newSetting.ID),
@@ -63,22 +64,22 @@ func resourceRancher2SettingCreate(d *schema.ResourceData, meta interface{}) err
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for setting (%s) to be created: %s", newSetting.ID, waitErr)
 	}
 
-	return resourceRancher2SettingRead(d, meta)
+	return resourceRancher2SettingRead(ctx, d, meta)
 }
 
-func resourceRancher2SettingRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SettingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Refreshing Rancher2 Setting ID %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	setting, err := client.Setting.ByID(name)
@@ -88,27 +89,27 @@ func resourceRancher2SettingRead(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = flattenSetting(d, setting)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceRancher2SettingUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SettingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating Setting ID %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	setting, err := client.Setting.ByID(d.Id())
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	update := map[string]interface{}{
@@ -119,10 +120,10 @@ func resourceRancher2SettingUpdate(d *schema.ResourceData, meta interface{}) err
 
 	newSetting, err := client.Setting.Update(setting, update)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"active"},
 		Target:     []string{"active"},
 		Refresh:    settingStateRefreshFunc(client, newSetting.ID),
@@ -130,21 +131,21 @@ func resourceRancher2SettingUpdate(d *schema.ResourceData, meta interface{}) err
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, waitErr := stateConf.WaitForState()
+	_, waitErr := stateConf.WaitForStateContext(ctx)
 	if waitErr != nil {
-		return fmt.Errorf(
+		return diag.Errorf(
 			"[ERROR] waiting for setting (%s) to be updated: %s", newSetting.ID, waitErr)
 	}
 
-	return resourceRancher2SettingRead(d, meta)
+	return resourceRancher2SettingRead(ctx, d, meta)
 }
 
-func resourceRancher2SettingDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SettingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Setting ID %s", d.Id())
 	id := d.Id()
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	setting, err := client.Setting.ByID(id)
@@ -154,19 +155,19 @@ func resourceRancher2SettingDelete(d *schema.ResourceData, meta interface{}) err
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Deleting setting if it was cretaed by user
 	if setting.CreatorID != "" {
 		err = client.Setting.Delete(setting)
 		if err != nil {
-			return fmt.Errorf("Error removing setting: %s", err)
+			return diag.Errorf("Error removing setting: %s", err)
 		}
 
 		log.Printf("[DEBUG] Waiting for setting (%s) to be removed", id)
 
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    []string{"active"},
 			Target:     []string{"removed"},
 			Refresh:    settingStateRefreshFunc(client, id),
@@ -175,21 +176,21 @@ func resourceRancher2SettingDelete(d *schema.ResourceData, meta interface{}) err
 			MinTimeout: 3 * time.Second,
 		}
 
-		_, waitErr := stateConf.WaitForState()
+		_, waitErr := stateConf.WaitForStateContext(ctx)
 		if waitErr != nil {
-			return fmt.Errorf(
+			return diag.Errorf(
 				"[ERROR] waiting for setting (%s) to be removed: %s", id, waitErr)
 		}
 		// Reseting setting to value = "" if it was cretaed by system
 	} else {
 		err = d.Set("value", "")
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
-		err = resourceRancher2SettingUpdate(d, meta)
-		if err != nil {
-			return err
+		diag2 := resourceRancher2SettingUpdate(ctx, d, meta)
+		if diag2.HasError() {
+			return diag2
 		}
 	}
 
@@ -197,8 +198,8 @@ func resourceRancher2SettingDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-// settingStateRefreshFunc returns a resource.StateRefreshFunc, used to watch a Rancher Project.
-func settingStateRefreshFunc(client *managementClient.Client, settingID string) resource.StateRefreshFunc {
+// settingStateRefreshFunc returns a retry.StateRefreshFunc, used to watch a Rancher Project.
+func settingStateRefreshFunc(client *managementClient.Client, settingID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		obj, err := client.Setting.ByID(settingID)
 		if err != nil {

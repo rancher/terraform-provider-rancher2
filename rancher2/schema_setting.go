@@ -1,7 +1,7 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	norman "github.com/rancher/norman/types"
 	managementAPI "github.com/rancher/rancher/pkg/apis/management.cattle.io/v3"

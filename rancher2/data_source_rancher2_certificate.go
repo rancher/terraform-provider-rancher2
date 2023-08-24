@@ -1,15 +1,17 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 )
 
 func dataSourceRancher2Certificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2CertificateRead,
+		ReadContext: dataSourceRancher2CertificateRead,
 
 		Schema: map[string]*schema.Schema{
 			"project_id": {
@@ -51,7 +53,7 @@ func dataSourceRancher2Certificate() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2CertificateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2CertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	_, projectID := splitProjectID(d.Get("project_id").(string))
 	name := d.Get("name").(string)
 	namespaceID := d.Get("namespace_id").(string)
@@ -67,24 +69,24 @@ func dataSourceRancher2CertificateRead(d *schema.ResourceData, meta interface{})
 
 	certs, err := meta.(*Config).GetCertificateByFilters(filters)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	switch t := certs.(type) {
 	case *projectClient.NamespacedCertificateCollection:
 		err = dataSourceRancher2CertificateCheck(len(certs.(*projectClient.NamespacedCertificateCollection).Data), projectID, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		return flattenCertificate(d, &certs.(*projectClient.NamespacedCertificateCollection).Data[0])
+		return diag.FromErr(flattenCertificate(d, &certs.(*projectClient.NamespacedCertificateCollection).Data[0]))
 	case *projectClient.CertificateCollection:
 		err = dataSourceRancher2CertificateCheck(len(certs.(*projectClient.CertificateCollection).Data), projectID, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		return flattenCertificate(d, &certs.(*projectClient.CertificateCollection).Data[0])
+		return diag.FromErr(flattenCertificate(d, &certs.(*projectClient.CertificateCollection).Data[0]))
 	default:
-		return fmt.Errorf("[ERROR] certificate type %s isn't supported", t)
+		return diag.Errorf("[ERROR] certificate type %s isn't supported", t)
 	}
 }
 

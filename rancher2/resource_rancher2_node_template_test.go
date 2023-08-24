@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
@@ -320,9 +322,9 @@ func TestAccRancher2NodeTemplate_basic_Amazonec2(t *testing.T) {
 
 	name := testAccRancher2NodeTemplateType + ".foo-aws"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateAmazonec2Config,
@@ -365,9 +367,9 @@ func TestAccRancher2NodeTemplate_disappears_Amazonec2(t *testing.T) {
 	var nodeTemplate *NodeTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateAmazonec2Config,
@@ -386,9 +388,9 @@ func TestAccRancher2NodeTemplate_basic_Azure(t *testing.T) {
 
 	name := testAccRancher2NodeTemplateType + ".foo-azure"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateAzureConfig,
@@ -431,9 +433,9 @@ func TestAccRancher2NodeTemplate_disappears_Azure(t *testing.T) {
 	var nodeTemplate *NodeTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateAzureConfig,
@@ -452,9 +454,9 @@ func TestAccRancher2NodeTemplate_basic_Digitalocean(t *testing.T) {
 
 	name := testAccRancher2NodeTemplateType + ".foo-do"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateDigitaloceanConfig,
@@ -497,9 +499,9 @@ func TestAccRancher2NodeTemplate_disappears_Digitalocean(t *testing.T) {
 	var nodeTemplate *NodeTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateDigitaloceanConfig,
@@ -518,9 +520,9 @@ func TestAccRancher2NodeTemplate_basic_Harvester(t *testing.T) {
 
 	name := testAccRancher2NodeTemplateType + ".foo-harvester"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateHarvesterConfig,
@@ -563,9 +565,9 @@ func TestAccRancher2NodeTemplate_disappears_Harvester(t *testing.T) {
 	var nodeTemplate *NodeTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateHarvesterConfig,
@@ -584,9 +586,9 @@ func TestAccRancher2NodeTemplate_basic_Opennebula(t *testing.T) {
 
 	name := testAccRancher2NodeTemplateType + ".foo-opennebula"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateOpennebulaConfig,
@@ -629,9 +631,9 @@ func TestAccRancher2NodeTemplate_disappears_Opennebula(t *testing.T) {
 	var nodeTemplate *NodeTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateOpennebulaConfig,
@@ -650,9 +652,9 @@ func TestAccRancher2NodeTemplate_basic_Openstack(t *testing.T) {
 
 	name := testAccRancher2NodeTemplateType + ".foo-openstack"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateOpenstackConfig,
@@ -695,9 +697,9 @@ func TestAccRancher2NodeTemplate_disappears_Openstack(t *testing.T) {
 	var nodeTemplate *NodeTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateOpenstackConfig,
@@ -716,9 +718,9 @@ func TestAccRancher2NodeTemplate_basic_Vsphere(t *testing.T) {
 
 	name := testAccRancher2NodeTemplateType + ".foo-vsphere"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateVsphereConfig,
@@ -764,9 +766,9 @@ func TestAccRancher2NodeTemplate_disappears_Vsphere(t *testing.T) {
 	var nodeTemplate *NodeTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateVsphereConfig,
@@ -785,9 +787,9 @@ func TestAccRancher2NodeTemplate_basic_Outscale(t *testing.T) {
 
 	name := testAccRancher2NodeTemplateType + ".foo-outscale"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateOutscaleConfig,
@@ -827,9 +829,9 @@ func TestAccRancher2NodeTemplate_disappears_Outscale(t *testing.T) {
 	var nodeTemplate *NodeTemplate
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NodeTemplateDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NodeTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NodeTemplateOutscaleConfig,
@@ -868,7 +870,7 @@ func testAccRancher2NodeTemplateDisappears(nodeTemplate *NodeTemplate) resource.
 				return fmt.Errorf("Error removing Node Template: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"removing"},
 				Target:     []string{"removed"},
 				Refresh:    nodeTemplateStateRefreshFunc(client, nodeTemplate.ID),
@@ -877,7 +879,7 @@ func testAccRancher2NodeTemplateDisappears(nodeTemplate *NodeTemplate) resource.
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf("[ERROR] waiting for node template (%s) to be removed: %s", nodeTemplate.ID, waitErr)
 			}

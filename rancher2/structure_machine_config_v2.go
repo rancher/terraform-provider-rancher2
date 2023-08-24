@@ -3,7 +3,7 @@ package rancher2
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

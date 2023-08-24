@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2NodeDriver() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2NodeDriverRead,
+		ReadContext: dataSourceRancher2NodeDriverRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -63,10 +64,10 @@ func dataSourceRancher2NodeDriver() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2NodeDriverRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2NodeDriverRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -82,16 +83,16 @@ func dataSourceRancher2NodeDriverRead(d *schema.ResourceData, meta interface{}) 
 
 	nodeDrivers, err := client.NodeDriver.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(nodeDrivers.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] node driver with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] node driver with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d node driver with name \"%s\"", count, name)
+		return diag.Errorf("[ERROR] found %d node driver with name \"%s\"", count, name)
 	}
 
-	return flattenNodeDriver(d, &nodeDrivers.Data[0])
+	return diag.FromErr(flattenNodeDriver(d, &nodeDrivers.Data[0]))
 }

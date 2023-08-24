@@ -1,22 +1,26 @@
 package rancher2
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceRancher2Secret() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2SecretCreate,
-		Read:   resourceRancher2SecretRead,
-		Update: resourceRancher2SecretUpdate,
-		Delete: resourceRancher2SecretDelete,
+		CreateContext: resourceRancher2SecretCreate,
+		ReadContext:   resourceRancher2SecretRead,
+		UpdateContext: resourceRancher2SecretUpdate,
+		DeleteContext: resourceRancher2SecretDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRancher2SecretImport,
+			StateContext: resourceRancher2SecretImport,
 		},
 
 		Schema: secretFields(),
@@ -28,14 +32,14 @@ func resourceRancher2Secret() *schema.Resource {
 	}
 }
 
-func resourceRancher2SecretCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SecretCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	_, projectID := splitProjectID(d.Get("project_id").(string))
 	name := d.Get("name").(string)
 
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		err := meta.(*Config).ProjectExist(projectID)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		secret := expandSecret(d)
@@ -44,24 +48,25 @@ func resourceRancher2SecretCreate(d *schema.ResourceData, meta interface{}) erro
 
 		newSecret, err := meta.(*Config).CreateSecret(secret)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		err = flattenSecret(d, newSecret)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
-		err = resourceRancher2SecretRead(d, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
+		diag2 := resourceRancher2SecretRead(ctx, d, meta)
+		if diag2.HasError() {
+			return retry.NonRetryableError(errors.New(diag2[0].Summary))
 		}
 
 		return nil
 	})
+	return diag.FromErr(err)
 }
 
-func resourceRancher2SecretRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	_, projectID := splitProjectID(d.Get("project_id").(string))
 	id := d.Id()
 	namespaceID := d.Get("namespace_id").(string)
@@ -75,23 +80,23 @@ func resourceRancher2SecretRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
-	return flattenSecret(d, secret)
+	return diag.FromErr(flattenSecret(d, secret))
 }
 
-func resourceRancher2SecretUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SecretUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	_, projectID := splitProjectID(d.Get("project_id").(string))
 	id := d.Id()
 	namespaceID := d.Get("namespace_id").(string)
 
 	log.Printf("[INFO] Updating Secret ID %s", id)
 
-	return resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		secret, err := meta.(*Config).GetSecret(id, projectID, namespaceID)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		update := map[string]interface{}{
@@ -103,31 +108,31 @@ func resourceRancher2SecretUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		newSecret, err := meta.(*Config).UpdateSecret(secret, update)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		err = flattenSecret(d, newSecret)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
-		err = resourceRancher2SecretRead(d, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
+		diag2 := resourceRancher2SecretRead(ctx, d, meta)
+		if diag2.HasError() {
+			return retry.NonRetryableError(errors.New(diag2[0].Summary))
 		}
 
 		return nil
-	})
+	}))
 }
 
-func resourceRancher2SecretDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2SecretDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	_, projectID := splitProjectID(d.Get("project_id").(string))
 	id := d.Id()
 	namespaceID := d.Get("namespace_id").(string)
 
 	log.Printf("[INFO] Deleting Secret ID %s", id)
 
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	return diag.FromErr(retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		secret, err := meta.(*Config).GetSecret(id, projectID, namespaceID)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
@@ -135,15 +140,15 @@ func resourceRancher2SecretDelete(d *schema.ResourceData, meta interface{}) erro
 				d.SetId("")
 				return nil
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		err = meta.(*Config).DeleteSecret(secret)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("[ERROR] Error removing Secret: %s", err))
+			return retry.NonRetryableError(fmt.Errorf("[ERROR] Error removing Secret: %s", err))
 		}
 
 		d.SetId("")
 		return nil
-	})
+	}))
 }

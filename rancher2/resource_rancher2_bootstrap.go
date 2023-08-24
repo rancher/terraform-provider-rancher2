@@ -6,27 +6,28 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceRancher2Bootstrap() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2BootstrapCreate,
-		Read:   resourceRancher2BootstrapRead,
-		Update: resourceRancher2BootstrapUpdate,
-		Delete: resourceRancher2BootstrapDelete,
-		Schema: bootstrapFields(),
+		CreateContext: resourceRancher2BootstrapCreate,
+		ReadContext:   resourceRancher2BootstrapRead,
+		UpdateContext: resourceRancher2BootstrapUpdate,
+		DeleteContext: resourceRancher2BootstrapDelete,
+		Schema:        bootstrapFields(),
 	}
 }
 
-func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2BootstrapCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if !meta.(*Config).Bootstrap {
-		return fmt.Errorf("[ERROR] Resource rancher2_bootstrap just available on bootstrap mode")
+		return diag.Errorf("[ERROR] Resource rancher2_bootstrap just available on bootstrap mode")
 	}
 
 	err := bootstrapDoLogin(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set user
@@ -35,7 +36,7 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 	// Set rancher url
 	err = meta.(*Config).SetSetting(bootstrapSettingURL, meta.(*Config).URL)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set telemetry option
@@ -46,7 +47,7 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 
 	err = meta.(*Config).SetSetting(bootstrapSettingTelemetry, telemetry)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set ui default landing option for rancher up to 2.5.0
@@ -55,14 +56,14 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 
 		err = meta.(*Config).SetSetting(bootstrapSettingUILanding, uiLanding)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	// Generate a new token
 	tokenID, token, err := meta.(*Config).GenerateUserToken(bootstrapDefaultUser, bootstrapDefaultTokenDesc, d.Get("token_ttl").(int))
 	if err != nil {
-		return fmt.Errorf("[ERROR] Creating Admin token: %s", err)
+		return diag.Errorf("[ERROR] Creating Admin token: %s", err)
 	}
 
 	// Update new tokenkey
@@ -70,14 +71,14 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 	d.Set("token", token)
 	err = meta.(*Config).UpdateToken(token)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Admin token: %s", err)
+		return diag.Errorf("[ERROR] Updating Admin token: %s", err)
 	}
 
 	// Set admin user password
 	pass := d.Get("password").(string)
 	_, newPass, adminUser, err := meta.(*Config).SetUserPasswordByName(bootstrapDefaultUser, pass)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Admin password: %s", err)
+		return diag.Errorf("[ERROR] Updating Admin password: %s", err)
 	}
 	d.Set("password", newPass)
 	d.Set("current_password", newPass)
@@ -88,7 +89,7 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 	// Updating local cluster due to issue https://github.com/rancher/rancher/issues/16213
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	clusterLocal, _ := client.Cluster.ByID(rancher2DefaultLocalClusterID)
 	if clusterLocal != nil && clusterLocal.State == "provisioning" {
@@ -100,18 +101,18 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 		}
 		_, err := client.Cluster.Update(clusterLocal, update)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return resourceRancher2BootstrapRead(d, meta)
+	return resourceRancher2BootstrapRead(ctx, d, meta)
 }
 
-func resourceRancher2BootstrapRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2BootstrapRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing bootstrap")
 
 	if !meta.(*Config).Bootstrap {
-		return fmt.Errorf("[ERROR] Resource rancher2_bootstrap just available on bootstrap mode")
+		return diag.Errorf("[ERROR] Resource rancher2_bootstrap just available on bootstrap mode")
 	}
 
 	err := bootstrapDoLogin(d, meta)
@@ -123,13 +124,13 @@ func resourceRancher2BootstrapRead(d *schema.ResourceData, meta interface{}) err
 
 	err = meta.(*Config).waitForRancherLocalActive()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Check if token is expired
 	expiredToken, err := meta.(*Config).IsTokenExpired(d.Get("token_id").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("token_update", expiredToken)
@@ -137,7 +138,7 @@ func resourceRancher2BootstrapRead(d *schema.ResourceData, meta interface{}) err
 	// Get rancher url
 	url, err := meta.(*Config).GetSettingValue(bootstrapSettingURL)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("url", url)
@@ -145,7 +146,7 @@ func resourceRancher2BootstrapRead(d *schema.ResourceData, meta interface{}) err
 	// Get telemetry
 	telemetry, err := meta.(*Config).GetSettingValue(bootstrapSettingTelemetry)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if telemetry == "in" {
@@ -154,13 +155,13 @@ func resourceRancher2BootstrapRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("telemetry", false)
 	}
 
-	return bootstrapCleanUpTempToken(d, meta)
+	return diag.FromErr(bootstrapCleanUpTempToken(d, meta))
 }
 
-func resourceRancher2BootstrapUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2BootstrapUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	err := bootstrapDoLogin(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set user
@@ -169,7 +170,7 @@ func resourceRancher2BootstrapUpdate(d *schema.ResourceData, meta interface{}) e
 	// Set rancher url
 	err = meta.(*Config).SetSetting(bootstrapSettingURL, meta.(*Config).URL)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set telemetry option
@@ -180,14 +181,14 @@ func resourceRancher2BootstrapUpdate(d *schema.ResourceData, meta interface{}) e
 
 	err = meta.(*Config).SetSetting(bootstrapSettingTelemetry, telemetry)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Update admin user password if needed
 	pass := d.Get("password").(string)
 	changedPass, newPass, adminUser, err := meta.(*Config).SetUserPasswordByName(bootstrapDefaultUser, pass)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Admin password: %s", err)
+		return diag.Errorf("[ERROR] Updating Admin password: %s", err)
 	}
 
 	if changedPass {
@@ -199,18 +200,18 @@ func resourceRancher2BootstrapUpdate(d *schema.ResourceData, meta interface{}) e
 	// Check if token is expired
 	expiredToken, err := meta.(*Config).IsTokenExpired(d.Get("token_id").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if d.Get("token_update").(bool) || expiredToken {
 		tokenID, token, err := meta.(*Config).GenerateUserToken(bootstrapDefaultUser, bootstrapDefaultTokenDesc, d.Get("token_ttl").(int))
 		if err != nil {
-			return fmt.Errorf("[ERROR] Creating Admin token: %s", err)
+			return diag.Errorf("[ERROR] Creating Admin token: %s", err)
 		}
 
 		// Delete old token
 		err = meta.(*Config).DeleteToken(d.Get("token_id").(string))
 		if err != nil {
-			return fmt.Errorf("[ERROR] Deleting previous Admin token: %s", err)
+			return diag.Errorf("[ERROR] Deleting previous Admin token: %s", err)
 		}
 
 		// Update new tokenkey
@@ -218,17 +219,17 @@ func resourceRancher2BootstrapUpdate(d *schema.ResourceData, meta interface{}) e
 		d.Set("token", token)
 		err = meta.(*Config).UpdateToken(token)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Updating Admin token: %s", err)
+			return diag.Errorf("[ERROR] Updating Admin token: %s", err)
 		}
 	}
 
 	// Set resource ID
 	d.SetId(adminUser.ID)
 
-	return resourceRancher2BootstrapRead(d, meta)
+	return resourceRancher2BootstrapRead(ctx, d, meta)
 }
 
-func resourceRancher2BootstrapDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2BootstrapDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	d.SetId("")
 
 	return nil

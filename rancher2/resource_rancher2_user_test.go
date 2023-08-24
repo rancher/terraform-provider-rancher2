@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -42,8 +44,8 @@ func TestAccRancher2User_basic(t *testing.T) {
 	var user *managementClient.User
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2UserDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2UserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2User,
@@ -80,8 +82,8 @@ func TestAccRancher2User_disappears(t *testing.T) {
 	var user *managementClient.User
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2UserDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2UserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2User,
@@ -119,7 +121,7 @@ func testAccRancher2UserDisappears(pro *managementClient.User) resource.TestChec
 				return fmt.Errorf("Error removing User: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"active"},
 				Target:     []string{"removed"},
 				Refresh:    userStateRefreshFunc(client, pro.ID),
@@ -128,7 +130,7 @@ func testAccRancher2UserDisappears(pro *managementClient.User) resource.TestChec
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for User (%s) to be removed: %s", pro.ID, waitErr)

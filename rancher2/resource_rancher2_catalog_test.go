@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
@@ -103,9 +105,9 @@ func TestAccRancher2Catalog_basic_Global(t *testing.T) {
 	var catalog interface{}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CatalogDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CatalogGlobal,
@@ -154,9 +156,9 @@ func TestAccRancher2Catalog_disappears_Global(t *testing.T) {
 	var catalog interface{}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CatalogDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CatalogGlobal,
@@ -174,9 +176,9 @@ func TestAccRancher2Catalog_basic_Cluster(t *testing.T) {
 	var catalog interface{}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CatalogDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CatalogClusterConfig,
@@ -222,9 +224,9 @@ func TestAccRancher2Catalog_disappears_Cluster(t *testing.T) {
 	var catalog interface{}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CatalogDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CatalogClusterConfig,
@@ -242,9 +244,9 @@ func TestAccRancher2Catalog_basic_Project(t *testing.T) {
 	var catalog interface{}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CatalogDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CatalogProjectConfig,
@@ -287,9 +289,9 @@ func TestAccRancher2Catalog_disappears_Project(t *testing.T) {
 	var catalog interface{}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2CatalogDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2CatalogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2CatalogProjectConfig,
@@ -325,7 +327,7 @@ func testAccRancher2CatalogDisappears(cat interface{}) resource.TestCheckFunc {
 				return fmt.Errorf("Error removing %s Catalog: %s", scope, err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"active"},
 				Target:     []string{"removed"},
 				Refresh:    catalogStateRefreshFunc(testAccProvider.Meta(), id, scope),
@@ -334,7 +336,7 @@ func testAccRancher2CatalogDisappears(cat interface{}) resource.TestCheckFunc {
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for %s catalog (%s) to be removed: %s", scope, id, waitErr)

@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
 )
 
@@ -70,8 +72,8 @@ func TestAccRancher2Namespace_basic(t *testing.T) {
 	var ns *clusterClient.Namespace
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NamespaceDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NamespaceConfig,
@@ -108,8 +110,8 @@ func TestAccRancher2Namespace_disappears(t *testing.T) {
 	var ns *clusterClient.Namespace
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NamespaceDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NamespaceConfig,
@@ -151,7 +153,7 @@ func testAccRancher2NamespaceDisappears(ns *clusterClient.Namespace) resource.Te
 				return fmt.Errorf("Error removing Namespace: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"removing"},
 				Target:     []string{"removed", "forbidden"},
 				Refresh:    namespaceStateRefreshFunc(client, ns.ID),
@@ -160,7 +162,7 @@ func testAccRancher2NamespaceDisappears(ns *clusterClient.Namespace) resource.Te
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for namespace (%s) to be removed: %s", ns.ID, waitErr)

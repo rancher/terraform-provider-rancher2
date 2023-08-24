@@ -1,12 +1,15 @@
 package rancher2
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2ClusterV2() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2ClusterV2Read,
+		ReadContext: dataSourceRancher2ClusterV2Read,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -26,7 +29,6 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 			},
 			"rke_config": {
 				Type:        schema.TypeList,
-				MaxItems:    1,
 				Computed:    true,
 				Description: "Cluster V2 rke config",
 				Elem: &schema.Resource{
@@ -68,7 +70,6 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 			},
 			"cluster_registration_token": {
 				Type:      schema.TypeList,
-				MaxItems:  1,
 				Computed:  true,
 				Sensitive: true,
 				Elem: &schema.Resource{
@@ -100,10 +101,10 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2ClusterV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	namespace := d.Get("fleet_namespace").(string)
 	d.SetId(namespace + clusterV2ClusterIDsep + name)
 
-	return resourceRancher2ClusterV2Read(d, meta)
+	return resourceRancher2ClusterV2Read(ctx, d, meta)
 }

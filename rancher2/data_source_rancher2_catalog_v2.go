@@ -1,14 +1,16 @@
 package rancher2
 
 import (
+	"context"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2CatalogV2() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2CatalogV2Read,
+		ReadContext: dataSourceRancher2CatalogV2Read,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -75,7 +77,7 @@ func dataSourceRancher2CatalogV2() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2CatalogV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 
@@ -86,8 +88,8 @@ func dataSourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) e
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
-	return flattenCatalogV2(d, catalog)
+	return diag.FromErr(flattenCatalogV2(d, catalog))
 }

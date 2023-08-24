@@ -1,11 +1,13 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
@@ -23,10 +25,10 @@ The following steps are used to create a Terraform controlled Rancher API token:
 
 func resourceRancher2CustomUserToken() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRancher2CustomUserTokenCreate,
-		Read:   resourceRancher2CustomUserTokenRead,
-		Update: resourceRancher2CustomUserTokenUpdate,
-		Delete: resourceRancher2CustomUserTokenDelete,
+		CreateContext: resourceRancher2CustomUserTokenCreate,
+		ReadContext:   resourceRancher2CustomUserTokenRead,
+		UpdateContext: resourceRancher2CustomUserTokenUpdate,
+		DeleteContext: resourceRancher2CustomUserTokenDelete,
 
 		Schema: customUserTokenFields(),
 		Timeouts: &schema.ResourceTimeout{
@@ -37,42 +39,42 @@ func resourceRancher2CustomUserToken() *schema.Resource {
 	}
 }
 
-func resourceRancher2CustomUserTokenCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CustomUserTokenCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Creating Custom User Account Token")
 	patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqualAndLessThan(rancher2TokeTTLMinutesVersion, rancher2TokeTTLMilisVersion)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	token, err := expandToken(d, patch)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	client, err := doUserLogin(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	defer doUserLogout(d, client)
 
 	newToken, err := client.Token.Create(token)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = flattenToken(d, newToken, patch)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceRancher2CustomUserTokenRead(d, meta)
+	return resourceRancher2CustomUserTokenRead(ctx, d, meta)
 }
 
-func resourceRancher2CustomUserTokenRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CustomUserTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Refreshing Token ID %s", d.Id())
 	client, err := doUserLogin(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	defer doUserLogout(d, client)
 
@@ -83,7 +85,7 @@ func resourceRancher2CustomUserTokenRead(d *schema.ResourceData, meta interface{
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	renew := d.Get("renew").(bool)
@@ -93,26 +95,26 @@ func resourceRancher2CustomUserTokenRead(d *schema.ResourceData, meta interface{
 
 	patch, err := meta.(*Config).IsRancherVersionGreaterThanOrEqualAndLessThan(rancher2TokeTTLMinutesVersion, rancher2TokeTTLMilisVersion)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	err = flattenToken(d, token, patch)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceRancher2CustomUserTokenUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceRancher2TokenRead(d, meta)
+func resourceRancher2CustomUserTokenUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return resourceRancher2TokenRead(ctx, d, meta)
 }
 
-func resourceRancher2CustomUserTokenDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceRancher2CustomUserTokenDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting Token ID %s", d.Id())
 	id := d.Id()
 	client, err := doUserLogin(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	defer doUserLogout(d, client)
 
@@ -123,12 +125,12 @@ func resourceRancher2CustomUserTokenDelete(d *schema.ResourceData, meta interfac
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	err = client.Token.Delete(token)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Deleting Token: %s", err)
+		return diag.Errorf("[ERROR] Deleting Token: %s", err)
 	}
 
 	d.SetId("")

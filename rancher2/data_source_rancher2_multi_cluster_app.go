@@ -1,14 +1,15 @@
 package rancher2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceRancher2MultiClusterApp() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRancher2MultiClusterAppRead,
+		ReadContext: dataSourceRancher2MultiClusterAppRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -98,7 +99,7 @@ func dataSourceRancher2MultiClusterApp() *schema.Resource {
 	}
 }
 
-func dataSourceRancher2MultiClusterAppRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceRancher2MultiClusterAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 
 	filters := map[string]interface{}{
@@ -109,26 +110,26 @@ func dataSourceRancher2MultiClusterAppRead(d *schema.ResourceData, meta interfac
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	multiClusterApps, err := client.MultiClusterApp.List(listOpts)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	count := len(multiClusterApps.Data)
 	if count <= 0 {
-		return fmt.Errorf("[ERROR] multi cluster app with name \"%s\" not found", name)
+		return diag.Errorf("[ERROR] multi cluster app with name \"%s\" not found", name)
 	}
 	if count > 1 {
-		return fmt.Errorf("[ERROR] found %d multi cluster app with name \"%s\"", count, name)
+		return diag.Errorf("[ERROR] found %d multi cluster app with name \"%s\"", count, name)
 	}
 
 	templateVersion, err := client.TemplateVersion.ByID(multiClusterApps.Data[0].TemplateVersionID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return flattenMultiClusterApp(d, &multiClusterApps.Data[0], templateVersion.ExternalID)
+	return diag.FromErr(flattenMultiClusterApp(d, &multiClusterApps.Data[0], templateVersion.ExternalID))
 }

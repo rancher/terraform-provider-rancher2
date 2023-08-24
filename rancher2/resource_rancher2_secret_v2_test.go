@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccRancher2SecretV2Type = "rancher2_secret_v2"
@@ -53,9 +55,9 @@ func TestAccRancher2SecretV2_basic(t *testing.T) {
 	var secret *SecretV2
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2SecretV2Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2SecretV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2SecretV2Config,
@@ -98,9 +100,9 @@ func TestAccRancher2SecretV2_disappears(t *testing.T) {
 	var secret *SecretV2
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2SecretV2Destroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2SecretV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2SecretV2Config,
@@ -133,7 +135,7 @@ func testAccRancher2SecretV2Disappears(cat *SecretV2) resource.TestCheckFunc {
 			if err != nil {
 				return fmt.Errorf("testAccRancher2SecretV2Disappears-delete: %v", err)
 			}
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{},
 				Target:     []string{"removed"},
 				Refresh:    secretV2StateRefreshFunc(testAccProvider.Meta(), clusterID, secret.ID),
@@ -141,7 +143,7 @@ func testAccRancher2SecretV2Disappears(cat *SecretV2) resource.TestCheckFunc {
 				Delay:      1 * time.Second,
 				MinTimeout: 3 * time.Second,
 			}
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf("[ERROR] waiting for secret (%s) to be deleted: %s", secret.ID, waitErr)
 			}

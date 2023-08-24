@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -64,8 +66,8 @@ func TestAccRancher2MultiClusterApp_basic(t *testing.T) {
 	var app *managementClient.MultiClusterApp
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2MultiClusterAppDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2MultiClusterAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2MultiClusterAppConfig,
@@ -107,8 +109,8 @@ func TestAccRancher2MultiClusterApp_disappears(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2MultiClusterAppDestroy,
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2MultiClusterAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2MultiClusterAppConfig,
@@ -147,7 +149,7 @@ func testAccRancher2MultiClusterAppDisappears(mca *managementClient.MultiCluster
 				return fmt.Errorf("Error removing multi cluster app: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"removing"},
 				Target:     []string{"removed"},
 				Refresh:    multiClusterAppStateRefreshFunc(client, rs.Primary.ID),
@@ -156,7 +158,7 @@ func testAccRancher2MultiClusterAppDisappears(mca *managementClient.MultiCluster
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for multi cluster app (%s) to be removed: %s", rs.Primary.ID, waitErr)

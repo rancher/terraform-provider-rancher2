@@ -1,12 +1,14 @@
 package rancher2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -248,9 +250,9 @@ func TestAccRancher2Notifier_basic_Dingtalk(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierDingtalkConfig,
@@ -293,9 +295,9 @@ func TestAccRancher2Notifier_disappears_Dingtalk(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierDingtalkConfig,
@@ -313,9 +315,9 @@ func TestAccRancher2Notifier_basic_MSTeams(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierMSTeamsConfig,
@@ -358,9 +360,9 @@ func TestAccRancher2Notifier_disappears_MSTeams(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierMSTeamsConfig,
@@ -378,9 +380,9 @@ func TestAccRancher2Notifier_basic_Pagerduty(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierPagerdutyConfig,
@@ -422,9 +424,9 @@ func TestAccRancher2Notifier_disappears_Pagerduty(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierPagerdutyConfig,
@@ -442,9 +444,9 @@ func TestAccRancher2Notifier_basic_Slack(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierSlackConfig,
@@ -488,9 +490,9 @@ func TestAccRancher2Notifier_disappears_Slack(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierSlackConfig,
@@ -508,9 +510,9 @@ func TestAccRancher2Notifier_basic_SMTP(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierSMTPConfig,
@@ -554,9 +556,9 @@ func TestAccRancher2Notifier_disappears_SMTP(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierSMTPConfig,
@@ -574,9 +576,9 @@ func TestAccRancher2Notifier_basic_Webhook(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierWebhookConfig,
@@ -617,9 +619,9 @@ func TestAccRancher2Notifier_disappears_Webhook(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierWebhookConfig,
@@ -637,9 +639,9 @@ func TestAccRancher2Notifier_basic_Wechat(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierWechatConfig,
@@ -683,9 +685,9 @@ func TestAccRancher2Notifier_disappears_Wechat(t *testing.T) {
 	var notifier *managementClient.Notifier
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2NotifierDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		CheckDestroy:      testAccCheckRancher2NotifierDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRancher2NotifierWechatConfig,
@@ -724,7 +726,7 @@ func testAccRancher2NotifierDisappears(notifier *managementClient.Notifier) reso
 				return fmt.Errorf("Error removing Notifier: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf := &retry.StateChangeConf{
 				Pending:    []string{"active"},
 				Target:     []string{"removed"},
 				Refresh:    notifierStateRefreshFunc(client, rs.Primary.ID),
@@ -733,7 +735,7 @@ func testAccRancher2NotifierDisappears(notifier *managementClient.Notifier) reso
 				MinTimeout: 3 * time.Second,
 			}
 
-			_, waitErr := stateConf.WaitForState()
+			_, waitErr := stateConf.WaitForStateContext(context.Background())
 			if waitErr != nil {
 				return fmt.Errorf(
 					"[ERROR] waiting for notifier (%s) to be removed: %s", rs.Primary.ID, waitErr)
