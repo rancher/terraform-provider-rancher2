@@ -9,7 +9,6 @@ import (
 
 func main() {
 	var debug bool
-
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
@@ -17,6 +16,5 @@ func main() {
 		Debug:        debug,
 		ProviderFunc: rancher2.Provider,
 	}
-
 	plugin.Serve(opts)
 }
