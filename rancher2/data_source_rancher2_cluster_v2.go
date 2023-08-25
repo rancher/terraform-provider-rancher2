@@ -109,14 +109,23 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 			"local_auth_endpoint": {
 				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"cluster_agent_deployment_customization": {
 				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"fleet_agent_deployment_customization": {
 				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
