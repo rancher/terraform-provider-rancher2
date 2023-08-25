@@ -64,6 +64,15 @@ func dataSourceRancher2NodePool() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			/*
+				TODO - ANDY I added the following fields here cause v2 was panicking. AS they didn't exists I used computed.
+				/go/src/github.com/terraform-providers/terraform-provider-rancher2/rancher2/structure_node_pool.go:19 +0x13c
+				/go/src/github.com/terraform-providers/terraform-provider-rancher2/rancher2/data_source_rancher2_node_pool.go:103 +0x3c5
+			*/
+			"drain_before_delete": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
