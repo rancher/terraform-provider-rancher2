@@ -114,17 +114,19 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 				},
 			},
 			"cluster_agent_deployment_customization": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Optional customization for cluster agent",
+				Elem: &schema.Resource{
+					Schema: agentDeploymentCustomizationFields(),
 				},
 			},
 			"fleet_agent_deployment_customization": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Optional customization for fleet agent",
+				Elem: &schema.Resource{
+					Schema: agentDeploymentCustomizationFields(),
 				},
 			},
 		},
