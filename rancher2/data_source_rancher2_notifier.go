@@ -93,6 +93,11 @@ func dataSourceRancher2Notifier() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			// TODO - ANDY I added the following fields here cause v2 was panicking. AS they didn't exists I used computed
+			"send_resolved": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
