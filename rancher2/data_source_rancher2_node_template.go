@@ -83,6 +83,16 @@ func dataSourceRancher2NodeTemplate() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+
+			// TODO - ANDY I look into this one caue I had to fix the node pool this two were set but not present
+			"auth_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auth_certificate_authority": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
