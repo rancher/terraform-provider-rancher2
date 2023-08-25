@@ -205,6 +205,42 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			/*
+				TODO - ANDY I added the following fields here cause v2 was panicking. AS they didn't exists I used computed.
+				panic: Invalid address to set: []string{"local_auth_endpoint"}
+				/go/src/github.com/terraform-providers/terraform-provider-rancher2/rancher2/structure_cluster_v2.go:52 +0x4ed
+				/go/src/github.com/terraform-providers/terraform-provider-rancher2/rancher2/resource_rancher2_cluster_v2.go:154 +0x4c9
+				/go/src/github.com/terraform-providers/terraform-provider-rancher2/rancher2/data_source_rancher2_cluster_v2.go:109 +0xf6
+			*/
+
+			"cluster_agent_deployment_customization": {
+				Type:     schema.TypeList,
+				Computed: true,
+			},
+			"fleet_agent_deployment_customization": {
+				Type:     schema.TypeList,
+				Computed: true,
+			},
+			"desired_agent_image": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"desired_auth_image": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"docker_root_dir": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"istio_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"windows_prefered_cluster": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
