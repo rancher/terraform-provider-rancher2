@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"bytes"
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -112,18 +114,8 @@ func init() {
 	testClusterV2Conf.Spec.ClusterAgentDeploymentCustomization = testClusterV2AgentDeploymentCustomizationConf
 	testClusterV2Conf.Spec.FleetAgentDeploymentCustomization = testClusterV2AgentDeploymentCustomizationConf
 
-	testClusterV2AgentCustomizationInterface = []interface{}{
-		map[string]interface{}{
-			"append_tolerations": []interface{}{
-				map[string]interface{}{
-					"effect":   "NoSchedule",
-					"key":      "tolerate/test",
-					"operator": "Equal",
-					"seconds":  0,
-					"value":    "true",
-				},
-			},
-			"override_affinity": `{
+	overrideAffinityJson := bytes.Buffer{}
+	_ = json.Compact(&overrideAffinityJson, []byte(`{
   				"nodeAffinity": {
     				"requiredDuringSchedulingIgnoredDuringExecution": {
       					"nodeSelectorTerms": [
@@ -141,7 +133,20 @@ func init() {
       					]
     				}
   				}
-			}`,
+			}`))
+
+	testClusterV2AgentCustomizationInterface = []interface{}{
+		map[string]interface{}{
+			"append_tolerations": []interface{}{
+				map[string]interface{}{
+					"effect":   "NoSchedule",
+					"key":      "tolerate/test",
+					"operator": "Equal",
+					"seconds":  0,
+					"value":    "true",
+				},
+			},
+			"override_affinity": overrideAffinityJson.String(),
 			"override_resource_requirements": []interface{}{
 				map[string]interface{}{
 					"cpu_limit":      "500",
