@@ -437,9 +437,9 @@ func resourceRancher2ClusterUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		// read cluster after update. If an error is returned then the read failed and is non retryable, else
 		// it was successful
-		diag2 := resourceRancher2ClusterRead(ctx, d, meta)
-		if diag2.HasError() {
-			return retry.NonRetryableError(errors.New(diag2[0].Summary))
+		diagnostics := resourceRancher2ClusterRead(ctx, d, meta)
+		if diagnostics.HasError() {
+			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
 		}
 
 		return nil

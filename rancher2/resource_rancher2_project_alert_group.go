@@ -30,9 +30,9 @@ func resourceRancher2ProjectAlertGroup() *schema.Resource {
 }
 
 func resourceRancher2ProjectAlertGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	diag2 := resourceRancher2ProjectAlertGroupRecients(ctx, d, meta)
-	if diag2.HasError() {
-		return diag2
+	diagnostics := resourceRancher2ProjectAlertGroupRecients(ctx, d, meta)
+	if diagnostics.HasError() {
+		return diagnostics
 	}
 	projectAlertGroup := expandProjectAlertGroup(d)
 
@@ -105,9 +105,9 @@ func resourceRancher2ProjectAlertGroupUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	if d.HasChange("recipients") {
-		diag2 := resourceRancher2ProjectAlertGroupRecients(ctx, d, meta)
-		if diag2.HasError() {
-			return diag2
+		diagnostics := resourceRancher2ProjectAlertGroupRecients(ctx, d, meta)
+		if diagnostics.HasError() {
+			return diagnostics
 		}
 	}
 
