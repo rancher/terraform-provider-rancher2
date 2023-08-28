@@ -40,9 +40,9 @@ func resourceRancher2AppCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
-	diag2 := resourceRancher2AppGetVersion(ctx, d, meta)
-	if diag2.HasError() {
-		return diag2
+	diagnostics := resourceRancher2AppGetVersion(ctx, d, meta)
+	if diagnostics.HasError() {
+		return diagnostics
 	}
 
 	app, err := expandApp(d)

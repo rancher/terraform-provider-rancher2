@@ -183,8 +183,8 @@ func resourceRancher2ClusterTemplateCreate(ctx context.Context, d *schema.Resour
 			}
 		}
 
-		if diag2 := resourceRancher2ClusterTemplateRead(ctx, d, meta); diag2.HasError() {
-			return retry.NonRetryableError(errors.New(diag2[0].Summary))
+		if diagnostics := resourceRancher2ClusterTemplateRead(ctx, d, meta); diagnostics.HasError() {
+			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
 		}
 
 		return nil
@@ -275,8 +275,8 @@ func resourceRancher2ClusterTemplateUpdate(ctx context.Context, d *schema.Resour
 			}
 		}
 
-		if diag2 := resourceRancher2ClusterTemplateRead(ctx, d, meta); diag2.HasError() {
-			return retry.NonRetryableError(errors.New(diag2[0].Summary))
+		if diagnostics := resourceRancher2ClusterTemplateRead(ctx, d, meta); diagnostics.HasError() {
+			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
 		}
 
 		return nil

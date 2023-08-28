@@ -56,9 +56,9 @@ func resourceRancher2CertificateCreate(ctx context.Context, d *schema.ResourceDa
 			return retry.NonRetryableError(err)
 		}
 
-		diag2 := resourceRancher2CertificateRead(ctx, d, meta)
-		if diag2.HasError() {
-			return retry.NonRetryableError(errors.New(diag2[0].Summary))
+		diagnostics := resourceRancher2CertificateRead(ctx, d, meta)
+		if diagnostics.HasError() {
+			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
 		}
 
 		return nil
@@ -119,9 +119,9 @@ func resourceRancher2CertificateUpdate(ctx context.Context, d *schema.ResourceDa
 			return retry.NonRetryableError(err)
 		}
 
-		diag2 := resourceRancher2CertificateRead(ctx, d, meta)
-		if diag2.HasError() {
-			return retry.NonRetryableError(errors.New(diag2[0].Summary))
+		diagnostics := resourceRancher2CertificateRead(ctx, d, meta)
+		if diagnostics.HasError() {
+			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
 		}
 
 		return nil

@@ -56,9 +56,9 @@ func resourceRancher2SecretCreate(ctx context.Context, d *schema.ResourceData, m
 			return retry.NonRetryableError(err)
 		}
 
-		diag2 := resourceRancher2SecretRead(ctx, d, meta)
-		if diag2.HasError() {
-			return retry.NonRetryableError(errors.New(diag2[0].Summary))
+		diagnostics := resourceRancher2SecretRead(ctx, d, meta)
+		if diagnostics.HasError() {
+			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
 		}
 
 		return nil
@@ -116,9 +116,9 @@ func resourceRancher2SecretUpdate(ctx context.Context, d *schema.ResourceData, m
 			return retry.NonRetryableError(err)
 		}
 
-		diag2 := resourceRancher2SecretRead(ctx, d, meta)
-		if diag2.HasError() {
-			return retry.NonRetryableError(errors.New(diag2[0].Summary))
+		diagnostics := resourceRancher2SecretRead(ctx, d, meta)
+		if diagnostics.HasError() {
+			return retry.NonRetryableError(errors.New(diagnostics[0].Summary))
 		}
 
 		return nil

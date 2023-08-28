@@ -188,9 +188,9 @@ func resourceRancher2SettingDelete(ctx context.Context, d *schema.ResourceData, 
 			return diag.FromErr(err)
 		}
 
-		diag2 := resourceRancher2SettingUpdate(ctx, d, meta)
-		if diag2.HasError() {
-			return diag2
+		diagnostics := resourceRancher2SettingUpdate(ctx, d, meta)
+		if diagnostics.HasError() {
+			return diagnostics
 		}
 	}
 
