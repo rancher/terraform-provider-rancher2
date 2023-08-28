@@ -114,8 +114,8 @@ func init() {
 	testClusterV2Conf.Spec.ClusterAgentDeploymentCustomization = testClusterV2AgentDeploymentCustomizationConf
 	testClusterV2Conf.Spec.FleetAgentDeploymentCustomization = testClusterV2AgentDeploymentCustomizationConf
 
-	overrideAffinityJson := bytes.Buffer{}
-	_ = json.Compact(&overrideAffinityJson, []byte(`{
+	overrideAffinityBuffer := bytes.Buffer{}
+	_ = json.Compact(&overrideAffinityBuffer, []byte(`{
   				"nodeAffinity": {
     				"requiredDuringSchedulingIgnoredDuringExecution": {
       					"nodeSelectorTerms": [
@@ -146,7 +146,7 @@ func init() {
 					"value":    "true",
 				},
 			},
-			"override_affinity": overrideAffinityJson.String(),
+			"override_affinity": overrideAffinityBuffer.String(),
 			"override_resource_requirements": []interface{}{
 				map[string]interface{}{
 					"cpu_limit":      "500",
