@@ -60,10 +60,18 @@ func flattenClusterV2(d *schema.ResourceData, in *ClusterV2) error {
 		d.Set("cloud_credential_secret_name", in.Spec.CloudCredentialSecretName)
 	}
 	if in.Spec.ClusterAgentDeploymentCustomization != nil {
-		d.Set("cluster_agent_deployment_customization", flattenAgentDeploymentCustomizationV2(in.Spec.ClusterAgentDeploymentCustomization))
+		flat, err := flattenAgentDeploymentCustomizationV2(in.Spec.ClusterAgentDeploymentCustomization)
+		if err != nil {
+			return err
+		}
+		d.Set("cluster_agent_deployment_customization", flat)
 	}
 	if in.Spec.FleetAgentDeploymentCustomization != nil {
-		d.Set("fleet_agent_deployment_customization", flattenAgentDeploymentCustomizationV2(in.Spec.FleetAgentDeploymentCustomization))
+		flat, err := flattenAgentDeploymentCustomizationV2(in.Spec.ClusterAgentDeploymentCustomization)
+		if err != nil {
+			return err
+		}
+		d.Set("fleet_agent_deployment_customization", flat)
 	}
 	if len(in.Spec.DefaultPodSecurityPolicyTemplateName) > 0 {
 		d.Set("default_pod_security_policy_template_name", in.Spec.DefaultPodSecurityPolicyTemplateName)

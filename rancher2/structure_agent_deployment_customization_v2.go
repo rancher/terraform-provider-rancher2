@@ -9,9 +9,9 @@ import (
 
 // Flatteners
 
-func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization) []interface{} {
+func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization) ([]interface{}, error) {
 	if in == nil {
-		return []interface{}{}
+		return []interface{}{}, nil
 	}
 
 	obj := make(map[string]interface{})
@@ -21,16 +21,18 @@ func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization) 
 	}
 
 	if in.OverrideAffinity != nil {
-		b, _ := interfaceToJSON(in.OverrideAffinity)
-		_ = b
-		obj["override_affinity"] = b // TODO - ANDY, changed it to keep it simpler instead of creating a new schema.  The expand reads a json
+		b, err := interfaceToJSON(in.OverrideAffinity)
+		if err != nil {
+			return []interface{}{}, err
+		}
+		obj["override_affinity"] = b // TODO - ANDY, changed it to keep it simpler instead of creating a new schema.  The expand reads a json.
 	}
 
 	if in.OverrideResourceRequirements != nil {
 		obj["override_resource_requirements"] = flattenResourceRequirementsV2(in.OverrideResourceRequirements) // TODO - ANDY added a flatten
 	}
 
-	return []interface{}{obj}
+	return []interface{}{obj}, nil
 }
 
 // Expanders
