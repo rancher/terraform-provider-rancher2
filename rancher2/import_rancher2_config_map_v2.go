@@ -13,8 +13,11 @@ func resourceRancher2ConfigMapV2Import(ctx context.Context, d *schema.ResourceDa
 	d.Set("name", name)
 
 	diag := resourceRancher2ConfigMapV2Read(ctx, d, meta)
-	if diag.HasError() || d.Id() == "" { // TODO - Check this if, it can break, didn't change the logic,.
+	if diag.HasError() {
 		return []*schema.ResourceData{}, errors.New(diag[0].Summary)
+	}
+	if d.Id() == "" {
+		return []*schema.ResourceData{}, nil
 	}
 
 	return []*schema.ResourceData{d}, nil

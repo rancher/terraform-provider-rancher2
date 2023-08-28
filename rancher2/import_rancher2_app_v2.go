@@ -13,8 +13,11 @@ func resourceRancher2AppV2Import(ctx context.Context, d *schema.ResourceData, me
 	d.Set("name", name)
 
 	diag := resourceRancher2AppV2Read(ctx, d, meta)
-	if diag.HasError() || d.Id() == "" { // TODO  _VER
+	if diag.HasError() {
 		return []*schema.ResourceData{}, errors.New(diag[0].Summary)
+	}
+	if d.Id() == "" {
+		return []*schema.ResourceData{}, nil
 	}
 
 	return []*schema.ResourceData{d}, nil
