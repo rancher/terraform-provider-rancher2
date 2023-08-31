@@ -191,7 +191,7 @@ The following attributes are exported:
 
 * `access_token` - (Optional/Sensitive) Digital Ocean access token. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `backups` - (Optional) Enable backups for droplet. Default `false` (bool)
-* `image` - (Optional) Digital Ocean Image. Default `ubuntu-16-04-x64` (string)
+* `image` - (Optional) Digital Ocean Image. Default `ubuntu-22-04-x64` (string)
 * `ipv6` - (Optional) Enable ipv6 for droplet. Default `false` (bool)
 * `monitoring` - (Optional) Enable monitoring for droplet. Default `false` (bool)
 * `private_networking` - (Optional) Enable private networking for droplet. Default `false` (bool)
