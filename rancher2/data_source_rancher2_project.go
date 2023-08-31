@@ -12,7 +12,7 @@ import (
 
 func dataSourceRancher2Project() *schema.Resource {
 	return &schema.Resource{
-		Exists:      dataSourceRancher2ProjectExists, // TODO Check if I can delete.
+		Exists:      dataSourceRancher2ProjectExists, // TODO Check if it can deleted.
 		ReadContext: dataSourceRancher2ProjectRead,
 
 		Schema: map[string]*schema.Schema{

@@ -25,11 +25,11 @@ func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization) 
 		if err != nil {
 			return []interface{}{}, err
 		}
-		obj["override_affinity"] = b // TODO - ANDY, changed it to keep it simpler instead of creating a new schema.  The expand reads a json.
+		obj["override_affinity"] = b
 	}
 
 	if in.OverrideResourceRequirements != nil {
-		obj["override_resource_requirements"] = flattenResourceRequirementsV2(in.OverrideResourceRequirements) // TODO - ANDY added a flatten
+		obj["override_resource_requirements"] = flattenResourceRequirementsV2(in.OverrideResourceRequirements)
 	}
 
 	return []interface{}{obj}, nil
