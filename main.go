@@ -16,5 +16,6 @@ func main() {
 		Debug:        debug,
 		ProviderFunc: rancher2.Provider,
 	}
+
 	plugin.Serve(opts)
 }
