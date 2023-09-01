@@ -68,7 +68,7 @@ func TestFlattenConfigMapV2(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, configMapV2Fields(), tc.ExpectedOutput)
 		err := flattenConfigMapV2(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {

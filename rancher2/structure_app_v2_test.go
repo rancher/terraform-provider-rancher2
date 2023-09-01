@@ -171,7 +171,7 @@ func TestFlattenAppV2(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, appV2Fields(), tc.ExpectedOutput)
 		err := flattenAppV2(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
@@ -199,7 +199,7 @@ func TestExpandChartInstallV2(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, appV2Fields(), tc.Input)
 		_, output, err := expandChartInstallV2(inputResourceData, tc.ChartInfo)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -223,7 +223,7 @@ func TestExpandChartInstallActionV2(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, appV2Fields(), tc.Input)
 		output, err := expandChartInstallActionV2(inputResourceData, tc.ChartInfo)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		tc.ExpectedOutput.Timeout = output.Timeout
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
@@ -248,7 +248,7 @@ func TestExpandChartUpgradeV2(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, appV2Fields(), tc.Input)
 		_, output, err := expandChartUpgradeV2(inputResourceData, tc.ChartInfo)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -272,7 +272,7 @@ func TestExpandChartUpgradeActionV2(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, appV2Fields(), tc.Input)
 		output, err := expandChartUpgradeActionV2(inputResourceData, tc.ChartInfo)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		tc.ExpectedOutput.Timeout = output.Timeout
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")

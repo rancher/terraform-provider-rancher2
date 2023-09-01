@@ -81,7 +81,7 @@ func TestFlattenClusterRKEConfigMonitoring(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigMonitoring(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -102,7 +102,7 @@ func TestExpandClusterRKEConfigMonitoring(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigMonitoring(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}

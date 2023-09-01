@@ -160,7 +160,7 @@ func TestFlattenNamespace(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, namespaceFields(), map[string]interface{}{})
 		err := flattenNamespace(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {

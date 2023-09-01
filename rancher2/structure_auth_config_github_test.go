@@ -52,7 +52,7 @@ func TestFlattenAuthConfigGithub(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, authConfigGithubFields(), map[string]interface{}{})
 		err := flattenAuthConfigGithub(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
@@ -77,7 +77,7 @@ func TestExpandAuthConfigGithub(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, authConfigGithubFields(), tc.Input)
 		output, err := expandAuthConfigGithub(inputResourceData)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}

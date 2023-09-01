@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -40,7 +41,7 @@ func init() {
 
 func TestProvider(t *testing.T) {
 	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
-		t.Fatalf("err: %s", err)
+		assert.FailNow(t, "err: %s", err)
 	}
 }
 
@@ -51,7 +52,7 @@ func TestProvider_impl(t *testing.T) {
 func testAccPreCheck(t *testing.T) {
 	err := testAccCheck()
 	if err != nil {
-		t.Fatalf("%v", err)
+		assert.FailNow(t, "%v", err)
 	}
 }
 

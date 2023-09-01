@@ -586,7 +586,7 @@ func TestFlattenClusterRegistrationToken(t *testing.T) {
 		tc.Input.ID = "id"
 		output, err := flattenClusterRegistrationToken(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -661,7 +661,7 @@ func TestFlattenCluster(t *testing.T) {
 		tc.InputToken.ID = "id"
 		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
@@ -702,7 +702,7 @@ func TestExpandClusterRegistrationToken(t *testing.T) {
 		output, err := expandClusterRegistrationToken(tc.Input, tc.ExpectedOutput.ClusterID)
 		tc.ExpectedOutput.ID = "id"
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -760,7 +760,7 @@ func TestExpandCluster(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, clusterFields(), tc.Input)
 		output, err := expandCluster(inputResourceData)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -810,7 +810,7 @@ func TestFlattenClusterWithPreservedClusterTemplateAnswers(t *testing.T) {
 		tc.InputToken.ID = "id"
 		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {

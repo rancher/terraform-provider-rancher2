@@ -125,7 +125,7 @@ func TestFlattenClusterRKEConfigCloudProviderVsphereDisk(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigCloudProviderVsphereDisk(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -146,7 +146,7 @@ func TestFlattenClusterRKEConfigCloudProviderVsphereGlobal(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigCloudProviderVsphereGlobal(tc.Input, testClusterRKEConfigCloudProviderVsphereGlobalInterface)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -167,7 +167,7 @@ func TestFlattenClusterRKEConfigCloudProviderVsphereNetwork(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigCloudProviderVsphereNetwork(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -188,7 +188,7 @@ func TestFlattenClusterRKEConfigCloudProviderVsphereVirtualCenter(t *testing.T) 
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigCloudProviderVsphereVirtualCenter(tc.Input, testClusterRKEConfigCloudProviderVsphereVirtualCenterInterface)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -209,7 +209,7 @@ func TestFlattenClusterRKEConfigCloudProviderVsphereWorkspace(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigCloudProviderVsphereWorkspace(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -230,7 +230,7 @@ func TestFlattenClusterRKEConfigCloudProviderVsphere(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigCloudProviderVsphere(tc.Input, testClusterRKEConfigCloudProviderVsphereInterface)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -251,7 +251,7 @@ func TestExpandClusterRKEConfigCloudProviderVsphereDisk(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigCloudProviderVsphereDisk(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -272,7 +272,7 @@ func TestExpandClusterRKEConfigCloudProviderVsphereGlobal(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigCloudProviderVsphereGlobal(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -293,7 +293,7 @@ func TestExpandClusterRKEConfigCloudProviderVsphereNetwork(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigCloudProviderVsphereNetwork(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -314,7 +314,7 @@ func TestExpandClusterRKEConfigCloudProviderVsphereVirtualCenter(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigCloudProviderVsphereVirtualCenter(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -335,7 +335,7 @@ func TestExpandClusterRKEConfigCloudProviderVsphereWorkspace(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigCloudProviderVsphereWorkspace(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -356,7 +356,7 @@ func TestExpandClusterRKEConfigCloudProviderVsphere(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigCloudProviderVsphere(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}

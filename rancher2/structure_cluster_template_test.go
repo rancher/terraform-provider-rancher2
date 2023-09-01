@@ -213,7 +213,7 @@ func TestFlattenClusterSpecBase(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterSpecBase(tc.Input, tc.ExpectedOutput)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -234,7 +234,7 @@ func TestFlattenClusterTemplateRevisions(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterTemplateRevisions(tc.Input, "default_revision_id", tc.ExpectedOutput)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -258,7 +258,7 @@ func TestFlattenClusterTemplate(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, clusterTemplateFields(), tc.ExpectedOutput)
 		err := flattenClusterTemplate(output, tc.Input, tc.Revisions)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
@@ -267,7 +267,7 @@ func TestFlattenClusterTemplate(t *testing.T) {
 
 		expectedOutput["template_revisions"].([]interface{})[0].(map[string]interface{})["cluster_config"].([]interface{})[0].(map[string]interface{})["rke_config"], _ = flattenClusterRKEConfig(testClusterTemplateRevisionsConfigRKEConf, []interface{}{})
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, expectedOutput)
 		}
 	}
@@ -306,7 +306,7 @@ func TestExpandClusterSpecBase(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterSpecBase(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -327,7 +327,7 @@ func TestExpandClusterTemplateRevisions(t *testing.T) {
 	for _, tc := range cases {
 		_, output, err := expandClusterTemplateRevisions(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -349,7 +349,7 @@ func TestExpandClusterTemplate(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, clusterTemplateFields(), tc.Input)
 		_, output, _, err := expandClusterTemplate(inputResourceData)
 		if err != nil {
-			t.Fatalf("[ERROR] on expnader: %#v", err)
+			assert.FailNow(t, "[ERROR] on expnader: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}

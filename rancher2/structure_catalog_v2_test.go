@@ -80,7 +80,7 @@ func TestFlattenCatalogV2(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, catalogV2Fields(), tc.ExpectedOutput)
 		err := flattenCatalogV2(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {

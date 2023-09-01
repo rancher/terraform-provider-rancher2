@@ -62,7 +62,7 @@ func TestFlattenAuthConfigKeyCloak(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, authConfigKeyCloakFields(), map[string]interface{}{})
 		err := flattenAuthConfigKeyCloak(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
@@ -88,7 +88,7 @@ func TestExpandAuthConfigKeyCloak(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, authConfigKeyCloakFields(), tc.Input)
 		output, err := expandAuthConfigKeyCloak(inputResourceData)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}

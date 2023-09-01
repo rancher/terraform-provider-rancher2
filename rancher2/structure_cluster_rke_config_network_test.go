@@ -365,7 +365,7 @@ func TestFlattenClusterRKEConfigNetworkAci(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigNetworkAci(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -386,7 +386,7 @@ func TestFlattenClusterRKEConfigNetworkCalico(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigNetworkCalico(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -407,7 +407,7 @@ func TestFlattenClusterRKEConfigNetworkCanal(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigNetworkCanal(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -428,7 +428,7 @@ func TestFlattenClusterRKEConfigNetworkFlannel(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigNetworkFlannel(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -449,7 +449,7 @@ func TestFlattenClusterRKEConfigNetworkWeave(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigNetworkWeave(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -486,7 +486,7 @@ func TestFlattenClusterRKEConfigNetwork(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigNetwork(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
@@ -507,7 +507,7 @@ func TestExpandClusterRKEConfigNetworkAci(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigNetworkAci(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -528,7 +528,7 @@ func TestExpandClusterRKEConfigNetworkCalico(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigNetworkCalico(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -549,7 +549,7 @@ func TestExpandClusterRKEConfigNetworkCanal(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigNetworkCanal(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -570,7 +570,7 @@ func TestExpandClusterRKEConfigNetworkFlannel(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigNetworkFlannel(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -591,7 +591,7 @@ func TestExpandClusterRKEConfigNetworkWeave(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigNetworkWeave(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
@@ -628,7 +628,7 @@ func TestExpandClusterRKEConfigNetwork(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigNetwork(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
