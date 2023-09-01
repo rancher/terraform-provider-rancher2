@@ -10,7 +10,7 @@ require (
 	github.com/rancher/rancher v0.0.0-20230525094739-ff2e09449efc
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
-	golang.org/x/crypto v0.10.0
+	golang.org/x/crypto v0.12.0
 	github.com/rancher/tfp-automation v0.0.0-20230809214753-73e576db407e
 	github.com/stretchr/testify v1.8.3
 	golang.org/x/crypto v0.6.0
@@ -27,7 +27,7 @@ require (
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 // indirect
 	github.com/hashicorp/hc-install v0.5.2 // indirect
-	github.com/hashicorp/terraform-plugin-go v0.16.0 // indirect
+	github.com/hashicorp/terraform-plugin-go v0.18.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.2.1 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
@@ -105,6 +105,9 @@ require (
 	github.com/hashicorp/terraform-json v0.13.0 // indirect
 	github.com/hashicorp/terraform-plugin-test/v2 v2.2.1 // indirect
 	github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 // indirect
+	github.com/hashicorp/terraform-exec v0.18.1 // indirect
+	github.com/hashicorp/terraform-json v0.17.1 // indirect
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.28.0
 	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/huandu/xstrings v1.3.3 // indirect
