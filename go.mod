@@ -11,7 +11,7 @@ require (
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
 	github.com/rancher/tfp-automation v0.0.0-20230809214753-73e576db407e
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.6.0
 	golang.org/x/sync v0.2.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -115,7 +115,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pkg/sftp v1.13.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/posener/complete v1.2.3 // indirect
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.52.0 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
@@ -135,8 +134,6 @@ require (
 	github.com/sirupsen/logrus v1.9.2 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/tmccombs/hcl2json v0.3.3 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
