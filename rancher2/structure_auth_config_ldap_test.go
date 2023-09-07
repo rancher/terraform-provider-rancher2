@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -90,14 +91,14 @@ func TestFlattenAuthConfigLdap(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, authConfigLdapFields(), map[string]interface{}{})
 		err := flattenAuthConfigLdap(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, expectedOutput)
 		}
 	}
@@ -119,11 +120,8 @@ func TestExpandAuthConfigLdap(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, authConfigLdapFields(), tc.Input)
 		output, err := expandAuthConfigLdap(inputResourceData)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

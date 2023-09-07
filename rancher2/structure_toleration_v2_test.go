@@ -1,9 +1,9 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -48,10 +48,7 @@ func TestFlattenTolerationsV2(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenTolerationsV2(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -69,9 +66,6 @@ func TestExpandTolerationsV2(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandTolerationsV2(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
@@ -144,10 +144,7 @@ func TestFlattenClusterV2RKEConfigMachinePoolMachineConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfigMachinePoolMachineConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -165,10 +162,7 @@ func TestFlattenClusterV2RKEConfigMachinePoolRollingUpdate(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfigMachinePoolRollingUpdate(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -186,10 +180,7 @@ func TestFlattenClusterV2RKEConfigMachinePools(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfigMachinePools(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -207,10 +198,7 @@ func TestExpandClusterV2RKEConfigMachinePoolMachineConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigMachinePoolMachineConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -228,10 +216,7 @@ func TestExpandClusterV2RKEConfigMachinePoolRollingUpdate(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigMachinePoolRollingUpdate(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -249,10 +234,7 @@ func TestExpandClusterV2RKEConfigMachinePools(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfigMachinePools(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 

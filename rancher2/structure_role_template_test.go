@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -182,14 +183,14 @@ func TestFlattenRoleTemplate(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, roleTemplateFields(), tc.ExpectedOutput)
 		err := flattenRoleTemplate(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				expectedOutput, tc.ExpectedOutput)
 		}
 	}
@@ -214,9 +215,6 @@ func TestExpandRoleTemplate(t *testing.T) {
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, roleTemplateFields(), tc.Input)
 		output := expandRoleTemplate(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
