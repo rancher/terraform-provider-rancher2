@@ -1,26 +1,30 @@
-pipeline {
-  agent any
-
-  stages {
-    stage('Build Docker image') {
-      steps {
-        script {
-            writeFile file: 'config.yml', text: params.CONFIG
-            env.CATTLE_TEST_CONFIG='/home/jenkins/workspace/rancher_qa/tfp-automation/config.yml'
-            sh 'docker build --build-arg CONFIG_FILE=config.yml -t tfp-automation .'
+#!groovy
+node {
+  def branch = 'master'
+  def repo = scm.userRemoteConfigs
+  
+  if ("${env.REPO}" != "null" && "${env.REPO}" != "") {
+    repo = [[url: "${env.REPO}"]]
+  }
+  stage('Checkout') {
+          deleteDir()
+          checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${branch}"]],
+                    extensions: scm.extensions + [[$class: 'CleanCheckout']],
+                    userRemoteConfigs: repo
+                  ])
         }
-      }
+    stage('Build Docker image') {
+            writeFile file: 'config.yml', text: env.CONFIG
+            env.CATTLE_TEST_CONFIG='/home/jenkins/workspace/rancher_qa/tfp-automation/config.yml'
+            sh 'docker build --build-arg CONFIG_FILE=config.yml -f tfp-automation/Dockerfile -t tfp-automation . '
     }
-
+    
     stage('Run Module Test') {
-      steps {
-        script {
             def dockerImage = docker.image('tfp-automation')
             dockerImage.inside() {
                 sh "go test -v -timeout 1h -run ${params.TEST_CASE} ./tfp-automation/tests/cluster"
             }
-        }
-      }
     }
-  }
 }
