@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -96,10 +96,7 @@ func TestFlattenRollingUpdate(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenRollingUpdate(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -117,10 +114,7 @@ func TestFlattenRollingUpdateDaemonSet(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenRollingUpdateDaemonSet(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -138,10 +132,7 @@ func TestFlattenRollingUpdateDeployment(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenRollingUpdateDeployment(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -159,10 +150,7 @@ func TestFlattenUpgradeStrategy(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenUpgradeStrategy(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -180,10 +168,7 @@ func TestFlattenDaemonSetStrategy(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenDaemonSetStrategy(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -201,10 +186,7 @@ func TestFlattenDeploymentStrategy(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenDeploymentStrategy(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -222,10 +204,7 @@ func TestExpandRollingUpdate(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandRollingUpdate(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -243,10 +222,7 @@ func TestExpandRollingUpdateDaemonSet(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandRollingUpdateDaemonSet(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -264,10 +240,7 @@ func TestExpandRollingUpdateDeployment(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandRollingUpdateDeployment(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -285,10 +258,7 @@ func TestExpandUpgradeStrategy(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandUpgradeStrategy(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -306,10 +276,7 @@ func TestExpandDaemonSetStrategy(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandDaemonSetStrategy(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -327,9 +294,6 @@ func TestExpandDeploymentStrategy(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandDeploymentStrategy(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

@@ -1,12 +1,12 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -582,17 +582,13 @@ func TestFlattenClusterRegistrationToken(t *testing.T) {
 			testClusterRegistrationTokenInterface,
 		},
 	}
-
 	for _, tc := range cases {
 		tc.Input.ID = "id"
 		output, err := flattenClusterRegistrationToken(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -665,7 +661,7 @@ func TestFlattenCluster(t *testing.T) {
 		tc.InputToken.ID = "id"
 		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
@@ -685,10 +681,8 @@ func TestFlattenCluster(t *testing.T) {
 			expectedOutput["fleet_agent_deployment_customization"] = flattenAgentDeploymentCustomization(tc.Input.FleetAgentDeploymentCustomization)
 		}
 		expectedOutput["id"] = "id"
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, expectedOutput)
-		}
+
+		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
@@ -708,12 +702,9 @@ func TestExpandClusterRegistrationToken(t *testing.T) {
 		output, err := expandClusterRegistrationToken(tc.Input, tc.ExpectedOutput.ClusterID)
 		tc.ExpectedOutput.ID = "id"
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -769,12 +760,9 @@ func TestExpandCluster(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, clusterFields(), tc.Input)
 		output, err := expandCluster(inputResourceData)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -822,7 +810,7 @@ func TestFlattenClusterWithPreservedClusterTemplateAnswers(t *testing.T) {
 		tc.InputToken.ID = "id"
 		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
@@ -833,10 +821,8 @@ func TestFlattenClusterWithPreservedClusterTemplateAnswers(t *testing.T) {
 			expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig, []interface{}{})
 		}
 		expectedOutput["id"] = "id"
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, expectedOutput)
-		}
+
+		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
@@ -874,10 +860,7 @@ func TestReadPreservedClusterTemplateAnswers(t *testing.T) {
 	}
 
 	result := readPreservedClusterTemplateAnswers(inputResourceData)
-	if !reflect.DeepEqual(result, expectedOutput) {
-		t.Fatalf("Unexpected result from preserved answers.\nExpected: %#v\nGiven:    %#v",
-			expectedOutput, result)
-	}
+	assert.Equal(t, expectedOutput, result, "Unexpected result from preserved answers.")
 }
 
 func TestFlattenClusterNodes(t *testing.T) {
@@ -983,10 +966,6 @@ func TestFlattenClusterNodes(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterNodes(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
-
 }
