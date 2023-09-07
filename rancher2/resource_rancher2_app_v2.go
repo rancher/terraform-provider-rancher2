@@ -452,7 +452,7 @@ func getAppV2OperationLogs(c *Config, clusterID string, op map[string]interface{
 		return "", fmt.Errorf("failed to get app v2 operation log %s", op["id"])
 	}
 
-	resp, err := DoGet(links[link], "", "", c.TokenKey, c.CACerts, c.Insecure)
+	resp, err := DoGet(links[link], "", "", c.TokenKey, c.CACerts, c.ProxyURL, c.Insecure)
 	if err != nil {
 		return "", fmt.Errorf("failed to get app v2 operation log %s: %s", op["id"], err)
 	}

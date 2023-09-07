@@ -137,7 +137,7 @@ func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 	return listOpts
 }
 
-func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
+func DoUserLogin(url, proxyURL, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
 	loginURL := url + "/v3-public/localProviders/local?action=login"
 	loginData := `{"username": "` + user + `", "password": "` + pass + `", "ttl": ` + ttl + `, "description": "` + desc + `"}`
 	loginHead := map[string]string{
@@ -146,7 +146,7 @@ func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (stri
 	}
 
 	// Login with user and pass
-	loginResp, err := DoPost(loginURL, loginData, cacert, insecure, loginHead)
+	loginResp, err := DoPost(loginURL, loginData, cacert, proxyURL, insecure, loginHead)
 	if err != nil {
 		return "", "", err
 	}
@@ -158,7 +158,7 @@ func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (stri
 	return loginResp["id"].(string), loginResp["token"].(string), nil
 }
 
-func DoPost(url, data, cacert string, insecure bool, headers map[string]string) (map[string]interface{}, error) {
+func DoPost(url, data, cacert, proxyURL string, insecure bool, headers map[string]string) (map[string]interface{}, error) {
 	response := make(map[string]interface{})
 
 	if url == "" {
@@ -179,7 +179,7 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
-		Proxy:           http.ProxyFromEnvironment,
+		Proxy:           proxyFromConfigOrEnvironment(proxyURL),
 	}
 
 	if cacert != "" {
@@ -213,7 +213,7 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 	return response, nil
 }
 
-func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte, error) {
+func DoGet(url, username, password, token, cacert, proxyURL string, insecure bool) ([]byte, error) {
 	start := time.Now()
 
 	if url == "" {
@@ -239,7 +239,7 @@ func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte
 
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
-		Proxy:           http.ProxyFromEnvironment,
+		Proxy:           proxyFromConfigOrEnvironment(proxyURL),
 	}
 
 	if cacert != "" {
@@ -294,6 +294,15 @@ func NormalizeURL(input string) (string, error) {
 	// Setting empty url path
 	u.Path = ""
 	return u.String(), nil
+}
+
+func proxyFromConfigOrEnvironment(proxyURL string) func(*http.Request) (*url.URL, error) {
+	if proxyURL != "" {
+		if url, err := url.Parse(proxyURL); err == nil {
+			return http.ProxyURL(url)
+		}
+	}
+	return http.ProxyFromEnvironment
 }
 
 func IsUnknownSchemaType(err error) bool {

@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -103,6 +104,11 @@ func Provider() terraform.ResourceProvider {
 					}
 					return
 				},
+			},
+			"proxy_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["proxy_url"],
 			},
 		},
 
@@ -215,6 +221,7 @@ func init() {
 		"bootstrap":  "Bootstrap rancher server",
 		"retries":    "Rancher connection retries",
 		"timeout":    "Rancher connection timeout (retry every 5s). Golang duration format, ex: \"60s\"",
+		"proxy_url":  "(Optional) URL to the proxy to be used for all API requests. URLs with \"http\", \"https\", and \"socks5\" schemes are supported.",
 	}
 }
 
@@ -226,6 +233,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	caCerts := d.Get("ca_certs").(string)
 	insecure := d.Get("insecure").(bool)
 	bootstrap := d.Get("bootstrap").(bool)
+	proxyURL := d.Get("proxy_url").(string)
 
 	timeout, err := time.ParseDuration(d.Get("timeout").(string))
 	if err != nil {
@@ -244,6 +252,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Insecure:  insecure,
 		Bootstrap: bootstrap,
 		Timeout:   timeout,
+		ProxyURL:  proxyURL,
 	}
 
 	return providerValidateConfig(config)
@@ -273,6 +282,19 @@ func providerValidateConfig(config *Config) (*Config, error) {
 			return nil, fmt.Errorf("[ERROR] default timeout is not in golang duration format, error: %v", err)
 		}
 		config.Timeout = timeout
+	}
+
+	// Validate proxy url
+	if config.ProxyURL != "" {
+		proxyURL, err := url.Parse(config.ProxyURL)
+		if err != nil {
+			return nil, fmt.Errorf("[ERROR] invalid proxy address %q: %v", config.ProxyURL, err)
+		}
+		if proxyURL.Scheme != "http" &&
+			proxyURL.Scheme != "https" &&
+			proxyURL.Scheme != "socks5" {
+			return nil, fmt.Errorf("[ERROR] invalid proxy scheme %q (should be one of http, https or socks5)", proxyURL.Scheme)
+		}
 	}
 
 	return config, nil

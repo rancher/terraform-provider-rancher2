@@ -53,6 +53,7 @@ type Config struct {
 	ClusterID            string `json:"clusterId"`
 	ProjectID            string `json:"projectId"`
 	Timeout              time.Duration
+	ProxyURL             string
 	RancherVersion       string
 	K8SDefaultVersion    string
 	K8SSupportedVersions []string
@@ -89,7 +90,7 @@ func (c *Config) isRancherReady() error {
 	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
 	defer cancel()
 	for {
-		resp, err = DoGet(url, "", "", "", c.CACerts, c.Insecure)
+		resp, err = DoGet(url, "", "", "", c.CACerts, c.ProxyURL, c.Insecure)
 		if err == nil && rancher2ReadyAnswer == string(resp) {
 			return nil
 		}
@@ -424,6 +425,7 @@ func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
 		TokenKey: c.TokenKey,
 		CACerts:  c.CACerts,
 		Insecure: c.Insecure,
+		ProxyURL: c.ProxyURL,
 	}
 	return options
 }
