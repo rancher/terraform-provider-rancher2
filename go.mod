@@ -43,7 +43,6 @@ require (
 )
 
 require (
-	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.266 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
