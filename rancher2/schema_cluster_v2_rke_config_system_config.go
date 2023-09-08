@@ -66,29 +66,9 @@ func clusterV2RKEConfigSystemConfigFieldsV0() map[string]*schema.Schema {
 			},
 		},
 		"config": {
-			Type:        schema.TypeString,
+			Type:        schema.TypeMap,
 			Optional:    true,
 			Description: "Machine selector config",
-			ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
-				v, ok := val.(string)
-				if !ok || len(v) == 0 {
-					return
-				}
-				_, err := ghodssyamlToMapInterface(v)
-				if err != nil {
-					errs = append(errs, fmt.Errorf("%q must be in yaml format, error: %v", key, err))
-					return
-				}
-				return
-			},
-			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				if old == "" || new == "" {
-					return false
-				}
-				oldMap, _ := ghodssyamlToMapInterface(old)
-				newMap, _ := ghodssyamlToMapInterface(new)
-				return reflect.DeepEqual(oldMap, newMap)
-			},
 		},
 	}
 
