@@ -149,7 +149,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	newCluster := &Cluster{}
 	if cluster.EKSConfig != nil && !cluster.EKSConfig.Imported {
 		if !checkClusterEKSConfigV2NodeGroupsDesiredSize(cluster) {
-			return fmt.Errorf("[ERROR] can't create %s EKS cluster with node group desired_size = 0. desired_size must be >=1. After initial provisioning, desired_size may be scaled down to 0 at any time.", cluster.Name)
+			return fmt.Errorf("[ERROR] can't create %s EKS cluster with node group desired_size = 0. desired_size must be >=1. After initial provisioning, desired_size may be scaled down to 0 at any time", cluster.Name)
 		}
 		clusterStr, _ := interfaceToJSON(cluster)
 		clusterMap, _ := jsonToMapInterface(clusterStr)
