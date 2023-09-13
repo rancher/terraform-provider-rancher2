@@ -427,15 +427,21 @@ func testAccRancher2UpgradeRancher() resource.TestCheckFunc {
 
 func testAccRancher2UpgradeVars() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
+		for k, rs := range s.RootModule().Resources {
 			if rs.Type != "rancher2_bootstrap" {
 				continue
 			}
-
 			token := rs.Primary.Attributes["token"]
-			os.Setenv("RANCHER_TOKEN_KEY", token)
+			rancherTokenKey := os.Getenv("RANCHER_TOKEN_KEY")
+			rancherAdminPass := os.Getenv("RANCHER_ADMIN_PASS")
+			if err := os.Setenv("RANCHER_TOKEN_KEY", token); err != nil {
+				fmt.Printf("Failed to update RANCHER_TOKEN_KEY on ressource %s with err %s", k, err.Error())
+			}
 			currentPassword := rs.Primary.Attributes["current_password"]
-			os.Setenv("RANCHER_ADMIN_PASS", currentPassword)
+			if err := os.Setenv("RANCHER_ADMIN_PASS", currentPassword); err != nil {
+				fmt.Printf("Failed to update RANCHER_ADMIN_PASS on ressource %s with err %s", k, err.Error())
+			}
+			fmt.Printf("Changing env on ressource %s: RANCHER_TOKEN_KEY: %s -> %s; RANCHER_ADMIN_PASS: %s -> %s", rancherTokenKey, token, rancherAdminPass, currentPassword)
 		}
 		return nil
 
