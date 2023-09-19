@@ -90,7 +90,6 @@ func flattenMachineConfigV2Openstack(in *MachineConfigV2Openstack) []interface{}
 	obj["image_name"] = in.ImageName
 	obj["insecure"] = in.Insecure
 	obj["ip_version"] = in.IPVersion
-	obj["keypair_name"] = in.KeypairName
 	obj["net_id"] = in.NetID
 	obj["net_name"] = in.NetName
 	obj["nova_network"] = in.NovaNetwork
@@ -186,9 +185,6 @@ func expandMachineConfigV2Openstack(p []interface{}, source *MachineConfigV2) *M
 	}
 	if v, ok := in["ip_version"].(string); ok && len(v) > 0 {
 		obj.IPVersion = v
-	}
-	if v, ok := in["keypair_name"].(string); ok && len(v) > 0 {
-		obj.KeypairName = v
 	}
 	if v, ok := in["net_id"].(string); ok && len(v) > 0 {
 		obj.NetID = v
