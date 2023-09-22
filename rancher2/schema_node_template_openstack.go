@@ -127,10 +127,6 @@ func openstackConfigFields() map[string]*schema.Schema {
 			Optional: true,
 			Default:  "4",
 		},
-		"keypair_name": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
 		"net_id": {
 			Type:     schema.TypeString,
 			Optional: true,
