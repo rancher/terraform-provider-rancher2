@@ -77,8 +77,7 @@ func resourceRancher2ClusterDriverRead(ctx context.Context, d *schema.ResourceDa
 				d.SetId("")
 				return nil
 			}
-
-			retry.NonRetryableError(err) // TODO -  This erro should be ignored?  what is happening here shouldnt we have a retunr?
+			return retry.NonRetryableError(err)
 		}
 
 		if err = flattenClusterDriver(d, clusterDriver); err != nil {

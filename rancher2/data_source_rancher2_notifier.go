@@ -67,9 +67,8 @@ func dataSourceRancher2Notifier() *schema.Resource {
 				},
 			},
 			"webhook_config": {
-				Type:          schema.TypeList,
-				Computed:      true,
-				ConflictsWith: []string{"dingtalk_config", "msteams_config", "pagerduty_config", "smtp_config", "slack_config", "wechat_config"},
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: notifierWebhookConfigFields(),
 				},

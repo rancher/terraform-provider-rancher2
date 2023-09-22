@@ -83,10 +83,5 @@ func dataSourceRancher2GlobalDNSProviderRead(ctx context.Context, d *schema.Reso
 		return diag.Errorf("[ERROR] found %d global dns provider with name \"%s\"", count, name)
 	}
 
-	// TODO - Validate if this is required there IMO i se no reason to call it twice.
-	_ = flattenGlobalDNSProvider(d, &globalDNSProvider.Data[0])
-
-	//return fmt.Errorf("[ERROR] %#v\n%#v", d.Get("route53_config"), globalDNSProvider.Data[0].Route53ProviderConfig)
-
 	return diag.FromErr(flattenGlobalDNSProvider(d, &globalDNSProvider.Data[0]))
 }
