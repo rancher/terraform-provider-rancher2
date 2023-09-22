@@ -435,15 +435,14 @@ func testAccRancher2UpgradeVars() resource.TestCheckFunc {
 			rancherTokenKey := os.Getenv("RANCHER_TOKEN_KEY")
 			rancherAdminPass := os.Getenv("RANCHER_ADMIN_PASS")
 			if err := os.Setenv("RANCHER_TOKEN_KEY", token); err != nil {
-				fmt.Printf("Failed to update RANCHER_TOKEN_KEY on ressource %s with err %s", k, err.Error())
+				fmt.Printf("Failed to update RANCHER_TOKEN_KEY on resource %s with err: %s", k, err.Error())
 			}
 			currentPassword := rs.Primary.Attributes["current_password"]
 			if err := os.Setenv("RANCHER_ADMIN_PASS", currentPassword); err != nil {
-				fmt.Printf("Failed to update RANCHER_ADMIN_PASS on ressource %s with err %s", k, err.Error())
+				fmt.Printf("Failed to update RANCHER_ADMIN_PASS on resource %s with err: %s", k, err.Error())
 			}
-			fmt.Printf("Changing env on ressource %s: RANCHER_TOKEN_KEY: %s -> %s; RANCHER_ADMIN_PASS: %s -> %s", k, rancherTokenKey, token, rancherAdminPass, currentPassword)
+			fmt.Printf("Changing env on resource %s: RANCHER_TOKEN_KEY: %s -> %s, RANCHER_ADMIN_PASS: %s -> %s", k, rancherTokenKey, token, rancherAdminPass, currentPassword)
 		}
 		return nil
-
 	}
 }
