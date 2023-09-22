@@ -432,6 +432,9 @@ func testAccRancher2UpgradeVars() resource.TestCheckFunc {
 				continue
 			}
 			token := rs.Primary.Attributes["token"]
+			// This get-envs and this getEnvs and prints were added to debugg a flaky test that was happening resulting on
+			// dangling resources. After they were added the flaky test didn't happen anymore. I believe that the syscall
+			// is fixing a race condition that was generating the flaky test
 			rancherTokenKey := os.Getenv("RANCHER_TOKEN_KEY")
 			rancherAdminPass := os.Getenv("RANCHER_ADMIN_PASS")
 			if err := os.Setenv("RANCHER_TOKEN_KEY", token); err != nil {
