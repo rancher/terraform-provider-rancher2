@@ -60,11 +60,11 @@ func flattenClusterV2(d *schema.ResourceData, in *ClusterV2) error {
 		d.Set("cloud_credential_secret_name", in.Spec.CloudCredentialSecretName)
 	}
 	if in.Spec.ClusterAgentDeploymentCustomization != nil {
-		flat, err := flattenAgentDeploymentCustomizationV2(in.Spec.ClusterAgentDeploymentCustomization)
+		agentDeploymentCustomizationV2, err := flattenAgentDeploymentCustomizationV2(in.Spec.ClusterAgentDeploymentCustomization)
 		if err != nil {
 			return err
 		}
-		d.Set("cluster_agent_deployment_customization", flat)
+		d.Set("cluster_agent_deployment_customization", agentDeploymentCustomizationV2)
 	}
 	if in.Spec.FleetAgentDeploymentCustomization != nil {
 		flat, err := flattenAgentDeploymentCustomizationV2(in.Spec.ClusterAgentDeploymentCustomization)
