@@ -93,11 +93,10 @@ func clusterV2RKEConfigMachinePoolFields() map[string]*schema.Schema {
 			Description: "Machine pool paused",
 		},
 		"quantity": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      1,
-			ValidateFunc: validation.IntAtLeast(1),
-			Description:  "Machine pool quantity",
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Default:     1,
+			Description: "Machine pool quantity",
 		},
 		"rolling_update": {
 			Type:        schema.TypeList,
