@@ -411,6 +411,8 @@ The following attributes are exported:
 
 > **Note:**: `Required**` denotes that either the _name or _id is required unless `application_credential_id` is defined.
 
+> **Note for OpenStack users:**: `keypair_name` is required to be in the schema even if there are no references in rancher itself
+
 ### `vsphere_config`
 
 #### Arguments
