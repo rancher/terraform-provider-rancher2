@@ -265,6 +265,7 @@ The following attributes are exported:
 * `image_name` - (Required+) OpenStack image name to use for the instance. Conflicts with `image_id` (string)
 * `insecure` - (Optional) Disable TLS credential checking. Default `false` (bool)
 * `ip_version` - (Optional) OpenStack version of IP address assigned for the machine Default `4` (string)
+* `keypair_name` - (Optional) OpenStack keypair to use to SSH to the instance (string)
 * `net_id` - (Required+) OpenStack network id the machine will be connected on. Conflicts with `net_name` (string)
 * `net_name` - (Required+) OpenStack network name the machine will be connected on. Conflicts with `net_id` (string)
 * `nova_network` - (Optional) Use the nova networking services instead of neutron (string)
@@ -291,6 +292,7 @@ The following attributes are exported:
 * `volume_device_path` - (Optional) OpenStack volume device path (attaching). Applicable only when `boot_from_volume` is `true`. Omit for auto `/dev/vdb`. (string)
 > **Note:**: `Required+` denotes that either the _name or _id is required but you cannot use both.
 > **Note:**: `Required++` denotes that either the _name or _id is required unless `application_credential_id` is defined.
+> **Note for OpenStack users:**: `keypair_name` is required to be in the schema even if there are no references in rancher itself
 
 ### `vsphere_config`
 
