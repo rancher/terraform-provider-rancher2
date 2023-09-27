@@ -53,15 +53,14 @@ resource "rancher2_namespace" "testacc" {
 	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
 	testAccCheckRancher2UpgradeCertificateV24 = testAccRancher2Certificate + testAccRancher2CertificateNs
 	testAccCheckRancher2BootstrapV23 = `
-provider "rancher2" {
-  alias = "bootstrap"
-
+provider "bootstrap" {
+  
   bootstrap = true
   insecure = true
   token_key = "` + providerDefaultEmptyString + `"
 }
 resource "rancher2_bootstrap" "foo" {
-  provider = rancher2.bootstrap
+  provider = bootstrap
 
   password = "` + testAccRancher2DefaultAdminPass + `"
   telemetry = true
@@ -76,15 +75,14 @@ provider "rancher2" {
 `
 
 	testAccCheckRancher2Bootstrap = `
-provider "rancher2" {
-  alias = "bootstrap"
+provider "bootstrap" {
 
   bootstrap = true
   insecure = true
   token_key = "` + providerDefaultEmptyString + `"
 }
 resource "rancher2_bootstrap" "foo" {
-  provider = rancher2.bootstrap
+  provider = bootstrap
 
   password = "` + testAccRancher2DefaultAdminPass + `"
   telemetry = true
@@ -331,6 +329,7 @@ func TestAccRancher2Upgrade(t *testing.T) {
 			{
 				Config: testAccCheckRancher2BootstrapV23,
 				Check: resource.ComposeTestCheckFunc(
+					testAccRancher2UpgradeVars(),
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
@@ -420,6 +419,25 @@ func testAccRancher2UpgradeRancher() resource.TestCheckFunc {
 			return fmt.Errorf("Waiting for cluster ID %s to be active: %v", testAccRancher2ClusterID, err)
 		}
 		time.Sleep(5 * time.Second)
+		return nil
+	}
+}
+
+func testAccRancher2UpgradeVars() resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for k, rs := range s.RootModule().Resources {
+			if rs.Type != "rancher2_bootstrap" {
+				continue
+			}
+			currentPassword := rs.Primary.Attributes["current_password"]
+			if err := os.Setenv("RANCHER_ADMIN_PASS", currentPassword); err != nil {
+				fmt.Printf("Failed to update RANCHER_ADMIN_PASS based on resource %s with err: %s", k, err.Error())
+			}
+			bootstrapRancherTokenKey := rs.Primary.Attributes["token"]
+			if err := os.Setenv("RANCHER_TOKEN_KEY", bootstrapRancherTokenKey); err != nil {
+				fmt.Printf("Failed to update RANCHER_TOKEN_KEY based on resource %s with err: %s", k, err.Error())
+			}
+		}
 		return nil
 	}
 }
