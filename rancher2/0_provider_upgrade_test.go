@@ -331,7 +331,6 @@ func TestAccRancher2Upgrade(t *testing.T) {
 			{
 				Config: testAccCheckRancher2BootstrapV23,
 				Check: resource.ComposeTestCheckFunc(
-					testAccRancher2UpgradeVars(),
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
@@ -421,31 +420,6 @@ func testAccRancher2UpgradeRancher() resource.TestCheckFunc {
 			return fmt.Errorf("Waiting for cluster ID %s to be active: %v", testAccRancher2ClusterID, err)
 		}
 		time.Sleep(5 * time.Second)
-		return nil
-	}
-}
-
-func testAccRancher2UpgradeVars() resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for k, rs := range s.RootModule().Resources {
-			if rs.Type != "rancher2_bootstrap" {
-				continue
-			}
-			token := rs.Primary.Attributes["token"]
-			// This get-envs and this getEnvs and prints were added to debugg a flaky test that was happening resulting on
-			// dangling resources. After they were added the flaky test didn't happen anymore. I believe that the syscall
-			// is fixing a race condition that was generating the flaky test
-			rancherTokenKey := os.Getenv("RANCHER_TOKEN_KEY")
-			rancherAdminPass := os.Getenv("RANCHER_ADMIN_PASS")
-			if err := os.Setenv("RANCHER_TOKEN_KEY", token); err != nil {
-				fmt.Printf("Failed to update RANCHER_TOKEN_KEY on resource %s with err: %s", k, err.Error())
-			}
-			currentPassword := rs.Primary.Attributes["current_password"]
-			if err := os.Setenv("RANCHER_ADMIN_PASS", currentPassword); err != nil {
-				fmt.Printf("Failed to update RANCHER_ADMIN_PASS on resource %s with err: %s", k, err.Error())
-			}
-			fmt.Printf("Changing env on resource %s: RANCHER_TOKEN_KEY: %s -> %s, RANCHER_ADMIN_PASS: %s -> %s", k, rancherTokenKey, token, rancherAdminPass, currentPassword)
-		}
 		return nil
 	}
 }

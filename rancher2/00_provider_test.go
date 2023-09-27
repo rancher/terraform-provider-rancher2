@@ -6,7 +6,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -55,6 +57,45 @@ func testAccPreCheck(t *testing.T) {
 	if err != nil {
 		assert.FailNow(t, "%v", err)
 	}
+}
+
+// TestGetBootstrapEnv This function doesn't test anything, but it must be run before the other tests.
+// Originally this was happening as the 1st step of TestAccRancher2Upgrade (1st test), but due to some change on the test
+// framework it started generating a flaky test due to the start time of the provider x the env being set.
+// I also tried to get the RANCHER_TOKEN_KEY set through the initialization script but that have inconsistent results
+// wile being used with the bootstrap initialization of the provider. To use that key it would take a major refactor on TestAccRancher2Upgrade.
+func TestGetBootstrapEnv(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+provider "rancher2" {
+  alias = "bootstrap"
+
+  bootstrap = true
+  insecure = true
+  token_key = "` + providerDefaultEmptyString + `"
+}
+resource "rancher2_bootstrap" "foo" {
+  provider = rancher2.bootstrap
+
+  password = "` + testAccRancher2DefaultAdminPass + `"
+  telemetry = true
+}
+provider "rancher2" {
+  api_url = rancher2_bootstrap.foo.url
+  token_key = rancher2_bootstrap.foo.token
+  insecure = true
+}
+`,
+				Check: resource.ComposeTestCheckFunc(
+					testAccRancher2UpgradeVars(),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheck() error {
@@ -121,4 +162,23 @@ func testAccClusterDefaultName(config *Config) error {
 		}
 	}
 	return nil
+}
+
+func testAccRancher2UpgradeVars() resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for k, rs := range s.RootModule().Resources {
+			if rs.Type != "rancher2_bootstrap" {
+				continue
+			}
+			currentPassword := rs.Primary.Attributes["current_password"]
+			if err := os.Setenv("RANCHER_ADMIN_PASS", currentPassword); err != nil {
+				fmt.Printf("Failed to update RANCHER_ADMIN_PASS based on resource %s with err: %s", k, err.Error())
+			}
+			bootstrapRancherTokenKey := rs.Primary.Attributes["token"]
+			if err := os.Setenv("RANCHER_TOKEN_KEY", bootstrapRancherTokenKey); err != nil {
+				fmt.Printf("Failed to update RANCHER_TOKEN_KEY based on resource %s with err: %s", k, err.Error())
+			}
+		}
+		return nil
+	}
 }
