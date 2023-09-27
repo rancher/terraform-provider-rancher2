@@ -15,6 +15,8 @@ var (
 	testClusterV2RKEConfigSystemConfigLabelSelectorInterface           []interface{}
 	testClusterV2RKEConfigSystemConfigConf                             []rkev1.RKESystemConfig
 	testClusterV2RKEConfigSystemConfigInterface                        []interface{}
+	testClusterV2RKEConfigMachineSelectorFilesConf                     []rkev1.RKEProvisioningFiles
+	testClusterV2RKEConfigMachineSelectorFilesInterface                []interface{}
 )
 
 func init() {
@@ -66,6 +68,83 @@ func init() {
 			"config":                 "config_one: one\nconfig_two: two\n",
 		},
 	}
+
+	testClusterV2RKEConfigMachineSelectorFilesConf = []rkev1.RKEProvisioningFiles{
+		{
+			MachineLabelSelector: testClusterV2RKEConfigSystemConfigLabelSelectorConf,
+			FileSources: []rkev1.ProvisioningFileSource{
+				{
+					Secret: rkev1.K8sObjectFileSource{
+						Name:               "test-config-secret",
+						DefaultPermissions: "0644",
+						Items: []rkev1.KeyToPath{
+							{
+								Key:         "a",
+								Path:        "/etc/rancher/rke2/test.yaml",
+								Permissions: "600",
+								Hash:        "abcdefg",
+								Dynamic:     true,
+							},
+						},
+					},
+					ConfigMap: rkev1.K8sObjectFileSource{
+						Name:               "test-config-configmap",
+						DefaultPermissions: "0644",
+						Items: []rkev1.KeyToPath{
+							{
+								Key:         "a",
+								Path:        "/etc/rancher/rke2/test.yaml",
+								Permissions: "600",
+								Hash:        "abcdefg",
+								Dynamic:     true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	testClusterV2RKEConfigMachineSelectorFilesInterface = []interface{}{
+		map[string]interface{}{
+			"machine_label_selector": testClusterV2RKEConfigSystemConfigLabelSelectorInterface,
+			"file_sources": []interface{}{
+				map[string]interface{}{
+					"secret": []interface{}{
+						map[string]interface{}{
+							"name":                "test-config-secret",
+							"default_permissions": "0644",
+							"items": []interface{}{
+								map[string]interface{}{
+									"key":         "a",
+									"path":        "/etc/rancher/rke2/test.yaml",
+									"permissions": "600",
+									"hash":        "abcdefg",
+									"dynamic":     true,
+								},
+							},
+						},
+					},
+					"configmap": []interface{}{
+						map[string]interface{}{
+							"name":                "test-config-configmap",
+							"default_permissions": "0644",
+							"items": []interface{}{
+								map[string]interface{}{
+									"key":         "a",
+									"path":        "/etc/rancher/rke2/test.yaml",
+									"permissions": "600",
+									"hash":        "abcdefg",
+									"dynamic":     true,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
 }
 
 func TestFlattenClusterV2RKEConfigSystemConfigLabelSelectorExpression(t *testing.T) {

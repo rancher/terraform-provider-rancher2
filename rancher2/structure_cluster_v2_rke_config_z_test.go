@@ -33,6 +33,7 @@ func init() {
 		},
 	}
 	testClusterV2RKEConfigConf.MachineSelectorConfig = testClusterV2RKEConfigSystemConfigConf
+	testClusterV2RKEConfigConf.MachineSelectorFiles = testClusterV2RKEConfigMachineSelectorFilesConf
 	testClusterV2RKEConfigConf.Registries = testClusterV2RKEConfigRegistryConf
 	testClusterV2RKEConfigConf.ETCD = testClusterV2RKEConfigETCDConf
 	testClusterV2RKEConfigConf.RotateCertificates = testClusterV2RKEConfigRotateCertificatesConf
@@ -48,6 +49,7 @@ func init() {
 			"machine_pools":           testClusterV2RKEConfigMachinePoolsInterface,
 			"machine_pool_defaults":   testClusterV2RKEConfigMachinePoolDefaultsInterface,
 			"machine_selector_config": testClusterV2RKEConfigSystemConfigInterface,
+			"machine_selector_files":  testClusterV2RKEConfigMachineSelectorFilesInterface,
 			"registries":              testClusterV2RKEConfigRegistryInterface,
 			"etcd":                    testClusterV2RKEConfigETCDInterface,
 			"rotate_certificates":     testClusterV2RKEConfigRotateCertificatesInterface,

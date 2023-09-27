@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-//Types
+// Types
 
 func clusterV2RKEConfigFieldsV0() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
@@ -110,6 +110,15 @@ func clusterV2RKEConfigFieldsV0() map[string]*schema.Schema {
 			Description: "Cluster V2 machine selector config",
 			Elem: &schema.Resource{
 				Schema: clusterV2RKEConfigSystemConfigFieldsV0(),
+			},
+		},
+		"machine_selector_files": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster V2 machine selector files",
+			Elem: &schema.Resource{
+				Schema: clusterV2RKEConfigMachineSelectorFilesFields(),
 			},
 		},
 		"registries": {
@@ -264,6 +273,15 @@ func clusterV2RKEConfigFields() map[string]*schema.Schema {
 			Description: "Cluster V2 machine selector config",
 			Elem: &schema.Resource{
 				Schema: clusterV2RKEConfigSystemConfigFields(),
+			},
+		},
+		"machine_selector_files": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster V2 machine selector files",
+			Elem: &schema.Resource{
+				Schema: clusterV2RKEConfigMachineSelectorFilesFields(),
 			},
 		},
 		"registries": {
