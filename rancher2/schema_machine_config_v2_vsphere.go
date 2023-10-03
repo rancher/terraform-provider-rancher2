@@ -16,7 +16,7 @@ var (
 	machineConfigV2VmwarevsphereVappTransports           = []string{"iso", "com.vmware.guestInfo"}
 )
 
-//Schemas
+// Schemas
 
 func machineConfigV2VmwarevsphereFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
@@ -205,6 +205,11 @@ func machineConfigV2VmwarevsphereFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "443",
 			Description: "vSphere Port for vCenter",
+		},
+		"graceful_shutdown_timeout": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Duration in seconds for wait for graceful shutdown of the VM. A force destroy will be performed when the value is zero",
 		},
 	}
 

@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-//Schemas
+// Schemas
 
 func clusterRKEConfigCloudProviderVsphereDiskFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
@@ -48,6 +48,11 @@ func clusterRKEConfigCloudProviderVsphereGlobalFields() map[string]*schema.Schem
 		},
 		"soap_roundtrip_count": {
 			Type:     schema.TypeInt,
+			Optional: true,
+			Computed: true,
+		},
+		"graceful_shutdown_timeout": {
+			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},

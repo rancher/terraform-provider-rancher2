@@ -312,6 +312,7 @@ The following attributes are exported:
 * `datastore_cluster` - (Optional) vSphere datastore cluster for virtual machine (string)
 * `disk_size` - (Optional) vSphere size of disk for docker VM (in MB). Default `20480` (string)
 * `folder` - (Optional) vSphere folder for the docker VM. This folder must already exist in the datacenter (string)
+* `graceful_shutdown_timeout` (Optional) Duration in seconds for wait for graceful shutdown of the VM. A force destroy will be performed when the value is zero (string)
 * `hostsystem` - (Optional) vSphere compute resource where the docker VM will be instantiated. This can be omitted if using a cluster with DRS (string)
 * `memory_size` - (Optional) vSphere size of memory for docker VM (in MB). Default `2048` (string)
 * `network` - (Optional) vSphere network where the docker VM will be attached (list)
