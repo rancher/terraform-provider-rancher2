@@ -39,6 +39,15 @@ func globalRoleFields() map[string]*schema.Schema {
 				Schema: policyRuleFields(),
 			},
 		},
+		"inherited_cluster_roles": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 	}
 
 	for k, v := range commonAnnotationLabelFields() {

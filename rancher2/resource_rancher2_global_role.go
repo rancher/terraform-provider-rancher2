@@ -2,10 +2,10 @@ package rancher2
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -94,13 +94,16 @@ func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) 
 			return resource.NonRetryableError(err)
 		}
 
+		log.Println("updated inherited_cluster_roles", toArrayString(d.Get("inherited_cluster_roles").([]interface{})))
+
 		update := map[string]interface{}{
-			"description":    d.Get("description").(string),
-			"name":           d.Get("name").(string),
-			"newUserDefault": d.Get("new_user_default").(bool),
-			"rules":          expandPolicyRules(d.Get("rules").([]interface{})),
-			"annotations":    toMapString(d.Get("annotations").(map[string]interface{})),
-			"labels":         toMapString(d.Get("labels").(map[string]interface{})),
+			"description":           d.Get("description").(string),
+			"name":                  d.Get("name").(string),
+			"newUserDefault":        d.Get("new_user_default").(bool),
+			"rules":                 expandPolicyRules(d.Get("rules").([]interface{})),
+			"annotations":           toMapString(d.Get("annotations").(map[string]interface{})),
+			"labels":                toMapString(d.Get("labels").(map[string]interface{})),
+			"inheritedClusterRoles": toArrayString(d.Get("inherited_cluster_roles").([]interface{})),
 		}
 
 		if _, err = client.GlobalRole.Update(globalRole, update); err != nil {

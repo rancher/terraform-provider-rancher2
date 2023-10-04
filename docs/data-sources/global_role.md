@@ -31,3 +31,4 @@ The following attributes are exported:
 * `rules` - (Computed) Global role policy rules (list)
 * `annotations` - (Computed) Annotations for global role object (map)
 * `labels` - (Computed) Labels for global role object (map)
+* `inherited_cluster_roles` - (Computed) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)

@@ -30,6 +30,7 @@ resource "` + testAccRancher2GlobalRoleType + `" "foo" {
     resources = ["secrets"]
     verbs = ["` + policyRuleVerbCreate + `"]
   }
+  inherited_cluster_roles = ["cluster-owner"]
 }
 `
 	testAccRancher2GlobalRoleUpdateConfig = `
@@ -42,6 +43,7 @@ resource "` + testAccRancher2GlobalRoleType + `" "foo" {
     resources = ["secrets"]
     verbs = ["` + policyRuleVerbCreate + `", "` + policyRuleVerbGet + `"]
   }
+  inherited_cluster_roles = ["cluster-owner"]
 }
  `
 }
@@ -61,6 +63,7 @@ func TestAccRancher2GlobalRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "new_user_default", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "description", "Terraform global role acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "rules.0.verbs.0", policyRuleVerbCreate),
+					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "inherited_cluster_roles.0", "cluster-owner"),
 				),
 			},
 			{
@@ -71,6 +74,7 @@ func TestAccRancher2GlobalRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "new_user_default", "false"),
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "description", "Terraform global role acceptance test - updated"),
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "rules.0.verbs.1", policyRuleVerbGet),
+					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "inherited_cluster_roles.0", "cluster-owner"),
 				),
 			},
 			{
@@ -81,6 +85,7 @@ func TestAccRancher2GlobalRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "new_user_default", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "description", "Terraform global role acceptance test"),
 					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "rules.0.verbs.0", policyRuleVerbCreate),
+					resource.TestCheckResourceAttr(testAccRancher2GlobalRoleType+".foo", "inherited_cluster_roles.0", "cluster-owner"),
 				),
 			},
 		},
