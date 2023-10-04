@@ -10,15 +10,15 @@ func podSecurityPolicyTemplateFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
 			Description: "Pod Security Policy template policy name",
+			Required:    true,
 			ForceNew:    true,
 		},
 		"description": {
 			Type:        schema.TypeString,
+			Description: "Pod Security Policy template policy description",
 			Optional:    true,
 			Computed:    true,
-			Description: "Pod Security Policy template policy description",
 		},
 		"allow_privilege_escalation": {
 			Type:        schema.TypeBool,
