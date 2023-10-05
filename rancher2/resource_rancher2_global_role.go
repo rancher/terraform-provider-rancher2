@@ -94,8 +94,6 @@ func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) 
 			return resource.NonRetryableError(err)
 		}
 
-		log.Println("updated inherited_cluster_roles", toArrayString(d.Get("inherited_cluster_roles").([]interface{})))
-
 		update := map[string]interface{}{
 			"description":           d.Get("description").(string),
 			"name":                  d.Get("name").(string),
