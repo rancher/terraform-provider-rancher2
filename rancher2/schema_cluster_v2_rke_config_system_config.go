@@ -68,6 +68,7 @@ func clusterV2RKEConfigSystemConfigFieldsV0() map[string]*schema.Schema {
 		"config": {
 			Type:        schema.TypeMap,
 			Optional:    true,
+			Default:     "protect-kernel-defaults: false",
 			Description: "Machine selector config",
 		},
 	}
@@ -89,6 +90,7 @@ func clusterV2RKEConfigSystemConfigFields() map[string]*schema.Schema {
 		"config": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Default:     "protect-kernel-defaults: false",
 			Description: "Machine selector config",
 			ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 				v, ok := val.(string)
