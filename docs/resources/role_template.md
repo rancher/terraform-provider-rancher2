@@ -56,7 +56,7 @@ The following arguments are supported:
 * `rules` - (Optional/Computed) Role template policy rules (list)
 * `annotations` - (Optional/Computed) Annotations for role template object (map)
 * `labels` - (Optional/Computed) Labels for role template object (map)
-* `inherited_cluster_roles` - (Optional/Computed) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
+* `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
 
 ## Attributes Reference
 
