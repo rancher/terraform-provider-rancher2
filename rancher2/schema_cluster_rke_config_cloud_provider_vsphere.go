@@ -54,7 +54,6 @@ func clusterRKEConfigCloudProviderVsphereGlobalFields() map[string]*schema.Schem
 		"graceful_shutdown_timeout": {
 			Type:     schema.TypeString,
 			Optional: true,
-			Computed: true,
 		},
 	}
 	return s

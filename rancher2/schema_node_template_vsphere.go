@@ -247,7 +247,7 @@ func vsphereConfigFields() map[string]*schema.Schema {
 		"graceful_shutdown_timeout": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "Duration in seconds for wait for graceful shutdown of the VM. A force destroy will be performed when the value is zero",
+			Description: "Duration in seconds before the graceful shutdown of the VM times out and the VM is destroyed. A force destroy will be performed when the value is zero",
 		},
 	}
 	return s
