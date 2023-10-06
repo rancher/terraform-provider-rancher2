@@ -50,7 +50,7 @@ func dataSourceRancher2GlobalRole() *schema.Resource {
 			},
 			"inherited_cluster_roles": {
 				Type:        schema.TypeList,
-				Computed:    true,
+				Optional:    true,
 				Description: "Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
