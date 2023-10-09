@@ -484,7 +484,7 @@ resource "rancher2_cluster" "foo" {
 
 ### Creating GKE cluster from Rancher v2, using `gke_config_v2`. For Rancher v2.5.8 and above.
 
-**Note:** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585]](https://github.com/rancher/rancher/issues/32585)
+**Note:** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585](https://github.com/rancher/rancher/issues/32585)
 
 ```hcl
 resource "rancher2_cloud_credential" "foo-google" {
