@@ -424,6 +424,8 @@ resource "rancher2_cluster" "foo" {
 
 ### Creating EKS cluster from Rancher v2, using `eks_config_v2` and launch template. For Rancher v2.5.6 and above.
 
+Note: To effectively use `launch_template` you must provide the ID (seen as `<EC2_LAUNCH_TEMPLATE_ID>`) to the template either as a static value. Or fetched via AWS data-source using one of: [aws_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami.html), [aws_ami_ids](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami_ids), or similar data-sources.
+
 ```hcl
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
