@@ -580,6 +580,53 @@ EOF
 }
 ```
 
+### Creating Rancher V2 Cluster with Machine Selector Files. For Rancher v2.7.2 and above.
+
+Machine selector files provides a means to deliver files to nodes, so that the files can be in place before initiating K3s server or agent processes.
+For more information, please refer to Rancher documentation:
+[RKE2 Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/rke2-cluster-configuration#machineselectorconfig) or 
+[K3s Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/k3s-cluster-configuration#machineselectorfiles)
+
+```hcl
+resource "rancher2_cluster_v2" "foo" {
+  name = var.rke2_cluster_name
+  kubernetes_version = "v1.25.13+rke2r1" // or a K3s version 
+  enable_network_policy = false
+  rke_config {
+    machine_pools {
+      name = "pool1"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
+      control_plane_role = true
+      etcd_role = true
+      worker_role = true
+      quantity = 1
+      machine_config {
+        kind = rancher2_machine_config_v2.foo.kind
+        name = rancher2_machine_config_v2.foo.name
+      }
+    }
+    machine_selector_files {
+      machine_label_selector {
+        match_labels = {
+          "rke.cattle.io/control-plane-role" = "true"
+        }
+      }
+      file_sources {
+        secret {
+          name = "config-file-v1"
+          default_permissions = "644"
+          items {
+            key = "audit-policy"
+            path ="/etc/rancher/rke2/custom/policy-v1.yaml"
+            permissions = "666"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -659,6 +706,7 @@ The following attributes are exported:
 * `machine_global_config` - (Optional) Cluster V2 machine global config. Must be in YAML format (string)
 * `machine_pools` - (Optional/Computed) Cluster V2 machine pools (list)
 * `machine_selector_config` - (Optional/Computed) Cluster V2 machine selector config (list)
+* `machine_selector_files` - (Optional/Computed) Cluster V2 machine selector files (list)
 * `registries` - (Optional) Cluster V2 docker registries (list maxitems:1)
 * `etcd` - (Optional) Cluster V2 etcd (list maxitems:1)
 * `rotate_certificates` (Optional) Cluster V2 certificate rotation (list maxitems:1)
@@ -763,6 +811,46 @@ The following attributes are exported:
 * `key` - (Optional) Machine selector label match expressions key (string)
 * `operator` - (Optional) Machine selector label match expressions operator (string)
 * `values` - (Optional) Machine selector label match expressions values (List string)
+
+#### `machine_selector_files`
+
+##### Arguments
+
+* `machine_label_selector` - (Optional) Machine selector label (list maxitems:1)
+* `files` - (Optional) Machine selector files (list)
+
+#### `files`
+
+##### Arguments
+
+* `secret` - (Optional) The secret which is the source of files (list maxitems:1)
+* `configmap` - (Optional) The configmap which is the source of files (list maxitems:1)
+
+#### `secret`
+
+##### Arguments
+
+* `name` - (Required) The name of the secret (string)
+* `default_permissions` - (Optional) The numeric representation of the file default permissions (string)
+* `items` - (Optional) Items to retrieve from the secret (list)
+
+#### `configmap`
+
+##### Arguments
+
+* `name` - (Required) The name of the configmap (string)
+* `default_permissions` - (Optional) The numeric representation of the file default permissions (string)
+* `items` - (Optional) Items to retrieve from the configmap (list)
+
+#### `items`
+
+##### Arguments
+
+* `key` - (Required) The key of the item to retrieve (string)
+* `path` - (Required) The path to put the file in the target node (string)
+* `dynamic` - (Optional) If true, the file is ignored when determining whether the node should be drained before updating the node plan (Boolean, default: true)
+* `permissions` - (Optional) The numeric representation of the file permission (string)
+* `hash` - (Optional) The base64 encoded value of the SHA256 checksum of the file's content (string)
 
 #### `registries`
 

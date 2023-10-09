@@ -36,6 +36,9 @@ func flattenClusterV2RKEConfig(in *provisionv1.RKEConfig) []interface{} {
 	if in.MachineSelectorConfig != nil && len(in.MachineSelectorConfig) > 0 {
 		obj["machine_selector_config"] = flattenClusterV2RKEConfigSystemConfig(in.MachineSelectorConfig)
 	}
+	if in.MachineSelectorFiles != nil && len(in.MachineSelectorFiles) > 0 {
+		obj["machine_selector_files"] = flattenClusterV2RKEConfigMachineSelectorFiles(in.MachineSelectorFiles)
+	}
 	if in.Registries != nil {
 		obj["registries"] = flattenClusterV2RKEConfigRegistry(in.Registries)
 	}
@@ -90,6 +93,9 @@ func expandClusterV2RKEConfig(p []interface{}) *provisionv1.RKEConfig {
 	}
 	if v, ok := in["machine_selector_config"].([]interface{}); ok && len(v) > 0 {
 		obj.MachineSelectorConfig = expandClusterV2RKEConfigSystemConfig(v)
+	}
+	if v, ok := in["machine_selector_files"].([]interface{}); ok && len(v) > 0 {
+		obj.MachineSelectorFiles = expandClusterV2RKEConfigProvisioningFiles(v)
 	}
 	if v, ok := in["registries"].([]interface{}); ok && len(v) > 0 {
 		obj.Registries = expandClusterV2RKEConfigRegistry(v)

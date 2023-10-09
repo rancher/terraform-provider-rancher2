@@ -1,7 +1,6 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -196,19 +195,16 @@ func TestFlattenClusterV2(t *testing.T) {
 		if err != nil {
 			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
-		expectedOutput := map[string]interface{}{}
+		actualOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
-			expectedOutput[k] = output.Get(k)
+			actualOutput[k] = output.Get(k)
 			if k == "rke_config" {
 				// This is a hack to remove the deprecated field because it is not being set.
-				rkeConfig := expectedOutput[k].([]interface{})[0].(map[string]interface{})
+				rkeConfig := actualOutput[k].([]interface{})[0].(map[string]interface{})
 				delete(rkeConfig, "local_auth_endpoint")
 			}
 		}
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, expectedOutput)
-		}
+		assert.Equal(t, tc.ExpectedOutput, actualOutput)
 	}
 }
 
