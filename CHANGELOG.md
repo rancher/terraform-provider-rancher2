@@ -1,3 +1,23 @@
+## 3.2.0 (October 12, 2023)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* Add retry logic to rancher2_cluster update. See https://github.com/rancher/terraform-provider-rancher2/pull/1159
+* Set protect-kernel-defaults on v2 clusters. See https://github.com/rancher/terraform-provider-rancher2/pull/1245
+* Add group_search_filter, user_search_filter, and start_tls to LDAP Auth Config. See https://github.com/rancher/terraform-provider-rancher2/pull/1173
+* [Docs] Update branching info. See https://github.com/rancher/terraform-provider-rancher2/pull/1202
+* [Docs] Remove keypair_name for amazonec2_config. See https://github.com/rancher/terraform-provider-rancher2/pull/1227
+* [Docs] Update msc schema and docs. See https://github.com/rancher/terraform-provider-rancher2/pull/1239
+
+BUG FIXES:
+* Fix machine selector config to allow kubelet arg list. See https://github.com/rancher/terraform-provider-rancher2/pull/1181
+
+
+
 ## 3.1.1 (August 3, 2023)
 
 FEATURES:
@@ -29,7 +49,7 @@ FEATURES:
 * Add Pod Security Admission Configuration Template (PSACT) support with state migration logic for 1.25+ RKE and v2 prov clusters. See [#1119](https://github.com/rancher/terraform-provider-rancher2/pull/1119) and [#1117](https://github.com/rancher/terraform-provider-rancher2/pull/1117)
   * **New Argument** `default_pod_security_admission_configuration_template_name` - (Optional) Cluster default pod security admission configuration template name (string)
   * **New Argument** `default_pod_security_admission_configuration_template_name` - (Computed) Cluster V2 default pod security admission configuration template name (string)
-  
+
 ENHANCEMENTS:
 
 * **New Argument** `entity_id_field` - (Optional) Entity ID for authentication config (string). See [#1163](https://github.com/rancher/terraform-provider-rancher2/pull/1163)
