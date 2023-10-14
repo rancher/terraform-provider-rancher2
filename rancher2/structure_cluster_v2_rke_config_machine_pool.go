@@ -20,6 +20,9 @@ func flattenClusterV2RKEConfigMachinePoolMachineConfig(in *corev1.ObjectReferenc
 
 	obj["kind"] = in.Kind
 	obj["name"] = in.Name
+	if in.APIVersion != "" {
+		obj["api_version"] = in.APIVersion
+	}
 
 	return []interface{}{obj}
 }
@@ -121,6 +124,9 @@ func expandClusterV2RKEConfigMachinePoolMachineConfig(p []interface{}) *corev1.O
 	}
 	if v, ok := in["name"].(string); ok {
 		obj.Name = v
+	}
+	if v, ok := in["api_version"].(string); ok && v != "" {
+		obj.APIVersion = v
 	}
 
 	return obj
