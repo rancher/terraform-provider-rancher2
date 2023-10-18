@@ -9,10 +9,12 @@ import (
 )
 
 var (
-	testGlobalRolePolicyRulesConf      []managementClient.PolicyRule
-	testGlobalRolePolicyRulesInterface []interface{}
-	testGlobalRoleConf                 *managementClient.GlobalRole
-	testGlobalRoleInterface            map[string]interface{}
+	testGlobalRolePolicyRulesConf                    []managementClient.PolicyRule
+	testGlobalRolePolicyRulesInterface               []interface{}
+	testGlobalRoleConf                               *managementClient.GlobalRole
+	testGlobalRoleInterface                          map[string]interface{}
+	testGlobalRoleWithInheritedClusterRolesConf      *managementClient.GlobalRole
+	testGlobalRoleWithInheritedClusterRolesInterface map[string]interface{}
 )
 
 func init() {
@@ -93,10 +95,44 @@ func init() {
 			"option2": "value2",
 		},
 	}
+
+	testGlobalRoleWithInheritedClusterRolesConf = &managementClient.GlobalRole{
+		Description:    "description",
+		Name:           "name",
+		NewUserDefault: true,
+		Rules:          testGlobalRolePolicyRulesConf,
+		Annotations: map[string]string{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		Labels: map[string]string{
+			"option1": "value1",
+			"option2": "value2",
+		},
+		InheritedClusterRoles: []string{
+			"cluster-owner",
+		},
+	}
+	testGlobalRoleWithInheritedClusterRolesInterface = map[string]interface{}{
+		"new_user_default": true,
+		"description":      "description",
+		"name":             "name",
+		"rules":            testGlobalRolePolicyRulesInterface,
+		"annotations": map[string]interface{}{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		"labels": map[string]interface{}{
+			"option1": "value1",
+			"option2": "value2",
+		},
+		"inherited_cluster_roles": []interface{}{
+			"cluster-owner",
+		},
+	}
 }
 
 func TestFlattenGlobalRole(t *testing.T) {
-
 	cases := []struct {
 		Input          *managementClient.GlobalRole
 		ExpectedOutput map[string]interface{}
@@ -104,6 +140,10 @@ func TestFlattenGlobalRole(t *testing.T) {
 		{
 			testGlobalRoleConf,
 			testGlobalRoleInterface,
+		},
+		{
+			testGlobalRoleWithInheritedClusterRolesConf,
+			testGlobalRoleWithInheritedClusterRolesInterface,
 		},
 	}
 
@@ -122,7 +162,6 @@ func TestFlattenGlobalRole(t *testing.T) {
 }
 
 func TestExpandGlobalRole(t *testing.T) {
-
 	cases := []struct {
 		Input          map[string]interface{}
 		ExpectedOutput *managementClient.GlobalRole
@@ -130,6 +169,10 @@ func TestExpandGlobalRole(t *testing.T) {
 		{
 			testGlobalRoleInterface,
 			testGlobalRoleConf,
+		},
+		{
+			testGlobalRoleWithInheritedClusterRolesInterface,
+			testGlobalRoleWithInheritedClusterRolesConf,
 		},
 	}
 
