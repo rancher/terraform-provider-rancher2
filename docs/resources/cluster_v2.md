@@ -15,7 +15,7 @@ Provides a Rancher v2 Cluster v2 resource. This can be used to create RKE2 and K
 # Create a new rancher v2 RKE2 custom Cluster v2
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  kubernetes_version = "rancher-kubernetes-version"
   fleet_namespace = "fleet-ns"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
@@ -25,7 +25,7 @@ resource "rancher2_cluster_v2" "foo" {
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
   fleet_namespace = "fleet-ns"
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  kubernetes_version = "rancher-kubernetes-version"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
 }
@@ -33,7 +33,7 @@ resource "rancher2_cluster_v2" "foo" {
 
 **Note:** Once created, get the node command from `rancher2_cluster_v2.foo.cluster_registration_token`
 
-### Creating Rancher v2 amazonec2 cluster v2
+### Creating Rancher v2 AmazonEC2 cluster v2
 
 ```hcl
 # Create amazonec2 cloud credential
@@ -49,19 +49,19 @@ resource "rancher2_cloud_credential" "foo" {
 resource "rancher2_machine_config_v2" "foo" {
   generate_name = "test-foo"
   amazonec2_config {
-    ami =  "<AMI_ID>"
-    region = "<REGION>"
-    security_group = [<AWS_SG>]
-    subnet_id = "<SUBNET_ID>"
-    vpc_id = "<VPC_ID>"
-    zone = "<ZONE>"
+    ami =  "ami-id"
+    region = "region"
+    security_group = ["security-group"]
+    subnet_id = "subnet-id"
+    vpc_id = "vpc-id"
+    zone = "zone"
   }
 }
 
 # Create a new rancher v2 Cluster with multiple machine pools
 resource "rancher2_cluster_v2" "foo-rke2" {
   name = "foo-rke2"
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  kubernetes_version = "rancher-kubernetes-version"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
   rke_config {
@@ -98,7 +98,7 @@ resource "rancher2_cluster_v2" "foo-rke2" {
 # Create a new rancher v2 amazonec2 RKE2 Cluster v2
 resource "rancher2_cluster_v2" "foo-rke2" {
   name = "foo-rke2"
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  kubernetes_version = "rancher-kubernetes-version"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
   rke_config {
@@ -120,7 +120,7 @@ resource "rancher2_cluster_v2" "foo-rke2" {
 # Create a new rancher v2 amazonec2 K3S Cluster v2
 resource "rancher2_cluster_v2" "foo-k3s" {
   name = "foo-k3s"
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  kubernetes_version = "rancher-kubernetes-version"
   enable_network_policy = false
   default_cluster_role_for_project_members = "user"
   rke_config {
@@ -145,8 +145,8 @@ resource "rancher2_cluster_v2" "foo-k3s" {
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   amazonec2_credential_config {
-    access_key = "<ACCESS_KEY>"
-    secret_key = "<SECRET_KEY>"
+    access_key = "access-key"
+    secret_key = "secret-key"
   }
 }
 
@@ -154,18 +154,18 @@ resource "rancher2_cloud_credential" "foo" {
 resource "rancher2_machine_config_v2" "foo" {
   generate_name = "test-foo"
   amazonec2_config {
-    ami =  "<AMI_ID>"
-    region = "<REGION>"
-    security_group = [<AWS_SG>]
-    subnet_id = "<SUBNET_ID>"
-    vpc_id = "<VPC_ID>"
-    zone = "<ZONE>"
+    ami =  "ami-id"
+    region = "region"
+    security_group = ["security-group"]
+    subnet_id = "subnet-id"
+    vpc_id = "vpc-id"
+    zone = "zone"
   }
 }
 
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  kubernetes_version = "rancher-kubernetes-version"
   enable_network_policy = false
   rke_config {
     machine_pools {
@@ -249,18 +249,18 @@ EOF
 ```hcl
 resource "rancher2_cluster_v2" "foo_cluster_v2" {
   name = "cluster-with-custom-registry"
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  kubernetes_version = "rancher-kubernetes-version"
   rke_config {
     machine_selector_config {
       config = {
-        system-default-registry: "<CUSTOM_REGISTRY_HOSTNAME>"
+        system-default-registry: "custom-registry-hostname"
       }
     }
     registries {
       configs {
-        hostname = "<CUSTOM_REGISTRY_HOSTNAME>"
-        auth_config_secret_name = "<AUTH_CONFIG_SECRET_NAME>"
-        insecure = <TLS_INSECURE_BOOL>
+        hostname = "custom-registry-hostname"
+        auth_config_secret_name = "auth-config-secret-name"
+        insecure = <tls-insecure-bool>
         tls_secret_name = ""
         ca_bundle = ""
       }
@@ -278,29 +278,16 @@ Many registries may be specified in the `rke_config`s `registries` section, howe
 ```hcl
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  kubernetes_version = "rancher-kubernetes-version"
   enable_network_policy = false
   rke_config {
-    machine_pools {
-      name = "pool1"
-      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
-      control_plane_role = true
-      etcd_role = true
-      worker_role = true
-      quantity = 1
-      machine_config {
-        kind = rancher2_machine_config_v2.foo.kind
-        name = rancher2_machine_config_v2.foo.name
-      }
-    }
+    cluster_agent_deployment_customization {
+      append_tolerations {
+        effect = "NoSchedule"
+        key    = "tolerate/control-plane"
+        value  = "true"
   }
-  cluster_agent_deployment_customization {
-    append_tolerations {
-      effect = "NoSchedule"
-      key    = "tolerate/control-plane"
-      value  = "true"
-}
-    override_affinity = <<EOF
+      override_affinity = <<EOF
 {
   "nodeAffinity": {
     "requiredDuringSchedulingIgnoredDuringExecution": {
@@ -317,12 +304,14 @@ resource "rancher2_cluster_v2" "foo" {
   }
 }
 EOF
-    override_resource_requirements {
-      cpu_limit      = "800"
-      cpu_request    = "500"
-      memory_limit   = "800"
-      memory_request = "500"
+      override_resource_requirements {
+        cpu_limit      = "800"
+        cpu_request    = "500"
+        memory_limit   = "800"
+        memory_request = "500"
+      }
     }
+    machine_pools ...
   }
 }
 ```
@@ -333,14 +322,14 @@ EOF
 
 ```hcl
 locals {
-  version = "rke2" // will be k3s for K3s clusters
+  version = "rke2"  // k3s for K3s clusters
   rancher_psact_mount_path = "/etc/rancher/${local.version}/config/rancher-psact.yaml"
   kube_apiserver_arg = var.default_psa_template != null && var.default_psa_template != "" ? ["admission-control-config-file=${local.rancher_psact_mount_path}"] : []
 }
 
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
-  kubernetes_version = "<RANCHER_KUBERNETES_VERSION>"
+  kubernetes_version = "rancher-kubernetes-version"
   enable_network_policy = false
   default_pod_security_admission_configuration_template_name = "rancher-restricted"
   rke_config {
@@ -350,18 +339,33 @@ resource "rancher2_cluster_v2" "foo" {
       etcd-expose-metrics = false
       kube-apiserver-arg = local.kube_apiserver_arg
     })
-    machine_pools {
-      name = "pool1"
-      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
-      control_plane_role = true
-      etcd_role = true
-      worker_role = true
-      quantity = 1
-      machine_config {
-        kind = rancher2_machine_config_v2.foo.kind
-        name = rancher2_machine_config_v2.foo.name
+    machine_pools ...
+  }
+}
+```
+
+### Creating Rancher V2 cluster with Machine Selector Config. For Rancher 2.7.7 and above.
+
+```hcl
+resource "rancher2_cluster_v2" "foo" {
+  name = "foo"
+  kubernetes_version = "rancher-kubernetes-version"
+  enable_network_policy = false
+  rke_config {
+    machine_selector_config {
+      machine_label_selector {
+        match_expressions {
+          key      = "node-label-key"
+          operator = "In"
+          values   = ["node-label-value"]
+        }
       }
+      config = <<EOF
+        kubelet-arg:
+          - cloud-provider-name=external
+      EOF
     }
+    machine_pools ...
   }
 }
 ```
@@ -576,6 +580,53 @@ EOF
 }
 ```
 
+### Creating Rancher V2 Cluster with Machine Selector Files. For Rancher v2.7.2 and above.
+
+Machine selector files provides a means to deliver files to nodes, so that the files can be in place before initiating K3s server or agent processes.
+For more information, please refer to Rancher documentation:
+[RKE2 Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/rke2-cluster-configuration#machineselectorconfig) or 
+[K3s Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/k3s-cluster-configuration#machineselectorfiles)
+
+```hcl
+resource "rancher2_cluster_v2" "foo" {
+  name = var.rke2_cluster_name
+  kubernetes_version = "v1.25.13+rke2r1" // or a K3s version 
+  enable_network_policy = false
+  rke_config {
+    machine_pools {
+      name = "pool1"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
+      control_plane_role = true
+      etcd_role = true
+      worker_role = true
+      quantity = 1
+      machine_config {
+        kind = rancher2_machine_config_v2.foo.kind
+        name = rancher2_machine_config_v2.foo.name
+      }
+    }
+    machine_selector_files {
+      machine_label_selector {
+        match_labels = {
+          "rke.cattle.io/control-plane-role" = "true"
+        }
+      }
+      file_sources {
+        secret {
+          name = "config-file-v1"
+          default_permissions = "644"
+          items {
+            key = "audit-policy"
+            path ="/etc/rancher/rke2/custom/policy-v1.yaml"
+            permissions = "666"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -655,6 +706,7 @@ The following attributes are exported:
 * `machine_global_config` - (Optional) Cluster V2 machine global config. Must be in YAML format (string)
 * `machine_pools` - (Optional/Computed) Cluster V2 machine pools (list)
 * `machine_selector_config` - (Optional/Computed) Cluster V2 machine selector config (list)
+* `machine_selector_files` - (Optional/Computed) Cluster V2 machine selector files (list)
 * `registries` - (Optional) Cluster V2 docker registries (list maxitems:1)
 * `etcd` - (Optional) Cluster V2 etcd (list maxitems:1)
 * `rotate_certificates` (Optional) Cluster V2 certificate rotation (list maxitems:1)
@@ -743,7 +795,7 @@ The following attributes are exported:
 ##### Arguments
 
 * `machine_label_selector` - (Optional) Machine selector label (list maxitems:1)
-* `config` - (Optional) Machine selector config (map)
+* `config` - (Optional) Machine selector config. Must be in YAML format (string)
 
 ##### `machine_label_selector`
 
@@ -759,6 +811,46 @@ The following attributes are exported:
 * `key` - (Optional) Machine selector label match expressions key (string)
 * `operator` - (Optional) Machine selector label match expressions operator (string)
 * `values` - (Optional) Machine selector label match expressions values (List string)
+
+#### `machine_selector_files`
+
+##### Arguments
+
+* `machine_label_selector` - (Optional) Machine selector label (list maxitems:1)
+* `files` - (Optional) Machine selector files (list)
+
+#### `files`
+
+##### Arguments
+
+* `secret` - (Optional) The secret which is the source of files (list maxitems:1)
+* `configmap` - (Optional) The configmap which is the source of files (list maxitems:1)
+
+#### `secret`
+
+##### Arguments
+
+* `name` - (Required) The name of the secret (string)
+* `default_permissions` - (Optional) The numeric representation of the file default permissions (string)
+* `items` - (Optional) Items to retrieve from the secret (list)
+
+#### `configmap`
+
+##### Arguments
+
+* `name` - (Required) The name of the configmap (string)
+* `default_permissions` - (Optional) The numeric representation of the file default permissions (string)
+* `items` - (Optional) Items to retrieve from the configmap (list)
+
+#### `items`
+
+##### Arguments
+
+* `key` - (Required) The key of the item to retrieve (string)
+* `path` - (Required) The path to put the file in the target node (string)
+* `dynamic` - (Optional) If true, the file is ignored when determining whether the node should be drained before updating the node plan (Boolean, default: true)
+* `permissions` - (Optional) The numeric representation of the file permission (string)
+* `hash` - (Optional) The base64 encoded value of the SHA256 checksum of the file's content (string)
 
 #### `registries`
 
