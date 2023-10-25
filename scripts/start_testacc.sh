@@ -42,7 +42,7 @@ if [ "${JQ_BIN}" == "none" ] ; then
 fi
 ## kubectl
 KUBECTL_NAME=kubectl
-KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+KUBECTL_URL="https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 KUBECTL_BIN=$(which ${KUBECTL_NAME} || echo none)
 if [ "${KUBECTL_BIN}" == "none" ] ; then
   echo Downloading ${KUBECTL_NAME}
