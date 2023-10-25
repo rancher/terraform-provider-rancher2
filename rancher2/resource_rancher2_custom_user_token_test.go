@@ -121,7 +121,7 @@ func testAccCheckRancher2CustomUserTokenExists(n string, token *managementClient
 			return fmt.Errorf("[ERROR] No config")
 		}
 
-		_, tempToken, err := DoUserLogin(testAccProviderConfig.URL, "foo", "TestACC123456", "0", "Temp Terraform API token for ACC tests", testAccProviderConfig.CACerts, "", testAccProviderConfig.Insecure)
+		_, tempToken, err := DoUserLogin(testAccProviderConfig.URL, "", "foo", "TestACC123456", "0", "Temp Terraform API token for ACC tests", testAccProviderConfig.CACerts, testAccProviderConfig.Insecure)
 		if err != nil {
 			return fmt.Errorf("[ERROR] Login with %s user: %v", "foo", err)
 		}

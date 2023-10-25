@@ -141,7 +141,7 @@ func doUserLogin(d *schema.ResourceData, meta interface{}) (*managementClient.Cl
 	}
 
 	log.Printf("[DEBUG] Creating Temp API Token for User %s", d.Get("username").(string))
-	tempTokenID, tempTokenValue, err := DoUserLogin(meta.(*Config).URL, d.Get("username").(string), d.Get("password").(string), "0", "Temp Terraform API token", meta.(*Config).CACerts, meta.(*Config).ProxyURL, meta.(*Config).Insecure)
+	tempTokenID, tempTokenValue, err := DoUserLogin(meta.(*Config).URL, meta.(*Config).ProxyURL, d.Get("username").(string), d.Get("password").(string), "0", "Temp Terraform API token", meta.(*Config).CACerts, meta.(*Config).Insecure)
 	if err != nil {
 		return nil, fmt.Errorf("[ERROR] Login with %s user: %v", d.Get("username").(string), err)
 	}
