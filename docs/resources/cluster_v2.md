@@ -249,17 +249,17 @@ EOF
 ```hcl
 resource "rancher2_cluster_v2" "foo_cluster_v2" {
   name = "cluster-with-custom-registry"
-  kubernetes_version = "rancher-kubernetes-version"
+  kubernetes_version = "<rancher-kubernetes-version>"
   rke_config {
     machine_selector_config {
       config = {
-        system-default-registry: "custom-registry-hostname"
+        system-default-registry: "<custom-registry-hostname>"
       }
     }
     registries {
       configs {
-        hostname = "custom-registry-hostname"
-        auth_config_secret_name = "auth-config-secret-name"
+        hostname = "<custom-registry-hostname>"
+        auth_config_secret_name = "<auth-config-secret-name>"
         insecure = <tls-insecure-bool>
         tls_secret_name = ""
         ca_bundle = ""
@@ -316,9 +316,11 @@ EOF
 }
 ```
 
-### Creating Rancher V2 cluster with Pod Security Policy Admission Configuration Template (PSACT). For Rancher v2.7.2 and above.
+### Creating Rancher V2 cluster with Pod Security Admission Configuration Template (PSACT). For Rancher v2.7.2 and above.
 
 **Note:** When PSACT is enabled in RKE2 or K3s, Rancher webhook sets the `kube-apiserver-arg` to the Pod Security Admission mount path. To suppress Terraform constantly trying to reconcile that arg, it must be set locally.
+
+**Note**: When PSACT is enabled in RKE2 or K3s, Rancher webhook manages the machine selector file source that is set when a template is linked to a cluster. To suppress Terraform adding that file source back in on template deletion, ignore changes in the `machine_selector_files` field.
 
 ```hcl
 locals {
@@ -327,11 +329,35 @@ locals {
   kube_apiserver_arg = var.default_psa_template != null && var.default_psa_template != "" ? ["admission-control-config-file=${local.rancher_psact_mount_path}"] : []
 }
 
+# Custom PSACT (if you wish to use your own)
+resource "rancher2_pod_security_admission_configuration_template" "foo" {
+  name = "custom-psact"
+  description = "This is my custom Pod Security Admission Configuration Template"
+  defaults {
+    audit = "restricted"
+    audit_version = "latest"
+    enforce = "restricted"
+    enforce_version = "latest"
+    warn = "restricted"
+    warn_version = "latest"
+  }
+  exemptions {
+    namespaces = ["ingress-nginx","kube-system"]
+  }
+}
+
 resource "rancher2_cluster_v2" "foo" {
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to machine selector files because Rancher webhook 
+      # manages it.
+      rke_config["machine_selector_files"],
+    ]
+  }
   name = "foo"
-  kubernetes_version = "rancher-kubernetes-version"
+  kubernetes_version = "<rancher-kubernetes-version>"
   enable_network_policy = false
-  default_pod_security_admission_configuration_template_name = "rancher-restricted"
+  default_pod_security_admission_configuration_template_name = "<name>" # privileged, baseline, restricted or name of custom template
   rke_config {
     machine_global_config = yamlencode({
       cni = "calico"
@@ -349,15 +375,15 @@ resource "rancher2_cluster_v2" "foo" {
 ```hcl
 resource "rancher2_cluster_v2" "foo" {
   name = "foo"
-  kubernetes_version = "rancher-kubernetes-version"
+  kubernetes_version = "<rancher-kubernetes-version>"
   enable_network_policy = false
   rke_config {
     machine_selector_config {
       machine_label_selector {
         match_expressions {
-          key      = "node-label-key"
+          key      = "<node-label-key>"
           operator = "In"
-          values   = ["node-label-value"]
+          values   = ["<node-label-value>"]
         }
       }
       config = <<EOF
@@ -817,9 +843,9 @@ The following attributes are exported:
 ##### Arguments
 
 * `machine_label_selector` - (Optional) Machine selector label (list maxitems:1)
-* `files` - (Optional) Machine selector files (list)
+* `file_sources` - (Optional) Machine selector files (list)
 
-#### `files`
+#### `file_sources`
 
 ##### Arguments
 
