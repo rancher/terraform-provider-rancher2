@@ -23,7 +23,7 @@ func machineConfigV2DigitaloceanFields() map[string]*schema.Schema {
 		"image": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "ubuntu-22-04-x64",
+			Default:     "ubuntu-20-04-x64",
 			Description: "Digital Ocean Image",
 		},
 		"ipv6": {
