@@ -800,9 +800,9 @@ func (c *Config) getObjectV2ByID(clusterID, id, APIType string, resp interface{}
 	}
 }
 
-func (c *Config) GetSettingV2ByID(id string) (*SettingV2, error) {
+func (c *Config) GetSettingV2ByID(clusterID, id string) (*SettingV2, error) {
 	resp := &SettingV2{}
-	err := c.getObjectV2ByID("local", id, settingV2APIType, resp)
+	err := c.getObjectV2ByID(clusterID, id, settingV2APIType, resp)
 	if err != nil {
 		if !IsServerError(err) && !IsNotFound(err) && !IsForbidden(err) {
 			return nil, fmt.Errorf("Getting Setting V2: %s", err)
