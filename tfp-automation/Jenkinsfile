@@ -1,10 +1,16 @@
 #!groovy
 node {
-  def branch = 'master'
+  def branch = "${env.BRANCH}"
+  if ("${env.BRANCH}" != "null" && "${env.BRANCH}" != "") {
+        branch = "${env.BRANCH}"
+  }
   def repo = scm.userRemoteConfigs
-  
   if ("${env.REPO}" != "null" && "${env.REPO}" != "") {
     repo = [[url: "${env.REPO}"]]
+  }
+  def timeout = "${env.TIMEOUT}"
+  if ("${env.TIMEOUT}" != "null" && "${env.TIMEOUT}" != "") {
+        timeout = "${env.TIMEOUT}" 
   }
   stage('Checkout') {
           deleteDir()
@@ -24,7 +30,7 @@ node {
     stage('Run Module Test') {
             def dockerImage = docker.image('tfp-automation')
             dockerImage.inside() {
-                sh "go test -v -timeout 1h -run ${params.TEST_CASE} ./tfp-automation/tests/cluster"
+                sh "go test -v -timeout ${timeout} -run ${params.TEST_CASE} ./tfp-automation/tests/cluster"
             }
     }
 }
