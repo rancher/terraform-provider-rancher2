@@ -21,6 +21,23 @@ resource "rancher2_app_v2" "foo" {
 }
 ```
 
+### Create an App from a Helm Chart using a different registry
+
+The `system_default_registry` argument can override the global value at App installation. If argument is not provided, the global value for System Default Registry will be used instead.
+
+```hcl
+resource "rancher2_app_v2" "cis_benchmark" {
+  cluster_id = "<CLUSTER_ID>"
+  name = "rancher-cis-benchmark"
+  namespace = "cis-operator-system"
+  repo_name = "rancher-charts"
+  chart_name = "rancher-cis-benchmark"
+
+  # Valid DNS for Private Registry
+  system_default_registry = "<some.dns.here>:<PORT>"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -40,6 +57,7 @@ The following arguments are supported:
 * `wait` - (Optional) Wait until app is deployed. Default: `true` (bool)
 * `annotations` - (Optional/Computed) Annotations for the app v2 (map)
 * `labels` - (Optional/Computed) Labels for the app v2 (map)
+* `system_default_registry` - (Optional/Computed) System default registry providing images for app deployment (string)
 
 ## Attributes Reference
 
