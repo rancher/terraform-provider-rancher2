@@ -50,14 +50,12 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("cluster_name", cluster.Name)
 
-	globalSystemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID("local", appV2DefaultRegistryID)
+	globalSystemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
 	if err != nil {
 		return err
 	}
 
-	if systemDefaultRegistry != globalSystemDefaultRegistry.Value {
-		d.Set("system_default_registry", systemDefaultRegistry)
-	} else {
+	if systemDefaultRegistry == "" {
 		d.Set("system_default_registry", globalSystemDefaultRegistry.Value)
 	}
 
@@ -98,7 +96,7 @@ func resourceRancher2AppV2Read(d *schema.ResourceData, meta interface{}) error {
 			d.Set("cluster_name", cluster.Name)
 		}
 		if systemDefaultRegistry, ok := d.Get("system_default_registry").(string); !ok || len(systemDefaultRegistry) == 0 {
-			systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(clusterID, appV2DefaultRegistryID)
+			systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
