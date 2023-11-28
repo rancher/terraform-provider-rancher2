@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
-	"github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
+	v1 "github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 )
 
 const (
@@ -79,8 +79,10 @@ func appV2Fields() map[string]*schema.Schema {
 			Description: "Deploy app within project ID",
 		},
 		"system_default_registry": {
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    true,
+			Description: "System default registry providing images for app deployment.",
 		},
 		"values": {
 			Type:             schema.TypeString,

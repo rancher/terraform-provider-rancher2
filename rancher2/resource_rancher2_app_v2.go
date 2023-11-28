@@ -37,6 +37,7 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 	repoName := d.Get("repo_name").(string)
 	chartName := d.Get("chart_name").(string)
 	chartVersion := d.Get("chart_version").(string)
+	systemDefaultRegistry := d.Get("system_default_registry").(string)
 
 	log.Printf("[INFO] Creating App V2 %s at cluster ID %s", name, clusterID)
 
@@ -49,11 +50,14 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("cluster_name", cluster.Name)
 
-	systemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
+	globalSystemDefaultRegistry, err := meta.(*Config).GetSettingV2ByID(appV2DefaultRegistryID)
 	if err != nil {
 		return err
 	}
-	d.Set("system_default_registry", systemDefaultRegistry.Value)
+
+	if systemDefaultRegistry == "" {
+		d.Set("system_default_registry", globalSystemDefaultRegistry.Value)
+	}
 
 	repo, chartInfo, err := infoAppV2(meta.(*Config), clusterID, repoName, chartName, chartVersion)
 	if err != nil {
