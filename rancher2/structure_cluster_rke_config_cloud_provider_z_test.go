@@ -50,13 +50,15 @@ func init() {
 		},
 	}
 	testClusterRKEConfigCloudProviderConf = &managementClient.CloudProvider{
-		CustomCloudProvider: "XXXXXXXXXXXX",
-		Name:                "test",
+		CustomCloudProvider:         "XXXXXXXXXXXX",
+		Name:                        "test",
+		UseInstanceMetadataHostname: newTrue(),
 	}
 	testClusterRKEConfigCloudProviderInterface = []interface{}{
 		map[string]interface{}{
-			"custom_cloud_provider": "XXXXXXXXXXXX",
-			"name":                  "test",
+			"custom_cloud_provider":          "XXXXXXXXXXXX",
+			"name":                           "test",
+			"use_instance_metadata_hostname": true,
 		},
 	}
 }

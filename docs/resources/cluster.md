@@ -745,6 +745,7 @@ The following attributes are exported:
 * `name` - (Optional) RKE Cloud Provider name (string)
 * `openstack_cloud_provider` - (Optional/Computed) RKE Openstack Cloud Provider config for Cloud Provider [rke-openstack-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/openstack/) (list maxitems:1)
 * `vsphere_cloud_provider` - (Optional/Computed) RKE Vsphere Cloud Provider config for Cloud Provider [rke-vsphere-cloud-provider](https://rancher.com/docs/rke/latest/en/config-options/cloud-providers/vsphere/) Extra argument `name` is required on `virtual_center` configuration. (list maxitems:1)
+* `use_instance_metadata_hostname` - (Optional/Computed) (bool)
 
 ##### `aws_cloud_provider`
 
