@@ -38,7 +38,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
+* `id` - (Computed) The ID of the resource, e.g. `p-def34-blabla` (string)
 
 ## Timeouts
 
@@ -57,3 +57,7 @@ Project Role Template Bindings can be imported using the Rancher Project Role Te
 $ terraform import rancher2_project_role_template_binding.foo &lt;project_role_template_binding_id&gt;
 ```
 
+Retrieve the ID from the `projectroletemplatebindings` API URL: look at `id` field of the object with `baseType": "projectRoleTemplateBinding"` and matching name and project ID. The URL is provided by the error message you get if you attempt import with an incorrect ID, for example:
+```
+Error: Bad response statusCode [404]. Status [404 Not Found]. Body: [message=failed to find resource by id, baseType=error, code=NotFound] from [https://<domain>/v3/projectroletemplatebindings]
+```
