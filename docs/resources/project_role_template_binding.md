@@ -22,7 +22,7 @@ resource "rancher2_project_role_template_binding" "foo" {
 
 The following arguments are supported:
 
-* `project_id` - (Required/ForceNew) The project id where bind project role template (string)
+* `project_id` - (Required/ForceNew) The project id where bind project role template, in format `cluster_id:project_id`, e.g. `c-abc12:p-def34` (string)
 * `role_template_id` - (Required/ForceNew) The role template id from create project role template binding (string)
 * `name` - (Required/ForceNew) The name of the project role template binding (string)
 * `group_id` - (Optional/Computed/ForceNew) The group ID to assign project role template binding (string)
