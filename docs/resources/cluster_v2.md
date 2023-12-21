@@ -774,6 +774,7 @@ The following attributes are exported:
 
 * `kind` - (Required) Machine config kind (string)
 * `name` - (Required) Machine config name (string)
+* `api_version` - (Optional) Api version of the machine_config (string)
 
 ##### `rolling_update`
 

@@ -24,13 +24,15 @@ var (
 
 func init() {
 	testClusterV2RKEConfigMachinePoolMachineConfigConf = &corev1.ObjectReference{
-		Kind: "kind",
-		Name: "name",
+		Kind:       "kind",
+		Name:       "name",
+		APIVersion: "api_version",
 	}
 	testClusterV2RKEConfigMachinePoolMachineConfigInterface = []interface{}{
 		map[string]interface{}{
-			"kind": "kind",
-			"name": "name",
+			"kind":        "kind",
+			"name":        "name",
+			"api_version": "api_version",
 		},
 	}
 	maxSurge := intstr.FromString("max_surge")
