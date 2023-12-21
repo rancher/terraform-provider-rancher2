@@ -32,6 +32,8 @@ type machineConfigV2Harvester struct {
 	NetworkInfo       string `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
 	UserData          string `json:"userData,omitempty" yaml:"userData,omitempty"`
 	NetworkData       string `json:"networkData,omitempty" yaml:"networkData,omitempty"`
+	EnableEFI         bool   `json:"enableEfi,omitempty" yaml:"enableEfi,omitempty"`
+	EnableSecureBoot  bool   `json:"enableSecureBoot,omitempty" yaml:"enableSecureBoot,omitempty"`
 }
 
 type MachineConfigV2Harvester struct {
@@ -106,6 +108,14 @@ func flattenMachineConfigV2Harvester(in *MachineConfigV2Harvester) []interface{}
 
 	if len(in.NetworkData) > 0 {
 		obj["network_data"] = in.NetworkData
+	}
+
+	if in.EnableEFI {
+		obj["enable_efi"] = in.EnableEFI
+	}
+
+	if in.EnableSecureBoot {
+		obj["enable_secure_boot"] = in.EnableSecureBoot
 	}
 
 	return []interface{}{obj}
@@ -187,6 +197,14 @@ func expandMachineConfigV2Harvester(p []interface{}, source *MachineConfigV2) *M
 
 	if v, ok := in["network_data"].(string); ok && len(v) > 0 {
 		obj.NetworkData = v
+	}
+
+	if v, ok := in["enable_efi"].(bool); ok && v {
+		obj.EnableEFI = v
+	}
+
+	if v, ok := in["enable_secure_boot"].(bool); ok && v {
+		obj.EnableSecureBoot = v
 	}
 
 	return obj

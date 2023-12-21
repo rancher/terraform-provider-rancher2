@@ -122,6 +122,18 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "NetworkData content of cloud-init, base64 is supported",
 		},
+		"enable_efi": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable EFI mode",
+		},
+		"enable_secure_boot": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable secure boot, only available when enable_efi is true",
+		},
 	}
 
 	return s
