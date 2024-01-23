@@ -29,7 +29,8 @@ func flattenCatalogV2(d *schema.ResourceData, in *ClusterRepo) error {
 	}
 	d.Set("resource_version", in.ObjectMeta.ResourceVersion)
 
-	d.Set("ca_bundle", string(in.Spec.CABundle))
+	encodedCABundle := base64.StdEncoding.EncodeToString(in.Spec.CABundle)
+	d.Set("ca_bundle", encodedCABundle)
 	if in.Spec.Enabled != nil {
 		d.Set("enabled", *in.Spec.Enabled)
 	}
