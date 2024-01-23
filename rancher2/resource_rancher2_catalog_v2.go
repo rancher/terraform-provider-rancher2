@@ -34,7 +34,10 @@ func resourceRancher2CatalogV2() *schema.Resource {
 func resourceRancher2CatalogV2Create(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
-	catalog := expandCatalogV2(d)
+	catalog, err := expandCatalogV2(d)
+	if err != nil {
+		return fmt.Errorf("failed to expand resource: %w", err)
+	}
 
 	log.Printf("[INFO] Creating Catalog V2 %s", name)
 
@@ -86,7 +89,10 @@ func resourceRancher2CatalogV2Read(d *schema.ResourceData, meta interface{}) err
 func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
-	catalog := expandCatalogV2(d)
+	catalog, err := expandCatalogV2(d)
+	if err != nil {
+		return fmt.Errorf("failed to expand catalog_v2 resource: %w", err)
+	}
 	log.Printf("[INFO] Updating Catalog V2 %s", name)
 
 	_, rancherID := splitID(d.Id())
