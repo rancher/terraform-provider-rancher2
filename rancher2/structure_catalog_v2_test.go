@@ -28,7 +28,7 @@ func init() {
 		"label1": "one",
 		"label2": "two",
 	}
-	testCatalogV2Conf.Spec.CABundle = []byte("ca_bundle")
+	testCatalogV2Conf.Spec.CABundle = []byte("test DER data")
 	testCatalogV2Conf.Spec.Enabled = newTrue()
 	testCatalogV2Conf.Spec.GitBranch = "git_branch"
 	testCatalogV2Conf.Spec.GitRepo = "git_repo"
@@ -43,7 +43,7 @@ func init() {
 
 	testCatalogV2Interface = map[string]interface{}{
 		"name":                      "name",
-		"ca_bundle":                 "ca_bundle",
+		"ca_bundle":                 "dGVzdCBERVIgZGF0YQ==",
 		"enabled":                   true,
 		"git_branch":                "git_branch",
 		"git_repo":                  "git_repo",
@@ -104,7 +104,10 @@ func TestExpandCatalogV2(t *testing.T) {
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, catalogV2Fields(), tc.Input)
-		output := expandCatalogV2(inputResourceData)
+		output, err := expandCatalogV2(inputResourceData)
+		if err != nil {
+			t.Fatal(err)
+		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
