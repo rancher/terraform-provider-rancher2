@@ -45,7 +45,7 @@ func catalogV2Fields() map[string]*schema.Schema {
 		"ca_bundle": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Description: "PEM encoded CA bundle which will be used to validate the repo's certificate",
+			Description: "CA certificate in base64-encoded DER format which will be used to validate the repo's certificate",
 		},
 		"enabled": {
 			Type:        schema.TypeBool,
