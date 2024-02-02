@@ -202,6 +202,28 @@ func resourceRancher2ClusterV2Delete(d *schema.ResourceData, meta interface{}) e
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be removed: %s", cluster.ID, waitErr)
 	}
+
+	// Rancher deletes the Management v3 Cluster under the hook, we should wait for the deletion to success
+	v1ClusterName := cluster.Status.ClusterName
+	if v1ClusterName != "" {
+		client, err := meta.(*Config).ManagementClient()
+		if err != nil {
+			return err
+		}
+		stateConf = &resource.StateChangeConf{
+			Pending:    []string{"removing"},
+			Target:     []string{"removed"},
+			Refresh:    clusterStateRefreshFunc(client, v1ClusterName),
+			Timeout:    d.Timeout(schema.TimeoutDelete),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitErr = stateConf.WaitForState()
+		if waitErr != nil {
+			return fmt.Errorf("[ERROR] waiting for cluster (%s) to be removed: %s", cluster.ID, waitErr)
+		}
+	}
+
 	d.SetId("")
 	return nil
 }

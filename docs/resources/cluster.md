@@ -215,6 +215,7 @@ resource "rancher2_cluster" "foo-custom" {
     }
   }
 }
+
 # Create a new rancher2 Node Template
 resource "rancher2_node_template" "foo" {
   name = "foo"
@@ -230,6 +231,7 @@ resource "rancher2_node_template" "foo" {
     zone = "<ZONE>"
   }
 }
+
 # Create a new rancher2 Node Pool
 resource "rancher2_node_pool" "foo" {
   cluster_id =  rancher2_cluster.foo-custom.id
@@ -272,6 +274,7 @@ resource "rancher2_cluster_template" "foo" {
   }
   description = "Test cluster template v2"
 }
+
 # Create a new rancher2 RKE Cluster from template
 resource "rancher2_cluster" "foo" {
   name = "foo"
@@ -361,6 +364,41 @@ EOF
 }
 ```
 
+### Creating Rancher v2 RKE cluster with Pod Security Admission Configuration Template (PSACT). For Rancher v2.7.2 and above.
+
+```hcl
+# Custom PSACT (if you wish to use your own)
+resource "rancher2_pod_security_admission_configuration_template" "foo" {
+  name = "custom-psact"
+  description = "This is my custom Pod Security Admission Configuration Template"
+  defaults {
+    audit = "restricted"
+    audit_version = "latest"
+    enforce = "restricted"
+    enforce_version = "latest"
+    warn = "restricted"
+    warn_version = "latest"
+  }
+  exemptions {
+    usernames = ["testuser"]
+    runtime_classes = ["testclass"]
+    namespaces = ["ingress-nginx","kube-system"]
+  }
+}
+
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform cluster with PSACT"
+  default_pod_security_admission_configuration_template_name = "<name>" # privileged, baseline, restricted or name of custom template
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+    # ...
+  }
+}
+```
+
 ### Importing EKS cluster to Rancher v2, using `eks_config_v2`. For Rancher v2.5.x and above.
 
 ```hcl
@@ -368,8 +406,8 @@ resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   description = "foo test"
   amazonec2_credential_config {
-    access_key = "<AWS_ACCESS_KEY>"
-    secret_key = "<AWS_SECRET_KEY>"
+    access_key = "<aws-access-key>"
+    secret_key = "<aws-secret-key>"
   }
 }
 resource "rancher2_cluster" "foo" {
@@ -377,8 +415,8 @@ resource "rancher2_cluster" "foo" {
   description = "Terraform EKS cluster"
   eks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo.id
-    name = "<CLUSTER_NAME>"
-    region = "<EKS_REGION>"
+    name = "<cluster-name>"
+    region = "<eks-region>"
     imported = true
   }
 }
@@ -391,8 +429,8 @@ resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   description = "foo test"
   amazonec2_credential_config {
-    access_key = "<AWS_ACCESS_KEY>"
-    secret_key = "<AWS_SECRET_KEY>"
+    access_key = "<aws-access-key>"
+    secret_key = "<aws-secret-key>"
   }
 }
 resource "rancher2_cluster" "foo" {
@@ -429,8 +467,8 @@ resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   description = "foo test"
   amazonec2_credential_config {
-    access_key = "<AWS_ACCESS_KEY>"
-    secret_key = "<AWS_SECRET_KEY>"
+    access_key = "<aws-access-key>"
+    secret_key = "<aws-secret-key>"
   }
 }
 resource "rancher2_cluster" "foo" {
@@ -446,7 +484,7 @@ resource "rancher2_cluster" "foo" {
       max_size = 5
       name = "node_group1"
       launch_template {
-        id = "<EC2_LAUNCH_TEMPLATE_ID>"
+        id = "<ec2-launch-template-id>"
         version = 1
       }
     }
@@ -469,12 +507,12 @@ resource "rancher2_cloud_credential" "foo-google" {
 
 resource "rancher2_cluster" "foo" {
   name = "foo"
-  description = "Foo rancher2 imported GKE cluster"
+  description = "Terraform imported GKE cluster"
   gke_config_v2 {
     name = "foo"
     google_credential_secret = rancher2_cloud_credential.foo-google.id
-    region = <REGION> # Zone argument could also be used instead of region
-    project_id = <PROJECT_ID>
+    region = <region> # Zone argument could also be used instead of region
+    project_id = <project-id>
     imported = true
   }
 }
@@ -499,16 +537,16 @@ resource "rancher2_cluster" "foo" {
   gke_config_v2 {
     name = "foo"
     google_credential_secret = rancher2_cloud_credential.foo-google.id
-    region = <REGION> # Zone argument could also be used instead of region
-    project_id = <PROJECT_ID>
-    kubernetes_version = <K8S_VERSION>
-    network = <NETWORK>
-    subnetwork = <SUBNET>
+    region = <region> # Zone argument could also be used instead of region
+    project_id = <project-id>
+    kubernetes_version = <rancher-kubernetes-version>
+    network = <network>
+    subnetwork = <subnet>
     node_pools {
       initial_node_count = 1
       max_pods_constraint = 110
-      name = <NODE_POOL_NAME>
-      version = <VERSION>
+      name = <node-pool-name>
+      version = <version>
     }
   }
 }
@@ -521,19 +559,19 @@ resource "rancher2_cluster" "foo" {
 resource "rancher2_cloud_credential" "foo-aks" {
   name = "foo-aks"
   azure_credential_config {
-    client_id = "<CLIENT_ID>"
-    client_secret = "<CLIENT_SECRET>"
-    subscription_id = "<SUBSCRIPTION_ID>"
+    client_id = "<client-id>"
+    client_secret = "<client-secret>"
+    subscription_id = "<subscription-id>"
   }
 }
 # For imported AKS clusters, don't add any other aks_config_v2 field
 resource "rancher2_cluster" "foo" {
-  name = <CLUSTER_NAME>
+  name = <cluster-name>
   description = "Terraform AKS cluster"
   aks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo-aks.id
-    resource_group = "<RESOURCE_GROUP>"
-    resource_location = "<RESOURCE_LOCATION>"
+    resource_group = "<resource-group>"
+    resource_location = "<resource-location"
     imported = true
   }
 }
@@ -545,9 +583,9 @@ resource "rancher2_cluster" "foo" {
 resource "rancher2_cloud_credential" "foo-aks" {
   name = "foo-aks"
   azure_credential_config {
-    client_id = "<CLIENT_ID>"
-    client_secret = "<CLIENT_SECRET>"
-    subscription_id = "<SUBSCRIPTION_ID>"
+    client_id = "<client-id>"
+    client_secret = "<client-secret>"
+    subscription_id = "<subscription-id>"
   }
 }
 
@@ -556,14 +594,14 @@ resource "rancher2_cluster" "foo" {
   description = "Terraform AKS cluster"
   aks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo-aks.id
-    resource_group = "<RESOURCE_GROUP>"
-    resource_location = "<RESOURCE_LOCATION>"
-    dns_prefix = "<DNS_PREFIX>"
+    resource_group = "<resource-group>"
+    resource_location = "<resource-location>"
+    dns_prefix = "<dns-prefix>"
     kubernetes_version = "1.24.6"
-    network_plugin = "<NETWORK_PLUGIN>"
+    network_plugin = "<network-plugin>"
     node_pools {
       availability_zones = ["1", "2", "3"]
-      name = "<NODEPOOL_NAME_1>"
+      name = "<nodepool-name-1>"
       mode = "System"
       count = 1
       orchestrator_version = "1.21.2"
@@ -572,7 +610,7 @@ resource "rancher2_cluster" "foo" {
     }
     node_pools {
       availability_zones = ["1", "2", "3"]
-      name = "<NODEPOOL_NAME_2>"
+      name = "<nodepool-name-2>"
       count = 1
       mode = "User"
       orchestrator_version = "1.21.2"
@@ -615,7 +653,7 @@ The following arguments are supported:
 * `cluster_template_questions` - (Optional/Computed) Cluster template questions. For Rancher v2.3.x and above (list)
 * `cluster_template_revision_id` - (Optional) Cluster template revision ID. For Rancher v2.3.x and above (string)
 * `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support) (string)
-* `default_pod_security_admission_configuration_template_name` - (Optional/Computed) Cluster default pod security admission configuration template name (string)
+* `default_pod_security_admission_configuration_template_name` - (Optional/Computed) The name of the pre-defined pod security admission configuration template to be applied to the cluster. Rancher admins (or those with the right permissions) can create, manage, and edit those templates. For more information, please refer to [Rancher Documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/psa-config-templates). The argument is available in Rancher v2.7.2 and above (string)
 * `desired_agent_image` - (Optional/Computed) Desired agent image. For Rancher v2.3.x and above (string)
 * `desired_auth_image` - (Optional/Computed) Desired auth image. For Rancher v2.3.x and above (string)
 * `docker_root_dir` - (Optional/Computed) Desired auth image. For Rancher v2.3.x and above (string)
