@@ -1,3 +1,35 @@
+## v4.0.0 (February 5, 2024)
+
+FEATURES:
+
+* Added support for `machine_selector_files` on . See https://github.com/rancher/terraform-provider-rancher2/pull/1225
+* Added support for `graceful_shutdown_timeout` for vSphere nodes. See https://github.com/rancher/terraform-provider-rancher2/pull/1228
+* Added `inherited_cluster_roles` attribute to global_role. See https://github.com/rancher/terraform-provider-rancher2/pull/1242
+
+
+ENHANCEMENTS:
+
+* Changed default Ubuntu image for DigitalOcean from 16.04 -> 22.04. See  https://github.com/rancher/terraform-provider-rancher2/pull/1213
+* Improved EKS node_group error message. See https://github.com/rancher/terraform-provider-rancher2/pull/1205
+* Set `protect-kernel-defaults` on rancher_v2 clusters. See https://github.com/rancher/terraform-provider-rancher2/pull/1244
+* Updated `default_system_registry` behavior at `rancher2_app_v2` resource. See https://github.com/rancher/terraform-provider-rancher2/pull/1265
+* Updated RKE config machine pool schema and structure. See https://github.com/rancher/terraform-provider-rancher2/pull/1253
+* Added `project_id` syntax for `rancher2_project_role_template_binding`. See https://github.com/rancher/terraform-provider-rancher2/pull/1272
+* Add the `keypair_name` argument  to the `openstack_config` machine config and node template.  See https://github.com/rancher/terraform-provider-rancher2/pull/1235
+* [Docs] updated the documentation for `rancher_cluster_v2`. See https://github.com/rancher/terraform-provider-rancher2/pull/1300
+* [Docs] Remove `keypair_name` from `amazonec2_config`. See https://github.com/rancher/terraform-provider-rancher2/pull/942
+
+
+BUGFIXES:
+
+* Fixed `machine_selector_config` old schema to have the correct type. See https://github.com/rancher/terraform-provider-rancher2/pull/1223
+* Allow machine pools to be created and scaled down to 0. See https://github.com/rancher/terraform-provider-rancher2/pull/1232
+* Fixed the issue where the for_each in `rancher2_registry` keeps changing the order of the list that has not changed. See https://github.com/rancher/terraform-provider-rancher2/pull/1268
+* Fixed double base64-encoding of `ca_bundle` field. See https://github.com/rancher/terraform-provider-rancher2/pull/1296
+* [Docs] Fixed description for using `kms_key` `eks_config_v2`. See https://github.com/rancher/terraform-provider-rancher2/pull/892
+
+
+
 ## 3.1.1 (August 3, 2023)
 
 FEATURES:
