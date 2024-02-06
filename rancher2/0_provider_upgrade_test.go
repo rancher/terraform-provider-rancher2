@@ -21,6 +21,8 @@ var (
 	testAccCheckRancher2UpgradeConfigV24      string
 	testAccCheckRancher2UpgradeConfigV25      string
 	testAccCheckRancher2UpgradeConfigV26      string
+	testAccCheckRancher2UpgradeConfigV27      string
+	testAccCheckRancher2UpgradeConfigV28      string
 	testAccCheckRancher2UpgradeCluster        string
 	testAccCheckRancher2UpgradeVersion        []string
 	testAccCheckRancher2RunningVersionIndex   int
@@ -47,7 +49,7 @@ resource "rancher2_namespace" "testacc" {
   project_id = rancher2_cluster_sync.testacc.default_project_id
 }
 `
-	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.13", "v2.5.9", "v2.6.2"}
+	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.13", "v2.5.9", "v2.6.2", "v2.7.9", "v2.8.1"}
 	testAccCheckRancher2RunningVersionIndex = 0
 	testAccCheckRancher2UpgradeCluster = os.Getenv("RANCHER_ACC_CLUSTER_NAME")
 	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
@@ -321,6 +323,67 @@ provider "rancher2" {
 ` + testAccRancher2Token + `
 ` + testAccRancher2TokenCluster + `
 `
+
+	testAccCheckRancher2UpgradeConfigV27 = testAccCheckRancher2Bootstrap + `
+` + testAccRancher2AppV2 + `
+` + testAccCheckRancher2UpgradeCatalogV24 + `
+` + testAccRancher2CatalogV2 + `
+` + testAccCheckRancher2UpgradeCertificateV24 + `
+` + testAccRancher2CloudCredentialConfigAmazonec2 + `
+` + testAccRancher2CloudCredentialConfigAzure + `
+` + testAccRancher2CloudCredentialConfigDigitalocean + `
+` + testAccRancher2CloudCredentialConfigOpenstack + `
+` + testAccRancher2CloudCredentialConfigS3 + `
+` + testAccRancher2CloudCredentialConfigVsphere + `
+` + testAccRancher2ClusterConfigRKE + `
+` + testAccRancher2ClusterAlertGroup + `
+` + testAccRancher2ClusterAlertRule + `
+` + testAccRancher2ClusterDriver + `
+` + testAccRancher2ClusterV2 + `
+` + testAccRancher2ConfigMapV2 + `
+` + testAccRancher2User + `
+` + testAccRancher2ClusterRoleTemplateBinding + `
+` + testAccRancher2ClusterTemplateConfig + `
+` + testAccRancher2EtcdBackup + `
+` + testAccRancher2FeatureConfig + `
+` + testAccRancher2GlobalDNS + `
+` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
+` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
+` + testAccRancher2GlobalDNSProviderRoute53Config + `
+` + testAccRancher2GlobalRoleBinding + `
+` + testAccRancher2MultiClusterApp + `
+` + testAccRancher2Namespace + `
+` + testAccRancher2NodeDriver + `
+` + testAccRancher2NodePool + `
+` + testAccRancher2NodeTemplateAmazonec2 + `
+` + testAccRancher2NodeTemplateAzure + `
+` + testAccRancher2NodeTemplateDigitalocean + `
+` + testAccRancher2NodeTemplateOpennebulaConfig + `
+` + testAccRancher2NodeTemplateOpenstack + `
+` + testAccRancher2NodeTemplateVsphere + `
+` + testAccRancher2NotifierDingtalk + `
+` + testAccRancher2NotifierMSTeams + `
+` + testAccRancher2NotifierPagerduty + `
+` + testAccRancher2NotifierSlack + `
+` + testAccRancher2NotifierSMTP + `
+` + testAccRancher2NotifierWebhook + `
+` + testAccRancher2NotifierWechat + `
+` + testAccCheckRancher2PodSecurityPolicyTemplate + `
+` + testAccRancher2ProjectAlertGroupConfig + `
+` + testAccRancher2ProjectAlertRule + `
+` + testAccRancher2ProjectRoleTemplateBinding + `
+` + testAccRancher2Project + `
+` + testAccRancher2Registry + `
+` + testAccRancher2RoleTemplateConfig + `
+` + testAccRancher2Secret + `
+` + testAccRancher2SecretV2 + `
+` + testAccRancher2SecretNs + `
+` + testAccRancher2SettingConfig + `
+` + testAccRancher2StorageClassV2 + `
+` + testAccRancher2Token + `
+` + testAccRancher2TokenCluster + `
+`
+	testAccCheckRancher2UpgradeConfigV28 = testAccCheckRancher2UpgradeConfigV27
 }
 
 func TestAccRancher2Upgrade(t *testing.T) {
@@ -387,6 +450,38 @@ func TestAccRancher2Upgrade(t *testing.T) {
 			},
 			{
 				Config: testAccCheckRancher2UpgradeConfigV26,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
+					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
+					testAccRancher2UpgradeRancher(),
+				),
+			},
+			{
+				Config: testAccCheckRancher2UpgradeConfigV27,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
+					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
+					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
+					testAccRancher2UpgradeRancher(),
+				),
+			},
+			{
+				Config: testAccCheckRancher2UpgradeConfigV28,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),

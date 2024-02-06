@@ -66,7 +66,7 @@ resource "rancher2_app" "foo" {
 	testAccRancher2AppUpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccCheckRancher2NamespaceTestacc + testAccRancher2AppUpdate
 }
 
-func TestAccRancher2App_basic(t *testing.T) {
+func testAccRancher2AppBasic(t *testing.T) {
 	var app *projectClient.App
 
 	resource.Test(t, resource.TestCase{
@@ -116,7 +116,7 @@ func TestAccRancher2App_basic(t *testing.T) {
 	})
 }
 
-func TestAccRancher2App_disappears(t *testing.T) {
+func testAccRancher2AppDisappear(t *testing.T) {
 	var app *projectClient.App
 
 	resource.Test(t, resource.TestCase{

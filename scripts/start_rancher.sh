@@ -87,7 +87,7 @@ spec:
     hostname: ${RANCHER_HOSTNAME}
     replicas: 1
     rancherImageTag: ${RANCHER_VERSION}
-    bootstrapPassword: "admin"
+    bootstrapPassword: "admin123456789abcdefg"
 EOF
 
 ${DOCKER_BIN} cp ${TEMP_DIR}"/rancher.yaml" ${K3S_SERVER}:/var/lib/rancher/k3s/server/manifests/

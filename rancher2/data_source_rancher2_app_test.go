@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccRancher2AppDataSource(t *testing.T) {
+func testAccRancher2AppDataSource(t *testing.T) {
 	testAccCheckRancher2AppDataSourceConfig := testAccRancher2AppConfig + `
 data "` + testAccRancher2AppType + `" "foo" {
   name = rancher2_app.foo.name

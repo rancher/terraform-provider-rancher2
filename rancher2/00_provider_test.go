@@ -14,7 +14,7 @@ import (
 const (
 	testAccRancher2DefaultClusterID   = "local"
 	testAccRancher2DefaultClusterName = "local"
-	testAccRancher2DefaultAdminPass   = "admin"
+	testAccRancher2DefaultAdminPass   = "admin123456789abcdefg"
 )
 
 var (
