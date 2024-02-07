@@ -133,4 +133,5 @@ BUG FIXES:
 
 * Create a PR to update CHANGELOG
 * Copy the updated notes back to the draft release and save (DO NOT release with just the generated notes. Those are just a template to help you)
-* Create an [EIO issue](https://github.com/rancherlabs/eio) for Hashicorp to publish the release
+* Undraft the release, which creates the tag and builds the release
+* If necessary - create a followup PR to edit [`./docs/compatibility-matrix.md`](https://github.com/rancher/terraform-provider-rancher2/blob/master/docs/compatibility-matrix.md) with the new version information
