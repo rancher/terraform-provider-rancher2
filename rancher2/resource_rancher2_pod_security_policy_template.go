@@ -117,7 +117,7 @@ func resourceRancher2PodSecurityPolicyTemplateDelete(d *schema.ResourceData, met
 
 	err = client.PodSecurityPolicyTemplate.Delete(pspt)
 	if err != nil {
-		return fmt.Errorf("Error removing PodSecurityPolicyTemplate: %s", err)
+		return fmt.Errorf("[ERROR] removing PodSecurityPolicyTemplate: %s", err)
 	}
 
 	stateConf := &resource.StateChangeConf{
