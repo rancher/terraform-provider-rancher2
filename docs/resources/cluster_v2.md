@@ -422,10 +422,10 @@ resource "rancher2_cluster_v2" "foo" {
 EOF
     # The resource units follow Kubernetes' standard
     override_resource_requirements {
-      cpu_limit      = "800"
-      cpu_request    = "500"
-      memory_limit   = "800"
-      memory_request = "500"
+      cpu_limit      = "800m"
+      cpu_request    = "500m"
+      memory_limit   = "800Mi"
+      memory_request = "500Mi"
     }
   }
   
@@ -748,6 +748,24 @@ EOF
 }
 ```
 
+The example below demonstrates how to configure the IPv4/IPv6 network CIDRs to use for pod IPs and service IPs in an RKE2/K3s cluster:
+
+```hcl
+resource "rancher2_cluster_v2" "foo" {
+  name = "foo"
+  kubernetes_version = "rke2/k3s-version"
+  rke_config {
+    machine_global_config= <<EOF
+cluster-cidr: "0.42.0.0/16"
+service-cidr: "0.42.0.0/16"
+EOF
+  }
+    # In the case of a node-driver cluster
+    machine_pools {
+      # ...
+    }
+}
+```
 
 ### Customize chart values in a cluster
 
