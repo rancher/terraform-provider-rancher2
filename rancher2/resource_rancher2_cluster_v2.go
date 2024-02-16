@@ -200,8 +200,30 @@ func resourceRancher2ClusterV2Delete(d *schema.ResourceData, meta interface{}) e
 	}
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be removed: %s", cluster.ID, waitErr)
+		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be removed: %w", cluster.ID, waitErr)
 	}
+
+	// Rancher deletes the Management v3 Cluster under the hook, we should wait for the deletion to success
+	v1ClusterName := cluster.Status.ClusterName
+	if v1ClusterName != "" {
+		client, err := meta.(*Config).ManagementClient()
+		if err != nil {
+			return err
+		}
+		stateConf = &resource.StateChangeConf{
+			Pending:    []string{"removing"},
+			Target:     []string{"removed"},
+			Refresh:    clusterStateRefreshFunc(client, v1ClusterName),
+			Timeout:    d.Timeout(schema.TimeoutDelete),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitErr = stateConf.WaitForState()
+		if waitErr != nil {
+			return fmt.Errorf("[ERROR] waiting for cluster (%s) to be removed: %w", cluster.ID, waitErr)
+		}
+	}
+
 	d.SetId("")
 	return nil
 }
@@ -263,7 +285,7 @@ func getClusterV2ByID(c *Config, id string) (*ClusterV2, error) {
 	err := c.getObjectV2ByID(rancher2DefaultLocalClusterID, id, clusterV2APIType, resp)
 	if err != nil {
 		if !IsServerError(err) && !IsNotFound(err) && !IsForbidden(err) {
-			return nil, fmt.Errorf("Getting cluster V2: %s", err)
+			return nil, fmt.Errorf("Getting cluster V2: %w", err)
 		}
 		return nil, err
 	}
@@ -303,7 +325,7 @@ func updateClusterV2(c *Config, id string, obj *ClusterV2) (*ClusterV2, error) {
 		select {
 		case <-time.After(rancher2RetriesWait * time.Second):
 		case <-ctx.Done():
-			return nil, fmt.Errorf("Timeout updating cluster V2 ID %s: %v", id, err)
+			return nil, fmt.Errorf("Timeout updating cluster V2 ID %s: %w", id, err)
 		}
 	}
 }
@@ -320,7 +342,7 @@ func waitForClusterV2State(c *Config, id, state string, interval time.Duration) 
 		if err != nil {
 			log.Printf("[DEBUG] Retrying on error Refreshing Cluster V2 %s: %v", id, err)
 			if !IsNotFound(err) && !IsForbidden(err) && !IsNotAccessibleByID(err) {
-				return nil, fmt.Errorf("Getting cluster V2 ID (%s): %v", id, err)
+				return nil, fmt.Errorf("Getting cluster V2 ID (%s): %w", id, err)
 			}
 			if IsNotAccessibleByID(err) {
 				// Restarting clients to update RBAC
@@ -355,6 +377,8 @@ func waitForClusterV2State(c *Config, id, state string, interval time.Duration) 
 }
 
 func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
+	format := "Setting cluster V2 legacy data: %w"
+
 	if c == nil {
 		return fmt.Errorf("Setting cluster V2 legacy data: Provider config is nil")
 	}
@@ -365,7 +389,7 @@ func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
 
 	client, err := c.ManagementClient()
 	if err != nil {
-		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
+		return fmt.Errorf(format, err)
 	}
 
 	cluster := &Cluster{}
@@ -375,22 +399,22 @@ func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
 			log.Printf("[INFO] Cluster ID %s not found.", cluster.ID)
 			return nil
 		}
-		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
+		return fmt.Errorf(format, err)
 	}
 
 	clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
 	if err != nil && !IsForbidden(err) {
-		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
+		return fmt.Errorf(format, err)
 	}
 	regToken, _ := flattenClusterRegistrationToken(clusterRegistrationToken)
 	err = d.Set("cluster_registration_token", regToken)
 	if err != nil {
-		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
+		return fmt.Errorf(format, err)
 	}
 
 	kubeConfig, err := getClusterKubeconfig(c, cluster.ID, d.Get("kube_config").(string))
 	if err != nil {
-		return fmt.Errorf("Setting cluster V2 legacy data: %v", err)
+		return fmt.Errorf(format, err)
 	}
 	d.Set("kube_config", kubeConfig.Config)
 
