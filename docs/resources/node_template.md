@@ -151,25 +151,26 @@ The following arguments are supported:
 * `cloud_credential_id` - (Optional) Cloud credential ID for the Node Template. Required from Rancher v2.2.x (string)
 * `description` - (Optional) Description for the Node Template (string)
 * `digitalocean_config` - (Optional) Digitalocean config for the Node Template (list maxitems:1)
-* `linode_config` - (Optional) Linode config for the Node Template (list maxitems:1)
-* `driver_id` - (Optional/Computed) The node driver id used by the node template. It's required if the node driver isn't built in Rancher (string)
-* `engine_env` - (Optional) Engine environment for the node template (string)
-* `engine_insecure_registry` - (Optional) Insecure registry for the node template (list)
-* `engine_install_url` - (Optional/Computed) Docker engine install URL for the node template. Available install docker versions at `https://github.com/rancher/install-docker` (string)
-* `engine_label` - (Optional) Engine label for the node template (string)
-* `engine_opt` - (Optional) Engine options for the node template (map)
-* `engine_registry_mirror` - (Optional) Engine registry mirror for the node template (list)
-* `engine_storage_driver` - (Optional) Engine storage driver for the node template (string)
-* `node_taints` - (Optional) Node taints. For Rancher v2.3.3 and above (List)
+* `driver_id` - (Optional/Computed) The node driver id used by the Node Template. It's required if the node driver isn't built in Rancher (string)
+* `engine_env` - (Optional) Engine environment for the Node Template (string)
+* `engine_insecure_registry` - (Optional) Insecure registry for the Node Template (list)
+* `engine_install_url` - (Optional/Computed) Docker engine install URL for the Node Template. Available install docker versions at `https://github.com/rancher/install-docker` (string)
+* `engine_label` - (Optional) Engine label for the Node Template (string)
+* `engine_opt` - (Optional) Engine options for the Node Template (map)
+* `engine_registry_mirror` - (Optional) Engine registry mirror for the Node Template (list)
+* `engine_storage_driver` - (Optional) Engine storage driver for the Node Template (string)
 * `harvester_config` - (Optional) Harvester config for the Node Template (list maxitems:1)
 * `hetzner_config` - (Optional) Hetzner config for the Node Template (list maxitems:1)
+* `linode_config` - (Optional) Linode config for the Node Template (list maxitems:1)
+* `log_opt` - (Optional) Log options for the Node Template (map)
+* `node_taints` - (Optional) Node taints. For Rancher v2.3.3 and above (List)
 * `opennebula_config` - (Optional) Opennebula config for the Node Template (list maxitems:1)
 * `openstack_config` - (Optional) Openstack config for the Node Template (list maxitems:1)
 * `outscale_config` - (Optional) Outscale config for the Node Template (list maxitems:1)
-* `use_internal_ip_address` - (Optional) Engine storage driver for the node template (bool)
+* `use_internal_ip_address` - (Optional) Engine storage driver for the Node Template (bool)
 * `vsphere_config` - (Optional) vSphere config for the Node Template (list maxitems:1)
-* `annotations` - (Optional) Annotations for Node Template object (map)
-* `labels` - (Optional/Computed) Labels for Node Template object (map)
+* `annotations` - (Optional) Annotations for the Node Template (map)
+* `labels` - (Optional/Computed) Labels for the Node Template (map)
 
 **Note:** `labels` and `node_taints` will be applied to nodes deployed using the Node Template
 
@@ -178,7 +179,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
-* `driver` - (Computed) The driver of the node template (string)
+* `driver` - (Computed) The driver of the Node Template (string)
 
 ## Nested blocks
 
