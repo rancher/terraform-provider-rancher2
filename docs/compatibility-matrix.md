@@ -26,6 +26,7 @@ The version matrix specifies the Terraform provider version _recommended_ to use
 | Terraform provider version | Rancher | Notes |
 |----------------------------|:-------:|-------|
 | 4.0.0                      |  2.8.x  |       |
+| 4.1.0                      |  2.8.x  |       |
 
 #### FAQ
 
