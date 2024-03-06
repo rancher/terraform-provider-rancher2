@@ -1,8 +1,22 @@
+## v4.1.0 (March 6, 2024)
+
+FEATURES:
+
+* Added support for `rancher2_pod_security_admission_configuration_template` resource and dataSource. See https://github.com/rancher/terraform-provider-rancher2/pull/1302
+
+ENHANCEMENTS:
+
+* [Docs] fix unit and add new example to the documentation for `rancher_cluster_v2`. See  https://github.com/rancher/terraform-provider-rancher2/pull/1309
+* [Docs] add note linking to AWS docs for `eks_config_v2`. See https://github.com/rancher/terraform-provider-rancher2/pull/1247
+
+BUGFIXES:
+
+
 ## v4.0.0 (February 5, 2024)
 
 FEATURES:
 
-* Added support for `machine_selector_files` on . See https://github.com/rancher/terraform-provider-rancher2/pull/1225
+* Added support for `machine_selector_files` on the `rancher2_cluster_v2` resource. See https://github.com/rancher/terraform-provider-rancher2/pull/1225
 * Added support for `graceful_shutdown_timeout` for vSphere nodes. See https://github.com/rancher/terraform-provider-rancher2/pull/1228
 * Added `inherited_cluster_roles` attribute to global_role. See https://github.com/rancher/terraform-provider-rancher2/pull/1242
 
