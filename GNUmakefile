@@ -1,3 +1,6 @@
+SHELL=/bin/bash
+export PATH:=/usr/local/go/bin:~/go/bin/:$(PATH)
+
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 PKG_NAME=rancher2
 TEST?="./${PKG_NAME}"

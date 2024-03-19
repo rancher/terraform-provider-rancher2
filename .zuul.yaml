@@ -1,0 +1,36 @@
+---
+
+- job:
+    name: lint
+    parent: golang-make
+    nodeset: ubuntu-jammy
+    vars:
+      make_command: lint
+- job:
+    name: vet
+    parent: golang-make
+    nodeset: ubuntu-jammy
+    vars:
+      make_command: vet
+- job:
+    name: test
+    parent: golang-make
+    nodeset: ubuntu-jammy
+    vars:
+      make_command: test
+
+- project:
+    merge-mode: squash-merge
+    default-branch: master
+    check:
+      jobs:
+        - lint
+        - vet
+        - test
+        - goreleaser-build
+    gate:
+      jobs:
+        - lint
+        - vet
+        - test
+        - goreleaser-build
