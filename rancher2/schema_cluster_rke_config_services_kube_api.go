@@ -517,6 +517,14 @@ func clusterRKEConfigServicesKubeAPIFieldsV0() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+		"extra_args_array": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesExtraArgsArrayFields(),
+			},
+			Set: clusterRKEConfigServicesExtraArgsArraySchemaSetFunc,
+		},
 		"extra_binds": {
 			Type:     schema.TypeList,
 			Optional: true,
@@ -599,6 +607,14 @@ func clusterRKEConfigServicesKubeAPIFields() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
+		},
+		"extra_args_array": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesExtraArgsArrayFields(),
+			},
+			Set: clusterRKEConfigServicesExtraArgsArraySchemaSetFunc,
 		},
 		"extra_binds": {
 			Type:     schema.TypeList,
@@ -683,6 +699,14 @@ func clusterRKEConfigServicesKubeAPIFieldsData() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
+		},
+		"extra_args_array": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: clusterRKEConfigServicesExtraArgsArrayFields(),
+			},
+			Set: clusterRKEConfigServicesExtraArgsArraySchemaSetFunc,
 		},
 		"extra_binds": {
 			Type:     schema.TypeList,
