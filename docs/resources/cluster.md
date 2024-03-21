@@ -601,6 +601,10 @@ resource "rancher2_cluster" "foo" {
     dns_prefix = "<dns-prefix>"
     kubernetes_version = "1.24.6"
     network_plugin = "<network-plugin>"
+    virtual_network = "<virtual-network>"
+    virtual_network_resource_group = "<virtual-network-resource-group>"
+    subnet = "<subnet>"
+    node_resource_group = "<node-resource-group>"
     node_pools {
       availability_zones = ["1", "2", "3"]
       name = "<nodepool-name-1>"
@@ -1602,6 +1606,7 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `network_pod_cidr` - (Optional/Computed) The AKS network pod cidr (string)
 * `network_policy` - (Optional/Computed) The AKS network policy (string)
 * `network_service_cidr` - (Optional/Computed) The AKS network service cidr (string)
+* `node_resource_group` (Optional/Computed) The AKS node resource group name (string)
 * `private_cluster` - (Optional/Computed) Is AKS cluster private? (bool)
 * `subnet` - (Optional/Computed) The AKS subnet (string)
 * `tags` - (Optional/Computed) The AKS cluster tags (map)
