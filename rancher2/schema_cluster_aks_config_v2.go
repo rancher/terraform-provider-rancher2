@@ -257,6 +257,12 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 				Schema: clusterAKSConfigV2NodePoolsFields(),
 			},
 		},
+		"node_resource_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "The AKS node resource group name",
+		},
 		"private_cluster": {
 			Type:        schema.TypeBool,
 			Optional:    true,
