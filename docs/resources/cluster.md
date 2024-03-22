@@ -462,6 +462,8 @@ resource "rancher2_cluster" "foo" {
 
 ### Creating EKS cluster from Rancher v2, using `eks_config_v2` and launch template. For Rancher v2.5.6 and above.
 
+Note: To use `launch_template` you must provide the ID (seen as `<EC2_LAUNCH_TEMPLATE_ID>`) to the template either as a static value. Or fetched via AWS data-source using one of: [aws_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami.html), [aws_ami_ids](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami_ids), or similar data-sources. You can also create a custom [`launch_template`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template) first and provide the ID to that.
+
 ```hcl
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
@@ -520,7 +522,7 @@ resource "rancher2_cluster" "foo" {
 
 ### Creating GKE cluster from Rancher v2, using `gke_config_v2`. For Rancher v2.5.8 and above.
 
-**Note:** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585]](https://github.com/rancher/rancher/issues/32585)
+**Note:** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585](https://github.com/rancher/rancher/issues/32585)
 
 ```hcl
 resource "rancher2_cloud_credential" "foo-google" {
@@ -599,6 +601,10 @@ resource "rancher2_cluster" "foo" {
     dns_prefix = "<dns-prefix>"
     kubernetes_version = "1.24.6"
     network_plugin = "<network-plugin>"
+    virtual_network = "<virtual-network>"
+    virtual_network_resource_group = "<virtual-network-resource-group>"
+    subnet = "<subnet>"
+    node_resource_group = "<node-resource-group>"
     node_pools {
       availability_zones = ["1", "2", "3"]
       name = "<nodepool-name-1>"
@@ -1600,6 +1606,7 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `network_pod_cidr` - (Optional/Computed) The AKS network pod cidr (string)
 * `network_policy` - (Optional/Computed) The AKS network policy (string)
 * `network_service_cidr` - (Optional/Computed) The AKS network service cidr (string)
+* `node_resource_group` (Optional/Computed) The AKS node resource group name (string)
 * `private_cluster` - (Optional/Computed) Is AKS cluster private? (bool)
 * `subnet` - (Optional/Computed) The AKS subnet (string)
 * `tags` - (Optional/Computed) The AKS cluster tags (map)
