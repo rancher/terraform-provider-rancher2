@@ -12,7 +12,7 @@ This resource bootstraps a Rancher system by performing the following tasks:
 - Sets `telemetry-opt` setting.
 - Creates a token for admin user with concrete TTL.
 
-**Note** Starting from Rancher v2.6.0, the Rancher2 installation is setting a random initial admin password by default. To specify the initial password during rancher2 installation, helm chart [`bootstrapPassword`](https://github.com/rancher/rancher/blob/release/v2.6/chart/values.yaml#L157) value for HA installation or docker env variable [`CATTLE_BOOTSTRAP_PASSWORD`](https://github.com/rancher/rancher/blob/release/v2.6/chart/templates/deployment.yaml#L135) for single node installation can be used. To properly use this resource for Rancher v2.6.0 and above, set the `initial_password` argument to the password generated or set during installation.
+**Note:** Starting from Rancher v2.6.0, the Rancher2 installation is setting a random initial admin password by default. To specify the initial password during rancher2 installation, helm chart [`bootstrapPassword`](https://github.com/rancher/rancher/blob/release/v2.6/chart/values.yaml#L157) value for HA installation or docker env variable [`CATTLE_BOOTSTRAP_PASSWORD`](https://github.com/rancher/rancher/blob/release/v2.6/chart/templates/deployment.yaml#L135) for single node installation can be used. To properly use this resource for Rancher v2.6.0 and above, set the `initial_password` argument to the password generated or set during installation.
 
 Rancher2 admin password can be updated after the initial run of terraform by setting `password` field and applying this resource again.
 

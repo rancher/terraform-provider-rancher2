@@ -77,17 +77,23 @@ func resourceRancher2EtcdBackupRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	etcdBackup, err := client.EtcdBackup.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Etcd Backup ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		etcdBackup, err := client.EtcdBackup.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Etcd Backup ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	return flattenEtcdBackup(d, etcdBackup)
+		if err = flattenEtcdBackup(d, etcdBackup); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2EtcdBackupUpdate(d *schema.ResourceData, meta interface{}) error {

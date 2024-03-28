@@ -125,6 +125,10 @@ func flattenClusterRKEConfigCloudProviderAzure(in *managementClient.AzureCloudPr
 		obj["vnet_resource_group"] = in.VnetResourceGroup
 	}
 
+	if len(in.Tags) > 0 {
+		obj["tags"] = in.Tags
+	}
+
 	return []interface{}{obj}, nil
 }
 
@@ -251,6 +255,10 @@ func expandClusterRKEConfigCloudProviderAzure(p []interface{}) (*managementClien
 
 	if v, ok := in["vnet_resource_group"].(string); ok && len(v) > 0 {
 		obj.VnetResourceGroup = v
+	}
+
+	if v, ok := in["tags"].(string); ok && len(v) > 0 {
+		obj.Tags = v
 	}
 
 	return obj, nil

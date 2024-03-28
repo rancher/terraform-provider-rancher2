@@ -68,16 +68,23 @@ func resourceRancher2ProjectAlertRuleRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	projectAlertRule, err := client.ProjectAlertRule.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Project Alert Rule ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		projectAlertRule, err := client.ProjectAlertRule.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Project Alert Rule ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-	}
 
-	return flattenProjectAlertRule(d, projectAlertRule)
+		if err = flattenProjectAlertRule(d, projectAlertRule); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ProjectAlertRuleUpdate(d *schema.ResourceData, meta interface{}) error {

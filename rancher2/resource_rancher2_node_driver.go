@@ -68,16 +68,23 @@ func resourceRancher2NodeDriverRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	nodeDriver, err := client.NodeDriver.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Node Driver ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		nodeDriver, err := client.NodeDriver.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Node Driver ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-	}
 
-	return flattenNodeDriver(d, nodeDriver)
+		if err = flattenNodeDriver(d, nodeDriver); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2NodeDriverUpdate(d *schema.ResourceData, meta interface{}) error {

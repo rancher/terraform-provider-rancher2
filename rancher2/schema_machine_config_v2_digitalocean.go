@@ -23,7 +23,7 @@ func machineConfigV2DigitaloceanFields() map[string]*schema.Schema {
 		"image": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "ubuntu-16-04-x64",
+			Default:     "ubuntu-22-04-x64",
 			Description: "Digital Ocean Image",
 		},
 		"ipv6": {
@@ -88,7 +88,6 @@ func machineConfigV2DigitaloceanFields() map[string]*schema.Schema {
 		"userdata": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "docker-user",
 			Description: "Path to file with cloud-init user-data",
 		},
 	}

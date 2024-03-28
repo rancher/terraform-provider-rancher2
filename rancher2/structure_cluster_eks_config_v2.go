@@ -75,6 +75,9 @@ func flattenClusterEKSConfigV2NodeGroups(input []managementClient.NodeGroup, p [
 		if in.MinSize != nil {
 			obj["min_size"] = int(*in.MinSize)
 		}
+		if in.NodeRole != nil && len(*in.NodeRole) > 0 {
+			obj["node_role"] = *in.NodeRole
+		}
 		if in.RequestSpotInstances != nil {
 			obj["request_spot_instances"] = *in.RequestSpotInstances
 		}
@@ -206,7 +209,6 @@ func expandClusterEKSConfigV2NodeGroups(p []interface{}, subnets []string, versi
 		if v, ok := in["instance_type"].(string); ok {
 			obj.InstanceType = &v
 		}
-
 		if v, ok := in["desired_size"].(int); ok {
 			size := int64(v)
 			obj.DesiredSize = &size
@@ -238,6 +240,9 @@ func expandClusterEKSConfigV2NodeGroups(p []interface{}, subnets []string, versi
 		if v, ok := in["min_size"].(int); ok {
 			size := int64(v)
 			obj.MinSize = &size
+		}
+		if v, ok := in["node_role"].(string); ok {
+			obj.NodeRole = &v
 		}
 		if v, ok := in["request_spot_instances"].(bool); ok {
 			obj.RequestSpotInstances = &v
@@ -392,4 +397,17 @@ func fixClusterEKSConfigV2NodeGroupsLaunchTemplate(p []interface{}) map[string]i
 	}
 
 	return obj
+}
+
+func checkClusterEKSConfigV2NodeGroupsDesiredSize(cluster *Cluster) bool {
+	if len(cluster.EKSConfig.NodeGroups) == 0 {
+		return false
+	}
+
+	for _, v := range cluster.EKSConfig.NodeGroups {
+		if *v.DesiredSize == 0 {
+			return false
+		}
+	}
+	return true
 }

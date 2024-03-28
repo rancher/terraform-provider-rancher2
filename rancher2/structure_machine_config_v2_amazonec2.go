@@ -28,7 +28,6 @@ type machineConfigV2Amazonec2 struct {
 	IamInstanceProfile      string   `json:"iamInstanceProfile,omitempty" yaml:"iamInstanceProfile,omitempty"`
 	InsecureTransport       bool     `json:"insecureTransport,omitempty" yaml:"insecureTransport,omitempty"`
 	InstanceType            string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
-	KeypairName             string   `json:"keypairName,omitempty" yaml:"keypairName,omitempty"`
 	KmsKey                  string   `json:"kmsKey,omitempty" yaml:"kmsKey,omitempty"`
 	Monitoring              bool     `json:"monitoring,omitempty" yaml:"monitoring,omitempty"`
 	OpenPort                []string `json:"openPort,omitempty" yaml:"openPort,omitempty"`
@@ -100,10 +99,6 @@ func flattenMachineConfigV2Amazonec2(in *MachineConfigV2Amazonec2) []interface{}
 
 	if len(in.InstanceType) > 0 {
 		obj["instance_type"] = in.InstanceType
-	}
-
-	if len(in.KeypairName) > 0 {
-		obj["keypair_name"] = in.KeypairName
 	}
 
 	if len(in.KmsKey) > 0 {
@@ -239,10 +234,6 @@ func expandMachineConfigV2Amazonec2(p []interface{}, source *MachineConfigV2) *M
 
 	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
 		obj.InstanceType = v
-	}
-
-	if v, ok := in["keypair_name"].(string); ok && len(v) > 0 {
-		obj.KeypairName = v
 	}
 
 	if v, ok := in["kms_key"].(string); ok && len(v) > 0 {

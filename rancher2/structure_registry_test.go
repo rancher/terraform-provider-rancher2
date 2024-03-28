@@ -1,11 +1,11 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -24,9 +24,29 @@ func init() {
 	}
 	testRegistryCredentialConfInterface = []interface{}{
 		map[string]interface{}{
-			"address":  "address",
-			"username": "username",
-			"password": "password",
+			"address":  "docker-registry.eu.rancher.com",
+			"username": "username1",
+			"password": "password1",
+		},
+		map[string]interface{}{
+			"address":  "external.docker.suse.com",
+			"username": "username2",
+			"password": "password2",
+		},
+		map[string]interface{}{
+			"address":  "arrow.test.com",
+			"username": "username3",
+			"password": "password3",
+		},
+		map[string]interface{}{
+			"address":  "psi-reg.rnd.dev.net",
+			"username": "username4",
+			"password": "password4",
+		},
+		map[string]interface{}{
+			"address":  "rds-dev.tea1.inf.rancher.com",
+			"username": "username5",
+			"password": "password5",
 		},
 	}
 	testDockerCredentialConf = &projectClient.DockerCredential{
@@ -34,7 +54,11 @@ func init() {
 		Name:        "name",
 		Description: "description",
 		Registries: map[string]projectClient.RegistryCredential{
-			"address": *testRegistryCredentialConf,
+			"rds-dev.tea1.inf.rancher.com":   {Username: "username5", Password: "password5"},
+			"psi-reg.rnd.dev.net":            {Username: "username4", Password: "password4"},
+			"arrow.test.com":                 {Username: "username3", Password: "password3"},
+			"external.docker.suse.com":       {Username: "username2", Password: "password2"},
+			"docker-registry.eu.rancher.com": {Username: "username1", Password: "password1"},
 		},
 		Annotations: map[string]string{
 			"node_one": "one",
@@ -65,7 +89,11 @@ func init() {
 		Description: "description",
 		NamespaceId: "namespace_id",
 		Registries: map[string]projectClient.RegistryCredential{
-			"address": *testRegistryCredentialConf,
+			"rds-dev.tea1.inf.rancher.com":   {Username: "username5", Password: "password5"},
+			"psi-reg.rnd.dev.net":            {Username: "username4", Password: "password4"},
+			"arrow.test.com":                 {Username: "username3", Password: "password3"},
+			"external.docker.suse.com":       {Username: "username2", Password: "password2"},
+			"docker-registry.eu.rancher.com": {Username: "username1", Password: "password1"},
 		},
 		Annotations: map[string]string{
 			"node_one": "one",
@@ -113,16 +141,13 @@ func TestFlattenRegistry(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, registryFields(), tc.ExpectedOutput)
 		err := flattenRegistry(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				expectedOutput, tc.ExpectedOutput)
-		}
+		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
@@ -145,9 +170,6 @@ func TestExpandRegistry(t *testing.T) {
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, registryFields(), tc.Input)
 		output := expandRegistry(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

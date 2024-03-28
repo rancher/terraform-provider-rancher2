@@ -68,16 +68,24 @@ func resourceRancher2ClusterDriverRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	clusterDriver, err := client.KontainerDriver.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Cluster Driver ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
-		}
-	}
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		clusterDriver, err := client.KontainerDriver.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cluster Driver ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
 
-	return flattenClusterDriver(d, clusterDriver)
+			resource.NonRetryableError(err)
+		}
+
+		if err = flattenClusterDriver(d, clusterDriver); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ClusterDriverUpdate(d *schema.ResourceData, meta interface{}) error {

@@ -56,17 +56,23 @@ func resourceRancher2PodSecurityPolicyTemplateRead(d *schema.ResourceData, meta 
 		return err
 	}
 
-	pspt, err := client.PodSecurityPolicyTemplate.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] PodSecurityPolicyTemplate with ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		pspt, err := client.PodSecurityPolicyTemplate.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] PodSecurityPolicyTemplate with ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	return flattenPodSecurityPolicyTemplate(d, pspt)
+		if err = flattenPodSecurityPolicyTemplate(d, pspt); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2PodSecurityPolicyTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -111,7 +117,7 @@ func resourceRancher2PodSecurityPolicyTemplateDelete(d *schema.ResourceData, met
 
 	err = client.PodSecurityPolicyTemplate.Delete(pspt)
 	if err != nil {
-		return fmt.Errorf("Error removing PodSecurityPolicyTemplate: %s", err)
+		return fmt.Errorf("[ERROR] removing PodSecurityPolicyTemplate: %s", err)
 	}
 
 	stateConf := &resource.StateChangeConf{

@@ -13,14 +13,20 @@ func flattenRegistryCredential(in map[string]projectClient.RegistryCredential, p
 	}
 
 	out := make([]interface{}, len(in))
-	lenP := len(p)
 	i := 0
+	// Golang does not guarantee the order of returned objects when traversing a Map;
+	// Terraform reports changes when the order of items is changed even though it is the same set of items in a List.
+	// Preserve the order of existing items in the final List can prevent Terraform from reporting such changes.
 	for key := range in {
-		var obj map[string]interface{}
-		if lenP <= i {
-			obj = make(map[string]interface{})
-		} else {
-			obj = p[i].(map[string]interface{})
+		obj := make(map[string]interface{})
+		existingIndex := -1
+		for idx, existing := range p {
+			tmp := existing.(map[string]interface{})
+			if key == tmp["address"] {
+				existingIndex = idx
+				obj = tmp
+				break
+			}
 		}
 
 		obj["address"] = key
@@ -33,7 +39,11 @@ func flattenRegistryCredential(in map[string]projectClient.RegistryCredential, p
 			obj["username"] = in[key].Username
 		}
 
-		out[i] = obj
+		if existingIndex != -1 {
+			out[existingIndex] = obj
+		} else {
+			out[i] = obj
+		}
 		i++
 	}
 

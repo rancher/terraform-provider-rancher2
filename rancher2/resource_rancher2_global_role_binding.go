@@ -75,17 +75,23 @@ func resourceRancher2GlobalRoleBindingRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	globalRole, err := client.GlobalRoleBinding.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Global Role Binding ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		globalRole, err := client.GlobalRoleBinding.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Global Role Binding ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	return flattenGlobalRoleBinding(d, globalRole)
+		if err = flattenGlobalRoleBinding(d, globalRole); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2GlobalRoleBindingUpdate(d *schema.ResourceData, meta interface{}) error {

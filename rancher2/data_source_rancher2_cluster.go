@@ -150,7 +150,7 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: clusterRegistationTokenFields(),
+					Schema: clusterRegistrationTokenFields(),
 				},
 			},
 			"cluster_template_answers": {
@@ -183,7 +183,13 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			"default_pod_security_policy_template_id": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Default pod security policy template id",
+				Description: "Default pod security policy template ID",
+			},
+			"default_pod_security_admission_configuration_template_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Default pod security admission configuration template name",
 			},
 			"enable_cluster_alerting": {
 				Type:        schema.TypeBool,
@@ -203,14 +209,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			"fleet_workspace_name": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"scheduled_cluster_scan": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "Cluster scheduled scan",
-				Elem: &schema.Resource{
-					Schema: scheduledClusterScanFields(),
-				},
 			},
 			"annotations": {
 				Type:     schema.TypeMap,

@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -17,6 +18,7 @@ const (
 )
 
 var (
+	testAccProviderConfig                      *Config
 	testAccProviders                           map[string]terraform.ResourceProvider
 	testAccProvider                            *schema.Provider
 	testAccRancher2ClusterID                   string
@@ -39,7 +41,7 @@ func init() {
 
 func TestProvider(t *testing.T) {
 	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
-		t.Fatalf("err: %s", err)
+		assert.FailNow(t, "err: %s", err)
 	}
 }
 
@@ -50,7 +52,7 @@ func TestProvider_impl(t *testing.T) {
 func testAccPreCheck(t *testing.T) {
 	err := testAccCheck()
 	if err != nil {
-		t.Fatalf("%v", err)
+		assert.FailNow(t, "%v", err)
 	}
 }
 
@@ -79,7 +81,7 @@ func testAccCheck() error {
 			tokenKey = accessKey + ":" + secretKey
 		}
 
-		config := &Config{
+		testAccProviderConfig = &Config{
 			URL:       apiURL,
 			TokenKey:  tokenKey,
 			CACerts:   caCerts,
@@ -92,12 +94,12 @@ func testAccCheck() error {
 		}
 
 		if len(tokenKey) > 5 {
-			err := testAccClusterDefaultName(config)
+			err := testAccClusterDefaultName(testAccProviderConfig)
 			if err != nil {
 				return err
 			}
 
-			testAccRancher2ClusterRKEK8SDefaultVersion, err = config.getK8SDefaultVersion()
+			testAccRancher2ClusterRKEK8SDefaultVersion, err = testAccProviderConfig.getK8SDefaultVersion()
 			if err != nil {
 				return err
 			}

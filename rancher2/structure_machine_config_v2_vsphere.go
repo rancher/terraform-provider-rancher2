@@ -12,42 +12,43 @@ const (
 	machineConfigV2VmwarevsphereClusterIDsep = "."
 )
 
-//Types
+// Types
 
 type machineConfigV2Vmwarevsphere struct {
-	metav1.TypeMeta        `json:",inline"`
-	metav1.ObjectMeta      `json:"metadata,omitempty"`
-	Boot2dockerURL         string   `json:"boot2dockerUrl,omitempty" yaml:"boot2dockerUrl,omitempty"`
-	Cfgparam               []string `json:"cfgparam,omitempty" yaml:"cfgparam,omitempty"`
-	CloneFrom              string   `json:"cloneFrom,omitempty" yaml:"cloneFrom,omitempty"`
-	CloudConfig            string   `json:"cloudConfig,omitempty" yaml:"cloudConfig,omitempty"`
-	Cloudinit              string   `json:"cloudinit,omitempty" yaml:"cloudinit,omitempty"`
-	ContentLibrary         string   `json:"contentLibrary,omitempty" yaml:"contentLibrary,omitempty"`
-	CPUCount               string   `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
-	CreationType           string   `json:"creationType,omitempty" yaml:"creationType,omitempty"`
-	CustomAttributes       []string `json:"customAttribute,omitempty" yaml:"customAttribute,omitempty"`
-	Datacenter             string   `json:"datacenter,omitempty" yaml:"datacenter,omitempty"`
-	Datastore              string   `json:"datastore,omitempty" yaml:"datastore,omitempty"`
-	DatastoreCluster       string   `json:"datastoreCluster,omitempty" yaml:"datastoreCluster,omitempty"`
-	DiskSize               string   `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
-	Folder                 string   `json:"folder,omitempty" yaml:"folder,omitempty"`
-	Hostsystem             string   `json:"hostsystem,omitempty" yaml:"hostsystem,omitempty"`
-	MemorySize             string   `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
-	Network                []string `json:"network,omitempty" yaml:"network,omitempty"`
-	Password               string   `json:"password,omitempty" yaml:"password,omitempty"`
-	Pool                   string   `json:"pool,omitempty" yaml:"pool,omitempty"`
-	SSHPassword            string   `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
-	SSHPort                string   `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
-	SSHUser                string   `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	SSHUserGroup           string   `json:"sshUserGroup,omitempty" yaml:"sshUserGroup,omitempty"`
-	Tags                   []string `json:"tag,omitempty" yaml:"tag,omitempty"`
-	Username               string   `json:"username,omitempty" yaml:"username,omitempty"`
-	VappIpallocationpolicy string   `json:"vappIpallocationpolicy,omitempty" yaml:"vappIpallocationpolicy,omitempty"`
-	VappIpprotocol         string   `json:"vappIpprotocol,omitempty" yaml:"vappIpprotocol,omitempty"`
-	VappProperty           []string `json:"vappProperty,omitempty" yaml:"vappProperty,omitempty"`
-	VappTransport          string   `json:"vappTransport,omitempty" yaml:"vappTransport,omitempty"`
-	Vcenter                string   `json:"vcenter,omitempty" yaml:"vcenter,omitempty"`
-	VcenterPort            string   `json:"vcenterPort,omitempty" yaml:"vcenterPort,omitempty"`
+	metav1.TypeMeta         `json:",inline"`
+	metav1.ObjectMeta       `json:"metadata,omitempty"`
+	Boot2dockerURL          string   `json:"boot2dockerUrl,omitempty" yaml:"boot2dockerUrl,omitempty"`
+	Cfgparam                []string `json:"cfgparam,omitempty" yaml:"cfgparam,omitempty"`
+	CloneFrom               string   `json:"cloneFrom,omitempty" yaml:"cloneFrom,omitempty"`
+	CloudConfig             string   `json:"cloudConfig,omitempty" yaml:"cloudConfig,omitempty"`
+	Cloudinit               string   `json:"cloudinit,omitempty" yaml:"cloudinit,omitempty"`
+	ContentLibrary          string   `json:"contentLibrary,omitempty" yaml:"contentLibrary,omitempty"`
+	CPUCount                string   `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
+	CreationType            string   `json:"creationType,omitempty" yaml:"creationType,omitempty"`
+	CustomAttributes        []string `json:"customAttribute,omitempty" yaml:"customAttribute,omitempty"`
+	Datacenter              string   `json:"datacenter,omitempty" yaml:"datacenter,omitempty"`
+	Datastore               string   `json:"datastore,omitempty" yaml:"datastore,omitempty"`
+	DatastoreCluster        string   `json:"datastoreCluster,omitempty" yaml:"datastoreCluster,omitempty"`
+	DiskSize                string   `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
+	Folder                  string   `json:"folder,omitempty" yaml:"folder,omitempty"`
+	Hostsystem              string   `json:"hostsystem,omitempty" yaml:"hostsystem,omitempty"`
+	MemorySize              string   `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
+	Network                 []string `json:"network,omitempty" yaml:"network,omitempty"`
+	Password                string   `json:"password,omitempty" yaml:"password,omitempty"`
+	Pool                    string   `json:"pool,omitempty" yaml:"pool,omitempty"`
+	SSHPassword             string   `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
+	SSHPort                 string   `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
+	SSHUser                 string   `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	SSHUserGroup            string   `json:"sshUserGroup,omitempty" yaml:"sshUserGroup,omitempty"`
+	Tags                    []string `json:"tag,omitempty" yaml:"tag,omitempty"`
+	Username                string   `json:"username,omitempty" yaml:"username,omitempty"`
+	VappIpallocationpolicy  string   `json:"vappIpallocationpolicy,omitempty" yaml:"vappIpallocationpolicy,omitempty"`
+	VappIpprotocol          string   `json:"vappIpprotocol,omitempty" yaml:"vappIpprotocol,omitempty"`
+	VappProperty            []string `json:"vappProperty,omitempty" yaml:"vappProperty,omitempty"`
+	VappTransport           string   `json:"vappTransport,omitempty" yaml:"vappTransport,omitempty"`
+	Vcenter                 string   `json:"vcenter,omitempty" yaml:"vcenter,omitempty"`
+	VcenterPort             string   `json:"vcenterPort,omitempty" yaml:"vcenterPort,omitempty"`
+	GracefulShutdownTimeout string   `json:"gracefulShutdownTimeout,omitempty" yaml:"gracefulShutdownTimeout, omitempty"`
 }
 
 type MachineConfigV2Vmwarevsphere struct {
@@ -156,6 +157,9 @@ func flattenMachineConfigV2Vmwarevsphere(in *MachineConfigV2Vmwarevsphere) []int
 	}
 	if len(in.VcenterPort) > 0 {
 		obj["vcenter_port"] = in.VcenterPort
+	}
+	if len(in.GracefulShutdownTimeout) > 0 {
+		obj["graceful_shutdown_timeout"] = in.GracefulShutdownTimeout
 	}
 
 	return []interface{}{obj}
@@ -271,6 +275,9 @@ func expandMachineConfigV2Vmwarevsphere(p []interface{}, source *MachineConfigV2
 	}
 	if v, ok := in["vcenter_port"].(string); ok && len(v) > 0 {
 		obj.VcenterPort = v
+	}
+	if v, ok := in["graceful_shutdown_timeout"].(string); ok && len(v) > 0 {
+		obj.GracefulShutdownTimeout = v
 	}
 
 	return obj

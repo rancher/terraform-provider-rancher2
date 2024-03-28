@@ -36,6 +36,7 @@ The following arguments are supported:
 * `sp_key` - (Required/Sensitive) Ping SP key (string)
 * `uid_field` - (Required) Ping UID field (string)
 * `user_name_field` - (Required) Ping user name field (string)
+* `entity_id_field` - (Optional) Ping entity ID field (string)
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `ping_user://<USER_ID>`  `ping_group://<GROUP_ID>` (list)
 * `enabled` - (Optional) Enable auth config provider. Default `true` (bool)

@@ -39,6 +39,10 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"user_search_filter": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"certificate": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -89,6 +93,10 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+		"group_search_filter": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"nested_group_membership_enabled": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -135,6 +143,11 @@ func authConfigLdapFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"tls": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Computed: true,
+		},
+		"start_tls": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,

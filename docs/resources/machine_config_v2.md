@@ -4,11 +4,9 @@ page_title: "rancher2_machine_config_v2 Resource"
 
 # rancher2\_machine\_config\_v2 Resource
 
-Provides a Rancher v2 Machine config v2 resource. This can be used to create Machine Config v2 for Rancher v2 and retrieve their information. This resource is supported as tech preview from Rancher v2.6.0 and above.
+Provides a Rancher v2 Machine config v2 resource. This can be used to create Machine Config v2 for Rancher v2 and retrieve their information. This resource is available from Rancher v2.6.0 and above.
 
-`amazonec2`, `azure`, `digitalocean`, `linode`, `openstack`, and `vsphere` cloud providers are supported for machine config V2
-
-**Note** This resource is used by 
+The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `openstack`, and `vsphere`.
 
 ## Example Usage
 
@@ -51,10 +49,34 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
     vm_namespace = "default"
     cpu_count = "2"
     memory_size = "4"
-    disk_size = "40"
-    network_name = "harvester-public/vlan1"
-    image_name = "harvester-public/image-57hzg"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "harvester-public/image-57hzg",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "harvester-public/vlan1"
+        }]
+    }
+    EOF
     ssh_user = "ubuntu"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 ```
@@ -75,7 +97,7 @@ The following arguments are supported:
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
-**Note** `labels` and `node_taints` will be applied to nodes deployed using the Machine Config V2
+**Note:** `labels` and `node_taints` will be applied to nodes deployed using the Machine Config V2
 
 ## Attributes Reference
 
@@ -107,7 +129,6 @@ The following attributes are exported:
 * `iam_instance_profile` - (Optional) AWS IAM Instance Profile (string)
 * `insecure_transport` - (Optional) Disable SSL when sending requests (bool)
 * `instance_type` - (Optional) AWS instance type. Default `t3a.medium` (string)
-* `keypair_name` - (Optional) AWS keypair to use; requires --amazonec2-ssh-keypath (string)
 * `kms_key` - (Optional) Custom KMS key ID using the AWS Managed CMK (string)
 * `monitoring` - (Optional) Set this flag to enable CloudWatch monitoring. Deafult `false` (bool)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
@@ -135,14 +156,14 @@ The following attributes are exported:
 * `subscription_id` - (Optional/Sensitive) Azure Subscription ID. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `availability_set` - (Optional) Azure Availability Set to place the virtual machine into. Default `docker-machine` (string)
 * `custom_data` - (Optional) Path to file with custom-data (string)
-* `disk_size` - (Optional) Disk size if using managed disk. Just for Rancher v2.3.x and above. Default `30` (string)
+* `disk_size` - (Optional) Disk size if using managed disk. For Rancher v2.3.x and above. Default `30` (string)
 * `dns` - (Optional) A unique DNS label for the public IP adddress (string)
 * `docker_port` - (Optional) Port number for Docker engine. Default `2376` (string)
 * `environment` - (Optional) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud). Default `AzurePublicCloud` (string)
 * `fault_domain_count` - (Optional) Fault domain count to use for availability set. Default `3` (string)
 * `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:18.04-LTS:latest` (string)
 * `location` - (Optional) Azure region to create the virtual machine. Default `westus` (string)
-* `managed_disks` - (Optional) Configures VM and availability set for managed disks. Just for Rancher v2.3.x and above. Default `false` (bool)
+* `managed_disks` - (Optional) Configures VM and availability set for managed disks. For Rancher v2.3.x and above. Default `false` (bool)
 * `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false` (bool)
 * `nsg` - (Optional) Azure Network Security Group to assign this node to (accepts either a name or resource ID, default is to create a new NSG for each machine). Default `docker-machine-nsg` (string)
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
@@ -167,7 +188,7 @@ The following attributes are exported:
 
 * `access_token` - (Optional/Sensitive) Digital Ocean access token. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `backups` - (Optional) Enable backups for droplet. Default `false` (bool)
-* `image` - (Optional) Digital Ocean Image. Default `ubuntu-16-04-x64` (string)
+* `image` - (Optional) Digital Ocean Image. Default `ubuntu-22-04-x64` (string)
 * `ipv6` - (Optional) Enable ipv6 for droplet. Default `false` (bool)
 * `monitoring` - (Optional) Enable monitoring for droplet. Default `false` (bool)
 * `private_networking` - (Optional) Enable private networking for droplet. Default `false` (bool)
@@ -187,15 +208,18 @@ The following attributes are exported:
 * `vm_namespace` - (Required) Virtual machine namespace e.g. `default` (string)
 * `cpu_count` - (Optional) CPU count, Default `2` (string)
 * `memory_size` - (Optional) Memory size (in GiB), Default `4` (string)
-* `disk_size` - (Optional) Disk size (in GiB), Default `40` (string)
-* `disk_bus` - (Optional) Disk bus, Default `virtio` (string)
-* `image_name` - (Required) Image name e.g. `harvester-public/image-57hzg` (string)
+* `disk_size` - (Deprecated) Use `disk_info` instead
+* `disk_bus` - (Deprecated) Use `disk_info` instead
+* `image_name` - (Deprecated) Use `disk_info` instead
+* `disk_info` - (Required) A JSON string specifying info for the disks e.g. `{\"disks\":[{\"imageName\":\"harvester-public/image-57hzg\",\"bootOrder\":1,\"size\":40},{\"storageClassName\":\"node-driver-test\",\"bootOrder\":2,\"size\":1}]}` (string)
 * `ssh_user` - (Required) SSH username e.g. `ubuntu` (string)
 * `ssh_password` - (Optional/Sensitive) SSH password (string)
-* `network_name` - (Required) Network name e.g. `harvester-public/vlan1` (string)
-* `network_model` - (Optional) Network model, Default `virtio` (string)
-* `user_data` - (Optional) UserData content of cloud-init, base64 is supported (string)
+* `network_name` - (Deprecated) Use `network_info` instead
+* `network_model` - (Deprecated) Use `network_info` instead
+* `network_info` - (Required) A JSON string specifying info for the networks e.g. `{\"interfaces\":[{\"networkName\":\"harvester-public/vlan1\"},{\"networkName\":\"harvester-public/vlan2\"}]}` (string)
+* `user_data` - (Optional) UserData content of cloud-init, base64 is supported. If the image does not contain the qemu-guest-agent package, you must install and start qemu-guest-agent using userdata (string)
 * `network_data` - (Optional) NetworkData content of cloud-init, base64 is supported (string)
+* `vm_affinity` - (Optional) Virtual machine affinity, only base64 format is supported. For Rancher v2.6.7 and above (string)
 
 ### `linode_config`
 
@@ -264,8 +288,9 @@ The following attributes are exported:
 * `volume_id` - (Optional) OpenStack volume id of existing volume. Applicable only when `boot_from_volume` is `true` (string)
 * `volume_name` - (Optional) OpenStack volume name of existing volume. Applicable only when `boot_from_volume` is `true` (string)
 * `volume_device_path` - (Optional) OpenStack volume device path (attaching). Applicable only when `boot_from_volume` is `true`. Omit for auto `/dev/vdb`. (string)
-> **Note**: `Required+` denotes that either the _name or _id is required but you cannot use both.
-> **Note**: `Required++` denotes that either the _name or _id is required unless `application_credential_id` is defined.
+> **Note:**: `Required+` denotes that either the _name or _id is required but you cannot use both.
+> **Note:**: `Required++` denotes that either the _name or _id is required unless `application_credential_id` is defined.
+> **Note for OpenStack users:**: `keypair_name` is required to be in the schema even if there are no references in rancher itself
 
 ### `vsphere_config`
 
@@ -285,6 +310,7 @@ The following attributes are exported:
 * `datastore_cluster` - (Optional) vSphere datastore cluster for virtual machine (string)
 * `disk_size` - (Optional) vSphere size of disk for docker VM (in MB). Default `20480` (string)
 * `folder` - (Optional) vSphere folder for the docker VM. This folder must already exist in the datacenter (string)
+* `graceful_shutdown_timeout` (Optional) Duration in seconds before the graceful shutdown of the VM times out and the VM is destroyed. A force destroy will be performed when the value is zero (string)
 * `hostsystem` - (Optional) vSphere compute resource where the docker VM will be instantiated. This can be omitted if using a cluster with DRS (string)
 * `memory_size` - (Optional) vSphere size of memory for docker VM (in MB). Default `2048` (string)
 * `network` - (Optional) vSphere network where the docker VM will be attached (list)

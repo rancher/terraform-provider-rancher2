@@ -68,16 +68,24 @@ func resourceRancher2ClusterAlertRuleRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	clusterAlertRule, err := client.ClusterAlertRule.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Cluster Alert Rule ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
-		}
-	}
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		clusterAlertRule, err := client.ClusterAlertRule.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cluster Alert Rule ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
 
-	return flattenClusterAlertRule(d, clusterAlertRule)
+			return resource.NonRetryableError(err)
+		}
+
+		if err = flattenClusterAlertRule(d, clusterAlertRule); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ClusterAlertRuleUpdate(d *schema.ResourceData, meta interface{}) error {

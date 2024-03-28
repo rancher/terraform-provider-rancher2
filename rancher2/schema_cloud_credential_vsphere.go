@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-//Types
+// Types
 
 type vmwarevsphereCredentialConfig struct {
 	Password    string `json:"password,omitempty" yaml:"password,omitempty"`
@@ -13,7 +13,7 @@ type vmwarevsphereCredentialConfig struct {
 	VcenterPort string `json:"vcenterPort,omitempty" yaml:"vcenterPort,omitempty"`
 }
 
-//Schemas
+// Schemas
 
 func cloudCredentialVsphereFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{

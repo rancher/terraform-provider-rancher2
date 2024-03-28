@@ -96,11 +96,6 @@ func machineConfigV2Amazonec2Fields() map[string]*schema.Schema {
 			Default:     "t3a.medium",
 			Description: "AWS instance type",
 		},
-		"keypair_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "AWS keypair to use; requires --amazonec2-ssh-keypath",
-		},
 		"kms_key": {
 			Type:        schema.TypeString,
 			Optional:    true,

@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -88,12 +88,9 @@ func TestFlattenClusterRKEConfigCloudProvider(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterRKEConfigCloudProvider(tc.Input, tc.ExpectedOutput)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -124,11 +121,8 @@ func TestExpandClusterRKEConfigCloudProvider(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterRKEConfigCloudProvider(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

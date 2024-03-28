@@ -1,18 +1,20 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
-	testGlobalRolePolicyRulesConf      []managementClient.PolicyRule
-	testGlobalRolePolicyRulesInterface []interface{}
-	testGlobalRoleConf                 *managementClient.GlobalRole
-	testGlobalRoleInterface            map[string]interface{}
+	testGlobalRolePolicyRulesConf                    []managementClient.PolicyRule
+	testGlobalRolePolicyRulesInterface               []interface{}
+	testGlobalRoleConf                               *managementClient.GlobalRole
+	testGlobalRoleInterface                          map[string]interface{}
+	testGlobalRoleWithInheritedClusterRolesConf      *managementClient.GlobalRole
+	testGlobalRoleWithInheritedClusterRolesInterface map[string]interface{}
 )
 
 func init() {
@@ -93,10 +95,44 @@ func init() {
 			"option2": "value2",
 		},
 	}
+
+	testGlobalRoleWithInheritedClusterRolesConf = &managementClient.GlobalRole{
+		Description:    "description",
+		Name:           "name",
+		NewUserDefault: true,
+		Rules:          testGlobalRolePolicyRulesConf,
+		Annotations: map[string]string{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		Labels: map[string]string{
+			"option1": "value1",
+			"option2": "value2",
+		},
+		InheritedClusterRoles: []string{
+			"cluster-owner",
+		},
+	}
+	testGlobalRoleWithInheritedClusterRolesInterface = map[string]interface{}{
+		"new_user_default": true,
+		"description":      "description",
+		"name":             "name",
+		"rules":            testGlobalRolePolicyRulesInterface,
+		"annotations": map[string]interface{}{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		"labels": map[string]interface{}{
+			"option1": "value1",
+			"option2": "value2",
+		},
+		"inherited_cluster_roles": []interface{}{
+			"cluster-owner",
+		},
+	}
 }
 
 func TestFlattenGlobalRole(t *testing.T) {
-
 	cases := []struct {
 		Input          *managementClient.GlobalRole
 		ExpectedOutput map[string]interface{}
@@ -105,27 +141,27 @@ func TestFlattenGlobalRole(t *testing.T) {
 			testGlobalRoleConf,
 			testGlobalRoleInterface,
 		},
+		{
+			testGlobalRoleWithInheritedClusterRolesConf,
+			testGlobalRoleWithInheritedClusterRolesInterface,
+		},
 	}
 
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, globalRoleFields(), tc.ExpectedOutput)
 		err := flattenGlobalRole(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				expectedOutput, tc.ExpectedOutput)
-		}
+		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
 func TestExpandGlobalRole(t *testing.T) {
-
 	cases := []struct {
 		Input          map[string]interface{}
 		ExpectedOutput *managementClient.GlobalRole
@@ -134,14 +170,15 @@ func TestExpandGlobalRole(t *testing.T) {
 			testGlobalRoleInterface,
 			testGlobalRoleConf,
 		},
+		{
+			testGlobalRoleWithInheritedClusterRolesInterface,
+			testGlobalRoleWithInheritedClusterRolesConf,
+		},
 	}
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, globalRoleFields(), tc.Input)
 		output := expandGlobalRole(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

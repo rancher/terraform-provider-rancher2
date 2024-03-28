@@ -6,8 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-var testAccCheckRancher2PodSecurityPolicyTemplateDataSourceConfig string
-
 func TestAccRancher2PodSecurityPolicyTemplateDataSource(t *testing.T) {
 	testAccCheckRancher2PodSecurityPolicyTemplateDataSourceConfig := testAccCheckRancher2PodSecurityPolicyTemplate + `
 data "` + testAccRancher2PodSecurityPolicyTemplateType + `" "foo" {

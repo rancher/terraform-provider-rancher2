@@ -109,9 +109,9 @@ This resource has the following arguments definition:
 
 These are some examples how to deploy some Rancher cerfified Apps v2:
 
-**Note** Apps v2 certified by Rancher should be installed within fixed app name and namespace defined by chart annotations, `catalog.cattle.io/release-name` and `catalog.cattle.io/namespace`. The provider will be forcing them on Rancher cerfified Apps v2 installation, but generating a diff on next `terraform apply`, if app v2 name and/or namespace is customized by user. Adjusting the values at tf file should supress the diff
+**Note:** Apps v2 certified by Rancher should be installed within fixed app name and namespace defined by chart annotations, `catalog.cattle.io/release-name` and `catalog.cattle.io/namespace`. The provider will be forcing them on Rancher cerfified Apps v2 installation, but generating a diff on next `terraform apply`, if app v2 name and/or namespace is customized by user. Adjusting the values at tf file should supress the diff
 
-**Note** Latest app v2 version will be deployed, if `chart_version` is not provided
+**Note:** Latest app v2 version will be deployed, if `chart_version` is not provided
 
 * `rancher-monitoring` - Deploy Rancher monitoring
 

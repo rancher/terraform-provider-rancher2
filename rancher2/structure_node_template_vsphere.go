@@ -101,6 +101,9 @@ func flattenVsphereConfig(in *vmwarevsphereConfig) []interface{} {
 	if len(in.VcenterPort) > 0 {
 		obj["vcenter_port"] = in.VcenterPort
 	}
+	if len(in.GracefulShutdownTimeout) > 0 {
+		obj["graceful_shutdown_timeout"] = in.GracefulShutdownTimeout
+	}
 
 	return []interface{}{obj}
 }
@@ -206,6 +209,9 @@ func expandVsphereConfig(p []interface{}) *vmwarevsphereConfig {
 	}
 	if v, ok := in["vcenter_port"].(string); ok && len(v) > 0 {
 		obj.VcenterPort = v
+	}
+	if v, ok := in["graceful_shutdown_timeout"].(string); ok && len(v) > 0 {
+		obj.GracefulShutdownTimeout = v
 	}
 
 	return obj

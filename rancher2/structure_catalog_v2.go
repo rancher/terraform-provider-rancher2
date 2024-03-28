@@ -1,6 +1,9 @@
 package rancher2
 
 import (
+	"encoding/base64"
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
 )
@@ -26,7 +29,8 @@ func flattenCatalogV2(d *schema.ResourceData, in *ClusterRepo) error {
 	}
 	d.Set("resource_version", in.ObjectMeta.ResourceVersion)
 
-	d.Set("ca_bundle", string(in.Spec.CABundle))
+	encodedCABundle := base64.StdEncoding.EncodeToString(in.Spec.CABundle)
+	d.Set("ca_bundle", encodedCABundle)
 	if in.Spec.Enabled != nil {
 		d.Set("enabled", *in.Spec.Enabled)
 	}
@@ -46,9 +50,9 @@ func flattenCatalogV2(d *schema.ResourceData, in *ClusterRepo) error {
 
 // Expanders
 
-func expandCatalogV2(in *schema.ResourceData) *ClusterRepo {
+func expandCatalogV2(in *schema.ResourceData) (*ClusterRepo, error) {
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 	obj := &ClusterRepo{}
 
@@ -69,7 +73,15 @@ func expandCatalogV2(in *schema.ResourceData) *ClusterRepo {
 		obj.ObjectMeta.ResourceVersion = v
 	}
 	if v, ok := in.Get("ca_bundle").(string); ok {
-		obj.Spec.CABundle = []byte(v)
+		// The rancher API expects the CA bundle to be in base64-encoded DER
+		// format. The caBundle field of ClusterRepo is of type []byte, so
+		// json.Marshal base64-encodes this field for us. So internally, we
+		// set the caBundle field to non-base64-encoded DER.
+		decodedCABundle, err := base64.StdEncoding.DecodeString(v)
+		if err != nil {
+			return nil, fmt.Errorf("failed to base64-decode ca_bundle: %w", err)
+		}
+		obj.Spec.CABundle = decodedCABundle
 	}
 	if v, ok := in.Get("enabled").(bool); ok {
 		obj.Spec.Enabled = &v
@@ -102,5 +114,5 @@ func expandCatalogV2(in *schema.ResourceData) *ClusterRepo {
 		obj.Spec.URL = v
 	}
 
-	return obj
+	return obj, nil
 }

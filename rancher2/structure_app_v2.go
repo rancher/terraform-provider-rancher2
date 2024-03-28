@@ -37,7 +37,7 @@ func flattenAppV2(d *schema.ResourceData, in *AppV2) error {
 		if err != nil {
 			return fmt.Errorf("failed to marshal chart values yaml: %v", err)
 		}
-		d.Set("values", valuesStr)
+		d.Set("deployment_values", valuesStr)
 		if global, ok := in.Spec.Values["global"].(map[string]interface{}); ok && len(global) > 0 {
 			if cattle, ok := global["cattle"].(map[string]interface{}); ok && len(cattle) > 0 {
 				if clusterID, ok := cattle["clusterId"].(string); ok && len(clusterID) > 0 {
@@ -65,39 +65,17 @@ func expandChartInstallV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 	if in == nil || chartInfo == nil || chartInfo.Chart == nil {
 		return "", nil, nil
 	}
-	out := []types.ChartInstall{}
+	out := make([]types.ChartInstall, 0)
 	name := in.Get("name").(string)
 	namespace := in.Get("namespace").(string)
-	globalInfo := map[string]interface{}{
-		"systemDefaultRegistry": in.Get("system_default_registry").(string),
-		"cattle": map[string]interface{}{
-			"clusterId":             in.Get("cluster_id").(string),
-			"clusterName":           in.Get("cluster_name").(string),
-			"systemDefaultRegistry": in.Get("system_default_registry").(string),
-		},
-	}
+	globalInfo := generateGlobalInfoMap(in)
 	valuesData := v3.MapStringInterface{}
 	if v, ok := in.Get("values").(string); ok {
-		values, err := ghodssyamlToMapInterface(v)
+		values, err := unmarshalValuesContent(v)
 		if err != nil {
-			return "", nil, fmt.Errorf("failed to unmarshal chart install values yaml: %#v", err)
+			return "", nil, err
 		}
-		if values == nil {
-			values = map[string]interface{}{}
-		}
-		if global, ok := values["global"].(map[string]interface{}); ok && len(global) > 0 {
-			values["global"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["systemDefaultRegistry"]
-			if _, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["cattle"].(map[string]interface{})["systemDefaultRegistry"]
-
-			} else {
-				values["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
-			}
-		} else {
-			values["global"] = globalInfo
-		}
+		mergeGlobalMaps(values, globalInfo)
 		valuesData = v3.MapStringInterface(values)
 	}
 	if chartAnnotations, ok := chartInfo.Chart["annotations"].(map[string]interface{}); ok && len(chartAnnotations) > 0 {
@@ -147,6 +125,39 @@ func expandChartInstallV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 	return namespace, out, nil
 }
 
+func mergeGlobalMaps(values map[string]interface{}, globalInfo map[string]interface{}) {
+	globalInfoCattle := globalInfo["cattle"].(map[string]interface{})
+
+	if global, ok := values["global"].(map[string]interface{}); ok && len(global) > 0 {
+		global["systemDefaultRegistry"] = globalInfo["systemDefaultRegistry"]
+		if globalCattle, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
+			globalCattle["clusterId"] = globalInfoCattle["clusterId"]
+			globalCattle["clusterName"] = globalInfoCattle["clusterName"]
+			globalCattle["systemDefaultRegistry"] = globalInfoCattle["systemDefaultRegistry"]
+
+		} else {
+			global["cattle"] = globalInfo["cattle"]
+		}
+	} else {
+		values["global"] = globalInfo
+	}
+}
+
+func generateGlobalInfoMap(in *schema.ResourceData) map[string]interface{} {
+	globalInfoCattle := map[string]interface{}{
+		"clusterId":             in.Get("cluster_id").(string),
+		"clusterName":           in.Get("cluster_name").(string),
+		"systemDefaultRegistry": in.Get("system_default_registry").(string),
+	}
+
+	globalInfo := map[string]interface{}{
+		"systemDefaultRegistry": in.Get("system_default_registry").(string),
+		"cattle":                globalInfoCattle,
+	}
+
+	return globalInfo
+}
+
 func expandChartInstallActionV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (*types.ChartInstallAction, error) {
 	if in == nil || chartInfo == nil {
 		return nil, nil
@@ -182,40 +193,19 @@ func expandChartUpgradeV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 		return "", nil, nil
 	}
 
-	out := []types.ChartUpgrade{}
+	out := make([]types.ChartUpgrade, 0)
 	chartName := in.Get("chart_name").(string)
 	chartVersion := in.Get("chart_version").(string)
 	name := in.Get("name").(string)
 	namespace := in.Get("namespace").(string)
-	globalInfo := map[string]interface{}{
-		"systemDefaultRegistry": in.Get("system_default_registry").(string),
-		"cattle": map[string]interface{}{
-			"clusterId":             in.Get("cluster_id").(string),
-			"clusterName":           in.Get("cluster_name").(string),
-			"systemDefaultRegistry": in.Get("system_default_registry").(string),
-		},
-	}
+	globalInfo := generateGlobalInfoMap(in)
 	valuesData := v3.MapStringInterface{}
 	if v, ok := in.Get("values").(string); ok {
-		values, err := ghodssyamlToMapInterface(v)
+		values, err := unmarshalValuesContent(v)
 		if err != nil {
-			return "", nil, fmt.Errorf("failed to unmarshal chart install values yaml: %#v", err)
+			return "", nil, err
 		}
-		if values == nil {
-			values = map[string]interface{}{}
-		}
-		if global, ok := values["global"].(map[string]interface{}); ok && len(global) > 0 {
-			values["global"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["systemDefaultRegistry"]
-			if _, ok := global["cattle"].(map[string]interface{}); ok && len(global) > 0 {
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterId"] = globalInfo["cattle"].(map[string]interface{})["clusterId"]
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["clusterName"] = globalInfo["cattle"].(map[string]interface{})["clusterName"]
-				values["global"].(map[string]interface{})["cattle"].(map[string]interface{})["systemDefaultRegistry"] = globalInfo["cattle"].(map[string]interface{})["systemDefaultRegistry"]
-			} else {
-				values["global"].(map[string]interface{})["cattle"] = globalInfo["cattle"]
-			}
-		} else {
-			values["global"] = globalInfo
-		}
+		mergeGlobalMaps(values, globalInfo)
 		valuesData = v3.MapStringInterface(values)
 	}
 	if chartAnnotations, ok := chartInfo.Chart["annotations"].(map[string]interface{}); ok && len(chartAnnotations) > 0 {
@@ -265,6 +255,18 @@ func expandChartUpgradeV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (
 	out = append(out, obj)
 
 	return namespace, out, nil
+}
+
+func unmarshalValuesContent(v string) (map[string]interface{}, error) {
+	values, err := ghodssyamlToMapInterface(v)
+	if err != nil {
+		return nil, fmt.Errorf("[ERROR] failed to unmarshal chart install values YAML: %#v", err)
+	}
+	if values == nil {
+		values = map[string]interface{}{}
+	}
+
+	return values, nil
 }
 
 func expandChartUpgradeActionV2(in *schema.ResourceData, chartInfo *types.ChartInfo) (*types.ChartUpgradeAction, error) {

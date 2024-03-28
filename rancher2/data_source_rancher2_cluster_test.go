@@ -30,20 +30,6 @@ resource "rancher2_cluster" "foo" {
       }
     }
   }
-  scheduled_cluster_scan {
-    enabled = true
-    scan_config {
-      cis_scan_config {
-        debug_master = true
-        debug_worker = true
-        override_benchmark_version = "rke-cis-1.5"
-      }
-    }
-    schedule_config {
-      cron_schedule = "30 * * * *"
-      retention = 5
-    }
-  }
 }
 data "` + testAccRancher2ClusterDataSourceType + `" "foo" {
   name = rancher2_cluster.foo.name
@@ -64,8 +50,6 @@ func TestAccRancher2ClusterDataSource(t *testing.T) {
 					resource.TestCheckResourceAttr("data."+testAccRancher2ClusterDataSourceType+".foo", "rke_config.0.network.0.plugin", "canal"),
 					resource.TestCheckResourceAttr("data."+testAccRancher2ClusterDataSourceType+".foo", "rke_config.0.services.0.etcd.0.creation", "6h"),
 					resource.TestCheckResourceAttr("data."+testAccRancher2ClusterDataSourceType+".foo", "labels.cattle.io/creator", "norman"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2ClusterDataSourceType+".foo", "scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
-					resource.TestCheckResourceAttr("data."+testAccRancher2ClusterDataSourceType+".foo", "scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 		},

@@ -104,9 +104,19 @@ func flattenAzureConfig(in *azureConfig) []interface{} {
 	}
 
 	obj["use_private_ip"] = in.UsePrivateIP
+	obj["use_public_ip_standard_sku"] = in.UsePublicIPStandardSKU
+	obj["accelerated_networking"] = in.AcceleratedNetworking
 
 	if len(in.Vnet) > 0 {
 		obj["vnet"] = in.Vnet
+	}
+
+	if len(in.AvailabilityZone) > 0 {
+		obj["availability_zone"] = in.AvailabilityZone
+	}
+
+	if len(in.Tags) > 0 {
+		obj["tags"] = in.Tags
 	}
 
 	return []interface{}{obj}
@@ -231,6 +241,22 @@ func expandAzureConfig(p []interface{}) *azureConfig {
 
 	if v, ok := in["vnet"].(string); ok && len(v) > 0 {
 		obj.Vnet = v
+	}
+
+	if v, ok := in["use_public_ip_standard_sku"].(bool); ok {
+		obj.UsePublicIPStandardSKU = v
+	}
+
+	if v, ok := in["accelerated_networking"].(bool); ok {
+		obj.AcceleratedNetworking = v
+	}
+
+	if v, ok := in["availability_zone"].(string); ok && len(v) > 0 {
+		obj.AvailabilityZone = v
+	}
+
+	if v, ok := in["tags"].(string); ok && len(v) > 0 {
+		obj.Tags = v
 	}
 
 	return obj

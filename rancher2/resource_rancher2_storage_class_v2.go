@@ -77,16 +77,22 @@ func resourceRancher2StorageClassV2Read(d *schema.ResourceData, meta interface{}
 	clusterID, rancherID := splitID(d.Id())
 	log.Printf("[INFO] Refreshing StorageClass V2 %s at Cluster ID %s", rancherID, clusterID)
 
-	storageClass, err := getStorageClassV2ByID(meta.(*Config), clusterID, rancherID)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] StorageClass V2 %s not found at cluster ID %s", rancherID, clusterID)
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		storageClass, err := getStorageClassV2ByID(meta.(*Config), clusterID, rancherID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] StorageClass V2 %s not found at cluster ID %s", rancherID, clusterID)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
-	return flattenStorageClassV2(d, storageClass)
+		if err = flattenStorageClassV2(d, storageClass); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2StorageClassV2Update(d *schema.ResourceData, meta interface{}) error {

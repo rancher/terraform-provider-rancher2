@@ -1,11 +1,11 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/apis/catalog.cattle.io/v1"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -28,7 +28,7 @@ func init() {
 		"label1": "one",
 		"label2": "two",
 	}
-	testCatalogV2Conf.Spec.CABundle = []byte("ca_bundle")
+	testCatalogV2Conf.Spec.CABundle = []byte("test DER data")
 	testCatalogV2Conf.Spec.Enabled = newTrue()
 	testCatalogV2Conf.Spec.GitBranch = "git_branch"
 	testCatalogV2Conf.Spec.GitRepo = "git_repo"
@@ -43,7 +43,7 @@ func init() {
 
 	testCatalogV2Interface = map[string]interface{}{
 		"name":                      "name",
-		"ca_bundle":                 "ca_bundle",
+		"ca_bundle":                 "dGVzdCBERVIgZGF0YQ==",
 		"enabled":                   true,
 		"git_branch":                "git_branch",
 		"git_repo":                  "git_repo",
@@ -80,16 +80,13 @@ func TestFlattenCatalogV2(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, catalogV2Fields(), tc.ExpectedOutput)
 		err := flattenCatalogV2(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, expectedOutput)
-		}
+		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
@@ -107,10 +104,10 @@ func TestExpandCatalogV2(t *testing.T) {
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, catalogV2Fields(), tc.Input)
-		output := expandCatalogV2(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
+		output, err := expandCatalogV2(inputResourceData)
+		if err != nil {
+			t.Fatal(err)
 		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

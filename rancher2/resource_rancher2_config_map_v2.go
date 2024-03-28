@@ -60,16 +60,22 @@ func resourceRancher2ConfigMapV2Read(d *schema.ResourceData, meta interface{}) e
 	clusterID, rancherID := splitID(d.Id())
 	log.Printf("[INFO] Refreshing ConfigMap V2 %s at Cluster ID %s", rancherID, clusterID)
 
-	configMap, err := getConfigMapV2ByID(meta.(*Config), clusterID, rancherID)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] ConfigMap V2 %s not found at cluster ID %s", rancherID, clusterID)
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		configMap, err := getConfigMapV2ByID(meta.(*Config), clusterID, rancherID)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] ConfigMap V2 %s not found at cluster ID %s", rancherID, clusterID)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
-	return flattenConfigMapV2(d, configMap)
+		if err = flattenConfigMapV2(d, configMap); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ConfigMapV2Update(d *schema.ResourceData, meta interface{}) error {

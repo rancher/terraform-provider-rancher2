@@ -111,7 +111,6 @@ provider "rancher2" {
 ` + testAccRancher2ClusterAlertGroup + `
 ` + testAccRancher2ClusterAlertRule + `
 ` + testAccRancher2ClusterDriver + `
-` + testAccRancher2ClusterLoggingSyslog + `
 ` + testAccRancher2User + `
 ` + testAccRancher2ClusterRoleTemplateBinding + `
 ` + testAccRancher2ClusterTemplateConfig + `
@@ -139,7 +138,6 @@ provider "rancher2" {
 ` + testAccCheckRancher2PodSecurityPolicyTemplate + `
 ` + testAccRancher2ProjectAlertGroupConfig + `
 ` + testAccRancher2ProjectAlertRule + `
-` + testAccRancher2ProjectLoggingSyslog + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `
@@ -164,7 +162,6 @@ provider "rancher2" {
 ` + testAccRancher2ClusterAlertGroup + `
 ` + testAccRancher2ClusterAlertRule + `
 ` + testAccRancher2ClusterDriver + `
-` + testAccRancher2ClusterLoggingSyslog + `
 ` + testAccRancher2User + `
 ` + testAccRancher2ClusterRoleTemplateBinding + `
 ` + testAccRancher2ClusterTemplateConfig + `
@@ -194,7 +191,6 @@ provider "rancher2" {
 ` + testAccCheckRancher2PodSecurityPolicyTemplate + `
 ` + testAccRancher2ProjectAlertGroupConfig + `
 ` + testAccRancher2ProjectAlertRule + `
-` + testAccRancher2ProjectLoggingSyslog + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `
@@ -221,7 +217,6 @@ provider "rancher2" {
 ` + testAccRancher2ClusterAlertGroup + `
 ` + testAccRancher2ClusterAlertRule + `
 ` + testAccRancher2ClusterDriver + `
-` + testAccRancher2ClusterLoggingSyslog + `
 ` + testAccRancher2ConfigMapV2 + `
 ` + testAccRancher2User + `
 ` + testAccRancher2ClusterRoleTemplateBinding + `
@@ -253,7 +248,6 @@ provider "rancher2" {
 ` + testAccCheckRancher2PodSecurityPolicyTemplate + `
 ` + testAccRancher2ProjectAlertGroupConfig + `
 ` + testAccRancher2ProjectAlertRule + `
-` + testAccRancher2ProjectLoggingSyslog + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `
@@ -283,7 +277,6 @@ provider "rancher2" {
 ` + testAccRancher2ClusterAlertGroup + `
 ` + testAccRancher2ClusterAlertRule + `
 ` + testAccRancher2ClusterDriver + `
-` + testAccRancher2ClusterLoggingSyslog + `
 ` + testAccRancher2ClusterV2 + `
 ` + testAccRancher2ConfigMapV2 + `
 ` + testAccRancher2User + `
@@ -316,7 +309,6 @@ provider "rancher2" {
 ` + testAccCheckRancher2PodSecurityPolicyTemplate + `
 ` + testAccRancher2ProjectAlertGroupConfig + `
 ` + testAccRancher2ProjectAlertRule + `
-` + testAccRancher2ProjectLoggingSyslog + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `

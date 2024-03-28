@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -108,14 +109,14 @@ func TestFlattenSecret(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, secretFields(), tc.ExpectedOutput)
 		err := flattenSecret(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				expectedOutput, tc.ExpectedOutput)
 		}
 	}
@@ -140,9 +141,6 @@ func TestExpandSecret(t *testing.T) {
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, secretFields(), tc.Input)
 		output := expandSecret(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

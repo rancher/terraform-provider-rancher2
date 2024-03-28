@@ -62,7 +62,7 @@ resource "rancher2_cluster" "foo-custom" {
 
 ### Creating Rancher v2 RKE cluster enabling and customizing monitoring
 
-**Note** Cluster monitoring version `0.2.0` or above, can't be enabled until cluster is fully deployed as [`kubeVersion`](https://github.com/rancher/system-charts/blob/52be656700468904b9bf15c3f39cd7112e1f8c9b/charts/rancher-monitoring/v0.2.0/Chart.yaml#L12) requirement has been introduced to helm chart 
+**Note** Cluster monitoring version `0.2.0` and above, can't be enabled until cluster is fully deployed as [`kubeVersion`](https://github.com/rancher/system-charts/blob/52be656700468904b9bf15c3f39cd7112e1f8c9b/charts/rancher-monitoring/v0.2.0/Chart.yaml#L12) requirement has been introduced to helm chart
 
 ```hcl
 # Create a new rancher2 RKE Cluster
@@ -215,6 +215,7 @@ resource "rancher2_cluster" "foo-custom" {
     }
   }
 }
+
 # Create a new rancher2 Node Template
 resource "rancher2_node_template" "foo" {
   name = "foo"
@@ -230,6 +231,7 @@ resource "rancher2_node_template" "foo" {
     zone = "<ZONE>"
   }
 }
+
 # Create a new rancher2 Node Pool
 resource "rancher2_node_pool" "foo" {
   cluster_id =  rancher2_cluster.foo-custom.id
@@ -243,7 +245,7 @@ resource "rancher2_node_pool" "foo" {
 }
 ```
 
-### Creating Rancher v2 RKE cluster from template. For Rancher v2.3.x or above.
+### Creating Rancher v2 RKE cluster from template. For Rancher v2.3.x and above.
 
 ```hcl
 # Create a new rancher2 cluster template
@@ -272,6 +274,7 @@ resource "rancher2_cluster_template" "foo" {
   }
   description = "Test cluster template v2"
 }
+
 # Create a new rancher2 RKE Cluster from template
 resource "rancher2_cluster" "foo" {
   name = "foo"
@@ -280,7 +283,7 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-### Creating Rancher v2 RKE cluster with upgrade strategy. For Rancher v2.4.x or above.
+### Creating Rancher v2 RKE cluster with upgrade strategy. For Rancher v2.4.x and above.
 
 ```hcl
 resource "rancher2_cluster" "foo" {
@@ -317,48 +320,94 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-### Creating Rancher v2 RKE cluster with scheduled cluster scan. For Rancher v2.4.x or above.
+### Creating Rancher v2 RKE cluster with cluster agent customization. For Rancher v2.7.5 and above.
 
 ```hcl
 resource "rancher2_cluster" "foo" {
   name = "foo"
-  description = "Terraform custom cluster"
+  description = "Terraform cluster with agent customization"
   rke_config {
     network {
       plugin = "canal"
     }
-    services {
-      etcd {
-        creation = "6h"
-        retention = "24h"
-      }
+  }
+  cluster_agent_deployment_customization {
+    append_tolerations {
+      effect = "NoSchedule"
+      key    = "tolerate/control-plane"
+      value  = "true"
+}
+    override_affinity = <<EOF
+{
+  "nodeAffinity": {
+    "requiredDuringSchedulingIgnoredDuringExecution": {
+      "nodeSelectorTerms": [{
+        "matchExpressions": [{
+          "key": "not.this/nodepool",
+          "operator": "In",
+          "values": [
+            "true"
+          ]
+        }]
+      }]
     }
   }
-  scheduled_cluster_scan {
-    enabled = true
-    scan_config {
-      cis_scan_config {
-        debug_master = true
-        debug_worker = true
-      }
-    }
-    schedule_config {
-      cron_schedule = "30 * * * *"
-      retention = 5
+}
+EOF
+    override_resource_requirements {
+      cpu_limit      = "800"
+      cpu_request    = "500"
+      memory_limit   = "800"
+      memory_request = "500"
     }
   }
 }
 ```
 
-### Importing EKS cluster to Rancher v2, using `eks_config_v2`. For Rancher v2.5.x or above.
+### Creating Rancher v2 RKE cluster with Pod Security Admission Configuration Template (PSACT). For Rancher v2.7.2 and above.
+
+```hcl
+# Custom PSACT (if you wish to use your own)
+resource "rancher2_pod_security_admission_configuration_template" "foo" {
+  name = "custom-psact"
+  description = "This is my custom Pod Security Admission Configuration Template"
+  defaults {
+    audit = "restricted"
+    audit_version = "latest"
+    enforce = "restricted"
+    enforce_version = "latest"
+    warn = "restricted"
+    warn_version = "latest"
+  }
+  exemptions {
+    usernames = ["testuser"]
+    runtime_classes = ["testclass"]
+    namespaces = ["ingress-nginx","kube-system"]
+  }
+}
+
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform cluster with PSACT"
+  default_pod_security_admission_configuration_template_name = "<name>" # privileged, baseline, restricted or name of custom template
+  rke_config {
+    network {
+      plugin = "canal"
+    }
+    # ...
+  }
+}
+```
+
+### Importing EKS cluster to Rancher v2, using `eks_config_v2`. For Rancher v2.5.x and above.
 
 ```hcl
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   description = "foo test"
   amazonec2_credential_config {
-    access_key = "<AWS_ACCESS_KEY>"
-    secret_key = "<AWS_SECRET_KEY>"
+    access_key = "<aws-access-key>"
+    secret_key = "<aws-secret-key>"
   }
 }
 resource "rancher2_cluster" "foo" {
@@ -366,22 +415,22 @@ resource "rancher2_cluster" "foo" {
   description = "Terraform EKS cluster"
   eks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo.id
-    name = "<CLUSTER_NAME>"
-    region = "<EKS_REGION>"
+    name = "<cluster-name>"
+    region = "<eks-region>"
     imported = true
   }
 }
 ```
 
-### Creating EKS cluster from Rancher v2, using `eks_config_v2`. For Rancher v2.5.x or above.
+### Creating EKS cluster from Rancher v2, using `eks_config_v2`. For Rancher v2.5.x and above.
 
 ```hcl
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   description = "foo test"
   amazonec2_credential_config {
-    access_key = "<AWS_ACCESS_KEY>"
-    secret_key = "<AWS_SECRET_KEY>"
+    access_key = "<aws-access-key>"
+    secret_key = "<aws-secret-key>"
   }
 }
 resource "rancher2_cluster" "foo" {
@@ -390,7 +439,7 @@ resource "rancher2_cluster" "foo" {
   eks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo.id
     region = "<EKS_REGION>"
-    kubernetes_version = "1.17"
+    kubernetes_version = "1.24"
     logging_types = ["audit", "api"]
     node_groups {
       name = "node_group1"
@@ -403,6 +452,7 @@ resource "rancher2_cluster" "foo" {
       instance_type = "m5.xlarge"
       desired_size = 2
       max_size = 3
+      node_role = "arn:aws:iam::role/test-NodeInstanceRole"
     }
     private_access = true
     public_access = false
@@ -410,15 +460,17 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-### Creating EKS cluster from Rancher v2, using `eks_config_v2` and launch template. For Rancher v2.5.6 or above.
+### Creating EKS cluster from Rancher v2, using `eks_config_v2` and launch template. For Rancher v2.5.6 and above.
+
+Note: To use `launch_template` you must provide the ID (seen as `<EC2_LAUNCH_TEMPLATE_ID>`) to the template either as a static value. Or fetched via AWS data-source using one of: [aws_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami.html), [aws_ami_ids](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami_ids), or similar data-sources. You can also create a custom [`launch_template`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template) first and provide the ID to that.
 
 ```hcl
 resource "rancher2_cloud_credential" "foo" {
   name = "foo"
   description = "foo test"
   amazonec2_credential_config {
-    access_key = "<AWS_ACCESS_KEY>"
-    secret_key = "<AWS_SECRET_KEY>"
+    access_key = "<aws-access-key>"
+    secret_key = "<aws-secret-key>"
   }
 }
 resource "rancher2_cluster" "foo" {
@@ -427,14 +479,14 @@ resource "rancher2_cluster" "foo" {
   eks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo.id
     region = "<EKS_REGION>"
-    kubernetes_version = "1.17"
+    kubernetes_version = "1.24"
     logging_types = ["audit", "api"]
     node_groups {
       desired_size = 3
       max_size = 5
       name = "node_group1"
       launch_template {
-        id = "<EC2_LAUNCH_TEMPLATE_ID>"
+        id = "<ec2-launch-template-id>"
         version = 1
       }
     }
@@ -444,7 +496,7 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
-### Importing GKE cluster from Rancher v2, using `gke_config_v2`. For Rancher v2.5.8 or above.
+### Importing GKE cluster from Rancher v2, using `gke_config_v2`. For Rancher v2.5.8 and above.
 
 ```hcl
 resource "rancher2_cloud_credential" "foo-google" {
@@ -457,20 +509,20 @@ resource "rancher2_cloud_credential" "foo-google" {
 
 resource "rancher2_cluster" "foo" {
   name = "foo"
-  description = "Foo rancher2 imported GKE cluster"
+  description = "Terraform imported GKE cluster"
   gke_config_v2 {
     name = "foo"
     google_credential_secret = rancher2_cloud_credential.foo-google.id
-    region = <REGION> # Zone argument could also be used instead of region
-    project_id = <PROJECT_ID>
+    region = <region> # Zone argument could also be used instead of region
+    project_id = <project-id>
     imported = true
   }
 }
 ```
 
-### Creating GKE cluster from Rancher v2, using `gke_config_v2`. For Rancher v2.5.8 or above.
+### Creating GKE cluster from Rancher v2, using `gke_config_v2`. For Rancher v2.5.8 and above.
 
-**Note** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585]](https://github.com/rancher/rancher/issues/32585)
+**Note:** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585](https://github.com/rancher/rancher/issues/32585)
 
 ```hcl
 resource "rancher2_cloud_credential" "foo-google" {
@@ -487,55 +539,55 @@ resource "rancher2_cluster" "foo" {
   gke_config_v2 {
     name = "foo"
     google_credential_secret = rancher2_cloud_credential.foo-google.id
-    region = <REGION> # Zone argument could also be used instead of region
-    project_id = <PROJECT_ID>
-    kubernetes_version = <K8S_VERSION>
-    network = <NETWORK>
-    subnetwork = <SUBNET>
+    region = <region> # Zone argument could also be used instead of region
+    project_id = <project-id>
+    kubernetes_version = <rancher-kubernetes-version>
+    network = <network>
+    subnetwork = <subnet>
     node_pools {
       initial_node_count = 1
       max_pods_constraint = 110
-      name = <NODE_POOL_NAME>
-      version = <VERSION>
+      name = <node-pool-name>
+      version = <version>
     }
   }
 }
 ```
 
 
-### Importing AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 or above (Tech preview)
+### Importing AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 and above.
 
 ```hcl
 resource "rancher2_cloud_credential" "foo-aks" {
   name = "foo-aks"
   azure_credential_config {
-    client_id = "<CLIENT_ID>"
-    client_secret = "<CLIENT_SECRET>"
-    subscription_id = "<SUBSCRIPTION_ID>"
+    client_id = "<client-id>"
+    client_secret = "<client-secret>"
+    subscription_id = "<subscription-id>"
   }
 }
 # For imported AKS clusters, don't add any other aks_config_v2 field
 resource "rancher2_cluster" "foo" {
-  name = <CLUSTER_NAME>
+  name = <cluster-name>
   description = "Terraform AKS cluster"
   aks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo-aks.id
-    resource_group = "<RESOURCE_GROUP>"
-    resource_location = "<RESOURCE_LOCATION>"
+    resource_group = "<resource-group>"
+    resource_location = "<resource-location"
     imported = true
   }
 }
 ```
 
-### Creating AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 or above (Tech preview)
+### Creating AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 and above.
 
 ```hcl
 resource "rancher2_cloud_credential" "foo-aks" {
   name = "foo-aks"
   azure_credential_config {
-    client_id = "<CLIENT_ID>"
-    client_secret = "<CLIENT_SECRET>"
-    subscription_id = "<SUBSCRIPTION_ID>"
+    client_id = "<client-id>"
+    client_secret = "<client-secret>"
+    subscription_id = "<subscription-id>"
   }
 }
 
@@ -544,18 +596,38 @@ resource "rancher2_cluster" "foo" {
   description = "Terraform AKS cluster"
   aks_config_v2 {
     cloud_credential_id = rancher2_cloud_credential.foo-aks.id
-    resource_group = "<RESOURCE_GROUP>"
-    resource_location = "<RESOURCE_LOCATION>"
-    dns_prefix = "<DNS_PREFIX>"
-    kubernetes_version = "1.21.2"
-    network_plugin = "<NETWORK_PLUGIN>"
+    resource_group = "<resource-group>"
+    resource_location = "<resource-location>"
+    dns_prefix = "<dns-prefix>"
+    kubernetes_version = "1.24.6"
+    network_plugin = "<network-plugin>"
+    virtual_network = "<virtual-network>"
+    virtual_network_resource_group = "<virtual-network-resource-group>"
+    subnet = "<subnet>"
+    node_resource_group = "<node-resource-group>"
     node_pools {
       availability_zones = ["1", "2", "3"]
-      name = "<NODEPOOL_NAME>"
+      name = "<nodepool-name-1>"
+      mode = "System"
       count = 1
       orchestrator_version = "1.21.2"
       os_disk_size_gb = 128
       vm_size = "Standard_DS2_v2"
+    }
+    node_pools {
+      availability_zones = ["1", "2", "3"]
+      name = "<nodepool-name-2>"
+      count = 1
+      mode = "User"
+      orchestrator_version = "1.21.2"
+      os_disk_size_gb = 128
+      vm_size = "Standard_DS2_v2"
+      max_surge = "25%"
+      labels = {
+        "test1" = "data1"
+        "test2" = "data2"
+      }
+      taints = [ "none:PreferNoSchedule" ]
     }
   }
 }
@@ -566,45 +638,39 @@ resource "rancher2_cluster" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the Cluster (string)
-* `agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. Just for Rancher v2.5.6 and above (list)
+* `agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. For Rancher v2.5.6 and above (list)
+* `cluster_agent_deployment_customization` - (Optional) Optional customization for cluster agent. For Rancher v2.7.5 and above (list)
+* `fleet_agent_deployment_customization` - (Optional) Optional customization for fleet agent. For Rancher v2.7.5 and above (list)
 * `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `k3s_config` (list maxitems:1)
 * `rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
 * `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `rke_config` (list maxitems:1)
 * `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
 * `aks_config_v2` - (Optional) The Azure AKS v2 configuration for creating/import `aks` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
 * `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `eks_config_v2` - (Optional/Computed) The Amazon EKS V2 configuration to create or import `eks` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config`. For Rancher v2.5.x or above (list maxitems:1)
+* `eks_config_v2` - (Optional/Computed) The Amazon EKS V2 configuration to create or import `eks` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config`. For Rancher v2.5.x and above (list maxitems:1)
 * `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config_v2`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
-* `gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 or above (list maxitems:1)
+* `gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 and above (list maxitems:1)
 * `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `k3s_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_monitoring_input` - (Optional) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
-* `cluster_template_answers` - (Optional/Computed) Cluster template answers. Just for Rancher v2.3.x and above (list maxitems:1)
-* `cluster_template_id` - (Optional) Cluster template ID. Just for Rancher v2.3.x and above (string)
-* `cluster_template_questions` - (Optional/Computed) Cluster template questions. Just for Rancher v2.3.x and above (list)
-* `cluster_template_revision_id` - (Optional) Cluster template revision ID. Just for Rancher v2.3.x and above (string)
+* `cluster_template_answers` - (Optional/Computed) Cluster template answers. For Rancher v2.3.x and above (list maxitems:1)
+* `cluster_template_id` - (Optional) Cluster template ID. For Rancher v2.3.x and above (string)
+* `cluster_template_questions` - (Optional/Computed) Cluster template questions. For Rancher v2.3.x and above (list)
+* `cluster_template_revision_id` - (Optional) Cluster template revision ID. For Rancher v2.3.x and above (string)
 * `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support) (string)
-* `desired_agent_image` - (Optional/Computed) Desired agent image. Just for Rancher v2.3.x and above (string)
-* `desired_auth_image` - (Optional/Computed) Desired auth image. Just for Rancher v2.3.x and above (string)
-* `docker_root_dir` - (Optional/Computed) Desired auth image. Just for Rancher v2.3.x and above (string)
+* `default_pod_security_admission_configuration_template_name` - (Optional/Computed) The name of the pre-defined pod security admission configuration template to be applied to the cluster. Rancher admins (or those with the right permissions) can create, manage, and edit those templates. For more information, please refer to [Rancher Documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/psa-config-templates). The argument is available in Rancher v2.7.2 and above (string)
+* `desired_agent_image` - (Optional/Computed) Desired agent image. For Rancher v2.3.x and above (string)
+* `desired_auth_image` - (Optional/Computed) Desired auth image. For Rancher v2.3.x and above (string)
+* `docker_root_dir` - (Optional/Computed) Desired auth image. For Rancher v2.3.x and above (string)
 * `enable_cluster_alerting` - (Optional/Computed) Enable built-in cluster alerting (bool)
 * `enable_cluster_monitoring` - (Optional/Computed) Enable built-in cluster monitoring (bool)
 * `enable_cluster_istio` - (Deprecated) Deploy istio on `system` project and `istio-system` namespace, using rancher2_app resource instead. See above example.
 * `enable_network_policy` - (Optional/Computed) Enable project network isolation (bool)
-* `scheduled_cluster_scan`- (Optional/Computed) Cluster scheduled cis scan. For Rancher v2.4.0 or above (List maxitems:1)
 * `fleet_workspace_name` - (Optional/Computed) Fleet workspace name (string)
 * `annotations` - (Optional/Computed) Annotations for the Cluster (map)
 * `labels` - (Optional/Computed) Labels for the Cluster (map)
 * `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
-
-
-#### `schedule_config`
-
-##### Arguments
-
-* `cron_schedule` - (Required) Crontab schedule. It should contains 5 fields `"<min> <hour> <month_day> <month> <week_day>"` (string)
-* `retention` - (Optional/Computed) Cluster scan retention (int)
 
 
 ## Attributes Reference
@@ -615,12 +681,12 @@ The following attributes are exported:
 * `cluster_registration_token` - (Computed) Cluster Registration Token generated for the cluster (list maxitems:1)
 * `default_project_id` - (Computed) Default project ID for the cluster (string)
 * `driver` - (Computed) The driver used for the Cluster. `imported`, `azurekubernetesservice`, `amazonelasticcontainerservice`, `googlekubernetesengine` and `rancherKubernetesEngine` are supported (string)
-* `istio_enabled` - (Computed) Is istio enabled at cluster? Just for Rancher v2.3.x and above (bool)
+* `istio_enabled` - (Computed) Is istio enabled at cluster? For Rancher v2.3.x and above (bool)
 * `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster. Note: For Rancher 2.6.0 and above, when the cluster has `cluster_auth_endpoint` enabled, the kube_config will not be available until the cluster is `connected` (string)
 * `ca_cert` - (Computed/Sensitive) K8s cluster ca cert (string)
 * `system_project_id` - (Computed) System project ID for the cluster (string)
 
-**Note** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
+**Note:** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
 
 ## Nested blocks
 
@@ -631,9 +697,36 @@ The following attributes are exported:
 * `name` - (Required) Rancher agent env var name (string)
 * `value` - (Required) Rancher agent env var value (string)
 
+### `agent_deployment_customization`
+
+#### Arguments
+
+* `append_tolerations` - (Optional) User defined tolerations to append to agent (list)
+* `override_affinity` - (Optional) User defined affinity to override default agent affinity (string)
+* `override_resource_requirements` - (Optional) User defined resource requirements to set on the agent (list)
+
+#### `append_tolerations`
+
+#### Arguments
+
+* `key` - (Required) The toleration key (string)
+* `effect` - (Optional) The toleration effect. Default: `\"NoSchedule\"` (string)
+* `operator` - (Optional) The toleration operator (string)
+* `seconds` - (Optional) The number of seconds a pod will stay bound to a node with a matching taint (int)
+* `value` - (Optional) The toleration value (string)
+
+#### `override_resource_requirements`
+
+#### Arguments
+
+* `cpu_limit` - (Optional) The maximum CPU limit for agent (string) 
+* `cpu_request` - (Optional) The minimum CPU required for agent (string)
+* `memory_limit` - (Optional) The maximum memory limit for agent (string)
+* `memory_request` - (Optional) The minimum memory required for agent (string)
+
 ### `rke_config`
 
-**Note** `rke_config` works the same as within Rancher GUI; it will not _provision_ hosts when not using `node_pool` nor `node_driver`. It is expected that nodes are registered by having the `node_command` run on each node. Running the `node_command` is outside the scope of this provider.
+**Note:** `rke_config` works the same as within Rancher GUI; it will not _provision_ hosts when not using `node_pool` nor `node_driver`. It is expected that nodes are registered by having the `node_command` run on each node. Running the `node_command` is outside the scope of this provider.
 
 #### Arguments
 
@@ -644,7 +737,7 @@ The following attributes are exported:
 * `authorization` - (Optional/Computed) Kubernetes cluster authorization (list maxitems:1)
 * `bastion_host` - (Optional/Computed) RKE bastion host (list maxitems:1)
 * `cloud_provider` - (Optional/Computed) RKE cloud provider [rke-cloud-providers](https://rancher.com/docs/rke/v0.1.x/en/config-options/cloud-providers/) (list maxitems:1)
-* `dns` - (Optional/Computed) RKE dns add-on. Just for Rancher v2.2.x (list maxitems:1)
+* `dns` - (Optional/Computed) RKE dns add-on. For Rancher v2.2.x (list maxitems:1)
 * `enable_cri_dockerd` - (Optional) Enable/disable using cri-dockerd. Deafult: `false` [enable_cri_dockerd](https://rancher.com/docs/rke/latest/en/config-options/#cri-dockerd) (bool)
 * `ignore_docker_version` - (Optional) Ignore docker version. Default `true` (bool)
 * `ingress` - (Optional/Computed) Kubernetes ingress configuration (list maxitems:1)
@@ -999,6 +1092,7 @@ The following attributes are exported:
 
 ##### Arguments
 
+* `aci_network_provider` - (Optional/Computed) ACI provider config for RKE network (list maxitems:63)
 * `calico_network_provider` - (Optional/Computed) Calico provider config for RKE network (list maxitems:1)
 * `canal_network_provider` - (Optional/Computed) Canal provider config for RKE network (list maxitems:1)
 * `flannel_network_provider` - (Optional/Computed) Flannel provider config for RKE network (list maxitems:1)
@@ -1007,6 +1101,85 @@ The following attributes are exported:
 * `options` - (Optional/Computed) RKE options for network (map)
 * `plugin` - (Optional/Computed) Plugin for RKE network. `canal` (default), `flannel`, `calico`, `none` and `weave` are supported. (string)
 * `tolerations` - (Optional) Network add-on tolerations (list)
+
+##### `aci_network_provider`
+
+###### Arguments
+
+* `aep` - (Required) Attachable entity profile (string)
+* `apic_hosts` - (Required) List of APIC hosts to connect for APIC API (list)
+* `apic_refresh_ticker_adjust` - (Optional) APIC refresh ticker adjust amount (string)
+* `apic_refresh_time` - (Optional) APIC refresh time in seconds (string)
+* `apic_subscription_delay` - (Optional) APIC subscription delay amount (string)
+* `apic_user_crt` - (Required/Sensitive) APIC user certificate (string)
+* `apic_user_key` - (Required/Sensitive) APIC user key (string)
+* `apic_user_name` - (Required) APIC user name (string)
+* `capic` - (Optional) cAPIC cloud (string)
+* `controller_log_level` - (Optional) Log level for ACI controller (string)
+* `disable_periodic_snat_global_info_sync` - (Optional) Whether to disable periodic SNAT global info sync (string)
+* `disable_wait_for_network` - (Optional) Whether to disable waiting for network (string)
+* `drop_log_enable` - (Optional) Whether to enable drop log (string)
+* `duration_wait_for_network` - (Optional) The duration to wait for network (string)
+* `extern_dynamic` - (Required) Subnet to use for dynamic external IPs (string)
+* `enable_endpoint_slice` - (Optional) Whether to enable endpoint slices (string)
+* `encap_type` - (Required) Encap type: vxlan or vlan (string)
+* `ep_registry` - (Optional) EP registry (string)
+* `gbp_pod_subnet` - (Optional) GBH pod subnet (string)
+* `host_agent_log_level` - (Optional) Log level for ACI host agent (string)
+* `image_pull_policy` - (Optional) Image pull policy (string)
+* `image_pull_secret` - (Optional) Image pull policy (string)
+* `infra_vlan` - (Optional) The VLAN used by ACI infra (string)
+* `install_istio` - (Optional) Whether to install Istio (string)
+* `istio_profile` - (Optional) Istio profile name (string)
+* `kafka_brokers` - (Optional) List of Kafka broker hosts (list)
+* `kafka_client_crt` - (Optional) Kafka client certificate (string)
+* `kafka_client_key` - (Optional) Kafka client key (string)
+* `kube_api_vlan` - (Required) The VLAN used by the physdom for nodes (string)
+* `l3out` - (Required) L3out (string)
+* `l3out_external_networks` - (Required) L3out external networks (list)
+* `max_nodes_svc_graph` - (Optional) Max nodes in service graph (string)
+* `mcast_range_end` - (Required) End of mcast range (string)
+* `mcast_range_start` - (Required) Start of mcast range (string)
+* `mtu_head_room` - (Optional) MTU head room amount (string)
+* `multus_disable` - (Optional) Whether to disable Multus (string)
+* `no_priority_class` - (Optional) Whether to use priority class (string)
+* `node_pod_if_enable` - (Optional) Whether to enable node pod interface (string)
+* `node_subnet` - (Required) Subnet to use for nodes (string)
+* `ovs_memory_limit` - (Optional) OVS memory limit (string)
+* `opflex_log_level` - (Optional) Log level for ACI opflex (string)
+* `opflex_client_ssl` - (Optional) Whether to use client SSL for Opflex (string)
+* `opflex_device_delete_timeout` - (Optional) Opflex device delete timeout (string)
+* `opflex_mode` - (Optional) Opflex mode (string)
+* `opflex_server_port` - (Optional) Opflex server port (string)
+* `overlay_vrf_name` - (Optional) Overlay VRF name (string)
+* `pbr_tracking_non_snat` - (Optional) Policy-based routing tracking non snat (string)
+* `pod_subnet_chunk_size` - (Optional) Pod subnet chunk size (string)
+* `run_gbp_container` - (Optional) Whether to run GBP container (string)
+* `run_opflex_server_container` - (Optional) Whether to run Opflex server container (string)
+* `node_svc_subnet` - (Required) Subnet to use for service graph (string)
+* `service_monitor_interval` - (Optional) Service monitor interval (string)
+* `service_vlan` - (Required) The VLAN used by LoadBalancer services (string)
+* `snat_contract_scope` - (Optional) Snat contract scope (string)
+* `snat_namespace` - (Optional) Snat namespace (string)
+* `snat_port_range_end` - (Optional) End of snat port range (string)
+* `snat_port_range_start` - (Optional) End of snat port range (string)
+* `snat_ports_per_node` - (Optional) Snat ports per node (string)
+* `sriov_enable` - (Optional) Whether to enable SR-IOV (string)
+* `extern_static` - (Required)  Subnet to use for static external IPs (string)
+* `subnet_domain_name` - (Optional) Subnet domain name (string)
+* `system_id` - (Required) ACI system ID (string)
+* `tenant` - (Optional) ACI tenant (string)
+* `token` - (Required/Sensitive) ACI token (string)
+* `use_aci_anywhere_crd` - (Optional) Whether to use ACI anywhere CRD (string)
+* `use_aci_cni_priority_class` - (Optional) Whether to use ACI CNI priority class (string)
+* `use_cluster_role` - (Optional) Whether to use cluster role (string)
+* `use_host_netns_volume` - (Optional) Whether to use host netns volume (string)
+* `use_opflex_server_volume` - (Optional) Whether use Opflex server volume (string)
+* `use_privileged_container` - (Optional) Whether ACI containers should run as privileged (string)
+* `vrf_name` - (Required) VRF name (string)
+* `vrf_tenant` - (Required) VRF tenant (string)
+* `vmm_controller` - (Optional) VMM controller configuration (string)
+* `vmm_domain` - (Optional) VMM domain configuration (string)
 
 ##### `calico_network_provider`
 
@@ -1092,7 +1265,7 @@ The following attributes are exported:
 
 ###### Arguments
 
-* `backup_config` - (Optional/Computed) Backup options for etcd service. Just for Rancher v2.2.x (list maxitems:1)
+* `backup_config` - (Optional/Computed) Backup options for etcd service. For Rancher v2.2.x (list maxitems:1)
 * `ca_cert` - (Optional/Computed) TLS CA certificate for etcd service (string)
 * `cert` - (Optional/Computed/Sensitive) TLS certificate for etcd service (string)
 * `creation` - (Optional/Computed) Creation option for etcd service (string)
@@ -1100,13 +1273,13 @@ The following attributes are exported:
 * `extra_args` - (Optional/Computed) Extra arguments for etcd service (map)
 * `extra_binds` - (Optional) Extra binds for etcd service (list)
 * `extra_env` - (Optional) Extra environment for etcd service (list)
-* `gid` - (Optional) Etcd service GID. Default: `0`. For Rancher v2.3.x or above (int)
+* `gid` - (Optional) Etcd service GID. Default: `0`. For Rancher v2.3.x and above (int)
 * `image` - (Optional/Computed) Docker image for etcd service (string)
 * `key` - (Optional/Computed/Sensitive) TLS key for etcd service (string)
 * `path` - (Optional/Computed) Path for etcd service (string)
 * `retention` - (Optional/Computed) Retention option for etcd service (string)
 * `snapshot` - (Optional/Computed) Snapshot option for etcd service (bool)
-* `uid` - (Optional) Etcd service UID. Default: `0`. For Rancher v2.3.x or above (int)
+* `uid` - (Optional) Etcd service UID. Default: `0`. For Rancher v2.3.x and above (int)
 
 ###### `backup_config`
 
@@ -1117,7 +1290,7 @@ The following attributes are exported:
 * `retention` - (Optional) Retention for etcd backup. Default `6` (int)
 * `s3_backup_config` - (Optional) S3 config options for etcd backup (list maxitems:1)
 * `safe_timestamp` - (Optional) Safe timestamp for etcd backup. Default: `false` (bool)
-* `timeout` - (Optional/Computed) Timeout in seconds for etcd backup. Default: `300`. Just for Rancher v2.5.6 and above (int)
+* `timeout` - (Optional/Computed) Timeout in seconds for etcd backup. Default: `300`. For Rancher v2.5.6 and above (int)
 
 ###### `s3_backup_config`
 
@@ -1147,6 +1320,41 @@ The following attributes are exported:
 * `secrets_encryption_config` - (Optional) [Encrypt k8s secret data configration](https://rancher.com/docs/rke/latest/en/config-options/secrets-encryption/). (list maxitem: 1)
 * `service_cluster_ip_range` - (Optional/Computed) Service Cluster IP Range option for kube API service (string)
 * `service_node_port_range` - (Optional/Computed) Service Node Port Range option for kube API service (string)
+
+
+###### `admission_configuration`
+
+###### Arguments
+
+* `api_version` - (Optional) Admission configuration ApiVersion. Default: `apiserver.config.k8s.io/v1` (string)
+* `kind` - (Optional) Admission configuration Kind. Default: `AdmissionConfiguration` (string)
+* `plugins` - (Optional) Admission configuration plugins. (list `plugin`)
+
+###### `plugin`
+
+###### Arguments
+
+* `name` - (Optional) Plugin name. (string)
+* `path` - (Optional) Plugin path. Default: `""` (string)
+* `configuration` - (Optional) Plugin configuration. (string) Ex:
+
+```
+configuration = <<EOF
+apiVersion: pod-security.admission.config.k8s.io/v1alpha1
+kind: PodSecurityConfiguration
+defaults:
+  enforce: restricted
+  enforce-version: latest
+  audit: restricted
+  audit-version: latest
+  warn: restricted
+  warn-version: latest
+exemptions:
+  usernames: []
+  runtimeClasses: []
+  namespaces: []
+EOF
+```
 
 ###### `audit_log`
 
@@ -1376,7 +1584,7 @@ The following arguments are supported:
 * `resource_location` - (Required) The AKS resource location (string)
 * `imported` - (Optional) Is AKS cluster imported? Defaul: `false` (bool)
 
-The following arguments are supported just for creating new AKS clusters (`imported=false`): 
+The following arguments are supported just for creating new AKS clusters (`imported=false`):
 
 * `node_pools` - (Optional) The AKS nnode pools. Required if `imported=false` (list)
 * `dns_prefix` - (Optional/ForceNew) The AKS dns prefix. Required if `imported=false` (string)
@@ -1398,9 +1606,10 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `network_pod_cidr` - (Optional/Computed) The AKS network pod cidr (string)
 * `network_policy` - (Optional/Computed) The AKS network policy (string)
 * `network_service_cidr` - (Optional/Computed) The AKS network service cidr (string)
+* `node_resource_group` (Optional/Computed) The AKS node resource group name (string)
 * `private_cluster` - (Optional/Computed) Is AKS cluster private? (bool)
 * `subnet` - (Optional/Computed) The AKS subnet (string)
-* `tags` - (Optional/Computed) The AKS cluster tags" (map)
+* `tags` - (Optional/Computed) The AKS cluster tags (map)
 * `virtual_network` - (Optional/Computed) The AKS virtual network (string)
 * `virtual_network_resource_group` - (Optional/Computed) The AKS virtual network resource group (string)
 
@@ -1421,6 +1630,10 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `os_disk_type` - (Optional) The AKS node pool os disk type. Default: `Managed` (string)
 * `os_type` - (Optional) The AKS node pool os type. Default: `Linux` (string)
 * `vm_size` - (Optional/computed) The AKS node pool orchestrator version (string)
+* `max_surge` - (Optional) The AKS node pool max surge (string), example value: `25%`
+* `labels` - (Optional) The AKS node pool labels (map)
+* `taints` - (Optonal) The AKS node pool taints (list)
+
 
 ### `eks_config`
 
@@ -1433,9 +1646,9 @@ The following arguments are supported:
 * `secret_key` - (Required/Sensitive) The AWS Client Secret associated with the Client ID (string)
 * `ami` - (Optional) AMI ID to use for the worker nodes instead of the default (string)
 * `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes. Default `true` (bool)
-* `desired_nodes` - (Optional) The desired number of worker nodes. Just for Rancher v2.3.x and above. Default `3` (int)
+* `desired_nodes` - (Optional) The desired number of worker nodes. For Rancher v2.3.x and above. Default `3` (int)
 * `instance_type` - (Optional) The type of machine to use for worker nodes. Default `t2.medium` (string)
-* `key_pair_name` - (Optional) Allow user to specify key name to use. Just for Rancher v2.2.7 and above (string)
+* `key_pair_name` - (Optional) Allow user to specify key name to use. For Rancher v2.2.7 and above (string)
 * `maximum_nodes` - (Optional) The maximum number of worker nodes. Default `3` (int)
 * `minimum_nodes` - (Optional) The minimum number of worker nodes. Default `1` (int)
 * `node_volume_size` - (Optional) The volume size for each node. Default `20` (int)
@@ -1456,7 +1669,7 @@ The following arguments are supported:
 * `cloud_credential_id` - (Required) The EKS cloud_credential id (string)
 * `imported` - (Optional) Set to `true` to import EKS cluster. Default: `false` (bool)
 * `name` - (Optional/Computed) The EKS cluster name to import. Required to import a cluster (string)
-* `kms_key` - (Optional) The AWS kms key to use (string)
+* `kms_key` - (Optional) The AWS kms label ARN to use (string, e.g. arn:aws:kms:<ZONE>:<123456789100>:alias/<NAME>)
 * `kubernetes_version` - (Optional/Computed) The EKS cluster kubernetes version. Required to create a new cluster (string)
 * `logging_types` - (Optional) The AWS cloudwatch logging types. `audit`, `api`, `scheduler`, `controllerManager` and `authenticator` values are allowed (list)
 * `node_groups` - (Optional/Computed) The EKS cluster name to import. Required to create a new cluster (list)
@@ -1487,6 +1700,7 @@ The following arguments are supported:
 * `launch_template` - (Optional) The EKS node groups launch template (list Maxitem: 1)
 * `max_size` - (Optional) The EKS node group maximum size. Default `2` (int)
 * `min_size` - (Optional) The EKS node group maximum size. Default `2` (int)
+* `node_role` - (Optional) The EKS node group node role ARN. Default `""` (string)
 * `request_spot_instances` - (Optional) Enable EKS node group request spot instances (bool)
 * `resource_tags` - (Optional) The EKS node group resource tags (map)
 * `spot_instance_types` - (Optional) The EKS node group sport instace types (list string)
@@ -1693,12 +1907,12 @@ The following arguments are supported:
 * `compartment_id` - (Required) The OCID of the compartment in which to create resources OKE cluster and related resources (string)
 * `custom_boot_volume_size` - (Optional) Optional custom boot volume size (GB) for all nodes. If you specify 0, it will apply the default according to the `node_image` specified. Default `0` (int)
 * `description` - (Optional) An optional description of this cluster (string)
-* `enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` Just for Rancher v2.5.10 or above (bool)
+* `enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` for Rancher v2.5.10 and above (bool)
 * `enable_kubernetes_dashboard` - (Optional) Specifies whether to enable the Kubernetes dashboard. Default `false` (bool)
 * `enable_private_nodes` - (Optional) Specifies whether worker nodes will be deployed into a new, private, subnet. Default `false` (bool)
 * `fingerprint` - (Required) The fingerprint corresponding to the specified user's private API Key (string)
 * `flex_ocpus` - (Optional) Specifies number of OCPUs for nodes (requires flexible shape specified with `node_shape`) (int)
-* `kms_key_id` - (Optional) The OCID of a KMS vault master key used to encrypt secrets at rest. See [here](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengencryptingdata.htm) for help creating a vault and master encryption key. Just for Rancher v2.5.9 or above (string)
+* `kms_key_id` - (Optional) The OCID of a KMS vault master key used to encrypt secrets at rest. See [here](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengencryptingdata.htm) for help creating a vault and master encryption key. For Rancher v2.5.9 and above (string)
 * `kubernetes_version` - (Required) The Kubernetes version that will be used for your master *and* OKE worker nodes (string)
 * `limit_node_count` - (Optional) The maximum number of worker nodes. Can limit `quantity_per_subnet`. Default `0` (no limit) (int)
 * `load_balancer_subnet_name_1` - (Optional) The name of the first existing subnet to use for Kubernetes services / LB. `vcn_name` is also required when specifying an existing subnet. (string)
@@ -1772,29 +1986,6 @@ The following arguments are supported:
 * `annotations` - (Computed) Annotations for cluster registration token object (map)
 * `labels` - (Computed) Labels for cluster registration token object (map)
 
-### `scheduled_cluster_scan`
-
-#### Arguments
-
-* `scan_config` - (Required) Cluster scan config (List maxitems:1)
-* `schedule_config` - (Required) Cluster scan schedule config (list maxitems:1)
-* `enabled` - (Optional) Enable scheduled cluster scan. Default: `false` (bool)
-
-#### `scan_config`
-
-##### Arguments
-
-* `cis_scan_config` - (Optional/computed) Cluster Cis Scan config (List maxitems:1)
-
-##### `cis_scan_config`
-
-###### Arguments
-
-* `debug_master` - (Optional) Debug master. Default: `false` (bool)
-* `debug_worker` - (Optional) Debug worker. Default: `false` (bool)
-* `override_benchmark_version` - (Optional) Override benchmark version (string)
-* `override_skip` - (Optional) Override skip (string)
-* `profile` - (Optional) Cis scan profile. Allowed values: `"permissive" (default) || "hardened"` (string)
 
 ## Timeouts
 

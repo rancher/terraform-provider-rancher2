@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -127,10 +127,7 @@ func TestFlattenEventRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenEventRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -148,10 +145,7 @@ func TestFlattenMetricRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenMetricRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -169,10 +163,7 @@ func TestFlattenNodeRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenNodeRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -190,10 +181,7 @@ func TestFlattenPodRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenPodRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -211,10 +199,7 @@ func TestFlattenSystemServiceRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenSystemServiceRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -232,10 +217,7 @@ func TestFlattenWorkloadRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenWorkloadRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -253,10 +235,7 @@ func TestExpandEventRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandEventRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -274,10 +253,7 @@ func TestExpandMetricRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandMetricRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -295,10 +271,7 @@ func TestExpandNodeRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandNodeRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -316,10 +289,7 @@ func TestExpandPodRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandPodRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -337,10 +307,7 @@ func TestExpandSystemServiceRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandSystemServiceRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -358,9 +325,6 @@ func TestExpandWorkloadRule(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandWorkloadRule(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

@@ -38,6 +38,13 @@ func flattenGlobalRole(d *schema.ResourceData, in *managementClient.GlobalRole) 
 		return err
 	}
 
+	if len(in.InheritedClusterRoles) > 0 {
+		err = d.Set("inherited_cluster_roles", toArrayInterface(in.InheritedClusterRoles))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -70,6 +77,10 @@ func expandGlobalRole(in *schema.ResourceData) *managementClient.GlobalRole {
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, k := in.Get("inherited_cluster_roles").([]interface{}); k && len(v) > 0 {
+		obj.InheritedClusterRoles = toArrayString(v)
 	}
 
 	return obj
