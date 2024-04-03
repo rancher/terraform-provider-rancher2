@@ -178,6 +178,28 @@ resource "` + testAccRancher2CloudCredentialType + `" "foo-vsphere" {
   }
 }
  `
+	testAccRancher2CloudCredentialConfigOpenTelekomCloud = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-otc" {
+  name = "foo-vsphere"
+  description= "Terraform cloudCredential acceptance test"
+  vsphere_credential_config {
+    password = "XXXXXXXXXXXXXXXXXXXX"
+    username = "user"
+    vcenter = "vcenter"
+  }
+}
+`
+	testAccRancher2CloudCredentialUpdateConfigOpenTelekomCloud = `
+resource "` + testAccRancher2CloudCredentialType + `" "foo-otc" {
+  name = "foo-vsphere"
+  description= "Terraform cloudCredential acceptance test - updated"
+  vsphere_credential_config {
+    password = "YYYYYYYYYYYYYYYYYYYY"
+    username = "user"
+    vcenter = "vcenter2"
+  }
+}
+ `
 )
 
 func TestAccRancher2CloudCredential_basic_Amazonec2(t *testing.T) {
@@ -677,6 +699,71 @@ func TestAccRancher2CloudCredential_disappears_Vsphere(t *testing.T) {
 				Config: testAccRancher2CloudCredentialConfigVsphere,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-vsphere", cloudCredential),
+					testAccRancher2CloudCredentialDisappears(cloudCredential),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_basic_OTC(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2CloudCredentialConfigOpenTelekomCloud,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-otc", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "name", "foo-otc"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "driver", openTelekomCloudConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "open_telekom_cloud_credential_config.0.password", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "open_telekom_cloud_credential_config.0.vcenter", "vcenter"),
+				),
+			},
+			{
+				Config: testAccRancher2CloudCredentialUpdateConfigOpenTelekomCloud,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-otc", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "name", "foo-otc"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "description", "Terraform cloudCredential acceptance test - updated"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "driver", openTelekomCloudConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "open_telekom_cloud_credential_config.0.password", "YYYYYYYYYYYYYYYYYYYY"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "open_telekom_cloud_credential_config.0.vcenter", "vcenter2"),
+				),
+			},
+			{
+				Config: testAccRancher2CloudCredentialConfigOpenTelekomCloud,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-otc", cloudCredential),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "name", "foo-otc"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "description", "Terraform cloudCredential acceptance test"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "driver", openTelekomCloudConfigDriver),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "open_telekom_cloud_credential_config.0.password", "XXXXXXXXXXXXXXXXXXXX"),
+					resource.TestCheckResourceAttr(testAccRancher2CloudCredentialType+".foo-otc", "open_telekom_cloud_credential_config.0.vcenter", "vcenter"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRancher2CloudCredential_disappears_OTC(t *testing.T) {
+	var cloudCredential *CloudCredential
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRancher2CloudCredentialDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2CloudCredentialConfigOpenTelekomCloud,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CloudCredentialExists(testAccRancher2CloudCredentialType+".foo-otc", cloudCredential),
 					testAccRancher2CloudCredentialDisappears(cloudCredential),
 				),
 				ExpectNonEmptyPlan: true,

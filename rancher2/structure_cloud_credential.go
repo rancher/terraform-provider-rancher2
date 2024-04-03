@@ -102,6 +102,15 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		if err != nil {
 			return err
 		}
+	case openTelekomCloudConfigDriver:
+		v, ok := d.Get("open_telekom_cloud_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err := d.Set("open_telekom_cloud_credential_config", flattenCloudCredentialOpenTelekomCloud(in.OpenTelekomCloudCredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on cloud credential: %s", driver)
 	}
@@ -183,6 +192,11 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	if v, ok := in.Get("vsphere_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.VmwarevsphereCredentialConfig = expandCloudCredentialVsphere(v)
 		in.Set("driver", vmwarevsphereConfigDriver)
+	}
+
+	if v, ok := in.Get("open_telekom_cloud_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.OpenTelekomCloudCredentialConfig = expandCloudCredentialOpenTelekomCloud(v)
+		in.Set("driver", openTelekomCloudConfigDriver)
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {

@@ -53,7 +53,10 @@ func dataSourceRancher2CloudCredentialRead(d *schema.ResourceData, meta interfac
 	credential := credentials.Data[0]
 
 	d.SetId(credential.ID)
-	d.Set("name", credential.Name)
+	err = d.Set("name", credential.Name)
+	if err != nil {
+		return err
+	}
 	err = d.Set("annotations", toMapInterface(credential.Annotations))
 	if err != nil {
 		return err
