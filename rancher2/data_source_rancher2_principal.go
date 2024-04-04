@@ -58,12 +58,13 @@ func dataSourceRancher2PrincipalRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	count := len(principals.Data)
-	if count <= 0 {
-		return fmt.Errorf("[ERROR] principal \"%s\" of type \"%s\" not found", name, principalType)
+	for _, principal := range principals.Data {
+		if principal.Name == name {
+			return flattenDataSourcePrincipal(d, &principal)
+		}
 	}
 
-	return flattenDataSourcePrincipal(d, &principals.Data[0])
+	return fmt.Errorf("[ERROR] principal \"%s\" of type \"%s\" not found", name, principalType)
 }
 
 func flattenDataSourcePrincipal(d *schema.ResourceData, in *managementClient.Principal) error {
