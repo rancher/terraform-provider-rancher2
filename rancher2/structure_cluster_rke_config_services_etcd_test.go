@@ -3,17 +3,20 @@ package rancher2
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	"github.com/stretchr/testify/assert"
 )
 
 var (
-	testClusterRKEConfigServicesETCDBackupS3Conf      *managementClient.S3BackupConfig
-	testClusterRKEConfigServicesETCDBackupS3Interface []interface{}
-	testClusterRKEConfigServicesETCDBackupConf        *managementClient.BackupConfig
-	testClusterRKEConfigServicesETCDBackupInterface   []interface{}
-	testClusterRKEConfigServicesETCDConf              *managementClient.ETCDService
-	testClusterRKEConfigServicesETCDInterface         []interface{}
+	testClusterRKEConfigServicesETCDBackupS3Conf            *managementClient.S3BackupConfig
+	testClusterRKEConfigServicesETCDBackupS3Interface       []interface{}
+	testClusterRKEConfigServicesETCDBackupConf              *managementClient.BackupConfig
+	testClusterRKEConfigServicesETCDBackupInterface         []interface{}
+	testClusterRKEConfigServicesETCDExtraArgsArrayConf      map[string][]string
+	testClusterRKEConfigServicesETCDExtraArgsArrayInterface *schema.Set
+	testClusterRKEConfigServicesETCDConf                    *managementClient.ETCDService
+	testClusterRKEConfigServicesETCDInterface               []interface{}
 )
 
 func init() {
@@ -53,6 +56,23 @@ func init() {
 			"timeout":          500,
 		},
 	}
+	testClusterRKEConfigServicesETCDExtraArgsArrayConf = map[string][]string{
+		"arg1": {"v1"},
+		"arg2": {"v2"},
+	}
+	testClusterRKEConfigServicesETCDExtraArgsArrayInterface = schema.NewSet(
+		clusterRKEConfigServicesExtraArgsArraySchemaSetFunc,
+		[]interface{}{
+			map[string]interface{}{
+				"name":  "arg1",
+				"value": []interface{}{"v1"},
+			},
+			map[string]interface{}{
+				"name":  "arg2",
+				"value": []interface{}{"v2"},
+			},
+		},
+	)
 	testClusterRKEConfigServicesETCDConf = &managementClient.ETCDService{
 		BackupConfig: testClusterRKEConfigServicesETCDBackupConf,
 		CACert:       "XXXXXXXX",
@@ -132,6 +152,23 @@ func TestFlattenClusterRKEConfigServicesEtcdBackupConfig(t *testing.T) {
 	}
 }
 
+func TestFlattenClusterRKEConfigServicesEtcdExtraArgsArray(t *testing.T) {
+
+	cases := []struct {
+		Input          map[string][]string
+		ExpectedOutput *schema.Set
+	}{
+		{
+			testClusterRKEConfigServicesETCDExtraArgsArrayConf,
+			testClusterRKEConfigServicesETCDExtraArgsArrayInterface,
+		},
+	}
+	for _, tc := range cases {
+		output := flattenExtraArgsArray(tc.Input)
+		assert.ElementsMatch(t, tc.ExpectedOutput.List(), output.List(), "Unexpected output from flattener.")
+	}
+}
+
 func TestFlattenClusterRKEConfigServicesEtcd(t *testing.T) {
 
 	cases := []struct {
@@ -188,6 +225,23 @@ func TestExpandClusterRKEConfigServicesEtcdBackupConfig(t *testing.T) {
 		if err != nil {
 			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
+	}
+}
+
+func TestExpandClusterRKEConfigServicesEtcdExtraArgsArrayConfig(t *testing.T) {
+
+	cases := []struct {
+		Input          *schema.Set
+		ExpectedOutput map[string][]string
+	}{
+		{
+			testClusterRKEConfigServicesETCDExtraArgsArrayInterface,
+			testClusterRKEConfigServicesETCDExtraArgsArrayConf,
+		},
+	}
+	for _, tc := range cases {
+		output := expandExtraArgsArray(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
