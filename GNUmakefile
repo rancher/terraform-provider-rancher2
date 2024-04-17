@@ -49,7 +49,7 @@ vet:
 
 lint:
 	@echo "==> Checking that code complies with golint requirements..."
-	@GO111MODULE=off go get -u golang.org/x/lint/golint
+	go get -u golang.org/x/lint/golint
 	@if [ -n "$$(golint $$(go list ./...) | grep -v 'should have comment.*or be unexported' | tee /dev/stderr)" ]; then \
 		echo ""; \
 		echo "golint found style issues. Please check the reported issues"; \
@@ -71,7 +71,7 @@ errcheck:
 
 vendor:
 	@echo "==> Updating vendor modules..."
-	@GO111MODULE=on go mod vendor
+	go mod vendor
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
