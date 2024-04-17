@@ -5,7 +5,6 @@ go 1.22
 toolchain go1.22.2
 
 require (
-	github.com/emicklei/go-restful v2.16.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
@@ -19,7 +18,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.28.6
 	k8s.io/apimachinery v0.28.6
-	k8s.io/apiserver v0.25.4
+	k8s.io/apiserver v0.28.6
 	k8s.io/client-go v12.0.0+incompatible
 )
 
@@ -44,10 +43,11 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.1 // indirect
-	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
+	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
+	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/felixge/httpsnoop v1.0.1 // indirect
-	github.com/fsnotify/fsnotify v1.5.4 // indirect
+	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
@@ -57,6 +57,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
+	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-github/v29 v29.0.3 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -96,7 +97,6 @@ require (
 	github.com/matryer/moq v0.3.4 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/cli v1.1.2 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -126,6 +126,7 @@ require (
 	github.com/rancher/lasso v0.0.0-20240325194215-0064abcb8aee // indirect
 	github.com/rancher/rke v1.5.0-rc2 // indirect
 	github.com/rancher/wrangler v1.1.1 // indirect
+	github.com/rancher/wrangler/v2 v2.2.0-rc3 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
@@ -150,20 +151,20 @@ require (
 	google.golang.org/genproto v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230629202037-9506855d4529 // indirect
-	google.golang.org/grpc v1.56.1 // indirect
+	google.golang.org/grpc v1.56.3 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.28.6 // indirect
-	k8s.io/component-base v0.25.4 // indirect
+	k8s.io/component-base v0.28.6 // indirect
 	k8s.io/gengo v0.0.0-20240310015720-9cff6334dab4 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
 	k8s.io/kubernetes v1.25.4 // indirect
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
-	sigs.k8s.io/cli-utils v0.27.0 // indirect
+	sigs.k8s.io/cli-utils v0.35.0 // indirect
 	sigs.k8s.io/cluster-api v1.2.12 // indirect
-	sigs.k8s.io/controller-runtime v0.12.3 // indirect
+	sigs.k8s.io/controller-runtime v0.14.1 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
