@@ -120,6 +120,12 @@ func machineConfigV2VmwarevsphereFields() map[string]*schema.Schema {
 				Type: schema.TypeString,
 			},
 		},
+		"os": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "linux",
+			Description: "Operating System of the vSphere virtual machines",
+		},
 		"password": {
 			Type:        schema.TypeString,
 			Optional:    true,

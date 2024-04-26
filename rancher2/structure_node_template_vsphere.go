@@ -59,6 +59,9 @@ func flattenVsphereConfig(in *vmwarevsphereConfig) []interface{} {
 	if len(in.Network) > 0 {
 		obj["network"] = toArrayInterface(in.Network)
 	}
+	if len(in.OS) > 0 {
+		obj["os"] = in.OS
+	}
 	if len(in.Password) > 0 {
 		obj["password"] = in.Password
 	}
@@ -167,6 +170,9 @@ func expandVsphereConfig(p []interface{}) *vmwarevsphereConfig {
 	}
 	if v, ok := in["network"].([]interface{}); ok && len(v) > 0 {
 		obj.Network = toArrayString(v)
+	}
+	if v, ok := in["os"].(string); ok && len(v) > 0 {
+		obj.OS = v
 	}
 	if v, ok := in["password"].(string); ok && len(v) > 0 {
 		obj.Password = v

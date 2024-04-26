@@ -434,6 +434,7 @@ The following attributes are exported:
 * `hostsystem` - (Optional) vSphere compute resource where the docker VM will be instantiated. This can be omitted if using a cluster with DRS (string)
 * `memory_size` - (Optional) vSphere size of memory for docker VM (in MB). Default `2048` (string)
 * `network` - (Optional) vSphere network where the docker VM will be attached (list)
+* `os` - (Optional) Operating System of the vSphere virtual machines. Default `linux` (string)
 * `password` - (Optional/Sensitive) vSphere password. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `pool` - (Optional) vSphere resource pool for docker VM (string)
 * `ssh_password` - (Optional) If using a non-B2D image you can specify the ssh password. Default `tcuser`. From Rancher v2.3.3 (string)

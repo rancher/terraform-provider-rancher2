@@ -314,6 +314,7 @@ The following attributes are exported:
 * `hostsystem` - (Optional) vSphere compute resource where the docker VM will be instantiated. This can be omitted if using a cluster with DRS (string)
 * `memory_size` - (Optional) vSphere size of memory for docker VM (in MB). Default `2048` (string)
 * `network` - (Optional) vSphere network where the docker VM will be attached (list)
+* `os` - (Optional) Operating System of the vSphere virtual machines . Default `linux`(string)
 * `pool` - (Optional) vSphere resource pool for docker VM (string)
 * `ssh_password` - (Optional) If using a non-B2D image you can specify the ssh password. Default `tcuser` (string)
 * `ssh_port` - (Optional) If using a non-B2D image you can specify the ssh port. Default `22` (string)
