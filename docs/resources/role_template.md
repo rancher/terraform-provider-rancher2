@@ -50,6 +50,7 @@ The following arguments are supported:
 * `default_role` - (Optional) Default role template for new created cluster or project. Default `false` (bool)
 * `description` - (Optional/Computed) Role template description (string)
 * `external` - (Optional) External role template. Default `false` (bool)
+* `external_rules` - (Optional/Computed) External rules used for authorization. This field is required when `external=true` and no underlying ClusterRole exists. (list)
 * `hidden` - (Optional) Hidden role template. Default `false` (bool)
 * `locked` - (Optional) Locked role template. Default `false` (bool)
 * `role_template_ids` - (Optional/Computed) Inherit role template IDs (list)
