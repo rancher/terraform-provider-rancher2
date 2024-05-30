@@ -1582,7 +1582,7 @@ The following arguments are supported:
 * `cloud_credential_id` - (Required) The AKS Cloud Credential ID to use (string)
 * `resource_group` - (Required) The AKS resource group (string)
 * `resource_location` - (Required) The AKS resource location (string)
-* `imported` - (Optional) Is AKS cluster imported? Defaul: `false` (bool)
+* `imported` - (Optional) Is AKS cluster imported? Default: `false` (bool)
 
 The following arguments are supported just for creating new AKS clusters (`imported=false`):
 
