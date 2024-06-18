@@ -1,0 +1,16 @@
+name: Pull Request
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build binaries
+        env:
+          CROSS: 1
+          VERSION: ${{ github.ref_name }}
+        run: |
+          make build-rancher
