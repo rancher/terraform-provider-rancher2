@@ -69,6 +69,10 @@ func dataSourceRancher2NodeTemplate() *schema.Resource {
 					Schema: taintFields(),
 				},
 			},
+			"log_opt": {
+				Type:     schema.TypeMap,
+				Computed: true,
+			},
 			"use_internal_ip_address": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -181,6 +185,13 @@ func flattenDataSourceNodeTemplate(d *schema.ResourceData, in *managementClient.
 
 	if len(in.EngineStorageDriver) > 0 {
 		d.Set("engine_storage_driver", in.EngineStorageDriver)
+	}
+
+	if len(in.LogOpt) > 0 {
+		err := d.Set("log_opt", toMapInterface(in.LogOpt))
+		if err != nil {
+			return err
+		}
 	}
 
 	d.Set("use_internal_ip_address", *in.UseInternalIPAddress)
