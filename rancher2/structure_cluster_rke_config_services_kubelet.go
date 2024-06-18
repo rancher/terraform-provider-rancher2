@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -22,6 +23,10 @@ func flattenClusterRKEConfigServicesKubelet(in *managementClient.KubeletService)
 
 	if len(in.ExtraArgs) > 0 {
 		obj["extra_args"] = toMapInterface(in.ExtraArgs)
+	}
+
+	if len(in.ExtraArgsArray) > 0 {
+		obj["extra_args_array"] = flattenExtraArgsArray(in.ExtraArgsArray)
 	}
 
 	if len(in.ExtraBinds) > 0 {
@@ -65,6 +70,10 @@ func expandClusterRKEConfigServicesKubelet(p []interface{}) (*managementClient.K
 
 	if v, ok := in["extra_args"].(map[string]interface{}); ok && len(v) > 0 {
 		obj.ExtraArgs = toMapString(v)
+	}
+
+	if v, ok := in["extra_args_array"].(*schema.Set); ok && len(v.List()) > 0 {
+		obj.ExtraArgsArray = expandExtraArgsArray(v)
 	}
 
 	if v, ok := in["extra_binds"].([]interface{}); ok && len(v) > 0 {
