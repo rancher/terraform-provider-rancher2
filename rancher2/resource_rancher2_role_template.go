@@ -110,6 +110,7 @@ func resourceRancher2RoleTemplateUpdate(d *schema.ResourceData, meta interface{}
 			"rules":           expandPolicyRules(d.Get("rules").([]interface{})),
 			"annotations":     toMapString(d.Get("annotations").(map[string]interface{})),
 			"labels":          toMapString(d.Get("labels").(map[string]interface{})),
+			"externalRules":   expandPolicyRules(d.Get("external_rules").([]interface{})),
 		}
 
 		switch update["context"] {
