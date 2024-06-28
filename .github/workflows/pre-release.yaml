@@ -37,7 +37,7 @@ jobs:
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
         run: |
           echo "Importing gpg key"
-          echo -n "${{ env.GPG_KEY }}" | base64 --decode | gpg --import --batch > /dev/null          
+          echo -n "${{ env.GPG_KEY }}" | gpg --import --batch > /dev/null
           echo "signing SHASUM file"
           VERSION_NO_V=$(echo ${{ github.ref_name }} | sed "s/^[v|V]//")
           SHASUM_FILE=dist/artifacts/${{ github.ref_name }}/terraform-provider-rancher2_"$VERSION_NO_V"_SHA256SUMS
