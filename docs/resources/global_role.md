@@ -11,9 +11,10 @@ Provides a Rancher v2 Global Role resource. This can be used to create Global Ro
 ```hcl
 # Create a new rancher2 Global Role
 resource "rancher2_global_role" "foo" {
-  name             = "foo"
-  new_user_default = true
-  description      = "Terraform global role acceptance test"
+  name                    = "foo"
+  new_user_default        = true
+  description             = "Terraform global role acceptance test"
+  inherited_cluster_roles = ["projects-view"]
 
   rules {
     api_groups = ["*"]
