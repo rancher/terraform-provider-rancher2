@@ -114,23 +114,15 @@ If you are using Terraform to provision clusters on instances of Rancher 2.7 and
 Releasing the Provider
 ---------------------------
 
-As of Terraform 2.0.0 and 3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version. For example, 3.0.0 will be released a few days after Rancher 2.7.x and fixes and features in the 3.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.7.x. A critical bug fix can be released 'out of band' as 3.0.1 and backported to `release/v2` as 2.0.1. A new feature can also be released 'out of band' as 3.1.0 but not backported. Terraform 4.0.0 must be released with Rancher 2.8.
-
-The [RKE provider](https://github.com/rancher/terraform-provider-rke) should be released after every RKE or KDM release. For example, if upstream RKE 1.3.15 was released, bump the RKE version to 1.3.15 and release the provider.
+As of Terraform 2.0.0 and 3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version. 
+For example, 3.0.0 will be released a few days after Rancher 2.7.x and fixes and features in the 3.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.7.x.
+A critical bug fix can be released 'out of band' as 3.0.1 and backported to `release/v2` as 2.0.1.
+A new feature can also be released 'out of band' as 3.1.0 but not backported.
+Terraform 4.0.0 must be released with Rancher 2.8.
 
 To release the provider
 
-* Create a draft of the [release](https://github.com/rancher/terraform-provider-rancher2/releases) and select create new tag for the version you are releasing
-* Create release notes by clicking `Generate release notes`
-* Copy the release notes to the CHANGELOG and update to the following format
-
-```
-# <tag version> (Month Day, Year)
-FEATURES:
-ENHANCEMENTS:
-BUG FIXES:
-```
-
-* Create a PR to update CHANGELOG
-* Copy the updated notes back to the draft release and save (DO NOT release with just the generated notes. Those are just a template to help you)
-* Create an [EIO issue](https://github.com/rancherlabs/eio) for Hashicorp to publish the release
+* Make sure that the various QA teams have validated the new version, see the [test process](./docs/test-process.md) for details
+* Push a tag for the new version, just like when generating the RC, the CI will build and generate the release
+* Update the [compatibility matrix](./docs/compatibility-matrix.md) if necessary
+* Update the [changelog](./CHANGELOG.md)
