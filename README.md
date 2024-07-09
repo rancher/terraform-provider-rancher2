@@ -114,24 +114,16 @@ If you are using Terraform to provision clusters on instances of Rancher 2.7 and
 Releasing the Provider
 ---------------------------
 
-As of Terraform 2.0.0 and 3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version. For example, 4.0.0 will be released 1-2 weeks after Rancher 2.8.x and fixes and features in the 4.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.8.x. A critical bug fix can be released 'out of band' as 4.0.1 and backported to `release/v3` as 3.0.1. A new feature can also be released 'out of band' as 4.1.0 but not backported.
-
-The [RKE provider](https://github.com/rancher/terraform-provider-rke) should be released after every RKE or KDM release. For example, if upstream RKE 1.3.15 was released, bump the RKE version to 1.3.15 and release the provider.
+As of Terraform 2.0.0 and 3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version.
+For example, 4.0.0 will be released 1-2 weeks after Rancher 2.8.x and fixes and features in the 4.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.8.x.
+A critical bug fix can be released 'out of band' as 4.0.1 and backported to `release/v3` as 3.0.1.
+A new feature can also be released 'out of band' as 4.1.0 but not backported.
 
 To release the provider
 
-* Create a draft of the [release](https://github.com/rancher/terraform-provider-rancher2/releases) and select create new tag for the version you are releasing
-* Create release notes by clicking `Generate release notes`
-* Copy the release notes to the CHANGELOG and update to the following format
+* Make sure that the various QA teams have approved the rc versions, see [test process](./docs/test-process.md) for more information.
+* Update the `CHANGELOG.md` with the release notes
+* Push a tag to the release branch (`release/v2`, `release/v3`, or `master`) which does not have a `-rc` suffix
+* The CI will build the provider and generate a release on GitHub
+* Make sure to validate that the release is picked up by the Terraform registry, you may need to find the "resync" button to accomplish this.
 
-```
-# <tag version> (Month Day, Year)
-FEATURES:
-ENHANCEMENTS:
-BUG FIXES:
-```
-
-* Create a PR to update CHANGELOG
-* Copy the updated notes back to the draft release and save (DO NOT release with just the generated notes. Those are just a template to help you)
-* Undraft the release, which creates the tag and builds the release
-* If necessary - create a followup PR to edit [`./docs/compatibility-matrix.md`](https://github.com/rancher/terraform-provider-rancher2/blob/master/docs/compatibility-matrix.md) with the new version information
