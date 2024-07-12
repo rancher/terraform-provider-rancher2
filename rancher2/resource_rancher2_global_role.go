@@ -102,6 +102,7 @@ func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) 
 			"annotations":           toMapString(d.Get("annotations").(map[string]interface{})),
 			"labels":                toMapString(d.Get("labels").(map[string]interface{})),
 			"inheritedClusterRoles": toArrayString(d.Get("inherited_cluster_roles").([]interface{})),
+			"namespacedRules":       toMapString(d.Get("namespaced_rules").(map[string]interface{})),
 		}
 
 		if _, err = client.GlobalRole.Update(globalRole, update); err != nil {
