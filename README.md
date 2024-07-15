@@ -97,19 +97,26 @@ See [test process](docs/test-process.md) for details on release testing (_Terraf
 Branching the Provider
 ---------------------------
 
-The provider is branched into three release lines with major version alignment with Rancher 2.6, 2.7, and 2.8. The `release/v2` branch with 2.0.0+ is aligned with Rancher 2.6, the `release/v3` branch with 3.0.0+ is aligned with Rancher 2.7, and the `master` branch with 4.0.0+ is aligned with Rancher 2.8. The lifecycle of each major provider version is aligned with the lifecycle of each Rancher minor version. For example, provider versions 4.0.x which are aligned with Rancher 2.8.x will only be actively maintained until the EOM for Rancher 2.8.x and supported until EOL for Rancher 2.8.x.
+This provider is branched in correlation with minor versions of Rancher: 2.8, 2.9, etc.
+The `release/v3` branch with 3.0.0+ is aligned with Rancher 2.7,
+  the `release/v4` branch with 4.0.0+ is aligned with Rancher 2.8,
+  and the `master` branch with 5.0.0+ is aligned with Rancher 2.9.
+The lifecycle of each major provider version is aligned with the lifecycle of each Rancher minor version.
+For example, provider versions 4.x are aligned with Rancher 2.8.x will only be actively maintained until the EOM for Rancher 2.8.x and supported until EOL for Rancher 2.8.x.
 
 See the [Rancher support matrix](https://www.suse.com/lifecycle/#rancher) for details.
 
-Aligning major provider releases with minor Rancher releases means,
+Aligning major provider releases with minor Rancher releases means:
 
 * We can follow semver
-* We can cut patch/minor versions on an as-needed basis to fix bugs or add new resources 
+* We can cut patch/minor versions on an as-needed basis to fix bugs or add new resources
 * We have 'out of band' flexibility and are only tied to releasing a new version of the provider when we get a new 2.x Rancher minor version.
 
 See the [compatibility matrix](docs/compatibility-matrix.md) for details.
 
-If you are using Terraform to provision clusters on instances of Rancher 2.7 and 2.8, you must have a separate configuration in a separate dir for each provider. Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
+If you are using Terraform to provision clusters on instances of Rancher 2.7 and 2.8,
+  you must have a separate configuration in a separate dir for each provider.
+Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
 
 Releasing the Provider
 ---------------------------
@@ -117,7 +124,6 @@ Releasing the Provider
 As of Terraform 2.0.0 and 3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version.
 For example, 4.0.0 will be released 1-2 weeks after Rancher 2.8.x and fixes and features in the 4.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.8.x.
 A critical bug fix can be released 'out of band' as 4.0.1 and backported to `release/v3` as 3.0.1.
-A new feature can also be released 'out of band' as 4.1.0 but not backported.
 
 To release the provider
 
@@ -126,4 +132,3 @@ To release the provider
 * Push a tag to the release branch (`release/v2`, `release/v3`, or `master`) which does not have a `-rc` suffix
 * The CI will build the provider and generate a release on GitHub
 * Make sure to validate that the release is picked up by the Terraform registry, you may need to find the "resync" button to accomplish this.
-
