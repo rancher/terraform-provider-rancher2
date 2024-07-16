@@ -45,6 +45,14 @@ func flattenGlobalRole(d *schema.ResourceData, in *managementClient.GlobalRole) 
 		}
 	}
 
+	if len(in.NamespacedRules) > 0 {
+		obj := make(map[string][]interface{})
+		for ns, rules := range in.NamespacedRules {
+			obj[ns] = flattenPolicyRules(rules)
+		}
+		err = d.Set("namespaced_rules", obj)
+	}
+
 	return nil
 }
 
@@ -81,6 +89,14 @@ func expandGlobalRole(in *schema.ResourceData) *managementClient.GlobalRole {
 
 	if v, k := in.Get("inherited_cluster_roles").([]interface{}); k && len(v) > 0 {
 		obj.InheritedClusterRoles = toArrayString(v)
+	}
+
+	if v, ok := in.Get("namespaced_rules").(map[string][]interface{}); ok && len(v) > 0 {
+		nsRules := make(map[string][]managementClient.PolicyRule)
+		for ns, rules := range v {
+			nsRules[ns] = expandPolicyRules(rules)
+		}
+		obj.NamespacedRules = nsRules
 	}
 
 	return obj

@@ -15,6 +15,9 @@ var (
 	testGlobalRoleInterface                          map[string]interface{}
 	testGlobalRoleWithInheritedClusterRolesConf      *managementClient.GlobalRole
 	testGlobalRoleWithInheritedClusterRolesInterface map[string]interface{}
+	testGlobalRoleNamespacedRules                    *managementClient.GlobalRole
+	testGlobalRoleNamespacedRulesConf                map[string][]managementClient.PolicyRule
+	testGlobalRoleNamespacedRulesInterface           map[string][]interface{}
 )
 
 func init() {
@@ -66,12 +69,65 @@ func init() {
 			},
 		},
 	}
+	testGlobalRoleNamespacedRulesConf = map[string][]managementClient.PolicyRule{
+		"namespace1": {
+			{
+				APIGroups: []string{
+					"api_group1",
+					"api_group2",
+				},
+				NonResourceURLs: []string{
+					"non_resource_urls1",
+					"non_resource_urls2",
+				},
+				ResourceNames: []string{
+					"resource_names1",
+					"resource_names2",
+				},
+				Resources: []string{
+					"resources1",
+					"resources2",
+				},
+				Verbs: []string{
+					"verbs1",
+					"verbs2",
+				},
+			},
+		},
+	}
+	testGlobalRoleNamespacedRulesInterface = map[string][]interface{}{
+		"namespace1": {
+			map[string]interface{}{
+				"api_groups": []interface{}{
+					"api_group1",
+					"api_group2",
+				},
+				"non_resource_urls": []interface{}{
+					"non_resource_urls1",
+					"non_resource_urls2",
+				},
+				"resource_names": []interface{}{
+					"resource_names1",
+					"resource_names2",
+				},
+				"resources": []interface{}{
+					"resources1",
+					"resources2",
+				},
+				"verbs": []interface{}{
+					"verbs1",
+					"verbs2",
+				},
+			},
+		},
+	}
 
 	testGlobalRoleConf = &managementClient.GlobalRole{
-		Description:    "description",
-		Name:           "name",
-		NewUserDefault: true,
-		Rules:          testGlobalRolePolicyRulesConf,
+		Description:     "description",
+		Name:            "name",
+		NewUserDefault:  true,
+		Rules:           testGlobalRolePolicyRulesConf,
+		NamespacedRules: testGlobalRoleNamespacedRulesConf,
 		Annotations: map[string]string{
 			"node_one": "one",
 			"node_two": "two",
@@ -86,6 +142,7 @@ func init() {
 		"description":      "description",
 		"name":             "name",
 		"rules":            testGlobalRolePolicyRulesInterface,
+		"namespaced_rules": testGlobalRoleNamespacedRulesInterface,
 		"annotations": map[string]interface{}{
 			"node_one": "one",
 			"node_two": "two",

@@ -56,6 +56,11 @@ func dataSourceRancher2GlobalRole() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"namespaced_rules": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Description: "Rules that are active in specific namespaces in the local cluster",
+			},
 		},
 	}
 }

@@ -1,16 +1,18 @@
 module github.com/rancher/terraform-provider-rancher2
 
-go 1.21
+go 1.22
+
+toolchain go1.22.5
 
 require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
-	github.com/rancher/norman v0.0.0-20240206180703-6eda4bc94b4c
-	github.com/rancher/rancher v0.0.0-20240618132447-2145c8e9d603
+	github.com/rancher/norman v0.0.0-20240207153100-3bb70b772b52
+	github.com/rancher/rancher v0.0.0-20240506132424-2b53406a5497
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.23.0
 	golang.org/x/sync v0.7.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -32,7 +34,7 @@ require (
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.49.24 // indirect
+	github.com/aws/aws-sdk-go v1.50.34 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -49,7 +51,7 @@ require (
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
-	github.com/go-openapi/swag v0.22.3 // indirect
+	github.com/go-openapi/swag v0.22.4 // indirect
 	github.com/go-test/deep v1.0.7 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -60,7 +62,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
-	github.com/google/uuid v1.5.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
@@ -89,7 +91,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matryer/moq v0.3.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -115,14 +117,14 @@ require (
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.10.1 // indirect
-	github.com/rancher/aks-operator v1.2.2 // indirect
-	github.com/rancher/apiserver v0.0.0-20240207153744-69b3c2b56f3f // indirect
+	github.com/rancher/aks-operator v1.3.0-rc12 // indirect
+	github.com/rancher/apiserver v0.0.0-20240207153957-4fd7d821d952 // indirect
 	github.com/rancher/channelserver v0.6.1-0.20240212155841-07630c8295da // indirect
-	github.com/rancher/eks-operator v1.3.2 // indirect
+	github.com/rancher/eks-operator v1.4.0-rc9 // indirect
 	github.com/rancher/fleet/pkg/apis v0.9.1-rc.2.0.20240213164401-2c6b1019687c // indirect
-	github.com/rancher/gke-operator v1.2.2 // indirect
+	github.com/rancher/gke-operator v1.3.0-rc6 // indirect
 	github.com/rancher/lasso v0.0.0-20240123150939-7055397d6dfa // indirect
-	github.com/rancher/rke v1.5.11-rc1 // indirect
+	github.com/rancher/rke v1.6.0-rc1 // indirect
 	github.com/rancher/wrangler/v2 v2.1.4 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
@@ -155,11 +157,11 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.28.8 // indirect
 	k8s.io/component-base v0.28.8 // indirect
-	k8s.io/gengo v0.0.0-20230306165830-ab3349d207d4 // indirect
+	k8s.io/gengo v0.0.0-20240129211411-f967bbeff4b4 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230717233707-2695361300d9 // indirect
 	k8s.io/kubernetes v1.28.8 // indirect
-	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
+	k8s.io/utils v0.0.0-20240102154912-e7106e64919e // indirect
 	sigs.k8s.io/cli-utils v0.28.0 // indirect
 	sigs.k8s.io/cluster-api v1.5.5 // indirect
 	sigs.k8s.io/controller-runtime v0.15.3 // indirect
@@ -172,8 +174,8 @@ replace (
 	github.com/crewjam/saml => github.com/crewjam/saml v0.4.5
 	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/docker => github.com/docker/docker v20.10.17+incompatible
-	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20240611034301-19a4362e2243
-	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20240611034301-19a4362e2243
+	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20240506132424-2b53406a5497
+	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20240506132424-2b53406a5497
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2
 	go.opentelemetry.io/otel/metric => go.opentelemetry.io/otel/metric v0.31.0
 	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.9.0-rancher1

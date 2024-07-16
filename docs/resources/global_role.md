@@ -34,6 +34,7 @@ The following arguments are supported:
 * `annotations` - (Optional/Computed) Annotations for global role object (map)
 * `labels` - (Optional/Computed) Labels for global role object (map)
 * `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
+* `namespaced_rules` - (Optional) Rules that are active in specific namespaces in the local cluster. (list)
 
 ## Attributes Reference
 
