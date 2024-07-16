@@ -542,7 +542,6 @@ func testCluster() {
 	testClusterConfTemplate.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfTemplate.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfTemplate.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
-	testClusterConfTemplate.EnableClusterAlerting = true
 	testClusterConfTemplate.EnableClusterMonitoring = true
 	testClusterConfTemplate.EnableNetworkPolicy = newTrue()
 	testClusterConfTemplate.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
@@ -556,7 +555,6 @@ func testCluster() {
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
 		"default_pod_security_policy_template_id":                    "default_pod_security_policy_template_id",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_cluster_alerting":                                    true,
 		"enable_cluster_monitoring":                                  true,
 		"enable_network_policy":                                      true,
 		"kube_config":                                                "kube_config",

@@ -191,11 +191,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed:    true,
 				Description: "Default pod security admission configuration template name",
 			},
-			"enable_cluster_alerting": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Enable built-in cluster alerting",
-			},
 			"enable_cluster_monitoring": {
 				Type:        schema.TypeBool,
 				Computed:    true,

@@ -26,7 +26,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
       cluster_auth_endpoint {
         enabled = true
       }
-      enable_cluster_alerting = false
       enable_cluster_monitoring = true
       enable_network_policy = false
       rke_config {
@@ -104,7 +103,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
       cluster_auth_endpoint {
         enabled = true
       }
-      enable_cluster_alerting = false
       enable_cluster_monitoring = true
       enable_network_policy = false
       rke_config {

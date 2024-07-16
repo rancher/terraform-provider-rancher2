@@ -80,7 +80,6 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 		obj["docker_root_dir"] = in.DockerRootDir
 	}
 
-	obj["enable_cluster_alerting"] = in.EnableClusterAlerting
 	obj["enable_cluster_monitoring"] = in.EnableClusterMonitoring
 	obj["enable_network_policy"] = *in.EnableNetworkPolicy
 
@@ -314,10 +313,6 @@ func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, 
 
 	if v, ok := in["docker_root_dir"].(string); ok && len(v) > 0 {
 		obj.DockerRootDir = v
-	}
-
-	if v, ok := in["enable_cluster_alerting"].(bool); ok {
-		obj.EnableClusterAlerting = v
 	}
 
 	if v, ok := in["enable_cluster_monitoring"].(bool); ok {

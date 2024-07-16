@@ -124,7 +124,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		d.Set("fleet_workspace_name", in.FleetWorkspaceName)
 	}
 
-	d.Set("enable_cluster_alerting", in.EnableClusterAlerting)
 	d.Set("enable_cluster_monitoring", in.EnableClusterMonitoring)
 	d.Set("istio_enabled", in.IstioEnabled)
 
@@ -480,10 +479,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if v, ok := in.Get("docker_root_dir").(string); ok && len(v) > 0 {
 		obj.DockerRootDir = v
-	}
-
-	if v, ok := in.Get("enable_cluster_alerting").(bool); ok {
-		obj.EnableClusterAlerting = v
 	}
 
 	if v, ok := in.Get("enable_cluster_monitoring").(bool); ok {

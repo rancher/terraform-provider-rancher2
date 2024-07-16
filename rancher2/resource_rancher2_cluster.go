@@ -316,7 +316,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"desiredAuthImage":         d.Get("desired_auth_image").(string),
 		"dockerRootDir":            d.Get("docker_root_dir").(string),
 		"fleetWorkspaceName":       d.Get("fleet_workspace_name").(string),
-		"enableClusterAlerting":    d.Get("enable_cluster_alerting").(bool),
 		"enableClusterMonitoring":  d.Get("enable_cluster_monitoring").(bool),
 		"enableNetworkPolicy":      &enableNetworkPolicy,
 		"istioEnabled":             d.Get("enable_cluster_istio").(bool),

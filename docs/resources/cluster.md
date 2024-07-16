@@ -663,7 +663,6 @@ The following arguments are supported:
 * `desired_agent_image` - (Optional/Computed) Desired agent image. For Rancher v2.3.x and above (string)
 * `desired_auth_image` - (Optional/Computed) Desired auth image. For Rancher v2.3.x and above (string)
 * `docker_root_dir` - (Optional/Computed) Desired auth image. For Rancher v2.3.x and above (string)
-* `enable_cluster_alerting` - (Optional/Computed) Enable built-in cluster alerting (bool)
 * `enable_cluster_monitoring` - (Optional/Computed) Enable built-in cluster monitoring (bool)
 * `enable_cluster_istio` - (Deprecated) Deploy istio on `system` project and `istio-system` namespace, using rancher2_app resource instead. See above example.
 * `enable_network_policy` - (Optional/Computed) Enable project network isolation (bool)

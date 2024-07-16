@@ -108,8 +108,6 @@ provider "rancher2" {
 ` + testAccRancher2CloudCredentialConfigOpenstack + `
 ` + testAccRancher2CloudCredentialConfigVsphere + `
 ` + testAccRancher2ClusterConfigRKE + `
-` + testAccRancher2ClusterAlertGroup + `
-` + testAccRancher2ClusterAlertRule + `
 ` + testAccRancher2ClusterDriver + `
 ` + testAccRancher2User + `
 ` + testAccRancher2ClusterRoleTemplateBinding + `
@@ -136,8 +134,6 @@ provider "rancher2" {
 ` + testAccRancher2NotifierWebhook + `
 ` + testAccRancher2NotifierWechat + `
 ` + testAccCheckRancher2PodSecurityPolicyTemplate + `
-` + testAccRancher2ProjectAlertGroupConfig + `
-` + testAccRancher2ProjectAlertRule + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `
@@ -159,8 +155,6 @@ provider "rancher2" {
 ` + testAccRancher2CloudCredentialConfigOpenstack + `
 ` + testAccRancher2CloudCredentialConfigVsphere + `
 ` + testAccRancher2ClusterConfigRKE + `
-` + testAccRancher2ClusterAlertGroup + `
-` + testAccRancher2ClusterAlertRule + `
 ` + testAccRancher2ClusterDriver + `
 ` + testAccRancher2User + `
 ` + testAccRancher2ClusterRoleTemplateBinding + `
@@ -189,8 +183,6 @@ provider "rancher2" {
 ` + testAccRancher2NotifierWebhook + `
 ` + testAccRancher2NotifierWechat + `
 ` + testAccCheckRancher2PodSecurityPolicyTemplate + `
-` + testAccRancher2ProjectAlertGroupConfig + `
-` + testAccRancher2ProjectAlertRule + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `
@@ -214,8 +206,6 @@ provider "rancher2" {
 ` + testAccRancher2CloudCredentialConfigOpenstack + `
 ` + testAccRancher2CloudCredentialConfigVsphere + `
 ` + testAccRancher2ClusterConfigRKE + `
-` + testAccRancher2ClusterAlertGroup + `
-` + testAccRancher2ClusterAlertRule + `
 ` + testAccRancher2ClusterDriver + `
 ` + testAccRancher2ConfigMapV2 + `
 ` + testAccRancher2User + `
@@ -246,8 +236,6 @@ provider "rancher2" {
 ` + testAccRancher2NotifierWebhook + `
 ` + testAccRancher2NotifierWechat + `
 ` + testAccCheckRancher2PodSecurityPolicyTemplate + `
-` + testAccRancher2ProjectAlertGroupConfig + `
-` + testAccRancher2ProjectAlertRule + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `
@@ -274,8 +262,6 @@ provider "rancher2" {
 ` + testAccRancher2CloudCredentialConfigS3 + `
 ` + testAccRancher2CloudCredentialConfigVsphere + `
 ` + testAccRancher2ClusterConfigRKE + `
-` + testAccRancher2ClusterAlertGroup + `
-` + testAccRancher2ClusterAlertRule + `
 ` + testAccRancher2ClusterDriver + `
 ` + testAccRancher2ClusterV2 + `
 ` + testAccRancher2ConfigMapV2 + `
@@ -307,8 +293,6 @@ provider "rancher2" {
 ` + testAccRancher2NotifierWebhook + `
 ` + testAccRancher2NotifierWechat + `
 ` + testAccCheckRancher2PodSecurityPolicyTemplate + `
-` + testAccRancher2ProjectAlertGroupConfig + `
-` + testAccRancher2ProjectAlertRule + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `

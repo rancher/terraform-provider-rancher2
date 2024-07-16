@@ -13,7 +13,6 @@ const (
 	clusterActiveCondition            = "Updated"
 	clusterConnectedCondition         = "Connected"
 	clusterMonitoringEnabledCondition = "MonitoringEnabled"
-	clusterAlertingEnabledCondition   = "AlertingEnabled"
 )
 
 var (
@@ -265,12 +264,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster alerting",
 		},
 		"enable_cluster_monitoring": {
 			Type:        schema.TypeBool,
@@ -544,12 +537,6 @@ func clusterFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster alerting",
 		},
 		"enable_cluster_monitoring": {
 			Type:        schema.TypeBool,
