@@ -265,7 +265,6 @@ func testCluster() {
 	testClusterConfAKS.Description = "description"
 	testClusterConfAKS.Driver = clusterDriverAKS
 	testClusterConfAKS.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfAKS.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfAKS.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfAKS.EnableNetworkPolicy = newTrue()
 	testClusterConfAKS.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
@@ -277,13 +276,12 @@ func testCluster() {
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id":                    "default_pod_security_policy_template_id",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy":                                      true,
-		"kube_config":                                                "kube_config",
-		"driver":                                                     clusterDriverAKS,
-		"aks_config":                                                 testClusterAKSConfigInterface,
-		"system_project_id":                                          "system_project_id",
+		"enable_network_policy": true,
+		"kube_config":           "kube_config",
+		"driver":                clusterDriverAKS,
+		"aks_config":            testClusterAKSConfigInterface,
+		"system_project_id":     "system_project_id",
 	}
 	testClusterConfEKS = &Cluster{
 		AmazonElasticContainerServiceConfig: testClusterEKSConfigConf,
@@ -292,7 +290,6 @@ func testCluster() {
 	testClusterConfEKS.Description = "description"
 	testClusterConfEKS.Driver = clusterDriverEKS
 	testClusterConfEKS.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfEKS.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfEKS.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfEKS.EnableNetworkPolicy = newTrue()
 	testClusterConfEKS.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
@@ -304,13 +301,12 @@ func testCluster() {
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id":                    "default_pod_security_policy_template_id",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy":                                      true,
-		"kube_config":                                                "kube_config",
-		"driver":                                                     clusterDriverEKS,
-		"eks_config":                                                 testClusterEKSConfigInterface,
-		"system_project_id":                                          "system_project_id",
+		"enable_network_policy": true,
+		"kube_config":           "kube_config",
+		"driver":                clusterDriverEKS,
+		"eks_config":            testClusterEKSConfigInterface,
+		"system_project_id":     "system_project_id",
 	}
 	testClusterConfEKSV2 = &Cluster{}
 	testClusterConfEKSV2.EKSConfig = testClusterEKSConfigV2Conf
@@ -320,21 +316,19 @@ func testCluster() {
 	testClusterConfEKSV2.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfEKSV2.ClusterAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
 	testClusterConfEKSV2.FleetAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
-	testClusterConfEKSV2.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfEKSV2.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfEKSV2.EnableNetworkPolicy = newTrue()
 	testClusterConfEKSV2.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceEKSV2 = map[string]interface{}{
-		"id":                                      "id",
-		"name":                                    "test",
-		"agent_env_vars":                          testClusterEnvVarsInterface,
-		"cluster_agent_deployment_customization":  testClusterAgentDeploymentCustomizationInterface,
-		"fleet_agent_deployment_customization":    testClusterAgentDeploymentCustomizationInterface,
-		"default_project_id":                      "default_project_id",
-		"description":                             "description",
-		"cluster_auth_endpoint":                   testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token":              testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id": "default_pod_security_policy_template_id",
+		"id":                                     "id",
+		"name":                                   "test",
+		"agent_env_vars":                         testClusterEnvVarsInterface,
+		"cluster_agent_deployment_customization": testClusterAgentDeploymentCustomizationInterface,
+		"fleet_agent_deployment_customization":   testClusterAgentDeploymentCustomizationInterface,
+		"default_project_id":                     "default_project_id",
+		"description":                            "description",
+		"cluster_auth_endpoint":                  testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token":             testClusterRegistrationTokenInterface,
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
 		"enable_network_policy": true,
 		"kube_config":           "kube_config",
@@ -349,7 +343,6 @@ func testCluster() {
 	testClusterConfGKE.Description = "description"
 	testClusterConfGKE.Driver = clusterDriverGKE
 	testClusterConfGKE.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfGKE.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfGKE.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfGKE.EnableNetworkPolicy = newTrue()
 	testClusterConfGKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
@@ -361,13 +354,12 @@ func testCluster() {
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id":                    "default_pod_security_policy_template_id",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy":                                      true,
-		"kube_config":                                                "kube_config",
-		"driver":                                                     clusterDriverGKE,
-		"gke_config":                                                 testClusterGKEConfigInterface,
-		"system_project_id":                                          "system_project_id",
+		"enable_network_policy": true,
+		"kube_config":           "kube_config",
+		"driver":                clusterDriverGKE,
+		"gke_config":            testClusterGKEConfigInterface,
+		"system_project_id":     "system_project_id",
 	}
 	testClusterConfK3S = &Cluster{}
 	testClusterConfK3S.Name = "test"
@@ -375,7 +367,6 @@ func testCluster() {
 	testClusterConfK3S.K3sConfig = testClusterK3SConfigConf
 	testClusterConfK3S.Driver = clusterDriverK3S
 	testClusterConfK3S.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfK3S.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfK3S.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfK3S.EnableNetworkPolicy = newTrue()
 	testClusterConfK3S.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
@@ -387,14 +378,13 @@ func testCluster() {
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id":                    "default_pod_security_policy_template_id",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy":                                      true,
-		"kube_config":                                                "kube_config",
-		"driver":                                                     clusterDriverK3S,
-		"k3s_config":                                                 testClusterK3SConfigInterface,
-		"system_project_id":                                          "system_project_id",
-		"windows_prefered_cluster":                                   false,
+		"enable_network_policy":    true,
+		"kube_config":              "kube_config",
+		"driver":                   clusterDriverK3S,
+		"k3s_config":               testClusterK3SConfigInterface,
+		"system_project_id":        "system_project_id",
+		"windows_prefered_cluster": false,
 	}
 	testClusterConfGKEV2 = &Cluster{}
 	testClusterConfGKEV2.GKEConfig = testClusterGKEConfigV2Conf
@@ -402,7 +392,6 @@ func testCluster() {
 	testClusterConfGKEV2.Description = "description"
 	testClusterConfGKEV2.Driver = clusterDriverGKEV2
 	testClusterConfGKEV2.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfGKEV2.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfGKEV2.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfGKEV2.EnableNetworkPolicy = newTrue()
 	testClusterConfGKEV2.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
@@ -414,13 +403,12 @@ func testCluster() {
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id":                    "default_pod_security_policy_template_id",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy":                                      true,
-		"kube_config":                                                "kube_config",
-		"driver":                                                     clusterDriverGKEV2,
-		"gke_config_v2":                                              testClusterGKEConfigV2Interface,
-		"system_project_id":                                          "system_project_id",
+		"enable_network_policy": true,
+		"kube_config":           "kube_config",
+		"driver":                clusterDriverGKEV2,
+		"gke_config_v2":         testClusterGKEConfigV2Interface,
+		"system_project_id":     "system_project_id",
 	}
 	testClusterConfOKE = &Cluster{
 		OracleKubernetesEngineConfig: testClusterOKEConfigConf,
@@ -429,7 +417,6 @@ func testCluster() {
 	testClusterConfOKE.Description = "description"
 	testClusterConfOKE.Driver = clusterOKEKind
 	testClusterConfOKE.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfOKE.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfOKE.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfOKE.EnableNetworkPolicy = newTrue()
 	testClusterConfOKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
@@ -441,13 +428,12 @@ func testCluster() {
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id":                    "default_pod_security_policy_template_id",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy":                                      true,
-		"kube_config":                                                "kube_config",
-		"driver":                                                     clusterOKEKind,
-		"oke_config":                                                 testClusterOKEConfigInterface,
-		"system_project_id":                                          "system_project_id",
+		"enable_network_policy": true,
+		"kube_config":           "kube_config",
+		"driver":                clusterOKEKind,
+		"oke_config":            testClusterOKEConfigInterface,
+		"system_project_id":     "system_project_id",
 	}
 	testClusterConfRKE = &Cluster{}
 	testClusterConfRKE.Name = "test"
@@ -457,22 +443,20 @@ func testCluster() {
 	testClusterConfRKE.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfRKE.ClusterAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
 	testClusterConfRKE.FleetAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
-	testClusterConfRKE.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfRKE.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfRKE.FleetWorkspaceName = "fleet-test"
 	testClusterConfRKE.EnableNetworkPolicy = newTrue()
 	testClusterConfRKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceRKE = map[string]interface{}{
-		"id":                                      "id",
-		"name":                                    "test",
-		"agent_env_vars":                          testClusterEnvVarsInterface,
-		"cluster_agent_deployment_customization":  testClusterAgentDeploymentCustomizationInterface,
-		"fleet_agent_deployment_customization":    testClusterAgentDeploymentCustomizationInterface,
-		"default_project_id":                      "default_project_id",
-		"description":                             "description",
-		"cluster_auth_endpoint":                   testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token":              testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id": "default_pod_security_policy_template_id",
+		"id":                                     "id",
+		"name":                                   "test",
+		"agent_env_vars":                         testClusterEnvVarsInterface,
+		"cluster_agent_deployment_customization": testClusterAgentDeploymentCustomizationInterface,
+		"fleet_agent_deployment_customization":   testClusterAgentDeploymentCustomizationInterface,
+		"default_project_id":                     "default_project_id",
+		"description":                            "description",
+		"cluster_auth_endpoint":                  testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token":             testClusterRegistrationTokenInterface,
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
 		"enable_network_policy":    true,
 		"fleet_workspace_name":     "fleet-test",
@@ -490,21 +474,19 @@ func testCluster() {
 	testClusterConfRKE2.AgentEnvVars = testClusterEnvVarsConf
 	testClusterConfRKE2.ClusterAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
 	testClusterConfRKE2.FleetAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
-	testClusterConfRKE2.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfRKE2.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfRKE2.EnableNetworkPolicy = newTrue()
 	testClusterConfRKE2.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
 	testClusterInterfaceRKE2 = map[string]interface{}{
-		"id":                                      "id",
-		"name":                                    "test",
-		"agent_env_vars":                          testClusterEnvVarsInterface,
-		"cluster_agent_deployment_customization":  testClusterAgentDeploymentCustomizationInterface,
-		"fleet_agent_deployment_customization":    testClusterAgentDeploymentCustomizationInterface,
-		"default_project_id":                      "default_project_id",
-		"description":                             "description",
-		"cluster_auth_endpoint":                   testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token":              testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id": "default_pod_security_policy_template_id",
+		"id":                                     "id",
+		"name":                                   "test",
+		"agent_env_vars":                         testClusterEnvVarsInterface,
+		"cluster_agent_deployment_customization": testClusterAgentDeploymentCustomizationInterface,
+		"fleet_agent_deployment_customization":   testClusterAgentDeploymentCustomizationInterface,
+		"default_project_id":                     "default_project_id",
+		"description":                            "description",
+		"cluster_auth_endpoint":                  testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token":             testClusterRegistrationTokenInterface,
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
 		"enable_network_policy":    true,
 		"kube_config":              "kube_config",
@@ -522,7 +504,6 @@ func testCluster() {
 	testClusterConfTemplate.ClusterTemplateRevisionID = "cluster_template_revision_id"
 	testClusterConfTemplate.Driver = clusterDriverRKE
 	testClusterConfTemplate.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfTemplate.DefaultPodSecurityPolicyTemplateID = "default_pod_security_policy_template_id"
 	testClusterConfTemplate.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterConfTemplate.EnableNetworkPolicy = newTrue()
 	testClusterConfTemplate.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
@@ -534,18 +515,17 @@ func testCluster() {
 		"description":                "description",
 		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
 		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_policy_template_id":                    "default_pod_security_policy_template_id",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy":                                      true,
-		"kube_config":                                                "kube_config",
-		"driver":                                                     clusterDriverRKE,
-		"cluster_template_answers":                                   testClusterAnswersInterface,
-		"cluster_template_id":                                        "cluster_template_id",
-		"cluster_template_questions":                                 testClusterQuestionsInterface,
-		"cluster_template_revision_id":                               "cluster_template_revision_id",
-		"rke_config":                                                 []interface{}{},
-		"system_project_id":                                          "system_project_id",
-		"windows_prefered_cluster":                                   false,
+		"enable_network_policy":        true,
+		"kube_config":                  "kube_config",
+		"driver":                       clusterDriverRKE,
+		"cluster_template_answers":     testClusterAnswersInterface,
+		"cluster_template_id":          "cluster_template_id",
+		"cluster_template_questions":   testClusterQuestionsInterface,
+		"cluster_template_revision_id": "cluster_template_revision_id",
+		"rke_config":                   []interface{}{},
+		"system_project_id":            "system_project_id",
+		"windows_prefered_cluster":     false,
 	}
 }
 
@@ -637,7 +617,7 @@ func TestFlattenCluster(t *testing.T) {
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{})
 		tc.InputToken.ID = "id"
-		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
+		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string))
 		if err != nil {
 			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
@@ -786,7 +766,7 @@ func TestFlattenClusterWithPreservedClusterTemplateAnswers(t *testing.T) {
 			},
 		})
 		tc.InputToken.ID = "id"
-		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string), nil)
+		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string))
 		if err != nil {
 			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}

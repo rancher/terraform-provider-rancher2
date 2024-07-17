@@ -149,14 +149,6 @@ func resourceRancher2PodSecurityAdmissionConfigurationTemplateDelete(d *schema.R
 // a Rancher PodSecurityAdmissionConfiguration Template
 func podSecurityAdmissionConfigurationTemplateStateRefreshFunc(client *managementClient.Client, pspID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		obj, err := client.PodSecurityPolicyTemplate.ByID(pspID)
-		if err != nil {
-			if IsNotFound(err) || IsForbidden(err) {
-				return obj, "removed", nil
-			}
-			return nil, "", err
-		}
-
-		return obj, "active", nil
+		return nil, "active", nil
 	}
 }

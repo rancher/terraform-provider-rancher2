@@ -77,32 +77,6 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 			"[ERROR] waiting for project (%s) to be created: %s", newProject.ID, waitErr)
 	}
 
-	if pspID, ok := d.Get("pod_security_policy_template_id").(string); ok && len(pspID) > 0 {
-		pspInput := &managementClient.SetPodSecurityPolicyTemplateInput{
-			PodSecurityPolicyTemplateName: pspID,
-		}
-		err = resource.Retry(3*time.Second, func() *resource.RetryError {
-			newProject, err = client.Project.ByID(newProject.ID)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-			_, err = client.Project.ActionSetpodsecuritypolicytemplate(newProject, pspInput)
-			if err != nil {
-				if IsConflict(err) || IsForbidden(err) {
-					return resource.RetryableError(err)
-				}
-				// Checking error due to ActionSetpodsecuritypolicytemplate() issue
-				if error.Error(err) != "unexpected end of JSON input" {
-					return resource.NonRetryableError(err)
-				}
-			}
-			return nil
-		})
-		if err != nil {
-			return fmt.Errorf("[ERROR] waiting for pod_security_policy_template_id (%s) to be set on project (%s): %s", pspID, newProject.ID, err)
-		}
-	}
-
 	return resourceRancher2ProjectRead(d, meta)
 }
 
@@ -163,19 +137,6 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 	if waitErr != nil {
 		return fmt.Errorf(
 			"[ERROR] waiting for project (%s) to be updated: %s", newProject.ID, waitErr)
-	}
-
-	if d.HasChange("pod_security_policy_template_id") {
-		pspInput := &managementClient.SetPodSecurityPolicyTemplateInput{
-			PodSecurityPolicyTemplateName: d.Get("pod_security_policy_template_id").(string),
-		}
-		_, err = client.Project.ActionSetpodsecuritypolicytemplate(newProject, pspInput)
-		if err != nil {
-			// Checking error due to ActionSetpodsecuritypolicytemplate() issue
-			if error.Error(err) != "unexpected end of JSON input" {
-				return err
-			}
-		}
 	}
 
 	return resourceRancher2ProjectRead(d, meta)

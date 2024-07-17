@@ -119,17 +119,15 @@ func init() {
 		Name:                          "test",
 		ContainerDefaultResourceLimit: testProjectContainerResourceLimitConf,
 		Description:                   "description",
-		PodSecurityPolicyTemplateName: "pod_security_policy_template_id",
 		ResourceQuota:                 testProjectResourceQuotaConf,
 		NamespaceDefaultResourceQuota: testProjectNamespaceResourceQuotaConf,
 	}
 	testProjectInterface = map[string]interface{}{
-		"cluster_id":                      "cluster-test",
-		"name":                            "test",
-		"container_resource_limit":        testProjectContainerResourceLimitInterface,
-		"description":                     "description",
-		"pod_security_policy_template_id": "pod_security_policy_template_id",
-		"resource_quota":                  testProjectResourceQuotaInterface,
+		"cluster_id":               "cluster-test",
+		"name":                     "test",
+		"container_resource_limit": testProjectContainerResourceLimitInterface,
+		"description":              "description",
+		"resource_quota":           testProjectResourceQuotaInterface,
 	}
 }
 
@@ -203,7 +201,7 @@ func TestFlattenProject(t *testing.T) {
 
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, projectFields(), map[string]interface{}{})
-		err := flattenProject(output, tc.Input, nil)
+		err := flattenProject(output, tc.Input)
 		if err != nil {
 			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}

@@ -127,8 +127,6 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 		}
 	}
 
-	d.Set("pod_security_policy_template_id", in.PodSecurityPolicyTemplateName)
-
 	if in.ResourceQuota != nil && in.NamespaceDefaultResourceQuota != nil {
 		resourceQuota := flattenProjectResourceQuota(in.ResourceQuota, in.NamespaceDefaultResourceQuota)
 		err := d.Set("resource_quota", resourceQuota)
@@ -279,8 +277,6 @@ func expandProject(in *schema.ResourceData) *managementClient.Project {
 		containerLimit := expandProjectContainerResourceLimit(v)
 		obj.ContainerDefaultResourceLimit = containerLimit
 	}
-
-	obj.PodSecurityPolicyTemplateName = in.Get("pod_security_policy_template_id").(string)
 
 	if v, ok := in.Get("resource_quota").([]interface{}); ok && len(v) > 0 {
 		resourceQuota, nsResourceQuota := expandProjectResourceQuota(v)

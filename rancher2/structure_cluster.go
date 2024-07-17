@@ -100,10 +100,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 
 	}
 
-	if len(in.DefaultPodSecurityPolicyTemplateID) > 0 {
-		d.Set("default_pod_security_policy_template_id", in.DefaultPodSecurityPolicyTemplateID)
-	}
-
 	if len(in.DefaultPodSecurityAdmissionConfigurationTemplateName) > 0 {
 		d.Set("default_pod_security_admission_configuration_template_name", in.DefaultPodSecurityAdmissionConfigurationTemplateName)
 	}
@@ -453,10 +449,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		if v, ok := in.Get("cluster_template_questions").([]interface{}); ok && len(v) > 0 {
 			obj.ClusterTemplateQuestions = expandQuestions(v)
 		}
-	}
-
-	if v, ok := in.Get("default_pod_security_policy_template_id").(string); ok && len(v) > 0 {
-		obj.DefaultPodSecurityPolicyTemplateID = v
 	}
 
 	if v, ok := in.Get("default_pod_security_admission_configuration_template_name").(string); ok && len(v) > 0 {

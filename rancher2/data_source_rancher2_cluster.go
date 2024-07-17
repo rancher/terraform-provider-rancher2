@@ -171,11 +171,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed:    true,
 				Description: "Cluster template revision ID",
 			},
-			"default_pod_security_policy_template_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Default pod security policy template ID",
-			},
 			"default_pod_security_admission_configuration_template_name": {
 				Type:        schema.TypeString,
 				Optional:    true,

@@ -227,12 +227,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Cluster template revision ID",
 		},
-		"default_pod_security_policy_template_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Default pod security policy template ID",
-		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -484,12 +478,6 @@ func clusterFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Cluster template revision ID",
-		},
-		"default_pod_security_policy_template_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Default pod security policy template ID",
 		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,

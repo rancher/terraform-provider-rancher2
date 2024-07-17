@@ -116,10 +116,6 @@ func projectFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"pod_security_policy_template_id": {
-			Type:     schema.TypeString,
-			Optional: true,
-		},
 		"resource_quota": {
 			Type:     schema.TypeList,
 			MaxItems: 1,

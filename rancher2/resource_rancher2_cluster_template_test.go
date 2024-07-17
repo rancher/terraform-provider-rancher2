@@ -65,7 +65,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
           }
           kube_api {
               service_node_port_range = "30000-32767"
-              pod_security_policy = false
               always_pull_images = false
           }
         }
@@ -141,7 +140,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
           }
           kube_api {
               service_node_port_range = "30000-32767"
-              pod_security_policy = false
               always_pull_images = false
           }
         }

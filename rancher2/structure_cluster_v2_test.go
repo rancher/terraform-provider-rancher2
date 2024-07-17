@@ -61,7 +61,6 @@ func init() {
 	testClusterV2Conf.Spec.RKEConfig = testClusterV2RKEConfigConf
 	testClusterV2Conf.Spec.AgentEnvVars = testClusterV2EnvVarConf
 	testClusterV2Conf.Spec.CloudCredentialSecretName = "cloud_credential_secret_name"
-	testClusterV2Conf.Spec.DefaultPodSecurityPolicyTemplateName = "default_pod_security_policy_template_name"
 	testClusterV2Conf.Spec.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
 	testClusterV2Conf.Spec.DefaultClusterRoleForProjectMembers = "default_cluster_role_for_project_members"
 	testClusterV2Conf.Spec.EnableNetworkPolicy = newTrue()
@@ -153,16 +152,15 @@ func init() {
 	}
 
 	testClusterV2Interface = map[string]interface{}{
-		"name":                                      "name",
-		"fleet_namespace":                           "fleet_namespace",
-		"kubernetes_version":                        "kubernetes_version",
-		"local_auth_endpoint":                       testClusterV2LocalAuthEndpointInterface,
-		"rke_config":                                testClusterV2RKEConfigInterface,
-		"agent_env_vars":                            testClusterV2EnvVarInterface,
-		"cluster_agent_deployment_customization":    testClusterV2AgentCustomizationInterface,
-		"fleet_agent_deployment_customization":      testClusterV2AgentCustomizationInterface,
-		"cloud_credential_secret_name":              "cloud_credential_secret_name",
-		"default_pod_security_policy_template_name": "default_pod_security_policy_template_name",
+		"name":                                   "name",
+		"fleet_namespace":                        "fleet_namespace",
+		"kubernetes_version":                     "kubernetes_version",
+		"local_auth_endpoint":                    testClusterV2LocalAuthEndpointInterface,
+		"rke_config":                             testClusterV2RKEConfigInterface,
+		"agent_env_vars":                         testClusterV2EnvVarInterface,
+		"cluster_agent_deployment_customization": testClusterV2AgentCustomizationInterface,
+		"fleet_agent_deployment_customization":   testClusterV2AgentCustomizationInterface,
+		"cloud_credential_secret_name":           "cloud_credential_secret_name",
 		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
 		"default_cluster_role_for_project_members":                   "default_cluster_role_for_project_members",
 		"enable_network_policy":                                      true,

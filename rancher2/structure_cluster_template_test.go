@@ -103,21 +103,19 @@ func testClusterTemplate() {
 	}
 	testClusterTemplateRevisionsConfigConf = &managementClient.ClusterSpecBase{
 		DefaultClusterRoleForProjectMembers:                  "default_cluster_role_for_project_members",
-		DefaultPodSecurityPolicyTemplateID:                   "default_pod_security_policy_template_id",
 		DefaultPodSecurityAdmissionConfigurationTemplateName: "default_pod_security_admission_configuration_template_name",
-		DesiredAgentImage:                                    "desired_agent_image",
-		DesiredAuthImage:                                     "desired_auth_image",
-		DockerRootDir:                                        "docker_root_dir",
-		EnableNetworkPolicy:                                  newTrue(),
-		LocalClusterAuthEndpoint:                             testClusterTemplateRevisionsConfigAuthEndpointConf,
-		RancherKubernetesEngineConfig:                        testClusterTemplateRevisionsConfigRKEConf,
-		WindowsPreferedCluster:                               true,
+		DesiredAgentImage:             "desired_agent_image",
+		DesiredAuthImage:              "desired_auth_image",
+		DockerRootDir:                 "docker_root_dir",
+		EnableNetworkPolicy:           newTrue(),
+		LocalClusterAuthEndpoint:      testClusterTemplateRevisionsConfigAuthEndpointConf,
+		RancherKubernetesEngineConfig: testClusterTemplateRevisionsConfigRKEConf,
+		WindowsPreferedCluster:        true,
 	}
 	testClusterTemplateRevisionsConfigInterface = []interface{}{
 		map[string]interface{}{
 			"cluster_auth_endpoint":                    testClusterTemplateRevisionsConfigAuthEndpointInterface,
 			"default_cluster_role_for_project_members": "default_cluster_role_for_project_members",
-			"default_pod_security_policy_template_id":  "default_pod_security_policy_template_id",
 			"desired_agent_image":                      "desired_agent_image",
 			"desired_auth_image":                       "desired_auth_image",
 			"docker_root_dir":                          "docker_root_dir",

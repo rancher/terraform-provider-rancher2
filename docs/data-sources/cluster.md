@@ -48,7 +48,6 @@ The following attributes are exported:
 * `cluster_template_id` - (Computed) Cluster template ID (string)
 * `cluster_template_questions` - (Computed) Cluster template questions (list)
 * `cluster_template_revision_id` - (Computed) Cluster template revision ID (string)
-* `default_pod_security_policy_template_id` - (Optional/Computed) [Default pod security policy template id](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#pod-security-policy-support) (string)
 * `enable_network_policy` - (Computed) Enable project network isolation. Default `false` (bool)
 * `enable_cluster_istio` - (Computed) Enable built-in cluster istio. Default `false` (bool)
 * `fleet_workspace_name` - (Computed) Fleet workspace name (string)

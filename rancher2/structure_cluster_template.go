@@ -60,10 +60,6 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 		obj["default_cluster_role_for_project_members"] = in.DefaultClusterRoleForProjectMembers
 	}
 
-	if len(in.DefaultPodSecurityPolicyTemplateID) > 0 {
-		obj["default_pod_security_policy_template_id"] = in.DefaultPodSecurityPolicyTemplateID
-	}
-
 	if len(in.DefaultPodSecurityAdmissionConfigurationTemplateName) > 0 {
 		obj["default_pod_security_admission_configuration_template_name"] = in.DefaultPodSecurityAdmissionConfigurationTemplateName
 	}
@@ -292,10 +288,6 @@ func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, 
 
 	if v, ok := in["default_cluster_role_for_project_members"].(string); ok && len(v) > 0 {
 		obj.DefaultClusterRoleForProjectMembers = v
-	}
-
-	if v, ok := in["default_pod_security_policy_template_id"].(string); ok && len(v) > 0 {
-		obj.DefaultPodSecurityPolicyTemplateID = v
 	}
 
 	if v, ok := in["default_pod_security_admission_configuration_template_name"].(string); ok && len(v) > 0 {

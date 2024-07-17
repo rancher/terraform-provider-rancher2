@@ -128,7 +128,6 @@ provider "rancher2" {
 ` + testAccRancher2NodeTemplateOpennebulaConfig + `
 ` + testAccRancher2NodeTemplateOpenstack + `
 ` + testAccRancher2NodeTemplateVsphere + `
-` + testAccCheckRancher2PodSecurityPolicyTemplate + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `
@@ -170,7 +169,6 @@ provider "rancher2" {
 ` + testAccRancher2NodeTemplateOpennebulaConfig + `
 ` + testAccRancher2NodeTemplateOpenstack + `
 ` + testAccRancher2NodeTemplateVsphere + `
-` + testAccCheckRancher2PodSecurityPolicyTemplate + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `
@@ -216,7 +214,6 @@ provider "rancher2" {
 ` + testAccRancher2NodeTemplateOpennebulaConfig + `
 ` + testAccRancher2NodeTemplateOpenstack + `
 ` + testAccRancher2NodeTemplateVsphere + `
-` + testAccCheckRancher2PodSecurityPolicyTemplate + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `
@@ -266,7 +263,6 @@ provider "rancher2" {
 ` + testAccRancher2NodeTemplateOpennebulaConfig + `
 ` + testAccRancher2NodeTemplateOpenstack + `
 ` + testAccRancher2NodeTemplateVsphere + `
-` + testAccCheckRancher2PodSecurityPolicyTemplate + `
 ` + testAccRancher2ProjectRoleTemplateBinding + `
 ` + testAccRancher2Project + `
 ` + testAccRancher2Registry + `

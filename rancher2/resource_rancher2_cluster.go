@@ -263,7 +263,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"clusterAgentDeploymentCustomization": clusterAgentDeploymentCustomization,
 		"fleetAgentDeploymentCustomization":   fleetAgentDeploymentCustomization,
 		"description":                         d.Get("description").(string),
-		"defaultPodSecurityPolicyTemplateId":  d.Get("default_pod_security_policy_template_id").(string),
 		"defaultPodSecurityAdmissionConfigurationTemplateName": d.Get("default_pod_security_admission_configuration_template_name").(string),
 		"desiredAgentImage":        d.Get("desired_agent_image").(string),
 		"desiredAuthImage":         d.Get("desired_auth_image").(string),

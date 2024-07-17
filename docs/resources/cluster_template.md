@@ -122,7 +122,6 @@ resource "rancher2_cluster_template" "foo" {
 
 * `cluster_auth_endpoint` - (Optional/Computed) Local cluster auth endpoint (list maxitems: 1)
 * `default_cluster_role_for_project_members` - (Optional/Computed) Default cluster role for project members (string)
-* `default_pod_security_policy_template_id` - (Optional/Computed) Default pod security policy template ID (string)
 * `desired_agent_image` - (Optional/Computed) Desired agent image (string)
 * `desired_auth_image` - (Optional/Computed) Desired auth image (string)
 * `docker_root_dir` - (Optional/Computed) Desired auth image (string)
