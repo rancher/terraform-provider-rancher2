@@ -7,12 +7,10 @@ import (
 )
 
 const (
-	clusterDriverImported             = "imported"
-	clusterRegistrationTokenName      = "default-token"
-	clusterMonitoringV1Namespace      = "cattle-prometheus"
-	clusterActiveCondition            = "Updated"
-	clusterConnectedCondition         = "Connected"
-	clusterMonitoringEnabledCondition = "MonitoringEnabled"
+	clusterDriverImported        = "imported"
+	clusterRegistrationTokenName = "default-token"
+	clusterActiveCondition       = "Updated"
+	clusterConnectedCondition    = "Connected"
 )
 
 var (
@@ -193,15 +191,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 				Schema: clusterAuthEndpoint(),
 			},
 		},
-		"cluster_monitoring_input": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Optional:    true,
-			Description: "Cluster monitoring configuration",
-			Elem: &schema.Resource{
-				Schema: monitoringInputFields(),
-			},
-		},
 		"cluster_registration_token": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -264,12 +253,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_cluster_istio": {
 			Type:        schema.TypeBool,
@@ -465,15 +448,6 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterAuthEndpoint(),
 			},
 		},
-		"cluster_monitoring_input": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Optional:    true,
-			Description: "Cluster monitoring configuration",
-			Elem: &schema.Resource{
-				Schema: monitoringInputFields(),
-			},
-		},
 		"cluster_registration_token": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -537,12 +511,6 @@ func clusterFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_cluster_istio": {
 			Type:        schema.TypeBool,

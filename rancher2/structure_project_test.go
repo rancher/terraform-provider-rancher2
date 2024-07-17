@@ -119,7 +119,6 @@ func init() {
 		Name:                          "test",
 		ContainerDefaultResourceLimit: testProjectContainerResourceLimitConf,
 		Description:                   "description",
-		EnableProjectMonitoring:       true,
 		PodSecurityPolicyTemplateName: "pod_security_policy_template_id",
 		ResourceQuota:                 testProjectResourceQuotaConf,
 		NamespaceDefaultResourceQuota: testProjectNamespaceResourceQuotaConf,
@@ -129,7 +128,6 @@ func init() {
 		"name":                            "test",
 		"container_resource_limit":        testProjectContainerResourceLimitInterface,
 		"description":                     "description",
-		"enable_project_monitoring":       true,
 		"pod_security_policy_template_id": "pod_security_policy_template_id",
 		"resource_quota":                  testProjectResourceQuotaInterface,
 	}

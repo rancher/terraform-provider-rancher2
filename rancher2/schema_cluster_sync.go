@@ -28,12 +28,6 @@ func clusterSyncFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Wait until all catalogs are downloaded and active",
 		},
-		"wait_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Wait until monitoring is up and running",
-		},
 		"node_pool_ids": {
 			Type:        schema.TypeList,
 			Optional:    true,

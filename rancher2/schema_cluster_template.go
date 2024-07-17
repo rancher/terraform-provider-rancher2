@@ -96,12 +96,6 @@ func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Docker Root Dir",
 		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster monitoring",
-		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -175,12 +169,6 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Docker Root Dir",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,
@@ -256,12 +244,6 @@ func clusterSpecBaseFieldsData() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Docker Root Dir",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,

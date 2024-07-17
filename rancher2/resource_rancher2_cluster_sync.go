@@ -55,13 +55,6 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if cluster.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
-		_, err := meta.(*Config).WaitForClusterState(clusterID, clusterMonitoringEnabledCondition, d.Timeout(schema.TimeoutCreate))
-		if err != nil {
-			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) monitoring to be running: %v", clusterID, err)
-		}
-	}
-
 	if d.Get("wait_catalogs").(bool) {
 		_, err := waitAllCatalogV2Downloaded(meta.(*Config), clusterID)
 		if err != nil {
@@ -120,17 +113,6 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 				return resource.NonRetryableError(err)
 			}
 			d.Set("nodes", flattenClusterNodes(nodes))
-
-			if clus.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
-				monitor, _, err := meta.(*Config).isClusterMonitoringEnabledCondition(clusterID)
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-				if !monitor {
-					d.Set("synced", false)
-					return nil
-				}
-			}
 
 			if d.Get("wait_catalogs").(bool) {
 				_, err := waitAllCatalogV2Downloaded(meta.(*Config), clusterID)

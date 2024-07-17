@@ -8,7 +8,7 @@ Provides a Rancher v2 Cluster resource. This can be used to create Clusters for 
 
 ## Example Usage
 
-**Note optional/computed arguments** If any `optional/computed` argument of this resource is defined by the user, removing it from tf file will NOT reset its value. To reset it, let its definition at tf file as empty/false object. Ex: `enable_cluster_monitoring = false`, `cloud_provider {}`, `name = ""`
+**Note optional/computed arguments** If any `optional/computed` argument of this resource is defined by the user, removing it from tf file will NOT reset its value. To reset it, let its definition at tf file as empty/false object. Ex: `cloud_provider {}`, `name = ""`
 
 ### Creating Rancher v2 imported cluster
 
@@ -60,9 +60,7 @@ resource "rancher2_cluster" "foo-custom" {
 }
 ```
 
-### Creating Rancher v2 RKE cluster enabling and customizing monitoring
-
-**Note** Cluster monitoring version `0.2.0` and above, can't be enabled until cluster is fully deployed as [`kubeVersion`](https://github.com/rancher/system-charts/blob/52be656700468904b9bf15c3f39cd7112e1f8c9b/charts/rancher-monitoring/v0.2.0/Chart.yaml#L12) requirement has been introduced to helm chart
+### Creating Rancher v2 RKE cluster enabling
 
 ```hcl
 # Create a new rancher2 RKE Cluster
@@ -73,35 +71,11 @@ resource "rancher2_cluster" "foo-custom" {
     network {
       plugin = "canal"
     }
-  }
-  enable_cluster_monitoring = true
-  cluster_monitoring_input {
-    answers = {
-      "exporter-kubelets.https" = true
-      "exporter-node.enabled" = true
-      "exporter-node.ports.metrics.port" = 9796
-      "exporter-node.resources.limits.cpu" = "200m"
-      "exporter-node.resources.limits.memory" = "200Mi"
-      "grafana.persistence.enabled" = false
-      "grafana.persistence.size" = "10Gi"
-      "grafana.persistence.storageClass" = "default"
-      "operator.resources.limits.memory" = "500Mi"
-      "prometheus.persistence.enabled" = "false"
-      "prometheus.persistence.size" = "50Gi"
-      "prometheus.persistence.storageClass" = "default"
-      "prometheus.persistent.useReleaseName" = "true"
-      "prometheus.resources.core.limits.cpu" = "1000m",
-      "prometheus.resources.core.limits.memory" = "1500Mi"
-      "prometheus.resources.core.requests.cpu" = "750m"
-      "prometheus.resources.core.requests.memory" = "750Mi"
-      "prometheus.retention" = "12h"
-    }
-    version = "0.1.0"
   }
 }
 ```
 
-### Creating Rancher v2 RKE cluster enabling/customizing monitoring and istio
+### Creating Rancher v2 RKE cluster enabling/customizing istio
 
 ```hcl
 # Create a new rancher2 RKE Cluster
@@ -112,36 +86,11 @@ resource "rancher2_cluster" "foo-custom" {
     network {
       plugin = "canal"
     }
-  }
-  enable_cluster_monitoring = true
-  cluster_monitoring_input {
-    answers = {
-      "exporter-kubelets.https" = true
-      "exporter-node.enabled" = true
-      "exporter-node.ports.metrics.port" = 9796
-      "exporter-node.resources.limits.cpu" = "200m"
-      "exporter-node.resources.limits.memory" = "200Mi"
-      "grafana.persistence.enabled" = false
-      "grafana.persistence.size" = "10Gi"
-      "grafana.persistence.storageClass" = "default"
-      "operator.resources.limits.memory" = "500Mi"
-      "prometheus.persistence.enabled" = "false"
-      "prometheus.persistence.size" = "50Gi"
-      "prometheus.persistence.storageClass" = "default"
-      "prometheus.persistent.useReleaseName" = "true"
-      "prometheus.resources.core.limits.cpu" = "1000m",
-      "prometheus.resources.core.limits.memory" = "1500Mi"
-      "prometheus.resources.core.requests.cpu" = "750m"
-      "prometheus.resources.core.requests.memory" = "750Mi"
-      "prometheus.retention" = "12h"
-    }
-    version = "0.1.0"
   }
 }
 # Create a new rancher2 Cluster Sync for foo-custom cluster
 resource "rancher2_cluster_sync" "foo-custom" {
   cluster_id =  rancher2_cluster.foo-custom.id
-  wait_monitoring = rancher2_cluster.foo-custom.enable_cluster_monitoring
 }
 # Create a new rancher2 Namespace
 resource "rancher2_namespace" "foo-istio" {
@@ -149,7 +98,7 @@ resource "rancher2_namespace" "foo-istio" {
   project_id = rancher2_cluster_sync.foo-custom.system_project_id
   description = "istio namespace"
 }
-# Create a new rancher2 App deploying istio (should wait until monitoring is up and running)
+# Create a new rancher2 App deploying istio
 resource "rancher2_app" "istio" {
   catalog_name = "system-library"
   name = "cluster-istio"
@@ -168,7 +117,6 @@ resource "rancher2_app" "istio" {
     "gateways.istio-ingressgateway.resources.requests.cpu" = "100m"
     "gateways.istio-ingressgateway.resources.requests.memory" = "128Mi"
     "gateways.istio-ingressgateway.type" = "NodePort"
-    "global.monitoring.type" = "cluster-monitoring"
     "global.rancher.clusterId" = rancher2_cluster_sync.foo-custom.cluster_id
     "istio_cni.enabled" = "false"
     "istiocoredns.enabled" = "false"
@@ -653,7 +601,6 @@ The following arguments are supported:
 * `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `k3s_config` and `rke_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
-* `cluster_monitoring_input` - (Optional) Cluster monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured  (list maxitems:1)
 * `cluster_template_answers` - (Optional/Computed) Cluster template answers. For Rancher v2.3.x and above (list maxitems:1)
 * `cluster_template_id` - (Optional) Cluster template ID. For Rancher v2.3.x and above (string)
 * `cluster_template_questions` - (Optional/Computed) Cluster template questions. For Rancher v2.3.x and above (list)
@@ -663,7 +610,6 @@ The following arguments are supported:
 * `desired_agent_image` - (Optional/Computed) Desired agent image. For Rancher v2.3.x and above (string)
 * `desired_auth_image` - (Optional/Computed) Desired auth image. For Rancher v2.3.x and above (string)
 * `docker_root_dir` - (Optional/Computed) Desired auth image. For Rancher v2.3.x and above (string)
-* `enable_cluster_monitoring` - (Optional/Computed) Enable built-in cluster monitoring (bool)
 * `enable_cluster_istio` - (Deprecated) Deploy istio on `system` project and `istio-system` namespace, using rancher2_app resource instead. See above example.
 * `enable_network_policy` - (Optional/Computed) Enable project network isolation (bool)
 * `fleet_workspace_name` - (Optional/Computed) Fleet workspace name (string)
@@ -1943,13 +1889,6 @@ The following arguments are supported:
 * `ca_certs` - (Optional) CA certs for the authorized cluster endpoint (string)
 * `enabled` - (Optional) Enable the authorized cluster endpoint. Default `true` (bool)
 * `fqdn` - (Optional) FQDN for the authorized cluster endpoint (string)
-
-### `cluster_monitoring_input`
-
-#### Arguments
-
-* `answers` - (Optional/Computed) Key/value answers for monitor input (map)
-* `version` - (Optional) rancher-monitoring chart version (string)
 
 ### `cluster_template_answers`
 

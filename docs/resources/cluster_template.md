@@ -126,7 +126,6 @@ resource "rancher2_cluster_template" "foo" {
 * `desired_agent_image` - (Optional/Computed) Desired agent image (string)
 * `desired_auth_image` - (Optional/Computed) Desired auth image (string)
 * `docker_root_dir` - (Optional/Computed) Desired auth image (string)
-* `enable_cluster_monitoring` - (Optional) Enable built-in cluster monitoring. Default: `false` (bool)
 * `enable_network_policy` - (Optional) Enable project network isolation. Default: `false` (bool)
 * `rke_config` - (Required) Rancher Kubernetes Engine Config (list maxitems: 1)
 * `windows_prefered_cluster` - (Optional) Windows prefered cluster. Default: `false` (bool)

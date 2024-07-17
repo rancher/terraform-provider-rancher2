@@ -36,7 +36,6 @@ resource "kubernetes_namespace" "my_namespace" {
 
  * `id` - (Computed) Cluster-wide unique ID of the Rancher 2 project (string)
  * `container_resource_limit` - (Computed) Default containers resource limits on project (List maxitem:1)
- * `enable_project_monitoring` - (Computed) Enable built-in project monitoring. Default `false` (bool)
  * `pod_security_policy_template_id` - (Computed) Default Pod Security Policy ID for the project (string)
  * `resource_quota` - (Computed) Resource quota for project. Rancher v2.1.x or higher (list maxitems:1)
  * `uuid` - (Computed) UUID of the project as stored by Rancher 2 (string)

@@ -909,10 +909,6 @@ func (c *Config) isClusterConnected(id string) (bool, *managementClient.Cluster,
 	return c.checkClusterCondition(id, clusterConnectedCondition)
 }
 
-func (c *Config) isClusterMonitoringEnabledCondition(id string) (bool, *managementClient.Cluster, error) {
-	return c.checkClusterCondition(id, clusterMonitoringEnabledCondition)
-}
-
 func (c *Config) ClusterExist(id string) error {
 	_, err := c.GetClusterByID(id)
 	if err != nil {

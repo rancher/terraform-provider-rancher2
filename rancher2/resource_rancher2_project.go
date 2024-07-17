@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 )
 
 func resourceRancher2Project() *schema.Resource {
@@ -58,12 +57,10 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[INFO] Creating Project %s on Cluster ID %s", project.Name, project.ClusterID)
 
 	// Creating cluster with monitoring disabled
-	project.EnableProjectMonitoring = false
 	newProject, err := client.Project.Create(project)
 	if err != nil {
 		return err
 	}
-	newProject.EnableProjectMonitoring = d.Get("enable_project_monitoring").(bool)
 	d.SetId(newProject.ID)
 
 	stateConf := &resource.StateChangeConf{
@@ -78,20 +75,6 @@ func resourceRancher2ProjectCreate(d *schema.ResourceData, meta interface{}) err
 	if waitErr != nil {
 		return fmt.Errorf(
 			"[ERROR] waiting for project (%s) to be created: %s", newProject.ID, waitErr)
-	}
-
-	monitoringInput := expandMonitoringInput(d.Get("project_monitoring_input").([]interface{}))
-	if newProject.EnableProjectMonitoring {
-		if len(newProject.Actions[monitoringActionEnable]) == 0 {
-			newProject, err = client.Project.ByID(newProject.ID)
-			if err != nil {
-				return err
-			}
-		}
-		err = client.Project.ActionEnableMonitoring(newProject, monitoringInput)
-		if err != nil {
-			return err
-		}
 	}
 
 	if pspID, ok := d.Get("pod_security_policy_template_id").(string); ok && len(pspID) > 0 {
@@ -141,17 +124,7 @@ func resourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) error
 			return resource.NonRetryableError(err)
 		}
 
-		var monitoringInput *managementClient.MonitoringInput
-		if len(project.Annotations[monitoringInputAnnotation]) > 0 {
-			monitoringInput = &managementClient.MonitoringInput{}
-			err = jsonToInterface(project.Annotations[monitoringInputAnnotation], monitoringInput)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-		}
-
-		if err = flattenProject(d, project, monitoringInput); err != nil {
+		if err = flattenProject(d, project); err != nil {
 			return resource.NonRetryableError(err)
 		}
 
@@ -201,61 +174,6 @@ func resourceRancher2ProjectUpdate(d *schema.ResourceData, meta interface{}) err
 			// Checking error due to ActionSetpodsecuritypolicytemplate() issue
 			if error.Error(err) != "unexpected end of JSON input" {
 				return err
-			}
-		}
-	}
-
-	if d.HasChange("enable_project_monitoring") || d.HasChange("project_monitoring_input") {
-		enableMonitoring := d.Get("enable_project_monitoring").(bool)
-		if !enableMonitoring && len(newProject.Actions[monitoringActionDisable]) > 0 {
-			err = client.Project.ActionDisableMonitoring(newProject)
-			if err != nil {
-				return err
-			}
-		}
-		if enableMonitoring {
-			monitoringInput := expandMonitoringInput(d.Get("project_monitoring_input").([]interface{}))
-			if len(newProject.Actions[monitoringActionEnable]) > 0 {
-				err = client.Project.ActionEnableMonitoring(newProject, monitoringInput)
-				if err != nil {
-					return err
-				}
-			} else {
-				monitorVersionChanged := false
-				if d.HasChange("project_monitoring_input") {
-					old, new := d.GetChange("project_monitoring_input")
-					oldInput := old.([]interface{})
-					oldInputLen := len(oldInput)
-					oldVersion := ""
-					if oldInputLen > 0 {
-						oldRow, oldOK := oldInput[0].(map[string]interface{})
-						if oldOK {
-							oldVersion = oldRow["version"].(string)
-						}
-					}
-					newInput := new.([]interface{})
-					newInputLen := len(newInput)
-					newVersion := ""
-					if newInputLen > 0 {
-						newRow, newOK := newInput[0].(map[string]interface{})
-						if newOK {
-							newVersion = newRow["version"].(string)
-						}
-					}
-					if oldVersion != newVersion {
-						monitorVersionChanged = true
-					}
-				}
-				if monitorVersionChanged && monitoringInput != nil {
-					err = updateProjectMonitoringApps(meta, newProject.ID, monitoringInput.Version)
-					if err != nil {
-						return err
-					}
-				}
-				err = client.Project.ActionEditMonitoring(newProject, monitoringInput)
-				if err != nil {
-					return err
-				}
 			}
 		}
 	}
@@ -320,37 +238,4 @@ func projectStateRefreshFunc(client *managementClient.Client, projectID string) 
 
 		return obj, obj.State, nil
 	}
-}
-
-func updateProjectMonitoringApps(meta interface{}, projectID, version string) error {
-	cliProject, err := meta.(*Config).ProjectClient(projectID)
-	if err != nil {
-		return err
-	}
-
-	filters := map[string]interface{}{
-		"name": "project-monitoring",
-	}
-
-	listOpts := NewListOpts(filters)
-
-	apps, err := cliProject.App.List(listOpts)
-	if err != nil {
-		return err
-	}
-
-	for _, a := range apps.Data {
-		externalID := updateVersionExternalID(a.ExternalID, version)
-		upgrade := &projectClient.AppUpgradeConfig{
-			Answers:      a.Answers,
-			ExternalID:   externalID,
-			ForceUpgrade: true,
-		}
-
-		err = cliProject.App.ActionUpgrade(&a, upgrade)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

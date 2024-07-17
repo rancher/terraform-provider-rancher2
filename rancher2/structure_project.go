@@ -109,7 +109,7 @@ func flattenProjectResourceQuota(pQuota *managementClient.ProjectResourceQuota, 
 	return []interface{}{obj}
 }
 
-func flattenProject(d *schema.ResourceData, in *managementClient.Project, monitoringInput *managementClient.MonitoringInput) error {
+func flattenProject(d *schema.ResourceData, in *managementClient.Project) error {
 	if in == nil {
 		return nil
 	}
@@ -118,7 +118,6 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project, monito
 	d.Set("cluster_id", in.ClusterID)
 	d.Set("name", in.Name)
 	d.Set("description", in.Description)
-	d.Set("enable_project_monitoring", in.EnableProjectMonitoring)
 
 	if in.ContainerDefaultResourceLimit != nil {
 		containerLimit := flattenProjectContainerResourceLimit(in.ContainerDefaultResourceLimit)
@@ -138,12 +137,7 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project, monito
 		}
 	}
 
-	err := d.Set("project_monitoring_input", flattenMonitoringInput(monitoringInput))
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("annotations", toMapInterface(in.Annotations))
+	err := d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
 	}
@@ -284,10 +278,6 @@ func expandProject(in *schema.ResourceData) *managementClient.Project {
 	if v, ok := in.Get("container_resource_limit").([]interface{}); ok && len(v) > 0 {
 		containerLimit := expandProjectContainerResourceLimit(v)
 		obj.ContainerDefaultResourceLimit = containerLimit
-	}
-
-	if v, ok := in.Get("enable_project_monitoring").(bool); ok {
-		obj.EnableProjectMonitoring = v
 	}
 
 	obj.PodSecurityPolicyTemplateName = in.Get("pod_security_policy_template_id").(string)
