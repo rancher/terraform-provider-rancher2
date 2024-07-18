@@ -2,9 +2,10 @@ package rancher2
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -51,20 +52,6 @@ func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{})
 		// Retrying until resource create timeout
 		for connected, _, _ := meta.(*Config).isClusterConnected(clusterID); !connected; connected, _, _ = meta.(*Config).isClusterConnected(clusterID) {
 			time.Sleep(rancher2RetriesWait * time.Second)
-		}
-	}
-
-	if cluster.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
-		_, err := meta.(*Config).WaitForClusterState(clusterID, clusterMonitoringEnabledCondition, d.Timeout(schema.TimeoutCreate))
-		if err != nil {
-			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) monitoring to be running: %v", clusterID, err)
-		}
-	}
-
-	if cluster.EnableClusterAlerting && d.Get("wait_alerting").(bool) {
-		_, err := meta.(*Config).WaitForClusterState(clusterID, clusterAlertingEnabledCondition, d.Timeout(schema.TimeoutCreate))
-		if err != nil {
-			return fmt.Errorf("[ERROR] waiting for cluster ID (%s) alerting to be running: %v", clusterID, err)
 		}
 	}
 
@@ -126,28 +113,6 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 				return resource.NonRetryableError(err)
 			}
 			d.Set("nodes", flattenClusterNodes(nodes))
-
-			if clus.EnableClusterMonitoring && d.Get("wait_monitoring").(bool) {
-				monitor, _, err := meta.(*Config).isClusterMonitoringEnabledCondition(clusterID)
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-				if !monitor {
-					d.Set("synced", false)
-					return nil
-				}
-			}
-
-			if clus.EnableClusterAlerting && d.Get("wait_alerting").(bool) {
-				alert, _, err := meta.(*Config).isClusterAlertingEnabledCondition(clusterID)
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-				if !alert {
-					d.Set("synced", false)
-					return nil
-				}
-			}
 
 			if d.Get("wait_catalogs").(bool) {
 				_, err := waitAllCatalogV2Downloaded(meta.(*Config), clusterID)

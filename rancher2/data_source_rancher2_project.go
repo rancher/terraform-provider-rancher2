@@ -37,15 +37,6 @@ func dataSourceRancher2Project() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"enable_project_monitoring": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Enable built-in project monitoring",
-			},
-			"pod_security_policy_template_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"resource_quota": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -147,8 +138,6 @@ func dataSourceRancher2ProjectRead(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 	}
-
-	d.Set("pod_security_policy_template_id", project.PodSecurityPolicyTemplateName)
 
 	if project.ResourceQuota != nil && project.NamespaceDefaultResourceQuota != nil {
 		resourceQuota := flattenProjectResourceQuota(project.ResourceQuota, project.NamespaceDefaultResourceQuota)

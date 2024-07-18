@@ -45,7 +45,7 @@ func flattenClusterAuthEndpoint(in *managementClient.LocalClusterAuthEndpoint) [
 	return []interface{}{obj}
 }
 
-func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput, defaultProjectID, systemProjectID string, monitoringInput *managementClient.MonitoringInput) error {
+func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput, defaultProjectID, systemProjectID string) error {
 	if in == nil {
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster is nil")
 	}
@@ -100,10 +100,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 
 	}
 
-	if len(in.DefaultPodSecurityPolicyTemplateID) > 0 {
-		d.Set("default_pod_security_policy_template_id", in.DefaultPodSecurityPolicyTemplateID)
-	}
-
 	if len(in.DefaultPodSecurityAdmissionConfigurationTemplateName) > 0 {
 		d.Set("default_pod_security_admission_configuration_template_name", in.DefaultPodSecurityAdmissionConfigurationTemplateName)
 	}
@@ -124,8 +120,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		d.Set("fleet_workspace_name", in.FleetWorkspaceName)
 	}
 
-	d.Set("enable_cluster_alerting", in.EnableClusterAlerting)
-	d.Set("enable_cluster_monitoring", in.EnableClusterMonitoring)
 	d.Set("istio_enabled", in.IstioEnabled)
 
 	if in.EnableNetworkPolicy != nil {
@@ -145,11 +139,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 	err = d.Set("cluster_registration_token", regToken)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("cluster_monitoring_input", flattenMonitoringInput(monitoringInput))
 	if err != nil {
 		return err
 	}
@@ -462,10 +451,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 	}
 
-	if v, ok := in.Get("default_pod_security_policy_template_id").(string); ok && len(v) > 0 {
-		obj.DefaultPodSecurityPolicyTemplateID = v
-	}
-
 	if v, ok := in.Get("default_pod_security_admission_configuration_template_name").(string); ok && len(v) > 0 {
 		obj.DefaultPodSecurityAdmissionConfigurationTemplateName = v
 	}
@@ -480,14 +465,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if v, ok := in.Get("docker_root_dir").(string); ok && len(v) > 0 {
 		obj.DockerRootDir = v
-	}
-
-	if v, ok := in.Get("enable_cluster_alerting").(bool); ok {
-		obj.EnableClusterAlerting = v
-	}
-
-	if v, ok := in.Get("enable_cluster_monitoring").(bool); ok {
-		obj.EnableClusterMonitoring = v
 	}
 
 	if v, ok := in.Get("enable_network_policy").(bool); ok {

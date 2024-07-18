@@ -66,12 +66,6 @@ func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Default cluster role for project members",
 		},
-		"default_pod_security_policy_template_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Default pod security policy template ID",
-		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -95,18 +89,6 @@ func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Docker Root Dir",
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,
@@ -152,12 +134,6 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Default cluster role for project members",
 		},
-		"default_pod_security_policy_template_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Default pod security policy template ID",
-		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -181,18 +157,6 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Docker Root Dir",
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,
@@ -239,12 +203,6 @@ func clusterSpecBaseFieldsData() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Default cluster role for project members",
 		},
-		"default_pod_security_policy_template_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Default pod security policy template ID",
-		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -268,18 +226,6 @@ func clusterSpecBaseFieldsData() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Docker Root Dir",
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,
