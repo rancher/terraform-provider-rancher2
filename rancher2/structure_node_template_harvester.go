@@ -68,6 +68,14 @@ func flattenHarvesterConfig(in *harvesterConfig) []interface{} {
 		obj["network_data"] = in.NetworkData
 	}
 
+	if in.EnableEFI {
+		obj["enable_efi"] = in.EnableEFI
+	}
+
+	if in.EnableSecureBoot {
+		obj["enable_secure_boot"] = in.EnableSecureBoot
+	}
+
 	return []interface{}{obj}
 }
 
@@ -138,6 +146,14 @@ func expandHarvestercloudConfig(p []interface{}) *harvesterConfig {
 
 	if v, ok := in["network_data"].(string); ok && len(v) > 0 {
 		obj.NetworkData = v
+	}
+
+	if v, ok := in["enable_efi"].(bool); ok && v {
+		obj.EnableEFI = v
+	}
+
+	if v, ok := in["enable_secure_boot"].(bool); ok && v {
+		obj.EnableSecureBoot = v
 	}
 
 	return obj
