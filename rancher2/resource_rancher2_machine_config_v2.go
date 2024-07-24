@@ -49,33 +49,47 @@ func resourceRancher2MachineConfigV2Create(d *schema.ResourceData, meta interfac
 }
 
 func waitForMachineConfigV2(d *schema.ResourceData, config *Config, interval time.Duration) error {
-	log.Printf("[INFO] Waiting for state Machine Config V2 %s", d.Id())
+    log.Printf("[INFO] Waiting for state Machine Config V2 %s", d.Id())
 
-	ctx, cancel := context.WithTimeout(context.Background(), interval)
-	defer cancel()
-	for {
-		kind := d.Get("kind").(string)
-		_, err := getMachineConfigV2ByID(config, d.Id(), kind)
-		if err == nil {
-			return nil
-		}
-		log.Printf("[INFO] Retrying on error Refreshing Machine Config V2 %s: %v", d.Id(), err)
-		if IsNotFound(err) || IsForbidden(err) {
-			d.SetId("")
-			return fmt.Errorf("Machine Config V2 %s not found: %s", d.Id(), err)
-		}
-		if IsNotAccessibleByID(err) {
-			// Restarting clients to update RBAC
-			config.RestartClients()
-		}
+    ctx, cancel := context.WithTimeout(context.Background(), interval)
+    defer cancel()
 
-		select {
-		case <-time.After(rancher2RetriesWait * time.Second):
-		case <-ctx.Done():
-			return fmt.Errorf("Timeout waiting for machine config V2 ID %s", d.Id())
-		}
-	}
+    retryCount := 0
+    maxRetries := 5
+    backoffInterval := 5 * time.Second
+
+    for {
+        kind := d.Get("kind").(string)
+        _, err := getMachineConfigV2ByID(config, d.Id(), kind)
+        if err == nil {
+            return nil
+        }
+
+        log.Printf("[INFO] Retrying on error Refreshing Machine Config V2 %s: %v", d.Id(), err)
+
+        if IsNotFound(err) || IsForbidden(err) {
+            retryCount++
+            if retryCount > maxRetries {
+                d.SetId("")
+                return fmt.Errorf("Machine Config V2 %s not found after %d retries: %s", d.Id(), maxRetries, err)
+            }
+            log.Printf("[INFO] Encountered 404/403 error, retrying (%d/%d)", retryCount, maxRetries)
+            time.Sleep(backoffInterval)
+            continue
+        }
+
+        if IsNotAccessibleByID(err) {
+            config.RestartClients()
+        }
+
+        select {
+        case <-time.After(rancher2RetriesWait * time.Second):
+        case <-ctx.Done():
+            return fmt.Errorf("Timeout waiting for machine config V2 ID %s", d.Id())
+        }
+    }
 }
+
 
 func resourceRancher2MachineConfigV2Read(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Refreshing Machine Config V2 %s", d.Id())
