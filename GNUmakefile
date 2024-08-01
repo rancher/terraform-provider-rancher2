@@ -23,9 +23,9 @@ package-rancher:
 
 test: fmtcheck
 	@echo "==> Running testing..."
-	go test $(TEST) || exit 1
+	go test -v $(TEST) || exit 1
 	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
+		xargs -t -n4 go test -v $(TESTARGS) -timeout=30s -parallel=4
 
 testacc: 
 	@sh -c "'$(CURDIR)/scripts/gotestacc.sh'"
@@ -69,6 +69,6 @@ test-compile:
 		echo "  make test-compile TEST=./$(PKG_NAME)"; \
 		exit 1; \
 	fi
-	go test -c $(TEST) $(TESTARGS)
+	go test -v -c $(TEST) $(TESTARGS)
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile bin vendor
