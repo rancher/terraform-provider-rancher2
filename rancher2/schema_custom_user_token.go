@@ -12,6 +12,7 @@ func customUserTokenFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			Sensitive:   true,
+			ForceNew:    true,
 			Description: "The user password",
 		},
 		"username": {
