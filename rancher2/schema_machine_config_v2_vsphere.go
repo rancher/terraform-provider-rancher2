@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	machineConfigV2VmwarevsphereCreationTypeDefault = "vm"
+	machineConfigV2VmwarevsphereCreationTypeDefault = "template"
 )
 
 var (
