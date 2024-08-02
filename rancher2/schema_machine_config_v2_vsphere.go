@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	machineConfigV2VmwarevsphereCreationTypeDefault = "legacy"
+	machineConfigV2VmwarevsphereCreationTypeDefault = "vm"
 )
 
 var (
