@@ -26,5 +26,6 @@ data "rancher2_user" "foo" {
 * `name` - (Computed) The user common name (string)
 * `annotations` - (Computed) Annotations of the resource (map)
 * `enabled` - (Computed) The user is enabled (bool)
+* `must_change_password` - (Computed) The user must change password at first login (bool)
 * `principal_ids` - (Computed) The user principal IDs (list)
 * `labels` - (Computed) Labels of the resource (map)
