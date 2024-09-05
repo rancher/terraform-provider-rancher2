@@ -68,6 +68,7 @@ func waitForMachineConfigV2(d *schema.ResourceData, config *Config, interval tim
 		select {
 		case <-time.After(rancher2RetriesWait * time.Second):
 		case <-ctx.Done():
+			d.SetId("")
 			return fmt.Errorf("Timeout waiting for machine config V2 ID %s", d.Id())
 		}
 	}
