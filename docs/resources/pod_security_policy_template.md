@@ -10,6 +10,9 @@ description: |-
 
 Provides a Rancher v2 PodSecurityPolicyTemplate resource. This can be used to create PodSecurityPolicyTemplates for Rancher v2 environments and retrieve their information.
 
+Warning! Pod security policy templates are deprecated and shouldn't be used.
+Please use rancher2_pod_security_admission_configuration_template instead.
+
 ## Example Usage
 
 ```hcl-terraform
