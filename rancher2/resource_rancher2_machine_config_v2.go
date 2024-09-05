@@ -60,10 +60,6 @@ func waitForMachineConfigV2(d *schema.ResourceData, config *Config, interval tim
 			return nil
 		}
 		log.Printf("[INFO] Retrying on error Refreshing Machine Config V2 %s: %v", d.Id(), err)
-		if IsNotFound(err) || IsForbidden(err) {
-			d.SetId("")
-			return fmt.Errorf("Machine Config V2 %s not found: %s", d.Id(), err)
-		}
 		if IsNotAccessibleByID(err) {
 			// Restarting clients to update RBAC
 			config.RestartClients()
