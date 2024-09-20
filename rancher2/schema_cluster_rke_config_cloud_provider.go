@@ -49,6 +49,11 @@ func clusterRKEConfigCloudProviderFields() map[string]*schema.Schema {
 				Schema: clusterRKEConfigCloudProviderVsphereFields(),
 			},
 		},
+		"use_instance_metadata_hostname": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Computed: true,
+		},
 	}
 	return s
 }
