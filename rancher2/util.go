@@ -421,7 +421,7 @@ func splitRegistryID(id string) (namespaceID, projectID, resourceID string) {
 
 func clusterIDFromProjectID(projectID string) (string, error) {
 	if projectID == "" || !strings.Contains(projectID, clusterProjectIDSeparator) {
-		return "", fmt.Errorf("[ERROR] Getting clusted ID from project ID: Bad project id format %s", projectID)
+		return "", fmt.Errorf("[ERROR] Getting cluster ID from project ID: Bad project id format %s", projectID)
 	}
 
 	return projectID[0:strings.Index(projectID, clusterProjectIDSeparator)], nil
