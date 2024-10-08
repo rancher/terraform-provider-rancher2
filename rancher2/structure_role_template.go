@@ -60,6 +60,11 @@ func flattenRoleTemplate(d *schema.ResourceData, in *managementClient.RoleTempla
 		return err
 	}
 
+	err = d.Set("external_rules", flattenPolicyRules(in.ExternalRules))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -111,6 +116,10 @@ func expandRoleTemplate(in *schema.ResourceData) *managementClient.RoleTemplate 
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("external_rules").([]interface{}); ok && len(v) > 0 {
+		obj.ExternalRules = expandPolicyRules(v)
 	}
 
 	return obj

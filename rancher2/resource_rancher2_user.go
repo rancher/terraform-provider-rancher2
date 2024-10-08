@@ -108,10 +108,11 @@ func resourceRancher2UserUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	update := map[string]interface{}{
-		"name":        d.Get("name").(string),
-		"enabled":     d.Get("enabled").(bool),
-		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
+		"name":                 d.Get("name").(string),
+		"enabled":              d.Get("enabled").(bool),
+		"must_change_password": d.Get("must_change_password").(bool),
+		"annotations":          toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":               toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newUser, err := client.User.Update(user, update)

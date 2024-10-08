@@ -487,4 +487,3 @@ $ terraform import rancher2_node_template.foo &lt;node_template_id&gt;
 **Important** This process could update `rancher2_node_template` data on tfstate file. Be sure to save a copy of tfstate file before proceed
 
 Due to [this feature](https://github.com/rancher/rancher/pull/23718) included on Rancher v2.3.3, `rancher2_node_template` are now global scoped objects with RBAC around them, instead of user scoped objects as they were. This means that existing node templates `id` field is changing on upgrade. Provider implements `fixNodeTemplateID()` that will update tfstate with proper id.
-```

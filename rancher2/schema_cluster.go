@@ -7,13 +7,10 @@ import (
 )
 
 const (
-	clusterDriverImported             = "imported"
-	clusterRegistrationTokenName      = "default-token"
-	clusterMonitoringV1Namespace      = "cattle-prometheus"
-	clusterActiveCondition            = "Updated"
-	clusterConnectedCondition         = "Connected"
-	clusterMonitoringEnabledCondition = "MonitoringEnabled"
-	clusterAlertingEnabledCondition   = "AlertingEnabled"
+	clusterDriverImported        = "imported"
+	clusterRegistrationTokenName = "default-token"
+	clusterActiveCondition       = "Updated"
+	clusterConnectedCondition    = "Connected"
 )
 
 var (
@@ -194,15 +191,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 				Schema: clusterAuthEndpoint(),
 			},
 		},
-		"cluster_monitoring_input": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Optional:    true,
-			Description: "Cluster monitoring configuration",
-			Elem: &schema.Resource{
-				Schema: monitoringInputFields(),
-			},
-		},
 		"cluster_registration_token": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -239,12 +227,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Cluster template revision ID",
 		},
-		"default_pod_security_policy_template_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Default pod security policy template ID",
-		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -265,18 +247,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_cluster_istio": {
 			Type:        schema.TypeBool,
@@ -472,15 +442,6 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterAuthEndpoint(),
 			},
 		},
-		"cluster_monitoring_input": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Optional:    true,
-			Description: "Cluster monitoring configuration",
-			Elem: &schema.Resource{
-				Schema: monitoringInputFields(),
-			},
-		},
 		"cluster_registration_token": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -518,12 +479,6 @@ func clusterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Cluster template revision ID",
 		},
-		"default_pod_security_policy_template_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Default pod security policy template ID",
-		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -544,18 +499,6 @@ func clusterFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_cluster_istio": {
 			Type:        schema.TypeBool,

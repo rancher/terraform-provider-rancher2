@@ -136,15 +136,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterAuthEndpoint(),
 				},
 			},
-			"cluster_monitoring_input": {
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				Computed:    true,
-				Description: "Cluster monitoring configuration",
-				Elem: &schema.Resource{
-					Schema: monitoringInputFields(),
-				},
-			},
 			"cluster_registration_token": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -180,26 +171,11 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed:    true,
 				Description: "Cluster template revision ID",
 			},
-			"default_pod_security_policy_template_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Default pod security policy template ID",
-			},
 			"default_pod_security_admission_configuration_template_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 				Description: "Default pod security admission configuration template name",
-			},
-			"enable_cluster_alerting": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Enable built-in cluster alerting",
-			},
-			"enable_cluster_monitoring": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Enable built-in cluster monitoring",
 			},
 			"enable_network_policy": {
 				Type:        schema.TypeBool,

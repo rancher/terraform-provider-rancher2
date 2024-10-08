@@ -75,6 +75,15 @@ func dataSourceRancher2RoleTemplate() *schema.Resource {
 					Schema: policyRuleFields(),
 				},
 			},
+			"external_rules": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Optional:    true,
+				Description: "External policy rules used for authorization",
+				Elem: &schema.Resource{
+					Schema: policyRuleFields(),
+				},
+			},
 			"annotations": {
 				Type:        schema.TypeMap,
 				Computed:    true,
