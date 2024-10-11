@@ -21,6 +21,8 @@ const (
 	policyRuleVerbBind             = "bind"
 	policyRuleVerbEscalate         = "escalate"
 	policyRuleVerbImpersonate      = "impersonate"
+	policyRuleVerbManageNamespaces = "manage-namespaces"
+	policyRuleVerbUpdatePSA        = "updatepsa"
 )
 
 var (
@@ -40,6 +42,8 @@ var (
 		policyRuleVerbBind,
 		policyRuleVerbEscalate,
 		policyRuleVerbImpersonate,
+		policyRuleVerbManageNamespaces,
+		policyRuleVerbUpdatePSA,
 	}
 )
 
