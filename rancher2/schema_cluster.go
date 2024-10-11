@@ -7,13 +7,10 @@ import (
 )
 
 const (
-	clusterDriverImported             = "imported"
-	clusterRegistrationTokenName      = "default-token"
-	clusterMonitoringV1Namespace      = "cattle-prometheus"
-	clusterActiveCondition            = "Updated"
-	clusterConnectedCondition         = "Connected"
-	clusterMonitoringEnabledCondition = "MonitoringEnabled"
-	clusterAlertingEnabledCondition   = "AlertingEnabled"
+	clusterDriverImported        = "imported"
+	clusterRegistrationTokenName = "default-token"
+	clusterActiveCondition       = "Updated"
+	clusterConnectedCondition    = "Connected"
 )
 
 var (
@@ -33,7 +30,7 @@ type Cluster struct {
 
 // Schemas
 
-func clusterRegistationTokenFields() map[string]*schema.Schema {
+func clusterRegistrationTokenFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"id": {
 			Type:     schema.TypeString,
@@ -106,165 +103,6 @@ func clusterAuthEndpoint() map[string]*schema.Schema {
 		},
 	}
 
-	return s
-}
-
-func clusterDataFieldsV0() map[string]*schema.Schema {
-	s := map[string]*schema.Schema{
-		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"driver": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"kube_config": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"rke_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterRKEConfigFieldsV0(),
-			},
-		},
-		"k3s_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterK3SConfigFields(),
-			},
-		},
-		"eks_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterEKSConfigFields(),
-			},
-		},
-		"aks_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterAKSConfigFields(),
-			},
-		},
-		"gke_config": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterGKEConfigFields(),
-			},
-		},
-		"default_project_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"system_project_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"description": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"cluster_auth_endpoint": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterAuthEndpoint(),
-			},
-		},
-		"cluster_monitoring_input": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Computed:    true,
-			Description: "Cluster monitoring configuration",
-			Elem: &schema.Resource{
-				Schema: monitoringInputFields(),
-			},
-		},
-		"cluster_registration_token": {
-			Type:     schema.TypeList,
-			MaxItems: 1,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
-			},
-		},
-		"cluster_template_answers": {
-			Type:        schema.TypeList,
-			Computed:    true,
-			MaxItems:    1,
-			Description: "Cluster template answers",
-			Elem: &schema.Resource{
-				Schema: answerFields(),
-			},
-		},
-		"cluster_template_id": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Cluster template ID",
-		},
-		"cluster_template_questions": {
-			Type:        schema.TypeList,
-			Computed:    true,
-			Description: "Cluster template questions",
-			Elem: &schema.Resource{
-				Schema: questionFields(),
-			},
-		},
-		"cluster_template_revision_id": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Cluster template revision ID",
-		},
-		"default_pod_security_policy_template_id": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Default pod security policy template id",
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Computed:    true,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Computed:    true,
-			Description: "Enable built-in cluster monitoring",
-		},
-		"enable_network_policy": {
-			Type:        schema.TypeBool,
-			Computed:    true,
-			Description: "Enable project network isolation",
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Computed:    true,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
-			},
-		},
-		"annotations": {
-			Type:     schema.TypeMap,
-			Computed: true,
-		},
-		"labels": {
-			Type:     schema.TypeMap,
-			Computed: true,
-		},
-	}
 	return s
 }
 
@@ -353,21 +191,12 @@ func clusterFieldsV0() map[string]*schema.Schema {
 				Schema: clusterAuthEndpoint(),
 			},
 		},
-		"cluster_monitoring_input": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Optional:    true,
-			Description: "Cluster monitoring configuration",
-			Elem: &schema.Resource{
-				Schema: monitoringInputFields(),
-			},
-		},
 		"cluster_registration_token": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
+				Schema: clusterRegistrationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {
@@ -398,11 +227,11 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Cluster template revision ID",
 		},
-		"default_pod_security_policy_template_id": {
+		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Default pod security policy template id",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:     schema.TypeString,
@@ -418,18 +247,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_cluster_istio": {
 			Type:        schema.TypeBool,
@@ -447,16 +264,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Enable project network isolation",
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
-			},
 		},
 		"windows_prefered_cluster": {
 			Type:        schema.TypeBool,
@@ -486,6 +293,22 @@ func clusterFields() map[string]*schema.Schema {
 			Description: "Optional Agent Env Vars for Rancher agent",
 			Elem: &schema.Resource{
 				Schema: envVarFields(),
+			},
+		},
+		"cluster_agent_deployment_customization": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional customization for cluster agent",
+			Elem: &schema.Resource{
+				Schema: agentDeploymentCustomizationFields(),
+			},
+		},
+		"fleet_agent_deployment_customization": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Optional customization for fleet agent",
+			Elem: &schema.Resource{
+				Schema: agentDeploymentCustomizationFields(),
 			},
 		},
 		"driver": {
@@ -619,21 +442,12 @@ func clusterFields() map[string]*schema.Schema {
 				Schema: clusterAuthEndpoint(),
 			},
 		},
-		"cluster_monitoring_input": {
-			Type:        schema.TypeList,
-			MaxItems:    1,
-			Optional:    true,
-			Description: "Cluster monitoring configuration",
-			Elem: &schema.Resource{
-				Schema: monitoringInputFields(),
-			},
-		},
 		"cluster_registration_token": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: clusterRegistationTokenFields(),
+				Schema: clusterRegistrationTokenFields(),
 			},
 		},
 		"cluster_template_answers": {
@@ -665,11 +479,11 @@ func clusterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Cluster template revision ID",
 		},
-		"default_pod_security_policy_template_id": {
+		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Default pod security policy template id",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:     schema.TypeString,
@@ -685,18 +499,6 @@ func clusterFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Computed:    true,
-			Description: "Enable built-in cluster monitoring",
 		},
 		"enable_cluster_istio": {
 			Type:        schema.TypeBool,
@@ -719,16 +521,6 @@ func clusterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Enable project network isolation",
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
-			},
 		},
 		"windows_prefered_cluster": {
 			Type:        schema.TypeBool,

@@ -1,11 +1,12 @@
 package rancher2
 
 import (
+	"time"
+
 	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"time"
 )
 
 // Flatteners
@@ -19,6 +20,9 @@ func flattenClusterV2RKEConfigMachinePoolMachineConfig(in *corev1.ObjectReferenc
 
 	obj["kind"] = in.Kind
 	obj["name"] = in.Name
+	if in.APIVersion != "" {
+		obj["api_version"] = in.APIVersion
+	}
 
 	return []interface{}{obj}
 }
@@ -65,6 +69,9 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		if len(in.MachineDeploymentLabels) > 0 {
 			obj["labels"] = toMapInterface(in.MachineDeploymentLabels)
 		}
+		if len(in.Labels) > 0 {
+			obj["machine_labels"] = toMapInterface(in.Labels)
+		}
 		obj["paused"] = in.Paused
 		if in.Quantity != nil {
 			obj["quantity"] = int(*in.Quantity)
@@ -93,6 +100,9 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		if in.UnhealthyRange != nil {
 			obj["unhealthy_range"] = *in.UnhealthyRange
 		}
+		if in.HostnameLengthLimit != 0 {
+			obj["hostname_length_limit"] = in.HostnameLengthLimit
+		}
 	}
 
 	return out
@@ -114,6 +124,9 @@ func expandClusterV2RKEConfigMachinePoolMachineConfig(p []interface{}) *corev1.O
 	}
 	if v, ok := in["name"].(string); ok {
 		obj.Name = v
+	}
+	if v, ok := in["api_version"].(string); ok && v != "" {
+		obj.APIVersion = v
 	}
 
 	return obj
@@ -175,6 +188,9 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		if v, ok := in["labels"].(map[string]interface{}); ok && len(v) > 0 {
 			obj.MachineDeploymentLabels = toMapString(v)
 		}
+		if v, ok := in["machine_labels"].(map[string]interface{}); ok && len(v) > 0 {
+			obj.Labels = toMapString(v)
+		}
 		if v, ok := in["paused"].(bool); ok {
 			obj.Paused = v
 		}
@@ -208,6 +224,10 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		}
 		if v, ok := in["unhealthy_range"].(string); ok && len(v) > 0 {
 			obj.UnhealthyRange = &v
+		}
+
+		if v, ok := in["hostname_length_limit"].(int); ok && v != 0 {
+			obj.HostnameLengthLimit = v
 		}
 
 		out[i] = obj

@@ -66,11 +66,11 @@ func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Default cluster role for project members",
 		},
-		"default_pod_security_policy_template_id": {
+		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Default pod security policy template ID",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:        schema.TypeString,
@@ -90,18 +90,6 @@ func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Docker Root Dir",
 		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster monitoring",
-		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -115,15 +103,6 @@ func clusterSpecBaseFieldsV0() map[string]*schema.Schema {
 			Description: "Rancher Kubernetes Engine Config",
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigFieldsV0(),
-			},
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
 			},
 		},
 		"windows_prefered_cluster": {
@@ -155,11 +134,11 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Default cluster role for project members",
 		},
-		"default_pod_security_policy_template_id": {
+		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Default pod security policy template ID",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:        schema.TypeString,
@@ -179,18 +158,6 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Docker Root Dir",
 		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster monitoring",
-		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -204,15 +171,6 @@ func clusterSpecBaseFields() map[string]*schema.Schema {
 			Description: "Rancher Kubernetes Engine Config",
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigFields(),
-			},
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
 			},
 		},
 		"windows_prefered_cluster": {
@@ -245,11 +203,11 @@ func clusterSpecBaseFieldsData() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Default cluster role for project members",
 		},
-		"default_pod_security_policy_template_id": {
+		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Default pod security policy template ID",
+			Description: "Default pod security admission configuration template name",
 		},
 		"desired_agent_image": {
 			Type:        schema.TypeString,
@@ -269,18 +227,6 @@ func clusterSpecBaseFieldsData() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Docker Root Dir",
 		},
-		"enable_cluster_alerting": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster alerting",
-		},
-		"enable_cluster_monitoring": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
-			Description: "Enable built-in cluster monitoring",
-		},
 		"enable_network_policy": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -294,15 +240,6 @@ func clusterSpecBaseFieldsData() map[string]*schema.Schema {
 			Description: "Rancher Kubernetes Engine Config",
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigFieldsData(),
-			},
-		},
-		"scheduled_cluster_scan": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
-			Description: "Cluster scheduled scan",
-			Elem: &schema.Resource{
-				Schema: scheduledClusterScanFields(),
 			},
 		},
 		"windows_prefered_cluster": {

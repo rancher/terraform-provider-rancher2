@@ -59,6 +59,15 @@ func flattenClusterAKSConfigV2NodePools(input []managementClient.AKSNodePool, p 
 		if len(in.VMSize) > 0 {
 			obj["vm_size"] = in.VMSize
 		}
+		if len(in.MaxSurge) > 0 {
+			obj["max_surge"] = in.MaxSurge
+		}
+		if in.NodeLabels != nil && len(in.NodeLabels) > 0 {
+			obj["labels"] = toMapInterface(in.NodeLabels)
+		}
+		if in.NodeTaints != nil && len(in.NodeTaints) > 0 {
+			obj["taints"] = toArrayInterface(in.NodeTaints)
+		}
 		out[i] = obj
 	}
 
@@ -154,6 +163,9 @@ func flattenClusterAKSConfigV2(in *managementClient.AKSClusterConfigSpec, p []in
 		}
 		obj["node_pools"] = flattenClusterAKSConfigV2NodePools(in.NodePools, v)
 	}
+	if in.NodeResourceGroup != nil && len(*in.NodeResourceGroup) > 0 {
+		obj["node_resource_group"] = *in.NodeResourceGroup
+	}
 	if in.PrivateCluster != nil {
 		obj["private_cluster"] = *in.PrivateCluster
 	}
@@ -231,6 +243,17 @@ func expandClusterAKSConfigV2NodePools(p []interface{}) []managementClient.AKSNo
 		}
 		if v, ok := in["vm_size"].(string); ok {
 			obj.VMSize = v
+		}
+		if v, ok := in["max_surge"].(string); ok {
+			obj.MaxSurge = v
+		}
+		if v, ok := in["labels"].(map[string]interface{}); ok && len(v) > 0 {
+			labels := toMapString(v)
+			obj.NodeLabels = labels
+		}
+		if v, ok := in["taints"].([]interface{}); ok && len(v) > 0 {
+			taints := toArrayString(v)
+			obj.NodeTaints = taints
 		}
 		out[i] = obj
 	}
@@ -325,6 +348,9 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	if v, ok := in["node_pools"].([]interface{}); ok && len(v) > 0 {
 		nodePools := expandClusterAKSConfigV2NodePools(v)
 		obj.NodePools = nodePools
+	}
+	if v, ok := in["node_resource_group"].(string); ok && len(v) > 0 {
+		obj.NodeResourceGroup = &v
 	}
 	if v, ok := in["subnet"].(string); ok && len(v) > 0 {
 		obj.Subnet = &v

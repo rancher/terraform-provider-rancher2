@@ -12,7 +12,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -34,13 +33,6 @@ const (
 	maxHTTPRedirect           = 5
 )
 
-func getMax(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 func AreEqual(o, n interface{}) bool {
 	return reflect.DeepEqual(o, n)
 }
@@ -61,11 +53,6 @@ func Base64Decode(s string) (string, error) {
 	data, err := base64.StdEncoding.DecodeString(s)
 
 	return string(data), err
-}
-
-func IsBase64(s string) bool {
-	_, err := base64.StdEncoding.DecodeString(s)
-	return err == nil
 }
 
 func getKubeConfigFromObj(kubeconfig *kubeconfig.Config) (string, error) {
@@ -106,34 +93,6 @@ func getTokenFromKubeConfig(config string) (string, error) {
 		return "", nil
 	}
 	kubeconfig, err := getObjFromKubeConfig(config)
-	if err != nil {
-		return "", err
-	}
-	if kubeconfig == nil || kubeconfig.AuthInfos == nil || len(kubeconfig.AuthInfos) == 0 {
-		return "", nil
-	}
-
-	return kubeconfig.AuthInfos[0].AuthInfo.Token, nil
-}
-
-func getTokenIDFromKubeConfig(config string) (string, error) {
-	token, err := getTokenFromKubeConfig(config)
-	if err != nil {
-		return "", err
-	}
-	return splitTokenID(token), nil
-
-}
-
-func updateKubeConfigToken(config, token string) (string, error) {
-	if len(token) == 0 {
-		return config, nil
-	}
-	if len(config) == 0 {
-		return "", nil
-	}
-	kubeconfig := &kubeconfig.Config{}
-	err := jsonToInterface(config, kubeconfig)
 	if err != nil {
 		return "", err
 	}
@@ -193,7 +152,7 @@ func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (stri
 	}
 
 	if loginResp["type"].(string) != "token" || loginResp["token"] == nil {
-		return "", "", fmt.Errorf("Doing  user logging: %s %s", loginResp["type"].(string), loginResp["code"].(string))
+		return "", "", fmt.Errorf("Doing user login: %s %s", loginResp["type"].(string), loginResp["code"].(string))
 	}
 
 	return loginResp["id"].(string), loginResp["token"].(string), nil
@@ -349,6 +308,16 @@ func IsNotFound(err error) bool {
 	return clientbase.IsNotFound(err)
 }
 
+// IsUnauthorized checks if the given APIError is a Unauthorized HTTP statuscode
+func IsUnauthorized(err error) bool {
+	apiError, ok := err.(*clientbase.APIError)
+	if !ok {
+		return false
+	}
+
+	return apiError.StatusCode == http.StatusUnauthorized
+}
+
 // IsForbidden checks if the given APIError is a Forbidden HTTP statuscode
 func IsForbidden(err error) bool {
 	apiError, ok := err.(*clientbase.APIError)
@@ -452,7 +421,7 @@ func splitRegistryID(id string) (namespaceID, projectID, resourceID string) {
 
 func clusterIDFromProjectID(projectID string) (string, error) {
 	if projectID == "" || !strings.Contains(projectID, clusterProjectIDSeparator) {
-		return "", fmt.Errorf("[ERROR] Getting clusted ID from project ID: Bad project id format %s", projectID)
+		return "", fmt.Errorf("[ERROR] Getting cluster ID from project ID: Bad project id format %s", projectID)
 	}
 
 	return projectID[0:strings.Index(projectID, clusterProjectIDSeparator)], nil
@@ -561,19 +530,6 @@ func toMapString(in map[string]interface{}) map[string]string {
 	return out
 }
 
-func toMapByte(in map[string]interface{}) map[string][]byte {
-	out := make(map[string][]byte)
-	for i, v := range in {
-		if v == nil {
-			out[i] = []byte{}
-			continue
-		}
-		value := v.(string)
-		out[i] = []byte(value)
-	}
-	return out
-}
-
 func toMapInterface(in map[string]string) map[string]interface{} {
 	out := make(map[string]interface{})
 	for i, v := range in {
@@ -634,15 +590,6 @@ func ghodssyamlToInterface(in string, out interface{}) error {
 	return err
 }
 
-func yamlToMapInterface(in string) (map[string]interface{}, error) {
-	out := make(map[string]interface{})
-	err := yaml.Unmarshal([]byte(in), &out)
-	if err != nil {
-		return nil, err
-	}
-	return out, err
-}
-
 func yamlToInterface(in string, out interface{}) error {
 	if out == nil {
 		return nil
@@ -699,43 +646,6 @@ func interfaceToGhodssyaml(in interface{}) (string, error) {
 		return "", err
 	}
 	return string(out), err
-}
-
-func YAMLToJSON(in string) (string, error) {
-	if len(in) == 0 {
-		return "", nil
-	}
-	out, err := ghodssyaml.YAMLToJSON([]byte(in))
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
-}
-
-func JSONToYAML(in string) (string, error) {
-	if len(in) == 0 {
-		return "", nil
-	}
-	out, err := ghodssyaml.JSONToYAML([]byte(in))
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
-}
-
-func FileExist(path string) (bool, error) {
-	if path == "" {
-		return false, nil
-	}
-	_, err := os.Stat(path)
-
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
 }
 
 func newString(value string) *string {

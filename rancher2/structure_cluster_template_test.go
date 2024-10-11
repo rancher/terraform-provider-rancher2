@@ -6,27 +6,24 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
-	testClusterTemplateQuestionsConf                                []managementClient.Question
-	testClusterTemplateQuestionsInterface                           []interface{}
-	testClusterTemplateRevisionsConfigRKEConf                       *managementClient.RancherKubernetesEngineConfig
-	testClusterTemplateRevisionsConfigAuthEndpointConf              *managementClient.LocalClusterAuthEndpoint
-	testClusterTemplateRevisionsConfigRKEInterface                  []interface{}
-	testClusterTemplateRevisionsConfigAuthEndpointInterface         []interface{}
-	testClusterTemplateRevisionsScheduledClusterScanConfigConf      *managementClient.ScheduledClusterScanConfig
-	testClusterTemplateRevisionsScheduledClusterScanConfigInterface []interface{}
-	testClusterTemplateRevisionsScheduledClusterScanConf            *managementClient.ScheduledClusterScan
-	testClusterTemplateRevisionsScheduledClusterScanInterface       []interface{}
-	testClusterTemplateRevisionsConfigConf                          *managementClient.ClusterSpecBase
-	testClusterTemplateRevisionsConfigInterface                     []interface{}
-	testClusterTemplateRevisionsConf                                []managementClient.ClusterTemplateRevision
-	testClusterTemplateRevisionsInterface                           []interface{}
-	testClusterTemplateMembersConf                                  []managementClient.Member
-	testClusterTemplateMembersInterface                             []interface{}
-	testClusterTemplateConf                                         *managementClient.ClusterTemplate
-	testClusterTemplateInterface                                    map[string]interface{}
+	testClusterTemplateQuestionsConf                        []managementClient.Question
+	testClusterTemplateQuestionsInterface                   []interface{}
+	testClusterTemplateRevisionsConfigRKEConf               *managementClient.RancherKubernetesEngineConfig
+	testClusterTemplateRevisionsConfigAuthEndpointConf      *managementClient.LocalClusterAuthEndpoint
+	testClusterTemplateRevisionsConfigRKEInterface          []interface{}
+	testClusterTemplateRevisionsConfigAuthEndpointInterface []interface{}
+	testClusterTemplateRevisionsConfigConf                  *managementClient.ClusterSpecBase
+	testClusterTemplateRevisionsConfigInterface             []interface{}
+	testClusterTemplateRevisionsConf                        []managementClient.ClusterTemplateRevision
+	testClusterTemplateRevisionsInterface                   []interface{}
+	testClusterTemplateMembersConf                          []managementClient.Member
+	testClusterTemplateMembersInterface                     []interface{}
+	testClusterTemplateConf                                 *managementClient.ClusterTemplate
+	testClusterTemplateInterface                            map[string]interface{}
 )
 
 func testClusterTemplate() {
@@ -104,55 +101,26 @@ func testClusterTemplate() {
 			"fqdn":     "fqdn",
 		},
 	}
-	testClusterTemplateRevisionsScheduledClusterScanConfigConf = &managementClient.ScheduledClusterScanConfig{
-		CronSchedule: "cron_schedule",
-		Retention:    5,
-	}
-	testClusterTemplateRevisionsScheduledClusterScanConfigInterface = []interface{}{
-		map[string]interface{}{
-			"cron_schedule": "cron_schedule",
-			"retention":     5,
-		},
-	}
-	testClusterTemplateRevisionsScheduledClusterScanConf = &managementClient.ScheduledClusterScan{
-		Enabled:        true,
-		ScanConfig:     testClusterScanConfigConf,
-		ScheduleConfig: testClusterTemplateRevisionsScheduledClusterScanConfigConf,
-	}
-	testClusterTemplateRevisionsScheduledClusterScanInterface = []interface{}{
-		map[string]interface{}{
-			"enabled":         true,
-			"scan_config":     testClusterScanConfigInterface,
-			"schedule_config": testClusterTemplateRevisionsScheduledClusterScanConfigInterface,
-		},
-	}
 	testClusterTemplateRevisionsConfigConf = &managementClient.ClusterSpecBase{
-		DefaultClusterRoleForProjectMembers: "default_cluster_role_for_project_members",
-		DefaultPodSecurityPolicyTemplateID:  "default_pod_security_policy_template_id",
-		DesiredAgentImage:                   "desired_agent_image",
-		DesiredAuthImage:                    "desired_auth_image",
-		DockerRootDir:                       "docker_root_dir",
-		EnableClusterAlerting:               true,
-		EnableClusterMonitoring:             true,
-		EnableNetworkPolicy:                 newTrue(),
-		LocalClusterAuthEndpoint:            testClusterTemplateRevisionsConfigAuthEndpointConf,
-		RancherKubernetesEngineConfig:       testClusterTemplateRevisionsConfigRKEConf,
-		ScheduledClusterScan:                testClusterTemplateRevisionsScheduledClusterScanConf,
-		WindowsPreferedCluster:              true,
+		DefaultClusterRoleForProjectMembers:                  "default_cluster_role_for_project_members",
+		DefaultPodSecurityAdmissionConfigurationTemplateName: "default_pod_security_admission_configuration_template_name",
+		DesiredAgentImage:             "desired_agent_image",
+		DesiredAuthImage:              "desired_auth_image",
+		DockerRootDir:                 "docker_root_dir",
+		EnableNetworkPolicy:           newTrue(),
+		LocalClusterAuthEndpoint:      testClusterTemplateRevisionsConfigAuthEndpointConf,
+		RancherKubernetesEngineConfig: testClusterTemplateRevisionsConfigRKEConf,
+		WindowsPreferedCluster:        true,
 	}
 	testClusterTemplateRevisionsConfigInterface = []interface{}{
 		map[string]interface{}{
 			"cluster_auth_endpoint":                    testClusterTemplateRevisionsConfigAuthEndpointInterface,
 			"default_cluster_role_for_project_members": "default_cluster_role_for_project_members",
-			"default_pod_security_policy_template_id":  "default_pod_security_policy_template_id",
 			"desired_agent_image":                      "desired_agent_image",
 			"desired_auth_image":                       "desired_auth_image",
 			"docker_root_dir":                          "docker_root_dir",
-			"enable_cluster_alerting":                  true,
-			"enable_cluster_monitoring":                true,
 			"enable_network_policy":                    true,
 			"rke_config":                               testClusterTemplateRevisionsConfigRKEInterface,
-			"scheduled_cluster_scan":                   testClusterTemplateRevisionsScheduledClusterScanInterface,
 			"windows_prefered_cluster":                 true,
 		},
 	}
@@ -220,10 +188,7 @@ func TestFlattenQuestions(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenQuestions(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -242,12 +207,9 @@ func TestFlattenClusterSpecBase(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterSpecBase(tc.Input, tc.ExpectedOutput)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -266,12 +228,9 @@ func TestFlattenClusterTemplateRevisions(t *testing.T) {
 	for _, tc := range cases {
 		output, err := flattenClusterTemplateRevisions(tc.Input, "default_revision_id", tc.ExpectedOutput)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -293,7 +252,7 @@ func TestFlattenClusterTemplate(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, clusterTemplateFields(), tc.ExpectedOutput)
 		err := flattenClusterTemplate(output, tc.Input, tc.Revisions)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
@@ -302,7 +261,7 @@ func TestFlattenClusterTemplate(t *testing.T) {
 
 		expectedOutput["template_revisions"].([]interface{})[0].(map[string]interface{})["cluster_config"].([]interface{})[0].(map[string]interface{})["rke_config"], _ = flattenClusterRKEConfig(testClusterTemplateRevisionsConfigRKEConf, []interface{}{})
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, expectedOutput)
 		}
 	}
@@ -322,10 +281,7 @@ func TestExpandQuestions(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandQuestions(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -344,12 +300,9 @@ func TestExpandClusterSpecBase(t *testing.T) {
 	for _, tc := range cases {
 		output, err := expandClusterSpecBase(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -368,12 +321,9 @@ func TestExpandClusterTemplateRevisions(t *testing.T) {
 	for _, tc := range cases {
 		_, output, err := expandClusterTemplateRevisions(tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -393,11 +343,8 @@ func TestExpandClusterTemplate(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, clusterTemplateFields(), tc.Input)
 		_, output, _, err := expandClusterTemplate(inputResourceData)
 		if err != nil {
-			t.Fatalf("[ERROR] on expnader: %#v", err)
+			assert.FailNow(t, "[ERROR] on expnader: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

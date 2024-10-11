@@ -14,7 +14,7 @@ Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 0.11.x
 - [Go](https://golang.org/doc/install) 1.13 to build the provider plugin
-- [Docker](https://docs.docker.com/install/) 17.03.x to run acceptance tests
+- [Docker](https://docs.docker.com/install/) 20.10.x to run acceptance tests
 
 Building The Provider
 ---------------------
@@ -61,51 +61,74 @@ $ terraform plan
 $ terraform apply
 ```
 
+See [development process](docs/development-process.md) for more details.
+
 Testing the Provider
 ---------------------------
 
-In order to test the provider, you can simply run `make test`.
+In order to test the provider, simply run `make test`.
 
 ```sh
 $ make test
 ```
 
-In order to run the full suite of Acceptance tests, a running rancher system, a rancher API key and a working k8s cluster imported are needed. Also, acceptance tests are covering Rancher server upgrade, v2.3.6 and v2.4.2
+In order to run the full suite of Acceptance tests, a running rancher system, a rancher API key and a working k8s cluster imported are needed. Acceptance tests cover a Rancher server upgrade, v2.3.6 and v2.4.2.
 
-To run acceptance tests, you can simply run `make testacc`. `scripts/gotestacc.sh` will be run, deploying all needed requirements, running acceptance tests and cleanup.
+To run the Acceptance tests, simply run `make testacc`. `scripts/gotestacc.sh` will be run, deploying all needed requirements, running tests and cleanup.
 
 ```sh
 $ make testacc
 ```
 
-Due to [network limitation](https://docs.docker.com/docker-for-mac/networking/#known-limitations-use-cases-and-workarounds) on docker for osx and/or windows, there is a way to run dockerized acceptance test.
+Due to [network limitations](https://docs.docker.com/docker-for-mac/networking/#known-limitations-use-cases-and-workarounds) on Docker for osx and/or windows, there is a way to run dockerized acceptance test.
 
 ```sh
 $ EXPOSE_HOST_PORTS=true make docker-testacc
 ```
 
+To run the structure tests, run
+
+```sh
+$ go clean --testcache && go test -v ./rancher2
+```
+
+See [test process](docs/test-process.md) for details on release testing (_Terraform Maintainers Only_).
+
+Branching the Provider
+---------------------------
+
+This provider is branched in correlation with minor versions of Rancher: 2.8, 2.9, etc.
+The `release/v3` branch with 3.0.0+ is aligned with Rancher 2.7,
+  the `release/v4` branch with 4.0.0+ is aligned with Rancher 2.8,
+  and the `master` branch with 5.0.0+ is aligned with Rancher 2.9.
+The lifecycle of each major provider version is aligned with the lifecycle of each Rancher minor version.
+For example, provider versions 4.x are aligned with Rancher 2.8.x will only be actively maintained until the EOM for Rancher 2.8.x and supported until EOL for Rancher 2.8.x.
+
+See the [Rancher support matrix](https://www.suse.com/lifecycle/#rancher) for details.
+
+Aligning major provider releases with minor Rancher releases means:
+
+* We can follow semver
+* We can cut patch/minor versions on an as-needed basis to fix bugs or add new resources
+* We have 'out of band' flexibility and are only tied to releasing a new version of the provider when we get a new 2.x Rancher minor version.
+
+See the [compatibility matrix](docs/compatibility-matrix.md) for details.
+
+If you are using Terraform to provision clusters on instances of Rancher 2.7 and 2.8,
+  you must have a separate configuration in a separate dir for each provider.
+Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
+
 Releasing the Provider
 ---------------------------
 
-* Create a draft of the [release](https://github.com/rancher/terraform-provider-rancher2/releases) and select create new tag for the version you are releasing
-* Create release notes by clicking `Generate release notes`
-* Copy the release notes to the CHANGELOG and update to the following format
+As of Terraform 2.0.0 and 3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version.
+For example, 4.0.0 will be released 1-2 weeks after Rancher 2.8.x and fixes and features in the 4.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.8.x.
+A critical bug fix can be released 'out of band' as 4.0.1 and backported to `release/v3` as 3.0.1.
 
-```
-# <tag version> (Month Day, Year)
-FEATURES:
-ENHANCEMENTS:
-BUG FIXES:
-```
+To release the provider
 
-* Create a PR to update CHANGELOG
-* Copy the updated notes back to the draft release (DO NOT release with just the generated notes. Those are just a template to help you)
-* Make sure the branch is up-to-date with the remote, in this example, the branch is master and the release tag is v1.24.0
-
-```
-git remote add upstream-release git@github.com:rancher/terraform-provider-rancher2.git
-git checkout upstream-release/master
-git push upstream-release v1.24.0
-```
-
-* Create an [EIO issue](https://github.com/rancherlabs/eio) for Hashicorp to publish the release
+* Make sure that the various QA teams have approved the rc versions, see [test process](./docs/test-process.md) for more information.
+* Update the `CHANGELOG.md` with the release notes
+* Push a tag to the release branch (`release/v2`, `release/v3`, or `master`) which does not have a `-rc` suffix
+* The CI will build the provider and generate a release on GitHub
+* Make sure to validate that the release is picked up by the Terraform registry, you may need to find the "resync" button to accomplish this.

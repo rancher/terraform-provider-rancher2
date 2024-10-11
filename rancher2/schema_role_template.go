@@ -89,6 +89,15 @@ func roleTemplateFields() map[string]*schema.Schema {
 				Schema: policyRuleFields(),
 			},
 		},
+		"external_rules": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "External policy rules used for authorization",
+			Elem: &schema.Resource{
+				Schema: policyRuleFields(),
+			},
+		},
 	}
 
 	for k, v := range commonAnnotationLabelFields() {

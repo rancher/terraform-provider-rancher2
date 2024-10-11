@@ -9,7 +9,7 @@ import (
 
 // Flatteners
 
-func flattenClusterRegistationToken(in *managementClient.ClusterRegistrationToken) ([]interface{}, error) {
+func flattenClusterRegistrationToken(in *managementClient.ClusterRegistrationToken) ([]interface{}, error) {
 	obj := make(map[string]interface{})
 	if in == nil {
 		return []interface{}{}, nil
@@ -45,7 +45,7 @@ func flattenClusterAuthEndpoint(in *managementClient.LocalClusterAuthEndpoint) [
 	return []interface{}{obj}
 }
 
-func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput, defaultProjectID, systemProjectID string, monitoringInput *managementClient.MonitoringInput) error {
+func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *managementClient.ClusterRegistrationToken, kubeConfig *managementClient.GenerateKubeConfigOutput, defaultProjectID, systemProjectID string) error {
 	if in == nil {
 		return fmt.Errorf("[ERROR] flattening cluster: Input cluster is nil")
 	}
@@ -70,6 +70,14 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 
+	if in.ClusterAgentDeploymentCustomization != nil {
+		d.Set("cluster_agent_deployment_customization", flattenAgentDeploymentCustomization(in.ClusterAgentDeploymentCustomization))
+	}
+
+	if in.FleetAgentDeploymentCustomization != nil {
+		d.Set("fleet_agent_deployment_customization", flattenAgentDeploymentCustomization(in.FleetAgentDeploymentCustomization))
+	}
+
 	if len(in.ClusterTemplateID) > 0 {
 		d.Set("cluster_template_id", in.ClusterTemplateID)
 		if len(in.ClusterTemplateRevisionID) > 0 {
@@ -92,8 +100,8 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 
 	}
 
-	if len(in.DefaultPodSecurityPolicyTemplateID) > 0 {
-		d.Set("default_pod_security_policy_template_id", in.DefaultPodSecurityPolicyTemplateID)
+	if len(in.DefaultPodSecurityAdmissionConfigurationTemplateName) > 0 {
+		d.Set("default_pod_security_admission_configuration_template_name", in.DefaultPodSecurityAdmissionConfigurationTemplateName)
 	}
 
 	if len(in.DesiredAgentImage) > 0 {
@@ -107,12 +115,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	if len(in.DockerRootDir) > 0 {
 		d.Set("docker_root_dir", in.DockerRootDir)
 	}
+
 	if len(in.FleetWorkspaceName) > 0 {
 		d.Set("fleet_workspace_name", in.FleetWorkspaceName)
 	}
 
-	d.Set("enable_cluster_alerting", in.EnableClusterAlerting)
-	d.Set("enable_cluster_monitoring", in.EnableClusterMonitoring)
 	d.Set("istio_enabled", in.IstioEnabled)
 
 	if in.EnableNetworkPolicy != nil {
@@ -127,16 +134,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	if err != nil {
 		return err
 	}
-	regToken, err := flattenClusterRegistationToken(clusterRegToken)
+	regToken, err := flattenClusterRegistrationToken(clusterRegToken)
 	if err != nil {
 		return err
 	}
 	err = d.Set("cluster_registration_token", regToken)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("cluster_monitoring_input", flattenMonitoringInput(monitoringInput))
 	if err != nil {
 		return err
 	}
@@ -256,10 +258,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		return err
 	}
 
-	if in.ScheduledClusterScan != nil {
-		d.Set("scheduled_cluster_scan", flattenScheduledClusterScan(in.ScheduledClusterScan))
-	}
-
 	d.Set("windows_prefered_cluster", in.WindowsPreferedCluster)
 
 	return nil
@@ -350,7 +348,7 @@ func flattenNodeInfo(in *managementClient.NodeInfo) map[string]string {
 
 // Expanders
 
-func expandClusterRegistationToken(p []interface{}, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
+func expandClusterRegistrationToken(p []interface{}, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
 	if len(clusterID) == 0 {
 		return nil, fmt.Errorf("[ERROR] Expanding Cluster Registration Token: Cluster id is nil")
 	}
@@ -422,6 +420,22 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		obj.LocalClusterAuthEndpoint = expandClusterAuthEndpoint(v)
 	}
 
+	if v, ok := in.Get("cluster_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
+		clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v)
+		if err != nil {
+			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
+		}
+		obj.ClusterAgentDeploymentCustomization = clusterAgentDeploymentCustomization
+	}
+
+	if v, ok := in.Get("fleet_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
+		fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v)
+		if err != nil {
+			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
+		}
+		obj.FleetAgentDeploymentCustomization = fleetAgentDeploymentCustomization
+	}
+
 	if v, ok := in.Get("cluster_template_id").(string); ok && len(v) > 0 {
 		obj.ClusterTemplateID = v
 		obj.Driver = clusterDriverRKE
@@ -437,8 +451,8 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 	}
 
-	if v, ok := in.Get("default_pod_security_policy_template_id").(string); ok && len(v) > 0 {
-		obj.DefaultPodSecurityPolicyTemplateID = v
+	if v, ok := in.Get("default_pod_security_admission_configuration_template_name").(string); ok && len(v) > 0 {
+		obj.DefaultPodSecurityAdmissionConfigurationTemplateName = v
 	}
 
 	if v, ok := in.Get("desired_agent_image").(string); ok && len(v) > 0 {
@@ -451,14 +465,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if v, ok := in.Get("docker_root_dir").(string); ok && len(v) > 0 {
 		obj.DockerRootDir = v
-	}
-
-	if v, ok := in.Get("enable_cluster_alerting").(bool); ok {
-		obj.EnableClusterAlerting = v
-	}
-
-	if v, ok := in.Get("enable_cluster_monitoring").(bool); ok {
-		obj.EnableClusterMonitoring = v
 	}
 
 	if v, ok := in.Get("enable_network_policy").(bool); ok {
@@ -556,10 +562,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 
 	if len(obj.Driver) == 0 {
 		obj.Driver = clusterDriverImported
-	}
-
-	if v, ok := in.Get("scheduled_cluster_scan").([]interface{}); ok && len(v) > 0 {
-		obj.ScheduledClusterScan = expandScheduledClusterScan(v)
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {

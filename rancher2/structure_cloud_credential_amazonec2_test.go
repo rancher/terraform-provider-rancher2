@@ -1,8 +1,9 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -39,10 +40,7 @@ func TestFlattenCloudCredentialAmazonec2(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenCloudCredentialAmazonec2(tc.Input, tc.ExpectedOutput)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -60,9 +58,6 @@ func TestExpandCloudCredentialAmazonec2(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandCloudCredentialAmazonec2(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

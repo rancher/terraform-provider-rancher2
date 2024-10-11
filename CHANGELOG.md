@@ -1,3 +1,182 @@
+## v4.1.0 (March 6, 2024)
+
+FEATURES:
+
+* Added support for `rancher2_pod_security_admission_configuration_template` resource and dataSource. See https://github.com/rancher/terraform-provider-rancher2/pull/1302
+
+ENHANCEMENTS:
+
+* [Docs] fix unit and add new example to the documentation for `rancher_cluster_v2`. See  https://github.com/rancher/terraform-provider-rancher2/pull/1309
+* [Docs] add note linking to AWS docs for `eks_config_v2`. See https://github.com/rancher/terraform-provider-rancher2/pull/1247
+
+BUGFIXES:
+
+
+## v4.0.0 (February 5, 2024)
+
+FEATURES:
+
+* Added support for `machine_selector_files` on the `rancher2_cluster_v2` resource. See https://github.com/rancher/terraform-provider-rancher2/pull/1225
+* Added support for `graceful_shutdown_timeout` for vSphere nodes. See https://github.com/rancher/terraform-provider-rancher2/pull/1228
+* Added `inherited_cluster_roles` attribute to global_role. See https://github.com/rancher/terraform-provider-rancher2/pull/1242
+
+
+ENHANCEMENTS:
+
+* Changed default Ubuntu image for DigitalOcean from 16.04 -> 22.04. See  https://github.com/rancher/terraform-provider-rancher2/pull/1213
+* Improved EKS node_group error message. See https://github.com/rancher/terraform-provider-rancher2/pull/1205
+* Set `protect-kernel-defaults` on rancher_v2 clusters. See https://github.com/rancher/terraform-provider-rancher2/pull/1244
+* Updated `default_system_registry` behavior at `rancher2_app_v2` resource. See https://github.com/rancher/terraform-provider-rancher2/pull/1265
+* Updated RKE config machine pool schema and structure. See https://github.com/rancher/terraform-provider-rancher2/pull/1253
+* Added `project_id` syntax for `rancher2_project_role_template_binding`. See https://github.com/rancher/terraform-provider-rancher2/pull/1272
+* Add the `keypair_name` argument  to the `openstack_config` machine config and node template.  See https://github.com/rancher/terraform-provider-rancher2/pull/1235
+* [Docs] updated the documentation for `rancher_cluster_v2`. See https://github.com/rancher/terraform-provider-rancher2/pull/1300
+* [Docs] Remove `keypair_name` from `amazonec2_config`. See https://github.com/rancher/terraform-provider-rancher2/pull/942
+
+
+BUGFIXES:
+
+* Fixed `machine_selector_config` old schema to have the correct type. See https://github.com/rancher/terraform-provider-rancher2/pull/1223
+* Allow machine pools to be created and scaled down to 0. See https://github.com/rancher/terraform-provider-rancher2/pull/1232
+* Fixed the issue where the for_each in `rancher2_registry` keeps changing the order of the list that has not changed. See https://github.com/rancher/terraform-provider-rancher2/pull/1268
+* Fixed double base64-encoding of `ca_bundle` field. See https://github.com/rancher/terraform-provider-rancher2/pull/1296
+* [Docs] Fixed description for using `kms_key` `eks_config_v2`. See https://github.com/rancher/terraform-provider-rancher2/pull/892
+
+
+
+## 3.1.1 (August 3, 2023)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+* [Docs] Add Terraform docs for cluster and fleet agent customization, PSACT support, and authentication ping `entity_field_id` for the v3.1.1 patch release. See [#1175](https://github.com/rancher/terraform-provider-rancher2/pull/1175)
+* [Docs] Fix broken markdown in `rancher2_cluster` resource. See [#1180](https://github.com/rancher/terraform-provider-rancher2/pull/1180)
+* [Docs] Update wording in registry resource. See [#1185](https://github.com/rancher/terraform-provider-rancher2/pull/1185)
+* [Docs] Add example for multiple machine pools in RKE2. See [#957](https://github.com/rancher/terraform-provider-rancher2/pull/957)
+
+BUG FIXES:
+
+
+
+## 3.1.0 (June 25, 2023)
+
+FEATURES:
+
+* **New Resource** `rancher2_custom_user_token` - Provides configuration options to create, modify, and delete a user token. See [#932](https://github.com/rancher/terraform-provider-rancher2/pull/932) and [#1130](https://github.com/rancher/terraform-provider-rancher2/pull/1130)
+* Add Cluster and Fleet Agent Deployment Customization support for users to customize the tolerations, affinity, and resources of a downstream agent.  See [#1137](https://github.com/rancher/terraform-provider-rancher2/pull/1137)
+  * **New Argument** `cluster_agent_deployment_customization` - (Optional) Optional customization for cluster agent. For Rancher v2.7.5 and above (list)
+  * **New Argument** `fleet_agent_deployment_customization` - (Optional) Optional customization for fleet agent. For Rancher v2.7.5 and above (list)
+  * **New Argument** `append_tolerations` - (Optional) User defined tolerations to append to agent (list)
+  * **New Argument** `override_affinity` - (Optional) User defined affinity to override default agent affinity (string)
+  * **New Argument** `override_resource_requirements` - (Optional) User defined resource requirements to set on the agent (list)
+* Add Pod Security Admission Configuration Template (PSACT) support with state migration logic for 1.25+ RKE and v2 prov clusters. See [#1119](https://github.com/rancher/terraform-provider-rancher2/pull/1119) and [#1117](https://github.com/rancher/terraform-provider-rancher2/pull/1117)
+  * **New Argument** `default_pod_security_admission_configuration_template_name` - (Optional) Cluster default pod security admission configuration template name (string)
+  * **New Argument** `default_pod_security_admission_configuration_template_name` - (Computed) Cluster V2 default pod security admission configuration template name (string)
+  
+ENHANCEMENTS:
+
+* **New Argument** `entity_id_field` - (Optional) Entity ID for authentication config (string). See [#1163](https://github.com/rancher/terraform-provider-rancher2/pull/1163)
+* [Docs] Add dev process and rc docs. See [#1138](https://github.com/rancher/terraform-provider-rancher2/pull/1138)
+* Rancher machine hostname truncation. See [#1147](https://github.com/rancher/terraform-provider-rancher2/pull/1147)
+* Refactor kubeconfig logic to use token from cached kubeconfig and replace invalid/expired tokens properly. [See #1158](https://github.com/rancher/terraform-provider-rancher2/pull/1158) and [#1165](https://github.com/rancher/terraform-provider-rancher2/pull/1165)
+* Bump go-getter to 1.7.1. See [#1118](https://github.com/rancher/terraform-provider-rancher2/pull/1118)
+* Bump google.golang.org/grpc to 1.53.0. See [#1167](https://github.com/rancher/terraform-provider-rancher2/pull/1167)
+
+BUG FIXES:
+
+* Add missing AKS node pool options. See [#1122](https://github.com/rancher/terraform-provider-rancher2/pull/1122)
+* Verify `desired_size` in EKS node groups. See [#1126](https://github.com/rancher/terraform-provider-rancher2/pull/1126)
+* Set DO userdata default empty for v2prov. See [#1121](https://github.com/rancher/terraform-provider-rancher2/pull/1121)
+* Support old version HarvesterConfig. See [#1132](https://github.com/rancher/terraform-provider-rancher2/pull/1132)
+* Fix 'unexpected end of JSON input' error when setting Pod Security Policy Template on new project. See [#1113](https://github.com/rancher/terraform-provider-rancher2/pull/1113)
+* Fix Harvester `disk_size` default value. See [#1149](https://github.com/rancher/terraform-provider-rancher2/pull/1149)
+* Consider all possible cluster states before passing them to StateChangeConf. See [#1114](https://github.com/rancher/terraform-provider-rancher2/pull/1114)
+
+Your open source contributions are invaluable to us.
+
+## 3.0.1 (June 7, 2023)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Support old version HarvesterConfig. See [#1132](https://github.com/rancher/terraform-provider-rancher2/pull/1132)
+
+## 3.0.0 (May 1, 2023)
+
+FEATURES:
+
+* Add support for new Azure features - node template tags, network interface, availability zone, and option to enable standard SKU. See [#1023](https://github.com/rancher/terraform-provider-rancher2/pull/1023) and [#1062](https://github.com/rancher/terraform-provider-rancher2/pull/1062)
+* Add support for node group node role on EKS clusters. See [#1049](https://github.com/rancher/terraform-provider-rancher2/pull/1049)
+* Allow setting vmAffinity for Harvester clusters. See [#1024](https://github.com/rancher/terraform-provider-rancher2/pull/1024) and [#1110](https://github.com/rancher/terraform-provider-rancher2/pull/1110)
+* Update Harvester node driver to support multi nics and disks. See [#1051](https://github.com/rancher/terraform-provider-rancher2/pull/1051)
+
+ENHANCEMENTS:
+
+* [Docs] Update branching strategy and compatibility matrix. See [#1060](https://github.com/rancher/terraform-provider-rancher2/pull/1060)
+* [Docs] Add example for authenticated cluster level private registry. See [#1055](https://github.com/rancher/terraform-provider-rancher2/pull/1055)
+* [Docs] Remove macAddress in Harvester node driver. See [#1089](https://github.com/rancher/terraform-provider-rancher2/pull/1089)
+* Add k8s 1.25 support | Remove logging cis v1 support. See [#1056](https://github.com/rancher/terraform-provider-rancher2/pull/1056)
+* Add issue and pull request templates. See [#1063](https://github.com/rancher/terraform-provider-rancher2/pull/1063)
+* Update Wrangler to v1.1.0. See [#1079](https://github.com/rancher/terraform-provider-rancher2/pull/1079)
+* Bump golang.org/x/net from 0.2.0 to 0.7.0. See [#1078](https://github.com/rancher/terraform-provider-rancher2/pull/1078)
+* Bump github.com/hashicorp/go-getter from 1.4.0 to 1.7.0. See [#1077](https://github.com/rancher/terraform-provider-rancher2/pull/1077)
+* Add script to test Terraform RCs locally on darwin/unix and windows. See [#1082](https://github.com/rancher/terraform-provider-rancher2/pull/1082) and [#1085](https://github.com/rancher/terraform-provider-rancher2/pull/1085)
+* Implement retry logic to enforce timeouts. See [#1033](https://github.com/rancher/terraform-provider-rancher2/pull/1033)
+
+BUG FIXES:
+
+* [Docs] Add machine_pool `annotations` property. See [#1041](https://github.com/rancher/terraform-provider-rancher2/pull/1041)
+* Add new field for computed values in App v2 resource. See [#1021](https://github.com/rancher/terraform-provider-rancher2/pull/1021)
+* Do not sort mirror endpoints. See [#1029](https://github.com/rancher/terraform-provider-rancher2/pull/1029)
+* Update SDK and make machine pool `cloud_credential_secret_name optional` to fix plan bug. See [#1070](https://github.com/rancher/terraform-provider-rancher2/pull/1070)
+* Fix intermittent 409 conflict when creating new `rancher2_project` with PSPTID. See [#1058](https://github.com/rancher/terraform-provider-rancher2/pull/1058)
+
+## 1.25.0 (November 22, 2022)
+
+FEATURES:
+
+
+
+ENHANCEMENTS:
+
+
+
+BUG FIXES:
+
+* Update CHANGELOG with known bug info from #909. See [#1025](https://github.com/rancher/terraform-provider-rancher2/pull/1025)
+* Revert "Add admission_configuration configuration." See [#1026](https://github.com/rancher/terraform-provider-rancher2/pull/1026)
+
+## 1.24.2 (October 24, 2022)
+
+FEATURES:
+
+* Add Outscale support for node driver. See [#962](https://github.com/rancher/terraform-provider-rancher2/pull/962)
+* Allow setting labels on nodes with RKE2. See [#951](https://github.com/rancher/terraform-provider-rancher2/pull/951)
+
+ENHANCEMENTS:
+
+* [Docs] Add a note about Azure AD auth configuration migration. See [#983](https://github.com/rancher/terraform-provider-rancher2/pull/983)
+* [Docs] Remove tech preview reference for features that are already GA. See [#1000](https://github.com/rancher/terraform-provider-rancher2/pull/1000)
+* Bump docker url version to 20.10. See [#970](https://github.com/rancher/terraform-provider-rancher2/pull/970)
+
+BUG FIXES:
+
+* Use existing cluster registration token if conflict. See [#997](https://github.com/rancher/terraform-provider-rancher2/pull/997)
+
+KNOWN BUG:
+
+* An update to the `admission_configuration` field within the kube-api service performed in [#909](https://github.com/rancher/terraform-provider-rancher2/pull/909) prevents provider upgrades from v1.24.1 to v1.24.2 in cases where `admission_configuration` was previously defined due to a type mismatch. See [#1011](https://github.com/rancher/terraform-provider-rancher2/issues/1011)
+
 ## 1.24.1 (September 1, 2022)
 
 FEATURES:
@@ -38,7 +217,6 @@ FEATURES:
 * The Harvester node driver is now supported. See [#861](https://github.com/rancher/terraform-provider-rancher2/pull/861).
 * Added support for KEv2 cluster certificate rotation. See [#882](https://github.com/rancher/terraform-provider-rancher2/pull/882).
 * Added support for node pool health checks on KEv2 clusters. See [#889](https://github.com/rancher/terraform-provider-rancher2/pull/889).
-
 
 ENHANCEMENTS:
 
@@ -85,7 +263,7 @@ BUG FIXES:
 
 FEATURES:
 
-* **New Argument:** `rancher2_cloud_credential.s3_credential_config` - (Optional) S3 config for the Cloud Credential. Just for Rancher 2.6.0 and above (list maxitems:1)
+* **New Argument:** `rancher2_cloud_credential.s3_credential_config` - (Optional) S3 config for the Cloud Credential. For Rancher 2.6.0 and above (list maxitems:1)
 * **New Argument:** `rancher2_cluster.rke_config.enable_cri_dockerd` - (Optional) Enable/disable using cri-dockerd. Deafult: `false` (bool) https://github.com/rancher/terraform-provider-rancher2/issues/792
 * **New Argument:** `rancher2_cluster.rke_config.private_registries.ecr_credential_plugin` - (Optional) ECR credential plugin config (list maxitems:1)
 * **New Argument:** `rancher2_cluster_v2.local_auth_endpoint` - - (Optional) Cluster V2 local auth endpoint (list maxitems:1)
@@ -149,7 +327,7 @@ BUG FIXES:
 
 FEATURES:
 
-* **New Argument:** `rancher2_cluster.aks_config_v2` - (Optional) The Azure AKS v2 configuration for creating/import `aks` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config`. Just for Rancher v2.6.0 and above (list maxitems:1)
+* **New Argument:** `rancher2_cluster.aks_config_v2` - (Optional) The Azure AKS v2 configuration for creating/import `aks` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config`. For Rancher v2.6.0 and above (list maxitems:1)
 * **New Argument:** `rancher2_cloud_credential.azure_credential_config.environment` - (Optional/Computed) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud) (string)
 * **New Argument:** `rancher2_cloud_credential.azure_credential_config.tenant_id` - (Optional/Computed) Azure Tenant ID (string)
 * **New Attribute:** `rancher2_cluster.cluster_registration_token.insecure_node_command` - (Computed) Insecure node command to execute in a imported k8s cluster (string)
@@ -215,7 +393,7 @@ FEATURES:
 * **New Argument:** `rancher2_cluster.rke_config.network.tolerations` - (Optional) Network add-on tolerations (list)
 * **New Argument:** `rancher2_cluster.rke_config.dns.options` - (Optional) DNS add-on options (map)
 * **New Argument:** `rancher2_cluster.rke_config.dns.tolerations` - (Optional) DNS add-on tolerations (list)
-* **New Argument:** `rancher2_cluster.oke_config.enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` Just for Rancher v2.5.10 or above (bool)
+* **New Argument:** `rancher2_cluster.oke_config.enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` For Rancher v2.5.10 and above (bool)
 * **New Data Source:** `rancher2_storage_class_v2` - Provides Rancher Storage Class v2 data source. Available at Rancher v2.5.x and above.
 * **New Resource:** `rancher2_storage_class_v2` - Provides Rancher Storage Class v2 resource. Available at Rancher v2.5.x and above.
 
@@ -277,7 +455,7 @@ FEATURES:
 
 * **Deprecated Argument:** `rancher2_cluster.aks_config.tag` - (Deprecated) Use `tags` argument instead as []string
 * **New Argument:** `rancher2_cluster.aks_config.tags` - (Optional/Computed) Tags for Kubernetes cluster. For example, `["foo=bar","bar=foo"]` (list)
-* **New Argument:** `rancher2_cluster.agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. Just for Rancher v2.5.6 and above (list)
+* **New Argument:** `rancher2_cluster.agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. For Rancher v2.5.6 and above (list)
 * **Deprecated provider Argument:** `retries` - (Deprecated) Use timeout instead
 * **New provider Argument:** `timeout` - (Optional) Timeout duration to retry for Rancher connectivity and resource operations. Default: `"120s"`
 * **New Argument:** `rancher2_cluster.oke_config.pod_cidr` - (Optional) A CIDR IP range from which to assign Kubernetes Pod IPs (string)
@@ -303,7 +481,7 @@ FEATURES:
 * **New Argument:** `rancher2_cluster.rke_config.ingress.update_strategy` - (Optional) RKE ingress update strategy (list Maxitems: 1)
 * **New Argument:** `rancher2_cluster.rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
 * **New Argument:** `rancher2_cluster_sync.wait_alerting` - (Optional) Wait until alerting is up and running. Default: `false` (bool)
-* **New Argument:** `rancher2_cluster.gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 or above (list maxitems:1)
+* **New Argument:** `rancher2_cluster.gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 and above (list maxitems:1)
 * **New Argument:** `rancher2_cloud_credential.google_credential_config` - (Optional) Google config for the Cloud Credential (list maxitems:1)
 
 ENHANCEMENTS:
@@ -357,12 +535,12 @@ BUG FIXES:
 
 FEATURES:
 
-* **New Argument:** `rancher2_node_template.node_taints` - (Optional) Node taints. For Rancher v2.3.3 or above (List)
+* **New Argument:** `rancher2_node_template.node_taints` - (Optional) Node taints. For Rancher v2.3.3 and above (List)
 * **New Argument:** `rancher2_cluster.aks_config.load_balancer_sku` - (Optional/Computed) Load balancer type (basic | standard). Must be standard for auto-scaling
-* **New Argument:** `rancher2_cluster.rke_config.services.etc.backup_config.timeout` - (Optional/Computed) Set timeout in seconds for etcd backup. Just for Rancher v2.5.6 and above
+* **New Argument:** `rancher2_cluster.rke_config.services.etc.backup_config.timeout` - (Optional/Computed) Set timeout in seconds for etcd backup. For Rancher v2.5.6 and above
 * **New Data Source:** `rancher2_global_role` - Provides a Rancher V2 Global Role data source
 * **New Resource:** `rancher2_global_role` - Provides a Rancher V2 Global Role resource
-* **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. Just for Rancher v2.5.0 and above
+* **New Resource:** `rancher2_feature` - Provides a Rancher V2 Feature resource. For Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 
@@ -429,8 +607,8 @@ BUG FIXES:
 
 FEATURES:
 
-* **Deprecated Argument:** `rancher2_cluster.eks_import` - (Optional) Use `rancher2_cluster.eks_config_v2` instead. Just for Rancher v2.5.0 and above
-* **New Argument:** `rancher2_cluster.eks_config_v2` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above
+* **Deprecated Argument:** `rancher2_cluster.eks_import` - (Optional) Use `rancher2_cluster.eks_config_v2` instead. For Rancher v2.5.0 and above
+* **New Argument:** `rancher2_cluster.eks_config_v2` - (Optional) EKS cluster import and new management support. For Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 
@@ -459,11 +637,11 @@ FEATURES:
 * **New Argument:** `rancher2_node_template.openstack_config.application_credential_secret` - (Optional) OpenStack application credential secret
 * **New Argument:** `rancher2_notifier.dingtal_config` - (Optional) Dingtalk config for notifier. For Rancher v2.4.0 and above (list maxitems:1)
 * **New Argument:** `rancher2_notifier.msteams_config` - (Optional) MSTeams config for notifier. For Rancher v2.4.0 and above (list maxitems:1)
-* **New Argument:** `rancher2_cluster.eks_import` - (Optional) EKS cluster import and new management support. Just for Rancher v2.5.0 and above
-* **New Argument:** `rancher2_bootstrap.ui_default_landing` - (Optional) Set default ui landing on Rancher bootstrap. Just for Rancher v2.5.0 and above
-* **New Data Source:** `rancher2_catalog_v2` - Support new Rancher catalog V2 datasource. Just for Rancher v2.5.0 and above
-* **New Resource:** `rancher2_catalog_v2` - Support new Rancher catalog V2 resource. Just for Rancher v2.5.0 and above
-* **New Resource:** `rancher2_app_v2` - Support new Rancher app V2 resource. Just for Rancher v2.5.0 and above
+* **New Argument:** `rancher2_cluster.eks_import` - (Optional) EKS cluster import and new management support. For Rancher v2.5.0 and above
+* **New Argument:** `rancher2_bootstrap.ui_default_landing` - (Optional) Set default ui landing on Rancher bootstrap. For Rancher v2.5.0 and above
+* **New Data Source:** `rancher2_catalog_v2` - Support new Rancher catalog V2 datasource. For Rancher v2.5.0 and above
+* **New Resource:** `rancher2_catalog_v2` - Support new Rancher catalog V2 resource. For Rancher v2.5.0 and above
+* **New Resource:** `rancher2_app_v2` - Support new Rancher app V2 resource. For Rancher v2.5.0 and above
 
 ENHANCEMENTS:
 

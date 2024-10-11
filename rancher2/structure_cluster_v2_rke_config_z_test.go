@@ -1,11 +1,11 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	provisionv1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	rkev1 "github.com/rancher/rancher/pkg/apis/rke.cattle.io/v1"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -25,6 +25,7 @@ func init() {
 			"chart_two": "two",
 		},
 	}
+	testClusterV2RKEConfigConf.MachinePoolDefaults = testClusterV2RKEConfigMachinePoolDefaultsConf
 	testClusterV2RKEConfigConf.MachineGlobalConfig = rkev1.GenericMap{
 		Data: map[string]interface{}{
 			"config_one": "one",
@@ -32,6 +33,7 @@ func init() {
 		},
 	}
 	testClusterV2RKEConfigConf.MachineSelectorConfig = testClusterV2RKEConfigSystemConfigConf
+	testClusterV2RKEConfigConf.MachineSelectorFiles = testClusterV2RKEConfigMachineSelectorFilesConf
 	testClusterV2RKEConfigConf.Registries = testClusterV2RKEConfigRegistryConf
 	testClusterV2RKEConfigConf.ETCD = testClusterV2RKEConfigETCDConf
 	testClusterV2RKEConfigConf.RotateCertificates = testClusterV2RKEConfigRotateCertificatesConf
@@ -45,7 +47,9 @@ func init() {
 			"chart_values":            "chart_one: one\nchart_two: two\n",
 			"machine_global_config":   "config_one: one\nconfig_two: two\n",
 			"machine_pools":           testClusterV2RKEConfigMachinePoolsInterface,
+			"machine_pool_defaults":   testClusterV2RKEConfigMachinePoolDefaultsInterface,
 			"machine_selector_config": testClusterV2RKEConfigSystemConfigInterface,
+			"machine_selector_files":  testClusterV2RKEConfigMachineSelectorFilesInterface,
 			"registries":              testClusterV2RKEConfigRegistryInterface,
 			"etcd":                    testClusterV2RKEConfigETCDInterface,
 			"rotate_certificates":     testClusterV2RKEConfigRotateCertificatesInterface,
@@ -69,10 +73,7 @@ func TestFlattenClusterV2RKEConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterV2RKEConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -90,9 +91,6 @@ func TestExpandClusterV2RKEConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterV2RKEConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -33,18 +35,29 @@ func resourceRancher2RoleTemplateCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	roleTemplate := expandRoleTemplate(d)
+	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		roleTemplate := expandRoleTemplate(d)
+		if roleTemplate == nil {
+			log.Printf("[INFO] Expanded role template was empty")
+			return nil
+		}
 
-	log.Printf("[INFO] Creating role template")
+		log.Printf("[INFO] Creating role template")
 
-	newRoleTemplate, err := client.RoleTemplate.Create(roleTemplate)
-	if err != nil {
-		return err
-	}
+		newRoleTemplate, err := client.RoleTemplate.Create(roleTemplate)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	d.SetId(newRoleTemplate.ID)
+		d.SetId(newRoleTemplate.ID)
 
-	return resourceRancher2RoleTemplateRead(d, meta)
+		err = resourceRancher2RoleTemplateRead(d, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2RoleTemplateRead(d *schema.ResourceData, meta interface{}) error {
@@ -54,22 +67,23 @@ func resourceRancher2RoleTemplateRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	roleTemplate, err := client.RoleTemplate.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] role template ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		roleTemplate, err := client.RoleTemplate.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] role template ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	err = flattenRoleTemplate(d, roleTemplate)
-	if err != nil {
-		return err
-	}
+		if err = flattenRoleTemplate(d, roleTemplate); err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func resourceRancher2RoleTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -79,40 +93,55 @@ func resourceRancher2RoleTemplateUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	roleTemplate, err := client.RoleTemplate.ByID(d.Id())
-	if err != nil {
-		return err
-	}
+	return resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		roleTemplate, err := client.RoleTemplate.ByID(d.Id())
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	update := map[string]interface{}{
-		"administrative":  d.Get("administrative").(bool),
-		"context":         d.Get("context").(string),
-		"description":     d.Get("description").(string),
-		"external":        d.Get("external").(bool),
-		"hidden":          d.Get("hidden").(bool),
-		"locked":          d.Get("locked").(bool),
-		"name":            d.Get("name").(string),
-		"roleTemplateIds": toArrayString(d.Get("role_template_ids").([]interface{})),
-		"rules":           expandPolicyRules(d.Get("rules").([]interface{})),
-		"annotations":     toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":          toMapString(d.Get("labels").(map[string]interface{})),
-	}
+		update := map[string]interface{}{
+			"administrative":  d.Get("administrative").(bool),
+			"context":         d.Get("context").(string),
+			"description":     d.Get("description").(string),
+			"external":        d.Get("external").(bool),
+			"hidden":          d.Get("hidden").(bool),
+			"locked":          d.Get("locked").(bool),
+			"name":            d.Get("name").(string),
+			"roleTemplateIds": toArrayString(d.Get("role_template_ids").([]interface{})),
+			"rules":           expandPolicyRules(d.Get("rules").([]interface{})),
+			"annotations":     toMapString(d.Get("annotations").(map[string]interface{})),
+			"labels":          toMapString(d.Get("labels").(map[string]interface{})),
+		}
 
-	switch update["context"] {
-	case roleTemplateContextCluster:
-		update["clusterCreatorDefault"] = d.Get("default_role").(bool)
-		update["projectCreatorDefault"] = false
-	case roleTemplateContextProject:
-		update["clusterCreatorDefault"] = false
-		update["projectCreatorDefault"] = d.Get("default_role").(bool)
-	}
+		if update["external"].(bool) {
+			if v, ok := d.Get("external_rules").([]interface{}); ok && len(v) > 0 {
+				update["externalRules"] = expandPolicyRules(v)
+			}
+		} else {
+			update["externalRules"] = nil
+		}
 
-	_, err = client.RoleTemplate.Update(roleTemplate, update)
-	if err != nil {
-		return err
-	}
+		switch update["context"] {
+		case roleTemplateContextCluster:
+			update["clusterCreatorDefault"] = d.Get("default_role").(bool)
+			update["projectCreatorDefault"] = false
+		case roleTemplateContextProject:
+			update["clusterCreatorDefault"] = false
+			update["projectCreatorDefault"] = d.Get("default_role").(bool)
+		}
 
-	return resourceRancher2RoleTemplateRead(d, meta)
+		_, err = client.RoleTemplate.Update(roleTemplate, update)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		err = resourceRancher2RoleTemplateRead(d, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2RoleTemplateDelete(d *schema.ResourceData, meta interface{}) error {
@@ -123,23 +152,25 @@ func resourceRancher2RoleTemplateDelete(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	roleTemplate, err := client.RoleTemplate.ByID(id)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Role template ID %s not found.", id)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if !roleTemplate.Builtin {
-		err = client.RoleTemplate.Delete(roleTemplate)
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		roleTemplate, err := client.RoleTemplate.ByID(id)
 		if err != nil {
-			return fmt.Errorf("Error removing role template: %s", err)
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Role template ID %s not found.", id)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-	}
 
-	d.SetId("")
-	return nil
+		if !roleTemplate.Builtin {
+			err = client.RoleTemplate.Delete(roleTemplate)
+			if err != nil {
+				return resource.NonRetryableError(fmt.Errorf("[ERROR] Error removing role template: %s", err))
+			}
+		}
+
+		d.SetId("")
+		return nil
+	})
 }

@@ -32,7 +32,7 @@ The following arguments are supported:
 * `annotations` - (Optional/Computed) Annotations for cluster role template binding (map)
 * `labels` - (Optional/Computed) Labels for cluster role template binding (map)
 
-**Note** user `user_id | user_principal_id` OR group `group_id | group_principal_id` must be defined
+**Note:** user `user_id | user_principal_id` OR group `group_id | group_principal_id` must be defined
 
 ## Attributes Reference
 

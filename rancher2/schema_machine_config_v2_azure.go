@@ -181,6 +181,30 @@ func machineConfigV2AzureFields() map[string]*schema.Schema {
 			Default:     "docker-machine-vnet",
 			Description: "Azure Virtual Network name to connect the virtual machine (in [resourcegroup:]name format)",
 		},
+		"availability_zone": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "The Availability Zone that the Azure VM should be created in",
+		},
+		"tags": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
+			Description: "Tags to be applied to the Azure VM instance (e.g. key1,value1,key2,value2)",
+		},
+		"use_public_ip_standard_sku": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Use the standard SKU when creating a Public IP for the Azure VM instance",
+		},
+		"accelerated_networking": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Use Accelerated Networking when creating a network interface for the Azure VM",
+		},
 	}
 
 	return s

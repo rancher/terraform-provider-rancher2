@@ -909,14 +909,6 @@ func (c *Config) isClusterConnected(id string) (bool, *managementClient.Cluster,
 	return c.checkClusterCondition(id, clusterConnectedCondition)
 }
 
-func (c *Config) isClusterMonitoringEnabledCondition(id string) (bool, *managementClient.Cluster, error) {
-	return c.checkClusterCondition(id, clusterMonitoringEnabledCondition)
-}
-
-func (c *Config) isClusterAlertingEnabledCondition(id string) (bool, *managementClient.Cluster, error) {
-	return c.checkClusterCondition(id, clusterAlertingEnabledCondition)
-}
-
 func (c *Config) ClusterExist(id string) error {
 	_, err := c.GetClusterByID(id)
 	if err != nil {
@@ -1834,46 +1826,4 @@ func (c *Config) DeleteCertificate(cert interface{}) error {
 	default:
 		return fmt.Errorf("[ERROR] Certificate type %s isn't supported", t)
 	}
-}
-
-func (c *Config) GetRecipientByNotifier(id string) (*managementClient.Recipient, error) {
-	if len(id) == 0 {
-		return nil, fmt.Errorf("[ERROR] Notifier ID can't be nil")
-	}
-
-	client, err := c.ManagementClient()
-	if err != nil {
-		return nil, err
-	}
-
-	notifier, err := client.Notifier.ByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	out := &managementClient.Recipient{}
-
-	out.NotifierID = notifier.ID
-	if notifier.DingtalkConfig != nil {
-		out.NotifierType = recipientTypeDingtalk
-	} else if notifier.MSTeamsConfig != nil {
-		out.NotifierType = recipientTypeMsTeams
-	} else if notifier.PagerdutyConfig != nil {
-		out.NotifierType = recipientTypePagerduty
-		out.Recipient = notifier.PagerdutyConfig.ServiceKey
-	} else if notifier.SlackConfig != nil {
-		out.NotifierType = recipientTypeSlack
-		out.Recipient = notifier.SlackConfig.DefaultRecipient
-	} else if notifier.SMTPConfig != nil {
-		out.NotifierType = recipientTypeSMTP
-		out.Recipient = notifier.SMTPConfig.DefaultRecipient
-	} else if notifier.WebhookConfig != nil {
-		out.NotifierType = recipientTypeWebhook
-		out.Recipient = notifier.WebhookConfig.URL
-	} else if notifier.WechatConfig != nil {
-		out.NotifierType = recipientTypeWechat
-		out.Recipient = notifier.WechatConfig.DefaultRecipient
-	}
-
-	return out, nil
 }

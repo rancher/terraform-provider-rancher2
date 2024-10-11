@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -39,12 +38,12 @@ func resourceRancher2Cluster() *schema.Resource {
 			return nil
 		},
 		Schema:        clusterFields(),
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceRancher2ClusterResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: resourceRancher2ClusterStateUpgradeV0,
-				Version: 0,
+				Version: 1,
 			},
 		},
 		// Setting default timeouts to be liberal in order to accommodate managed Kubernetes providers like EKS, GKE, and AKS
@@ -104,6 +103,11 @@ func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta
 												}
 											}
 										}
+										if admissionConfig, ok := kubeAPI["admission_configuration"].(map[string]interface{}); ok {
+											newValue := []map[string]interface{}{}
+											newValue = append(newValue, admissionConfig)
+											rawState["rke_config"].([]interface{})[i1].(map[string]interface{})["services"].([]interface{})[i2].(map[string]interface{})["kube_api"].([]interface{})[i3].(map[string]interface{})["admission_configuration"] = newValue
+										}
 									}
 								}
 							}
@@ -129,20 +133,22 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[INFO] Creating Cluster %s", cluster.Name)
 
-	expectedState := "active"
+	expectedState := []string{"active"}
 
 	if cluster.Driver == clusterDriverImported || (cluster.Driver == clusterDriverEKSV2 && cluster.EKSConfig.Imported) {
-		expectedState = "pending"
+		expectedState = append(expectedState, "pending")
 	}
 
 	if cluster.Driver == clusterDriverRKE || cluster.Driver == clusterDriverK3S || cluster.Driver == clusterDriverRKE2 {
-		expectedState = "provisioning"
+		expectedState = append(expectedState, "provisioning")
 	}
 
 	// Creating cluster with monitoring disabled
-	cluster.EnableClusterMonitoring = false
 	newCluster := &Cluster{}
 	if cluster.EKSConfig != nil && !cluster.EKSConfig.Imported {
+		if !checkClusterEKSConfigV2NodeGroupsDesiredSize(cluster) {
+			return fmt.Errorf("[ERROR] can't create %s EKS cluster with node group desired_size = 0. desired_size must be >=1. After initial provisioning, desired_size may be scaled down to 0 at any time", cluster.Name)
+		}
 		clusterStr, _ := interfaceToJSON(cluster)
 		clusterMap, _ := jsonToMapInterface(clusterStr)
 		clusterMap["eksConfig"] = fixClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}), structToMap(cluster.EKSConfig))
@@ -159,12 +165,11 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	newCluster.EnableClusterMonitoring = d.Get("enable_cluster_monitoring").(bool)
 	d.SetId(newCluster.ID)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{expectedState},
+		Target:     expectedState,
 		Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
@@ -173,39 +178,6 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be created: %s", newCluster.ID, waitErr)
-	}
-
-	monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
-	if newCluster.EnableClusterMonitoring {
-		if len(newCluster.Actions[monitoringActionEnable]) == 0 {
-			err = client.APIBaseClient.ByID(managementClient.ClusterType, newCluster.ID, newCluster)
-			if err != nil {
-				return err
-			}
-		}
-		clusterResource := &norman.Resource{
-			ID:      newCluster.ID,
-			Type:    newCluster.Type,
-			Links:   newCluster.Links,
-			Actions: newCluster.Actions,
-		}
-		// Retry enabling monitoring until timeout if got apierr 500 https://github.com/rancher/rancher/issues/30188
-		ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
-		defer cancel()
-		for {
-			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
-			if err == nil {
-				return resourceRancher2ClusterRead(d, meta)
-			}
-			if !IsServerError(err) {
-				return err
-			}
-			select {
-			case <-time.After(rancher2RetriesWait * time.Second):
-			case <-ctx.Done():
-				break
-			}
-		}
 	}
 
 	return resourceRancher2ClusterRead(d, meta)
@@ -219,43 +191,45 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	cluster := &Cluster{}
-	err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Cluster ID %s not found.", cluster.ID)
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
-	if err != nil && !IsForbidden(err) {
-		return err
-	}
-
-	defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
-	if err != nil && !IsForbidden(err) {
-		return err
-	}
-
-	kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
-	if err != nil && !IsForbidden(err) {
-		return err
-	}
-
-	var monitoringInput *managementClient.MonitoringInput
-	if len(cluster.Annotations[monitoringInputAnnotation]) > 0 {
-		monitoringInput = &managementClient.MonitoringInput{}
-		err = jsonToInterface(cluster.Annotations[monitoringInputAnnotation], monitoringInput)
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		cluster := &Cluster{}
+		err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
 		if err != nil {
-			return err
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cluster ID %s not found.", cluster.ID)
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
 
-	}
+		clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
+		if err != nil && !IsForbidden(err) {
+			return resource.NonRetryableError(err)
+		}
 
-	return flattenCluster(d, cluster, clusterRegistrationToken, kubeConfig, defaultProjectID, systemProjectID, monitoringInput)
+		defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
+		if err != nil && !IsForbidden(err) {
+			return resource.NonRetryableError(err)
+		}
+
+		kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
+		if err != nil && !IsForbidden(err) {
+			return resource.NonRetryableError(err)
+		}
+
+		if err = flattenCluster(
+			d,
+			cluster,
+			clusterRegistrationToken,
+			kubeConfig,
+			defaultProjectID,
+			systemProjectID); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -273,28 +247,32 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	enableNetworkPolicy := d.Get("enable_network_policy").(bool)
-	update := map[string]interface{}{
-		"name":                               d.Get("name").(string),
-		"agentEnvVars":                       expandEnvVars(d.Get("agent_env_vars").([]interface{})),
-		"description":                        d.Get("description").(string),
-		"defaultPodSecurityPolicyTemplateId": d.Get("default_pod_security_policy_template_id").(string),
-		"desiredAgentImage":                  d.Get("desired_agent_image").(string),
-		"desiredAuthImage":                   d.Get("desired_auth_image").(string),
-		"dockerRootDir":                      d.Get("docker_root_dir").(string),
-		"fleetWorkspaceName":                 d.Get("fleet_workspace_name").(string),
-		"enableClusterAlerting":              d.Get("enable_cluster_alerting").(bool),
-		"enableClusterMonitoring":            d.Get("enable_cluster_monitoring").(bool),
-		"enableNetworkPolicy":                &enableNetworkPolicy,
-		"istioEnabled":                       d.Get("enable_cluster_istio").(bool),
-		"localClusterAuthEndpoint":           expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
-		"scheduledClusterScan":               expandScheduledClusterScan(d.Get("scheduled_cluster_scan").([]interface{})),
-		"annotations":                        toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":                             toMapString(d.Get("labels").(map[string]interface{})),
+
+	clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("cluster_agent_deployment_customization").([]interface{}))
+	if err != nil {
+		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
+	}
+	fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("fleet_agent_deployment_customization").([]interface{}))
+	if err != nil {
+		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
 	}
 
-	// cluster_monitoring is not updated here. Setting old `enable_cluster_monitoring` value if it was updated
-	if d.HasChange("enable_cluster_monitoring") {
-		update["enableClusterMonitoring"] = !d.Get("enable_cluster_monitoring").(bool)
+	update := map[string]interface{}{
+		"name":                                d.Get("name").(string),
+		"agentEnvVars":                        expandEnvVars(d.Get("agent_env_vars").([]interface{})),
+		"clusterAgentDeploymentCustomization": clusterAgentDeploymentCustomization,
+		"fleetAgentDeploymentCustomization":   fleetAgentDeploymentCustomization,
+		"description":                         d.Get("description").(string),
+		"defaultPodSecurityAdmissionConfigurationTemplateName": d.Get("default_pod_security_admission_configuration_template_name").(string),
+		"desiredAgentImage":        d.Get("desired_agent_image").(string),
+		"desiredAuthImage":         d.Get("desired_auth_image").(string),
+		"dockerRootDir":            d.Get("docker_root_dir").(string),
+		"fleetWorkspaceName":       d.Get("fleet_workspace_name").(string),
+		"enableNetworkPolicy":      &enableNetworkPolicy,
+		"istioEnabled":             d.Get("enable_cluster_istio").(bool),
+		"localClusterAuthEndpoint": expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
+		"annotations":              toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	if clusterTemplateID, ok := d.Get("cluster_template_id").(string); ok && len(clusterTemplateID) > 0 {
@@ -358,93 +336,46 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		update["rke2Config"] = expandClusterRKE2Config(d.Get("rke2_config").([]interface{}))
 	}
 
-	newCluster := &Cluster{}
-	if replace {
-		err = client.APIBaseClient.Replace(managementClient.ClusterType, cluster, update, newCluster)
-	} else {
-		err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
-	}
-	if err != nil {
-		return err
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"active", "provisioning", "pending", "updating", "upgrading"},
-		Target:     []string{"active", "provisioning", "pending"},
-		Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
-		Delay:      1 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-	_, waitErr := stateConf.WaitForState()
-	if waitErr != nil {
-		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr)
-	}
-
-	// cluster_monitoring is updated here
-	if d.HasChange("enable_cluster_monitoring") || d.HasChange("cluster_monitoring_input") {
-		clusterResource := &norman.Resource{
-			ID:      newCluster.ID,
-			Type:    newCluster.Type,
-			Links:   newCluster.Links,
-			Actions: newCluster.Actions,
+	// update the cluster; retry til timeout or non retryable error is returned. If api 500 error is received,
+	// retry to see if update will go through
+	return resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		newCluster := &Cluster{}
+		if replace {
+			err = client.APIBaseClient.Replace(managementClient.ClusterType, cluster, update, newCluster)
+		} else {
+			err = client.APIBaseClient.Update(managementClient.ClusterType, cluster, update, newCluster)
 		}
-		enableMonitoring := d.Get("enable_cluster_monitoring").(bool)
-		if enableMonitoring {
-			monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
-			if len(newCluster.Actions[monitoringActionEnable]) > 0 {
-				err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
-				if err != nil {
-					return err
-				}
-			} else {
-				monitorVersionChanged := false
-				if d.HasChange("cluster_monitoring_input") {
-					old, new := d.GetChange("cluster_monitoring_input")
-					oldInput := old.([]interface{})
-					oldInputLen := len(oldInput)
-					oldVersion := ""
-					if oldInputLen > 0 {
-						oldRow, oldOK := oldInput[0].(map[string]interface{})
-						if oldOK {
-							oldVersion = oldRow["version"].(string)
-						}
-					}
-					newInput := new.([]interface{})
-					newInputLen := len(newInput)
-					newVersion := ""
-					if newInputLen > 0 {
-						newRow, newOK := newInput[0].(map[string]interface{})
-						if newOK {
-							newVersion = newRow["version"].(string)
-						}
-					}
-					if oldVersion != newVersion {
-						monitorVersionChanged = true
-					}
-				}
-				if monitorVersionChanged && monitoringInput != nil {
-					err = updateClusterMonitoringApps(meta, d.Get("system_project_id").(string), monitoringInput.Version)
-					if err != nil {
-						return err
-					}
-				}
-				err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEdit, clusterResource, monitoringInput, nil)
-				if err != nil {
-					return err
-				}
+		if err != nil {
+			if IsServerError(err) {
+				return resource.RetryableError(err)
 			}
-		} else if len(newCluster.Actions[monitoringActionDisable]) > 0 {
-			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, nil, nil)
-			if err != nil {
-				return err
-			}
+			return resource.NonRetryableError(err)
 		}
-	}
 
-	d.SetId(newCluster.ID)
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"active", "provisioning", "pending", "updating", "upgrading"},
+			Target:     []string{"active", "provisioning", "pending"},
+			Refresh:    clusterStateRefreshFunc(client, newCluster.ID),
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
+			Delay:      1 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		_, waitErr := stateConf.WaitForState()
+		if waitErr != nil {
+			return resource.NonRetryableError(fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr))
+		}
 
-	return resourceRancher2ClusterRead(d, meta)
+		d.SetId(newCluster.ID)
+
+		// read cluster after update. If an error is returned then the read failed and is non retryable, else
+		// it was successful
+		err = resourceRancher2ClusterRead(d, meta)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2ClusterDelete(d *schema.ResourceData, meta interface{}) error {
@@ -501,9 +432,9 @@ func clusterStateRefreshFunc(client *managementClient.Client, clusterID string) 
 			// The IsForbidden check is used in the case the user performing the action does not have the
 			// right to retrieve the full list of clusters. If the user tries to retrieve the cluster that
 			// just got deleted, instead of getting a 404 not found response it will get a 403 forbidden
-			// eventhough it had the right to access the cluster before it was deleted. If we reach this
+			// even though it had the right to access the cluster before it was deleted. If we reach this
 			// code path, it means that the user had the right to access the cluster, delete it, hence
-			// meaning that the delete was successful.
+			// meaning that delete was successful.
 			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
@@ -533,10 +464,11 @@ func findFlattenClusterRegistrationToken(client *managementClient.Client, cluste
 		return []interface{}{}, err
 	}
 
-	return flattenClusterRegistationToken(clusterReg)
+	return flattenClusterRegistrationToken(clusterReg)
 }
 
 func findClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
+	log.Printf("[TRACE] Finding cluster registration token for %s", clusterID)
 	for i := range clusterRegistrationTokenNames {
 		regTokenID := clusterID + ":" + clusterRegistrationTokenNames[i]
 		for retry, retries := 1, 10; retry <= retries; retry++ {
@@ -545,25 +477,36 @@ func findClusterRegistrationToken(client *managementClient.Client, clusterID str
 				if !IsNotFound(err) {
 					return nil, err
 				}
+				log.Printf("[TRACE] Cluster registration token %s not found for %s", regTokenID, clusterID)
 				break
 			}
 			if (len(regToken.Command) > 0 && len(regToken.NodeCommand) > 0) || retry == retries {
+				log.Printf("[INFO] Found existing cluster registration token for %s", clusterID)
 				return regToken, nil
 			}
+			log.Printf("[DEBUG] Sleeping for 3 seconds before checking cluster registration token for %s", clusterID)
 			time.Sleep(3 * time.Second)
 		}
 	}
+	log.Printf("[TRACE] Cluster registration token not found for %s", clusterID)
 	return createClusterRegistrationToken(client, clusterID)
 }
 
 func createClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {
-	regToken, err := expandClusterRegistationToken([]interface{}{}, clusterID)
+	log.Printf("[DEBUG] Creating cluster registration token for %s", clusterID)
+
+	regToken, err := expandClusterRegistrationToken([]interface{}{}, clusterID)
 	if err != nil {
 		return nil, err
 	}
 
 	newRegToken, err := client.ClusterRegistrationToken.Create(regToken)
 	if err != nil {
+		if IsConflict(err) {
+			log.Printf("[INFO] Found existing cluster registration token for %s", clusterID)
+			regTokenID := clusterID + ":" + clusterRegistrationTokenName
+			return client.ClusterRegistrationToken.ByID(regTokenID)
+		}
 		return nil, err
 	}
 
@@ -583,6 +526,7 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("[INFO] Created cluster registration token %s for %s", newRegToken.ID, clusterID)
 	return newRegToken, nil
 }
 
@@ -596,7 +540,7 @@ func isKubeConfigValid(c *Config, config string) (string, bool, error) {
 	}
 	kubeconfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(config))
 	if err != nil {
-		return "", false, fmt.Errorf("Checking Kubeconfig: %v", err)
+		return "", false, fmt.Errorf("checking Kubeconfig: %v", err)
 	}
 	_, err = kubernetes.NewForConfig(kubeconfig)
 	if err != nil {
@@ -609,22 +553,19 @@ func isKubeConfigValid(c *Config, config string) (string, bool, error) {
 func isKubeConfigTokenValid(c *Config, config string) (string, bool, error) {
 	token, err := getTokenFromKubeConfig(config)
 	if err != nil {
-		return "", false, fmt.Errorf("Getting Kubeconfig token: %v", err)
+		return "", false, fmt.Errorf("getting Kubeconfig token: %v", err)
 	}
 	isValid, err := isTokenValid(c, splitTokenID(token))
 	if err != nil {
-		return "", false, fmt.Errorf("Checking Kubeconfig token: %v", err)
+		return "", false, fmt.Errorf("checking Kubeconfig token: %v", err)
 	}
 	return token, isValid, nil
 }
 
-func replaceKubeConfigToken(c *Config, config, token string) (string, error) {
-	if len(token) == 0 {
-		return config, nil
-	}
+func replaceKubeConfigToken(c *Config, config string) (string, error) {
 	kubeconfig, err := getObjFromKubeConfig(config)
 	if err != nil {
-		return "", fmt.Errorf("Getting K8s config object: %v", err)
+		return "", fmt.Errorf("getting K8s config object: %v", err)
 	}
 	if kubeconfig == nil || kubeconfig.AuthInfos == nil || len(kubeconfig.AuthInfos) == 0 {
 		return config, nil
@@ -632,20 +573,24 @@ func replaceKubeConfigToken(c *Config, config, token string) (string, error) {
 
 	client, err := c.ManagementClient()
 	if err != nil {
-		return "", fmt.Errorf("Replacing cluster Kubeconfig token: %v", err)
+		return "", fmt.Errorf("replacing cluster Kubeconfig token: %v", err)
 	}
-	removeToken, err := client.Token.ByID(splitTokenID(kubeconfig.AuthInfos[0].AuthInfo.Token))
-	if err != nil {
+
+	// if cached token is corrupt, ByID will fail and the token can't be
+	// retrieved or cleaned up
+	currentToken, err := client.Token.ByID(splitTokenID(kubeconfig.AuthInfos[0].AuthInfo.Token))
+	if err != nil || currentToken.Expired {
 		if !IsNotFound(err) && !IsForbidden(err) {
 			return "", err
 		}
+		// client can't find the token or token has expired, so create
+		// a new one
+		currentToken, err = client.Token.Create(currentToken)
+		if err != nil {
+			return "", fmt.Errorf("error creating Token: %s", err)
+		}
 	}
-
-	err = client.Token.Delete(removeToken)
-	if err != nil {
-		return "", fmt.Errorf("Error removing Token: %s", err)
-	}
-	kubeconfig.AuthInfos[0].AuthInfo.Token = token
+	kubeconfig.AuthInfos[0].AuthInfo.Token = currentToken.Token
 	return getKubeConfigFromObj(kubeconfig)
 }
 
@@ -653,17 +598,29 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 	action := "generateKubeconfig"
 	cluster := &Cluster{}
 
-	token, kubeValid, err := isKubeConfigValid(c, origconfig)
-	if err != nil {
-		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
-	}
-	if kubeValid {
-		return &managementClient.GenerateKubeConfigOutput{Config: origconfig}, nil
+	// kubeconfig already exists in the cache
+	if len(origconfig) > 0 {
+		token, kubeValid, err := isKubeConfigValid(c, origconfig)
+		if err != nil {
+			return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
+		}
+		if kubeValid {
+			return &managementClient.GenerateKubeConfigOutput{Config: origconfig}, nil
+		} else if len(token) == 0 {
+			// if token is zero length, token is not valid or expired so replace it
+			// in the cached kubeconfig
+			newConfig, err := replaceKubeConfigToken(c, origconfig)
+			if err != nil {
+				return nil, err
+			}
+			return &managementClient.GenerateKubeConfigOutput{Config: newConfig}, nil
+		}
 	}
 
+	// kubeconfig is not cached or invalid for other reasons, download a new one
 	client, err := c.ManagementClient()
 	if err != nil {
-		return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+		return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), c.Timeout)
@@ -672,7 +629,7 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 		err = client.APIBaseClient.ByID(managementClient.ClusterType, id, cluster)
 		if err != nil {
 			if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
-				return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+				return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
 			}
 		} else if len(cluster.Actions[action]) > 0 {
 			isRancher26, err := c.IsRancherVersionGreaterThanOrEqual("2.6.0")
@@ -694,17 +651,12 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 			}
 			err = client.APIBaseClient.Action(managementClient.ClusterType, action, clusterResource, nil, kubeConfig)
 			if err == nil {
-				if isRancher26 && len(token) > 0 {
-					newConfig, err := replaceKubeConfigToken(c, kubeConfig.Config, token)
-					if err != nil {
-						return nil, err
-					}
-					kubeConfig.Config = newConfig
-				}
 				return kubeConfig, nil
 			}
-			if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
-				return nil, fmt.Errorf("Getting cluster Kubeconfig: %v", err)
+			if err != nil {
+				if !IsNotFound(err) && !IsForbidden(err) && !IsServiceUnavailableError(err) {
+					return nil, fmt.Errorf("getting cluster Kubeconfig: %w", err)
+				}
 			}
 		}
 		select {
@@ -713,39 +665,4 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 			return nil, fmt.Errorf("Timeout getting cluster Kubeconfig: %v", err)
 		}
 	}
-}
-
-func updateClusterMonitoringApps(meta interface{}, systemProjectID, version string) error {
-	cliProject, err := meta.(*Config).ProjectClient(systemProjectID)
-	if err != nil {
-		return err
-	}
-
-	filters := map[string]interface{}{
-		"targetNamespace": clusterMonitoringV1Namespace,
-	}
-
-	listOpts := NewListOpts(filters)
-
-	apps, err := cliProject.App.List(listOpts)
-	if err != nil {
-		return err
-	}
-
-	for _, a := range apps.Data {
-		if a.Name == "cluster-monitoring" || a.Name == "monitoring-operator" {
-			externalID := updateVersionExternalID(a.ExternalID, version)
-			upgrade := &projectClient.AppUpgradeConfig{
-				Answers:      a.Answers,
-				ExternalID:   externalID,
-				ForceUpgrade: true,
-			}
-
-			err = cliProject.App.ActionUpgrade(&a, upgrade)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }

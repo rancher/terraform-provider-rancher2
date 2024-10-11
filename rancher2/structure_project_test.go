@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -118,19 +119,15 @@ func init() {
 		Name:                          "test",
 		ContainerDefaultResourceLimit: testProjectContainerResourceLimitConf,
 		Description:                   "description",
-		EnableProjectMonitoring:       true,
-		PodSecurityPolicyTemplateName: "pod_security_policy_template_id",
 		ResourceQuota:                 testProjectResourceQuotaConf,
 		NamespaceDefaultResourceQuota: testProjectNamespaceResourceQuotaConf,
 	}
 	testProjectInterface = map[string]interface{}{
-		"cluster_id":                      "cluster-test",
-		"name":                            "test",
-		"container_resource_limit":        testProjectContainerResourceLimitInterface,
-		"description":                     "description",
-		"enable_project_monitoring":       true,
-		"pod_security_policy_template_id": "pod_security_policy_template_id",
-		"resource_quota":                  testProjectResourceQuotaInterface,
+		"cluster_id":               "cluster-test",
+		"name":                     "test",
+		"container_resource_limit": testProjectContainerResourceLimitInterface,
+		"description":              "description",
+		"resource_quota":           testProjectResourceQuotaInterface,
 	}
 }
 
@@ -148,10 +145,7 @@ func TestFlattenProjectContainerResourceLimit(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenProjectContainerResourceLimit(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -169,10 +163,7 @@ func TestFlattenProjectResourceQuotaLimit(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenProjectResourceQuotaLimit(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -192,10 +183,7 @@ func TestFlattenProjectResourceQuota(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenProjectResourceQuota(tc.Input1, tc.Input2)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -213,16 +201,16 @@ func TestFlattenProject(t *testing.T) {
 
 	for _, tc := range cases {
 		output := schema.TestResourceDataRaw(t, projectFields(), map[string]interface{}{})
-		err := flattenProject(output, tc.Input, nil)
+		err := flattenProject(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				expectedOutput, output)
 		}
 	}
@@ -243,7 +231,7 @@ func TestExpandProjectContainerResourceLimit(t *testing.T) {
 	for _, tc := range cases {
 		output := expandProjectContainerResourceLimit(tc.Input)
 		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven: %#v", tc.ExpectedOutput, output)
+			assert.FailNow(t, "Unexpected output from expander.\nExpected: %#v\nGiven: %#v", tc.ExpectedOutput, output)
 		}
 	}
 }
@@ -262,10 +250,7 @@ func TestExpandProjectResourceQuotaLimit(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandProjectResourceQuotaLimit(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -286,11 +271,11 @@ func TestExpandProjectResourceQuota(t *testing.T) {
 	for _, tc := range cases {
 		output1, output2 := expandProjectResourceQuota(tc.Input)
 		if !reflect.DeepEqual(output1, tc.ExpectedOutput1) {
-			t.Fatalf("Unexpected output from expander on project quota.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from expander on project quota.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput1, output1)
 		}
 		if !reflect.DeepEqual(output2, tc.ExpectedOutput2) {
-			t.Fatalf("Unexpected output from expander on namespace quouta.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from expander on namespace quouta.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput2, output2)
 		}
 	}
@@ -311,9 +296,6 @@ func TestExpandProject(t *testing.T) {
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, projectFields(), tc.Input)
 		output := expandProject(inputResourceData)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

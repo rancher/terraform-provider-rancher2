@@ -60,8 +60,8 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 		obj["default_cluster_role_for_project_members"] = in.DefaultClusterRoleForProjectMembers
 	}
 
-	if len(in.DefaultPodSecurityPolicyTemplateID) > 0 {
-		obj["default_pod_security_policy_template_id"] = in.DefaultPodSecurityPolicyTemplateID
+	if len(in.DefaultPodSecurityAdmissionConfigurationTemplateName) > 0 {
+		obj["default_pod_security_admission_configuration_template_name"] = in.DefaultPodSecurityAdmissionConfigurationTemplateName
 	}
 
 	if len(in.DesiredAgentImage) > 0 {
@@ -76,8 +76,6 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 		obj["docker_root_dir"] = in.DockerRootDir
 	}
 
-	obj["enable_cluster_alerting"] = in.EnableClusterAlerting
-	obj["enable_cluster_monitoring"] = in.EnableClusterMonitoring
 	obj["enable_network_policy"] = *in.EnableNetworkPolicy
 
 	if in.RancherKubernetesEngineConfig != nil {
@@ -90,10 +88,6 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 			return []interface{}{}, err
 		}
 		obj["rke_config"] = rkeConfig
-	}
-
-	if in.ScheduledClusterScan != nil {
-		obj["scheduled_cluster_scan"] = flattenScheduledClusterScan(in.ScheduledClusterScan)
 	}
 
 	obj["windows_prefered_cluster"] = in.WindowsPreferedCluster
@@ -296,8 +290,8 @@ func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, 
 		obj.DefaultClusterRoleForProjectMembers = v
 	}
 
-	if v, ok := in["default_pod_security_policy_template_id"].(string); ok && len(v) > 0 {
-		obj.DefaultPodSecurityPolicyTemplateID = v
+	if v, ok := in["default_pod_security_admission_configuration_template_name"].(string); ok && len(v) > 0 {
+		obj.DefaultPodSecurityAdmissionConfigurationTemplateName = v
 	}
 
 	if v, ok := in["desired_agent_image"].(string); ok && len(v) > 0 {
@@ -312,14 +306,6 @@ func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, 
 		obj.DockerRootDir = v
 	}
 
-	if v, ok := in["enable_cluster_alerting"].(bool); ok {
-		obj.EnableClusterAlerting = v
-	}
-
-	if v, ok := in["enable_cluster_monitoring"].(bool); ok {
-		obj.EnableClusterMonitoring = v
-	}
-
 	if v, ok := in["enable_network_policy"].(bool); ok {
 		obj.EnableNetworkPolicy = &v
 	}
@@ -330,10 +316,6 @@ func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, 
 			return nil, err
 		}
 		obj.RancherKubernetesEngineConfig = rkeConfig
-	}
-
-	if v, ok := in["scheduled_cluster_scan"].([]interface{}); ok && len(v) > 0 {
-		obj.ScheduledClusterScan = expandScheduledClusterScan(v)
 	}
 
 	if v, ok := in["windows_prefered_cluster"].(bool); ok {

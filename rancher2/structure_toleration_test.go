@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -18,8 +18,8 @@ func init() {
 		{
 			Key:               "key",
 			Value:             "value",
-			Effect:            "recipient",
-			Operator:          "operator",
+			Effect:            "NoSchedule",
+			Operator:          "Equal",
 			TolerationSeconds: &seconds,
 		},
 	}
@@ -27,8 +27,8 @@ func init() {
 		map[string]interface{}{
 			"key":      "key",
 			"value":    "value",
-			"effect":   "recipient",
-			"operator": "operator",
+			"effect":   "NoSchedule",
+			"operator": "Equal",
 			"seconds":  10,
 		},
 	}
@@ -48,10 +48,7 @@ func TestFlattenTolerations(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenTolerations(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -69,9 +66,6 @@ func TestExpandTolerations(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandTolerations(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

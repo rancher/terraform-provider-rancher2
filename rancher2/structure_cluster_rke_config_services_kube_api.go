@@ -179,8 +179,6 @@ func flattenClusterRKEConfigServicesKubeAPI(in *managementClient.KubeAPIService)
 		obj["image"] = in.Image
 	}
 
-	obj["pod_security_policy"] = in.PodSecurityPolicy
-
 	if in.SecretsEncryptionConfig != nil {
 		customConfig, err := flattenClusterRKEConfigServicesKubeAPISecretsEncryptionConfig(in.SecretsEncryptionConfig)
 		if err != nil {
@@ -402,10 +400,6 @@ func expandClusterRKEConfigServicesKubeAPI(p []interface{}) (*managementClient.K
 
 	if v, ok := in["image"].(string); ok && len(v) > 0 {
 		obj.Image = v
-	}
-
-	if v, ok := in["pod_security_policy"].(bool); ok {
-		obj.PodSecurityPolicy = v
 	}
 
 	if v, ok := in["secrets_encryption_config"].([]interface{}); ok && len(v) > 0 {

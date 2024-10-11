@@ -26,8 +26,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
       cluster_auth_endpoint {
         enabled = true
       }
-      enable_cluster_alerting = false
-      enable_cluster_monitoring = true
       enable_network_policy = false
       rke_config {
         ignore_docker_version = true
@@ -67,7 +65,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
           }
           kube_api {
               service_node_port_range = "30000-32767"
-              pod_security_policy = false
               always_pull_images = false
           }
         }
@@ -82,20 +79,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
 	        ignore_daemon_sets = true
 	        timeout = "120"
           }
-        }
-      }
-      scheduled_cluster_scan {
-        enabled = true
-        scan_config {
-          cis_scan_config {
-            debug_master = true
-            debug_worker = true
-            profile = "permissive"
-          }
-        }
-        schedule_config {
-          cron_schedule = "30 * * * *"
-          retention = "24"
         }
       }
     }
@@ -118,8 +101,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
       cluster_auth_endpoint {
         enabled = true
       }
-      enable_cluster_alerting = false
-      enable_cluster_monitoring = true
       enable_network_policy = false
       rke_config {
         ignore_docker_version = true
@@ -159,7 +140,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
           }
           kube_api {
               service_node_port_range = "30000-32767"
-              pod_security_policy = false
               always_pull_images = false
           }
         }
@@ -174,20 +154,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
 	        ignore_daemon_sets = true
 	        timeout = "120"
           }
-        }
-      }
-      scheduled_cluster_scan {
-        enabled = true
-        scan_config {
-          cis_scan_config {
-            debug_master = true
-            debug_worker = true
-            profile = "permissive"
-          }
-        }
-        schedule_config {
-          cron_schedule = "30 * * * *"
-          retention = "24"
         }
       }
     }
@@ -206,19 +172,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
           }
         }
       }
-      scheduled_cluster_scan {
-	    enabled = true
-	    scan_config {
-	      cis_scan_config {
-	        debug_master = true
-	        debug_worker = true
-	      }
-	    }
-	    schedule_config {
-	      cron_schedule = "30 10 * * *"
-	      retention = 5
-	    }
-	  }
     }
   }
   description = "Terraform cluster template acceptance test - updated"
@@ -245,8 +198,6 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "members.0.access_type", "owner"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.network.0.plugin", "canal"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.services.0.etcd.0.retention", "72h"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 			{
@@ -260,8 +211,6 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "members.0.access_type", "read-only"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.1.cluster_config.0.rke_config.0.network.0.plugin", "canal"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.1.cluster_config.0.rke_config.0.services.0.etcd.0.retention", "48h"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.1.cluster_config.0.scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.1.cluster_config.0.scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 10 * * *"),
 				),
 			},
 			{
@@ -275,8 +224,6 @@ func TestAccRancher2ClusterTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "members.0.access_type", "owner"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.network.0.plugin", "canal"),
 					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.rke_config.0.services.0.etcd.0.retention", "72h"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.scan_config.0.cis_scan_config.0.debug_worker", "true"),
-					resource.TestCheckResourceAttr(testAccRancher2ClusterTemplateType+".foo", "template_revisions.0.cluster_config.0.scheduled_cluster_scan.0.schedule_config.0.cron_schedule", "30 * * * *"),
 				),
 			},
 		},

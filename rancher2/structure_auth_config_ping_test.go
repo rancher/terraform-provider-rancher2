@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -27,6 +28,7 @@ func init() {
 		SpCert:              "sp_cert",
 		UIDField:            "uid_field",
 		UserNameField:       "user_name_field",
+		EntityID:            "entity_id_field",
 	}
 	testAuthConfigPingInterface = map[string]interface{}{
 		"name":                  AuthConfigPingName,
@@ -41,6 +43,7 @@ func init() {
 		"sp_cert":               "sp_cert",
 		"uid_field":             "uid_field",
 		"user_name_field":       "user_name_field",
+		"entity_id_field":       "entity_id_field",
 	}
 }
 
@@ -60,14 +63,14 @@ func TestFlattenAuthConfigPing(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, authConfigPingFields(), map[string]interface{}{})
 		err := flattenAuthConfigPing(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, expectedOutput)
 		}
 	}
@@ -89,11 +92,8 @@ func TestExpandAuthConfigPing(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, authConfigPingFields(), tc.Input)
 		output, err := expandAuthConfigPing(inputResourceData)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

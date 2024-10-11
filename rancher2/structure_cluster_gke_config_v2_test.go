@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -269,10 +269,7 @@ func TestFlattenClusterGKEConfigV2ClusterAddons(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterGKEConfigV2ClusterAddons(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -290,10 +287,7 @@ func TestFlattenClusterGKEConfigV2IPAllocationPolicy(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterGKEConfigV2IPAllocationPolicy(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -311,10 +305,7 @@ func TestFlattenClusterGKEConfigV2MasterAuthorizedNetworksConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterGKEConfigV2MasterAuthorizedNetworksConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -332,10 +323,7 @@ func TestFlattenClusterGKEConfigV2NodePoolsConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterGKEConfigV2NodePoolsConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -353,10 +341,7 @@ func TestFlattenClusterGKEConfigV2PrivateClusterConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterGKEConfigV2PrivateClusterConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -374,10 +359,7 @@ func TestFlattenClusterGKEConfigV2(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterGKEConfigV2(tc.Input, tc.ExpectedOutput)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -395,10 +377,7 @@ func TestExpandClusterGKEConfigV2ClusterAddons(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2ClusterAddons(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -416,10 +395,7 @@ func TestExpandClusterGKEConfigV2IPAllocationPolicy(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2IPAllocationPolicy(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -437,10 +413,7 @@ func TestExpandClusterGKEConfigV2MasterAuthorizedNetworksConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2MasterAuthorizedNetworksConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -458,10 +431,7 @@ func TestExpandClusterGKEConfigV2NodePoolsConfig(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2NodePoolsConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -476,13 +446,9 @@ func TestExpandClusterGKEConfigV2PrivateClusterConfig(t *testing.T) {
 			testClusterGKEConfigV2PrivateClusterConfigConf,
 		},
 	}
-
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2PrivateClusterConfig(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -497,12 +463,8 @@ func TestExpandClusterGKEConfigV2(t *testing.T) {
 			testClusterGKEConfigV2Conf,
 		},
 	}
-
 	for _, tc := range cases {
 		output := expandClusterGKEConfigV2(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

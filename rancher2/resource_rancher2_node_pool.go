@@ -74,17 +74,23 @@ func resourceRancher2NodePoolRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	nodePool, err := client.NodePool.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] Node Pool ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		nodePool, err := client.NodePool.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Node Pool ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	return flattenNodePool(d, nodePool)
+		if err = flattenNodePool(d, nodePool); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2NodePoolUpdate(d *schema.ResourceData, meta interface{}) error {

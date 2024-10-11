@@ -70,17 +70,23 @@ func resourceRancher2UserRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	user, err := client.User.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) || IsForbidden(err) {
-			log.Printf("[INFO] User ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		user, err := client.User.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] User ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	return flattenUser(d, user)
+		if err = flattenUser(d, user); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
 
 func resourceRancher2UserUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -102,10 +108,11 @@ func resourceRancher2UserUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	update := map[string]interface{}{
-		"name":        d.Get("name").(string),
-		"enabled":     d.Get("enabled").(bool),
-		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
+		"name":                 d.Get("name").(string),
+		"enabled":              d.Get("enabled").(bool),
+		"must_change_password": d.Get("must_change_password").(bool),
+		"annotations":          toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":               toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newUser, err := client.User.Update(user, update)

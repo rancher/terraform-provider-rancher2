@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -30,15 +31,18 @@ func init() {
 		GroupObjectClass:                "group_object_class",
 		GroupSearchAttribute:            "group_search_attribute",
 		GroupSearchBase:                 "group_search_base",
+		GroupSearchFilter:               "(cn=$SEARCH_STRING)",
 		NestedGroupMembershipEnabled:    true,
 		Port:                            389,
 		TLS:                             true,
+		StartTLS:                        true,
 		UserDisabledBitMask:             0,
 		UserLoginAttribute:              "user_login_attribute",
 		UserMemberAttribute:             "user_member_attribute",
 		UserNameAttribute:               "user_name_attribute",
 		UserObjectClass:                 "user_object_class",
 		UserSearchAttribute:             "user_search_attribute",
+		UserSearchFilter:                "(|(cn=$SEARCH_STRING)(sAMAccountName=$SEARCH_STRING))",
 	}
 	testAuthConfigLdapInterface = map[string]interface{}{
 		"access_mode":                        "access",
@@ -56,15 +60,18 @@ func init() {
 		"group_object_class":                 "group_object_class",
 		"group_search_attribute":             "group_search_attribute",
 		"group_search_base":                  "group_search_base",
+		"group_search_filter":                "(cn=$SEARCH_STRING)",
 		"nested_group_membership_enabled":    true,
 		"port":                               389,
 		"tls":                                true,
+		"start_tls":                          true,
 		"user_disabled_bit_mask":             0,
 		"user_login_attribute":               "user_login_attribute",
 		"user_member_attribute":              "user_member_attribute",
 		"user_name_attribute":                "user_name_attribute",
 		"user_object_class":                  "user_object_class",
 		"user_search_attribute":              "user_search_attribute",
+		"user_search_filter":                 "(|(cn=$SEARCH_STRING)(sAMAccountName=$SEARCH_STRING))",
 	}
 }
 
@@ -84,14 +91,14 @@ func TestFlattenAuthConfigLdap(t *testing.T) {
 		output := schema.TestResourceDataRaw(t, authConfigLdapFields(), map[string]interface{}{})
 		err := flattenAuthConfigLdap(output, tc.Input)
 		if err != nil {
-			t.Fatalf("[ERROR] on flattener: %#v", err)
+			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 		}
 		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
+			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
 				tc.ExpectedOutput, expectedOutput)
 		}
 	}
@@ -113,11 +120,8 @@ func TestExpandAuthConfigLdap(t *testing.T) {
 		inputResourceData := schema.TestResourceDataRaw(t, authConfigLdapFields(), tc.Input)
 		output, err := expandAuthConfigLdap(inputResourceData)
 		if err != nil {
-			t.Fatalf("[ERROR] on expander: %#v", err)
+			assert.FailNow(t, "[ERROR] on expander: %#v", err)
 		}
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

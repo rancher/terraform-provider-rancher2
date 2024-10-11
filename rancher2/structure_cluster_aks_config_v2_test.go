@@ -1,10 +1,10 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -31,6 +31,12 @@ func init() {
 			OsDiskType:          "os_disk_type",
 			OsType:              "os_type",
 			VMSize:              "vm_size",
+			MaxSurge:            "max_surge",
+			NodeLabels: map[string]string{
+				"value1": "one",
+				"value2": "two",
+			},
+			NodeTaints: []string{"test1:NoSchedule", "test2:PreferNoSchedule"},
 		},
 	}
 	testClusterAKSConfigV2NodePoolInterface = []interface{}{
@@ -48,6 +54,12 @@ func init() {
 			"os_disk_type":         "os_disk_type",
 			"os_type":              "os_type",
 			"vm_size":              "vm_size",
+			"max_surge":            "max_surge",
+			"labels": map[string]string{
+				"value1": "one",
+				"value2": "two",
+			},
+			"taints": []string{"test1:NoSchedule", "test2:PreferNoSchedule"},
 		},
 	}
 	testClusterAKSConfigV2Conf = &managementClient.AKSClusterConfigSpec{
@@ -73,6 +85,7 @@ func init() {
 		NetworkPolicy:              newString("network_policy"),
 		NetworkServiceCIDR:         newString("network_service_cidr"),
 		NodePools:                  testClusterAKSConfigV2NodePoolConf,
+		NodeResourceGroup:          newString("node_resource_group"),
 		PrivateCluster:             newTrue(),
 		ResourceGroup:              "resource_group",
 		ResourceLocation:           "resource_location",
@@ -108,6 +121,7 @@ func init() {
 			"network_policy":                "network_policy",
 			"network_service_cidr":          "network_service_cidr",
 			"node_pools":                    testClusterAKSConfigV2NodePoolInterface,
+			"node_resource_group":           "node_resource_group",
 			"private_cluster":               true,
 			"resource_group":                "resource_group",
 			"resource_location":             "resource_location",
@@ -136,10 +150,7 @@ func TestFlattenClusterAKSConfigV2NodePools(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterAKSConfigV2NodePools(tc.Input, tc.ExpectedOutput)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -157,10 +168,7 @@ func TestFlattenClusterAKSConfigV2(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenClusterAKSConfigV2(tc.Input, tc.ExpectedOutput)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -178,10 +186,7 @@ func TestExpandClusterAKSConfigV2NodePools(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterAKSConfigV2NodePools(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }
 
@@ -199,9 +204,6 @@ func TestExpandClusterAKSConfigV2(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandClusterAKSConfigV2(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			t.Fatalf("Unexpected output from expander.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput, output)
-		}
+		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

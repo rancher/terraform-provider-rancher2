@@ -73,22 +73,23 @@ func resourceRancher2GlobalDNSProviderRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	globalDNSProvider, err := client.GlobalDnsProvider.ByID(d.Id())
-	if err != nil {
-		if IsNotFound(err) {
-			log.Printf("[INFO] Global DNS Provider ID %s not found.", d.Id())
-			d.SetId("")
-			return nil
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		globalDNSProvider, err := client.GlobalDnsProvider.ByID(d.Id())
+		if err != nil {
+			if IsNotFound(err) {
+				log.Printf("[INFO] Global DNS Provider ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
 		}
-		return err
-	}
 
-	err = flattenGlobalDNSProvider(d, globalDNSProvider)
-	if err != nil {
-		return err
-	}
+		if err = flattenGlobalDNSProvider(d, globalDNSProvider); err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func resourceRancher2GlobalDNSProviderUpdate(d *schema.ResourceData, meta interface{}) error {

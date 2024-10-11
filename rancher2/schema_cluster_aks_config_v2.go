@@ -89,6 +89,26 @@ func clusterAKSConfigV2NodePoolsFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "The AKS node pool vm size",
 		},
+		"max_surge": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The AKS node pool max surge",
+		},
+		"labels": {
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Computed:    true,
+			Description: "The AKS node pool labels",
+		},
+		"taints": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "The AKS node pool taints",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 	}
 
 	return s
@@ -236,6 +256,12 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterAKSConfigV2NodePoolsFields(),
 			},
+		},
+		"node_resource_group": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "The AKS node resource group name",
 		},
 		"private_cluster": {
 			Type:        schema.TypeBool,

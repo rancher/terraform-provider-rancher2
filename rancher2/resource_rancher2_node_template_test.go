@@ -101,10 +101,35 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
   harvester_config {
     cpu_count = "2"
     memory_size = "4"
-	image_name = "foo"
-	network_name = "test-net"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "foo",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "test-net"
+        }]
+    }
+    EOF
 	ssh_user = "ubuntu"
 	vm_namespace = "test"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 `
@@ -116,10 +141,35 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-harvester" {
   harvester_config {
     cpu_count = "4"
     memory_size = "8"
-	image_name = "foo"
-	network_name = "test-net"
+    disk_info = <<EOF
+    {
+        "disks": [{
+            "imageName": "foo",
+            "size": 40,
+            "bootOrder": 1
+        }]
+    }
+    EOF
+    network_info = <<EOF
+    {
+        "interfaces": [{
+            "networkName": "test-net"
+        }]
+    }
+    EOF
 	ssh_user = "ubuntu"
 	vm_namespace = "test"
+    user_data = <<EOF
+    package_update: true
+    packages:
+      - qemu-guest-agent
+      - iptables
+    runcmd:
+      - - systemctl
+        - enable
+        - '--now'
+        - qemu-guest-agent.service
+    EOF
   }
 }
 `
@@ -217,6 +267,7 @@ resource "` + testAccRancher2NodeTemplateType + `" "foo-vsphere" {
 	cpu_count = "8"
 	disk_size = "20480"
 	pool =  "pool-YYYYYYYY"
+	graceful_shutdown_timeout = "30"
   }
 }
 `
@@ -692,6 +743,7 @@ func TestAccRancher2NodeTemplate_basic_Vsphere(t *testing.T) {
 					resource.TestCheckResourceAttr(name, "vsphere_config.0.cpu_count", "8"),
 					resource.TestCheckResourceAttr(name, "vsphere_config.0.disk_size", "20480"),
 					resource.TestCheckResourceAttr(name, "vsphere_config.0.pool", "pool-YYYYYYYY"),
+					resource.TestCheckResourceAttr(name, "vsphere_config.0.graceful_shutdown_timeout", "30"),
 				),
 			},
 			{

@@ -46,10 +46,10 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 				Computed:    true,
 				Description: "Cluster V2 cloud credential secret name",
 			},
-			"default_pod_security_policy_template_name": {
+			"default_pod_security_admission_configuration_template_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Cluster V2 default pod security policy template name",
+				Description: "Cluster V2 default pod security admission configuration template name",
 			},
 			"default_cluster_role_for_project_members": {
 				Type:        schema.TypeString,
@@ -67,7 +67,7 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 				Elem: &schema.Resource{
-					Schema: clusterRegistationTokenFields(),
+					Schema: clusterRegistrationTokenFields(),
 				},
 			},
 			"kube_config": {

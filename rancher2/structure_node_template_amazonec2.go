@@ -48,10 +48,6 @@ func flattenAmazonec2Config(in *amazonec2Config) []interface{} {
 		obj["instance_type"] = in.InstanceType
 	}
 
-	if len(in.KeypairName) > 0 {
-		obj["keypair_name"] = in.KeypairName
-	}
-
 	if len(in.KmsKey) > 0 {
 		obj["kms_key"] = in.KmsKey
 	}
@@ -186,10 +182,6 @@ func expandAmazonec2Config(p []interface{}) *amazonec2Config {
 
 	if v, ok := in["instance_type"].(string); ok && len(v) > 0 {
 		obj.InstanceType = v
-	}
-
-	if v, ok := in["keypair_name"].(string); ok && len(v) > 0 {
-		obj.KeypairName = v
 	}
 
 	if v, ok := in["kms_key"].(string); ok && len(v) > 0 {
