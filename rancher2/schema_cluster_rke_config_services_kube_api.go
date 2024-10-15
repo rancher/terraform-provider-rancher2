@@ -536,11 +536,6 @@ func clusterRKEConfigServicesKubeAPIFieldsV0() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
-		"pod_security_policy": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-		},
 		"secrets_encryption_config": {
 			Type:     schema.TypeList,
 			MaxItems: 1,
@@ -618,11 +613,6 @@ func clusterRKEConfigServicesKubeAPIFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"pod_security_policy": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
 		},
 		"secrets_encryption_config": {
 			Type:     schema.TypeList,
@@ -702,11 +692,6 @@ func clusterRKEConfigServicesKubeAPIFieldsData() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-		},
-		"pod_security_policy": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
 		},
 		"secrets_encryption_config": {
 			Type:     schema.TypeList,

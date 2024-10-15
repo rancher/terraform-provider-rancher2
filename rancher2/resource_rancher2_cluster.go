@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -145,7 +144,6 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// Creating cluster with monitoring disabled
-	cluster.EnableClusterMonitoring = false
 	newCluster := &Cluster{}
 	if cluster.EKSConfig != nil && !cluster.EKSConfig.Imported {
 		if !checkClusterEKSConfigV2NodeGroupsDesiredSize(cluster) {
@@ -167,7 +165,6 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	newCluster.EnableClusterMonitoring = d.Get("enable_cluster_monitoring").(bool)
 	d.SetId(newCluster.ID)
 
 	stateConf := &resource.StateChangeConf{
@@ -181,39 +178,6 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be created: %s", newCluster.ID, waitErr)
-	}
-
-	monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
-	if newCluster.EnableClusterMonitoring {
-		if len(newCluster.Actions[monitoringActionEnable]) == 0 {
-			err = client.APIBaseClient.ByID(managementClient.ClusterType, newCluster.ID, newCluster)
-			if err != nil {
-				return err
-			}
-		}
-		clusterResource := &norman.Resource{
-			ID:      newCluster.ID,
-			Type:    newCluster.Type,
-			Links:   newCluster.Links,
-			Actions: newCluster.Actions,
-		}
-		// Retry enable monitoring until timeout if got api error 500
-		ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
-		defer cancel()
-		for {
-			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
-			if err == nil {
-				return resourceRancher2ClusterRead(d, meta)
-			}
-			if !IsServerError(err) {
-				return err
-			}
-			select {
-			case <-time.After(rancher2RetriesWait * time.Second):
-			case <-ctx.Done():
-				break
-			}
-		}
 	}
 
 	return resourceRancher2ClusterRead(d, meta)
@@ -254,24 +218,13 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 			return resource.NonRetryableError(err)
 		}
 
-		var monitoringInput *managementClient.MonitoringInput
-		if len(cluster.Annotations[monitoringInputAnnotation]) > 0 {
-			monitoringInput = &managementClient.MonitoringInput{}
-			err = jsonToInterface(cluster.Annotations[monitoringInputAnnotation], monitoringInput)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-		}
-
 		if err = flattenCluster(
 			d,
 			cluster,
 			clusterRegistrationToken,
 			kubeConfig,
 			defaultProjectID,
-			systemProjectID,
-			monitoringInput); err != nil {
+			systemProjectID); err != nil {
 			return resource.NonRetryableError(err)
 		}
 
@@ -310,24 +263,16 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"clusterAgentDeploymentCustomization": clusterAgentDeploymentCustomization,
 		"fleetAgentDeploymentCustomization":   fleetAgentDeploymentCustomization,
 		"description":                         d.Get("description").(string),
-		"defaultPodSecurityPolicyTemplateId":  d.Get("default_pod_security_policy_template_id").(string),
 		"defaultPodSecurityAdmissionConfigurationTemplateName": d.Get("default_pod_security_admission_configuration_template_name").(string),
 		"desiredAgentImage":        d.Get("desired_agent_image").(string),
 		"desiredAuthImage":         d.Get("desired_auth_image").(string),
 		"dockerRootDir":            d.Get("docker_root_dir").(string),
 		"fleetWorkspaceName":       d.Get("fleet_workspace_name").(string),
-		"enableClusterAlerting":    d.Get("enable_cluster_alerting").(bool),
-		"enableClusterMonitoring":  d.Get("enable_cluster_monitoring").(bool),
 		"enableNetworkPolicy":      &enableNetworkPolicy,
 		"istioEnabled":             d.Get("enable_cluster_istio").(bool),
 		"localClusterAuthEndpoint": expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
 		"annotations":              toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
-	}
-
-	// cluster_monitoring is not updated here. Setting old `enable_cluster_monitoring` value if it was updated
-	if d.HasChange("enable_cluster_monitoring") {
-		update["enableClusterMonitoring"] = !d.Get("enable_cluster_monitoring").(bool)
 	}
 
 	if clusterTemplateID, ok := d.Get("cluster_template_id").(string); ok && len(clusterTemplateID) > 0 {
@@ -418,17 +363,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		_, waitErr := stateConf.WaitForState()
 		if waitErr != nil {
 			return resource.NonRetryableError(fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr))
-		}
-
-		// update cluster monitoring if it has changed
-		if d.HasChange("enable_cluster_monitoring") || d.HasChange("cluster_monitoring_input") {
-			err = updateClusterMonitoring(client, d, meta, *newCluster)
-			if err != nil {
-				if IsServerError(err) {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
 		}
 
 		d.SetId(newCluster.ID)
@@ -731,101 +665,4 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 			return nil, fmt.Errorf("Timeout getting cluster Kubeconfig: %v", err)
 		}
 	}
-}
-
-func updateClusterMonitoring(client *managementClient.Client, d *schema.ResourceData, meta interface{}, newCluster Cluster) error {
-	clusterResource := &norman.Resource{
-		ID:      newCluster.ID,
-		Type:    newCluster.Type,
-		Links:   newCluster.Links,
-		Actions: newCluster.Actions,
-	}
-	enableMonitoring := d.Get("enable_cluster_monitoring").(bool)
-
-	if enableMonitoring {
-		monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
-		if len(newCluster.Actions[monitoringActionEnable]) > 0 {
-			err := client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
-			if err != nil {
-				return err
-			}
-		} else {
-			monitorVersionChanged := false
-			if d.HasChange("cluster_monitoring_input") {
-				old, new := d.GetChange("cluster_monitoring_input")
-				oldInput := old.([]interface{})
-				oldInputLen := len(oldInput)
-				oldVersion := ""
-				if oldInputLen > 0 {
-					oldRow, oldOK := oldInput[0].(map[string]interface{})
-					if oldOK {
-						oldVersion = oldRow["version"].(string)
-					}
-				}
-				newInput := new.([]interface{})
-				newInputLen := len(newInput)
-				newVersion := ""
-				if newInputLen > 0 {
-					newRow, newOK := newInput[0].(map[string]interface{})
-					if newOK {
-						newVersion = newRow["version"].(string)
-					}
-				}
-				if oldVersion != newVersion {
-					monitorVersionChanged = true
-				}
-			}
-			if monitorVersionChanged && monitoringInput != nil {
-				err := updateClusterMonitoringApps(meta, d.Get("system_project_id").(string), monitoringInput.Version)
-				if err != nil {
-					return err
-				}
-			}
-			err := client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEdit, clusterResource, monitoringInput, nil)
-			if err != nil {
-				return err
-			}
-		}
-	} else if len(newCluster.Actions[monitoringActionDisable]) > 0 {
-		err := client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, nil, nil)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func updateClusterMonitoringApps(meta interface{}, systemProjectID, version string) error {
-	cliProject, err := meta.(*Config).ProjectClient(systemProjectID)
-	if err != nil {
-		return err
-	}
-
-	filters := map[string]interface{}{
-		"targetNamespace": clusterMonitoringV1Namespace,
-	}
-
-	listOpts := NewListOpts(filters)
-
-	apps, err := cliProject.App.List(listOpts)
-	if err != nil {
-		return err
-	}
-
-	for _, a := range apps.Data {
-		if a.Name == "cluster-monitoring" || a.Name == "monitoring-operator" {
-			externalID := updateVersionExternalID(a.ExternalID, version)
-			upgrade := &projectClient.AppUpgradeConfig{
-				Answers:      a.Answers,
-				ExternalID:   externalID,
-				ForceUpgrade: true,
-			}
-
-			err = cliProject.App.ActionUpgrade(&a, upgrade)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }

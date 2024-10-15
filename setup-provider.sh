@@ -28,11 +28,10 @@ PROVIDER=$1
 VERSION=$2
 VERSION_TAG=$(echo $2 | cut -c 2-)
 
-# Install gzip
-
-if ! command -v "gzip" &> /dev/null; then
-  echo "Missing gzip. Installing..."
-  brew install gzip
+# Check for unzip
+if ! command -v "unzip" &> /dev/null; then
+  echo "Missing required tool unzip. unzip can be installed via apt on Linux"
+  exit 1
 fi
 
 # Download binary
@@ -41,7 +40,16 @@ OS_PLATFORM=$(uname -sp | tr '[:upper:] ' '[:lower:]_' | sed 's/x86_64/amd64/' |
 
 DIR=~/.terraform.d/plugins/terraform.local/local/${PROVIDER}/${VERSION_TAG}/${OS_PLATFORM}
 mkdir -p $DIR
-curl -sfL https://github.com/rancher/terraform-provider-${PROVIDER}/releases/download/${VERSION}/terraform-provider-${PROVIDER}_${VERSION_TAG}_${OS_PLATFORM}.zip | gunzip -c - > ${DIR}/terraform-provider-${PROVIDER}
+
+# unzip can't handle files from stdin, so we create a temporary file
+ZIP_FILE=terraform-provider-${PROVIDER}_${VERSION_TAG}_${OS_PLATFORM}.zip
+curl -sfL https://github.com/rancher/terraform-provider-${PROVIDER}/releases/download/${VERSION}/${ZIP_FILE} -o ${ZIP_FILE}
+
+unzip $ZIP_FILE -d ${DIR}
+rm ${ZIP_FILE}
+
+#Note the required 'v' in front of VERSION_TAG
+mv ${DIR}/terraform-provider-${PROVIDER}_v${VERSION_TAG} ${DIR}/terraform-provider-${PROVIDER}
 
 # Mod binary
 chmod +x ${DIR}/terraform-provider-${PROVIDER}

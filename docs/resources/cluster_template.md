@@ -122,12 +122,9 @@ resource "rancher2_cluster_template" "foo" {
 
 * `cluster_auth_endpoint` - (Optional/Computed) Local cluster auth endpoint (list maxitems: 1)
 * `default_cluster_role_for_project_members` - (Optional/Computed) Default cluster role for project members (string)
-* `default_pod_security_policy_template_id` - (Optional/Computed) Default pod security policy template ID (string)
 * `desired_agent_image` - (Optional/Computed) Desired agent image (string)
 * `desired_auth_image` - (Optional/Computed) Desired auth image (string)
 * `docker_root_dir` - (Optional/Computed) Desired auth image (string)
-* `enable_cluster_alerting` - (Optional) Enable built-in cluster alerting. Default: `false` (bool)
-* `enable_cluster_monitoring` - (Optional) Enable built-in cluster monitoring. Default: `false` (bool)
 * `enable_network_policy` - (Optional) Enable project network isolation. Default: `false` (bool)
 * `rke_config` - (Required) Rancher Kubernetes Engine Config (list maxitems: 1)
 * `windows_prefered_cluster` - (Optional) Windows prefered cluster. Default: `false` (bool)

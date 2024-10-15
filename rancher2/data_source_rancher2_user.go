@@ -26,6 +26,10 @@ func dataSourceRancher2User() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"must_change_password": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"is_external": {
 				Type:     schema.TypeBool,
 				Optional: true,

@@ -23,6 +23,11 @@ func userFields() map[string]*schema.Schema {
 			Optional: true,
 			Default:  true,
 		},
+		"must_change_password": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
 		"name": {
 			Type:     schema.TypeString,
 			Optional: true,

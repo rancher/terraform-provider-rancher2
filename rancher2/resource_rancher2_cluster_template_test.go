@@ -26,8 +26,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
       cluster_auth_endpoint {
         enabled = true
       }
-      enable_cluster_alerting = false
-      enable_cluster_monitoring = true
       enable_network_policy = false
       rke_config {
         ignore_docker_version = true
@@ -67,7 +65,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
           }
           kube_api {
               service_node_port_range = "30000-32767"
-              pod_security_policy = false
               always_pull_images = false
           }
         }
@@ -104,8 +101,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
       cluster_auth_endpoint {
         enabled = true
       }
-      enable_cluster_alerting = false
-      enable_cluster_monitoring = true
       enable_network_policy = false
       rke_config {
         ignore_docker_version = true
@@ -145,7 +140,6 @@ resource "` + testAccRancher2ClusterTemplateType + `" "foo" {
           }
           kube_api {
               service_node_port_range = "30000-32767"
-              pod_security_policy = false
               always_pull_images = false
           }
         }

@@ -60,10 +60,6 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 		obj["default_cluster_role_for_project_members"] = in.DefaultClusterRoleForProjectMembers
 	}
 
-	if len(in.DefaultPodSecurityPolicyTemplateID) > 0 {
-		obj["default_pod_security_policy_template_id"] = in.DefaultPodSecurityPolicyTemplateID
-	}
-
 	if len(in.DefaultPodSecurityAdmissionConfigurationTemplateName) > 0 {
 		obj["default_pod_security_admission_configuration_template_name"] = in.DefaultPodSecurityAdmissionConfigurationTemplateName
 	}
@@ -80,8 +76,6 @@ func flattenClusterSpecBase(in *managementClient.ClusterSpecBase, p []interface{
 		obj["docker_root_dir"] = in.DockerRootDir
 	}
 
-	obj["enable_cluster_alerting"] = in.EnableClusterAlerting
-	obj["enable_cluster_monitoring"] = in.EnableClusterMonitoring
 	obj["enable_network_policy"] = *in.EnableNetworkPolicy
 
 	if in.RancherKubernetesEngineConfig != nil {
@@ -296,10 +290,6 @@ func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, 
 		obj.DefaultClusterRoleForProjectMembers = v
 	}
 
-	if v, ok := in["default_pod_security_policy_template_id"].(string); ok && len(v) > 0 {
-		obj.DefaultPodSecurityPolicyTemplateID = v
-	}
-
 	if v, ok := in["default_pod_security_admission_configuration_template_name"].(string); ok && len(v) > 0 {
 		obj.DefaultPodSecurityAdmissionConfigurationTemplateName = v
 	}
@@ -314,14 +304,6 @@ func expandClusterSpecBase(p []interface{}) (*managementClient.ClusterSpecBase, 
 
 	if v, ok := in["docker_root_dir"].(string); ok && len(v) > 0 {
 		obj.DockerRootDir = v
-	}
-
-	if v, ok := in["enable_cluster_alerting"].(bool); ok {
-		obj.EnableClusterAlerting = v
-	}
-
-	if v, ok := in["enable_cluster_monitoring"].(bool); ok {
-		obj.EnableClusterMonitoring = v
 	}
 
 	if v, ok := in["enable_network_policy"].(bool); ok {

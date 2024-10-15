@@ -53,7 +53,7 @@ The following attributes are exported:
 * `non_resource_urls` - (Optional) Policy rule non resource urls (list)
 * `resource_names` - (Optional) Policy rule resource names (list)
 * `resources` - (Optional) Policy rule resources (list)
-* `verbs` - (Optional) Policy rule verbs. `bind`, `create`, `delete`, `deletecollection`, `escalate`, `get`, `impersonate`, `list`, `patch`, `update`, `use`, `view`, `watch`, `own` and `*` values are supported (list)
+* `verbs` - (Optional) Policy rule verbs. `bind`, `create`, `delete`, `deletecollection`, `escalate`, `get`, `impersonate`, `list`, `manage-namespaces`, `patch`, `update`, `updatepsa`, `use`, `view`, `watch`, `own` and `*` values are supported (list)
 
 ## Timeouts
 
