@@ -37,6 +37,7 @@ type vmwarevsphereConfig struct {
 	Hostsystem              string   `json:"hostsystem,omitempty" yaml:"hostsystem,omitempty"`
 	MemorySize              string   `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
 	Network                 []string `json:"network,omitempty" yaml:"network,omitempty"`
+	OS                      string   `json:"os,omitempty" yaml:"os,omitempty"`
 	Password                string   `json:"password,omitempty" yaml:"password,omitempty"`
 	Pool                    string   `json:"pool,omitempty" yaml:"pool,omitempty"`
 	SSHPassword             string   `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
@@ -157,6 +158,12 @@ func vsphereConfigFields() map[string]*schema.Schema {
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
+		},
+		"os": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "linux",
+			Description: "Operating System of the vSphere virtual machines",
 		},
 		"password": {
 			Type:        schema.TypeString,

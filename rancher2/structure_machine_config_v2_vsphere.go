@@ -34,6 +34,7 @@ type machineConfigV2Vmwarevsphere struct {
 	Hostsystem              string   `json:"hostsystem,omitempty" yaml:"hostsystem,omitempty"`
 	MemorySize              string   `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
 	Network                 []string `json:"network,omitempty" yaml:"network,omitempty"`
+	OS                      string   `json:"os,omitempty" yaml:"os,omitempty"`
 	Password                string   `json:"password,omitempty" yaml:"password,omitempty"`
 	Pool                    string   `json:"pool,omitempty" yaml:"pool,omitempty"`
 	SSHPassword             string   `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
@@ -115,6 +116,9 @@ func flattenMachineConfigV2Vmwarevsphere(in *MachineConfigV2Vmwarevsphere) []int
 	}
 	if len(in.Network) > 0 {
 		obj["network"] = toArrayInterface(in.Network)
+	}
+	if len(in.OS) > 0 {
+		obj["os"] = in.OS
 	}
 	if len(in.Password) > 0 {
 		obj["password"] = in.Password
@@ -233,6 +237,9 @@ func expandMachineConfigV2Vmwarevsphere(p []interface{}, source *MachineConfigV2
 	}
 	if v, ok := in["network"].([]interface{}); ok && len(v) > 0 {
 		obj.Network = toArrayString(v)
+	}
+	if v, ok := in["os"].(string); ok && len(v) > 0 {
+		obj.OS = v
 	}
 	if v, ok := in["password"].(string); ok && len(v) > 0 {
 		obj.Password = v
