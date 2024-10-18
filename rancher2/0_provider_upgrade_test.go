@@ -113,10 +113,6 @@ provider "rancher2" {
 ` + testAccRancher2ClusterRoleTemplateBinding + `
 ` + testAccRancher2ClusterTemplateConfig + `
 ` + testAccRancher2EtcdBackup + `
-` + testAccRancher2GlobalDNS + `
-` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
-` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
-` + testAccRancher2GlobalDNSProviderRoute53Config + `
 ` + testAccRancher2GlobalRoleBinding + `
 ` + testAccRancher2MultiClusterApp + `
 ` + testAccRancher2Namespace + `
@@ -154,10 +150,6 @@ provider "rancher2" {
 ` + testAccRancher2ClusterRoleTemplateBinding + `
 ` + testAccRancher2ClusterTemplateConfig + `
 ` + testAccRancher2EtcdBackup + `
-` + testAccRancher2GlobalDNS + `
-` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
-` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
-` + testAccRancher2GlobalDNSProviderRoute53Config + `
 ` + testAccRancher2GlobalRoleBinding + `
 ` + testAccRancher2MultiClusterApp + `
 ` + testAccRancher2Namespace + `
@@ -199,10 +191,6 @@ provider "rancher2" {
 ` + testAccRancher2ClusterTemplateConfig + `
 ` + testAccRancher2EtcdBackup + `
 ` + testAccRancher2FeatureConfig + `
-` + testAccRancher2GlobalDNS + `
-` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
-` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
-` + testAccRancher2GlobalDNSProviderRoute53Config + `
 ` + testAccRancher2GlobalRoleBinding + `
 ` + testAccRancher2MultiClusterApp + `
 ` + testAccRancher2Namespace + `
@@ -248,10 +236,6 @@ provider "rancher2" {
 ` + testAccRancher2ClusterTemplateConfig + `
 ` + testAccRancher2EtcdBackup + `
 ` + testAccRancher2FeatureConfig + `
-` + testAccRancher2GlobalDNS + `
-` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
-` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
-` + testAccRancher2GlobalDNSProviderRoute53Config + `
 ` + testAccRancher2GlobalRoleBinding + `
 ` + testAccRancher2MultiClusterApp + `
 ` + testAccRancher2Namespace + `
