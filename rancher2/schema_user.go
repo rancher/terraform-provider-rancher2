@@ -25,6 +25,7 @@ func userFields() map[string]*schema.Schema {
 		},
 		"must_change_password": {
 			Type:     schema.TypeBool,
+			ForceNew: true, // This makes the attribute immutable after creation
 			Optional: true,
 			Default:  false,
 		},
