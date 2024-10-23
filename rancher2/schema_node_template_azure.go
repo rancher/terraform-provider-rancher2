@@ -104,7 +104,7 @@ func azureConfigFields() map[string]*schema.Schema {
 		"image": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "canonical:UbuntuServer:18.04-LTS:latest",
+			Default:     "canonical:ubuntu-24_04-lts:server-gen1:latest",
 			Description: "Azure virtual machine OS image",
 		},
 		"location": {
@@ -158,7 +158,7 @@ func azureConfigFields() map[string]*schema.Schema {
 		"size": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "Standard_A2",
+			Default:     "Standard_D2_v2",
 			Description: "Size for Azure Virtual Machine",
 		},
 		"ssh_user": {
