@@ -13,8 +13,10 @@ const testAccRancher2CatalogV2Type = "rancher2_catalog_v2"
 
 var (
 	testAccRancher2CatalogV2             string
+	testAccRancher2OCICatalogV2          string
 	testAccRancher2CatalogV2Update       string
 	testAccRancher2CatalogV2Config       string
+	testAccRancher2OCICatalogV2Config    string
 	testAccRancher2CatalogV2UpdateConfig string
 )
 
@@ -35,7 +37,16 @@ resource "` + testAccRancher2CatalogV2Type + `" "foo" {
   git_branch = "master"
 }
  `
+	testAccRancher2OCICatalogV2 = `
+resource "` + testAccRancher2CatalogV2Type + `" "foo" {
+  cluster_id = rancher2_cluster_sync.testacc.cluster_id
+  name = "foo"
+  url = "oci://chartproxy.container-registry.com/docs.projectcalico.org/charts"
+  git_branch = "dev-v2.5"
+}
+`
 	testAccRancher2CatalogV2Config = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2CatalogV2
+	testAccRancher2OCICatalogV2Config = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2OCICatalogV2
 	testAccRancher2CatalogV2UpdateConfig = testAccCheckRancher2ClusterSyncTestacc + testAccRancher2CatalogV2Update
 }
 
@@ -47,6 +58,14 @@ func TestAccRancher2CatalogV2_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRancher2CatalogV2Destroy,
 		Steps: []resource.TestStep{
+			{
+				Config: testAccRancher2OCICatalogV2Config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2CatalogV2Exists(testAccRancher2CatalogV2Type+".foo", catalog),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "name", "foo"),
+					resource.TestCheckResourceAttr(testAccRancher2CatalogV2Type+".foo", "url", "oci://chartproxy.container-registry.com/docs.projectcalico.org/charts"),
+				),
+			},
 			{
 				Config: testAccRancher2CatalogV2Config,
 				Check: resource.ComposeTestCheckFunc(
