@@ -19,6 +19,7 @@ import (
 
 	ghodssyaml "github.com/ghodss/yaml"
 	gover "github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 	"golang.org/x/crypto/bcrypt"
@@ -536,6 +537,57 @@ func toMapInterface(in map[string]string) map[string]interface{} {
 		out[i] = v
 	}
 	return out
+}
+
+func expandExtraArgsArray(vExtraArgsArray *schema.Set) map[string][]string {
+	extraArgsArray := make(map[string][]string, len(vExtraArgsArray.List()))
+
+	if len(vExtraArgsArray.List()) == 0 {
+		return extraArgsArray
+	}
+
+	for _, vExtraArgs := range vExtraArgsArray.List() {
+		mExtraArgs := vExtraArgs.(map[string]interface{})
+
+		if v, ok := mExtraArgs["value"].([]interface{}); ok {
+			value := make([]string, 0, len(v))
+			for _, e := range v {
+				value = append(value, e.(string))
+			}
+			extraArgsArray[mExtraArgs["name"].(string)] = value
+		}
+	}
+
+	return extraArgsArray
+}
+
+func flattenExtraArgsArray(extraArgsArray map[string][]string) *schema.Set {
+	var names []string
+
+	for name := range extraArgsArray {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	var vExtraArgsArray []interface{}
+
+	for _, name := range names {
+		var value []interface{}
+
+		for _, e := range extraArgsArray[name] {
+			value = append(value, e)
+		}
+		sort.Slice(value, func(i, j int) bool { return value[i].(string) < value[j].(string) })
+
+		mExtraArgs := map[string]interface{}{
+			"name":  name,
+			"value": value,
+		}
+
+		vExtraArgsArray = append(vExtraArgsArray, mExtraArgs)
+	}
+
+	return schema.NewSet(clusterRKEConfigServicesExtraArgsArraySchemaSetFunc, vExtraArgsArray)
 }
 
 func jsonToMapInterface(in string) (map[string]interface{}, error) {
