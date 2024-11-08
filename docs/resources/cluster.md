@@ -1216,6 +1216,7 @@ The following attributes are exported:
 * `creation` - (Optional/Computed) Creation option for etcd service (string)
 * `external_urls` - (Optional) External urls for etcd service (list)
 * `extra_args` - (Optional/Computed) Extra arguments for etcd service (map)
+* `extra_args_array` - (Optional/Computed) Extra arguments array for etcd service (list)
 * `extra_binds` - (Optional) Extra binds for etcd service (list)
 * `extra_env` - (Optional) Extra environment for etcd service (list)
 * `gid` - (Optional) Etcd service GID. Default: `0`. For Rancher v2.3.x and above (int)
@@ -1258,6 +1259,7 @@ The following attributes are exported:
 * `audit_log` - (Optional) K8s audit log configuration. (list maxitems: 1)
 * `event_rate_limit` - (Optional) K8s event rate limit configuration. (list maxitems: 1)
 * `extra_args` - (Optional/Computed) Extra arguments for kube API service (map)
+* `extra_args_array` - (Optional/Computed) Extra arguments array for kube API service (list)
 * `extra_binds` - (Optional) Extra binds for kube API service (list)
 * `extra_env` - (Optional) Extra environment for kube API service (list)
 * `image` - (Optional/Computed) Docker image for kube API service (string)
@@ -1379,6 +1381,7 @@ EOF
 
 * `cluster_cidr` - (Optional/Computed) Cluster CIDR option for kube controller service (string)
 * `extra_args` - (Optional/Computed) Extra arguments for kube controller service (map)
+* `extra_args_array` - (Optional/Computed) Extra arguments array for kube controller service (list)
 * `extra_binds` - (Optional) Extra binds for kube controller service (list)
 * `extra_env` - (Optional) Extra environment for kube controller service (list)
 * `image` - (Optional/Computed) Docker image for kube controller service (string)
@@ -1391,6 +1394,7 @@ EOF
 * `cluster_dns_server` - (Optional/Computed) Cluster DNS Server option for kubelet service (string)
 * `cluster_domain` - (Optional/Computed) Cluster Domain option for kubelet service (string)
 * `extra_args` - (Optional/Computed) Extra arguments for kubelet service (map)
+* `extra_args_array` - (Optional/Computed) Extra arguments array for kubelet service (list)
 * `extra_binds` - (Optional) Extra binds for kubelet service (list)
 * `extra_env` - (Optional) Extra environment for kubelet service (list)
 * `fail_swap_on` - (Optional/Computed) Enable or disable failing when swap on is not supported (bool)
@@ -1403,6 +1407,7 @@ EOF
 ###### Arguments
 
 * `extra_args` - (Optional/Computed) Extra arguments for kubeproxy service (map)
+* `extra_args_array` - (Optional/Computed) Extra arguments array for kubeproxy service (list)
 * `extra_binds` - (Optional) Extra binds for kubeproxy service (list)
 * `extra_env` - (Optional) Extra environment for kubeproxy service (list)
 * `image` - (Optional/Computed) Docker image for kubeproxy service (string)
@@ -1412,6 +1417,7 @@ EOF
 ###### Arguments
 
 * `extra_args` - (Optional/Computed) Extra arguments for scheduler service (map)
+* `extra_args_array` - (Optional/Computed) Extra arguments array for scheduler service (list)
 * `extra_binds` - (Optional) Extra binds for scheduler service (list)
 * `extra_env` - (Optional) Extra environment for scheduler service (list)
 * `image` - (Optional/Computed) Docker image for scheduler service (string)

@@ -186,3 +186,26 @@ func clusterRKEConfigServicesFieldsData() map[string]*schema.Schema {
 	}
 	return s
 }
+
+func clusterRKEConfigServicesExtraArgsArrayFields() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"name": {
+			Required: true,
+			Type:     schema.TypeString,
+		},
+		"value": {
+			Type:     schema.TypeList,
+			Required: true,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+	}
+}
+
+func clusterRKEConfigServicesExtraArgsArraySchemaSetFunc(v interface{}) int {
+	resource := &schema.Resource{
+		Schema: clusterRKEConfigServicesExtraArgsArrayFields(),
+	}
+	return schema.HashResource(resource)(v)
+}
