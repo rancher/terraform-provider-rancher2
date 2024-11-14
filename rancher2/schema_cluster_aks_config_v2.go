@@ -2,11 +2,16 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const (
 	clusterAKSV2Kind   = "aksV2"
 	clusterDriverAKSV2 = "AKS"
+)
+
+var (
+	clusterAKSOutboundType = []string{"loadbalancer", "managednatgateway", "userassignednatgateway", "userdefinedrouting"}
 )
 
 //Schemas
@@ -262,6 +267,13 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "The AKS node resource group name",
+		},
+		"outboung_type": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Default:      "loadBalancer",
+			Description:  "The AKS outbound type for the egress traffic",
+			ValidateFunc: validation.StringInSlice(clusterAKSOutboundType, true),
 		},
 		"private_cluster": {
 			Type:        schema.TypeBool,
