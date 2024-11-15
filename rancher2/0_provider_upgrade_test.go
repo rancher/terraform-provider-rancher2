@@ -64,7 +64,6 @@ resource "rancher2_bootstrap" "foo" {
   provider = rancher2.bootstrap
 
   password = "` + testAccRancher2DefaultAdminPass + `"
-  telemetry = true
 }
 provider "rancher2" {
   api_url = rancher2_bootstrap.foo.url
@@ -87,7 +86,6 @@ resource "rancher2_bootstrap" "foo" {
   provider = rancher2.bootstrap
 
   password = "` + testAccRancher2DefaultAdminPass + `"
-  telemetry = true
 }
 provider "rancher2" {
   api_url = rancher2_bootstrap.foo.url
@@ -272,7 +270,6 @@ func TestAccRancher2Upgrade(t *testing.T) {
 					testAccRancher2UpgradeVars(),
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
 				),
 			},
@@ -281,7 +278,6 @@ func TestAccRancher2Upgrade(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
@@ -296,7 +292,6 @@ func TestAccRancher2Upgrade(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
@@ -312,7 +307,6 @@ func TestAccRancher2Upgrade(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
@@ -328,7 +322,6 @@ func TestAccRancher2Upgrade(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
 					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),

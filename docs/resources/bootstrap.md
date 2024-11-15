@@ -9,7 +9,6 @@ Provides a Rancher v2 bootstrap resource. This can be used to bootstrap Rancher 
 This resource bootstraps a Rancher system by performing the following tasks:
 - Updates the default admin password, provided by setting `password` or generating a random one.
 - Sets `server-url` setting, based on `api_url`.
-- Sets `telemetry-opt` setting.
 - Creates a token for admin user with concrete TTL.
 
 **Note:** Starting from Rancher v2.6.0, the Rancher2 installation is setting a random initial admin password by default. To specify the initial password during rancher2 installation, helm chart [`bootstrapPassword`](https://github.com/rancher/rancher/blob/release/v2.6/chart/values.yaml#L157) value for HA installation or docker env variable [`CATTLE_BOOTSTRAP_PASSWORD`](https://github.com/rancher/rancher/blob/release/v2.6/chart/templates/deployment.yaml#L135) for single node installation can be used. To properly use this resource for Rancher v2.6.0 and above, set the `initial_password` argument to the password generated or set during installation.
@@ -32,7 +31,6 @@ provider "rancher2" {
 # Create a new rancher2_bootstrap
 resource "rancher2_bootstrap" "admin" {
   password = "blahblah"
-  telemetry = true
 }
 ```
 
@@ -47,7 +45,6 @@ provider "rancher2" {
 resource "rancher2_bootstrap" "admin" {
   initial_password = "<INSTALL_PASSWORD>"
   password = "blahblah"
-  telemetry = true
 }
 ```
 
@@ -65,7 +62,6 @@ resource "rancher2_bootstrap" "admin" {
   provider = "rancher2.bootstrap"
 
   password = "blahblah"
-  telemetry = true
 }
 ```
 
@@ -75,7 +71,6 @@ The following arguments are supported:
 
 * `initial_password` - (Optional/Computed/Sensitive) Initial password for Admin user. Default: `admin` (string)
 * `password` - (Optional/Computed/Sensitive) Password for Admin user or random generated if empty (string)
-* `telemetry` - (Optional) Send telemetry anonymous data. Default: `false` (bool)
 * `token_ttl` - (Optional) TTL in seconds for generated admin token. Default: `0`  (int)
 * `token_update` - (Optional) Regenerate admin token. Default: `false` (bool)
 * `ui_default_landing` - (Optional) Default UI landing for k8s clusters. Available options: `ember` (cluster manager ui)  and `vue` (cluster explorer ui). Default: `ember` (string)
