@@ -553,6 +553,7 @@ resource "rancher2_cluster" "foo" {
     virtual_network_resource_group = "<virtual-network-resource-group>"
     subnet = "<subnet>"
     node_resource_group = "<node-resource-group>"
+    outbound_type = "loadBalancer"
     node_pools {
       availability_zones = ["1", "2", "3"]
       name = "<nodepool-name-1>"
@@ -1550,6 +1551,7 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `network_policy` - (Optional/Computed) The AKS network policy (string)
 * `network_service_cidr` - (Optional/Computed) The AKS network service cidr (string)
 * `node_resource_group` (Optional/Computed) The AKS node resource group name (string)
+* `outbound_type` (Optional/Computed) The AKS outbound type for the egress traffic (string)
 * `private_cluster` - (Optional/Computed) Is AKS cluster private? (bool)
 * `subnet` - (Optional/Computed) The AKS subnet (string)
 * `tags` - (Optional/Computed) The AKS cluster tags (map)
