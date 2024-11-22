@@ -44,6 +44,9 @@ func flattenVsphereConfig(in *vmwarevsphereConfig) []interface{} {
 	if len(in.DatastoreCluster) > 0 {
 		obj["datastore_cluster"] = in.DatastoreCluster
 	}
+	if len(in.OS) > 0 {
+		obj["os"] = in.OS
+	}
 	if len(in.DiskSize) > 0 {
 		obj["disk_size"] = in.DiskSize
 	}
@@ -152,6 +155,9 @@ func expandVsphereConfig(p []interface{}) *vmwarevsphereConfig {
 	}
 	if v, ok := in["datastore_cluster"].(string); ok && len(v) > 0 {
 		obj.DatastoreCluster = v
+	}
+	if v, ok := in["os"].(string); ok && len(v) > 0 {
+		obj.OS = v
 	}
 	if v, ok := in["disk_size"].(string); ok && len(v) > 0 {
 		obj.DiskSize = v

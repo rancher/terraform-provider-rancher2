@@ -436,6 +436,7 @@ The following attributes are exported:
 * `network` - (Optional) vSphere network where the docker VM will be attached (list)
 * `password` - (Optional/Sensitive) vSphere password. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `pool` - (Optional) vSphere resource pool for docker VM (string)
+* `os` - (Optional) Type of virtual machine OS in vSphere. Default `linux`(string)
 * `ssh_password` - (Optional) If using a non-B2D image you can specify the ssh password. Default `tcuser`. From Rancher v2.3.3 (string)
 * `ssh_port` - (Optional) If using a non-B2D image you can specify the ssh port. Default `22`. From Rancher v2.3.3 (string)
 * `ssh_user` - (Optional) If using a non-B2D image you can specify the ssh user. Default `docker`. From Rancher v2.3.3 (string)

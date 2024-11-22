@@ -145,6 +145,12 @@ func clusterV2RKEConfigMachinePoolFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "range of unhealthy nodes for automated replacement to be allowed",
 		},
+		"machine_os": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "linux",
+			Description: "OS Type in machine pool",
+		},
 		"machine_labels": {
 			Type:        schema.TypeMap,
 			Optional:    true,

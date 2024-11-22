@@ -315,6 +315,7 @@ The following attributes are exported:
 * `memory_size` - (Optional) vSphere size of memory for docker VM (in MB). Default `2048` (string)
 * `network` - (Optional) vSphere network where the docker VM will be attached (list)
 * `pool` - (Optional) vSphere resource pool for docker VM (string)
+* `os` - (Optional) Type of virtual machine OS in vSphere. Default `linux`(string)
 * `ssh_password` - (Optional) If using a non-B2D image you can specify the ssh password. Default `tcuser` (string)
 * `ssh_port` - (Optional) If using a non-B2D image you can specify the ssh port. Default `22` (string)
 * `ssh_user` - (Optional) If using a non-B2D image you can specify the ssh user. Default `docker`. (string)
