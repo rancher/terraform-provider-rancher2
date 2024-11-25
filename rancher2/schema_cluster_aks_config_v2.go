@@ -14,7 +14,7 @@ var (
 	clusterAKSOutboundType = []string{"loadbalancer", "managednatgateway", "userassignednatgateway", "userdefinedrouting"}
 )
 
-//Schemas
+// Schemas
 
 func clusterAKSConfigV2NodePoolsFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
@@ -268,7 +268,7 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "The AKS node resource group name",
 		},
-		"outboung_type": {
+		"outbound_type": {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Default:      "loadBalancer",
