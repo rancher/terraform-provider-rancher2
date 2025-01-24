@@ -60,28 +60,12 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterK3SConfigFields(),
 				},
 			},
-			"eks_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: clusterEKSConfigFields(),
-				},
-			},
 			"eks_config_v2": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterEKSConfigV2Fields(),
-				},
-			},
-			"aks_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: clusterAKSConfigFields(),
 				},
 			},
 			"aks_config_v2": {
@@ -92,28 +76,12 @@ func dataSourceRancher2Cluster() *schema.Resource {
 					Schema: clusterAKSConfigV2Fields(),
 				},
 			},
-			"gke_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: clusterGKEConfigFields(),
-				},
-			},
 			"gke_config_v2": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: clusterGKEConfigV2Fields(),
-				},
-			},
-			"oke_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: clusterOKEConfigFields(),
 				},
 			},
 			"default_project_id": {
