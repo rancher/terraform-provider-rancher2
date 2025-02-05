@@ -1819,6 +1819,7 @@ The following arguments are supported:
 * `preemptible` - (Optional) Enable GKE node config preemptible. Default: `false` (bool)
 * `tags` - (Optional/Computed) The GKE node config tags (List)
 * `taints` - (Optional) The GKE node config taints (List)
+* `service_account` - (Optional) The GKE Service Account to be used by the node VMs (string)
 
 ###### `taints`
 
