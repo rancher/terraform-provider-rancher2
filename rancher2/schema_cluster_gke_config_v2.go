@@ -243,6 +243,11 @@ func clusterGKEConfigV2NodeConfigFields() map[string]*schema.Schema {
 				Schema: clusterGKEConfigV2NodeTaintFields(),
 			},
 		},
+		"service_account": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The GKE node config service account",
+		},
 	}
 
 	return s
