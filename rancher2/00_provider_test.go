@@ -35,7 +35,7 @@ func init() {
 	testAccRancher2AdminPass = testAccRancher2DefaultAdminPass
 	err := testAccCheck()
 	if err != nil {
-		log.Fatalf("failed check %s", err)
+		log.Fatalf("%v", err)
 	}
 }
 
@@ -64,8 +64,14 @@ func testAccCheck() error {
 		secretKey := os.Getenv("RANCHER_SECRET_KEY")
 		caCerts := os.Getenv("RANCHER_CA_CERTS")
 		adminPass := os.Getenv("RANCHER_ADMIN_PASS")
-		insecure := os.Getenv("RANCHER_INSECURE") == "true"
-		bootstrap := os.Getenv("RANCHER_BOOTSTRAP") == "true"
+		insecure := false
+		if os.Getenv("RANCHER_INSECURE") == "true" {
+			insecure = true
+		}
+		bootstrap := false
+		if os.Getenv("RANCHER_BOOTSTRAP") == "true" {
+			bootstrap = true
+		}
 
 		if apiURL == "" {
 			return fmt.Errorf("RANCHER_URL must be set for acceptance tests")
@@ -90,12 +96,12 @@ func testAccCheck() error {
 		if len(tokenKey) > 5 {
 			err := testAccClusterDefaultName(testAccProviderConfig)
 			if err != nil {
-				return fmt.Errorf("failed to test the default cluster name: %w", err)
+				return err
 			}
 
 			testAccRancher2ClusterRKEK8SDefaultVersion, err = testAccProviderConfig.getK8SDefaultVersion()
 			if err != nil {
-				return fmt.Errorf("failed get the default k8s version: %w", err)
+				return err
 			}
 		}
 	}

@@ -38,7 +38,6 @@ func flattenAuthConfigAzureAD(d *schema.ResourceData, in *managementClient.Azure
 	d.Set("rancher_url", in.RancherURL)
 	d.Set("tenant_id", in.TenantID)
 	d.Set("token_endpoint", in.TokenEndpoint)
-	d.Set("group_membership_filter", in.GroupMembershipFilter)
 
 	return nil
 }
@@ -108,10 +107,6 @@ func expandAuthConfigAzureAD(in *schema.ResourceData) (*managementClient.AzureAD
 
 	if v, ok := in.Get("token_endpoint").(string); ok {
 		obj.TokenEndpoint = v
-	}
-
-	if v, ok := in.Get("group_membership_filter").(string); ok {
-		obj.GroupMembershipFilter = v
 	}
 
 	return obj, nil
