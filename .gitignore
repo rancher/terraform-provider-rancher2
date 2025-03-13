@@ -1,13 +1,6 @@
 .idea
-.dapper
 bin/
 build/
 dist/
 */*.swp
-.envrc
-.functions
-.aliases
-.rcs
-.variables
-flake.lock
-flake.nix
+test/data
