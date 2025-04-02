@@ -312,6 +312,35 @@ EOF
 }
 ```
 
+### Creating Rancher v2 RKE cluster with cluster agent scheduling customization. For Custom and Imported clusters provisioned by Rancher v2.11.0 and above.
+
+```hcl
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform cluster with agent customization"
+  rke_config {
+  }
+  cluster_agent_deployment_customization {
+    scheduling_customization {
+      priority_class {
+        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted. 
+        # If omitted, the default of 'PreemptLowerPriority' is used.
+        preemption_policy = "PreemptLowerPriority"
+        # The value cannot be less than negative 1 billion, or greater than 1 billion
+        value = 1000000000
+      }
+      pod_disruption_budget {
+        # min_available and max_unavailable must either be non-negative whole integers, 
+        # or whole number percentages greater than 0 and less than or equal to 100 (e.g. "50%").
+        # You cannot set both min_available and max_unavailable at the same time.
+        min_available = "1"
+        #max_unavailable
+      }
+    }
+  }
+}
+```
+
 ### Creating Rancher v2 RKE cluster with Pod Security Admission Configuration Template (PSACT). For Rancher v2.7.2 and above.
 
 ```hcl
@@ -649,6 +678,7 @@ The following attributes are exported:
 * `append_tolerations` - (Optional) User defined tolerations to append to agent (list)
 * `override_affinity` - (Optional) User defined affinity to override default agent affinity (string)
 * `override_resource_requirements` - (Optional) User defined resource requirements to set on the agent (list)
+* `scheduling_customization` - (Optional) Supported in Rancher 2.11.0 and above. Defines the configuration of a Priority Class and or Pod Disruption Budget. Currently only supported by the `cluster_agent_deployment_customization` field, and requires the `cattle_cluster_agent_scheduling_customization` feature to be enabled.
 
 #### `append_tolerations`
 
@@ -668,6 +698,27 @@ The following attributes are exported:
 * `cpu_request` - (Optional) The minimum CPU required for agent (string)
 * `memory_limit` - (Optional) The maximum memory limit for agent (string)
 * `memory_request` - (Optional) The minimum memory required for agent (string)
+
+#### `scheduling_customization`
+
+#### Arguments
+
+* `pod_disruption_budget` - (Optional, list) The definition of a Pod Disruption Budget deployed for the cluster agent
+* `priority_class` - (Optional, list) The definition of a Priority Class deployed for the cluster agent
+
+#### `pod_disruption_budget`
+
+#### Arguments
+
+* `min_available` - (Optional, string) The minimum number of agent replicas that must be running at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%").  This field cannot be used at the same time as `max_unavailable`.
+* `max_unavailable` - (Optional, string) The maximum number of agent replicas that can be unavailable at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `min_available`.
+
+#### `priority_class`
+
+#### Arguments
+
+* `value` - (Optional, int) The priority value set for the Priority Class. Must be greater than or equal to negative 1 billion, and less than or equal to 1 billion.
+* `preemption_policy` (Optional, string) The preemption policy set for the Priority Class. Must be set to either 'Never', or 'PreemptLowerPriority'
 
 ### `rke_config`
 
