@@ -306,56 +306,6 @@ func testCluster() {
 	testClusterGenerateKubeConfigOutput = &managementClient.GenerateKubeConfigOutput{
 		Config: "kube_config",
 	}
-	testClusterConfAKS = &Cluster{
-		AzureKubernetesServiceConfig: testClusterAKSConfigConf,
-	}
-	testClusterConfAKS.Name = "test"
-	testClusterConfAKS.Description = "description"
-	testClusterConfAKS.Driver = clusterDriverAKS
-	testClusterConfAKS.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfAKS.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
-	testClusterConfAKS.EnableNetworkPolicy = newTrue()
-	testClusterConfAKS.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterInterfaceAKS = map[string]interface{}{
-		"id":                         "id",
-		"name":                       "test",
-		"agent_env_vars":             testClusterEnvVarsInterface,
-		"default_project_id":         "default_project_id",
-		"description":                "description",
-		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy": true,
-		"kube_config":           "kube_config",
-		"driver":                clusterDriverAKS,
-		"aks_config":            testClusterAKSConfigInterface,
-		"system_project_id":     "system_project_id",
-	}
-	testClusterConfEKS = &Cluster{
-		AmazonElasticContainerServiceConfig: testClusterEKSConfigConf,
-	}
-	testClusterConfEKS.Name = "test"
-	testClusterConfEKS.Description = "description"
-	testClusterConfEKS.Driver = clusterDriverEKS
-	testClusterConfEKS.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfEKS.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
-	testClusterConfEKS.EnableNetworkPolicy = newTrue()
-	testClusterConfEKS.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterInterfaceEKS = map[string]interface{}{
-		"id":                         "id",
-		"name":                       "test",
-		"agent_env_vars":             testClusterEnvVarsInterface,
-		"default_project_id":         "default_project_id",
-		"description":                "description",
-		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy": true,
-		"kube_config":           "kube_config",
-		"driver":                clusterDriverEKS,
-		"eks_config":            testClusterEKSConfigInterface,
-		"system_project_id":     "system_project_id",
-	}
 	testClusterConfEKSV2 = &Cluster{}
 	testClusterConfEKSV2.EKSConfig = testClusterEKSConfigV2Conf
 	testClusterConfEKSV2.Name = "test"
@@ -382,31 +332,6 @@ func testCluster() {
 		"kube_config":           "kube_config",
 		"driver":                clusterDriverEKSV2,
 		"eks_config_v2":         testClusterEKSConfigV2Interface,
-		"system_project_id":     "system_project_id",
-	}
-	testClusterConfGKE = &Cluster{
-		GoogleKubernetesEngineConfig: testClusterGKEConfigConf,
-	}
-	testClusterConfGKE.Name = "test"
-	testClusterConfGKE.Description = "description"
-	testClusterConfGKE.Driver = clusterDriverGKE
-	testClusterConfGKE.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfGKE.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
-	testClusterConfGKE.EnableNetworkPolicy = newTrue()
-	testClusterConfGKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterInterfaceGKE = map[string]interface{}{
-		"id":                         "id",
-		"name":                       "test",
-		"agent_env_vars":             testClusterEnvVarsInterface,
-		"default_project_id":         "default_project_id",
-		"description":                "description",
-		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy": true,
-		"kube_config":           "kube_config",
-		"driver":                clusterDriverGKE,
-		"gke_config":            testClusterGKEConfigInterface,
 		"system_project_id":     "system_project_id",
 	}
 	testClusterConfK3S = &Cluster{}
@@ -456,31 +381,6 @@ func testCluster() {
 		"kube_config":           "kube_config",
 		"driver":                clusterDriverGKEV2,
 		"gke_config_v2":         testClusterGKEConfigV2Interface,
-		"system_project_id":     "system_project_id",
-	}
-	testClusterConfOKE = &Cluster{
-		OracleKubernetesEngineConfig: testClusterOKEConfigConf,
-	}
-	testClusterConfOKE.Name = "test"
-	testClusterConfOKE.Description = "description"
-	testClusterConfOKE.Driver = clusterOKEKind
-	testClusterConfOKE.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfOKE.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
-	testClusterConfOKE.EnableNetworkPolicy = newTrue()
-	testClusterConfOKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterInterfaceOKE = map[string]interface{}{
-		"id":                         "id",
-		"name":                       "test",
-		"agent_env_vars":             testClusterEnvVarsInterface,
-		"default_project_id":         "default_project_id",
-		"description":                "description",
-		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy": true,
-		"kube_config":           "kube_config",
-		"driver":                clusterOKEKind,
-		"oke_config":            testClusterOKEConfigInterface,
 		"system_project_id":     "system_project_id",
 	}
 	testClusterConfRKE = &Cluster{}
@@ -607,24 +507,6 @@ func TestFlattenCluster(t *testing.T) {
 		ExpectedOutput map[string]interface{}
 	}{
 		{
-			testClusterConfAKS,
-			testClusterRegistrationTokenConf,
-			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceAKS,
-		},
-		{
-			testClusterConfEKS,
-			testClusterRegistrationTokenConf,
-			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceEKS,
-		},
-		{
-			testClusterConfGKE,
-			testClusterRegistrationTokenConf,
-			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceGKE,
-		},
-		{
 			testClusterConfK3S,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
@@ -635,12 +517,6 @@ func TestFlattenCluster(t *testing.T) {
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
 			testClusterInterfaceGKEV2,
-		},
-		{
-			testClusterConfOKE,
-			testClusterRegistrationTokenConf,
-			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceOKE,
 		},
 		{
 			testClusterConfRKE,
@@ -676,9 +552,6 @@ func TestFlattenCluster(t *testing.T) {
 		}
 		if tc.ExpectedOutput["driver"] == clusterDriverRKE {
 			expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig, []interface{}{})
-		}
-		if tc.ExpectedOutput["driver"] == clusterDriverAKS {
-			expectedOutput["aks_config"], _ = flattenClusterAKSConfig(tc.Input.AzureKubernetesServiceConfig, []interface{}{})
 		}
 		if tc.ExpectedOutput["cluster_agent_deployment_customization"] != nil {
 			expectedOutput["cluster_agent_deployment_customization"] = flattenAgentDeploymentCustomization(tc.Input.ClusterAgentDeploymentCustomization, true)
@@ -721,20 +594,8 @@ func TestExpandCluster(t *testing.T) {
 		ExpectedOutput *Cluster
 	}{
 		{
-			testClusterInterfaceAKS,
-			testClusterConfAKS,
-		},
-		{
-			testClusterInterfaceEKS,
-			testClusterConfEKS,
-		},
-		{
 			testClusterInterfaceEKSV2,
 			testClusterConfEKSV2,
-		},
-		{
-			testClusterInterfaceGKE,
-			testClusterConfGKE,
 		},
 		{
 			testClusterInterfaceK3S,
@@ -743,10 +604,6 @@ func TestExpandCluster(t *testing.T) {
 		{
 			testClusterInterfaceGKEV2,
 			testClusterConfGKEV2,
-		},
-		{
-			testClusterInterfaceOKE,
-			testClusterConfOKE,
 		},
 		{
 			testClusterInterfaceRKE,
