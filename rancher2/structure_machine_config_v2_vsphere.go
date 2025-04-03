@@ -29,6 +29,7 @@ type machineConfigV2Vmwarevsphere struct {
 	Datacenter              string   `json:"datacenter,omitempty" yaml:"datacenter,omitempty"`
 	Datastore               string   `json:"datastore,omitempty" yaml:"datastore,omitempty"`
 	DatastoreCluster        string   `json:"datastoreCluster,omitempty" yaml:"datastoreCluster,omitempty"`
+	OS                      string   `json:"os,omitempty" yaml:"os,omitempty"`
 	DiskSize                string   `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
 	Folder                  string   `json:"folder,omitempty" yaml:"folder,omitempty"`
 	Hostsystem              string   `json:"hostsystem,omitempty" yaml:"hostsystem,omitempty"`
@@ -100,6 +101,9 @@ func flattenMachineConfigV2Vmwarevsphere(in *MachineConfigV2Vmwarevsphere) []int
 	}
 	if len(in.DatastoreCluster) > 0 {
 		obj["datastore_cluster"] = in.DatastoreCluster
+	}
+	if len(in.OS) > 0 {
+		obj["os"] = in.OS
 	}
 	if len(in.DiskSize) > 0 {
 		obj["disk_size"] = in.DiskSize
@@ -218,6 +222,9 @@ func expandMachineConfigV2Vmwarevsphere(p []interface{}, source *MachineConfigV2
 	}
 	if v, ok := in["datastore_cluster"].(string); ok && len(v) > 0 {
 		obj.DatastoreCluster = v
+	}
+	if v, ok := in["os"].(string); ok && len(v) > 0 {
+		obj.OS = v
 	}
 	if v, ok := in["disk_size"].(string); ok && len(v) > 0 {
 		obj.DiskSize = v
