@@ -70,6 +70,10 @@ func flattenClusterRKEConfigCloudProvider(in *managementClient.CloudProvider, p 
 		obj["vsphere_cloud_provider"] = vsphereProvider
 	}
 
+	if in.UseInstanceMetadataHostname != nil {
+		obj["use_instance_metadata_hostname"] = *in.UseInstanceMetadataHostname
+	}
+
 	return []interface{}{obj}, nil
 }
 
@@ -120,6 +124,10 @@ func expandClusterRKEConfigCloudProvider(p []interface{}) (*managementClient.Clo
 			return obj, err
 		}
 		obj.VsphereCloudProvider = vsphereProvider
+	}
+
+	if v, ok := in["use_instance_metadata_hostname"].(bool); ok {
+		obj.UseInstanceMetadataHostname = &v
 	}
 
 	return obj, nil
