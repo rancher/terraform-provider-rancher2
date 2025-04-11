@@ -50,7 +50,6 @@ resource "rancher2_namespace" "testacc" {
 	testAccCheckRancher2UpgradeVersion = []string{"v2.3.6", "v2.4.13", "v2.5.9", "v2.6.2"}
 	testAccCheckRancher2RunningVersionIndex = 0
 	testAccCheckRancher2UpgradeCluster = os.Getenv("RANCHER_ACC_CLUSTER_NAME")
-	testAccCheckRancher2UpgradeCatalogV24 = testAccRancher2CatalogGlobal + testAccRancher2CatalogCluster + testAccRancher2CatalogProject
 	testAccCheckRancher2UpgradeCertificateV24 = testAccRancher2Certificate + testAccRancher2CertificateNs
 	testAccCheckRancher2BootstrapV23 = `
 provider "rancher2" {
@@ -64,7 +63,6 @@ resource "rancher2_bootstrap" "foo" {
   provider = rancher2.bootstrap
 
   password = "` + testAccRancher2DefaultAdminPass + `"
-  telemetry = true
 }
 provider "rancher2" {
   api_url = rancher2_bootstrap.foo.url
@@ -87,7 +85,6 @@ resource "rancher2_bootstrap" "foo" {
   provider = rancher2.bootstrap
 
   password = "` + testAccRancher2DefaultAdminPass + `"
-  telemetry = true
 }
 provider "rancher2" {
   api_url = rancher2_bootstrap.foo.url
@@ -99,7 +96,6 @@ provider "rancher2" {
 `
 
 	testAccCheckRancher2UpgradeConfigV23 = testAccCheckRancher2BootstrapV23 + `
-` + testAccRancher2App + `
 ` + testAccCheckRancher2UpgradeCatalogV24 + `
 ` + testAccCheckRancher2UpgradeCertificateV24 + `
 ` + testAccRancher2CloudCredentialConfigAmazonec2 + `
@@ -113,12 +109,7 @@ provider "rancher2" {
 ` + testAccRancher2ClusterRoleTemplateBinding + `
 ` + testAccRancher2ClusterTemplateConfig + `
 ` + testAccRancher2EtcdBackup + `
-` + testAccRancher2GlobalDNS + `
-` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
-` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
-` + testAccRancher2GlobalDNSProviderRoute53Config + `
 ` + testAccRancher2GlobalRoleBinding + `
-` + testAccRancher2MultiClusterApp + `
 ` + testAccRancher2Namespace + `
 ` + testAccRancher2NodeDriver + `
 ` + testAccRancher2NodePool + `
@@ -140,7 +131,6 @@ provider "rancher2" {
 `
 
 	testAccCheckRancher2UpgradeConfigV24 = testAccCheckRancher2BootstrapV23 + `
-` + testAccRancher2App + `
 ` + testAccCheckRancher2UpgradeCatalogV24 + `
 ` + testAccCheckRancher2UpgradeCertificateV24 + `
 ` + testAccRancher2CloudCredentialConfigAmazonec2 + `
@@ -154,12 +144,7 @@ provider "rancher2" {
 ` + testAccRancher2ClusterRoleTemplateBinding + `
 ` + testAccRancher2ClusterTemplateConfig + `
 ` + testAccRancher2EtcdBackup + `
-` + testAccRancher2GlobalDNS + `
-` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
-` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
-` + testAccRancher2GlobalDNSProviderRoute53Config + `
 ` + testAccRancher2GlobalRoleBinding + `
-` + testAccRancher2MultiClusterApp + `
 ` + testAccRancher2Namespace + `
 ` + testAccRancher2NodeDriver + `
 ` + testAccRancher2NodePool + `
@@ -181,7 +166,6 @@ provider "rancher2" {
 `
 
 	testAccCheckRancher2UpgradeConfigV25 = testAccCheckRancher2Bootstrap + `
-` + testAccRancher2App + `
 ` + testAccRancher2AppV2 + `
 ` + testAccCheckRancher2UpgradeCatalogV24 + `
 ` + testAccRancher2CatalogV2 + `
@@ -199,12 +183,7 @@ provider "rancher2" {
 ` + testAccRancher2ClusterTemplateConfig + `
 ` + testAccRancher2EtcdBackup + `
 ` + testAccRancher2FeatureConfig + `
-` + testAccRancher2GlobalDNS + `
-` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
-` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
-` + testAccRancher2GlobalDNSProviderRoute53Config + `
 ` + testAccRancher2GlobalRoleBinding + `
-` + testAccRancher2MultiClusterApp + `
 ` + testAccRancher2Namespace + `
 ` + testAccRancher2NodeDriver + `
 ` + testAccRancher2NodePool + `
@@ -228,7 +207,6 @@ provider "rancher2" {
 `
 
 	testAccCheckRancher2UpgradeConfigV26 = testAccCheckRancher2Bootstrap + `
-` + testAccRancher2App + `
 ` + testAccRancher2AppV2 + `
 ` + testAccCheckRancher2UpgradeCatalogV24 + `
 ` + testAccRancher2CatalogV2 + `
@@ -248,12 +226,7 @@ provider "rancher2" {
 ` + testAccRancher2ClusterTemplateConfig + `
 ` + testAccRancher2EtcdBackup + `
 ` + testAccRancher2FeatureConfig + `
-` + testAccRancher2GlobalDNS + `
-` + testAccRancher2GlobalDNSProviderAlidnsConfig + `
-` + testAccRancher2GlobalDNSProviderCloudflareConfig + `
-` + testAccRancher2GlobalDNSProviderRoute53Config + `
 ` + testAccRancher2GlobalRoleBinding + `
-` + testAccRancher2MultiClusterApp + `
 ` + testAccRancher2Namespace + `
 ` + testAccRancher2NodeDriver + `
 ` + testAccRancher2NodePool + `
@@ -288,7 +261,6 @@ func TestAccRancher2Upgrade(t *testing.T) {
 					testAccRancher2UpgradeVars(),
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
 				),
 			},
@@ -297,12 +269,7 @@ func TestAccRancher2Upgrade(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
 					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
 					testAccRancher2UpgradeRancher(),
 				),
@@ -312,13 +279,7 @@ func TestAccRancher2Upgrade(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
 					testAccRancher2UpgradeRancher(),
 				),
@@ -328,13 +289,7 @@ func TestAccRancher2Upgrade(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
 					testAccRancher2UpgradeRancher(),
 				),
@@ -344,13 +299,7 @@ func TestAccRancher2Upgrade(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2DefaultAdminPass),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "name", "foo-global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "description", "Terraform catalog acceptance test"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "url", "http://foo.com:8080"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "scope", "global"),
-					resource.TestCheckResourceAttr(testAccRancher2CatalogType+".foo-global", "version", "helm_v3"),
 					resource.TestCheckResourceAttr("rancher2_cluster.foo", "name", "foo"),
 				),
 			},

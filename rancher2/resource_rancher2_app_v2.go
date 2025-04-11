@@ -180,41 +180,7 @@ func resourceRancher2AppV2Delete(d *schema.ResourceData, meta interface{}) error
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for app (%s) to be deleted: %s", app.ID, waitErr)
 	}
-	if app.Spec.Chart.Metadata != nil && app.Spec.Chart.Metadata.Annotations != nil && len(app.Spec.Chart.Metadata.Annotations) > 0 && len(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"]) > 0 {
-		namespace := d.Get("namespace").(string)
-		if len(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/namespace"]) > 0 {
-			namespace = app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/namespace"]
-		}
-		chartAuto := splitBySep(app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"], "=")
-		if len(chartAuto) != 2 {
-			return fmt.Errorf("bad format on chart annotation catalog.cattle.io/auto-install: %s", app.Spec.Chart.Metadata.Annotations["catalog.cattle.io/auto-install"])
-		}
-		name := chartAuto[0]
-		app, err = getAppV2ByID(meta.(*Config), clusterID, namespace+"/"+name)
-		if err != nil {
-			if IsNotFound(err) || IsForbidden(err) {
-				return nil
-			}
-			return err
-		}
-		err = deleteAppV2(meta.(*Config), clusterID, app)
-		if err != nil {
-			return fmt.Errorf("Error removing App V2 %s: %s", name, err)
-		}
-		stateConf = &resource.StateChangeConf{
-			Pending:    []string{},
-			Target:     []string{"removed"},
-			Refresh:    appV2StateRefreshFunc(meta, clusterID, app.ID),
-			Timeout:    d.Timeout(schema.TimeoutDelete),
-			Delay:      1 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-		_, waitErr = stateConf.WaitForState()
-		if waitErr != nil {
-			return fmt.Errorf("[ERROR] waiting for app (%s) to be deleted: %s", app.ID, waitErr)
-		}
 
-	}
 	return nil
 }
 

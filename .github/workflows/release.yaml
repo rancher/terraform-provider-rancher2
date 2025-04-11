@@ -43,6 +43,14 @@ jobs:
           SHASUM_FILE="dist/artifacts/${{ github.ref_name }}/terraform-provider-rancher2_${VERSION_NO_V}_SHA256SUMS"
           echo '${{ env.GPG_PASSPHRASE }}' | gpg --detach-sig --pinentry-mode loopback --passphrase-fd 0 --output "${SHASUM_FILE}.sig" --sign "${SHASUM_FILE}"
 
+          echo "Validating signature..."
+          gpg --verify "${SHASUM_FILE}.sig" "${SHASUM_FILE}"
+          if [ $? -eq 0 ]; then
+            echo "Signature is valid..."
+          else
+            echo "Signature verification failed!"
+            exit 1
+          fi
       - name: GH release
         env:
           GH_TOKEN: ${{ github.token }}

@@ -45,7 +45,6 @@ resource "rancher2_bootstrap" "admin" {
   provider = "rancher2.bootstrap"
 
   password = "blahblah"
-  telemetry = true
 }
 
 # Provider config for admin
