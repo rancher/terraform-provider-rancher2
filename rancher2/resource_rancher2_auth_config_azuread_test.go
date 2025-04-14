@@ -33,6 +33,19 @@ resource "` + testAccRancher2AuthConfigAzureADType + `" "azuread" {
   token_endpoint = "token"
 }
  `
+
+	testAccRancher2AuthConfigAzureADConfigWithUserGroupFilter = `
+resource "` + testAccRancher2AuthConfigAzureADType + `" "azuread" {
+  application_id = "XXXXXX"
+  application_secret = "YYYYYYYY"
+  auth_endpoint = "authorize-updated"
+  graph_endpoint = "graph"
+  rancher_url = "https://RANCHER-UPDATED"
+  tenant_id = "ZZZZZZZZ"
+  token_endpoint = "token"
+  group_membership_filter = "startswith(displayName, 'test')"
+}
+ `
 )
 
 func TestAccRancher2AuthConfigAzureAD_basic(t *testing.T) {
@@ -74,6 +87,14 @@ func TestAccRancher2AuthConfigAzureAD_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, "rancher_url", "https://RANCHER"),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, "application_secret", "XXXXXXXX"),
 					resource.TestCheckResourceAttr(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, "tenant_id", "XXXXXXXX"),
+				),
+			},
+			{
+				Config: testAccRancher2AuthConfigAzureADConfigWithUserGroupFilter,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRancher2AuthConfigExists(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, authConfig),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, "tenant_id", "ZZZZZZZZ"),
+					resource.TestCheckResourceAttr(testAccRancher2AuthConfigAzureADType+"."+AuthConfigAzureADName, "group_membership_filter", "startswith(displayName, 'test')"),
 				),
 			},
 		},

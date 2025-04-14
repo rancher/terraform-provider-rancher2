@@ -9,7 +9,7 @@ import (
 
 // Flatteners
 
-func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization) []interface{} {
+func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization, includeScheduling bool) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -28,12 +28,16 @@ func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization) 
 		obj["override_resource_requirements"] = in.OverrideResourceRequirements
 	}
 
+	if includeScheduling {
+		obj["scheduling_customization"] = flattenAgentSchedulingCustomizationV2(in.SchedulingCustomization)
+	}
+
 	return []interface{}{obj}
 }
 
 // Expanders
 
-func expandAgentDeploymentCustomizationV2(p []interface{}) (*v1.AgentDeploymentCustomization, error) {
+func expandAgentDeploymentCustomizationV2(p []interface{}, includeScheduling bool) (*v1.AgentDeploymentCustomization, error) {
 	if len(p) == 0 || p[0] == nil {
 		return nil, nil
 	}
@@ -60,6 +64,12 @@ func expandAgentDeploymentCustomizationV2(p []interface{}) (*v1.AgentDeploymentC
 			return nil, err
 		}
 		obj.OverrideResourceRequirements = overrideResourceRequirements
+	}
+
+	if includeScheduling {
+		if v, ok := in["scheduling_customization"].([]interface{}); ok && len(v) > 0 {
+			obj.SchedulingCustomization = expandAgentSchedulingCustomizationV2(v)
+		}
 	}
 
 	return obj, nil

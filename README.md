@@ -97,10 +97,13 @@ See [test process](docs/test-process.md) for details on release testing (_Terraf
 Branching the Provider
 ---------------------------
 
-This provider is branched in correlation with minor versions of Rancher: 2.8, 2.9, etc.
-The `release/v3` branch with 3.0.0+ is aligned with Rancher 2.7,
-  the `release/v4` branch with 4.0.0+ is aligned with Rancher 2.8,
-  and the `master` branch with 5.0.0+ is aligned with Rancher 2.9.
+This provider is branched in correlation with minor versions of Rancher:
+* The `release/v3` branch with 3.0.0+ is aligned with Rancher 2.7
+* the `release/v4` branch with 4.0.0+ is aligned with Rancher 2.8 
+* the `release/v5` branch with 5.0.0+ is aligned with Rancher 2.9
+* the `release/v6` branch with 6.0.0+ is aligned with Rancher 2.10 
+* the `master` branch with 7.0.0+ is aligned with Rancher 2.11
+
 The lifecycle of each major provider version is aligned with the lifecycle of each Rancher minor version.
 For example, provider versions 4.x are aligned with Rancher 2.8.x will only be actively maintained until the EOM for Rancher 2.8.x and supported until EOL for Rancher 2.8.x.
 

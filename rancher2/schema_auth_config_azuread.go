@@ -45,6 +45,10 @@ func authConfigAzureADFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"group_membership_filter": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 	}
 
 	for k, v := range authConfigFields() {

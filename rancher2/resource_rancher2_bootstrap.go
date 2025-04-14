@@ -38,17 +38,6 @@ func resourceRancher2BootstrapCreate(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	// Set telemetry option
-	telemetry := "out"
-	if d.Get("telemetry").(bool) {
-		telemetry = "in"
-	}
-
-	err = meta.(*Config).SetSetting(bootstrapSettingTelemetry, telemetry)
-	if err != nil {
-		return err
-	}
-
 	// Set ui default landing option for rancher up to 2.5.0
 	if ok, _ := meta.(*Config).IsRancherVersionGreaterThanOrEqual(rancher2UILandingVersion); ok {
 		uiLanding := d.Get("ui_default_landing").(string)
@@ -142,18 +131,6 @@ func resourceRancher2BootstrapRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("url", url)
 
-	// Get telemetry
-	telemetry, err := meta.(*Config).GetSettingValue(bootstrapSettingTelemetry)
-	if err != nil {
-		return err
-	}
-
-	if telemetry == "in" {
-		d.Set("telemetry", true)
-	} else {
-		d.Set("telemetry", false)
-	}
-
 	return bootstrapCleanUpTempToken(d, meta)
 }
 
@@ -168,17 +145,6 @@ func resourceRancher2BootstrapUpdate(d *schema.ResourceData, meta interface{}) e
 
 	// Set rancher url
 	err = meta.(*Config).SetSetting(bootstrapSettingURL, meta.(*Config).URL)
-	if err != nil {
-		return err
-	}
-
-	// Set telemetry option
-	telemetry := "out"
-	if d.Get("telemetry").(bool) {
-		telemetry = "in"
-	}
-
-	err = meta.(*Config).SetSetting(bootstrapSettingTelemetry, telemetry)
 	if err != nil {
 		return err
 	}

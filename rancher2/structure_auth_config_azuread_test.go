@@ -16,37 +16,38 @@ var (
 
 func init() {
 	testAuthConfigAzureADConf = &managementClient.AzureADConfig{
-		Name:                AuthConfigAzureADName,
-		Type:                managementClient.AzureADConfigType,
-		AccessMode:          "access",
-		AllowedPrincipalIDs: []string{"allowed1", "allowed2"},
-		Enabled:             true,
-		ApplicationID:       "application_id",
-		AuthEndpoint:        "auth_endpoint",
-		Endpoint:            "endpoint",
-		GraphEndpoint:       "graph_endpoint",
-		RancherURL:          "rancher_url",
-		TenantID:            "tenant_id",
-		TokenEndpoint:       "token_endpoint",
+		Name:                  AuthConfigAzureADName,
+		Type:                  managementClient.AzureADConfigType,
+		AccessMode:            "access",
+		AllowedPrincipalIDs:   []string{"allowed1", "allowed2"},
+		Enabled:               true,
+		ApplicationID:         "application_id",
+		AuthEndpoint:          "auth_endpoint",
+		Endpoint:              "endpoint",
+		GraphEndpoint:         "graph_endpoint",
+		RancherURL:            "rancher_url",
+		TenantID:              "tenant_id",
+		TokenEndpoint:         "token_endpoint",
+		GroupMembershipFilter: "startswith(displayName,'test')",
 	}
 	testAuthConfigAzureADInterface = map[string]interface{}{
-		"name":                  AuthConfigAzureADName,
-		"type":                  managementClient.AzureADConfigType,
-		"access_mode":           "access",
-		"allowed_principal_ids": []interface{}{"allowed1", "allowed2"},
-		"enabled":               true,
-		"application_id":        "application_id",
-		"auth_endpoint":         "auth_endpoint",
-		"endpoint":              "endpoint",
-		"graph_endpoint":        "graph_endpoint",
-		"rancher_url":           "rancher_url",
-		"tenant_id":             "tenant_id",
-		"token_endpoint":        "token_endpoint",
+		"name":                    AuthConfigAzureADName,
+		"type":                    managementClient.AzureADConfigType,
+		"access_mode":             "access",
+		"allowed_principal_ids":   []interface{}{"allowed1", "allowed2"},
+		"enabled":                 true,
+		"application_id":          "application_id",
+		"auth_endpoint":           "auth_endpoint",
+		"endpoint":                "endpoint",
+		"graph_endpoint":          "graph_endpoint",
+		"rancher_url":             "rancher_url",
+		"tenant_id":               "tenant_id",
+		"token_endpoint":          "token_endpoint",
+		"group_membership_filter": "startswith(displayName,'test')",
 	}
 }
 
 func TestFlattenAuthConfigAzureAD(t *testing.T) {
-
 	cases := []struct {
 		Input          *managementClient.AzureADConfig
 		ExpectedOutput map[string]interface{}
@@ -75,7 +76,6 @@ func TestFlattenAuthConfigAzureAD(t *testing.T) {
 }
 
 func TestExpandAuthConfigAzureAD(t *testing.T) {
-
 	cases := []struct {
 		Input          map[string]interface{}
 		ExpectedOutput *managementClient.AzureADConfig

@@ -123,12 +123,13 @@ func init() {
 			"label1": "value1",
 			"label2": "value2",
 		},
-		LocalSsdCount: int64(1),
-		MachineType:   "machine_type",
-		OauthScopes:   []string{"oauth1", "oauth1"},
-		Preemptible:   true,
-		Tags:          []string{"tags1", "tags2"},
-		Taints:        testClusterGKEConfigV2NodeTaintsConfigConf,
+		LocalSsdCount:  int64(1),
+		MachineType:    "machine_type",
+		OauthScopes:    []string{"oauth1", "oauth1"},
+		Preemptible:    true,
+		Tags:           []string{"tags1", "tags2"},
+		Taints:         testClusterGKEConfigV2NodeTaintsConfigConf,
+		ServiceAccount: "test@example.com",
 	}
 	testClusterGKEConfigV2NodeConfigInterface = []interface{}{
 		map[string]interface{}{
@@ -145,6 +146,7 @@ func init() {
 			"preemptible":     true,
 			"tags":            []interface{}{"tags1", "tags2"},
 			"taints":          testClusterGKEConfigV2NodeTaintsConfigInterface,
+			"service_account": "test@example.com",
 		},
 	}
 	testClusterGKEConfigV2NodePoolsManagementConf = &managementClient.GKENodePoolManagement{

@@ -31,7 +31,6 @@ provider "rancher2" {
 	testAccRancher2BootstrapConfig = testAccRancher2ProviderConfig + `
 resource "` + testAccRancher2BootstrapType + `" "foo" {
   password = "` + testAccRancher2BootstrapPass + `"
-  telemetry = true
 }
 `
 
@@ -53,7 +52,6 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2BootstrapPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "ui_default_landing", bootstrapUILandingManager),
 				),
@@ -63,7 +61,6 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2BootstrapPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "false"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "ui_default_landing", bootstrapUILandingExplorer),
 				),
@@ -73,7 +70,6 @@ func TestAccRancher2Bootstrap_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRancher2BootstrapExists(testAccRancher2BootstrapType+".foo"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "password", testAccRancher2BootstrapPass),
-					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "telemetry", "true"),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "current_password", testAccRancher2BootstrapPass),
 					resource.TestCheckResourceAttr(testAccRancher2BootstrapType+".foo", "ui_default_landing", bootstrapUILandingManager),
 				),

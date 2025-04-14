@@ -13,7 +13,6 @@ const (
 	bootstrapDefaultTTL         = "60000"
 	bootstrapSettingUILanding   = "ui-default-landing"
 	bootstrapSettingURL         = "server-url"
-	bootstrapSettingTelemetry   = "telemetry-opt"
 	bootstrapUILandingExplorer  = "vue"
 	bootstrapUILandingManager   = "ember"
 )
@@ -58,11 +57,6 @@ func bootstrapFields() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"token_update": {
-			Type:     schema.TypeBool,
-			Optional: true,
-			Default:  false,
-		},
-		"telemetry": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Default:  false,

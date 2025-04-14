@@ -442,6 +442,51 @@ EOF
 }
 ```
 
+#### Customize scheduling for the cluster agent
+
+This argument is available in Rancher 2.11.0 and above.
+
+You can configure a Priority Class and or Pod Disruption Budget to be automatically deployed for the cattle cluster agent when provisioning or updating downstream clusters. 
+
+In order to use this field, you must ensure that the `cluster-agent-scheduling-customization` feature is enabled in the Rancher server. 
+
+
+The example below demonstrates how to set the `scheduling_customization` field to deploy a Priority Class and Pod Disruption Budget. Currently, this field is only supported for the cluster agent. 
+
+```hcl
+resource "rancher2_cluster_v2" "foo" {
+  name = "foo"
+  kubernetes_version = "rke2/k3s-version"
+  cluster_agent_deployment_customization {
+    scheduling_customization {
+      priority_class {
+        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted. 
+        # If omitted, the default of 'PreemptLowerPriority' is used.
+        preemption_policy = "PreemptLowerPriority"
+        # The value cannot be less than negative 1 billion, or greater than 1 billion
+        value = 1000000000
+      }
+      pod_disruption_budget {
+        # min_available and max_unavailable must either be non-negative whole integers, 
+        # or whole number percentages greater than 0 and less than or equal to 100 (e.g. "50%").
+        # You cannot set both min_available and max_unavailable at the same time.
+        min_available = "1"
+        
+        # max_unavailable = "1"
+      }
+    }
+    
+  }
+
+  rke_config {
+    # In the case of a node-driver cluster
+    machine_pools {
+      # ...
+      }
+    } 
+}
+```
+
 ### Enable Pod Security Policy Admission Configuration Template (PSACT) on the cluster
 
 This argument is available in Rancher v2.7.2 and above.
@@ -878,13 +923,14 @@ The following attributes are exported:
 
 ### `cluster_agent_deployment_customization` and `fleet_agent_deployment_customization`
 
-Those arguments are available in Rancher v2.7.5 and above.
+These arguments are available in Rancher v2.7.5 and above. The `scheduling_customization` argument is only available in Rancher 2.11 and above, may only be set within `cluster_agent_deployment_customization`, and requires that the `cattle-cluster-agent-scheduling-customization` feature be enabled.
 
 #### Arguments
 
 * `append_tolerations` - (Optional, list) A list of tolerations to be appended to the default tolerations.
 * `override_affinity` - (Optional, string, JSON format) Override affinity overrides the global default affinity setting.
 * `override_resource_requirements` - (Optional, list) Override resource requirements overrides the default value for requests and/or limits. 
++ `scheduling_customization` - (Optional, list) Supported in Rancher 2.11.0 and above. Defines the configuration of a Priority Class and or Pod Disruption Budget. Currently only supported in the `cluster_agent_deployment_customization` field, and requires the `cattle_cluster_agent_scheduling_customization` feature to be enabled.
 
 ### `append_tolerations`
 
@@ -907,6 +953,27 @@ see more information on [Resource Management for Pods and Containers](https://ku
 * `cpu_request` - (Optional, string) The minimum CPU required for agent.
 * `memory_limit` - (Optional, string) The maximum memory limit for agent.
 * `memory_request` - (Optional, string) The minimum memory required for agent.
+
+### `scheduling_customization`
+
+#### Arguments
+
+* `pod_disruption_budget` - (Optional, list) The definition of a Pod Disruption Budget deployed for the cluster agent
+* `priority_class` - (Optional, list) The definition of a Priority Class deployed for the cluster agent
+
+### `pod_disruption_budget`
+
+#### Arguments
+
+* `min_available` - (Optional, string) The minimum number of agent replicas that must be running at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `max_unavailable`.
+* `max_unavailable` - (Optional, string) The maximum number of agent replicas that can be unavailable at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `min_available`. 
+
+### `priority_class`
+
+#### Arguments
+
+* `value` - (Optional, int) The priority value set for the Priority Class. Must be greater than or equal to negative 1 billion, and less than or equal to 1 billion. 
+* `preemption_policy` (Optional, string) The preemption policy set for the Priority Class. Must be set to either 'Never', 'PreemptLowerPriority', or omitted.
 
 ### `rke_config`
 

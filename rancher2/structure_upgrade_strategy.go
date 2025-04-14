@@ -7,24 +7,6 @@ import (
 
 // Flatteners
 
-func flattenRollingUpdate(in *managementClient.RollingUpdate) []interface{} {
-	obj := make(map[string]interface{})
-
-	if in == nil {
-		return []interface{}{}
-	}
-
-	if in.BatchSize > 0 {
-		obj["batch_size"] = int(in.BatchSize)
-	}
-
-	if in.Interval > 0 {
-		obj["interval"] = int(in.Interval)
-	}
-
-	return []interface{}{obj}
-}
-
 func flattenRollingUpdateDaemonSet(in *managementClient.RollingUpdateDaemonSet) []interface{} {
 	obj := make(map[string]interface{})
 
@@ -52,20 +34,6 @@ func flattenRollingUpdateDeployment(in *managementClient.RollingUpdateDeployment
 
 	if v := in.MaxUnavailable.IntValue(); v > 0 {
 		obj["max_unavailable"] = in.MaxUnavailable.IntValue()
-	}
-
-	return []interface{}{obj}
-}
-
-func flattenUpgradeStrategy(in *managementClient.UpgradeStrategy) []interface{} {
-	obj := make(map[string]interface{})
-
-	if in == nil {
-		return []interface{}{}
-	}
-
-	if in.RollingUpdate != nil {
-		obj["rolling_update"] = flattenRollingUpdate(in.RollingUpdate)
 	}
 
 	return []interface{}{obj}
@@ -109,25 +77,6 @@ func flattenDeploymentStrategy(in *managementClient.DeploymentStrategy) []interf
 
 // Expanders
 
-func expandRollingUpdate(p []interface{}) *managementClient.RollingUpdate {
-	obj := &managementClient.RollingUpdate{}
-	if len(p) == 0 || p[0] == nil {
-		return obj
-	}
-
-	in := p[0].(map[string]interface{})
-
-	if v, ok := in["batch_size"].(int); ok && v > 0 {
-		obj.BatchSize = int64(v)
-	}
-
-	if v, ok := in["interval"].(int); ok && v > 0 {
-		obj.Interval = int64(v)
-	}
-
-	return obj
-}
-
 func expandRollingUpdateDaemonSet(p []interface{}) *managementClient.RollingUpdateDaemonSet {
 	obj := &managementClient.RollingUpdateDaemonSet{}
 	if len(p) == 0 || p[0] == nil {
@@ -157,21 +106,6 @@ func expandRollingUpdateDeployment(p []interface{}) *managementClient.RollingUpd
 
 	if v, ok := in["max_unavailable"].(int); ok && v > 0 {
 		obj.MaxUnavailable = intstr.FromInt(v)
-	}
-
-	return obj
-}
-
-func expandUpgradeStrategy(p []interface{}) *managementClient.UpgradeStrategy {
-	obj := &managementClient.UpgradeStrategy{}
-	if len(p) == 0 || p[0] == nil {
-		return obj
-	}
-
-	in := p[0].(map[string]interface{})
-
-	if v, ok := in["rolling_update"].([]interface{}); ok && len(v) > 0 {
-		obj.RollingUpdate = expandRollingUpdate(v)
 	}
 
 	return obj

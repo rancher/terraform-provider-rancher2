@@ -9,13 +9,11 @@ import (
 )
 
 var (
-	testRollingUpdateConf                *managementClient.RollingUpdate
 	testRollingUpdateInterface           []interface{}
 	testRollingUpdateDeploymentConf      *managementClient.RollingUpdateDeployment
 	testRollingUpdateDeploymentInterface []interface{}
 	testRollingUpdateDaemonSetConf       *managementClient.RollingUpdateDaemonSet
 	testRollingUpdateDaemonSetInterface  []interface{}
-	testUpgradeStrategyConf              *managementClient.UpgradeStrategy
 	testUpgradeStrategyInterface         []interface{}
 	testDeploymentStrategyConf           *managementClient.DeploymentStrategy
 	testDeploymentStrategyInterface      []interface{}
@@ -24,10 +22,6 @@ var (
 )
 
 func init() {
-	testRollingUpdateConf = &managementClient.RollingUpdate{
-		BatchSize: 10,
-		Interval:  10,
-	}
 	testRollingUpdateInterface = []interface{}{
 		map[string]interface{}{
 			"batch_size": 10,
@@ -51,9 +45,6 @@ func init() {
 		map[string]interface{}{
 			"max_unavailable": 10,
 		},
-	}
-	testUpgradeStrategyConf = &managementClient.UpgradeStrategy{
-		RollingUpdate: testRollingUpdateConf,
 	}
 	testUpgradeStrategyInterface = []interface{}{
 		map[string]interface{}{
@@ -79,24 +70,6 @@ func init() {
 			"rolling_update": testRollingUpdateDaemonSetInterface,
 			"strategy":       "strategy",
 		},
-	}
-}
-
-func TestFlattenRollingUpdate(t *testing.T) {
-
-	cases := []struct {
-		Input          *managementClient.RollingUpdate
-		ExpectedOutput []interface{}
-	}{
-		{
-			testRollingUpdateConf,
-			testRollingUpdateInterface,
-		},
-	}
-
-	for _, tc := range cases {
-		output := flattenRollingUpdate(tc.Input)
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
 
@@ -132,24 +105,6 @@ func TestFlattenRollingUpdateDeployment(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenRollingUpdateDeployment(tc.Input)
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
-	}
-}
-
-func TestFlattenUpgradeStrategy(t *testing.T) {
-
-	cases := []struct {
-		Input          *managementClient.UpgradeStrategy
-		ExpectedOutput []interface{}
-	}{
-		{
-			testUpgradeStrategyConf,
-			testUpgradeStrategyInterface,
-		},
-	}
-
-	for _, tc := range cases {
-		output := flattenUpgradeStrategy(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
@@ -190,24 +145,6 @@ func TestFlattenDeploymentStrategy(t *testing.T) {
 	}
 }
 
-func TestExpandRollingUpdate(t *testing.T) {
-
-	cases := []struct {
-		Input          []interface{}
-		ExpectedOutput *managementClient.RollingUpdate
-	}{
-		{
-			testRollingUpdateInterface,
-			testRollingUpdateConf,
-		},
-	}
-
-	for _, tc := range cases {
-		output := expandRollingUpdate(tc.Input)
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-	}
-}
-
 func TestExpandRollingUpdateDaemonSet(t *testing.T) {
 
 	cases := []struct {
@@ -240,24 +177,6 @@ func TestExpandRollingUpdateDeployment(t *testing.T) {
 
 	for _, tc := range cases {
 		output := expandRollingUpdateDeployment(tc.Input)
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-	}
-}
-
-func TestExpandUpgradeStrategy(t *testing.T) {
-
-	cases := []struct {
-		Input          []interface{}
-		ExpectedOutput *managementClient.UpgradeStrategy
-	}{
-		{
-			testUpgradeStrategyInterface,
-			testUpgradeStrategyConf,
-		},
-	}
-
-	for _, tc := range cases {
-		output := expandUpgradeStrategy(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

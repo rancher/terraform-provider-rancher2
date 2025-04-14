@@ -164,6 +164,9 @@ func flattenClusterGKEConfigV2NodeConfig(in *managementClient.GKENodeConfig) []i
 	if len(in.Taints) > 0 {
 		obj["taints"] = flattenClusterGKEConfigV2NodeTaintsConfig(in.Taints)
 	}
+	if len(in.ServiceAccount) > 0 {
+		obj["service_account"] = in.ServiceAccount
+	}
 
 	return []interface{}{obj}
 }
@@ -491,6 +494,9 @@ func expandClusterGKEConfigV2NodeConfig(p []interface{}) *managementClient.GKENo
 	}
 	if v, ok := in["taints"].([]interface{}); ok && len(v) > 0 {
 		obj.Taints = expandClusterGKEConfigV2NodeTaintsConfig(v)
+	}
+	if v, ok := in["service_account"].(string); ok && len(v) > 0 {
+		obj.ServiceAccount = v
 	}
 	return obj
 }

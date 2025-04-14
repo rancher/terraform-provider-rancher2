@@ -300,7 +300,7 @@ func clusterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Optional customization for cluster agent",
 			Elem: &schema.Resource{
-				Schema: agentDeploymentCustomizationFields(),
+				Schema: agentDeploymentCustomizationFields(true),
 			},
 		},
 		"fleet_agent_deployment_customization": {
@@ -308,7 +308,7 @@ func clusterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Optional customization for fleet agent",
 			Elem: &schema.Resource{
-				Schema: agentDeploymentCustomizationFields(),
+				Schema: agentDeploymentCustomizationFields(false),
 			},
 		},
 		"driver": {

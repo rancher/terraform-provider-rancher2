@@ -107,7 +107,6 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"rancher2_app":                                           resourceRancher2App(),
 			"rancher2_app_v2":                                        resourceRancher2AppV2(),
 			"rancher2_auth_config_activedirectory":                   resourceRancher2AuthConfigActiveDirectory(),
 			"rancher2_auth_config_adfs":                              resourceRancher2AuthConfigADFS(),
@@ -119,7 +118,6 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_auth_config_openldap":                          resourceRancher2AuthConfigOpenLdap(),
 			"rancher2_auth_config_ping":                              resourceRancher2AuthConfigPing(),
 			"rancher2_bootstrap":                                     resourceRancher2Bootstrap(),
-			"rancher2_catalog":                                       resourceRancher2Catalog(),
 			"rancher2_catalog_v2":                                    resourceRancher2CatalogV2(),
 			"rancher2_certificate":                                   resourceRancher2Certificate(),
 			"rancher2_cloud_credential":                              resourceRancher2CloudCredential(),
@@ -136,7 +134,6 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_global_role":                                   resourceRancher2GlobalRole(),
 			"rancher2_global_role_binding":                           resourceRancher2GlobalRoleBinding(),
 			"rancher2_machine_config_v2":                             resourceRancher2MachineConfigV2(),
-			"rancher2_multi_cluster_app":                             resourceRancher2MultiClusterApp(),
 			"rancher2_namespace":                                     resourceRancher2Namespace(),
 			"rancher2_node_driver":                                   resourceRancher2NodeDriver(),
 			"rancher2_node_pool":                                     resourceRancher2NodePool(),
@@ -155,8 +152,6 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"rancher2_app":                                           dataSourceRancher2App(),
-			"rancher2_catalog":                                       dataSourceRancher2Catalog(),
 			"rancher2_catalog_v2":                                    dataSourceRancher2CatalogV2(),
 			"rancher2_certificate":                                   dataSourceRancher2Certificate(),
 			"rancher2_cloud_credential":                              dataSourceRancher2CloudCredential(),
@@ -169,7 +164,6 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_etcd_backup":                                   dataSourceRancher2EtcdBackup(),
 			"rancher2_global_role":                                   dataSourceRancher2GlobalRole(),
 			"rancher2_global_role_binding":                           dataSourceRancher2GlobalRoleBinding(),
-			"rancher2_multi_cluster_app":                             dataSourceRancher2MultiClusterApp(),
 			"rancher2_namespace":                                     dataSourceRancher2Namespace(),
 			"rancher2_node_driver":                                   dataSourceRancher2NodeDriver(),
 			"rancher2_node_pool":                                     dataSourceRancher2NodePool(),

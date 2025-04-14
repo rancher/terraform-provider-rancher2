@@ -60,7 +60,7 @@ func clusterV2FieldsV0() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Optional customization for cluster agent",
 			Elem: &schema.Resource{
-				Schema: agentDeploymentCustomizationFields(),
+				Schema: agentDeploymentCustomizationFields(true),
 			},
 		},
 		"fleet_agent_deployment_customization": {
@@ -68,7 +68,7 @@ func clusterV2FieldsV0() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Optional customization for fleet agent",
 			Elem: &schema.Resource{
-				Schema: agentDeploymentCustomizationFields(),
+				Schema: agentDeploymentCustomizationFields(false),
 			},
 		},
 		"default_pod_security_admission_configuration_template_name": {
@@ -175,7 +175,7 @@ func clusterV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Optional customization for cluster agent",
 			Elem: &schema.Resource{
-				Schema: agentDeploymentCustomizationFields(),
+				Schema: agentDeploymentCustomizationFields(true),
 			},
 		},
 		"fleet_agent_deployment_customization": {
@@ -183,7 +183,7 @@ func clusterV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Optional customization for fleet agent",
 			Elem: &schema.Resource{
-				Schema: agentDeploymentCustomizationFields(),
+				Schema: agentDeploymentCustomizationFields(false),
 			},
 		},
 		"default_pod_security_admission_configuration_template_name": {
