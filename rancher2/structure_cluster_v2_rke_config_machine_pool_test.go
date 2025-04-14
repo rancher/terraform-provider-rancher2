@@ -128,6 +128,7 @@ func init() {
 			"max_unhealthy":                  "2",
 			"unhealthy_range":                "[2,5]",
 			"hostname_length_limit":          16,
+			"machine_os":                     "linux",
 		},
 	}
 }
