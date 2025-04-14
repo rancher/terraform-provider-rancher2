@@ -97,6 +97,9 @@ func flattenClusterV2RKEConfigMachinePools(p []provisionv1.RKEMachinePool) []int
 		if in.MaxUnhealthy != nil {
 			obj["max_unhealthy"] = *in.MaxUnhealthy
 		}
+		if len(in.MachineOS) > 0 {
+			obj["machine_os"] = in.MachineOS
+		}
 		if in.UnhealthyRange != nil {
 			obj["unhealthy_range"] = *in.UnhealthyRange
 		}
@@ -221,6 +224,9 @@ func expandClusterV2RKEConfigMachinePools(p []interface{}) []provisionv1.RKEMach
 		}
 		if v, ok := in["max_unhealthy"].(string); ok && len(v) > 0 {
 			obj.MaxUnhealthy = &v
+		}
+		if v, ok := in["machine_os"].(string); ok && len(v) > 0 {
+			obj.MachineOS = v
 		}
 		if v, ok := in["unhealthy_range"].(string); ok && len(v) > 0 {
 			obj.UnhealthyRange = &v

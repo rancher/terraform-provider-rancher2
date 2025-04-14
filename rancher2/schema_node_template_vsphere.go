@@ -32,6 +32,7 @@ type vmwarevsphereConfig struct {
 	Datacenter              string   `json:"datacenter,omitempty" yaml:"datacenter,omitempty"`
 	Datastore               string   `json:"datastore,omitempty" yaml:"datastore,omitempty"`
 	DatastoreCluster        string   `json:"datastoreCluster,omitempty" yaml:"datastoreCluster,omitempty"`
+	OS                      string   `json:"os,omitempty" yaml:"os,omitempty"`
 	DiskSize                string   `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
 	Folder                  string   `json:"folder,omitempty" yaml:"folder,omitempty"`
 	Hostsystem              string   `json:"hostsystem,omitempty" yaml:"hostsystem,omitempty"`
@@ -122,6 +123,12 @@ func vsphereConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "vSphere datastore for virtual machine",
+		},
+		"os": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "linux",
+			Description: "Type of virtual machine OS in vSphere",
 		},
 		"datastore_cluster": {
 			Type:        schema.TypeString,
