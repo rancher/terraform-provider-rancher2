@@ -290,39 +290,15 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 	replace := false
 	switch driver := ToLower(d.Get("driver").(string)); driver {
-	case clusterDriverAKS:
-		aksConfig, err := expandClusterAKSConfig(d.Get("aks_config").([]interface{}), d.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		update["azureKubernetesServiceConfig"] = aksConfig
 	case ToLower(clusterDriverAKSV2):
 		aksConfigV2 := expandClusterAKSConfigV2(d.Get("aks_config_v2").([]interface{}))
 		update["aksConfig"] = aksConfigV2
-	case clusterDriverEKS:
-		eksConfig, err := expandClusterEKSConfig(d.Get("eks_config").([]interface{}), d.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		update["amazonElasticContainerServiceConfig"] = eksConfig
 	case ToLower(clusterDriverEKSV2):
 		eksConfigV2 := expandClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}))
 		update["eksConfig"] = fixClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}), structToMap(eksConfigV2))
-	case clusterDriverGKE:
-		gkeConfig, err := expandClusterGKEConfig(d.Get("gke_config").([]interface{}), d.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		update["googleKubernetesEngineConfig"] = gkeConfig
 	case ToLower(clusterDriverGKEV2):
 		gkeConfig := expandClusterGKEConfigV2(d.Get("gke_config_v2").([]interface{}))
 		update["gkeConfig"] = fixClusterGKEConfigV2(structToMap(gkeConfig))
-	case clusterOKEKind:
-		okeConfig, err := expandClusterOKEConfig(d.Get("oke_config").([]interface{}), d.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		update["okeEngineConfig"] = okeConfig
 	case ToLower(clusterDriverRKE):
 		rkeConfig, err := expandClusterRKEConfig(d.Get("rke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
