@@ -71,11 +71,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	}
 
 	if in.ClusterAgentDeploymentCustomization != nil {
-		d.Set("cluster_agent_deployment_customization", flattenAgentDeploymentCustomization(in.ClusterAgentDeploymentCustomization))
+		d.Set("cluster_agent_deployment_customization", flattenAgentDeploymentCustomization(in.ClusterAgentDeploymentCustomization, true))
 	}
 
 	if in.FleetAgentDeploymentCustomization != nil {
-		d.Set("fleet_agent_deployment_customization", flattenAgentDeploymentCustomization(in.FleetAgentDeploymentCustomization))
+		d.Set("fleet_agent_deployment_customization", flattenAgentDeploymentCustomization(in.FleetAgentDeploymentCustomization, false))
 	}
 
 	if len(in.ClusterTemplateID) > 0 {
@@ -153,38 +153,12 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	d.Set("driver", in.Driver)
 
 	switch driver := ToLower(in.Driver); driver {
-	case clusterDriverAKS:
-		v, ok := d.Get("aks_config").([]interface{})
-		if !ok {
-			v = []interface{}{}
-		}
-		aksConfig, err := flattenClusterAKSConfig(in.AzureKubernetesServiceConfig, v)
-		if err != nil {
-			return err
-		}
-		err = d.Set("aks_config", aksConfig)
-		if err != nil {
-			return err
-		}
 	case ToLower(clusterDriverAKSV2):
 		v, ok := d.Get("aks_config_v2").([]interface{})
 		if !ok {
 			v = []interface{}{}
 		}
 		err = d.Set("aks_config_v2", flattenClusterAKSConfigV2(in.AKSConfig, v))
-		if err != nil {
-			return err
-		}
-	case clusterDriverEKS:
-		v, ok := d.Get("eks_config").([]interface{})
-		if !ok {
-			v = []interface{}{}
-		}
-		eksConfig, err := flattenClusterEKSConfig(in.AmazonElasticContainerServiceConfig, v)
-		if err != nil {
-			return err
-		}
-		err = d.Set("eks_config", eksConfig)
 		if err != nil {
 			return err
 		}
@@ -197,19 +171,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		if err != nil {
 			return err
 		}
-	case clusterDriverGKE:
-		v, ok := d.Get("gke_config").([]interface{})
-		if !ok {
-			v = []interface{}{}
-		}
-		gkeConfig, err := flattenClusterGKEConfig(in.GoogleKubernetesEngineConfig, v)
-		if err != nil {
-			return err
-		}
-		err = d.Set("gke_config", gkeConfig)
-		if err != nil {
-			return err
-		}
 	case ToLower(clusterDriverGKEV2):
 		v, ok := d.Get("gke_config_v2").([]interface{})
 		if !ok {
@@ -217,20 +178,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		}
 		gkeConfig := flattenClusterGKEConfigV2(in.GKEConfig, v)
 		err = d.Set("gke_config_v2", gkeConfig)
-		if err != nil {
-			return err
-		}
-	case clusterOKEKind, clusterDriverOKE:
-		v, ok := d.Get("oke_config").([]interface{})
-		if !ok {
-			v = []interface{}{}
-		}
-
-		okeConfig, err := flattenClusterOKEConfig(in.OracleKubernetesEngineConfig, v)
-		if err != nil {
-			return err
-		}
-		err = d.Set("oke_config", okeConfig)
 		if err != nil {
 			return err
 		}
@@ -421,7 +368,7 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 	}
 
 	if v, ok := in.Get("cluster_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
-		clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v)
+		clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v, true)
 		if err != nil {
 			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
 		}
@@ -429,7 +376,7 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 	}
 
 	if v, ok := in.Get("fleet_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
-		fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v)
+		fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v, false)
 		if err != nil {
 			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
 		}
@@ -475,15 +422,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		obj.FleetWorkspaceName = v
 	}
 
-	if v, ok := in.Get("aks_config").([]interface{}); ok && len(v) > 0 {
-		aksConfig, err := expandClusterAKSConfig(v, obj.Name)
-		if err != nil {
-			return nil, err
-		}
-		obj.AzureKubernetesServiceConfig = aksConfig
-		obj.Driver = clusterDriverAKS
-	}
-
 	if v, ok := in.Get("aks_config_v2").([]interface{}); ok && len(v) > 0 {
 		// Setting aks cluster name if empty
 		if aksData, ok := v[0].(map[string]interface{}); ok {
@@ -494,15 +432,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 		obj.AKSConfig = expandClusterAKSConfigV2(v)
 		obj.Driver = clusterDriverAKSV2
-	}
-
-	if v, ok := in.Get("eks_config").([]interface{}); ok && len(v) > 0 {
-		eksConfig, err := expandClusterEKSConfig(v, obj.Name)
-		if err != nil {
-			return nil, err
-		}
-		obj.AmazonElasticContainerServiceConfig = eksConfig
-		obj.Driver = clusterDriverEKS
 	}
 
 	if v, ok := in.Get("eks_config_v2").([]interface{}); ok && len(v) > 0 {
@@ -517,28 +446,10 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		obj.Driver = clusterDriverEKSV2
 	}
 
-	if v, ok := in.Get("gke_config").([]interface{}); ok && len(v) > 0 {
-		gkeConfig, err := expandClusterGKEConfig(v, obj.Name)
-		if err != nil {
-			return nil, err
-		}
-		obj.GoogleKubernetesEngineConfig = gkeConfig
-		obj.Driver = clusterDriverGKE
-	}
-
 	if v, ok := in.Get("gke_config_v2").([]interface{}); ok && len(v) > 0 {
 		gkeConfig := expandClusterGKEConfigV2(v)
 		obj.GKEConfig = gkeConfig
 		obj.Driver = clusterDriverGKEV2
-	}
-
-	if v, ok := in.Get("oke_config").([]interface{}); ok && len(v) > 0 {
-		okeConfig, err := expandClusterOKEConfig(v, obj.Name)
-		if err != nil {
-			return nil, err
-		}
-		obj.OracleKubernetesEngineConfig = okeConfig
-		obj.Driver = clusterOKEKind
 	}
 
 	if v, ok := in.Get("k3s_config").([]interface{}); ok && len(v) > 0 {
