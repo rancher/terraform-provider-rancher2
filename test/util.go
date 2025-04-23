@@ -321,7 +321,7 @@ func GetRetryableTerraformErrors() map[string]string {
 		".*Error: disassociating EC2 EIP.*does not exist.*": "Failed to delete EIP because interface is already gone",
 		".*context deadline exceeded.*":                     "Failed due to kubernetes timeout, retrying.",
 		".*http2: client connection lost.*":                 "Failed due to transient network error.",
-    ".*iam.amazonaws.com: no such host.*":               "Failed due to transient AWS issue.",
+		".*iam.amazonaws.com: no such host.*":               "Failed due to transient AWS issue.",
 	}
 	return retryableTerraformErrors
 }
