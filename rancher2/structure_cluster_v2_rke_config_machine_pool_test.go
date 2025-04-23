@@ -81,6 +81,7 @@ func init() {
 			MaxUnhealthy:         stringPtr("2"),
 			UnhealthyRange:       stringPtr("[2,5]"),
 			HostnameLengthLimit:  16,
+			MachineOS:            "linux",
 		},
 	}
 	testClusterV2RKEConfigMachinePoolsConf[0].CloudCredentialSecretName = "cloud_credential_secret_name"
