@@ -22,19 +22,32 @@ while getopts ":r:t:p:s:" opt; do
     s) skip_build=true ;;
     \?) cat <<EOT >&2 && exit 1 ;;
 Invalid option -$OPTARG, valid options are
-  --r to re run failed tests
-  --t to specify a specific test (eg. TestBase)
-  --p to specify a specific test package (eg. base)
-  --s to skip building the provider binary and test using a released version
+  -r to re run failed tests
+  -t to specify a specific test (eg. TestBase)
+  -p to specify a specific test package (eg. base)
+  -s to skip building the provider binary and test using a released version
 EOT
   esac
 done
+
 
 run_tests() {
   local rerun=$1
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   cd "$REPO_ROOT" || exit 1
   export REPO_ROOT=$PWD
+
+  if [ "false" = "$SKIP_BUILD" ]; then
+    install -d "$REPO_ROOT/.terraform" || true
+    touch "$REPO_ROOT/.terraform/terraformrc" || true
+    cat <<EOF > "$REPO_ROOT/.terraform/terraformrc"
+provider_installation {
+  dev_overrides {
+    "rancher/rancher2" = "$REPO_ROOT/bin"
+  }
+}
+EOF
+  fi
 
   # Find the tests directory
   TEST_DIR=""
@@ -100,6 +113,10 @@ EOF
     $rerun_flag \
     $specific_test_flag
 
+  if [ "false" = "$SKIP_BUILD" ]; then
+    rm -rf "$REPO_ROOT/.terraform"
+  fi
+
   return $?
 }
 
@@ -111,17 +128,17 @@ echo "id is: $IDENTIFIER..."
 if [ -z "$GITHUB_TOKEN" ]; then echo "GITHUB_TOKEN isn't set"; else echo "GITHUB_TOKEN is set"; fi
 if [ -z "$GITHUB_OWNER" ]; then echo "GITHUB_OWNER isn't set"; else echo "GITHUB_OWNER is set"; fi
 if [ -z "$ZONE" ]; then echo "ZONE isn't set"; else echo "ZONE is set"; fi
+echo 'if tmp directory is missing, try restarting dev environment'
+
 #if [ -z "" ]; then echo ""; else echo ""; fi
 
 if [ "false" = "$skip_build" ]; then
   echo 'building...'
-  echo 'if tmp directory is missing, try restarting dev environment'
   $REPO_ROOT/scripts/gobuild.sh
-#  export TF_CLI_CONFIG_FILE="$REPO_ROOT/.terraform/terraformrc"
   export SKIP_BUILD="false"
 else
   echo "skipping build..."
-  unset SKIP_BUILD
+  export SKIP_BUILD="true"
 fi
 
 # Run tests initially

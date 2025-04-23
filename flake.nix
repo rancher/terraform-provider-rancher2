@@ -63,11 +63,11 @@
               gotestsum
               jq
               kubectl
+              kubernetes-helm
               leftovers
               less
               openssh
               openssl
-              pup
               shellcheck
               tflint
               tfsec
@@ -76,9 +76,9 @@
               updatecli
               vim
               which
+              yq
             ];
           };
-
         in
         {
           packages.default = devShellPackage;

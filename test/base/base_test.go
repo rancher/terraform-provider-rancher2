@@ -80,11 +80,9 @@ func TestBase(t *testing.T) {
 			"AWS_REGION":          region,
 			"KUBECONFIG":          testDir + "/kubeconfig",
 			"KUBE_CONFIG_PATH":    testDir,
-			"TF_IN_AUTOMATION":    "1",
       "WORKSPACE":           repoRoot,
+			"TF_IN_AUTOMATION":    "1",
 			"TF_DATA_DIR":         testDir,
-      // "TF_PLUGIN_CACHE_DIR": testDir + "/plugins",
-      // "TF_CLI_CONFIG_FILE":  repoRoot + "/.terraform/terraformrc",
 			"TF_CLI_ARGS_plan":    "-no-color -state=" + testDir + "/tfstate",
 			"TF_CLI_ARGS_apply":   "-no-color -state=" + testDir + "/tfstate",
 			"TF_CLI_ARGS_destroy": "-no-color -state=" + testDir + "/tfstate",
@@ -96,10 +94,6 @@ func TestBase(t *testing.T) {
 		Upgrade:                  true,
 	})
 
-  // if build {
-  //   terraformOptions.PluginDir = repoRoot + "/bin/"
-  // }
-
   _, err = terraform.InitE(t, terraformOptions)
 	if err != nil {
 		util.Teardown(t, testDir, terraformOptions, keyPair)
@@ -110,19 +104,22 @@ func TestBase(t *testing.T) {
 
   // after initializing the other providers override the rancher provider with the built binary
   if build {
+    t.Log("using the prebuilt rancher provider...")
     terraformOptions.EnvVars["TF_CLI_CONFIG_FILE"] = repoRoot + "/.terraform/terraformrc"
+  } else {
+    t.Log("not using the prebuilt rancher provider...")
   }
 
   _, err = terraform.ApplyE(t, terraformOptions)
 	if err != nil {
 		util.Teardown(t, testDir, terraformOptions, keyPair)
-		os.Remove(exampleDir + ".terraform.lock.hcl")
+		os.Remove(exampleDir + "/.terraform.lock.hcl")
 		sshAgent.Stop()
 		t.Fatalf("Error creating cluster: %s", err)
 	}
 
   t.Log("Test passed, tearing down...")
 	util.Teardown(t, testDir, terraformOptions, keyPair)
-	os.Remove(exampleDir + ".terraform.lock.hcl")
+	os.Remove(exampleDir + "/.terraform.lock.hcl")
 	sshAgent.Stop()
 }

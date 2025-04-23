@@ -4,3 +4,7 @@ build/
 dist/
 */*.swp
 test/data
+.terraform/terraformrc
+.terraform.lock.hcl
+*/.terraform.lock.hcl
+.terraform

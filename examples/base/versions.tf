@@ -23,7 +23,7 @@ terraform {
     }
     null = {
       source  = "hashicorp/null"
-      version = ">=3"
+      version = ">= 3"
     }
     tls = {
       source  = "hashicorp/tls"
@@ -43,7 +43,7 @@ terraform {
     }
     rancher2 = {
       source  = "rancher/rancher2"
-      version = "6.0.0"
+      version = ">= 5.0.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"

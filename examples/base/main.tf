@@ -23,6 +23,9 @@ provider "rancher2" {
 }
 
 resource "rancher2_bootstrap" "authenticate" {
+  depends_on = [
+    module.rancher,
+  ]
   provider         = rancher2.authenticate
   initial_password = module.rancher.admin_password
   password         = module.rancher.admin_password
@@ -38,23 +41,22 @@ provider "rancher2" {
 }
 
 locals {
-  identifier              = var.identifier
-  example                 = "base"
-  project_name            = "tf-${substr(md5(join("-", [local.example, local.identifier])), 0, 5)}"
-  username                = local.project_name
-  domain                  = local.project_name
-  zone                    = var.zone
-  key_name                = var.key_name
-  key                     = var.key
-  acme_server_url         = "https://acme-v02.api.letsencrypt.org"
-  owner                   = var.owner
-  rke2_version            = var.rke2_version
-  local_file_path         = var.file_path
-  runner_ip               = chomp(data.http.myip.response_body) # "runner" is the server running Terraform
-  rancher_version         = var.rancher_version
-  rancher_helm_repository = "https://releases.rancher.com/server-charts/stable"
-  cert_manager_version    = "1.16.3" # "1.13.1"
-  os                      = "sle-micro-60"
+  identifier           = var.identifier
+  example              = "base"
+  project_name         = "tf-${substr(md5(join("-", [local.example, local.identifier])), 0, 5)}"
+  username             = local.project_name
+  domain               = local.project_name
+  zone                 = var.zone
+  key_name             = var.key_name
+  key                  = var.key
+  acme_server_url      = "https://acme-v02.api.letsencrypt.org"
+  owner                = var.owner
+  rke2_version         = var.rke2_version
+  local_file_path      = var.file_path
+  runner_ip            = chomp(data.http.myip.response_body) # "runner" is the server running Terraform
+  rancher_version      = var.rancher_version
+  cert_manager_version = "1.16.3" # "1.13.1"
+  os                   = "sle-micro-61"
 }
 
 data "http" "myip" {
@@ -63,7 +65,7 @@ data "http" "myip" {
 
 module "rancher" {
   source  = "rancher/aws/rancher2"
-  version = "v0.3.1"
+  version = "v1.2.0"
   # project
   identifier   = local.identifier
   owner        = local.owner
@@ -90,17 +92,17 @@ module "rancher" {
     }
   }
   # rancher
-  cert_manager_version    = local.cert_manager_version
-  rancher_version         = local.rancher_version
-  rancher_helm_repository = local.rancher_helm_repository
+  cert_manager_version = local.cert_manager_version
+  rancher_version      = local.rancher_version
 }
 
-# test catalog entry
-resource "rancher2_catalog" "foo" {
+# Create a new rancher2 Token
+resource "rancher2_token" "test" {
   depends_on = [
     module.rancher,
+    rancher2_bootstrap.authenticate,
   ]
-  provider = rancher2.default
-  name     = "test"
-  url      = "http://foo.com:8080"
+  provider    = rancher2.default
+  description = "test token"
+  ttl         = 1200
 }

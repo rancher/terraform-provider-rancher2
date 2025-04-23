@@ -365,10 +365,11 @@ func GetAwsSessionToken() string {
 }
 
 func GetBuild() bool {
-	if os.Getenv("SKIP_BUILD") == "" {
-		return true
-	}
-	return false
+	if os.Getenv("SKIP_BUILD") == "true" {
+		return false
+	} else {
+    return true
+  }
 }
 
 func GetId() string {
@@ -396,22 +397,16 @@ func CreateTestDirectories(t *testing.T, id string) error {
 	if err != nil && !os.IsExist(err) {
 		return err
 	}
-	tdd = fwd + "/test/data/" + id + "/data"
-	err = os.Mkdir(tdd, 0755)
-	if err != nil && !os.IsExist(err) {
-		return err
-	}
 	tdd = fwd + "/test/data/" + id + "/providers"
 	err = os.Mkdir(tdd, 0755)
 	if err != nil && !os.IsExist(err) {
 		return err
 	}
-  tdd = fwd + "/test/data/" + id + "/plugins"
+	tdd = fwd + "/test/data/" + id + "/plugins"
 	err = os.Mkdir(tdd, 0755)
 	if err != nil && !os.IsExist(err) {
 		return err
 	}
-
   return nil
 }
 
@@ -424,7 +419,11 @@ func Teardown(t *testing.T, directory string, options *terraform.Options, keyPai
 		}
 	}
 	if directoryExists {
-		terraform.Destroy(t, options)
+		_, err2 := terraform.DestroyE(t, options)
+    if err2 != nil {
+      // don't fail the test if destroying the cluster fails
+      t.Logf("Error destroying cluster: %s", err2)
+    }
 		err := os.RemoveAll(directory)
 		if err != nil {
 			t.Logf("Failed to delete test data directory: %v", err)

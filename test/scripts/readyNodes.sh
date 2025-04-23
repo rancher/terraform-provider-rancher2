@@ -9,13 +9,13 @@ JSONPATH="'{range .items[*]}
 {end}'"
 
 notReady() {
-  # Get the list of nodes and their statuses  
+  # Get the list of nodes and their statuses
   NODES="$(kubectl get nodes -o jsonpath="$JSONPATH")"
   # Example output:
   # master-node   Ready
   # worker-node   Ready MemoryPressure
   # worker-node2  EtcVoter Ready
-  # worker-node3  
+  # worker-node3
   # shellcheck disable=SC2060,SC2140
   NOT_READY="$(echo "$NODES" | grep -v "Ready" | tr -d ["\t","\n"," ","'"] || true)"
   if [ -n "$NOT_READY" ]; then
