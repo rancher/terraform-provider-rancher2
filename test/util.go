@@ -368,8 +368,8 @@ func GetBuild() bool {
 	if os.Getenv("SKIP_BUILD") == "true" {
 		return false
 	} else {
-    return true
-  }
+		return true
+	}
 }
 
 func GetId() string {
@@ -407,7 +407,7 @@ func CreateTestDirectories(t *testing.T, id string) error {
 	if err != nil && !os.IsExist(err) {
 		return err
 	}
-  return nil
+	return nil
 }
 
 func Teardown(t *testing.T, directory string, options *terraform.Options, keyPair *aws.Ec2Keypair) {
@@ -420,10 +420,10 @@ func Teardown(t *testing.T, directory string, options *terraform.Options, keyPai
 	}
 	if directoryExists {
 		_, err2 := terraform.DestroyE(t, options)
-    if err2 != nil {
-      // don't fail the test if destroying the cluster fails
-      t.Logf("Error destroying cluster: %s", err2)
-    }
+		if err2 != nil {
+			// don't fail the test if destroying the cluster fails
+			t.Logf("Error destroying cluster: %s", err2)
+		}
 		err := os.RemoveAll(directory)
 		if err != nil {
 			t.Logf("Failed to delete test data directory: %v", err)

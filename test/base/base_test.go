@@ -20,7 +20,7 @@ func TestBase(t *testing.T) {
 	directory := "base"
 	owner := "terraform-ci@suse.com"
 	util.SetAcmeServer()
-  build := util.GetBuild()
+	build := util.GetBuild()
 
 	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
 	if err != nil {
@@ -80,7 +80,7 @@ func TestBase(t *testing.T) {
 			"AWS_REGION":          region,
 			"KUBECONFIG":          testDir + "/kubeconfig",
 			"KUBE_CONFIG_PATH":    testDir,
-      "WORKSPACE":           repoRoot,
+			"WORKSPACE":           repoRoot,
 			"TF_IN_AUTOMATION":    "1",
 			"TF_DATA_DIR":         testDir,
 			"TF_CLI_ARGS_plan":    "-no-color -state=" + testDir + "/tfstate",
@@ -94,7 +94,7 @@ func TestBase(t *testing.T) {
 		Upgrade:                  true,
 	})
 
-  _, err = terraform.InitE(t, terraformOptions)
+	_, err = terraform.InitE(t, terraformOptions)
 	if err != nil {
 		util.Teardown(t, testDir, terraformOptions, keyPair)
 		os.Remove(exampleDir + ".terraform.lock.hcl")
@@ -102,15 +102,15 @@ func TestBase(t *testing.T) {
 		t.Fatalf("Error creating cluster: %s", err)
 	}
 
-  // after initializing the other providers override the rancher provider with the built binary
-  if build {
-    t.Log("using the prebuilt rancher provider...")
-    terraformOptions.EnvVars["TF_CLI_CONFIG_FILE"] = repoRoot + "/.terraform/terraformrc"
-  } else {
-    t.Log("not using the prebuilt rancher provider...")
-  }
+	// after initializing the other providers override the rancher provider with the built binary
+	if build {
+		t.Log("using the prebuilt rancher provider...")
+		terraformOptions.EnvVars["TF_CLI_CONFIG_FILE"] = repoRoot + "/.terraform/terraformrc"
+	} else {
+		t.Log("not using the prebuilt rancher provider...")
+	}
 
-  _, err = terraform.ApplyE(t, terraformOptions)
+	_, err = terraform.ApplyE(t, terraformOptions)
 	if err != nil {
 		util.Teardown(t, testDir, terraformOptions, keyPair)
 		os.Remove(exampleDir + "/.terraform.lock.hcl")
@@ -118,7 +118,7 @@ func TestBase(t *testing.T) {
 		t.Fatalf("Error creating cluster: %s", err)
 	}
 
-  t.Log("Test passed, tearing down...")
+	t.Log("Test passed, tearing down...")
 	util.Teardown(t, testDir, terraformOptions, keyPair)
 	os.Remove(exampleDir + "/.terraform.lock.hcl")
 	sshAgent.Stop()
