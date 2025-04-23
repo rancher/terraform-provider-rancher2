@@ -312,6 +312,35 @@ EOF
 }
 ```
 
+### Creating Rancher v2 RKE cluster with cluster agent scheduling customization. For Custom and Imported clusters provisioned by Rancher v2.11.0 and above.
+
+```hcl
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform cluster with agent customization"
+  rke_config {
+  }
+  cluster_agent_deployment_customization {
+    scheduling_customization {
+      priority_class {
+        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted. 
+        # If omitted, the default of 'PreemptLowerPriority' is used.
+        preemption_policy = "PreemptLowerPriority"
+        # The value cannot be less than negative 1 billion, or greater than 1 billion
+        value = 1000000000
+      }
+      pod_disruption_budget {
+        # min_available and max_unavailable must either be non-negative whole integers, 
+        # or whole number percentages greater than 0 and less than or equal to 100 (e.g. "50%").
+        # You cannot set both min_available and max_unavailable at the same time.
+        min_available = "1"
+        #max_unavailable
+      }
+    }
+  }
+}
+```
+
 ### Creating Rancher v2 RKE cluster with Pod Security Admission Configuration Template (PSACT). For Rancher v2.7.2 and above.
 
 ```hcl
@@ -590,16 +619,12 @@ The following arguments are supported:
 * `agent_env_vars` - (Optional) Optional Agent Env Vars for Rancher agent. For Rancher v2.5.6 and above (list)
 * `cluster_agent_deployment_customization` - (Optional) Optional customization for cluster agent. For Rancher v2.7.5 and above (list)
 * `fleet_agent_deployment_customization` - (Optional) Optional customization for fleet agent. For Rancher v2.7.5 and above (list)
-* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `k3s_config` (list maxitems:1)
-* `rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `gke_config`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
-* `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` and `rke_config` (list maxitems:1)
-* `aks_config` - (Optional) The Azure AKS configuration for `aks` Clusters. Conflicts with `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `aks_config_v2` - (Optional) The Azure AKS v2 configuration for creating/import `aks` Clusters. Conflicts with `aks_config`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `eks_config` - (Optional) The Amazon EKS configuration for `eks` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config` (list maxitems:1)
-* `eks_config_v2` - (Optional/Computed) The Amazon EKS V2 configuration to create or import `eks` Clusters. Conflicts with `aks_config`, `eks_config`, `gke_config`, `gke_config_v2`, `oke_config` `k3s_config` and `rke_config`. For Rancher v2.5.x and above (list maxitems:1)
-* `gke_config` - (Optional) The Google GKE configuration for `gke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config_v2`, `oke_config`, `k3s_config` and `rke_config` (list maxitems:1)
-* `gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `oke_config`, `k3s_config` and `rke_config`. For Rancher v2.5.8 and above (list maxitems:1)
-* `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config`, `aks_config_v2`, `eks_config`, `eks_config_v2`, `gke_config`, `gke_config_v2`, `k3s_config` and `rke_config` (list maxitems:1)
+* `rke_config` - (Optional/Computed) The RKE configuration for `rke` Clusters. Conflicts with `aks_config_v2`, `eks_config_v2`, `gke_config_v2` and `k3s_config` (list maxitems:1)
+* `rke2_config` - (Optional/Computed) The RKE2 configuration for `rke2` Clusters. Conflicts with `aks_config_v2`, `k3s_config` and `rke_config` (list maxitems:1)
+* `k3s_config` - (Optional/Computed) The K3S configuration for `k3s` imported Clusters. Conflicts with `aks_config_v2`, `eks_config_v2`, `gke_config_v2` and `rke_config` (list maxitems:1)
+* `aks_config_v2` - (Optional) The Azure AKS v2 configuration for creating/import `aks` Clusters. Conflicts with `eks_config_v2`, `gke_config_v2`, `k3s_config` and `rke_config` (list maxitems:1)
+* `eks_config_v2` - (Optional/Computed) The Amazon EKS V2 configuration to create or import `eks` Clusters. Conflicts with `gke_config_v2`, `k3s_config` and `rke_config`. For Rancher v2.5.x and above (list maxitems:1)
+* `gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config_v2`, `eks_config_v2`, `k3s_config` and `rke_config`. For Rancher v2.5.8 and above (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_template_answers` - (Optional/Computed) Cluster template answers. For Rancher v2.3.x and above (list maxitems:1)
@@ -649,6 +674,7 @@ The following attributes are exported:
 * `append_tolerations` - (Optional) User defined tolerations to append to agent (list)
 * `override_affinity` - (Optional) User defined affinity to override default agent affinity (string)
 * `override_resource_requirements` - (Optional) User defined resource requirements to set on the agent (list)
+* `scheduling_customization` - (Optional) Supported in Rancher 2.11.0 and above. Defines the configuration of a Priority Class and or Pod Disruption Budget. Currently only supported by the `cluster_agent_deployment_customization` field, and requires the `cattle_cluster_agent_scheduling_customization` feature to be enabled.
 
 #### `append_tolerations`
 
@@ -668,6 +694,27 @@ The following attributes are exported:
 * `cpu_request` - (Optional) The minimum CPU required for agent (string)
 * `memory_limit` - (Optional) The maximum memory limit for agent (string)
 * `memory_request` - (Optional) The minimum memory required for agent (string)
+
+#### `scheduling_customization`
+
+#### Arguments
+
+* `pod_disruption_budget` - (Optional, list) The definition of a Pod Disruption Budget deployed for the cluster agent
+* `priority_class` - (Optional, list) The definition of a Priority Class deployed for the cluster agent
+
+#### `pod_disruption_budget`
+
+#### Arguments
+
+* `min_available` - (Optional, string) The minimum number of agent replicas that must be running at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%").  This field cannot be used at the same time as `max_unavailable`.
+* `max_unavailable` - (Optional, string) The maximum number of agent replicas that can be unavailable at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `min_available`.
+
+#### `priority_class`
+
+#### Arguments
+
+* `value` - (Optional, int) The priority value set for the Priority Class. Must be greater than or equal to negative 1 billion, and less than or equal to 1 billion.
+* `preemption_policy` (Optional, string) The preemption policy set for the Priority Class. Must be set to either 'Never', or 'PreemptLowerPriority'
 
 ### `rke_config`
 
@@ -1471,52 +1518,6 @@ The following arguments are supported:
 * `server_concurrency` - (Optional) Server concurrency. Default: `1` (int)
 * `worker_concurrency` - (Optional) Worker concurrency. Default: `1` (int)
 
-### `aks_config`
-
-#### Arguments
-
-The following arguments are supported:
-
-* `agent_dns_prefix` - (Required) DNS prefix to be used to create the FQDN for the agent pool (string)
-* `client_id` - (Required/Sensitive) Azure client ID to use (string)
-* `client_secret` - (Required/Sensitive) Azure client secret associated with the \"client id\" (string)
-* `kubernetes_version` - (Required) Specify the version of Kubernetes. To check available versions exec `az aks get-versions -l eastus -o table` (string)
-* `master_dns_prefix` - (Required) DNS prefix to use the Kubernetes cluster control pane (string)
-* `resource_group` - (Required) The name of the Cluster resource group (string)
-* `ssh_public_key_contents` - (Required) Contents of the SSH public key used to authenticate with Linux hosts (string)
-* `subnet` - (Required) The name of an existing Azure Virtual Subnet. Composite of agent virtual network subnet ID (string)
-* `subscription_id` - (Required) Subscription credentials which uniquely identify Microsoft Azure subscription (string)
-* `tenant_id` - (Required) Azure tenant ID to use (string)
-* `virtual_network` - (Required) The name of an existing Azure Virtual Network. Composite of agent virtual network subnet ID (string)
-* `virtual_network_resource_group` - (Required) The resource group of an existing Azure Virtual Network. Composite of agent virtual network subnet ID (string)
-* `add_client_app_id` - (Optional/Sensitive) The ID of an Azure Active Directory client application of type \"Native\". This application is for user login via kubectl (string)
-* `add_server_app_id` - (Optional/Sensitive) The ID of an Azure Active Directory server application of type \"Web app/API\". This application represents the managed cluster's apiserver (Server application) (string)
-* `aad_server_app_secret` - (Optional/Sensitive) The secret of an Azure Active Directory server application (string)
-* `aad_tenant_id` - (Optional/Sensitive) The ID of an Azure Active Directory tenant (string)
-* `admin_username` - (Optional) The administrator username to use for Linux hosts. Default `azureuser` (string)
-* `agent_os_disk_size` - (Optional) GB size to be used to specify the disk for every machine in the agent pool. If you specify 0, it will apply the default according to the \"agent vm size\" specified. Default `0` (int)
-* `agent_pool_name` - (Optional) Name for the agent pool, upto 12 alphanumeric characters. Default `agentpool0` (string)
-* `agent_storage_profile` - (Optional) Storage profile specifies what kind of storage used on machine in the agent pool. Chooses from [ManagedDisks StorageAccount]. Default `ManagedDisks` (string)
-* `agent_vm_size` - (Optional) Size of machine in the agent pool. Default `Standard_D1_v2` (string)
-* `auth_base_url` - (Optional) Different authentication API url to use. Default `https://login.microsoftonline.com/` (string)
-* `base_url` - (Optional) Different resource management API url to use. Default `https://management.azure.com/` (string)
-* `count` - (Optional) Number of machines (VMs) in the agent pool. Allowed values must be in the range of 1 to 100 (inclusive). Default `1` (int)
-* `dns_service_ip` - (Optional) An IP address assigned to the Kubernetes DNS service. It must be within the Kubernetes Service address range specified in \"service cidr\". Default `10.0.0.10` (string)
-* `docker_bridge_cidr` - (Required) A CIDR notation IP range assigned to the Docker bridge network. It must not overlap with any Subnet IP ranges or the Kubernetes Service address range specified in \"service cidr\". Default `172.17.0.1/16` (string)
-* `enable_http_application_routing` - (Optional) Enable the Kubernetes ingress with automatic public DNS name creation. Default `false` (bool)
-* `enable_monitoring` - (Optional) Turn on Azure Log Analytics monitoring. Uses the Log Analytics \"Default\" workspace if it exists, else creates one. if using an existing workspace, specifies \"log analytics workspace resource id\". Default `true` (bool)
-* `load_balancer_sku` - (Optional/Computed) Load balancer type (basic | standard). Must be standard for auto-scaling
-* `location` - (Optional) Azure Kubernetes cluster location. Default `eastus` (string)
-* `log_analytics_workspace` - (Optional) The name of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses '{resource group}-{subscription id}-{location code}' (string)
-* `log_analytics_workspace_resource_group` - (Optional) The resource group of an existing Azure Log Analytics Workspace to use for storing monitoring data. If not specified, uses the 'Cluster' resource group (string)
-* `max_pods` - (Optional) Maximum number of pods that can run on a node. Default `110` (int)
-* `network_plugin` - (Optional) Network plugin used for building Kubernetes network. Chooses from `azure` or `kubenet`. Default `azure` (string)
-* `network_policy` - (Optional) Network policy used for building Kubernetes network. Chooses from `calico` (string)
-* `pod_cidr` - (Optional) A CIDR notation IP range from which to assign Kubernetes Pod IPs when \"network plugin\" is specified in \"kubenet\". Default `172.244.0.0/16` (string)
-* `service_cidr` - (Optional) A CIDR notation IP range from which to assign Kubernetes Service cluster IPs. It must not overlap with any Subnet IP ranges. Default `10.0.0.0/16` (string)
-* `tag` - (Deprecated) Use `tags` argument instead as []string
-* `tags` - (Optional/Computed) Tags for Kubernetes cluster. For example, `["foo=bar","bar=foo"]` (list)
-
 ### `aks_config_v2`
 
 #### Arguments
@@ -1579,32 +1580,6 @@ The following arguments are supported just for creating new AKS clusters (`impor
 * `labels` - (Optional) The AKS node pool labels (map)
 * `taints` - (Optonal) The AKS node pool taints (list)
 
-
-### `eks_config`
-
-#### Arguments
-
-The following arguments are supported:
-
-* `access_key` - (Required/Sensitive) The AWS Client ID to use (string)
-* `kubernetes_version` - (Required) The Kubernetes master version (string)
-* `secret_key` - (Required/Sensitive) The AWS Client Secret associated with the Client ID (string)
-* `ami` - (Optional) AMI ID to use for the worker nodes instead of the default (string)
-* `associate_worker_node_public_ip` - (Optional) Associate public ip EKS worker nodes. Default `true` (bool)
-* `desired_nodes` - (Optional) The desired number of worker nodes. For Rancher v2.3.x and above. Default `3` (int)
-* `instance_type` - (Optional) The type of machine to use for worker nodes. Default `t2.medium` (string)
-* `key_pair_name` - (Optional) Allow user to specify key name to use. For Rancher v2.2.7 and above (string)
-* `maximum_nodes` - (Optional) The maximum number of worker nodes. Default `3` (int)
-* `minimum_nodes` - (Optional) The minimum number of worker nodes. Default `1` (int)
-* `node_volume_size` - (Optional) The volume size for each node. Default `20` (int)
-* `region` - (Optional) The AWS Region to create the EKS cluster in. Default `us-west-2` (string)
-* `security_groups` - (Optional) List of security groups to use for the cluster. If it's not specified Rancher will create a new security group (list)
-* `service_role` - (Optional) The service role to use to perform the cluster operations in AWS. If it's not specified Rancher will create a new service role (string)
-* `session_token` - (Optional/Sensitive) A session token to use with the client key and secret if applicable (string)
-* `subnets` - (Optional) List of subnets in the virtual network to use. If it's not specified Rancher will create 3 news subnets (list)
-* `user_data` - (Optional/Computed) Pass user-data to the nodes to perform automated configuration tasks (string)
-* `virtual_network` - (Optional) The name of the virtual network to use. If it's not specified Rancher will create a new VPC (string)
-
 ### `eks_config_v2`
 
 #### Arguments
@@ -1661,66 +1636,6 @@ The following arguments are supported:
 * `id` - (Required) The EKS node group launch template ID (string)
 * `name` - (Optional/Computed) The EKS node group launch template name (string)
 * `version` - (Optional) The EKS node group launch template version. Default: `1` (int)
-
-### `gke_config`
-
-#### Arguments
-
-The following arguments are supported:
-
-* `cluster_ipv4_cidr` - (Required) The IP address range of the container pods (string)
-* `credential` - (Required/Sensitive) The contents of the GC credential file (string)
-* `disk_type` - (Required) Type of the disk attached to each node (string)
-* `image_type` - (Required) The image to use for the worker nodes (string)
-* `ip_policy_cluster_ipv4_cidr_block` - (Required) The IP address range for the cluster pod IPs (string)
-* `ip_policy_cluster_secondary_range_name` - (Required) The name of the secondary range to be used for the cluster CIDR block (string)
-* `ip_policy_node_ipv4_cidr_block` - (Required) The IP address range of the instance IPs in this cluster (string)
-* `ip_policy_services_ipv4_cidr_block` - (Required) The IP address range of the services IPs in this cluster (string)
-* `ip_policy_services_secondary_range_name` - (Required) The name of the secondary range to be used for the services CIDR block (string)
-* `ip_policy_subnetwork_name` - (Required) A custom subnetwork name to be used if createSubnetwork is true (string)
-* `locations` - (Required) Locations for GKE cluster (list)
-* `machine_type` - (Required) Machine type for GKE cluster (string)
-* `maintenance_window` - (Required) Maintenance window for GKE cluster (string)
-* `master_ipv4_cidr_block` - (Required) The IP range in CIDR notation to use for the hosted master network (string)
-* `master_version` - (Required) Master version for GKE cluster (string)
-* `network` - (Required) Network for GKE cluster (string)
-* `node_pool` - (Required) The ID of the cluster node pool (string)
-* `node_version` - (Required) Node version for GKE cluster (string)
-* `oauth_scopes` - (Required) The set of Google API scopes to be made available on all of the node VMs under the default service account (list)
-* `project_id` - (Required) Project ID for GKE cluster (string)
-* `service_account` - (Required) The Google Cloud Platform Service Account to be used by the node VMs (string)
-* `sub_network` - (Required) Subnetwork for GKE cluster (string)
-* `description` - (Optional) An optional description of this cluster (string)
-* `disk_size_gb` - (Optional) Size of the disk attached to each node. Default `100` (int)
-* `enable_alpha_feature` - (Optional) To enable Kubernetes alpha feature. Default `true` (bool)
-* `enable_auto_repair` - (Optional) Specifies whether the node auto-repair is enabled for the node pool. Default `false` (bool)
-* `enable_auto_upgrade` - (Optional) Specifies whether node auto-upgrade is enabled for the node pool. Default `false` (bool)
-* `enable_horizontal_pod_autoscaling` - (Optional) Enable horizontal pod autoscaling for the cluster. Default `true` (bool)
-* `enable_http_load_balancing` - (Optional) Enable HTTP load balancing on GKE cluster. Default `true` (bool)
-* `enable_kubernetes_dashboard` - (Optional) Whether to enable the Kubernetes dashboard. Default `false` (bool)
-* `enable_legacy_abac` - (Optional) Whether to enable legacy abac on the cluster. Default `false` (bool)
-* `enable_master_authorized_network` - (Optional) Enable master authorized network. Set to `true` if `master_authorized_network_cidr_blocks` is set. Default `false` (bool)
-* `enable_network_policy_config` - (Optional) Enable network policy config for the cluster. Default `true` (bool)
-* `enable_nodepool_autoscaling` - (Optional) Enable nodepool autoscaling. Default `false` (bool)
-* `enable_private_endpoint` - (Optional) Whether the master's internal IP address is used as the cluster endpoint. Default `false` (bool)
-* `enable_private_nodes` - (Optional) Whether nodes have internal IP address only. Default `false` (bool)
-* `enable_stackdriver_logging` - (Optional) Enable stackdriver monitoring. Default `true` (bool)
-* `enable_stackdriver_monitoring` - (Optional) Enable stackdriver monitoring on GKE cluster (bool)
-* `ip_policy_create_subnetwork` - (Optional) Whether a new subnetwork will be created automatically for the cluster. Default `false` (bool)
-* `issue_client_certificate` - (Optional) Issue a client certificate. Default `false` (bool)
-* `kubernetes_dashboard` - (Optional) Enable the Kubernetes dashboard. Default `false` (bool)
-* `labels` - (Optional/Computed) The map of Kubernetes labels to be applied to each node (map)
-* `local_ssd_count` - (Optional) The number of local SSD disks to be attached to the node. Default `0` (int)
-* `master_authorized_network_cidr_blocks` - (Optional) Define up to 10 external networks that could access Kubernetes master through HTTPS (list)
-* `max_node_count` - (Optional) Maximum number of nodes in the NodePool. Must be >= minNodeCount. There has to enough quota to scale up the cluster. Default `0` (int)
-* `min_node_count` - (Optional) Minimmum number of nodes in the NodePool. Must be >= 1 and <= maxNodeCount. Default `0` (int)
-* `node_count` - (Optional) Node count for GKE cluster. Default `3` (int)
-* `preemptible` - (Optional) Whether the nodes are created as preemptible VM instances. Default `false` (bool)
-* `region` - (Optional) GKE cluster region. Conflicts with `zone` (string)
-* `resource_labels` - (Optional/Computed) The map of Kubernetes labels to be applied to each cluster (map)
-* `use_ip_aliases` - (Optional) Whether alias IPs will be used for pod IPs in the cluster. Default `false` (bool)
-* `taints` - (Required) List of Kubernetes taints to be applied to each node (list)
-* `zone` - (Optional) GKE cluster zone. Conflicts with `region` (string)
 
 ### `gke_config_v2`
 
@@ -1819,6 +1734,7 @@ The following arguments are supported:
 * `preemptible` - (Optional) Enable GKE node config preemptible. Default: `false` (bool)
 * `tags` - (Optional/Computed) The GKE node config tags (List)
 * `taints` - (Optional) The GKE node config taints (List)
+* `service_account` - (Optional) The GKE Service Account to be used by the node VMs (string)
 
 ###### `taints`
 
@@ -1842,45 +1758,6 @@ The following arguments are supported:
 * `master_ipv4_cidr_block` - (Required) The GKE cluster private master ip v4 cidr block (string)
 * `enable_private_endpoint` - (Optional) Enable GKE cluster private endpoint. Default: `false` (bool)
 * `enable_private_nodes` - (Optional) Enable GKE cluster private endpoint. Default: `false` (bool)
-
-### `oke_config`
-
-#### Arguments
-
-The following arguments are supported:
-
-* `compartment_id` - (Required) The OCID of the compartment in which to create resources OKE cluster and related resources (string)
-* `custom_boot_volume_size` - (Optional) Optional custom boot volume size (GB) for all nodes. If you specify 0, it will apply the default according to the `node_image` specified. Default `0` (int)
-* `description` - (Optional) An optional description of this cluster (string)
-* `enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` for Rancher v2.5.10 and above (bool)
-* `enable_kubernetes_dashboard` - (Optional) Specifies whether to enable the Kubernetes dashboard. Default `false` (bool)
-* `enable_private_nodes` - (Optional) Specifies whether worker nodes will be deployed into a new, private, subnet. Default `false` (bool)
-* `fingerprint` - (Required) The fingerprint corresponding to the specified user's private API Key (string)
-* `flex_ocpus` - (Optional) Specifies number of OCPUs for nodes (requires flexible shape specified with `node_shape`) (int)
-* `kms_key_id` - (Optional) The OCID of a KMS vault master key used to encrypt secrets at rest. See [here](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengencryptingdata.htm) for help creating a vault and master encryption key. For Rancher v2.5.9 and above (string)
-* `kubernetes_version` - (Required) The Kubernetes version that will be used for your master *and* OKE worker nodes (string)
-* `limit_node_count` - (Optional) The maximum number of worker nodes. Can limit `quantity_per_subnet`. Default `0` (no limit) (int)
-* `load_balancer_subnet_name_1` - (Optional) The name of the first existing subnet to use for Kubernetes services / LB. `vcn_name` is also required when specifying an existing subnet. (string)
-* `load_balancer_subnet_name_2` - (Optional) The name of a second existing subnet to use for Kubernetes services / LB. A second subnet is only required when it is AD-specific (non-regional) (string)
-* `node_image` - (Required) The Oracle Linux OS image name to use for the OKE node(s). See [here](https://docs.cloud.oracle.com/en-us/iaas/images/) for a list of images. (string)
-* `node_pool_dns_domain_name` - (Optional) Name for DNS domain of node pool subnet. Default `nodedns` (string)
-* `node_pool_subnet_name` - (Optional) Name for node pool subnet. Default `nodedns` (string)
-* `node_public_key_contents` - (Optional) The contents of the SSH public key file to use for the nodes (string)
-* `node_shape` - (Required) The shape of the node (determines number of CPUs and  amount of memory on each OKE node) (string)
-* `pod_cidr` - (Optional) A CIDR IP range from which to assign Kubernetes Pod IPs (string)
-* `private_key_contents` - (Required/Sensitive) The private API key file contents for the specified user, in PEM format (string)
-* `private_key_passphrase` - (Optional/Sensitive) The passphrase (if any) of the private key for the OKE cluster (string)
-* `quantity_of_node_subnets` - (Optional) Number of node subnets. Default `1` (int)
-* `quantity_per_subnet` - (Optional) Number of OKE worker nodes in each subnet / availability domain. Default `1` (int)
-* `region` - (Required) The availability domain within the region to host the cluster. See [here](https://docs.cloud.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm) for a list of region names. (string)
-* `service_cidr` - (Optional) A CIDR IP range from which to assign Kubernetes Service IPs (string)
-* `service_dns_domain_name` - (Optional) Name for DNS domain of service subnet. Default `svcdns` (string)
-* `skip_vcn_delete` - (Optional) Specifies whether to skip deleting the virtual cloud network (VCN) on destroy. Default `false` (bool)
-* `tenancy_id` - (Required) The OCID of the tenancy in which to create resources (string)
-* `user_ocid` - (Required) The OCID of a user who has access to the tenancy/compartment (string)
-* `vcn_compartment_id` - (Optional) The OCID of the compartment (if different from `compartment_id`) in which to find the pre-existing virtual network set with `vcn_name`. (string)
-* `vcn_name` - (Optional) The name of an existing virtual network to use for the cluster creation. If set, you must also set `load_balancer_subnet_name_1`. A VCN and subnets will be created if none are specified. (string)
-* `worker_node_ingress_cidr` - (Optional) Additional CIDR from which to allow ingress to worker nodes (string)
 
 ### `cluster_auth_endpoint`
 
