@@ -53,7 +53,7 @@ func TestBase(t *testing.T) {
 	}
 
 	// use latest Rancher, due to community patch issue
-	rancherVersion, _, _, err := util.GetReleases("rancher","rancher")
+	rancherVersion, _, _, err := util.GetReleases("rancher", "rancher")
 	if err != nil {
 		os.RemoveAll(testDir)
 		aws.DeleteEC2KeyPair(t, keyPair)
