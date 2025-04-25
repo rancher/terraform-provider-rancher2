@@ -20,12 +20,14 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetRancherReleases() (string, string, string, error) {
-	releases, err := getRancherReleases()
+func GetReleases(owner string, repo string) (string, string, string, error) {
+	releases, err := getReleases(owner, repo)
 	if err != nil {
 		return "", "", "", err
 	}
-	versions := filterPrerelease(releases)
+	filterPrerelease(&releases) // this removes release candidates and pending releases
+	filterAssetsExist(&releases)
+	versions := getVersionsFromReleases(&releases)
 	if len(versions) == 0 {
 		return "", "", "", errors.New("no eligible versions found")
 	}
@@ -45,7 +47,7 @@ func GetRancherReleases() (string, string, string, error) {
 	return latest, stable, lts, nil
 }
 
-func getRancherReleases() ([]*github.RepositoryRelease, error) {
+func getReleases(owner string, repo string) ([]*github.RepositoryRelease, error) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	if githubToken == "" {
 		fmt.Println("GITHUB_TOKEN environment variable not set")
@@ -60,93 +62,56 @@ func getRancherReleases() ([]*github.RepositoryRelease, error) {
 	client := github.NewClient(tokenClient)
 
 	var releases []*github.RepositoryRelease
-	releases, _, err := client.Repositories.ListReleases(context.Background(), "rancher", "rancher", &github.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	return releases, nil
-}
-
-func GetRke2Releases() (string, string, string, error) {
-	releases, err := getRke2Releases()
-	if err != nil {
-		return "", "", "", err
-	}
-	versions := filterPrerelease(releases)
-	if len(versions) == 0 {
-		return "", "", "", errors.New("no eligible versions found")
-	}
-	zeroPadVersionNumbers(&versions)
-	sortVersions(&versions)
-	filterDuplicateMinors(&versions)
-	removeZeroPadding(&versions)
-	latest := versions[0]
-	stable := latest
-	lts := stable
-	if len(versions) > 1 {
-		stable = versions[1]
-	}
-	if len(versions) > 2 {
-		lts = versions[2]
-	}
-	return latest, stable, lts, nil
-}
-
-func getRke2Releases() ([]*github.RepositoryRelease, error) {
-	githubToken := os.Getenv("GITHUB_TOKEN")
-	if githubToken == "" {
-		fmt.Println("GITHUB_TOKEN environment variable not set")
-		return nil, errors.New("GITHUB_TOKEN environment variable not set")
-	}
-
-	// Create a new OAuth2 token using the GitHub token
-	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: githubToken})
-	tokenClient := oauth2.NewClient(context.Background(), tokenSource)
-
-	// Create a new GitHub client using the authenticated HTTP client
-	client := github.NewClient(tokenClient)
-
-	var releases []*github.RepositoryRelease
-	releases, _, err := client.Repositories.ListReleases(context.Background(), "rancher", "rke2", &github.ListOptions{})
+	releases, _, err := client.Repositories.ListReleases(context.Background(), owner, repo, &github.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 	return releases, nil
 }
 
-func filterReleaseCandidate(v *[]string) {
-	var fv []string
-	versions := *v
-	for i := 1; i < len(versions); i++ {
-		if strings.Contains(versions[i], "-") != true {
-			fv = append(fv, versions[i])
+func filterPrerelease(r *[]*github.RepositoryRelease) {
+	var fr []*github.RepositoryRelease
+	releases := *r
+	for i := 0; i < len(releases); i++ {
+		if !releases[i].GetPrerelease() {
+			fr = append(fr, releases[i])
 		}
 	}
-	*v = fv
+	*r = fr
 }
 
-func filterPrerelease(r []*github.RepositoryRelease) []string {
+func filterAssetsExist(r *[]*github.RepositoryRelease) {
+	var fr []*github.RepositoryRelease
+	releases := *r
+	for i := 0; i < len(releases); i++ {
+		if len(releases[i].Assets) > 2 { // source zip and tar are always there
+			// prime only releases won't have additional artifacts
+			// so we only want releases with more than 2 artifacts
+			fr = append(fr, releases[i])
+		}
+	}
+	*r = fr
+}
+
+func getVersionsFromReleases(r *[]*github.RepositoryRelease) []string {
 	var versions []string
-	for _, release := range r {
-		version := release.GetTagName()
-		if !release.GetPrerelease() {
-			versions = append(versions, version)
-			// [
-			//   "v1.28.14+rke2r1",
-			//   "v1.30.1+rke2r3",
-			//   "v1.29.4+rke2r1",
-			//   "v1.30.1+rke2r2",
-			//   "v1.29.5+rke2r2",
-			//   "v1.30.1+rke2r1",
-			//   "v1.27.20+rke2r1",
-			//   "v1.30.0+rke2r1",
-			//   "v1.29.5+rke2r1",
-			//   "v1.28.17+rke2r1",
-			// ]
-		}
+	releases := *r
+	for i := 0; i < len(releases); i++ {
+		versions = append(versions, *releases[i].TagName)
 	}
 	return versions
+	// [
+	//   "v1.28.14+rke2r1",
+	//   "v1.30.1+rke2r3",
+	//   "v1.29.4+rke2r1",
+	//   "v1.30.1+rke2r2",
+	//   "v1.29.5+rke2r2",
+	//   "v1.30.1+rke2r1",
+	//   "v1.27.20+rke2r1",
+	//   "v1.30.0+rke2r1",
+	//   "v1.29.5+rke2r1",
+	//   "v1.28.17+rke2r1",
+	// ]
 }
 
 func sortVersions(v *[]string) {
@@ -365,14 +330,6 @@ func GetAwsSessionToken() string {
 	return os.Getenv("AWS_SESSION_TOKEN")
 }
 
-func GetBuild() bool {
-	if os.Getenv("SKIP_BUILD") == "true" {
-		return false
-	} else {
-		return true
-	}
-}
-
 func GetId() string {
 	id := os.Getenv("IDENTIFIER")
 	if id == "" {
@@ -388,25 +345,17 @@ func CreateTestDirectories(t *testing.T, id string) error {
 	if err != nil {
 		return err
 	}
-	tdd := fwd + "/test/data"
-	err = os.Mkdir(tdd, 0755)
-	if err != nil && !os.IsExist(err) {
-		return err
+	paths := []string{
+		filepath.Join(fwd, "test/data"),
+		filepath.Join(fwd, "test/data", id),
+		filepath.Join(fwd, "test/data", id, "providers"),
+		filepath.Join(fwd, "test/data", id, "plugins"),
 	}
-	tdd = fwd + "/test/data/" + id
-	err = os.Mkdir(tdd, 0755)
-	if err != nil && !os.IsExist(err) {
-		return err
-	}
-	tdd = fwd + "/test/data/" + id + "/providers"
-	err = os.Mkdir(tdd, 0755)
-	if err != nil && !os.IsExist(err) {
-		return err
-	}
-	tdd = fwd + "/test/data/" + id + "/plugins"
-	err = os.Mkdir(tdd, 0755)
-	if err != nil && !os.IsExist(err) {
-		return err
+	for _, path := range paths {
+		err = os.Mkdir(path, 0755)
+		if err != nil && !os.IsExist(err) {
+			return err
+		}
 	}
 	return nil
 }
@@ -431,4 +380,8 @@ func Teardown(t *testing.T, directory string, options *terraform.Options, keyPai
 		}
 	}
 	aws.DeleteEC2KeyPair(t, keyPair)
+}
+
+func GetBuild() bool {
+	return os.Getenv("SKIP_BUILD") != "true"
 }

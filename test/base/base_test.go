@@ -44,7 +44,7 @@ func TestBase(t *testing.T) {
 	t.Logf("Key %s created and added to agent", keyPair.Name)
 
 	// use oldest RKE2, remember it releases much more than Rancher
-	_, _, rke2Version, err := util.GetRke2Releases()
+	_, _, rke2Version, err := util.GetReleases("rancher", "rke2")
 	if err != nil {
 		os.RemoveAll(testDir)
 		aws.DeleteEC2KeyPair(t, keyPair)
@@ -53,7 +53,7 @@ func TestBase(t *testing.T) {
 	}
 
 	// use latest Rancher, due to community patch issue
-	rancherVersion, _, _, err := util.GetRancherReleases()
+	rancherVersion, _, _, err := util.GetReleases("rancher","rancher")
 	if err != nil {
 		os.RemoveAll(testDir)
 		aws.DeleteEC2KeyPair(t, keyPair)

@@ -130,8 +130,6 @@ if [ -z "$GITHUB_OWNER" ]; then echo "GITHUB_OWNER isn't set"; else echo "GITHUB
 if [ -z "$ZONE" ]; then echo "ZONE isn't set"; else echo "ZONE is set"; fi
 echo 'if tmp directory is missing, try restarting dev environment'
 
-#if [ -z "" ]; then echo ""; else echo ""; fi
-
 if [ "false" = "$skip_build" ]; then
   echo 'building...'
   $REPO_ROOT/scripts/gobuild.sh
