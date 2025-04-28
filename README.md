@@ -3,18 +3,11 @@ Terraform Provider for Rancher v2
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/terraform-providers/terraform-provider-rancher2)](https://goreportcard.com/report/github.com/terraform-providers/terraform-provider-rancher2)
 
-- Website: https://www.terraform.io
-- [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
-
-<img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/public/img/logo-hashicorp.svg" width="600px">
-
 Requirements
 ------------
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 0.11.x
-- [Go](https://golang.org/doc/install) 1.13 to build the provider plugin
-- [Docker](https://docs.docker.com/install/) 20.10.x to run acceptance tests
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.5.0
+- [Go](https://golang.org/doc/install) 1.23 to build the provider plugin
 
 Building The Provider
 ---------------------
@@ -41,7 +34,7 @@ If you're building the provider, follow the instructions to [install it as a plu
 Developing the Provider
 ---------------------------
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.9+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.20+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
 
 To compile the provider, run `make build`. This will build the provider and put the provider binary in `$GOPATH/bin` .
 
@@ -80,11 +73,7 @@ To run the Acceptance tests, simply run `make testacc`. `scripts/gotestacc.sh` w
 $ make testacc
 ```
 
-Due to [network limitations](https://docs.docker.com/docker-for-mac/networking/#known-limitations-use-cases-and-workarounds) on Docker for osx and/or windows, there is a way to run dockerized acceptance test.
-
-```sh
-$ EXPOSE_HOST_PORTS=true make docker-testacc
-```
+There is no way to run dockerized acceptance tests.
 
 To run the structure tests, run
 
@@ -98,8 +87,6 @@ Branching the Provider
 ---------------------------
 
 This provider is branched in correlation with minor versions of Rancher:
-* The `release/v3` branch with 3.0.0+ is aligned with Rancher 2.7
-* the `release/v4` branch with 4.0.0+ is aligned with Rancher 2.8 
 * the `release/v5` branch with 5.0.0+ is aligned with Rancher 2.9
 * the `release/v6` branch with 6.0.0+ is aligned with Rancher 2.10 
 * the `master` branch with 7.0.0+ is aligned with Rancher 2.11
@@ -117,16 +104,16 @@ Aligning major provider releases with minor Rancher releases means:
 
 See the [compatibility matrix](docs/compatibility-matrix.md) for details.
 
-If you are using Terraform to provision clusters on instances of Rancher 2.7 and 2.8,
+If you are using Terraform to provision clusters on instances of Rancher 2.8 and 2.9,
   you must have a separate configuration in a separate dir for each provider.
 Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
 
 Releasing the Provider
 ---------------------------
 
-As of Terraform 2.0.0 and 3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version.
-For example, 4.0.0 will be released 1-2 weeks after Rancher 2.8.x and fixes and features in the 4.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.8.x.
-A critical bug fix can be released 'out of band' as 4.0.1 and backported to `release/v3` as 3.0.1.
+As of v2.0.0 and v3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version.
+For example, v7.0.0 will be released 1-2 weeks after Rancher 2.11.x and fixes and features in the 7.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.11.x.
+A critical bug fix can be released immediately as a patch release. For instance, as v7.0.1
 
 To release the provider
 
