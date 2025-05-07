@@ -18,7 +18,7 @@ OS_ARCH_ARG[openbsd]="386 amd64"
 BIN_NAME="terraform-provider-rancher2"
 BUILD_DIR=$(dirname $0)"/../build/bin"
 
-
+# builds to bin/terraform-provider-rancher2 by default, does more if $CROSS is set.
 CGO_ENABLED=0 go build -ldflags="-w -s -X main.VERSION=$VERSION -extldflags -static" -o bin/${BIN_NAME}
 
 if [ -n "$CROSS" ]; then

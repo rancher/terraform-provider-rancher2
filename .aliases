@@ -1,0 +1,11 @@
+#!/bin/env sh
+alias gs='git status'
+alias gd='git diff'
+alias tf='terraform'
+alias tfa='if [ -f ssh_key ]; then chmod 600 ssh_key && ssh-add ssh_key; fi; terraform init; terraform apply --auto-approve'
+alias tfd='terraform destroy --auto-approve'
+alias tfp='terraform init || terraform providers && terraform validate && terraform plan'
+alias tfl='terraform state list'
+alias k='kubectl'
+alias tt='run_tests'
+alias sc='shell_check' # runs shellcheck -x on all files with a shbang

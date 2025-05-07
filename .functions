@@ -1,0 +1,210 @@
+#!/bin/env bash
+# get current branch in git repo
+git_status() {
+    BRANCH="$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')"
+    if [ ! "${BRANCH}" = "" ]; then
+      STAT="$(parse_git_dirty)"
+      if printf "%s" "$STAT" | grep -q -e '!' -e '?' -e '+' -e '>' -e 'x' -e '*'; then
+        printf "%s[%s %s]%s" "$(red)" "$BRANCH" "$STAT" "$(ce)"
+      else
+        printf "%s[%s%s]%s" "$(green)" "$BRANCH" "$STAT" "$(ce)"
+      fi
+    fi
+}
+get_repo_basename() {
+  basename "$(git rev-parse --show-toplevel)"
+}
+
+get_repo_owner() {
+  REPO="$(basename "$(git rev-parse --show-toplevel)")"
+  OWNER="$(basename "$(git rev-parse --show-toplevel | sed  s/"$REPO"//g)")"
+  printf "%s" "$OWNER"
+}
+
+# get current status of git repo
+parse_git_dirty() {
+    status="$(git status 2>&1 | tee)"
+    if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "Your branch is up to date with 'origin/main'" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" ""; fi # clean
+    if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "modified:" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" "!"; fi # dirty
+    if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "Untracked files" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" "?"; fi # untracked
+    if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "new file:" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" "+"; fi # new files
+    if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "renamed:" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" ">"; fi # renamed files
+    if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "deleted:" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" "x"; fi # deleted files
+    if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "Your branch is ahead of" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" "*"; fi # ahead of
+}
+
+encrypt_secrets() {
+  workspace="$(git rev-parse --show-toplevel)";
+  dir="$(pwd)";
+  cd "$workspace" || return;
+  while read -r file; do
+    if [ -f "$file" ]; then
+      if [ -f "$file.backup" ]; then
+        rm -rf "$file.backup"
+        cp "$file" "$file.backup"
+      fi
+      rm -rf "$file.age"
+      age -e -R "$workspace"/age_recipients.txt -o "$file.age" "$file"
+    fi
+  done <secret_file_list.txt
+  cd "$dir" || return;
+}
+
+decrypt_secrets() {
+  workspace="$(git rev-parse --show-toplevel)";
+  dir="$(pwd)";
+  cd "$workspace" || return;
+  while read -r file; do
+    if [ -f "$file.age" ]; then
+      printf "decrypting %s\n" "$file"
+      rm -rf "$file"
+      printf "%s" "$AGE_SECRET_KEY" | age -d -i - -o "$file" "$file.age"
+    fi
+  done <secret_file_list.txt
+  cd "$dir" || return;
+}
+
+encrypt_file() {
+  workspace="$(git rev-parse --show-toplevel)";
+  dir="$(pwd)";
+  printf "%s" "enter file to encrypt:";
+  while read -r file; do
+    if [ ! -f "$file" ]; then printf "%s" 'file not found'; exit 1; fi
+    printf "encrypting %s as %s.age" "$file" "$file";
+    if [ -f "$file.backup.age" ]; then
+      if [ -f "$file.age" ]; then
+        printf "found %s.backup.age, so saving %s.age as %s.backup.age" "$file" "$file" "$file"
+        rm -f "$file.backup.age"
+        cp "$file.age" "$file.backup.age"
+      fi
+    fi
+    rm -f "$file.age"
+    age -e -R "$workspace"/age_recipients.txt -o "$file.age" "$file";
+    break;
+  done <"${1:-/dev/stdin}"
+}
+
+# this clears out secrets and temp files that are only saved locally
+clear_local() {
+  echo "Removing secret files..."
+  workspace="$(git rev-parse --show-toplevel)";
+  dir="$(pwd)"
+  cd "$workspace" || exit
+  while read -r file; do
+    if [ -f "$file" ]; then
+      rm -rf "$file";
+    fi
+  done <secret_file_list.txt
+  cd "$dir" || exit
+  echo "removing tf cache..."
+  while read -r file; do echo "removing $file..."; rm -rf "$file"; done <<<"$(find . -type d -name '.terraform')"
+  while read -r file; do echo "removing $file..."; rm -rf "$file"; done <<<"$(find . -type f -name '.terraform.lock.hcl')"
+}
+
+# Function to recursively find shell script files
+find_shell_scripts() {
+  dir="$1"
+  for file in "$dir"/*; do
+    if [ -d "$file" ]; then
+      # Skip .git and .terraform directories
+      if [ "$(basename "$file")" != ".git" ] && [ "$(basename "$file")" != ".terraform" ]; then
+        find_shell_scripts "$file"
+      fi
+    elif [ -f "$file" ]; then
+      # Check if the file has a shebang line
+      if head -n 1 "$file" | grep -q '^#!'; then
+        echo "$file"
+      fi
+    fi
+  done
+}
+
+shell_check() {
+  workspace="$(git rev-parse --show-toplevel)";
+  dir="$(pwd)";
+  cd "$workspace" || return;
+  while read -r file; do
+    echo "checking $file..."
+    shellcheck -x "$file"
+  done <<<"$(grep -Rl -e '^#!' | grep -v '.terraform'| grep -v '.git')"
+  cd "$dir" || return;
+}
+
+# ps1 color functions
+# add colors like this `red`\$`ce` generates red '$' prompt
+ps1_color_open() {
+  red=$1
+  green=$2
+  blue=$3
+  printf '\e[0;38;2;%s;%s;%sm' "$red" "$green" "$blue";
+}
+
+green() {
+  ps1_color_open 0 254 0
+}
+red() {
+  ps1_color_open 254 0 0
+}
+blue() {
+  ps1_color_open 0 0 254
+}
+orange() {
+  ps1_color_open 254 127 0
+}
+white() {
+  ps1_color_open 254 254 254
+}
+yellow() {
+  ps1_color_open 254 254 0
+}
+
+# color end
+ce() {
+  printf '\e[m'
+}
+
+reset_state() {
+  # WARNING! This will delete all saved state and encrypt the state files back for saving
+  echo "Removing state..."
+  workspace="$(git rev-parse --show-toplevel)";
+  dir="$(pwd)"
+  cd "$workspace" || return;
+  for lc in project prototypes servers; do
+    cd "$workspace/$lc" || return;
+    echo '{"version": 4,"serial": 3,"outputs": {},"resources": [],"check_results": null}' > terraform.tfstate
+    rm -f terraform.tfstate.age
+    age -e -R "$workspace/age_recipients.txt" -o terraform.tfstate.age terraform.tfstate
+  done
+  cd "$dir" || return;
+}
+
+ts(){
+  stty cols 450
+}
+
+set_terminal_size(){
+  row="$1"
+  col="$2"
+  if [ "$row" == "" ]; then row=70; fi
+  if [ "$col" == "" ]; then col=300; fi
+  stty rows "$row"
+  stty cols "$col"
+}
+
+run_tests() {
+  ./run_tests.sh "$@"
+}
+
+get_leftovers() {
+  reg=$1
+  id=$2
+  for region in us-west-1 us-west-2 us-east-1 us-east-2; do
+    if [ -n "$reg" ] && [ "$region" != "$reg" ]; then continue; fi
+    echo "leftovers in $region:"
+    if [ -n "$id" ]; then
+      leftovers -d --iaas=aws --aws-region="$region" --filter="$id";
+    else
+      leftovers -d --iaas=aws --aws-region="$region" --filter="Owner:terraform";
+    fi
+  done
+}
