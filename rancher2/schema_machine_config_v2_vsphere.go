@@ -39,6 +39,12 @@ func machineConfigV2VmwarevsphereFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "If you choose creation type clone a name of what you want to clone is required",
 		},
+		"os": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "linux",
+			Description: "Type of virtual machine OS in vSphere",
+		},
 		"cloud_config": {
 			Type:        schema.TypeString,
 			Optional:    true,
