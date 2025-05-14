@@ -1045,6 +1045,7 @@ see more information on [Resource Management for Pods and Containers](https://ku
 * `max_unhealthy` - (Optional, string) Max unhealthy nodes for automated replacement to be allowed.
 * `unhealthy_range` - (Optional, string) Range of unhealthy nodes for automated replacement to be allowed.
 * `machine_labels` - (Optional, map) Labels for Machine pool nodes.
+* `machine_os` - (Optional) OS Type in machine pool. Default `linux`(string)
 * `labels` - (Optional, map) Labels for Machine Deployment Resource.
 * `annotations` - (Optional, map) Annotations for Machine Deployment Resource. 
 
