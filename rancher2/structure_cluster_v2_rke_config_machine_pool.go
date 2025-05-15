@@ -145,11 +145,11 @@ func expandClusterV2RKEConfigMachinePoolRollingUpdate(p []interface{}) *provisio
 	in := p[0].(map[string]interface{})
 
 	if v, ok := in["max_surge"].(string); ok && len(v) > 0 {
-		maxSurge := intstr.FromString(v)
+		maxSurge := intstr.Parse(v)
 		obj.MaxSurge = &maxSurge
 	}
 	if v, ok := in["max_unavailable"].(string); ok && len(v) > 0 {
-		maxUnavailable := intstr.FromString(v)
+		maxUnavailable := intstr.Parse(v)
 		obj.MaxUnavailable = &maxUnavailable
 	}
 
