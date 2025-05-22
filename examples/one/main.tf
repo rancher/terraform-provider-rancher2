@@ -42,7 +42,7 @@ provider "rancher2" {
 
 locals {
   identifier           = var.identifier
-  example              = "base"
+  example              = "basic"
   project_name         = "tf-${substr(md5(join("-", [local.example, local.identifier])), 0, 5)}"
   username             = local.project_name
   domain               = local.project_name
@@ -65,7 +65,7 @@ data "http" "myip" {
 
 module "rancher" {
   source  = "rancher/aws/rancher2"
-  version = "v1.2.0"
+  version = "1.2.2"
   # project
   identifier   = local.identifier
   owner        = local.owner
@@ -96,13 +96,11 @@ module "rancher" {
   rancher_version      = local.rancher_version
 }
 
-# Create a new rancher2 Token
-resource "rancher2_token" "test" {
+data "rancher2_cluster" "local" {
   depends_on = [
     module.rancher,
     rancher2_bootstrap.authenticate,
   ]
-  provider    = rancher2.default
-  description = "test token"
-  ttl         = 1200
+  provider = rancher2.default
+  name     = "local"
 }
