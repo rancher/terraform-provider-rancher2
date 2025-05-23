@@ -1,0 +1,74 @@
+
+provider "rancher2" {
+  api_url   = "https://$${local.domain}.$${local.zone}"
+  token_key = local.rancher_key
+  timeout   = "300s"
+}
+
+locals {
+  zone                  = var.zone
+  domain                = var.domain
+  rancher_key           = var.rancher_key
+  rke2_version          = var.rke2_version
+  cluster_name          = var.cluster_name
+  node_count            = var.node_count
+  machine_config_name   = var.machine_config_name
+  machine_config_kind   = var.machine_config_kind
+}
+
+import {
+  to = rancher2_cluster_v2.rke2_cluster
+  id = "${cluster_id}"
+}
+resource "rancher2_cluster_v2" "rke2_cluster" {
+  name                  = local.cluster_name
+  kubernetes_version    = local.rke2_version
+  enable_network_policy = true
+  rke_config {
+    machine_pools {
+      name               = local.cluster_name
+      control_plane_role = true
+      etcd_role          = true
+      worker_role        = true
+      quantity           = local.node_count
+      machine_config {
+        kind = local.machine_config_kind
+        name = local.machine_config_name
+      }
+    }
+  }
+  timeouts {
+    create = "120m"
+  }
+}
+
+data "rancher2_cluster" "downstream_cluster" {
+  name = local.cluster_name
+}
+
+import {
+  to = rancher2_namespace.imported
+  id = "${namespace_id}"
+}
+resource "rancher2_namespace" "imported" {
+  depends_on   = [
+    data.rancher2_cluster.downstream_cluster,
+  ]
+  name             = "test"
+  project_id       = data.rancher2_cluster.downstream_cluster.default_project_id
+  description      = "testing namespace"
+  wait_for_cluster = false
+  resource_quota {
+    limit {
+      limits_cpu       = "100m"
+      limits_memory    = "100Mi"
+      requests_storage = "1Gi"
+    }
+  }
+  container_resource_limit {
+    limits_cpu      = "20m"
+    limits_memory   = "20Mi"
+    requests_cpu    = "1m"
+    requests_memory = "1Mi"
+  }
+}

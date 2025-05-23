@@ -8,11 +8,15 @@ output "kubeconfig" {
 output "address" {
   value = module.rancher.address
 }
-output "admin_token" {
-  value     = module.rancher.admin_token
-  sensitive = true
-}
+# output "admin_token" {
+#   value     = module.rancher.admin_token
+#   sensitive = true
+# }
 output "admin_password" {
   value     = module.rancher.admin_password
   sensitive = true
 }
+
+# output "rke2_cluster_subnet" {
+#   value = module.rke2_cluster_access.subnets[keys(module.rke2_cluster_access.subnets)[0]]
+# }
