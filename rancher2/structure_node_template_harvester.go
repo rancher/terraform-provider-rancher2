@@ -24,6 +24,10 @@ func flattenHarvesterConfig(in *harvesterConfig) []interface{} {
 		obj["memory_size"] = in.MemorySize
 	}
 
+	if len(in.ReservedMemorySize) > 0 {
+		obj["reserved_memory_size"] = in.ReservedMemorySize
+	}
+
 	if len(in.DiskSize) > 0 {
 		obj["disk_size"] = in.DiskSize
 	}
@@ -94,6 +98,10 @@ func expandHarvestercloudConfig(p []interface{}) *harvesterConfig {
 
 	if v, ok := in["memory_size"].(string); ok && len(v) > 0 {
 		obj.MemorySize = v
+	}
+
+	if v, ok := in["reserved_memory_size"].(string); ok && len(v) > 0 {
+		obj.ReservedMemorySize = v
 	}
 
 	if v, ok := in["disk_size"].(string); ok && len(v) > 0 {
