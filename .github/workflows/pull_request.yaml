@@ -3,6 +3,11 @@ name: Pull Request
 on:
   pull_request:
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_OWNER: ${{ github.repository_owner }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -147,8 +152,8 @@ jobs:
 
           while read -r message; do
             echo "checking message ^$message\$"
-            prefix_check "$message"
             empty_check "$message"
+            prefix_check "$message"
             length_check "$message"
             spell_check "$message"
             echo "message ^$message\$ passed all checks"
