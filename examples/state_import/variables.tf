@@ -100,3 +100,12 @@ variable "data_path" {
   EOT
   default     = null
 }
+variable "project_mismatch" {
+  type        = string
+  description = <<-EOT
+    This is used for testing, it ensures that namespace imports can't alter the namespace.
+    In previous versions it was possible to move the namespace between projects as you import it, this is no longer possible.
+    Setting this to true should cause the import module to fail.
+  EOT
+  default     = false
+}

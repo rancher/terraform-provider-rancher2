@@ -4,7 +4,7 @@ get_git_root() {
   git rev-parse --show-toplevel
 }
 
-if get_git_root; then cd "$(get_git_root)"; else echo "expects to be run from within the terraform provider git repo"; exit 1; fi
+if get_git_root; then cd "$(get_git_root)" || exit; else echo "expects to be run from within the terraform provider git repo"; exit 1; fi
 export REPO_ROOT=$PWD
 
 IDENTIFIER=""
@@ -135,8 +135,9 @@ echo 'if tmp directory is missing, try restarting dev environment'
 if [ -z "$cleanup_id" ]; then
   if [ "false" = "$skip_build" ]; then
     echo 'building...'
-    $REPO_ROOT/scripts/gobuild.sh
+    if ! "$REPO_ROOT/scripts/gobuild.sh"; then C=$?; echo "failed to compile provider, exit code $C"; exit $C; fi
     export SKIP_BUILD="false"
+    echo "provider successfully compiles..."
   else
     echo "skipping build..."
     export SKIP_BUILD="true"
@@ -144,14 +145,15 @@ if [ -z "$cleanup_id" ]; then
 
   # Test if tests can compile
   echo "checking tests for compile errors..."
-  cd "$REPO_ROOT/test"
+  cd "$REPO_ROOT/test" || exit
   if ! go mod tidy; then C=$?; echo "failed to tidy, exit code $C"; exit $C; fi
 
-  for file in $(find $REPO_ROOT/test -name '*.go'); do
+  while read -r file; do
     echo "found $file";
     if ! go test -c "$file" -o "$file.test"; then C=$?; echo "failed to compile $file, exit code $C"; exit $C; fi
     rm -rf "$file.test"
-  done
+  done <<<"$(find "$REPO_ROOT/test" -name '*.go')"
+
   echo "compile checks passed..."
 
   # Run tests initially

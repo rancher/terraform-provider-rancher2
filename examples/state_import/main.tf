@@ -47,7 +47,8 @@ locals {
   email                 = (var.email != "" ? var.email : "${local.identifier}@${local.zone}")
   acme_server_url       = "https://acme-v02.api.letsencrypt.org"
   cluster_name          = "tf-all-in-one-config"
-  project_id            = data.rancher2_cluster.downstream_cluster.default_project_id
+  project_mismatch      = var.project_mismatch # if this is true, then the import should fail
+  project_id            = (local.project_mismatch ? rancher2_project.test.id : data.rancher2_cluster.downstream_cluster.default_project_id)
   # tflint-ignore: terraform_unused_declarations
   fail_project_id = (strcontains(local.project_id, ":") != true ? one([local.project_id, "project_id_malformed"]) : false)
 }
@@ -182,7 +183,7 @@ resource "rancher2_namespace" "test" {
   }
 }
 
-resource "local_file" "import_main" {
+resource "rancher2_project" "test" {
   depends_on = [
     module.rancher,
     module.rke2_image,
@@ -190,10 +191,23 @@ resource "local_file" "import_main" {
     data.rancher2_cluster.downstream_cluster,
     rancher2_namespace.test,
   ]
+  name       = "test"
+  cluster_id = data.rancher2_cluster.downstream_cluster.id
+}
+
+resource "local_file" "import_main" {
+  depends_on = [
+    module.rancher,
+    module.rke2_image,
+    module.downstream_cluster,
+    data.rancher2_cluster.downstream_cluster,
+    rancher2_namespace.test,
+    rancher2_project.test,
+  ]
   filename = "${local.tf_data_dir}/tf-rancher-imported/main.tf"
   content = templatefile("${path.module}/modules/import/main.tftpl", {
     cluster_id   = module.downstream_cluster.cluster_id
-    namespace_id = "${local.project_id}.${rancher2_namespace.test.id}"
+    namespace_id = join(".", [local.project_id, rancher2_namespace.test.id])
   })
 }
 
@@ -221,6 +235,7 @@ module "import" {
     zone                = "${local.zone}"
     machine_config_kind = "${module.downstream_cluster.machine_config_kind}"
     machine_config_name = "${module.downstream_cluster.machine_config_name}"
+    project_mismatch    = "${local.project_mismatch}"
   EOT
   skip_destroy = true  // this is for testing purposes, it prevents an issue where the imported resources destroy the API objects and the main resources error out on destroy (not found)
   init         = false // this is for testing purposes, it allow us to use dev overrides in the terraformrc to use the locally built binary rather than the registry provider
