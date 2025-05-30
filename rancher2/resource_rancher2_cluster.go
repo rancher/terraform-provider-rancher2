@@ -35,6 +35,19 @@ func resourceRancher2Cluster() *schema.Resource {
 					d.SetNew("eks_config_v2", flattenClusterEKSConfigV2(newObj, []interface{}{}))
 				}
 			}
+
+			if d.Get("driver") == clusterDriverGKEV2 && d.HasChange("gke_config_v2") {
+				old, new := d.GetChange("gke_config_v2")
+				oldObj := expandClusterGKEConfigV2(old.([]interface{}))
+				newObj := expandClusterGKEConfigV2(new.([]interface{}))
+
+				if reflect.DeepEqual(oldObj, newObj) {
+					d.Clear("gke_config_v2")
+				} else {
+					d.SetNew("gke_config_v2", flattenClusterGKEConfigV2(newObj, []interface{}{}))
+				}
+			}
+
 			return nil
 		},
 		Schema:        clusterFields(),
