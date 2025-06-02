@@ -28,6 +28,8 @@ func flattenGlobalRole(d *schema.ResourceData, in *managementClient.GlobalRole) 
 		return err
 	}
 
+	d.Set("uuid", in.UUID)
+
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
 		return err
@@ -82,6 +84,8 @@ func expandGlobalRole(in *schema.ResourceData) *managementClient.GlobalRole {
 	if v, k := in.Get("inherited_cluster_roles").([]interface{}); k && len(v) > 0 {
 		obj.InheritedClusterRoles = toArrayString(v)
 	}
+
+	obj.UUID = in.Get("uuid").(string)
 
 	return obj
 }
