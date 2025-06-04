@@ -303,7 +303,6 @@ func clusterGKEConfigV2NodePoolConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			MaxItems:    1,
 			Description: "The GKE node pool node config",
 			Elem: &schema.Resource{
@@ -360,7 +359,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster name",
 		},
 		"google_credential_secret": {
@@ -372,7 +370,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 		"project_id": {
 			Type:        schema.TypeString,
 			Required:    true,
-			ForceNew:    true,
 			Description: "The GKE project id",
 		},
 		"cluster_addons": {
@@ -389,28 +386,24 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE ip v4 cidr block",
 		},
 		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster description",
 		},
 		"enable_kubernetes_alpha": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "Enable Kubernetes alpha",
 		},
 		"ip_allocation_policy": {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			MaxItems:    1,
 			Description: "The GKE ip allocation policy",
 			Elem: &schema.Resource{
@@ -421,7 +414,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			ForceNew:    true,
 			Description: "Is GKE cluster imported?",
 		},
 		"kubernetes_version": {
@@ -461,7 +453,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			MaxItems:    1,
 			Description: "The GKE cluster master authorized networks config",
 			Elem: &schema.Resource{
@@ -478,7 +469,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster network",
 		},
 		"network_policy_enabled": {
@@ -500,7 +490,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			MaxItems:    1,
 			Description: "The GKE private cluster config",
 			Elem: &schema.Resource{
@@ -511,21 +500,18 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster region. Required if `zone` is empty",
 		},
 		"subnetwork": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster subnetwork",
 		},
 		"zone": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster zone. Required if `region` is empty",
 		},
 	}
