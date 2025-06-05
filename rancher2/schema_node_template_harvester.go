@@ -22,21 +22,22 @@ const (
 //Types
 
 type harvesterConfig struct {
-	VMNamespace  string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
-	VMAffinity   string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
-	CPUCount     string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
-	MemorySize   string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
-	DiskSize     string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
-	DiskBus      string `json:"diskBus,omitempty" yaml:"diskBus,omitempty"`
-	ImageName    string `json:"imageName,omitempty" yaml:"imageName,omitempty"`
-	DiskInfo     string `json:"diskInfo,omitempty" yaml:"diskInfo,omitempty"`
-	SSHUser      string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	SSHPassword  string `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
-	NetworkName  string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
-	NetworkModel string `json:"networkModel,omitempty" yaml:"networkModel,omitempty"`
-	NetworkInfo  string `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
-	UserData     string `json:"userData,omitempty" yaml:"userData,omitempty"`
-	NetworkData  string `json:"networkData,omitempty" yaml:"networkData,omitempty"`
+	VMNamespace        string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
+	VMAffinity         string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
+	CPUCount           string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
+	MemorySize         string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
+	ReservedMemorySize string `json:"reservedMemorySize,omitempty" yaml:"reservedMemorySize,omitempty"`
+	DiskSize           string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
+	DiskBus            string `json:"diskBus,omitempty" yaml:"diskBus,omitempty"`
+	ImageName          string `json:"imageName,omitempty" yaml:"imageName,omitempty"`
+	DiskInfo           string `json:"diskInfo,omitempty" yaml:"diskInfo,omitempty"`
+	SSHUser            string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	SSHPassword        string `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
+	NetworkName        string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
+	NetworkModel       string `json:"networkModel,omitempty" yaml:"networkModel,omitempty"`
+	NetworkInfo        string `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
+	UserData           string `json:"userData,omitempty" yaml:"userData,omitempty"`
+	NetworkData        string `json:"networkData,omitempty" yaml:"networkData,omitempty"`
 }
 
 //Schemas
@@ -64,6 +65,11 @@ func harvesterConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "4",
 			Description: "Memory size (in GiB)",
+		},
+		"reserved_memory_size": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Reserved memory size (in MiB)",
 		},
 		"disk_size": {
 			Type:     schema.TypeString,
