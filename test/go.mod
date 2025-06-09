@@ -1,6 +1,6 @@
 module github.com/rancher/terraform-provider-rancher2/test
 
-go 1.23.4
+go 1.24.2
 
 require (
 	github.com/aws/aws-sdk-go v1.55.5

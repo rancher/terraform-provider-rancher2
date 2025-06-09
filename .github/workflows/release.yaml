@@ -44,8 +44,8 @@ jobs:
           echo '${{ env.GPG_PASSPHRASE }}' | gpg --detach-sig --pinentry-mode loopback --passphrase-fd 0 --output "${SHASUM_FILE}.sig" --sign "${SHASUM_FILE}"
 
           echo "Validating signature..."
-          gpg --verify "${SHASUM_FILE}.sig" "${SHASUM_FILE}"
-          if [ $? -eq 0 ]; then
+
+          if ! gpg --verify "${SHASUM_FILE}.sig" "${SHASUM_FILE}"; then
             echo "Signature is valid..."
           else
             echo "Signature verification failed!"
