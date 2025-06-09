@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 JSONPATH="'{range .items[*]}
   {.metadata.name}{\"\\t\"} \
@@ -15,7 +16,6 @@ notReady() {
   # master-node   Ready
   # worker-node   Ready MemoryPressure
   # worker-node2  EtcVoter Ready
-  # worker-node3
   # shellcheck disable=SC2060,SC2140
   NOT_READY="$(echo "$NODES" | grep -v "Ready" | tr -d ["\t","\n"," ","'"] || true)"
   if [ -n "$NOT_READY" ]; then
@@ -31,12 +31,12 @@ TIMEOUT=5 # 5 minutes
 TIMEOUT_MINUTES=$((TIMEOUT * 60))
 INTERVAL=10 # 10 seconds
 MAX=$((TIMEOUT_MINUTES / INTERVAL))
-INDEX=0
+ATTEMPTS=0
 
 while notReady; do
-  if [[ $INDEX -lt $MAX ]]; then
+  if [[ $ATTEMPTS -lt $MAX ]]; then
     echo "Waiting for nodes to be ready..."
-    INDEX=$((INDEX + 1))
+    ATTEMPTS=$((ATTEMPTS + 1))
     sleep $INTERVAL;
   else
     echo "Timeout reached. Nodes are not ready..."
@@ -46,6 +46,13 @@ while notReady; do
   fi
 done
 
+echo "Nodes are ready..."
+
+echo "nodes..."
 kubectl get nodes || true
+echo "all..."
 kubectl get all -A || true
+echo "pods..."
+kubectl get pods -A || true
+
 exit 0
