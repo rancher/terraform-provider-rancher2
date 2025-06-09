@@ -67,6 +67,13 @@ variable "aws_secret_access_key" {
   EOT
   sensitive   = true
 }
+variable "aws_region" {
+  type        = string
+  description = <<-EOT
+    AWS region EC2 services.
+  EOT
+  sensitive   = true
+}
 variable "aws_session_token" {
   type        = string
   description = <<-EOT
@@ -75,13 +82,6 @@ variable "aws_session_token" {
   EOT
   sensitive   = true
   default     = ""
-}
-variable "aws_region" {
-  type        = string
-  description = <<-EOT
-    AWS region EC2 services.
-  EOT
-  sensitive   = true
 }
 variable "email" {
   type        = string

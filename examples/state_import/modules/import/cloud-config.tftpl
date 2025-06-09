@@ -1,0 +1,17 @@
+#cloud-config
+
+merge_how:
+ - name: list
+   settings: [replace]
+ - name: dict
+   settings: [replace]
+
+users:
+  - name: ${ssh_access_user}
+    gecos: ${ssh_access_user}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, ${ami_admin_group}
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${ssh_access_key}
+    homedir: /home/${ssh_access_user}

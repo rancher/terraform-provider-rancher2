@@ -1,4 +1,4 @@
-package base
+package one
 
 import (
 	"os"
@@ -12,15 +12,13 @@ import (
 	util "github.com/rancher/terraform-provider-rancher2/test"
 )
 
-// This test makes sure we can deploy Rancher on AWS
-func TestBase(t *testing.T) {
+func TestOneBasic(t *testing.T) {
 	t.Parallel()
 	id := util.GetId()
 	region := util.GetRegion()
-	directory := "base"
+	directory := "one"
 	owner := "terraform-ci@suse.com"
 	util.SetAcmeServer()
-	build := util.GetBuild()
 
 	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
 	if err != nil {
@@ -40,11 +38,17 @@ func TestBase(t *testing.T) {
 		os.RemoveAll(testDir)
 		t.Fatalf("Error creating test key pair: %s", err)
 	}
+
+	err = os.WriteFile(testDir+"/id_rsa", []byte(keyPair.KeyPair.PrivateKey), 0600)
+	if err != nil {
+		os.RemoveAll(testDir)
+		t.Fatalf("Error creating test key pair: %s", err)
+	}
 	sshAgent := ssh.SshAgentWithKeyPair(t, keyPair.KeyPair)
 	t.Logf("Key %s created and added to agent", keyPair.Name)
 
 	// use oldest RKE2, remember it releases much more than Rancher
-	_, _, rke2Version, err := util.GetReleases("rancher", "rke2")
+	_, _, rke2Version, err := util.GetRke2Releases()
 	if err != nil {
 		os.RemoveAll(testDir)
 		aws.DeleteEC2KeyPair(t, keyPair)
@@ -52,8 +56,12 @@ func TestBase(t *testing.T) {
 		t.Fatalf("Error getting Rke2 release version: %s", err)
 	}
 
-	// use latest Rancher, due to community patch issue
-	rancherVersion, _, _, err := util.GetReleases("rancher", "rancher")
+	rancherVersion := os.Getenv("RANCHER_VERSION")
+	if rancherVersion == "" {
+		// use stable version if not specified
+		// using stable prevents problems where the Rancher provider hasn't released to fit the latest Rancher
+		_, rancherVersion, _, err = util.GetRancherReleases()
+	}
 	if err != nil {
 		os.RemoveAll(testDir)
 		aws.DeleteEC2KeyPair(t, keyPair)
@@ -78,11 +86,8 @@ func TestBase(t *testing.T) {
 		EnvVars: map[string]string{
 			"AWS_DEFAULT_REGION":  region,
 			"AWS_REGION":          region,
-			"KUBECONFIG":          testDir + "/kubeconfig",
-			"KUBE_CONFIG_PATH":    testDir,
-			"WORKSPACE":           repoRoot,
-			"TF_IN_AUTOMATION":    "1",
 			"TF_DATA_DIR":         testDir,
+			"TF_IN_AUTOMATION":    "1",
 			"TF_CLI_ARGS_plan":    "-no-color -state=" + testDir + "/tfstate",
 			"TF_CLI_ARGS_apply":   "-no-color -state=" + testDir + "/tfstate",
 			"TF_CLI_ARGS_destroy": "-no-color -state=" + testDir + "/tfstate",
@@ -94,31 +99,22 @@ func TestBase(t *testing.T) {
 		Upgrade:                  true,
 	})
 
-	_, err = terraform.InitE(t, terraformOptions)
+	_, err = terraform.InitAndApplyE(t, terraformOptions)
 	if err != nil {
+		t.Log("Test failed, tearing down...")
+		util.GetErrorLogs(t, testDir+"/kubeconfig")
 		util.Teardown(t, testDir, terraformOptions, keyPair)
 		os.Remove(exampleDir + ".terraform.lock.hcl")
 		sshAgent.Stop()
 		t.Fatalf("Error creating cluster: %s", err)
 	}
-
-	// after initializing the other providers override the rancher provider with the built binary
-	if build {
-		t.Log("using the prebuilt rancher provider...")
-		terraformOptions.EnvVars["TF_CLI_CONFIG_FILE"] = repoRoot + "/.terraform/terraformrc"
+	util.CheckReady(t, testDir+"/kubeconfig")
+	util.CheckRunning(t, testDir+"/kubeconfig")
+	if t.Failed() {
+		t.Log("Test failed...")
 	} else {
-		t.Log("not using the prebuilt rancher provider...")
+		t.Log("Test passed...")
 	}
-
-	_, err = terraform.ApplyE(t, terraformOptions)
-	if err != nil {
-		util.Teardown(t, testDir, terraformOptions, keyPair)
-		os.Remove(exampleDir + "/.terraform.lock.hcl")
-		sshAgent.Stop()
-		t.Fatalf("Error creating cluster: %s", err)
-	}
-
-	t.Log("Test passed, tearing down...")
 	util.Teardown(t, testDir, terraformOptions, keyPair)
 	os.Remove(exampleDir + "/.terraform.lock.hcl")
 	sshAgent.Stop()

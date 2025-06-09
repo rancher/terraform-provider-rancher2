@@ -8,3 +8,9 @@ test/data
 .terraform.lock.hcl
 */.terraform.lock.hcl
 .terraform
+*/*.test
+examples/**/rke2
+terraform.tfstate
+*.tfstate.*
+tf-*
+*.env
