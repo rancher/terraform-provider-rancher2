@@ -43,7 +43,7 @@ variable "rancher_version" {
   description = <<-EOT
     The version of rancher to install on the rke2 cluster.
   EOT
-  default     = "2.10.4"
+  default     = "2.9.1"
 }
 variable "file_path" {
   type        = string

@@ -395,6 +395,8 @@ func splitBySep(data, sep string) []string {
 	return strings.Split(data, sep)
 }
 
+// eg. "abc123.def456"(id) returns "abc123"(clusterID), "def456"(resourceID)
+// eg. "abc123"(id) returns ""(clusterID), "abc123"(resourceID)
 func splitID(id string) (clusterID, resourceID string) {
 	separator := "."
 
@@ -437,6 +439,8 @@ func splitProjectIDPart(id string) (projectID string) {
 	return ""
 }
 
+// eg. "abc123:def456"(id) would return "abc123"(clusterID),"abc123:def456"(projectID)
+// eg. "abc123"(id) would return "abc123"(clusterID),""(projectID)
 func splitProjectID(id string) (clusterID, projectID string) {
 	id = strings.TrimSuffix(id, clusterProjectIDSeparator)
 

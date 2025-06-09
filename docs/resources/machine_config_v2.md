@@ -8,6 +8,9 @@ Provides a Rancher v2 Machine config v2 resource. This can be used to create Mac
 
 The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `openstack`, and `vsphere`.
 
+
+Starting with Rancher v2.12.0 and above, `google` is also offered as a supported cloud provider.
+
 ## Example Usage
 
 ```hcl
@@ -87,13 +90,14 @@ The following arguments are supported:
 
 * `generate_name` - (Required/ForceNew) Cluster V2 generate name. The pattern to generate machine config name. e.g  generate_name=\"prod-pool1\" will generate \"nc-prod-pool1-?????\" name computed at `name` attribute (string)
 * `fleet_namespace` - (Optional/ForceNew) Cluster V2 fleet namespace
-* `amazonec2_config` - (Optional) AWS config for the Machine Config V2. Conflicts with `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
-* `azure_config` - (Optional) Azure config for the Machine Config V2. Conflicts with `amazonec2_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
-* `digitalocean_config` - (Optional) Digitalocean config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `harvester_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
-* `harvester_config` - (Optional) Harvester config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
-* `linode_config` - (Optional) Linode config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
-* `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config` and `vsphere_config` (list maxitems:1)
-* `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config` and `openstack_config` (list maxitems:1)
+* `amazonec2_config` - (Optional) AWS config for the Machine Config V2. Conflicts with `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `azure_config` - (Optional) Azure config for the Machine Config V2. Conflicts with `amazonec2_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `digitalocean_config` - (Optional) Digitalocean config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `harvester_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `harvester_config` - (Optional) Harvester config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `linode_config` - (Optional) Linode config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `google_config` and `openstack_config` (list maxitems:1)
+* `google_config` - (Optional) Google config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
@@ -327,6 +331,34 @@ The following attributes are exported:
 * `vapp_transport` - (Optional) vSphere OVF environment transports to use for properties. Supported values are: `iso` and `com.vmware.guestInfo` (string)
 * `vcenter` - (Optional/Sensitive) vSphere IP/hostname for vCenter (string)
 * `vcenter_port` - (Optional/Sensitive) vSphere Port for vCenter Default `443` (string)
+
+
+### `google_config`
+
+#### Arguments
+
+* `address` - (Optional) GCE Instance External IP (string)
+* `auth_encoded_json` - (Optional/Sensitive) GCE service account auth json file path. Use `rancher2_cloud_credential` from Rancher v2.2.x. (string)
+* `disk_size` - (Required) GCE Instance Disk Size (in GB) (string)
+* `disk_type` - (Required) GCE Instance Disk Type (string)
+* `external_firewall_rule_prefix` - (Optional) A prefix to be added to firewall rules created when exposing ports publicly. Required if exposing ports publicly via the `open_port` field. (string)
+* `internal_firewall_rule_prefix` - (Optional) A prefix to be added to an internal firewall rule created to ensure virtual machines can communicate with one another. Omitting this field will result in an internal firewall rule not being created. (string)
+* `labels` - (Optional) A set of labels to be added to each VM, in the format of 'key1,value1,key2,value2' (string)
+* `machine_image` - (Required) GCE instance image absolute URL (string)
+* `machine_type` - (Required) GCE instance type (string)
+* `network` - (Required) The network to provision virtual machines within (string)
+* `open_port` - (Optional) A list of ports to be opened publicly (e.g. `123/tcp` or `456/udp`). The `external_firewall_rule_prefix` must also be set for ports to be exposed automatically. (list)
+* `preemptable` - (Optional) Indicates if the virtual machine can be preempted (bool)
+* `project` - (Required) The GCP project to create virtual machines within (string)
+* `scopes` - (Optional) Access scopes to be set on the virtual machine (string)
+* `sub_network` - (Optional) The subnetwork to provision virtual machines within (string)
+* `tags` - (Optional) A set of network tags to be added to each VM, in the format of 'tag1,tag2' (string)
+* `use_existing` - (Optional) Indicates if an existing VM should be used. This is not currently support in Rancher Node Drivers. (bool)
+* `use_internal_ip` - (Optional) Indicates if the virtual machines should use an internal IP (bool)
+* `use_internal_ip_only` - (Optional) Indicates if the virtual machines should use an internal IP only and not be assigned a public IP (bool)
+* `user_data` - (Optional) GCE user-data file path (string)
+* `username` - (Optional) The username to be set when logging into the virtual machines (string)
+* `zone` - (Required) The region and zone to create virtual machines within (e.g. us-east1-b) (string)
 
 ## Timeouts
 
