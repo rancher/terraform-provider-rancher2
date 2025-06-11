@@ -2,7 +2,6 @@ package rancher2
 
 import (
 	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
@@ -231,6 +230,19 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 			return err
 		}
 		err = d.Set("oke_config", okeConfig)
+		if err != nil {
+			return err
+		}
+	case clusterDriverImported:
+		v, ok := d.Get("imported_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		importedConfig, err := flattenClusterImportedConfig(in.ImportedConfig, v)
+		if err != nil {
+			return err
+		}
+		err = d.Set("imported_config", importedConfig)
 		if err != nil {
 			return err
 		}
@@ -558,6 +570,10 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 	if v, ok := in.Get("rke2_config").([]interface{}); ok && len(v) > 0 {
 		obj.Rke2Config = expandClusterRKE2Config(v)
 		obj.Driver = clusterDriverRKE2
+	}
+
+	if v, ok := in.Get("imported_config").([]interface{}); ok && len(v) > 0 {
+		obj.ImportedConfig = expandClusterImportedConfig(v)
 	}
 
 	if len(obj.Driver) == 0 {
