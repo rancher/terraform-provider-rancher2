@@ -148,12 +148,20 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	expectedState := []string{"active"}
 
-	if cluster.Driver == clusterDriverImported || (cluster.Driver == clusterDriverEKSV2 && cluster.EKSConfig.Imported) {
+	if cluster.Driver == clusterDriverEKSV2 && cluster.EKSConfig.Imported {
 		expectedState = append(expectedState, "pending")
 	}
 
 	if cluster.Driver == clusterDriverRKE || cluster.Driver == clusterDriverK3S || cluster.Driver == clusterDriverRKE2 {
 		expectedState = append(expectedState, "provisioning")
+	}
+
+	if cluster.Driver == clusterDriverImported {
+		if cluster.ImportedConfig != nil {
+			expectedState = append(expectedState, "provisioning")
+		} else {
+			expectedState = append(expectedState, "pending")
+		}
 	}
 
 	// Creating cluster with monitoring disabled
@@ -349,6 +357,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	case clusterDriverRKE2:
 		update["rke2Config"] = expandClusterRKE2Config(d.Get("rke2_config").([]interface{}))
 		replace = d.HasChange("cluster_agent_deployment_customization")
+	case clusterDriverImported:
+		update["importedConfig"] = expandClusterImportedConfig(d.Get("imported_config").([]interface{}))
 	}
 
 	// update the cluster; retry til timeout or non retryable error is returned. If api 500 error is received,
