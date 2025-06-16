@@ -312,6 +312,12 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	case ToLower(clusterDriverGKEV2):
 		gkeConfig := expandClusterGKEConfigV2(d.Get("gke_config_v2").([]interface{}))
 		update["gkeConfig"] = fixClusterGKEConfigV2(structToMap(gkeConfig))
+	case clusterOKEKind:
+		okeConfig, err := expandClusterOKEConfig(d.Get("oke_config").([]interface{}), d.Get("name").(string))
+		if err != nil {
+			return err
+		}
+		update["okeEngineConfig"] = okeConfig
 	case ToLower(clusterDriverRKE):
 		rkeConfig, err := expandClusterRKEConfig(d.Get("rke_config").([]interface{}), d.Get("name").(string))
 		if err != nil {
