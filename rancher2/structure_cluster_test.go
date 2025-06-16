@@ -383,6 +383,31 @@ func testCluster() {
 		"gke_config_v2":         testClusterGKEConfigV2Interface,
 		"system_project_id":     "system_project_id",
 	}
+	testClusterConfOKE = &Cluster{
+		OracleKubernetesEngineConfig: testClusterOKEConfigConf,
+	}
+	testClusterConfOKE.Name = "test"
+	testClusterConfOKE.Description = "description"
+	testClusterConfOKE.Driver = clusterOKEKind
+	testClusterConfOKE.AgentEnvVars = testClusterEnvVarsConf
+	testClusterConfOKE.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
+	testClusterConfOKE.EnableNetworkPolicy = newTrue()
+	testClusterConfOKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
+	testClusterInterfaceOKE = map[string]interface{}{
+		"id":                         "id",
+		"name":                       "test",
+		"agent_env_vars":             testClusterEnvVarsInterface,
+		"default_project_id":         "default_project_id",
+		"description":                "description",
+		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
+		"cluster_registration_token": testClusterRegistrationTokenInterface,
+		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
+		"enable_network_policy": true,
+		"kube_config":           "kube_config",
+		"driver":                clusterOKEKind,
+		"oke_config":            testClusterOKEConfigInterface,
+		"system_project_id":     "system_project_id",
+	}
 	testClusterConfRKE = &Cluster{}
 	testClusterConfRKE.Name = "test"
 	testClusterConfRKE.Description = "description"
@@ -519,6 +544,12 @@ func TestFlattenCluster(t *testing.T) {
 			testClusterInterfaceGKEV2,
 		},
 		{
+			testClusterConfOKE,
+			testClusterRegistrationTokenConf,
+			testClusterGenerateKubeConfigOutput,
+			testClusterInterfaceOKE,
+		},
+		{
 			testClusterConfRKE,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
@@ -604,6 +635,10 @@ func TestExpandCluster(t *testing.T) {
 		{
 			testClusterInterfaceGKEV2,
 			testClusterConfGKEV2,
+		},
+		{
+			testClusterInterfaceOKE,
+			testClusterConfOKE,
 		},
 		{
 			testClusterInterfaceRKE,
