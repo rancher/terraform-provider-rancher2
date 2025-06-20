@@ -3,6 +3,11 @@ name: Pull Request
 on:
   pull_request:
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_OWNER: ${{ github.repository_owner }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,3 +19,162 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: |
           make build-rancher
+
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: install-nix
+        run: |
+          curl -L https://nixos.org/nix/install | sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          which nix
+      - name: lint terraform
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
+        run: |
+          terraform fmt -check -recursive
+          tflint --recursive
+
+  actionlint:
+    name: 'Lint Workflows'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: install-nix
+        run: |
+          curl -L https://nixos.org/nix/install | sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          which nix
+      - name: action lint
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
+        run: actionlint
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: install-nix
+        run: |
+          curl -L https://nixos.org/nix/install | sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          which nix
+      - name: shell check
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
+        run: |
+          # while read -r file; do
+          #   echo "checking $file..."
+          #   shellcheck -x "$file"
+          # done <<<"$(grep -Rl -e '^#!' | grep -v '.terraform'| grep -v '.git')"
+          # in the future run this on every script, but first we need to eliminate unused scripts
+          shellcheck -x "./scripts/run_tests.sh"
+
+  validate-commit-message:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch all history so that we can validate the commit messages
+      - name: install-nix
+        run: |
+          curl -L https://nixos.org/nix/install | sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          which nix
+      - name: Check commit message
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
+        run: |
+          set -e
+          # Check commit messages
+          # This steps enforces https://www.conventionalcommits.org/en/v1.0.0/
+          # This format enables automatic generation of changelogs and versioning
+          filter() {
+            COMMIT="$1"
+            ouput="$(echo "$COMMIT" | grep -e '^fix: ' -e '^feature: ' -e '^feat: ' -e 'refactor!: ' -e 'feature!: ' -e 'feat!: ' -e '^chore(main): ')"
+            echo "$output"
+          }
+          prefix_check() {
+            message="$1"
+            if [ "" != "$(filter "$message")" ]; then
+              echo "...Commit message does not start with the required prefix.
+              Please use one of the following prefixes: "fix:", "feature:", "feat:", "refactor!:", "feature!:", or "feat!:".
+              This enables release-please to automatically determine the type of release (major, minor, patch) based on the commit message.
+              $message"
+              exit 1
+            else
+              echo "...Commit message starts with the required prefix."
+            fi
+          }
+          empty_check() {
+            message="$1"
+            if [ "" == "$message" ]; then
+              echo "...Empty commit message."
+              exit 1
+            else
+              echo "...Commit message isnt empty."
+            fi
+          }
+          length_check() {
+            message="$1"
+            if [ "$(wc -m <<<"$message")" -gt 50 ]; then
+              echo "...Commit message subject line should be less than 50 characters, found $(wc -m "$message")."
+              exit 1
+            else
+              echo "...Commit message subject line is less than 50 characters."
+            fi
+          }
+          spell_check() {
+            message="$1"
+            WORDS="$(aspell list <<<"$message")"
+            if [ "" != "$WORDS" ]; then
+              echo "...Commit message contains spelling errors on: ^$WORDS\$"
+              echo "...Also try updating the PR title."
+              exit 1
+            else
+              echo "...Commit message doesnt contain spelling errors."
+            fi
+          }
+
+          # Fetch the commit messages
+
+          COMMIT_MESSAGES="$(gh pr view ${{github.event.number}} --json commits | jq -r '.commits[].messageHeadline')"
+          echo "Commit messages found: "
+          echo "$COMMIT_MESSAGES"
+
+          while read -r message; do
+            echo "checking message ^$message\$"
+            empty_check "$message"
+            prefix_check "$message"
+            length_check "$message"
+            spell_check "$message"
+            echo "message ^$message\$ passed all checks"
+          done <<<"$COMMIT_MESSAGES"
+
+  gitleaks:
+    name: 'Scan for Secrets'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: install-nix
+        run: |
+          curl -L https://nixos.org/nix/install | sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          which nix
+      - name: Check for secrets
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
+        run: |
+          gitleaks detect --no-banner -v --no-git
+          gitleaks detect --no-banner -v
+        continue-on-error: true
