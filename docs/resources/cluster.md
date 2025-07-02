@@ -1779,14 +1779,20 @@ The following arguments are supported:
 
 The following arguments are supported:
 
+* `cluster_type` - (Optional) Choose basic or enhanced cluster. Default `basic` (string)
 * `compartment_id` - (Required) The OCID of the compartment in which to create resources OKE cluster and related resources (string)
 * `custom_boot_volume_size` - (Optional) Optional custom boot volume size (GB) for all nodes. If you specify 0, it will apply the default according to the `node_image` specified. Default `0` (int)
 * `description` - (Optional) An optional description of this cluster (string)
 * `enable_private_control_plane` - (Optional) Specifies whether Kubernetes API endpoint is a private IP only accessible from within the VCN. Default `false` for Rancher v2.5.10 and above (bool)
 * `enable_kubernetes_dashboard` - (Optional) Specifies whether to enable the Kubernetes dashboard. Default `false` (bool)
 * `enable_private_nodes` - (Optional) Specifies whether worker nodes will be deployed into a new, private, subnet. Default `false` (bool)
+* `eviction_grace_duration` - (Optional) Specifies the grace period in minutes to allow cordon and drain to complete. Default `\"5\"` (string)
 * `fingerprint` - (Required) The fingerprint corresponding to the specified user's private API Key (string)
 * `flex_ocpus` - (Optional) Specifies number of OCPUs for nodes (requires flexible shape specified with `node_shape`) (int)
+* `flex_memory_in_gbs` - (Optional) Specifies number amount of memory in GB for nodes (requires flexible shape specified with `node_shape`) (int)
+* `fingerprint` - (Required) The fingerprint corresponding to the specified user's private API Key (string)
+* `force_delete_after_grace_duration` - (Optional) Specifies whether to send a SIGKILL signal if a pod does not terminate within the specified grace period. See also `eviction_grace_duration`. Default `false` (bool)
+* `image_verification_kms_key_id` - (Optional) Comma separated list of OCID(s) of the KMS key to verify the image signatures (string)
 * `kms_key_id` - (Optional) The OCID of a KMS vault master key used to encrypt secrets at rest. See [here](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengencryptingdata.htm) for help creating a vault and master encryption key. For Rancher v2.5.9 and above (string)
 * `kubernetes_version` - (Required) The Kubernetes version that will be used for your master *and* OKE worker nodes (string)
 * `limit_node_count` - (Optional) The maximum number of worker nodes. Can limit `quantity_per_subnet`. Default `0` (no limit) (int)
