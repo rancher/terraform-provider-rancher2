@@ -20,7 +20,7 @@ type machineConfigV2GoogleGCE struct {
 	DiskType                   string   `json:"diskType,omitempty" yaml:"diskType,omitempty"`
 	ExternalFirewallRulePrefix string   `json:"externalFirewallRulePrefix,omitempty" yaml:"externalFirewallRulePrefix,omitempty"`
 	InternalFirewallRulePrefix string   `json:"internalFirewallRulePrefix,omitempty" yaml:"internalFirewallRulePrefix,omitempty"`
-	Labels                     string   `json:"labels,omitempty" yaml:"labels,omitempty"`
+	VMLabels                   string   `json:"vmLabels,omitempty" yaml:"vmLabels,omitempty"`
 	MachineImage               string   `json:"machineImage,omitempty" yaml:"machineImage,omitempty"`
 	MachineType                string   `json:"machineType,omitempty" yaml:"machineType,omitempty"`
 	Network                    string   `json:"network,omitempty" yaml:"network,omitempty"`
@@ -73,8 +73,8 @@ func flattenMachineConfigV2GoogleGCE(in *MachineConfigV2GoogleGCE) []interface{}
 		obj["internal_firewall_rule_prefix"] = in.InternalFirewallRulePrefix
 	}
 
-	if len(in.Labels) > 0 {
-		obj["labels"] = in.Labels
+	if len(in.VMLabels) > 0 {
+		obj["vm_labels"] = in.VMLabels
 	}
 
 	if len(in.MachineImage) > 0 {
@@ -177,8 +177,8 @@ func expandMachineConfigV2GoogleGCE(p []interface{}, source *MachineConfigV2) *M
 		obj.InternalFirewallRulePrefix = v
 	}
 
-	if v, ok := in["labels"].(string); ok && len(v) > 0 {
-		obj.Labels = v
+	if v, ok := in["vm_labels"].(string); ok && len(v) > 0 {
+		obj.VMLabels = v
 	}
 
 	if v, ok := in["machine_image"].(string); ok && len(v) > 0 {
