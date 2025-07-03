@@ -3,12 +3,10 @@ package rancher2
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/hashicorp/go-version"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
@@ -148,39 +146,6 @@ func (c *Config) getK8SDefaultVersion() (string, error) {
 	}
 }
 
-func (c *Config) getK8SVersions() ([]string, error) {
-	if len(c.K8SSupportedVersions) > 0 {
-		return c.K8SSupportedVersions, nil
-	}
-
-	if c.Client.Management == nil {
-		_, err := c.ManagementClient()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if ok, _ := c.IsRancherVersionLessThan(rancher2RKEK8sSystemImageVersion); ok {
-		return nil, nil
-	}
-
-	RKEK8sSystemImageCollection, err := c.Client.Management.RkeK8sSystemImage.ListAll(NewListOpts(nil))
-	if err != nil {
-		return nil, fmt.Errorf("[ERROR] Listing RKE K8s System Images: %s", err)
-	}
-	versions := make([]*version.Version, 0, len(RKEK8sSystemImageCollection.Data))
-	for _, RKEK8sSystem := range RKEK8sSystemImageCollection.Data {
-		v, _ := version.NewVersion(RKEK8sSystem.Name)
-		versions = append(versions, v)
-
-	}
-	sort.Sort(sort.Reverse(version.Collection(versions)))
-	for i := range versions {
-		c.K8SSupportedVersions = append(c.K8SSupportedVersions, "v"+versions[i].String())
-	}
-	return c.K8SSupportedVersions, nil
-}
-
 // Fix breaking API change https://github.com/rancher/rancher/pull/23718
 func (c *Config) fixNodeTemplateID(id string) string {
 	if ok, _ := c.IsRancherVersionGreaterThanOrEqual(rancher2NodeTemplateChangeVersion); ok && len(id) > 0 {
@@ -283,10 +248,6 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 	c.Client.Management = mClient
 
 	rancher2ClusterRKEK8SDefaultVersion, err = c.getK8SDefaultVersion()
-	if err != nil {
-		return nil, err
-	}
-	rancher2ClusterRKEK8SVersions, err = c.getK8SVersions()
 	if err != nil {
 		return nil, err
 	}
