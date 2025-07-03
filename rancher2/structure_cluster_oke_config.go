@@ -16,6 +16,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 		return []interface{}{}, nil
 	}
 
+	if len(in.ClusterType) > 0 {
+		obj["cluster_type"] = in.ClusterType
+	}
+
 	if len(in.CompartmentID) > 0 {
 		obj["compartment_id"] = in.CompartmentID
 	}
@@ -32,12 +36,26 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 	obj["enable_kubernetes_dashboard"] = in.EnableKubernetesDashboard
 	obj["enable_private_nodes"] = in.PrivateNodes
 
+	if len(in.EvictionGraceDuration) > 0 {
+		obj["eviction_grace_duration"] = in.EvictionGraceDuration
+	}
+
 	if len(in.Fingerprint) > 0 {
 		obj["fingerprint"] = in.Fingerprint
 	}
 
+	if in.FlexMemoryInGBs > 0 {
+		obj["flex_memory_in_gbs"] = int(in.FlexMemoryInGBs)
+	}
+
 	if in.FlexOCPUs > 0 {
 		obj["flex_ocpus"] = int(in.FlexOCPUs)
+	}
+
+	obj["force_delete_after_grace_duration"] = in.ForceDeleteAfterGraceDuration
+
+	if len(in.ImageVerificationKmsKeyID) > 0 {
+		obj["image_verification_kms_key_id"] = in.ImageVerificationKmsKeyID
 	}
 
 	if len(in.KMSKeyID) > 0 {
@@ -78,6 +96,10 @@ func flattenClusterOKEConfig(in *OracleKubernetesEngineConfig, p []interface{}) 
 
 	if len(in.NodeShape) > 0 {
 		obj["node_shape"] = in.NodeShape
+	}
+
+	if len(in.NodeUserDataContents) > 0 {
+		obj["node_user_data_contents"] = in.NodeUserDataContents
 	}
 
 	if len(in.PodCidr) > 0 {
@@ -150,6 +172,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 	obj.Name = name
 	obj.DriverName = clusterDriverOKE
 
+	if v, ok := in["cluster_type"].(string); ok && len(v) > 0 {
+		obj.ClusterType = v
+	}
+
 	if v, ok := in["compartment_id"].(string); ok && len(v) > 0 {
 		obj.CompartmentID = v
 	}
@@ -162,24 +188,40 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 		obj.Description = v
 	}
 
+        if v, ok := in["enable_kubernetes_dashboard"].(bool); ok {
+                obj.EnableKubernetesDashboard = v
+        }
+
 	if v, ok := in["enable_private_control_plane"].(bool); ok {
 		obj.PrivateControlPlane = v
-	}
-
-	if v, ok := in["enable_kubernetes_dashboard"].(bool); ok {
-		obj.EnableKubernetesDashboard = v
 	}
 
 	if v, ok := in["enable_private_nodes"].(bool); ok {
 		obj.PrivateNodes = v
 	}
 
+	if v, ok := in["eviction_grace_duration"].(string); ok && len(v) > 0 {
+		obj.EvictionGraceDuration = v
+	}
+
 	if v, ok := in["fingerprint"].(string); ok && len(v) > 0 {
 		obj.Fingerprint = v
 	}
 
+	if v, ok := in["flex_memory_in_gbs"].(int); ok && v > 0 {
+		obj.FlexMemoryInGBs = int64(v)
+	}
+
 	if v, ok := in["flex_ocpus"].(int); ok && v > 0 {
 		obj.FlexOCPUs = int64(v)
+	}
+
+	if v, ok := in["force_delete_after_grace_duration"].(bool); ok {
+		obj.ForceDeleteAfterGraceDuration = v
+	}
+
+	if v, ok := in["image_verification_kms_key_id"].(string); ok && len(v) > 0 {
+		obj.ImageVerificationKmsKeyID = v
 	}
 
 	if v, ok := in["kms_key_id"].(string); ok && len(v) > 0 {
@@ -224,6 +266,10 @@ func expandClusterOKEConfig(p []interface{}, name string) (*OracleKubernetesEngi
 
 	if v, ok := in["node_shape"].(string); ok && len(v) > 0 {
 		obj.NodeShape = v
+	}
+
+	if v, ok := in["node_user_data_contents"].(string); ok && len(v) > 0 {
+		obj.NodeUserDataContents = v
 	}
 
 	if v, ok := in["pod_cidr"].(string); ok && len(v) > 0 {
