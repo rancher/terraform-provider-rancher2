@@ -35,7 +35,7 @@ func machineConfigV2GoogleGCEFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "A prefix to be added to an internal firewall rule created to ensure virtual machines can communicate with one another.",
 		},
-		"labels": {
+		"vm_labels": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "A set of labels to be added to each VM, in the format of 'key1,value1,key2,value2'",

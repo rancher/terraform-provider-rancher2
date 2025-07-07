@@ -343,7 +343,7 @@ The following attributes are exported:
 * `disk_type` - (Required) GCE Instance Disk Type (string)
 * `external_firewall_rule_prefix` - (Optional) A prefix to be added to firewall rules created when exposing ports publicly. Required if exposing ports publicly via the `open_port` field. (string)
 * `internal_firewall_rule_prefix` - (Optional) A prefix to be added to an internal firewall rule created to ensure virtual machines can communicate with one another. Omitting this field will result in an internal firewall rule not being created. (string)
-* `labels` - (Optional) A set of labels to be added to each VM, in the format of 'key1,value1,key2,value2' (string)
+* `vm_labels` - (Optional) A set of labels to be added to each VM, in the format of 'key1,value1,key2,value2' (string)
 * `machine_image` - (Required) GCE instance image absolute URL (string)
 * `machine_type` - (Required) GCE instance type (string)
 * `network` - (Required) The network to provision virtual machines within (string)
