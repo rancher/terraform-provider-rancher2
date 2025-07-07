@@ -76,6 +76,7 @@ func resourceRancher2ClusterResourceV0() *schema.Resource {
 
 func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rkeConfigs, ok := rawState["rke_config"].([]interface{}); ok && len(rkeConfigs) > 0 {
+		log.Printf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 		for i1 := range rkeConfigs {
 			if rkeConfig, ok := rkeConfigs[i1].(map[string]interface{}); ok && len(rkeConfig) > 0 {
 				if services, ok := rkeConfig["services"].([]interface{}); ok && len(services) > 0 {
@@ -179,6 +180,8 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		clusterMap, _ := jsonToMapInterface(clusterStr)
 		clusterMap["gkeConfig"] = fixClusterGKEConfigV2(structToMap(cluster.GKEConfig))
 		err = client.APIBaseClient.Create(managementClient.ClusterType, clusterMap, newCluster)
+	} else if cluster.Driver == clusterDriverRKE {
+		return fmt.Errorf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 	} else {
 		err = client.APIBaseClient.Create(managementClient.ClusterType, cluster, newCluster)
 	}
@@ -327,12 +330,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		update["okeEngineConfig"] = okeConfig
 	case ToLower(clusterDriverRKE):
-		rkeConfig, err := expandClusterRKEConfig(d.Get("rke_config").([]interface{}), d.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		update["rancherKubernetesEngineConfig"] = rkeConfig
-		replace = d.HasChange("rke_config")
+		return fmt.Errorf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 	case clusterDriverK3S:
 		update["k3sConfig"] = expandClusterK3SConfig(d.Get("k3s_config").([]interface{}))
 		replace = d.HasChange("cluster_agent_deployment_customization")
