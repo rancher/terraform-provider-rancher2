@@ -19,12 +19,12 @@ provider "helm" {}       # make sure you set the env variable KUBE_CONFIG_PATH t
 provider "rancher2" {
   api_url   = "https://${local.domain}.${local.zone}"
   token_key = module.rancher.admin_token
-  timeout   = "3000s"
+  timeout   = "300s"
 }
 
 locals {
   identifier            = var.identifier
-  example               = "basic"
+  example               = "downstream"
   project_name          = "tf-${substr(md5(join("-", [local.example, local.identifier])), 0, 5)}"
   username              = local.project_name
   domain                = local.project_name
@@ -38,12 +38,14 @@ locals {
   rancher_version       = var.rancher_version
   cert_manager_version  = "1.16.3" #"1.13.1"
   os                    = "sle-micro-61"
-  acme_server_url       = "https://acme-v02.api.letsencrypt.org"
   aws_access_key_id     = var.aws_access_key_id
   aws_secret_access_key = var.aws_secret_access_key
   aws_region            = var.aws_region
   aws_session_token     = var.aws_session_token
+  aws_instance_type     = "m5.large"
+  node_count            = 3
   email                 = (var.email != "" ? var.email : "${local.identifier}@${local.zone}")
+  acme_server_url       = "https://acme-v02.api.letsencrypt.org"
 }
 
 data "http" "myip" {
@@ -86,8 +88,8 @@ module "rancher" {
   cert_manager_configuration = {
     aws_access_key_id     = local.aws_access_key_id
     aws_secret_access_key = local.aws_secret_access_key
-    aws_region            = local.aws_region
     aws_session_token     = local.aws_session_token
+    aws_region            = local.aws_region
     acme_email            = local.email
     acme_server_url       = local.acme_server_url
   }
@@ -98,7 +100,7 @@ module "rke2_image" {
   version             = "v1.4.0"
   server_use_strategy = "skip"
   image_use_strategy  = "find"
-  image_type          = local.os
+  image_type          = local.os # this is not required to match Rancher, it just seemed easier in this example
 }
 
 # you can add this one multiple times, or use a loop to deploy multiple clusters
@@ -109,7 +111,7 @@ module "downstream" {
   ]
   source = "./modules/downstream"
   # general
-  name       = "${local.project_name}-mp" # multi-pool
+  name       = "${local.project_name}-aio"
   identifier = local.identifier
   owner      = local.owner
   # aws access
@@ -128,12 +130,11 @@ module "downstream" {
   load_balancer_security_groups = module.rancher.load_balancer_security_groups
   subnet_id                     = module.rancher.subnets[keys(module.rancher.subnets)[0]].id
   # node info
-  aws_instance_type        = "m5.large"
-  ami_id                   = module.rke2_image.image.id
-  ami_ssh_user             = module.rke2_image.image.user
-  ami_admin_group          = module.rke2_image.image.admin_group
-  worker_node_count        = 2
-  control_plane_node_count = 2
+  aws_instance_type = local.aws_instance_type
+  ami_id            = module.rke2_image.image.id
+  ami_ssh_user      = module.rke2_image.image.user
+  ami_admin_group   = module.rke2_image.image.admin_group
+  node_count        = local.node_count
   direct_node_access = {
     runner_ip       = local.runner_ip
     ssh_access_key  = local.key
@@ -141,4 +142,13 @@ module "downstream" {
   }
   # rke2 info
   rke2_version = local.rke2_version
+}
+
+data "rancher2_cluster" "downstream" {
+  depends_on = [
+    module.rancher,
+    module.rke2_image,
+    module.downstream,
+  ]
+  name = "${local.project_name}-aio"
 }

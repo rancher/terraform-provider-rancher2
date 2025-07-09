@@ -8,11 +8,11 @@ output "kubeconfig" {
 output "address" {
   value = module.rancher.address
 }
-output "admin_token" {
-  value     = module.rancher.admin_token
-  sensitive = true
-}
 output "admin_password" {
   value     = module.rancher.admin_password
+  sensitive = true
+}
+output "downstream_kubeconfig" {
+  value     = data.rancher2_cluster.downstream.kube_config
   sensitive = true
 }
