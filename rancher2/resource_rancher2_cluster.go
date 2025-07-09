@@ -237,7 +237,7 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 			return resource.NonRetryableError(err)
 		}
 
-		kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
+		kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID)
 		if err != nil && !IsForbidden(err) {
 			return resource.NonRetryableError(err)
 		}
@@ -567,62 +567,10 @@ func isKubeConfigTokenValid(c *Config, config string) (string, bool, error) {
 	return token, isValid, nil
 }
 
-func replaceKubeConfigToken(c *Config, config string) (string, error) {
-	kubeconfig, err := getObjFromKubeConfig(config)
-	if err != nil {
-		return "", fmt.Errorf("getting K8s config object: %v", err)
-	}
-	if kubeconfig == nil || kubeconfig.AuthInfos == nil || len(kubeconfig.AuthInfos) == 0 {
-		return config, nil
-	}
-
-	client, err := c.ManagementClient()
-	if err != nil {
-		return "", fmt.Errorf("replacing cluster Kubeconfig token: %v", err)
-	}
-
-	// if cached token is corrupt, ByID will fail and the token can't be
-	// retrieved or cleaned up
-	currentToken, err := client.Token.ByID(splitTokenID(kubeconfig.AuthInfos[0].AuthInfo.Token))
-	if err != nil || currentToken.Expired {
-		if !IsNotFound(err) && !IsForbidden(err) {
-			return "", err
-		}
-		// client can't find the token or token has expired, so create
-		// a new one
-		currentToken, err = client.Token.Create(currentToken)
-		if err != nil {
-			return "", fmt.Errorf("error creating Token: %s", err)
-		}
-	}
-	kubeconfig.AuthInfos[0].AuthInfo.Token = currentToken.Token
-	return getKubeConfigFromObj(kubeconfig)
-}
-
-func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.GenerateKubeConfigOutput, error) {
+func getClusterKubeconfig(c *Config, id string) (*managementClient.GenerateKubeConfigOutput, error) {
 	action := "generateKubeconfig"
 	cluster := &Cluster{}
 
-	// kubeconfig already exists in the cache
-	if len(origconfig) > 0 {
-		token, kubeValid, err := isKubeConfigValid(c, origconfig)
-		if err != nil {
-			return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
-		}
-		if kubeValid {
-			return &managementClient.GenerateKubeConfigOutput{Config: origconfig}, nil
-		} else if len(token) == 0 {
-			// if token is zero length, token is not valid or expired so replace it
-			// in the cached kubeconfig
-			newConfig, err := replaceKubeConfigToken(c, origconfig)
-			if err != nil {
-				return nil, err
-			}
-			return &managementClient.GenerateKubeConfigOutput{Config: newConfig}, nil
-		}
-	}
-
-	// kubeconfig is not cached or invalid for other reasons, download a new one
 	client, err := c.ManagementClient()
 	if err != nil {
 		return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
@@ -637,12 +585,8 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 				return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
 			}
 		} else if len(cluster.Actions[action]) > 0 {
-			isRancher26, err := c.IsRancherVersionGreaterThanOrEqual("2.6.0")
-			if err != nil {
-				return nil, err
-			}
 			kubeConfig := &managementClient.GenerateKubeConfigOutput{}
-			if isRancher26 && cluster.LocalClusterAuthEndpoint != nil && cluster.LocalClusterAuthEndpoint.Enabled {
+			if cluster.LocalClusterAuthEndpoint != nil && cluster.LocalClusterAuthEndpoint.Enabled {
 				if connected, _, _ := c.isClusterConnected(cluster.ID); !connected {
 					log.Printf("[WARN] Getting cluster Kubeconfig: kubeconfig is not yet available for cluster %s", cluster.Name)
 					return kubeConfig, nil

@@ -89,11 +89,7 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 			d.Set("default_project_id", defaultProjectID)
 			d.Set("system_project_id", systemProjectID)
 
-			isRancher26, err := meta.(*Config).IsRancherVersionGreaterThanOrEqual("2.6.0")
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-			if isRancher26 && clus.LocalClusterAuthEndpoint != nil && clus.LocalClusterAuthEndpoint.Enabled {
+			if clus.LocalClusterAuthEndpoint != nil && clus.LocalClusterAuthEndpoint.Enabled {
 				connected, _, err := meta.(*Config).isClusterConnected(clusterID)
 				if err != nil {
 					return resource.NonRetryableError(err)
@@ -103,7 +99,7 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 					return nil
 				}
 			}
-			kubeConfig, err := getClusterKubeconfig(meta.(*Config), clusterID, d.Get("kube_config").(string))
+			kubeConfig, err := getClusterKubeconfig(meta.(*Config), clusterID)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
