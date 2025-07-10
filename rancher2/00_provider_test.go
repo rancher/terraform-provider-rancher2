@@ -1,9 +1,6 @@
 package rancher2
 
 import (
-	"fmt"
-	"log"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
