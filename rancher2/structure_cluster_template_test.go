@@ -27,10 +27,7 @@ var (
 )
 
 func testClusterTemplate() {
-	k8sVersion = testAccRancher2ClusterRKEK8SDefaultVersion
-	if len(testAccRancher2ClusterRKEK8SDefaultVersion) == 0 {
-		k8sVersion = "test"
-	}
+	k8sVersion = "test"
 	testClusterTemplateRevisionsConfigRKEConf = &managementClient.RancherKubernetesEngineConfig{
 		AddonJobTimeout:     30,
 		Addons:              "addons",
