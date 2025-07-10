@@ -152,6 +152,6 @@ func CheckOutputs(t *testing.T, terraformOptions *terraform.Options) {
 			t.Fail()
 			t.Logf("Missing output '%s'", Attributes[i])
 		}
-    t.Logf("Found attribute '%s' with value '%s'", Attributes[i], output)
+		t.Logf("Found attribute '%s' with value '%s'", Attributes[i], output)
 	}
 }
