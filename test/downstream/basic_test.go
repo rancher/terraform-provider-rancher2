@@ -129,10 +129,22 @@ func TestDownstreamBasic(t *testing.T) {
 		sshAgent.Stop()
 		t.Fatalf("Error creating cluster: %s", err)
 	}
+	downstreamKubeconfig, err := terraform.OutputE(t, terraformOptions, "downstream_kubeconfig")
+	if err != nil {
+		t.Fail()
+		t.Log("Missing downstream kubeconfig")
+	}
+	err = os.WriteFile(testDir+"/downstream_kubeconfig", []byte(downstreamKubeconfig), 0644)
+	if err != nil {
+		t.Fail()
+		t.Logf("Error writing downstream kubeconfig: %s", err)
+	}
+
 	// tests here
 	util.CheckReady(t, testDir+"/kubeconfig")
 	util.CheckRunning(t, testDir+"/kubeconfig")
 	CheckOutputs(t, terraformOptions)
+	CheckDownstream(t, testDir+"/downstream_kubeconfig")
 
 	// end tests
 	if t.Failed() {
@@ -154,4 +166,9 @@ func CheckOutputs(t *testing.T, terraformOptions *terraform.Options) {
 		}
 		t.Logf("Found attribute '%s' with value '%s'", Attributes[i], output)
 	}
+}
+
+func CheckDownstream(t *testing.T, kubeconfigPath string) {
+	util.CheckReady(t, kubeconfigPath)
+	util.CheckRunning(t, kubeconfigPath)
 }

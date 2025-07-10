@@ -13,6 +13,6 @@ output "admin_password" {
   sensitive = true
 }
 output "downstream_kubeconfig" {
-  value     = data.rancher2_cluster.downstream.kube_config
+  value     = data.rancher2_cluster_v2.downstream.kube_config
   sensitive = true
 }
