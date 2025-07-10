@@ -14,7 +14,7 @@ var (
 )
 
 func testClusterRKEConfig() {
-  k8sVersion = "test"
+	k8sVersion = "test"
 	testClusterRKEConfigConf = &managementClient.RancherKubernetesEngineConfig{
 		AddonJobTimeout:     30,
 		Addons:              "addons",
