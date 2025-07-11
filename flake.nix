@@ -86,7 +86,7 @@
           devShells.default = pkgs.mkShell {
             buildInputs = [ devShellPackage ];
             shellHook = ''
-              while read word; do echo -e "*$word\n#" | aspell -a >/dev/null; done < aspell_custom.txt
+              while read word; do echo -e "*$word\n#" | aspell -a --dont-validate-words >/dev/null; done < aspell_custom.txt
               homebin=$HOME/bin;
               install -d $homebin;
               tfswitch -b $homebin/terraform 1.5.7 &>/dev/null;
