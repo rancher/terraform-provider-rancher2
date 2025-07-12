@@ -130,7 +130,7 @@ data "http" "myip" {
 
 module "this" {
   source               = "rancher/aws/rancher2"
-  version              = "1.2.2"
+  version              = "2.0.1"
   identifier           = local.identifier
   owner                = local.owner
   project_name         = local.project_name
