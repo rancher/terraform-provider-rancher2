@@ -1609,7 +1609,7 @@ The following arguments are supported:
 * `node_groups` - (Optional/Computed) The EKS cluster name to import. Required to create a new cluster (list)
 * `private_access` - (Optional/Computed) The EKS cluster has private access (bool)
 * `public_access` - (Optional/Computed) The EKS cluster has public access (bool)
-* `public_access_sources` - (Optional/Computed) The EKS cluster public access sources (map)
+* `public_access_sources` - (Optional/Computed) The EKS cluster public access sources (list)
 * `region` - (Optional) The EKS cluster region. Default: `us-west-2` (string)
 * `secrets_encryption` - (Optional/Computed) Enable EKS cluster secret encryption (bool)
 * `security_groups` - (Optional/Computed) List of security groups to use for the cluster (list)
