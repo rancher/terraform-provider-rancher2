@@ -167,6 +167,10 @@ func nodeTemplateFields() map[string]*schema.Schema {
 				Schema: linodeConfigFields(),
 			},
 		},
+		"log_opt": {
+			Type:     schema.TypeMap,
+			Optional: true,
+		},
 		"node_taints": {
 			Type:     schema.TypeList,
 			Optional: true,
