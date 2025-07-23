@@ -121,6 +121,13 @@ func flattenNodeTemplate(d *schema.ResourceData, in *NodeTemplate) error {
 		d.Set("engine_storage_driver", in.EngineStorageDriver)
 	}
 
+	if len(in.LogOpt) > 0 {
+		err := d.Set("log_opt", toMapInterface(in.LogOpt))
+		if err != nil {
+			return err
+		}
+	}
+
 	err := d.Set("node_taints", flattenTaints(in.NodeTaints))
 	if err != nil {
 		return err
@@ -211,6 +218,10 @@ func expandNodeTemplate(in *schema.ResourceData) *NodeTemplate {
 
 	if v, ok := in.Get("engine_storage_driver").(string); ok && len(v) > 0 {
 		obj.EngineStorageDriver = v
+	}
+
+	if v, ok := in.Get("log_opt").(map[string]interface{}); ok && len(v) > 0 {
+		obj.LogOpt = toMapString(v)
 	}
 
 	if v, ok := in.Get("node_taints").([]interface{}); ok && len(v) > 0 {
