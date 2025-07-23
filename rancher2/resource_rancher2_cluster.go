@@ -682,22 +682,22 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 }
 
 func isImportedCluster(d *schema.ResourceDiff) bool {
-	_, newEks := d.GetChange("eks_config_v2")
-	newEksArray, ok := newEks.([]interface{})
+	eks := d.Get("eks_config_v2")
+	newEksArray, ok := eks.([]interface{})
 	isEks := ok && len(newEksArray) > 0
 	if isEks {
 		return expandClusterEKSConfigV2(newEksArray).Imported
 	}
 
-	_, newGke := d.GetChange("gke_config_v2")
-	newGkeArray, ok := newGke.([]interface{})
+	gke := d.Get("gke_config_v2")
+	newGkeArray, ok := gke.([]interface{})
 	isGke := ok && len(newGkeArray) > 0
 	if isGke {
 		return expandClusterGKEConfigV2(newGkeArray).Imported
 	}
 
-	_, newAks := d.GetChange("aks_config_v2")
-	newAksArray, ok := newAks.([]interface{})
+	aks := d.Get("aks_config_v2")
+	newAksArray, ok := aks.([]interface{})
 	isAks := ok && len(newAksArray) > 0
 	if isAks {
 		return expandClusterAKSConfigV2(newAksArray).Imported
