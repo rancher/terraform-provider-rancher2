@@ -194,6 +194,13 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			"imported_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: clusterImportedConfigFields(),
+				},
+			},
 		},
 	}
 }
