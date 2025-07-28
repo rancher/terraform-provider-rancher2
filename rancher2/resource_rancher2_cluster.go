@@ -556,7 +556,11 @@ func isKubeConfigValid(c *Config, config string) (string, bool, error) {
 	if err != nil {
 		return "", false, fmt.Errorf("checking Kubeconfig: %v", err)
 	}
-	_, err = kubernetes.NewForConfig(kubeconfig)
+	client, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		return token, false, nil
+	}
+	_, err = client.DiscoveryClient.ServerVersion()
 	if err != nil {
 		return token, false, nil
 	}
