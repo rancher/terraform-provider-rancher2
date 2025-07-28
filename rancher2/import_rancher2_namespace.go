@@ -19,7 +19,7 @@ func resourceRancher2NamespaceImport(d *schema.ResourceData, meta interface{}) (
 
 	client, err := meta.(*Config).ClusterClient(clusterID)
 	if err != nil {
-		log.Printf("[INFO] Problem getting cluster client for cluster with id \"%s\"", clusterID)
+		log.Printf("[ERROR] Problem getting cluster client for cluster with id \"%s\"", clusterID)
 		return []*schema.ResourceData{}, err
 	}
 
