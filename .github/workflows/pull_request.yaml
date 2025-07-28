@@ -99,16 +99,18 @@ jobs:
           # This format enables automatic generation of changelogs and versioning
           filter() {
             COMMIT="$1"
-            ouput="$(echo "$COMMIT" | grep -e '^fix: ' -e '^feature: ' -e '^feat: ' -e 'refactor!: ' -e 'feature!: ' -e 'feat!: ' -e '^chore(main): ')"
+            output="$(echo "$COMMIT" | grep -v -e '^fix: ' -e '^feature: ' -e '^feat: ' -e '^refactor!: ' -e '^feature!: ' -e '^feat!: ' -e '^chore(main): ' -e '^Merge branch ')"
             echo "$output"
           }
           prefix_check() {
             message="$1"
             if [ "" != "$(filter "$message")" ]; then
-              echo "...Commit message does not start with the required prefix.
-              Please use one of the following prefixes: "fix:", "feature:", "feat:", "refactor!:", "feature!:", or "feat!:".
-              This enables release-please to automatically determine the type of release (major, minor, patch) based on the commit message.
-              $message"
+              cat <<EOF
+          ...Commit message does not start with the required prefix.
+          Please use one of the following prefixes: "fix:", "feature:", "feat:", "refactor!:", "feature!:", or "feat!:".
+          This enables release-please to automatically determine the type of release (major, minor, patch) based on the commit message.
+          $message
+          EOF
               exit 1
             else
               echo "...Commit message starts with the required prefix."
@@ -125,8 +127,9 @@ jobs:
           }
           length_check() {
             message="$1"
-            if [ "$(wc -m <<<"$message")" -gt 50 ]; then
-              echo "...Commit message subject line should be less than 50 characters, found $(wc -m "$message")."
+            length="$(wc -m <<<"$message")"
+            if [ $length -gt 50 ]; then
+              echo "...Commit message subject line should be less than 50 characters, found $length."
               exit 1
             else
               echo "...Commit message subject line is less than 50 characters."
@@ -134,7 +137,7 @@ jobs:
           }
           spell_check() {
             message="$1"
-            WORDS="$(aspell list <<<"$message")"
+            WORDS="$(aspell list --dont-validate-words <<<"$message")"
             if [ "" != "$WORDS" ]; then
               echo "...Commit message contains spelling errors on: ^$WORDS\$"
               echo "...Also try updating the PR title."

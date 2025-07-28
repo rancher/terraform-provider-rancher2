@@ -48,6 +48,15 @@ func resourceRancher2Cluster() *schema.Resource {
 				}
 			}
 
+			// Allow the configuration of the imported_config field only if the
+			// cluster is an imported generic cluster or an imported hosted cluster (e.g. AKS, GKE, EKS).
+			// Previously defined 'conflictsWith' entries already handle other cluster types (rke, rke2, k3s)
+			// so they do not need to be reconsidered here.
+			importCnf, ok := d.Get("imported_config").([]interface{})
+			if ok && len(importCnf) > 0 && !isImportedCluster(d) {
+				return fmt.Errorf("The rancher2_cluster.imported_config field can only be used when working with generic imported clusters or imported hosted clusters (e.g. AKS, GKE, EKS)")
+			}
+
 			return nil
 		},
 		Schema:        clusterFields(),
@@ -674,4 +683,33 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 			return nil, fmt.Errorf("Timeout getting cluster Kubeconfig: %v", err)
 		}
 	}
+}
+
+func isImportedCluster(d *schema.ResourceDiff) bool {
+	eks := d.Get("eks_config_v2")
+	newEksArray, ok := eks.([]interface{})
+	isEks := ok && len(newEksArray) > 0
+	if isEks {
+		return expandClusterEKSConfigV2(newEksArray).Imported
+	}
+
+	gke := d.Get("gke_config_v2")
+	newGkeArray, ok := gke.([]interface{})
+	isGke := ok && len(newGkeArray) > 0
+	if isGke {
+		return expandClusterGKEConfigV2(newGkeArray).Imported
+	}
+
+	aks := d.Get("aks_config_v2")
+	newAksArray, ok := aks.([]interface{})
+	isAks := ok && len(newAksArray) > 0
+	if isAks {
+		return expandClusterAKSConfigV2(newAksArray).Imported
+	}
+
+	// if this is a generic imported cluster,
+	// we should always allow for the field to be used.
+	// Other non-imported cluster types (rke, rke2, k3s, etc.)
+	// are already being blocked via the static ConflictsWith field.
+	return true
 }

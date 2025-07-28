@@ -22,6 +22,8 @@ resource "rancher2_cluster" "foo-imported" {
 
 ### Creating Rancher v2 imported cluster with custom configuration. For Rancher v2.11.x and above.
 
+This configuration can be used to indicate that system images (such as the rancher-agent) should be pulled from an unauthenticated private registry. This can be used for all imported cluster types, including imported hosted clusters (AKS, EKS, GKE).
+
 ```hcl
 # Create a new rancher2 imported Cluster with custom configuration 
 resource "rancher2_cluster" "foo-imported" {
@@ -411,6 +413,32 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
+### Importing EKS cluster to Rancher v2, using `eks_config_v2`, while specifying an unauthenticated private registry. For Rancher v2.11.0 and above.
+
+```hcl
+resource "rancher2_cloud_credential" "foo" {
+  name = "foo"
+  description = "foo test"
+  amazonec2_credential_config {
+    access_key = "<aws-access-key>"
+    secret_key = "<aws-secret-key>"
+  }
+}
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform EKS cluster"
+  eks_config_v2 {
+    cloud_credential_id = rancher2_cloud_credential.foo.id
+    name = "<cluster-name>"
+    region = "<eks-region>"
+    imported = true
+  }
+  imported_config {
+    private_registry_url = <private_registry>
+  }
+}
+```
+
 ### Creating EKS cluster from Rancher v2, using `eks_config_v2`. For Rancher v2.5.x and above.
 
 ```hcl
@@ -509,6 +537,32 @@ resource "rancher2_cluster" "foo" {
 }
 ```
 
+### Importing GKE cluster from Rancher v2, using `gke_config_v2`, while specifying an unauthenticated private registry. For Rancher v2.11.0 above.
+
+```hcl
+resource "rancher2_cloud_credential" "foo-google" {
+  name = "foo-google"
+  description= "Terraform cloudCredential acceptance test"
+  google_credential_config {
+    auth_encoded_json = file(<GOOGLE_AUTH_ENCODED_JSON>)
+  }
+}
+
+resource "rancher2_cluster" "foo" {
+  name = "foo"
+  description = "Terraform imported GKE cluster"
+  gke_config_v2 {
+    name = "foo"
+    google_credential_secret = rancher2_cloud_credential.foo-google.id
+    region = <region> # Zone argument could also be used instead of region
+    project_id = <project-id>
+    imported = true
+  }
+  imported_config {
+    private_registry_url = <private_registry>
+  }
+}
+```
 ### Creating GKE cluster from Rancher v2, using `gke_config_v2`. For Rancher v2.5.8 and above.
 
 **Note:** At the moment, routed-based GKE clusters are not supported due to [rancher/issues/32585](https://github.com/rancher/rancher/issues/32585)
@@ -567,6 +621,34 @@ resource "rancher2_cluster" "foo" {
   }
 }
 ```
+
+### Importing AKS cluster from Rancher v2, using `aks_config_v2`, while specifying an unauthenticated private registry. For Rancher v2.11.0 and above.
+
+```hcl
+resource "rancher2_cloud_credential" "foo-aks" {
+  name = "foo-aks"
+  azure_credential_config {
+    client_id = "<client-id>"
+    client_secret = "<client-secret>"
+    subscription_id = "<subscription-id>"
+  }
+}
+# For imported AKS clusters, don't add any other aks_config_v2 field
+resource "rancher2_cluster" "foo" {
+  name = <cluster-name>
+  description = "Terraform AKS cluster"
+  aks_config_v2 {
+    cloud_credential_id = rancher2_cloud_credential.foo-aks.id
+    resource_group = "<resource-group>"
+    resource_location = "<resource-location"
+    imported = true
+  }
+  imported_config {
+    private_registry_url = "<private_registry>"
+  }
+}
+```
+
 
 ### Creating AKS cluster from Rancher v2, using `aks_config_v2`. For Rancher v2.6.0 and above.
 
