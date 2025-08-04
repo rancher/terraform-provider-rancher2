@@ -207,6 +207,7 @@ global:
     psp:
       enabled: false
     systemDefaultRegistry: registry.rancher.com
+    systemProjectId: <PROJECT_ID>
     url: https://<NODE_IP>
     clusterName: custom
     rkePathPrefix: ''
@@ -218,6 +219,27 @@ global:
   systemDefaultRegistry: registry.rancher.com
 EOF
 }
+
+# About the variables of the values.yaml file
+#
+# CLUSTER_ID
+# When viewing a specific cluster in the Rancher UI, the cluster ID (formatted as c-xxxxx) is visible in the browser's URL bar
+# You can also get the ID through Rancher API:
+#
+#  curl -s "https://${RANCHER_SERVER}/v3/clusters?name=${CLUSTER_NAME}" \
+#  -H 'content-type: application/json' \
+#  -H "Authorization: Bearer $APITOKEN" \
+#  --insecure | jq -r .data[0].id
+#
+#
+# PROJECT_ID
+# Go to Cluster Management>Explore>Cluster>Projects/Namespaces 
+# then go to the ellipsis button (three dots) to the right of the project name and select "View YAML." 
+# In the displayed YAML, the metadata.name field contains the Rancher Project ID (formatted as p-xxxxx)
+#
+#
+# NODE_IP
+# It's the IPv4 address of your Rancher server
 ```
 
 * `rancher-cis-benchmark` - Deploy Rancher cis benchmark
