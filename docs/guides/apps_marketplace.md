@@ -189,6 +189,59 @@ resource "rancher2_app_v2" "rancher-istio" {
 }
 ```
 
+* `prometheus-federator` - Deploy Prometheus Federator
+
+```hcl
+resource "rancher2_app_v2" "prometheus-federator" {  
+  cluster_id = "<CLUSTER_ID>"
+  name = "prometheus-federator"
+  namespace = "cattle-monitoring-system"
+  repo_name = "rancher-charts"
+  chart_name = "prometheus-federator"
+  chart_version = "104.0.2+up0.4.2" 
+  values = <<EOF
+global:
+  cattle:
+    clusterId: <CLUSTER_ID>
+    projectLabel: field.cattle.io/projectId
+    psp:
+      enabled: false
+    systemDefaultRegistry: registry.rancher.com
+    systemProjectId: <PROJECT_ID>
+    url: https://<NODE_IP>
+    clusterName: custom
+    rkePathPrefix: ''
+    rkeWindowsPathPrefix: ''
+  imagePullSecrets: []
+  rbac:
+    pspAnnotations: {}
+    pspEnabled: true
+  systemDefaultRegistry: registry.rancher.com
+EOF
+}
+
+# About the variables of the values.yaml file
+#
+# CLUSTER_ID
+# When viewing a specific cluster in the Rancher UI, the cluster ID (formatted as c-xxxxx) is visible in the browser's URL bar
+# You can also get the ID through Rancher API:
+#
+#  curl -s "https://${RANCHER_SERVER}/v3/clusters?name=${CLUSTER_NAME}" \
+#  -H 'content-type: application/json' \
+#  -H "Authorization: Bearer $APITOKEN" \
+#  --insecure | jq -r .data[0].id
+#
+#
+# PROJECT_ID
+# Go to Cluster Management>Explore>Cluster>Projects/Namespaces 
+# then go to the ellipsis button (three dots) to the right of the project name and select "View YAML." 
+# In the displayed YAML, the metadata.name field contains the Rancher Project ID (formatted as p-xxxxx)
+#
+#
+# NODE_IP
+# It's the IPv4 address of your Rancher server
+```
+
 * `rancher-cis-benchmark` - Deploy Rancher cis benchmark
 
 ```hcl
