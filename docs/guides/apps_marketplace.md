@@ -189,6 +189,37 @@ resource "rancher2_app_v2" "rancher-istio" {
 }
 ```
 
+* `prometheus-federator` - Deploy Prometheus Federator
+
+```hcl
+resource "rancher2_app_v2" "prometheus-federator" {  
+  cluster_id = "<CLUSTER_ID>"
+  name = "prometheus-federator"
+  namespace = "cattle-monitoring-system"
+  repo_name = "rancher-charts"
+  chart_name = "prometheus-federator"
+  chart_version = "104.0.2+up0.4.2" 
+  values = <<EOF
+global:
+  cattle:
+    clusterId: <CLUSTER_ID>
+    projectLabel: field.cattle.io/projectId
+    psp:
+      enabled: false
+    systemDefaultRegistry: registry.rancher.com
+    url: https://<NODE_IP>
+    clusterName: custom
+    rkePathPrefix: ''
+    rkeWindowsPathPrefix: ''
+  imagePullSecrets: []
+  rbac:
+    pspAnnotations: {}
+    pspEnabled: true
+  systemDefaultRegistry: registry.rancher.com
+EOF
+}
+```
+
 * `rancher-cis-benchmark` - Deploy Rancher cis benchmark
 
 ```hcl
