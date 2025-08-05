@@ -208,7 +208,7 @@ global:
       enabled: false
     systemDefaultRegistry: registry.rancher.com
     systemProjectId: <PROJECT_ID>
-    url: https://<NODE_IP>
+    url: <RANCHER_SERVER_URL>
     clusterName: custom
     rkePathPrefix: ''
     rkeWindowsPathPrefix: ''
@@ -238,8 +238,8 @@ EOF
 # In the displayed YAML, the metadata.name field contains the Rancher Project ID (formatted as p-xxxxx)
 #
 #
-# NODE_IP
-# It's the IPv4 address of your Rancher server
+# RANCHER_SERVER_URL
+# It's the protocol and hostname of your Rancher server, e.g. https://rancher.my.org, configured during the installation with Helm
 ```
 
 * `rancher-cis-benchmark` - Deploy Rancher cis benchmark
