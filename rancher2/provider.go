@@ -124,6 +124,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_cluster":                                       resourceRancher2Cluster(),
 			"rancher2_cluster_v2":                                    resourceRancher2ClusterV2(),
 			"rancher2_cluster_driver":                                resourceRancher2ClusterDriver(),
+			"rancher2_cluster_proxy_config_v2":                       resourceRancher2ClusterProxyConfigV2(),
 			"rancher2_cluster_role_template_binding":                 resourceRancher2ClusterRoleTemplateBinding(),
 			"rancher2_cluster_sync":                                  resourceRancher2ClusterSync(),
 			"rancher2_cluster_template":                              resourceRancher2ClusterTemplate(),
