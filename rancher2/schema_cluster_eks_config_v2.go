@@ -58,7 +58,7 @@ func clusterEKSConfigV2NodeGroupsLaunchTemplateFields() map[string]*schema.Schem
 		"version": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Default:     1,
+			Computed:    true,
 			Description: "The EKS node group launch template version",
 		},
 	}
