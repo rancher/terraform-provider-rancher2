@@ -13,3 +13,5 @@ config
 git
 variablize
 terraform
+pre
+pre-release
