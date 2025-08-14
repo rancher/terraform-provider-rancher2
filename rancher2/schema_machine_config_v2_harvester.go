@@ -122,6 +122,11 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "NetworkData content of cloud-init, base64 is supported",
 		},
+		"vgpu_info": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "A JSON string specifying info for the vGPUs e.g. `{\"vGPURequests\":[{\"name\":\"provisioned\",\"deviceName\":\"nvidia.com/NVIDIA_H200-141C\"}]}`",
+		},
 	}
 
 	return s
