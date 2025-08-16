@@ -9,9 +9,8 @@ import (
 func clusterV2LocalAuthEndpointFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"ca_certs": {
-			Type:          schema.TypeString,
-			Optional:      true,
-			ConflictsWith: []string{"use_internal_ca_certs"},
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 		"enabled": {
 			Type:     schema.TypeBool,
@@ -23,10 +22,9 @@ func clusterV2LocalAuthEndpointFields() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"use_internal_ca_certs": {
-			Type:          schema.TypeBool,
-			Optional:      true,
-			Default:       false,
-			ConflictsWith: []string{"ca_certs"},
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
 		},
 	}
 
