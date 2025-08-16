@@ -11,6 +11,7 @@ func clusterV2LocalAuthEndpointFields() map[string]*schema.Schema {
 		"ca_certs": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true,
 		},
 		"enabled": {
 			Type:     schema.TypeBool,
