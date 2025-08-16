@@ -496,7 +496,7 @@ func getClusterCACert(c *Config, clusterV1ID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return cluster.CACert, nil
+	return decodeCACertIfBase64(cluster.CACert), nil
 }
 
 func setClusterV2LocalAuthEndpointInternalFlag(d *schema.ResourceData, c *Config, cluster *ClusterV2) error {
