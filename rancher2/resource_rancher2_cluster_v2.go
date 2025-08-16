@@ -51,6 +51,13 @@ func resourceRancher2ClusterV2() *schema.Resource {
 				oldInterface, oldOk := oldObj.([]interface{})
 				newInterface, newOk := newObj.([]interface{})
 				if oldOk && newOk && len(newInterface) > 0 {
+					if m, ok := newInterface[0].(map[string]interface{}); ok {
+						if ca, ok := m["ca_certs"].(string); ok && ca != "" {
+							if use, ok := m["use_internal_ca_certs"].(bool); ok && use {
+								return fmt.Errorf("only one of \"ca_certs\" or \"use_internal_ca_certs\" can be set")
+							}
+						}
+					}
 					oldConfig := expandClusterV2LocalAuthEndpoint(oldInterface)
 					newConfig := expandClusterV2LocalAuthEndpoint(newInterface)
 					oldUse := false

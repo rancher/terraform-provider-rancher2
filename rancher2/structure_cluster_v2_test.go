@@ -232,7 +232,7 @@ func init() {
 		"name":                                   "name",
 		"fleet_namespace":                        "fleet_namespace",
 		"kubernetes_version":                     "kubernetes_version",
-		"local_auth_endpoint":                    testClusterV2LocalAuthEndpointInterface,
+		"local_auth_endpoint":                    testClusterV2LocalAuthEndpointInterfaceWithFlag,
 		"rke_config":                             testClusterV2RKEConfigInterface,
 		"agent_env_vars":                         testClusterV2EnvVarInterface,
 		"cluster_agent_deployment_customization": testClusterV2ClusterAgentCustomizationInterface,
