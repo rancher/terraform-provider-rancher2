@@ -150,6 +150,10 @@ The following attributes are exported:
 * `use_private_address` - (Optional) Force the usage of private IP address. Default `false` (bool)
 * `userdata` - (Optional) Path to file with cloud-init user data (string)
 * `volume_type` - (Optional) Amazon EBS volume type. Default `gp2` (string)
+* `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. Options: enabled, disabled (string)
+* `ipv6_address_count` - (Optional) The number of IPv6 addresses to assign to the network interface. It must be greater than zero when Ipv6AddressOnly is true (string)
+* `ipv6_address_only` - (Optional) Indicates whether the instance has only IPv6 address. Useful when the VPC or subnet is configured as IPv6-only (bool)
+* `enable_primary_ipv6` - (Optional) Indicates whether the instance’s first assigned IPv6 address is set as the primary IPv6 address (bool)
 
 ### `azure_config`
 
