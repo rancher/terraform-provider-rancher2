@@ -46,6 +46,9 @@ func flattenClusterV2RKEConfig(in *provisionv1.RKEConfig) []interface{} {
 	if in.ETCD != nil {
 		obj["etcd"] = flattenClusterV2RKEConfigETCD(in.ETCD)
 	}
+	if in.Networking != nil {
+		obj["networking"] = flattenClusterV2Networking(in.Networking)
+	}
 
 	if in.RotateCertificates != nil {
 		obj["rotate_certificates"] = flattenClusterV2RKEConfigRotateCertificates(in.RotateCertificates)
@@ -107,6 +110,9 @@ func expandClusterV2RKEConfig(p []interface{}) *provisionv1.RKEConfig {
 	}
 	if v, ok := in["etcd"].([]interface{}); ok && len(v) > 0 {
 		obj.ETCD = expandClusterV2RKEConfigETCD(v)
+	}
+	if v, ok := in["networking"].([]interface{}); ok && len(v) > 0 {
+		obj.Networking = expandClusterV2Networking(v)
 	}
 
 	if v, ok := in["rotate_certificates"].([]interface{}); ok && len(v) > 0 {
