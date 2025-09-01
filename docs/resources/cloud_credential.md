@@ -6,7 +6,7 @@ page_title: "rancher2_cloud_credential Resource"
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2.x and retrieve their information.
 
-amazonec2, azure, digitalocean, harvester, linode, openstack and vsphere credentials config are supported for Cloud Credential.
+amazonec2, azure, digitalocean, harvester, linode, openstack, vsphere and ionoscloud credentials config are supported for Cloud Credential.
 
 ## Example Usage
 
@@ -54,6 +54,7 @@ The following arguments are supported:
 * `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
 * `s3_credential_config` - (Optional) S3 config for the Cloud Credential. For Rancher 2.6.0 and above (list maxitems:1)
 * `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
+* `ionoscloud_credential_config` - (Optional) Ionoscloud config for the Cloud Credential (list maxitems:1)
 * `annotations` - (Optional) Annotations for Cloud Credential object (map)
 * `labels` - (Optional/Computed) Labels for Cloud Credential object (map)
 
@@ -137,6 +138,15 @@ The following attributes are exported:
 * `username` - (Required) vSphere username (string)
 * `vcenter` - (Required) vSphere IP/hostname for vCenter (string)
 * `vcenter_port` - (Optional) vSphere Port for vCenter. Default `443` (string)
+
+### `ionoscloud_credential_config`
+
+#### Arguments
+
+* `token` - (Optional/Sensitive) Ionoscloud token. Either token or username/password is required (string)
+* `password` - (Optional/Sensitive) Ionoscloud passwor. Either token or username/password is required (string)
+* `username` - (Optional) Ionoscloud username (string)
+* `endpoint` - (Optional) Ionoscloud endpoint. Default `https://api.ionos.com/cloudapi/v6` (string)
 
 ## Timeouts
 

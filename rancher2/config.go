@@ -1068,6 +1068,7 @@ func (c *Config) activateNodeDriver(id string, interval time.Duration) error {
 		if err != nil && !IsServerError(err) && !IsUnknownSchemaType(err) && !IsNotFound(err) && !IsForbidden(err) {
 			return fmt.Errorf("[ERROR] Getting Node Driver %s: %v", id, err)
 		}
+
 		if driver != nil {
 			if driver.State == "active" {
 				return nil
