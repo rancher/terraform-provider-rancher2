@@ -223,6 +223,17 @@ func expandMachineConfigV2Ionoscloud(p []interface{}, source *MachineConfigV2) *
 	obj.TypeMeta.APIVersion = machineConfigV2IonoscloudAPIVersion
 	source.TypeMeta = obj.TypeMeta
 	obj.ObjectMeta = source.ObjectMeta
+
+	var (
+		isServerTypeCube     bool
+		isExistingDatacenter bool
+		isExistingLan        bool
+		isExistingNat        bool
+	)
+	if v, ok := in["server_type"].(string); ok && len(v) > 0 {
+		obj.ServerType = v
+		isServerTypeCube = v == "CUBE"
+	}
 	if v, ok := in["endpoint"].(string); ok && len(v) > 0 {
 		obj.Endpoint = v
 	}
@@ -241,13 +252,17 @@ func expandMachineConfigV2Ionoscloud(p []interface{}, source *MachineConfigV2) *
 
 	if v, ok := in["server_cores"].(int); ok {
 		obj.ServerCores = v
+	} else if isServerTypeCube {
+		obj.ServerCores = 0
 	}
 
-	if v, ok := in["server_ram"].(int); ok {
+	if v, ok := in["server_ram"].(int); ok && !isServerTypeCube {
 		obj.ServerRam = v
+	} else if isExistingDatacenter {
+		obj.ServerRam = 0
 	}
 
-	if v, ok := in["server_cpu_family"].(string); ok && len(v) > 0 {
+	if v, ok := in["server_cpu_family"].(string); ok && len(v) > 0 && !isServerTypeCube {
 		obj.ServerCpuFamily = v
 	}
 
@@ -257,14 +272,12 @@ func expandMachineConfigV2Ionoscloud(p []interface{}, source *MachineConfigV2) *
 
 	if v, ok := in["disk_size"].(int); ok {
 		obj.DiskSize = v
+	} else if isServerTypeCube {
+		obj.DiskSize = 0
 	}
 
 	if v, ok := in["disk_type"].(string); ok && len(v) > 0 {
 		obj.DiskType = v
-	}
-
-	if v, ok := in["server_type"].(string); ok && len(v) > 0 {
-		obj.ServerType = v
 	}
 
 	if v, ok := in["template"].(string); ok && len(v) > 0 {
@@ -289,6 +302,8 @@ func expandMachineConfigV2Ionoscloud(p []interface{}, source *MachineConfigV2) *
 
 	if v, ok := in["datacenter_name"].(string); ok && len(v) > 0 {
 		obj.DatacenterName = v
+	} else if isExistingDatacenter {
+		obj.DatacenterName = ""
 	}
 
 	if v, ok := in["lan_id"].(string); ok && len(v) > 0 {
@@ -305,6 +320,8 @@ func expandMachineConfigV2Ionoscloud(p []interface{}, source *MachineConfigV2) *
 
 	if v, ok := in["lan_name"].(string); ok && len(v) > 0 {
 		obj.LanName = v
+	} else if isExistingLan {
+		obj.DatacenterName = ""
 	}
 
 	if v, ok := in["volume_availability_zone"].(string); ok && len(v) > 0 {
@@ -341,6 +358,8 @@ func expandMachineConfigV2Ionoscloud(p []interface{}, source *MachineConfigV2) *
 
 	if v, ok := in["nat_name"].(string); ok && len(v) > 0 {
 		obj.NatName = v
+	} else if isExistingNat {
+		obj.NatName = ""
 	}
 
 	if v, ok := in["nat_public_ips"].([]interface{}); ok && len(v) > 0 {
