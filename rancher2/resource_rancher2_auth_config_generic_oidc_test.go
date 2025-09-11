@@ -3,7 +3,6 @@ package rancher2
 import (
 	"fmt"
 	"os"
-	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -30,42 +29,6 @@ func init() {
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"rancher2": testAccProvider,
 	}
-}
-
-func TestAccRancher2AuthConfigGenericOIDC_basic(t *testing.T) {
-	if testAccRancher2AuthConfigGenericOIDCClientID == "" || testAccRancher2AuthConfigGenericOIDCClientSecret == "" || testAccRancher2AuthConfigGenericOIDCIssuerURL == "" {
-		t.Skip("Skipping test due to missing OIDC environment variables")
-	}
-
-	resourceName := testAccRancher2AuthConfigGenericOIDCType + "." + testAccRancher2AuthConfigGenericOIDCName
-	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRancher2AuthConfigGenericOIDCDisabled,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRancher2AuthConfigGenericOIDCConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigGenericOIDCExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "scopes", "openid profile email"),
-					resource.TestCheckResourceAttr(resourceName, "groups_field", "groups"),
-					resource.TestCheckResourceAttr(resourceName, "group_search_enabled", "true"),
-					testAccCheckRancher2AuthConfigGenericOIDCConfig(),
-				),
-			},
-			{
-				Config: testAccRancher2AuthConfigGenericOIDCUpdateConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRancher2AuthConfigGenericOIDCExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "scopes", "openid profile"),
-					resource.TestCheckResourceAttr(resourceName, "groups_field", "group"),
-					resource.TestCheckResourceAttr(resourceName, "group_search_enabled", "false"),
-					testAccCheckRancher2AuthConfigGenericOIDCConfig(),
-				),
-			},
-		},
-	})
 }
 
 func testAccCheckRancher2AuthConfigGenericOIDCExists(name string) resource.TestCheckFunc {

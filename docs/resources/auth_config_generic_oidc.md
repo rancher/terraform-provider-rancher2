@@ -23,9 +23,6 @@ resource "rancher2_auth_config_generic_oidc" "generic_oidc" {
   # OIDC claim mapping
   scopes               = "openid profile email read_api"
   groups_field         = "groups"
-  user_name_field      = "preferred_username"
-  uid_field            = "sub"
-  display_name_field   = "name"
   
   # For the 'genericoidc' provider, group processing must be explicitly enabled.
   group_search_enabled = true
@@ -44,7 +41,6 @@ The following arguments are supported:
 * `allowed_principal_ids` - (Optional) Allowed principal IDs for auth. Required if `access_mode` is `required` or `restricted`. Ex: `genericoidc_user://<USER_ID>` `genericoidc_group://<GROUP_ID>` (list)
 * `auth_endpoint` - (Optional/Computed) The OIDC Auth Endpoint URL.
 * `certificate` - (Optional/Sensitive) A PEM-encoded CA certificate for the OIDC provider.
-* `display_name_field` - (Optional/Computed) The name of the OIDC claim to use for the user's display name. Default `name` (string)
 * `enabled` - (Optional) Enable the auth config provider. Default `true` (bool)
 * `groups_field` - (Optional/Computed) The name of the OIDC claim to use for the user's group memberships. Default `groups` (string)
 * `group_search_enabled` - (Optional) Enable group search. Default `false` (bool)
@@ -52,8 +48,6 @@ The following arguments are supported:
 * `private_key` - (Optional/Sensitive) A PEM-encoded private key for the OIDC provider.
 * `scopes` - (Optional/Computed) The OIDC scopes to request. Defaults to `openid profile email` (string)
 * `token_endpoint` - (Optional/Computed) The OIDC Token Endpoint URL.
-* `uid_field` - (Optional/Computed) The name of the OIDC claim to use for the user's unique ID. Default `sub` (string)
-* `user_name_field` - (Optional/Computed) The name of the OIDC claim to use for the user's username. Default `preferred_username` (string)
 * `userinfo_endpoint` - (Optional/Computed) The OIDC User Info Endpoint URL.
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
