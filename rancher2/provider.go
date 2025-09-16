@@ -115,6 +115,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_auth_config_github":                            resourceRancher2AuthConfigGithub(),
 			"rancher2_auth_config_keycloak":                          resourceRancher2AuthConfigKeyCloak(),
 			"rancher2_auth_config_okta":                              resourceRancher2AuthConfigOKTA(),
+			"rancher2_auth_config_generic_oidc":                      resourceRancher2AuthConfigGenericOIDC(),
 			"rancher2_auth_config_openldap":                          resourceRancher2AuthConfigOpenLdap(),
 			"rancher2_auth_config_ping":                              resourceRancher2AuthConfigPing(),
 			"rancher2_bootstrap":                                     resourceRancher2Bootstrap(),
