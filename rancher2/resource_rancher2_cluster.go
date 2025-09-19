@@ -321,6 +321,18 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	// imported_config is special because it applies to *any imported cluster*,
+	// including hosted providers (AKS, EKS, GKE) where `imported = true` is set.
+	// If we keep it inside the driver-specific switch, it only gets processed
+	// for the "imported" driver, but NOT for hosted imported clusters.
+	// To avoid this bug, we always check imported_config here before switching on driver.
+	if v, ok := d.GetOk("imported_config"); ok {
+		importedConfig := v.([]interface{})
+		if len(importedConfig) > 0 {
+			update["importedConfig"] = expandClusterImportedConfig(importedConfig)
+		}
+	}
+
 	replace := false
 	switch driver := ToLower(d.Get("driver").(string)); driver {
 	case ToLower(clusterDriverAKSV2):
@@ -346,8 +358,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	case clusterDriverRKE2:
 		update["rke2Config"] = expandClusterRKE2Config(d.Get("rke2_config").([]interface{}))
 		replace = d.HasChange("cluster_agent_deployment_customization")
-	case clusterDriverImported:
-		update["importedConfig"] = expandClusterImportedConfig(d.Get("imported_config").([]interface{}))
 	}
 
 	// update the cluster; retry til timeout or non retryable error is returned. If api 500 error is received,
