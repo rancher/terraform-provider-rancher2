@@ -51,12 +51,35 @@ func resourceRancher2ClusterV2() *schema.Resource {
 				oldInterface, oldOk := oldObj.([]interface{})
 				newInterface, newOk := newObj.([]interface{})
 				if oldOk && newOk && len(newInterface) > 0 {
+					if m, ok := newInterface[0].(map[string]interface{}); ok {
+						if ca, ok := m["ca_certs"].(string); ok && ca != "" {
+							if use, ok := m["use_internal_ca_certs"].(bool); ok && use {
+								return fmt.Errorf("only one of \"ca_certs\" or \"use_internal_ca_certs\" can be set")
+							}
+						}
+					}
 					oldConfig := expandClusterV2LocalAuthEndpoint(oldInterface)
 					newConfig := expandClusterV2LocalAuthEndpoint(newInterface)
-					if reflect.DeepEqual(oldConfig, newConfig) {
+					oldUse := false
+					newUse := false
+					if len(oldInterface) > 0 {
+						if m, ok := oldInterface[0].(map[string]interface{}); ok {
+							if v, ok := m["use_internal_ca_certs"].(bool); ok {
+								oldUse = v
+							}
+						}
+					}
+					if len(newInterface) > 0 {
+						if m, ok := newInterface[0].(map[string]interface{}); ok {
+							if v, ok := m["use_internal_ca_certs"].(bool); ok {
+								newUse = v
+							}
+						}
+					}
+					if reflect.DeepEqual(oldConfig, newConfig) && oldUse == newUse {
 						d.Clear("local_auth_endpoint")
 					} else {
-						d.SetNew("local_auth_endpoint", flattenClusterV2LocalAuthEndpoint(newConfig))
+						d.SetNew("local_auth_endpoint", newObj)
 					}
 				}
 			}
@@ -110,6 +133,15 @@ func resourceRancher2ClusterV2Create(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	useInternal := false
+	if v, ok := d.Get("local_auth_endpoint").([]interface{}); ok && len(v) > 0 {
+		if m, ok := v[0].(map[string]interface{}); ok {
+			if b, ok := m["use_internal_ca_certs"].(bool); ok {
+				useInternal = b
+			}
+		}
+	}
+
 	log.Printf("[INFO] Creating Cluster V2 %s", name)
 
 	newCluster, err := createClusterV2(meta.(*Config), cluster)
@@ -125,6 +157,18 @@ func resourceRancher2ClusterV2Create(d *schema.ResourceData, meta interface{}) e
 	// Waiting for cluster v2 active if it has machine pools defined
 	if newCluster.Spec.RKEConfig != nil && newCluster.Spec.RKEConfig.MachinePools != nil && len(newCluster.Spec.RKEConfig.MachinePools) > 0 {
 		newCluster, err = waitForClusterV2State(meta.(*Config), newCluster.ID, clusterV2ActiveCondition, d.Timeout(schema.TimeoutCreate))
+		if err != nil {
+			return err
+		}
+	}
+
+	if useInternal {
+		caCert, err := getClusterCACert(meta.(*Config), newCluster.Status.ClusterName)
+		if err != nil {
+			return err
+		}
+		newCluster.Spec.LocalClusterAuthEndpoint.CACerts = caCert
+		_, err = updateClusterV2(meta.(*Config), newCluster.ID, newCluster)
 		if err != nil {
 			return err
 		}
@@ -150,13 +194,28 @@ func resourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) err
 	if err != nil {
 		return err
 	}
-	return flattenClusterV2(d, cluster)
+	if err := flattenClusterV2(d, cluster); err != nil {
+		return err
+	}
+	return setClusterV2LocalAuthEndpointInternalFlag(d, meta.(*Config), cluster)
 }
 
 func resourceRancher2ClusterV2Update(d *schema.ResourceData, meta interface{}) error {
 	cluster, err := expandClusterV2(d)
 	if err != nil {
 		return err
+	}
+
+	if v, ok := d.Get("local_auth_endpoint").([]interface{}); ok && len(v) > 0 {
+		if m, ok := v[0].(map[string]interface{}); ok {
+			if b, ok := m["use_internal_ca_certs"].(bool); ok && b {
+				caCert, err := getClusterCACert(meta.(*Config), d.Get("cluster_v1_id").(string))
+				if err != nil {
+					return err
+				}
+				cluster.Spec.LocalClusterAuthEndpoint.CACerts = caCert
+			}
+		}
 	}
 
 	log.Printf("[INFO] Updating Cluster V2 %s", d.Id())
@@ -418,5 +477,48 @@ func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
 	}
 	d.Set("kube_config", kubeConfig.Config)
 
+	return nil
+}
+
+func getClusterCACert(c *Config, clusterV1ID string) (string, error) {
+	if c == nil {
+		return "", fmt.Errorf("provider config is nil")
+	}
+	if clusterV1ID == "" {
+		return "", fmt.Errorf("cluster_v1_id is empty")
+	}
+	client, err := c.ManagementClient()
+	if err != nil {
+		return "", err
+	}
+	cluster := &Cluster{}
+	err = client.APIBaseClient.ByID(managementClient.ClusterType, clusterV1ID, cluster)
+	if err != nil {
+		return "", err
+	}
+	return decodeCACertIfBase64(cluster.CACert), nil
+}
+
+func setClusterV2LocalAuthEndpointInternalFlag(d *schema.ResourceData, c *Config, cluster *ClusterV2) error {
+	if cluster == nil || c == nil {
+		return fmt.Errorf("setting local auth endpoint internal flag: missing data")
+	}
+	lae := cluster.Spec.LocalClusterAuthEndpoint
+	useInternal := false
+	if cluster.Status.ClusterName != "" && lae.CACerts != "" {
+		caCert, err := getClusterCACert(c, cluster.Status.ClusterName)
+		if err != nil {
+			return err
+		}
+		if lae.CACerts == caCert {
+			useInternal = true
+		}
+	}
+	if v, ok := d.Get("local_auth_endpoint").([]interface{}); ok && len(v) > 0 {
+		if m, ok := v[0].(map[string]interface{}); ok {
+			m["use_internal_ca_certs"] = useInternal
+			d.Set("local_auth_endpoint", []interface{}{m})
+		}
+	}
 	return nil
 }

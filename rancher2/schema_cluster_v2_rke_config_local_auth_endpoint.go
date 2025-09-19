@@ -11,6 +11,7 @@ func clusterV2LocalAuthEndpointFields() map[string]*schema.Schema {
 		"ca_certs": {
 			Type:     schema.TypeString,
 			Optional: true,
+			Computed: true,
 		},
 		"enabled": {
 			Type:     schema.TypeBool,
@@ -20,6 +21,11 @@ func clusterV2LocalAuthEndpointFields() map[string]*schema.Schema {
 		"fqdn": {
 			Type:     schema.TypeString,
 			Optional: true,
+		},
+		"use_internal_ca_certs": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
 		},
 	}
 
