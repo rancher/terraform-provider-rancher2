@@ -28,21 +28,48 @@ jobs:
         uses: rancher-eio/read-vault-secrets@main
         with:
           secrets: |
-            secret/data/github/repo/${{ github.repository }}/key/app-credentials passphrase | GPG_PASSPHRASE ;
-            secret/data/github/repo/${{ github.repository }}/key/app-credentials privateKey | GPG_KEY
+            secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
 
       - name: sign shasum
         env:
-          GPG_KEY: ${{ env.GPG_KEY }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
+          GPG_KEY: ${{ env.GPG_KEY }}
         run: |
-          echo "Importing gpg key"
-          echo -n '${{ env.GPG_KEY }}' | gpg --import --batch > /dev/null
-          echo "signing SHASUM file"
-          VERSION_NO_V="$(echo ${{ github.ref_name }} | tr -d 'v')"
-          SHASUM_FILE="dist/artifacts/${{ github.ref_name }}/terraform-provider-rancher2_${VERSION_NO_V}_SHA256SUMS"
-          echo '${{ env.GPG_PASSPHRASE }}' | gpg --detach-sig --pinentry-mode loopback --passphrase-fd 0 --output "${SHASUM_FILE}.sig" --sign "${SHASUM_FILE}"
+          cleanup() {
+            # clear history just in case
+            history -c
+          }
+          trap cleanup EXIT TERM
 
+          # sanitize variables
+          GPG_PASSPHRASE="$(echo "${GPG_PASSPHRASE}" | xargs)"
+          GPG_KEY_ID="$(echo "${GPG_KEY_ID}" | xargs)"
+          GPG_KEY="$(echo -n "${GPG_KEY}" | awk '/-----BEGIN PGP PRIVATE KEY BLOCK-----/,/-----END PGP PRIVATE KEY BLOCK-----/')"
+
+          if [ -z "${GPG_PASSPHRASE}" ]; then echo "gpg passphrase empty"; exit 1; fi
+          if [ -z "${GPG_KEY_ID}" ]; then echo "key id empty"; exit 1; fi
+          if [ -z "${GPG_KEY}" ]; then echo "key contents empty"; exit 1; fi
+
+          echo "Importing gpg key"
+          echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
+
+          echo "Signing SHASUM file"
+          VERSION_NO_V="$(echo "${{ github.ref_name }}" | tr -d 'v')"
+          SHASUM_FILE="dist/artifacts/${{ github.ref_name }}/terraform-provider-rancher2_${VERSION_NO_V}_SHA256SUMS"
+
+          gpg --detach-sig \
+              --pinentry-mode loopback \
+              --passphrase "${GPG_PASSPHRASE}" \
+              --local-user "${GPG_KEY_ID}" \
+              --output "${SHASUM_FILE}.sig" \
+              --sign "${SHASUM_FILE}" || { echo "Failed to sign checksum."; exit 1; }
+
+          echo "Validating signature..."
+          gpg --verify "${SHASUM_FILE}.sig" "${SHASUM_FILE}" || { echo "Signature verification failed!"; exit 1; }
+          echo "Signature is valid..."
       - name: GH release
         env:
           GH_TOKEN: ${{ github.token }}
