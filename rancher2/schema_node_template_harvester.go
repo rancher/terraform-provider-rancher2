@@ -22,21 +22,23 @@ const (
 //Types
 
 type harvesterConfig struct {
-	VMNamespace  string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
-	VMAffinity   string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
-	CPUCount     string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
-	MemorySize   string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
-	DiskSize     string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
-	DiskBus      string `json:"diskBus,omitempty" yaml:"diskBus,omitempty"`
-	ImageName    string `json:"imageName,omitempty" yaml:"imageName,omitempty"`
-	DiskInfo     string `json:"diskInfo,omitempty" yaml:"diskInfo,omitempty"`
-	SSHUser      string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	SSHPassword  string `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
-	NetworkName  string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
-	NetworkModel string `json:"networkModel,omitempty" yaml:"networkModel,omitempty"`
-	NetworkInfo  string `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
-	UserData     string `json:"userData,omitempty" yaml:"userData,omitempty"`
-	NetworkData  string `json:"networkData,omitempty" yaml:"networkData,omitempty"`
+	VMNamespace      string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
+	VMAffinity       string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
+	CPUCount         string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
+	MemorySize       string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
+	DiskSize         string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
+	DiskBus          string `json:"diskBus,omitempty" yaml:"diskBus,omitempty"`
+	ImageName        string `json:"imageName,omitempty" yaml:"imageName,omitempty"`
+	DiskInfo         string `json:"diskInfo,omitempty" yaml:"diskInfo,omitempty"`
+	SSHUser          string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	SSHPassword      string `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
+	NetworkName      string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
+	NetworkModel     string `json:"networkModel,omitempty" yaml:"networkModel,omitempty"`
+	NetworkInfo      string `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
+	UserData         string `json:"userData,omitempty" yaml:"userData,omitempty"`
+	NetworkData      string `json:"networkData,omitempty" yaml:"networkData,omitempty"`
+	EnableEFI        bool   `json:"enableEfi,omitempty" yaml:"enableEfi,omitempty"`
+	EnableSecureBoot bool   `json:"enableSecureBoot,omitempty" yaml:"enableSecureBoot,omitempty"`
 }
 
 //Schemas
@@ -156,6 +158,18 @@ func harvesterConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "NetworkData content of cloud-init, base64 is supported",
+		},
+		"enable_efi": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable EFI mode",
+		},
+		"enable_secure_boot": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable secure boot, only available when enable_efi is true",
 		},
 	}
 
