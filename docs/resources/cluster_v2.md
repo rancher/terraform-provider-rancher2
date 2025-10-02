@@ -523,7 +523,7 @@ resource "rancher2_cluster_v2" "foo" {
 
 ### Create a cluster that uses a cluster-level authenticated `system-default-registry`
 
-The `<auth-config-secret-name>` represents a generic Kubernetes secret that contains two keys with base64 encoded values: the `username` and `password` for the specified custom registry. If the `system-default-registry` is not authenticated, no secret is required and the section within the `rke_config` can be omitted if not otherwise needed.
+The `<auth-config-secret-name>` represents a generic Kubernetes secret that contains two keys with base64 encoded values: the `username` and `password` for the specified custom registry. If the `system-default-registry` is not authenticated, no secret is required and the section within the `rke_config` can be omitted if not otherwise needed. While the below example shows how to create a registry secret, storing plain text credentials in terraform files is never a good idea. Significant care should be taken to ensure that the username and password values are not committed or otherwise leaked. 
 
 Many registries may be specified in the `rke_config`s `registries` section, however, the `system-default-registry` from which core system images are pulled is always denoted via the `system-default-registry` key of the `machine_selector_config` or the `machine_global_config`. For more information on private registries, please refer to [the Rancher documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/global-default-private-registry#setting-a-private-registry-with-credentials-when-deploying-a-cluster).
 
@@ -533,14 +533,13 @@ resource "rancher2_cluster_v2" "foo_cluster_v2" {
   kubernetes_version = "rke2/k3s-version"
   rke_config {
     machine_selector_config {
-      config = {
-        system-default-registry: "custom-registry-hostname"
-      }
+      # config is a string which represents a yaml object
+      config = "system-default-registry: registry_domain_name"
     }
     registries {
       configs {
-        hostname = "custom-registry-hostname"
-        auth_config_secret_name = "<auth-config-secret-name>"
+        hostname = "registry_domain_name"
+        auth_config_secret_name = var.registry_secret_name 
         insecure = "<tls-insecure-bool>"
         tls_secret_name = ""
         ca_bundle = ""
@@ -550,6 +549,18 @@ resource "rancher2_cluster_v2" "foo_cluster_v2" {
     machine_pools {
       # ...
     }
+  }
+}
+
+# create registry auth secret
+resource "rancher2_secret_v2" "my_registry" {
+  cluster_id = "local"
+  name = var.registry_secret_name
+  namespace = "fleet-default"
+  type = "kubernetes.io/basic-auth"
+  data = {
+    username = var.registry_username
+    password = var.registry_password
   }
 }
 ```
