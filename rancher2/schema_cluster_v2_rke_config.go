@@ -179,6 +179,14 @@ func clusterV2RKEConfigFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Cluster V2 additional manifest",
 		},
+		"data_directories": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Cluster V2 data directories",
+			Elem: &schema.Resource{
+				Schema: clusterV2RKEConfigDataDirectoriesFields(),
+			},
+		},
 		"local_auth_endpoint": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
