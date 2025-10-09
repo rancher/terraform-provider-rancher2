@@ -1001,6 +1001,7 @@ see more information on [Resource Management for Pods and Containers](https://ku
 * `machine_selector_files` - (Optional/computed, list) Machine selector files provide a means to deliver files to nodes so that the files can be in place before initiating RKE2/K3s server or agent processes. Please refer to Rancher documentation for [RKE2 Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/rke2-cluster-configuration#machineselectorfiles) and [K3s Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/k3s-cluster-configuration#machineselectorfiles). This argument is available in Rancher v2.7.2 and later.
 * `registries` - (Optional, list, max length: 1) Docker registries from which the cluster pulls images. 
 * `etcd` - (Optional/computed, list, max length: 1) Etcd configures the behavior of the automatic etcd snapshot feature.
+* `networking` - (Optional, list, max length: 1) The networking stack used by the cluster.
 * `rotate_certificates` (Optional, list, max length: 1) Cluster V2 certificate rotation.
 * `etcd_snapshot_create` (Optional, list, max length: 1) Cluster V2 etcd snapshot create.
 * `etcd_snapshot_restore` (Optional, list, max length: 1) Cluster V2 etcd snapshot restore.
@@ -1225,6 +1226,12 @@ This argument is available in Rancher v2.7.2 and later.
 * `name` - (Required, string) ETCD snapshot name to restore.
 * `generation` (Required, int) ETCD snapshot desired generation.
 * `restore_rke_config` (Optional, string) ETCD restore RKE config (set to none, all, or kubernetesVersion).
+
+#### `networking`
+
+##### Arguments
+
+* `stack_preference` - (Optional, string) The networking stack used by the cluster. The selected value configures the address used for health and readiness probes of calico, etcd, kube-apiserver, kube-scheduler, kube-controller-manager, and kubelet. It also defines the server URL in the authentication-token-webhook-config-file for the Authorized Cluster Endpoint and the advertise-client-urls for etcd during snapshot restore.  When set to `dual`, the cluster uses `localhost`; when set to `ipv6`, it uses `[::1]`; when set to `ipv4`, it uses `127.0.0.1`.
 
 ### `cluster_registration_token`
 

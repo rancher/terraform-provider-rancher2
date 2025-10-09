@@ -16,3 +16,6 @@ terraform
 pre
 pre-release
 prerelease
+IPv
+IPv4
+IPv6
