@@ -991,6 +991,7 @@ see more information on [Resource Management for Pods and Containers](https://ku
 #### Arguments
 
 * `additional_manifest` - (Optional, string, must be in YAML format) The value of the additional manifest is delivered to the path `/var/lib/rancher/rke2/server/manifests/rancher/addons.yaml` or `/var/lib/rancher/k3s/server/manifests/rancher/addons.yaml` on the control plane nodes.
+* `data_directories` - (Optional, list, max length: 1) Data directory configuration for the kubernetes distro, system-agent, and provisioning resources.
 * `local_auth_endpoint` - (Deprecated) Use rancher2_cluster_v2.local_auth_endpoint instead.
 * `upgrade_strategy` - (Optional, list, max length: 1) Cluster upgrade strategy.
 * `chart_values` - (Optional, string, must be in YAML format) The value for the system charts installed by the distribution. For more information about how RKE2 or K3s manage packaged components, please refer to [RKE2 documentation](https://docs.rke2.io/helm) or [K3s documentation](https://docs.k3s.io/installation/packaged-components).
@@ -1003,6 +1004,14 @@ see more information on [Resource Management for Pods and Containers](https://ku
 * `rotate_certificates` (Optional, list, max length: 1) Cluster V2 certificate rotation.
 * `etcd_snapshot_create` (Optional, list, max length: 1) Cluster V2 etcd snapshot create.
 * `etcd_snapshot_restore` (Optional, list, max length: 1) Cluster V2 etcd snapshot restore.
+
+#### `data_directories`
+
+##### Arguments
+
+* `system_agent` - (Optional, string) System agent data directory path, used for all system agent data on provisioning v2 downstream  cluster nodes. If unspecified, the `rancher-system-agent` will use the default: `/var/lib/rancher/agent`.
+* `provisioning` - (Optional, string) Provisioning data directory path, used for all provisioning data on provisioning v2 downstream cluster nodes. If unspecified, Rancher will use the default: `/var/lib/rancher/provisioning`.
+* `k8s_distro` - (Optional, string) Kubernetes distro data directory path, rendered as the `data-dir` argument for provisioning v2 RKE2/K3s clusters. If unspecified, the distro will use the default: `/var/lib/rancher/rke2` for RKE2, and `/var/lib/rancher/k3s` for K3s.
 
 #### `local_auth_endpoint`
 
