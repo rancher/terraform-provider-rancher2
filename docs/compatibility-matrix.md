@@ -14,6 +14,8 @@ This shouldn't be a changelog for every branch, each branch has its own CHANGELO
 | 5.x                        | 2.9.x           | release/v5 |
 | 6.x                        | 2.10.x          | release/v6 |
 | 7.x                        | 2.11.x          | release/v7 |
+| 8.x                        | 2.12.x          | release/v8 |
+| 13.x                       | 2.13.x          | release/v13 |
 
 ## FAQ
 
