@@ -27,6 +27,7 @@ type machineConfigV2 struct {
 	OpenstackConfig     *MachineConfigV2Openstack     `json:"openstackConfig,omitempty" yaml:"openstackConfig,omitempty"`
 	VmwarevsphereConfig *MachineConfigV2Vmwarevsphere `json:"vmwarevsphereConfig,omitempty" yaml:"vmwarevsphereConfig,omitempty"`
 	GoogleGCEConfig     *MachineConfigV2GoogleGCE     `json:"googleConfig,omitempty" yaml:"googleConfig,omitempty"`
+	IonoscloudConfig    *MachineConfigV2Ionoscloud    `json:"ionoscloudConfig,omitempty" yaml:"ionoscloudConfig,omitempty"`
 }
 
 type MachineConfigV2 struct {
@@ -80,6 +81,11 @@ func flattenMachineConfigV2(d *schema.ResourceData, in *MachineConfigV2) error {
 		}
 	case machineConfigV2GoogleGCEKind:
 		err := d.Set("google_config", flattenMachineConfigV2GoogleGCE(in.GoogleGCEConfig))
+		if err != nil {
+			return err
+		}
+	case machineConfigV2IonoscloudKind:
+		err := d.Set("ionoscloud_config", flattenMachineConfigV2Ionoscloud(in.IonoscloudConfig))
 		if err != nil {
 			return err
 		}
@@ -151,6 +157,9 @@ func expandMachineConfigV2(in *schema.ResourceData) *MachineConfigV2 {
 	}
 	if v, ok := in.Get("google_config").([]interface{}); ok && len(v) > 0 {
 		obj.GoogleGCEConfig = expandMachineConfigV2GoogleGCE(v, obj)
+	}
+	if v, ok := in.Get("ionoscloud_config").([]interface{}); ok && len(v) > 0 {
+		obj.IonoscloudConfig = expandMachineConfigV2Ionoscloud(v, obj)
 	}
 
 	return obj
