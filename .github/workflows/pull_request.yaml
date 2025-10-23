@@ -18,7 +18,7 @@ jobs:
           CROSS: 1
           VERSION: ${{ github.ref_name }}
         run: |
-          make build-rancher
+          make build
 
   terraform:
     name: 'Terraform'
@@ -76,7 +76,7 @@ jobs:
           #   shellcheck -x "$file"
           # done <<<"$(grep -Rl -e '^#!' | grep -v '.terraform'| grep -v '.git')"
           # in the future run this on every script, but first we need to eliminate unused scripts
-          shellcheck -x "./scripts/run_tests.sh"
+          shellcheck -x "run_tests.sh"
 
   validate-commit-message:
     runs-on: ubuntu-latest
