@@ -57,7 +57,7 @@ then
 fi
 
 # Overwrite the cached binary with your local one
-cp terraform-provider-rancher2 ${LOCAL_BINARY_PATH}/terraform-provider-rancher2
+cp -v terraform-provider-rancher2 ${LOCAL_BINARY_PATH}/terraform-provider-rancher2
 
 # Check if user specified options for init or apply
 while getopts 'ia' OPTION; do
