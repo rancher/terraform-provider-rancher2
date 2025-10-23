@@ -191,6 +191,6 @@ func userStateRefreshFunc(client *managementClient.Client, userID string) resour
 			}
 			return nil, "", err
 		}
-		return obj, obj.State, nil
+		return obj, "active", nil
 	}
 }
