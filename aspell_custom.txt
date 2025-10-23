@@ -16,3 +16,4 @@ terraform
 pre
 pre-release
 prerelease
+pr
