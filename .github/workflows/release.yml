@@ -35,12 +35,16 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.rest.issues.createComment({
-              issue_number: ${{ fromJson(steps.release-please.outputs.pr).number }},
-              owner: "${{ github.repository_owner }}",
-              repo: "${{ github.event.repository.name }}",
-              body: "Please make sure e2e tests pass before merging this PR! \n ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            })
+            try {
+              github.rest.issues.createComment({
+                issue_number: ${{ fromJson(steps.release-please.outputs.pr).number }},
+                owner: "${{ github.repository_owner }}",
+                repo: "${{ github.event.repository.name }}",
+                body: "Please make sure e2e tests pass before merging this PR! \n ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              })
+            } catch (error) {
+              core.setFailed(`Failed to create comment on release PR: ${error.message}`);
+            }
 
   test:
     needs:
@@ -139,23 +143,31 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.rest.issues.createComment({
-              issue_number: ${{ fromJson(needs.release.outputs.release_pr).number }},
-              owner: "${{ github.repository_owner }}",
-              repo: "${{ github.event.repository.name }}",
-              body: "End to End Tests Passed! \n ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            })
+            try {
+              github.rest.issues.createComment({
+                issue_number: ${{ fromJson(needs.release.outputs.release_pr).number }},
+                owner: "${{ github.repository_owner }}",
+                repo: "${{ github.event.repository.name }}",
+                body: "End to End Tests Passed! \n ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              })
+            } catch (error) {
+              core.setFailed(`Failed to create comment success on release PR: ${error.message}`);
+            }
       - uses: actions/github-script@v8
         if: needs.test.result == 'failure'
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.rest.issues.createComment({
-              issue_number: ${{ fromJson(needs.release.outputs.release_pr).number }},
-              owner: "${{ github.repository_owner }}",
-              repo: "${{ github.event.repository.name }}",
-              body: "End to End Tests Failed! \n ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            })
+            try {
+              github.rest.issues.createComment({
+                issue_number: ${{ fromJson(needs.release.outputs.release_pr).number }},
+                owner: "${{ github.repository_owner }}",
+                repo: "${{ github.event.repository.name }}",
+                body: "End to End Tests Failed! \n ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              })
+            } catch (error) {
+              core.setFailed(`Failed to create comment failure on release PR: ${error.message}`);
+            }
 
   rc-release:
     needs:

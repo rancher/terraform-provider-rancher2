@@ -34,17 +34,21 @@ jobs:
             // Create the main issue
             // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
             // Note: issues can't have teams assigned to them
-            const newIssue = await github.rest.issues.create({
-              owner: owner,
-              repo: repo,
-              title: pr.title,
-              body:  "This is the main issue tracking #" + pr.number + " \n\n" +
-                "Please add labels indicating the release versions eg. 'release/v13' \n\n" +
-                "Please add comments for user issues which this issue addresses. \n\n" +
-                "Description copied from PR: \n" + pr.body,
-              labels: newLabels,
-              assignees: assignees
-            });
+            try {
+              const newIssue = await github.rest.issues.create({
+                owner: owner,
+                repo: repo,
+                title: pr.title,
+                body:  "This is the main issue tracking #" + pr.number + " \n\n" +
+                  "Please add labels indicating the release versions eg. 'release/v13' \n\n" +
+                  "Please add comments for user issues which this issue addresses. \n\n" +
+                  "Description copied from PR: \n" + pr.body,
+                labels: newLabels,
+                assignees: assignees
+              });
+            } catch (error) {
+              core.setFailed(`Failed to create main issue: ${error.message}`);
+            }
             if (releaseLabel) {
               // if release label detected, then add appropriate sub-issues
               const parentIssue = newIssue.data;
@@ -52,23 +56,31 @@ jobs:
               const parentIssueNumber = parentIssue.number;
               // Note: can't get terraform-maintainers team, the default token can't access org level objects
               // Create the sub-issue
-              const newSubIssue = await github.rest.issues.create({
-                owner: owner,
-                repo: repo,
-                title: `Backport #${pr.number} to ${releaseLabel.name}`,
-                body:  `Backport #${pr.number} to ${releaseLabel.name} for #${parentIssueNumber}`,
-                labels: [releaseLabel],
-                assignees: assignees
-              });
+              try {
+                const newSubIssue = await github.rest.issues.create({
+                  owner: owner,
+                  repo: repo,
+                  title: `Backport #${pr.number} to ${releaseLabel.name}`,
+                  body:  `Backport #${pr.number} to ${releaseLabel.name} for #${parentIssueNumber}`,
+                  labels: [releaseLabel],
+                  assignees: assignees
+                });
+              } catch (error) {
+                core.setFailed(`Failed to create backport issue: ${error.message}`);
+              }
               const subIssueId = newSubIssue.data.id;
               // Attach the sub-issue to the parent using API request
-              await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
-                owner: owner,
-                repo: repo,
-                issue_number: parentIssueNumber,
-                sub_issue_id: subIssueId,
-                headers: {
-                  'X-GitHub-Api-Version': '2022-11-28'
-                }
-              });
+              try {
+                await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
+                  owner: owner,
+                  repo: repo,
+                  issue_number: parentIssueNumber,
+                  sub_issue_id: subIssueId,
+                  headers: {
+                    'X-GitHub-Api-Version': '2022-11-28'
+                  }
+                });
+              } catch (error) {
+                core.setFailed(`Failed to link backport issue to main issue: ${error.message}`);
+              }
             }

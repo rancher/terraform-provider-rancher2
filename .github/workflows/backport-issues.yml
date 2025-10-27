@@ -31,7 +31,10 @@ jobs:
                 if (issue.pull_request) {
                   return number;
                 }
-              } catch (error) { /* ignore */ }
+              } catch (error) {
+                // Ignore errors, likely due to some other tag in the issue body.
+                core.info(`Could not retrieve issue #${number}: ${error.message}`);
+              }
             }
             core.setFailed('No valid PR found.');
       - name: Create GitHub Issue
@@ -49,36 +52,49 @@ jobs:
             const parentIssueBody = parentIssue.body;
             const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
 
-            const { data: pr } = await github.rest.issues.get({
-              owner: owner,
-              repo: repo,
-              issue_number: ${{ steps.extract_pr.outputs.result }}
-            });
+            try {
+              const { data: pr } = await github.rest.issues.get({
+                owner: owner,
+                repo: repo,
+                issue_number: ${{ steps.extract_pr.outputs.result }}
+              });
+            } catch (error) {
+              core.setFailed(`Failed to retrieve PR #${{ steps.extract_pr.outputs.result }}: ${error.message}`);
+            }
+
             const prNumber = pr.number;
 
             // Note: can't get terraform-maintainers team, the default token can't access org level objects
             // Create the sub-issue
-            const newIssue = await github.rest.issues.create({
-              owner: owner,
-              repo: repo,
-              title: `Backport #${prNumber} to ${labelName}`,
-              body:  [
-                `Backport #${prNumber} to ${labelName} for #${parentIssueNumber}`,
-                `Copied from PR:`,
-                `${pr.body}`
-              ].join("\n\n"),
-              labels: [labelName],
-              assignees: assignees
-            });
+            try {
+              const newIssue = await github.rest.issues.create({
+                owner: owner,
+                repo: repo,
+                title: `Backport #${prNumber} to ${labelName}`,
+                body:  [
+                  `Backport #${prNumber} to ${labelName} for #${parentIssueNumber}`,
+                  `Copied from PR:`,
+                  `${pr.body}`
+                ].join("\n\n"),
+                labels: [labelName],
+                assignees: assignees
+              });
+            } catch (error) {
+              core.setFailed(`Failed to create backport issue: ${error.message}`);
+            }
             const subIssueId = newIssue.data.id;
 
             // Attach the sub-issue to the parent, use REST API because there isn't a github-script API yet.
-            await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
-              owner: owner,
-              repo: repo,
-              issue_number: parentIssueNumber,
-              sub_issue_id: subIssueId,
-              headers: {
-                'X-GitHub-Api-Version': '2022-11-28'
-              }
-            });
+            try {
+              await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
+                owner: owner,
+                repo: repo,
+                issue_number: parentIssueNumber,
+                sub_issue_id: subIssueId,
+                headers: {
+                  'X-GitHub-Api-Version': '2022-11-28'
+                }
+              });
+            } catch (error) {
+              core.setFailed(`Failed to link backport issue to main issue: ${error.message}`);
+            }
