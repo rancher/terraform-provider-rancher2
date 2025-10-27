@@ -19,7 +19,26 @@ jobs:
 
     steps:
       - name: 'Wait for merge to settle'
-        run: sleep 10
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const mergeCommitSha = context.payload.head_commit.id;
+            // wait 10 seconds to allow GitHub to index the commit and associated PRs
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            // just in case the GitHub API is still having trouble, try to fetch associated PRs
+            try {
+              const { data: associatedPrs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: mergeCommitSha
+              });
+            } catch (error) {
+              core.setFailed(`Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`);
+            }
       - name: 'Checkout Repository'
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
         with:
