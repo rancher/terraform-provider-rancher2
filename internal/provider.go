@@ -1,12 +1,125 @@
-package rancher2
+package provider
 
 import (
-	"fmt"
-	"time"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/rancher/terraform-provider-file/internal/provider/file_local"
+	"github.com/rancher/terraform-provider-file/internal/provider/file_local_directory"
+	"github.com/rancher/terraform-provider-file/internal/provider/file_local_snapshot"
 )
+
+// The `var _` is a special Go construct that results in an unusable variable.
+// The purpose of these lines is to make sure our class implements the provider.Provider interface.
+// These will fail at compilation time if the implementation is not satisfied.
+var _ provider.Provider = &RancherProvider{}
+
+type RancherProvider struct {
+	version string
+}
+
+type RancherProviderModel struct{
+  ApiURL    types.String `tfsdk:"api_url"`
+  AccessKey types.String `tfsdk:"access_key"`
+  Bootstrap types.Bool   `tfsdk:"bootstrap"`
+  SecretKey types.String `tfsdk:"secret_key"`
+  TokenKey  types.String `tfsdk:"token_key"`
+  CACerts   types.String `tfsdk:"ca_certs"`
+  Insecure  types.Bool   `tfsdk:"insecure"`
+  Timeout   types.String `tfsdk:"timeout"`
+}
+
+func (p *RancherProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "rancher"
+	resp.Version = p.version
+}
+
+func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+      "api_url": schema.StringAttribute{
+        Description: "The URL to the rancher API",
+        Required:    true,
+      },
+      "access_key": schema.StringAttribute{
+        Description: "API Key used to authenticate with the rancher server",
+        Optional:    true,
+        Sensitive:   true,
+      },
+      "bootstrap": schema.BoolAttribute{
+        Description: "Bootstrap rancher server",
+        Optional:    true,
+      },
+      "secret_key": schema.StringAttribute{
+        Description: "API secret used to authenticate with the rancher server",
+        Optional:    true,
+        Sensitive:   true,
+      },
+      "token_key": schema.StringAttribute{
+        Description: "API token used to authenticate with the rancher server",
+        Optional:    true,
+        Sensitive:   true,
+      },
+      "ca_certs": schema.StringAttribute{
+        Description: "CA certificates used to sign rancher server tls certificates. Mandatory if self signed tls and insecure option false",
+        Optional:    true,
+      },
+      "insecure": schema.BoolAttribute{
+        Description: "Allow insecure TLS connections",
+        Optional:    true,
+      },
+      "timeout": schema.StringAttribute{
+        Description: "Rancher connection timeout (retry every 5s). Golang duration format, ex: \"60s\"",
+        Optional:    true,
+      },
+    },
+	}
+}
+
+func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("Request Object: %#v", req))
+	var err error
+
+  var config RancherProviderModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+  ApiURL    = config.ApiURL.ValueString()
+  AccessKey = config.AccessKey.ValueString()
+  Bootstrap = config.Bootstrap.ValueBool()
+  SecretKey = config.SecretKey.ValueString()
+  TokenKey  = config.TokenKey.ValueString()
+  CACerts   = config.CACerts.ValueString()
+  Insecure  = config.Insecure.ValueBool()
+  Timeout   = config.Timeout.ValueString()
+
+  t, err := time.ParseDuration(Timeout)
+	if err != nil {
+    resp.Diagnostics.AddError("[ERROR] Timeout must be in golang duration format, error: %v", err.Error())
+    return
+	}
+
+	if TokenKey == "" && (AccessKey != "") && (SecretKey != "") {
+		TokenKey = AccessKey + ":" + SecretKey
+	}
+
+}
+
+
+
+
+
+
+
+
+
+// Old Stuff
 
 const (
 	providerDefaultEmptyString = "nil"
@@ -17,6 +130,9 @@ var (
 	rancher2ClusterRKEK8SDefaultVersion string
 	rancher2ClusterRKEK8SVersions       []string
 )
+
+
+
 
 // CLIConfig used to store data from file.
 type CLIConfig struct {
@@ -215,7 +331,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	// Set tokenKey based on accessKey and secretKey if needed
-	if tokenKey == providerDefaultEmptyString && accessKey != providerDefaultEmptyString && secretKey != providerDefaultEmptyString {
+	if tokenKey == providerDefaultEmptyString && (accessKey != providerDefaultEmptyString) && (secretKey != providerDefaultEmptyString) {
 		tokenKey = accessKey + ":" + secretKey
 	}
 

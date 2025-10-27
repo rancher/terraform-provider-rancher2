@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 # summarize.sh - reads report.json and prints a summary
@@ -25,14 +25,14 @@ process_tests() {
     report.json
 }
 
-echo "\n==================== TEST SUMMARY ===================="
+printf "\n==================== TEST SUMMARY ===================="
 
-echo "\nPASSED TESTS:"
+printf "\nPASSED TESTS:"
 process_tests "pass"
 
-echo "\nFAILED TESTS:"
+printf "\nFAILED TESTS:"
 process_tests "fail"
 
-echo "\n======================================================"
+printf "\n======================================================"
 
 rm -rf report.json
