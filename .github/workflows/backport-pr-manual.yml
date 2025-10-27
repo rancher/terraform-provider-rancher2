@@ -34,7 +34,7 @@ jobs:
           script: |
             const execSync = require('child_process').execSync;
             const owner = "rancher";
-            const repo = "terraform-provider-file";
+            const repo = "terraform-provider-rancher2";
             const mergeCommitSha = process.env.MERGE_COMMIT_SHA;
             const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
 
