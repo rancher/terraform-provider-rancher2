@@ -113,6 +113,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_auth_config_azuread":                           resourceRancher2AuthConfigAzureAD(),
 			"rancher2_auth_config_freeipa":                           resourceRancher2AuthConfigFreeIpa(),
 			"rancher2_auth_config_github":                            resourceRancher2AuthConfigGithub(),
+			"rancher2_auth_config_githubapp":                         resourceRancher2AuthConfigGithubApp(),
 			"rancher2_auth_config_keycloak":                          resourceRancher2AuthConfigKeyCloak(),
 			"rancher2_auth_config_okta":                              resourceRancher2AuthConfigOKTA(),
 			"rancher2_auth_config_generic_oidc":                      resourceRancher2AuthConfigGenericOIDC(),
@@ -235,7 +236,7 @@ func providerValidateConfig(config *Config) (*Config, error) {
 	if config.Bootstrap {
 		// If bootstrap tokenkey accesskey nor secretkey can be provided
 		if config.TokenKey != providerDefaultEmptyString {
-			return &Config{}, fmt.Errorf("[ERROR] Bootsrap mode activated. Token_key or access_key and secret_key can not be provided")
+			return &Config{}, fmt.Errorf("[ERROR] Bootsrap mode activated. token_key or access_key and secret_key can not be provided")
 		}
 	} else {
 		// Else token or access key and secret key should be provided
