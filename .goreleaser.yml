@@ -1,7 +1,4 @@
-
-
 # https://goreleaser.com for documentation
-
 version: 2
 before:
   hooks:
