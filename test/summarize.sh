@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -e
 
 # summarize.sh - reads report.json and prints a summary
 
