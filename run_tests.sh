@@ -235,15 +235,15 @@ if [ -n "$IDENTIFIER" ]; then
     echo "found s3 bucket $ID, removing..."
     while read -r v; do
       if [ -z "$v" ]; then continue; fi;
-      aws s3api delete-object --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" --key "tfstate" --version-id="$v" | /dev/null;
+      aws s3api delete-object --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" --key "tfstate" --version-id="$v" > /dev/null 2>&1;
     done <<<"$(aws s3api list-object-versions --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" | jq -r '.Versions[]?.VersionId')"
 
     while read -r v; do
       if [ -z "$v" ]; then continue; fi;
-      aws s3api delete-object --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" --key "tfstate" --version-id="$v";
+      aws s3api delete-object --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" --key "tfstate" --version-id="$v" > /dev/null 2>&1;
     done <<<"$(aws s3api list-object-versions --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" | jq -r '.DeleteMarkers[]?.VersionId')"
 
-    aws s3api delete-bucket --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')";
+    aws s3api delete-bucket --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" > /dev/null 2>&1;
 
     sleep 10
     attempts=$((attempts + 1))
@@ -256,7 +256,7 @@ if [ -n "$IDENTIFIER" ]; then
     while read -r line; do
       if [ -z "$line" ]; then continue; fi
       echo "removing load balancer target group, $line..."
-      aws elbv2 delete-target-group --target-group-arn "$line";
+      aws elbv2 delete-target-group --target-group-arn "$line" > /dev/null 2>&1;
     done <<<"$(
       while read -r line; do
         if [ -z "$line" ]; then continue; fi

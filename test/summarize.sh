@@ -12,15 +12,27 @@ fi
 process_tests() {
   local action=$1
   # slurp is important here, it reads the objects into an array for further processing
+  # select all objects with a .Test listed that matches $action and store it as $tests
+  # then iterate through tests and save the test name as $prefix
+  # then filter out any test names that don't exactly match the current test name, but do have the test name in them followed by a slash
+  # this leaves only test names that don't have duplicate prefixes, ie. the actual tests and not the parent blocks
+  # eg.
+  # changes this:
+  # TestFlattenPodSecurityAdmissionConfigurationTemplateDefaults
+  # TestFlattenPodSecurityAdmissionConfigurationTemplateDefaults/with_all_fields
+  # TestFlattenPodSecurityAdmissionConfigurationTemplateDefaults/with_some_fields
+  # TestFlattenPodSecurityAdmissionConfigurationTemplateDefaults/with_no_fields
+  # TestFlattenPodSecurityAdmissionConfigurationTemplateDefaults/with_nil_value
+  # into this:
+  # TestFlattenPodSecurityAdmissionConfigurationTemplateDefaults/with_all_fields
+  # TestFlattenPodSecurityAdmissionConfigurationTemplateDefaults/with_some_fields
+  # TestFlattenPodSecurityAdmissionConfigurationTemplateDefaults/with_no_fields
+  # TestFlattenPodSecurityAdmissionConfigurationTemplateDefaults/with_nil_value
   jq --slurp -r --arg action "$action" \
     '
-    # select all objects with a .Test listed that matches $acton and store it as $tests
     (map(select(.Test and .Action == $action) | .Test ) | unique) as $tests |
-    # iterate through tests and save the test name as $prefix
     $tests[] | . as $prefix |
-    # filter out any test names that dont exactly match the current test name, but do have the test name in them followed by a slash
     select(any($tests[]; . != $prefix and startswith($prefix+"/"))|not)
-    # this leaves only test names that dont have duplicate prefixes, ie. the actual tests and not the parent blocks
     '\
     report.json
 }
