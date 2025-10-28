@@ -77,7 +77,8 @@ run_tests() {
   local slow_mode=$1
   local test_dir="$2"
 
-  local repo_root="$(git rev-parse --show-toplevel)"
+  local repo_root
+  repo_root="$(git rev-parse --show-toplevel)"
   cd "$repo_root" || exit 1
 
   echo "" > "/tmp/${IDENTIFIER}_test.log"
