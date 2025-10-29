@@ -75,10 +75,11 @@ fi
 
 run_tests() {
   local slow_mode=$1
-  local TEST_DIR="$2"
+  local test_dir="$2"
 
-  REPO_ROOT="$(git rev-parse --show-toplevel)"
-  cd "$REPO_ROOT" || exit 1
+  local repo_root
+  repo_root="$(git rev-parse --show-toplevel)"
+  cd "$repo_root" || exit 1
 
   echo "" > "/tmp/${IDENTIFIER}_test.log"
   rm -f "/tmp/${IDENTIFIER}_failed_tests.txt"
@@ -100,7 +101,7 @@ EOF
   chmod +x "/tmp/${IDENTIFIER}_test-processor"
   export NO_COLOR=1
   echo "starting tests..."
-  cd "$TEST_DIR" || return 1;
+  cd "$test_dir" || return 1;
 
   local specific_test_flag=""
   # shellcheck disable=SC2143
@@ -133,7 +134,7 @@ gotestsum \
   --format "standard-verbose" \
   --jsonfile "/tmp/${IDENTIFIER}_test.log" \
   --post-run-command "sh /tmp/${IDENTIFIER}_test-processor" \
-  --packages "$REPO_ROOT/$TEST_DIR/$package_pattern" \
+  --packages "$repo_root/$test_dir/$package_pattern" \
   -- \
   -count=1 \
   -timeout=300m \
@@ -150,7 +151,7 @@ EOT
     --format="standard-verbose" \
     --jsonfile="/tmp/${IDENTIFIER}_test.log" \
     --post-run-command="sh /tmp/${IDENTIFIER}_test-processor" \
-    --packages="$REPO_ROOT/$TEST_DIR/$package_pattern" \
+    --packages="$repo_root/$test_dir/$package_pattern" \
     -- \
     -count=1 \
     -timeout=300m \
@@ -235,15 +236,15 @@ if [ -n "$IDENTIFIER" ]; then
     echo "found s3 bucket $ID, removing..."
     while read -r v; do
       if [ -z "$v" ]; then continue; fi;
-      aws s3api delete-object --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" --key "tfstate" --version-id="$v" | /dev/null;
+      aws s3api delete-object --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" --key "tfstate" --version-id="$v" > /dev/null 2>&1;
     done <<<"$(aws s3api list-object-versions --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" | jq -r '.Versions[]?.VersionId')"
 
     while read -r v; do
       if [ -z "$v" ]; then continue; fi;
-      aws s3api delete-object --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" --key "tfstate" --version-id="$v";
+      aws s3api delete-object --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" --key "tfstate" --version-id="$v" > /dev/null 2>&1;
     done <<<"$(aws s3api list-object-versions --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" | jq -r '.DeleteMarkers[]?.VersionId')"
 
-    aws s3api delete-bucket --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')";
+    aws s3api delete-bucket --bucket "$(echo "$ID" | tr '[:upper:]' '[:lower:]')" > /dev/null 2>&1;
 
     sleep 10
     attempts=$((attempts + 1))
@@ -256,7 +257,7 @@ if [ -n "$IDENTIFIER" ]; then
     while read -r line; do
       if [ -z "$line" ]; then continue; fi
       echo "removing load balancer target group, $line..."
-      aws elbv2 delete-target-group --target-group-arn "$line";
+      aws elbv2 delete-target-group --target-group-arn "$line" > /dev/null 2>&1;
     done <<<"$(
       while read -r line; do
         if [ -z "$line" ]; then continue; fi

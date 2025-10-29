@@ -376,10 +376,10 @@ func CreateTestDirectories(t *testing.T, id string) error {
 		return err
 	}
 	paths := []string{
-		filepath.Join(fwd, "test/data"),
-		filepath.Join(fwd, "test/data", id),
-		filepath.Join(fwd, "test/data", id, "backend"),
-		filepath.Join(fwd, "test/data", id, "data"),
+		filepath.Join(fwd, "test", "data"),
+		filepath.Join(fwd, "test", "data", id),
+		filepath.Join(fwd, "test", "data", id+"-backend"),
+		filepath.Join(fwd, "test", "data", id, "data"),
 	}
 	for _, path := range paths {
 		err = os.Mkdir(path, 0755)
@@ -425,7 +425,7 @@ func Teardown(t *testing.T, dataDir string, exampleDir string, options []*terraf
 	if err != nil {
 		t.Logf("Failed to destroy key pair: %v", err)
 	}
-	os.Remove(exampleDir + "/.terraform.lock.hcl")
+	os.Remove(filepath.Join(exampleDir, ".terraform.lock.hcl"))
 }
 
 func GetErrorLogs(t *testing.T, kubeconfigPath string) {
@@ -433,7 +433,7 @@ func GetErrorLogs(t *testing.T, kubeconfigPath string) {
 	if err != nil {
 		t.Logf("Error getting git root directory: %v", err)
 	}
-	script, err := os.ReadFile(repoRoot + "/test/scripts/getLogs.sh")
+	script, err := os.ReadFile(filepath.Join(repoRoot, "test", "scripts", "getLogs.sh"))
 	if err != nil {
 		t.Logf("Error reading script: %v", err)
 	}
@@ -457,7 +457,7 @@ func CheckReady(t *testing.T, kubeconfigPath string) {
 		t.Logf("Error getting git root directory: %v", err)
 		t.Fail()
 	}
-	script, err := os.ReadFile(repoRoot + "/test/scripts/readyNodes.sh")
+	script, err := os.ReadFile(filepath.Join(repoRoot, "test", "scripts", "readyNodes.sh"))
 	if err != nil {
 		t.Logf("Error reading script: %v", err)
 		t.Fail()
@@ -483,7 +483,7 @@ func CheckRunning(t *testing.T, kubeconfigPath string) {
 		t.Logf("Error getting git root directory: %v", err)
 		t.Fail()
 	}
-	script, err := os.ReadFile(repoRoot + "/test/scripts/runningPods.sh")
+	script, err := os.ReadFile(filepath.Join(repoRoot, "test", "scripts", "runningPods.sh"))
 	if err != nil {
 		t.Logf("Error reading script: %v", err)
 		t.Fail()
@@ -503,14 +503,16 @@ func CheckRunning(t *testing.T, kubeconfigPath string) {
 	t.Logf("Ready script output: %s", out)
 }
 
-func CreateObjectStorageBackend(t *testing.T, testDir string, id string, owner string, region string) (*terraform.Options, error) {
+func CreateObjectStorageBackend(t *testing.T, id string, owner string, region string) (*terraform.Options, error) {
 	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
 	if err != nil {
 		t.Fatalf("Error getting git root directory: %v", err)
 	}
-	exampleDir := repoRoot + "/examples/use-cases/backend_s3"
+	exampleDir := filepath.Join(repoRoot, "examples", "use-cases", "backend_s3")
+	backendDir := filepath.Join(repoRoot, "test", "data", id+"-backend")
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
+		// https://pkg.go.dev/github.com/gruntwork-io/terratest/modules/terraform#Options
 		TerraformDir: exampleDir,
 		// Variables to pass to our Terraform code using -var options
 		Vars: map[string]interface{}{
@@ -519,27 +521,30 @@ func CreateObjectStorageBackend(t *testing.T, testDir string, id string, owner s
 		},
 		// Environment variables to set when running Terraform
 		EnvVars: map[string]string{
-			"AWS_DEFAULT_REGION":  region,
-			"AWS_REGION":          region,
-			"TF_DATA_DIR":         testDir + "/backend",
-			"TF_IN_AUTOMATION":    "1",
-			"TF_CLI_ARGS_plan":    "-state=" + testDir + "/backend/tfstate",
-			"TF_CLI_ARGS_apply":   "-state=" + testDir + "/backend/tfstate",
-			"TF_CLI_ARGS_destroy": "-state=" + testDir + "/backend/tfstate",
-			"TF_CLI_ARGS_output":  "-state=" + testDir + "/backend/tfstate",
+			"AWS_DEFAULT_REGION": region,
+			"AWS_REGION":         region,
+			"TF_IN_AUTOMATION":   "1",
+			"TF_DATA_DIR":        backendDir,
 		},
 		RetryableTerraformErrors: GetRetryableTerraformErrors(),
-		Reconfigure:              true,
-		NoColor:                  true,
-		Upgrade:                  true,
+		BackendConfig: map[string]interface{}{
+			"path": filepath.Join(backendDir, "tfstate"),
+		},
+		Reconfigure: true,
+		NoColor:     true,
+		Upgrade:     true,
 	})
 
 	_, err = terraform.InitAndApplyE(t, terraformOptions)
 	return terraformOptions, err
 }
 
-func WriteTerraformRc(repoRoot string, path string) error {
-  formatString := `provider_installation {
+func WriteTerraformRc(t *testing.T, path string) error {
+	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
+	if err != nil {
+		t.Fatalf("Error getting git root directory: %v", err)
+	}
+	formatString := `provider_installation {
   dev_overrides {
     "rancher/rancher2" = "%s/bin"
   }
@@ -547,6 +552,6 @@ func WriteTerraformRc(repoRoot string, path string) error {
     exclude = []
   }
 }`
-  content := fmt.Sprintf(formatString, repoRoot)
-  return os.WriteFile(path, []byte(content), 0644)
+	content := fmt.Sprintf(formatString, repoRoot)
+	return os.WriteFile(path, []byte(content), 0644)
 }

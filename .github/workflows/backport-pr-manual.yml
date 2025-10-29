@@ -7,6 +7,9 @@ on:
         description: 'The sha of the merge commit from the main PR.'
         required: true
 
+env :
+  TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }} # eg. '["matttrach"]'
+
 jobs:
   create-cherry-pick-prs:
     runs-on: ubuntu-latest
@@ -17,7 +20,27 @@ jobs:
       actions: write
     steps:
       - name: 'Wait for merge to settle'
-        run: sleep 10
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          MERGE_COMMIT_SHA: ${{ inputs.merge_commit_sha }}
+          TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const mergeCommitSha = process.env.MERGE_COMMIT_SHA;
+            // wait 10 seconds to allow GitHub to index the commit and associated PRs
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            // just in case the GitHub API is still having trouble, try to fetch associated PRs
+            try {
+              const { data: associatedPrs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: mergeCommitSha
+              });
+            } catch (error) {
+              core.setFailed(`Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`);
+            }
       - name: 'Checkout Repository'
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
         with:
@@ -26,35 +49,45 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
         env:
           MERGE_COMMIT_SHA: ${{ inputs.merge_commit_sha }}
+          TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
         with:
           script: |
             const execSync = require('child_process').execSync;
             const owner = "rancher";
-            const repo = "terraform-provider-file";
+            const repo = "terraform-provider-rancher2";
             const mergeCommitSha = process.env.MERGE_COMMIT_SHA;
-            const assignees = ['matttrach', 'jiaqiluo', 'HarrisonWAffel'];
+            const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
 
-            const { data: associatedPrs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner,
-              repo,
-              commit_sha: mergeCommitSha
-            });
+            try {
+              const { data: associatedPrs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: mergeCommitSha
+              });
+            } catch (error) {
+              core.setFailed(`Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`);
+            }
             const pr = associatedPrs.find(p => p.base.ref === 'main' && p.merged_at);
             if (!pr) {
-              core.info(`No merged PR found for commit ${mergeCommitSha}. This may have been a direct push. Exiting.`);
+              core.info(`No merged PR found for commit ${mergeCommitSha}.`);
               return;
             }
             core.info(`Found associated PR: #${pr.number}`);
 
             // https://docs.github.com/en/rest/search/search?apiVersion=2022-11-28#search-issues-and-pull-requests
             core.info(`Searching for 'internal/main' issue linked to PR #${pr.number}`);
-            const { data: searchResults } = await github.request('GET /search/issues', {
-              q: `is:issue state:open label:"internal/main" repo:${owner}/${repo} in:body #${pr.number}`,
-              advanced_search: true,
-              headers: {
-                'X-GitHub-Api-Version': '2022-11-28'
-              }
-            });
+            try {
+              const { data: searchResults } = await github.request('GET /search/issues', {
+                q: `is:issue state:open label:"internal/main" repo:${owner}/${repo} in:body #${pr.number}`,
+                advanced_search: true,
+                headers: {
+                  'X-GitHub-Api-Version': '2022-11-28'
+                }
+              });
+            } catch (error) {
+              core.setFailed(`Failed to search for main issue for PR #${pr.number}: ${error.message}`);
+            }
+
             if (searchResults.total_count === 0) {
               core.info(`No 'internal/main' issue found for PR #${pr.number}. Exiting.`);
               return;
@@ -64,14 +97,18 @@ jobs:
 
             // https://docs.github.com/en/rest/issues/sub-issues?apiVersion=2022-11-28#add-sub-issue
             core.info(`Fetching sub-issues for main issue #${mainIssue.number}`);
-            const { data: subIssues } = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
-              owner: owner,
-              repo: repo,
-              issue_number: mainIssue.number,
-              headers: {
-                'X-GitHub-Api-Version': '2022-11-28'
-              }
-            });
+            try {
+              const { data: subIssues } = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
+                owner: owner,
+                repo: repo,
+                issue_number: mainIssue.number,
+                headers: {
+                  'X-GitHub-Api-Version': '2022-11-28'
+                }
+              });
+            } catch (error) {
+              core.setFailed(`Failed to fetch sub-issues for main issue #${mainIssue.number}: ${error.message}`);
+            }
             if (subIssues.length === 0) {
               core.info(`No sub-issues found for issue #${mainIssue.number}. Exiting.`);
               return;
@@ -89,35 +126,47 @@ jobs:
               const targetBranch = releaseLabel.name
               core.info(`Processing sub-issue #${subIssueNumber} for target branch: ${targetBranch}`);
               const newBranchName = `backport-${pr.number}-${targetBranch.replace(/\//g, '-')}`;
-              execSync(`git config user.name "github-actions[bot]"`);
-              execSync(`git config user.email "github-actions[bot]@users.noreply.github.com"`);
-              execSync(`git fetch origin ${targetBranch}`);
-              execSync(`git checkout -b ${newBranchName} origin/${targetBranch}`);
-              execSync(`git cherry-pick --allow-empty -x ${mergeCommitSha} -X theirs`);
-              execSync(`git push origin ${newBranchName}`);
+              try {
+                execSync(`git config user.name "github-actions[bot]"`);
+                execSync(`git config user.email "github-actions[bot]@users.noreply.github.com"`);
+                execSync(`git fetch origin ${targetBranch}`);
+                execSync(`git checkout -b ${newBranchName} origin/${targetBranch}`);
+                execSync(`git cherry-pick --allow-empty -x ${mergeCommitSha} -X theirs`);
+                execSync(`git push origin ${newBranchName}`);
+              } catch (error) {
+                core.setFailed(`Failed to create and push branch ${newBranchName}: ${error.message}`);
+              }
 
               core.info(`Creating pull request for branch ${newBranchName} targeting ${targetBranch}...`);
-              const { data: newPr } = await github.rest.pulls.create({
-                owner,
-                repo,
-                title: pr.title,
-                head: newBranchName,
-                base: targetBranch,
-                body: [
-                  `This pull request cherry-picks the changes from #${pr.number} into ${targetBranch}`,
-                  `Addresses #${subIssueNumber} for #${mainIssue.number}`,
-                  `**WARNING!**: to avoid having to resolve merge conflicts this PR is generated with 'git cherry-pick -X theirs'.`,
-                  `Please make sure to carefully inspect this PR so that you don't accidentally revert anything!`,
-                  `Please add the proper milestone to this PR`,
-                  `Copied from main PR:`,
-                  `${pr.body}`
-                ].join("\n\n")
-              });
+              try {
+                const { data: newPr } = await github.rest.pulls.create({
+                  owner,
+                  repo,
+                  title: pr.title,
+                  head: newBranchName,
+                  base: targetBranch,
+                  body: [
+                    `This pull request cherry-picks the changes from #${pr.number} into ${targetBranch}`,
+                    `Addresses #${subIssueNumber} for #${mainIssue.number}`,
+                    `**WARNING!**: to avoid having to resolve merge conflicts this PR is generated with 'git cherry-pick -X theirs'.`,
+                    `Please make sure to carefully inspect this PR so that you don't accidentally revert anything!`,
+                    `Please add the proper milestone to this PR`,
+                    `Copied from main PR:`,
+                    `${pr.body}`
+                  ].join("\n\n")
+                });
+              } catch (error) {
+                core.setFailed(`Failed to create pull request for branch ${newBranchName}: ${error.message}`);
+              }
               const prNumber = newPr.number
-              await github.rest.issues.addAssignees({
-                owner,
-                repo,
-                issue_number: prNumber,
-                assignees: assignees
-              });
+              try {
+                await github.rest.issues.addAssignees({
+                  owner,
+                  repo,
+                  issue_number: prNumber,
+                  assignees: assignees
+                });
+              } catch (error) {
+                core.setFailed(`Failed to assign PR #${prNumber}: ${error.message}`);
+              }
             }
