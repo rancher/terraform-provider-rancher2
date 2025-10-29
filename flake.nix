@@ -59,6 +59,7 @@
               gitleaks
               gnupg
               go
+              goreleaser
               gotestfmt
               gotestsum
               jq
