@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+  "fmt"
 	"testing"
   // "time"
   "strings"
@@ -9,11 +10,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/provider"
   "github.com/hashicorp/terraform-plugin-framework/provider/schema"
-  // "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
   "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-  // "github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func TestProviderMetadata(t *testing.T) {
@@ -23,7 +22,7 @@ func TestProviderMetadata(t *testing.T) {
 		want provider.MetadataResponse
 	}{
 		{
-      "Metadata function basic",
+      "Basic",
       RancherProvider{version: "test"},
       provider.MetadataResponse{TypeName: "rancher", Version: "test"},
     },
@@ -49,7 +48,7 @@ func TestProviderSchema(t *testing.T) {
     want []string
   }{
     {
-      "Schema function basic",
+      "Basic",
       RancherProvider{version: "test"},
       []string{
         "api_url",
@@ -91,45 +90,77 @@ func TestProviderSchema(t *testing.T) {
 
 // test provider configuration giving some basic values
 func TestProviderConfigure(t *testing.T) {
-  t.Run("Configure function basic", func(t *testing.T) {
-    testCases := []struct {
-      name string
-      fit  RancherProvider
-      config RancherProviderModel
-    }{
-      {
-        "Configure function basic",
-        RancherProvider{version: "test"},
-        RancherProviderModel{
-          ApiURL:    types.StringValue("https://my-rancher-server.com"),
-          CACerts:   types.StringValue(""),
-          Insecure:  types.BoolValue(true),
-          AccessKey: types.StringValue("my-access-key"),
-          SecretKey: types.StringValue("my-secret-key"),
-          TokenKey:  types.StringValue(""),
-          Timeout:   types.StringValue("30s"),
-          Bootstrap: types.BoolValue(false),
-        },
+  testCases := []struct {
+    name string
+    fit  RancherProvider
+    have RancherProviderModel
+  }{
+    {
+      "Basic",
+      RancherProvider{version: "test"},
+      RancherProviderModel{ // have
+        ApiURL:    types.StringValue("https://my-rancher-server.com"),
+        CACerts:   types.StringValue(""),
+        Insecure:  types.BoolValue(true),
+        AccessKey: types.StringValue("my-access-key"),
+        SecretKey: types.StringValue("my-secret-key"),
+        TokenKey:  types.StringValue(""),
+        Timeout:   types.StringValue("30s"),
+        Bootstrap: types.BoolValue(false),
       },
-    }
-    for _, tc := range testCases {
-      t.Run(tc.name, func(t *testing.T) {
-        ctx := context.Background()
-        req := provider.ConfigureRequest{ Config: tfsdk.Config{
-          Raw: tftypes.NewValue(
-            getObjectAttributeTypes(),
-            getObjectAttributeValues(t, tc.config),
-          ),
-        }}
-        res := provider.ConfigureResponse{}
-        tc.fit.Configure(ctx, req, &res)
-        if res.Diagnostics.HasError() {
-          t.Errorf("%#v.Configure() returned error diagnostics: %v", tc.fit, res.Diagnostics)
-        }
-      })
-    }
-  })
+    },
+    {
+      "Bootstrap",
+      RancherProvider{version: "test"},
+      RancherProviderModel{ // have
+        ApiURL:    types.StringValue("https://my-rancher-server.com"),
+        CACerts:   types.StringValue(""),
+        Insecure:  types.BoolValue(true),
+        AccessKey: types.StringValue("my-access-key"),
+        SecretKey: types.StringValue("my-secret-key"),
+        TokenKey:  types.StringValue(""),
+        Timeout:   types.StringValue("30s"),
+        Bootstrap: types.BoolValue(true),
+      },
+    },
+    {
+      "Token",
+      RancherProvider{version: "test"},
+      RancherProviderModel{ // have
+        ApiURL:    types.StringValue("https://my-rancher-server.com"),
+        CACerts:   types.StringValue(""),
+        Insecure:  types.BoolValue(true),
+        AccessKey: types.StringValue(""),
+        SecretKey: types.StringValue(""),
+        TokenKey:  types.StringValue("my-token-key"),
+        Timeout:   types.StringValue("30s"),
+        Bootstrap: types.BoolValue(true),
+      },
+    },
+  }
+  for _, tc := range testCases {
+    t.Run(tc.name, func(t *testing.T) {
+      ctx := context.Background()
+      req := provider.ConfigureRequest{ Config: tfsdk.Config{
+        Raw: tftypes.NewValue(
+          getObjectAttributeTypes(),
+          getObjectAttributeValues(t, tc.have),
+        ),
+        Schema: getSchema(),
+      }}
+      res := provider.ConfigureResponse{}
+      tc.fit.Configure(ctx, req, &res)
+      t.Logf("Configured provider: %+v", res)
+      if res.Diagnostics.HasError() {
+        t.Errorf("%#v.Configure() returned error diagnostics: %v", tc.fit, res.Diagnostics)
+      }
+    })
+  }
 }
+
+
+
+// helpers
 
 func getSchema() schema.Schema {
   testProvider := RancherProvider{version: "test"}
@@ -150,36 +181,63 @@ func getObjectAttributeTypes() tftypes.Object {
   }
 }
 
+var tfsdkTagFieldMap = map[string]string{}
+
+func getStructFieldByTfsdkTag(v reflect.Value, tagName string) (reflect.Value, error) {
+  // first check if the tagName is in the map
+  if fieldName, ok := tfsdkTagFieldMap[tagName]; ok {
+    return v.FieldByName(fieldName), nil
+  }
+  // otherwise build the map and look again
+  for i := 0; i < v.Type().NumField(); i++ {
+    field := v.Type().Field(i)
+    tag := field.Tag.Get("tfsdk")
+    tagParts := strings.Split(tag, ",")
+    tagValue := tagParts[0]
+    tfsdkTagFieldMap[tagValue] = field.Name
+  }
+  if fieldName, ok := tfsdkTagFieldMap[tagName]; ok {
+    return v.FieldByName(fieldName), nil
+  }
+  // if still not found, return zero Value and error
+  return reflect.Value{}, fmt.Errorf("no such field with tfsdk tag %s", tagName)
+}
+
 // getObjectAttributeValues converts the RancherProviderModel struct to a map[string]tftypes.Value
 // it parses the schema to get the attribute names and types so that it automatically adapts to schema changes
 func getObjectAttributeValues(t *testing.T, config RancherProviderModel) map[string]tftypes.Value {
-  schema := getSchema()
-  values := map[string]tftypes.Value{}
-  attributeTypes := getObjectAttributeTypes().AttributeTypes
-  for attrName, attr := range schema.GetAttributes() {
-    attrType, ok := attributeTypes[attrName]
-    if !ok {
-      t.Fatalf("getObjectAttributeValues: attribute type for %s not found", attrName)
+	values := map[string]tftypes.Value{}
+	attributeTypes := getObjectAttributeTypes().AttributeTypes
+	for attrName, attrType := range attributeTypes {
+		var value interface{}
+		// use reflect to get the value from the struct based on the attribute name variable
+		v := reflect.ValueOf(config)
+		fieldVal, err := getStructFieldByTfsdkTag(v, attrName)
+		if err != nil {
+			t.Fatalf("getObjectAttributeValues: %v", err)
+		}
+		if !fieldVal.IsValid() {
+			t.Fatalf("getObjectAttributeValues: no such field %s in model", attrName)
+		}
+
+		// Dynamically call the appropriate Value method based on the tfsdk type.
+		// e.g. for types.StringValue, we call ValueString(), for types.BoolValue, we call ValueBool()
+    // this works for all simple types, but not for complex types like lists, maps, sets, etc.
+    // try to avoid complex types in your schema
+		methodName := "Value" + strings.TrimSuffix(fieldVal.Type().Name(), "Value")
+		method := fieldVal.MethodByName(methodName)
+		if !method.IsValid() {
+			t.Fatalf("getObjectAttributeValues: no such method %s for type %s", methodName, fieldVal.Type().Name())
+		}
+		results := method.Call(nil)
+		value = results[0].Interface()
+
+    if value == nil {
+      // for nil values, set tftypes.UnknownValue of the appropriate type
+      values[attrName] = tftypes.NewValue(attrType, tftypes.UnknownValue)
+      continue
     }
-    var value interface{}
-    // use reflect to get the value from the struct based on the attribute name variable
-    v := reflect.ValueOf(config)
-    fieldVal := v.FieldByNameFunc(func(s string) bool {
-      return strings.EqualFold(s, attrName)
-    })
-    if !fieldVal.IsValid() {
-      t.Fatalf("getObjectAttributeValues: no such field %s in RancherProviderModel", attrName)
-    }
-    // get the underlying value from the types.Value
-    switch fv := fieldVal.Interface().(type) {
-    case types.String:
-      value = fv.ValueString()
-    case types.Bool:
-      value = fv.ValueBool()
-    default:
-      t.Fatalf("getObjectAttributeValues: unsupported type %T for field %s", fv, attrName)
-    }
-    values[attrName] = tftypes.NewValue(attrType, value)
-  }
-  return values
+		values[attrName] = tftypes.NewValue(attrType, value)
+	}
+	return values
 }

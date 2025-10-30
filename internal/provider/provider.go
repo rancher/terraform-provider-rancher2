@@ -14,6 +14,7 @@ import (
   "github.com/hashicorp/terraform-plugin-framework/resource"
   "github.com/hashicorp/terraform-plugin-framework/types"
   "github.com/hashicorp/terraform-plugin-log/tflog"
+  client "github.com/rancher/terraform-provider-rancher2/internal/provider/rancher_client"
 )
 
 // The `var _` is a special Go construct that results in an unusable variable.
@@ -26,14 +27,15 @@ type RancherProvider struct {
 }
 
 type RancherProviderModel struct{
-  ApiURL    types.String `tfsdk:"api_url"`
-  AccessKey types.String `tfsdk:"access_key"`
-  Bootstrap types.Bool   `tfsdk:"bootstrap"`
-  SecretKey types.String `tfsdk:"secret_key"`
-  TokenKey  types.String `tfsdk:"token_key"`
-  CACerts   types.String `tfsdk:"ca_certs"`
-  Insecure  types.Bool   `tfsdk:"insecure"`
-  Timeout   types.String `tfsdk:"timeout"`
+  ApiURL         types.String `tfsdk:"api_url"`
+  AccessKey      types.String `tfsdk:"access_key"`
+  Bootstrap      types.Bool   `tfsdk:"bootstrap"`
+  SecretKey      types.String `tfsdk:"secret_key"`
+  TokenKey       types.String `tfsdk:"token_key"`
+  CACerts        types.String `tfsdk:"ca_certs"`
+  IgnoreSystemCA types.Bool   `tfsdk:"ignore_system_ca"`
+  Insecure       types.Bool   `tfsdk:"insecure"`
+  Timeout        types.String `tfsdk:"timeout"`
 }
 
 func (p *RancherProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -48,35 +50,39 @@ func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest
         Description: "The URL to the rancher API",
         Required:    true,
       },
+      "ca_certs": schema.StringAttribute{
+        Description: "CA certificates used to sign rancher server TLS certificates.",
+        Optional:    true,
+      },
+      "ignore_system_certs": schema.BoolAttribute{
+        Description: "Ignore system CA certificates when validating TLS connections to Rancher. Defaults to false.",
+        Optional:    true,
+      },
+      "insecure": schema.BoolAttribute{
+        Description: "Allow insecure TLS connections. Defaults to false.",
+        Optional:    true,
+      },
       "access_key": schema.StringAttribute{
-        Description: "API Key used to authenticate with the rancher server",
+        Description: "API Key used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided.",
         Optional:    true,
         Sensitive:   true,
       },
-      "bootstrap": schema.BoolAttribute{
-        Description: "Bootstrap rancher server",
-        Optional:    true,
-      },
       "secret_key": schema.StringAttribute{
-        Description: "API secret used to authenticate with the rancher server",
+        Description: "API secret used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided.",
         Optional:    true,
         Sensitive:   true,
       },
       "token_key": schema.StringAttribute{
-        Description: "API token used to authenticate with the rancher server",
+        Description: "API token used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided.",
         Optional:    true,
         Sensitive:   true,
       },
-      "ca_certs": schema.StringAttribute{
-        Description: "CA certificates used to sign rancher server tls certificates. Mandatory if self signed tls and insecure option false",
-        Optional:    true,
-      },
-      "insecure": schema.BoolAttribute{
-        Description: "Allow insecure TLS connections",
+      "bootstrap": schema.BoolAttribute{
+        Description: "Bootstrap rancher server. When set to true, access_key, secret_key, and token_key are not required. Defaults to false.",
         Optional:    true,
       },
       "timeout": schema.StringAttribute{
-        Description: "Rancher connection timeout (retry every 5s). Golang duration format, ex: \"60s\"",
+        Description: "Rancher connection timeout. Golang duration format, ex: '60s'.",
         Optional:    true,
       },
     },
@@ -88,8 +94,8 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 	var err error
 
   var config RancherProviderModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -99,12 +105,19 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
   if !config.ApiURL.IsNull() {
     ApiURL = config.ApiURL.ValueString()
   }
-  // CACerts := os.Getenv("RANCHER_CA_CERTS")
-  // if !config.CACerts.IsNull() {
-  //   CACerts = config.CACerts.ValueString()
-  // }
-  // Insecure := config.Insecure.ValueBool()
-  
+  CACerts := os.Getenv("RANCHER_CA_CERTS")
+  if !config.CACerts.IsNull() {
+    CACerts = config.CACerts.ValueString()
+  }
+  IgnoreSystemCA := false
+  if !config.IgnoreSystemCA.IsNull() {
+    IgnoreSystemCA = config.IgnoreSystemCA.ValueBool()
+  }
+  Insecure := false
+  if !config.Insecure.IsNull() {
+    Insecure = config.Insecure.ValueBool()
+  }
+
   // Auth
   AccessKey := os.Getenv("RANCHER_ACCESS_KEY")
   if !config.AccessKey.IsNull() {
@@ -119,8 +132,8 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
     TokenKey = config.TokenKey.ValueString()
   }
   
-  Timeout := config.Timeout.ValueString()  
-  _, err = time.ParseDuration(Timeout)
+  to := config.Timeout.ValueString()
+  Timeout, err := time.ParseDuration(to)
 	if err != nil {
     resp.Diagnostics.AddError("[ERROR] Timeout must be in golang duration format, error: %v", err.Error())
     return
@@ -162,6 +175,23 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if resp.Diagnostics.HasError() {
 		return
 	}
+  var rancherClient client.RancherClient
+  if p.version == "test" {
+    tflog.Debug(ctx, "Rancher Provider configured (test version), creating memory client.")
+    rancherClient, err = client.NewRancherMemoryClient(ApiURL, CACerts, IgnoreSystemCA, Insecure, TokenKey, MaxRedirects, Timeout)
+    if err != nil {
+      resp.Diagnostics.AddError("Error creating Rancher memory client", err.Error())
+      return
+    }
+  } else {
+    rancherClient, err = client.NewRancherHttpClient(ApiURL, CACerts, IgnoreSystemCA, Insecure, TokenKey, MaxRedirects, Timeout)
+    if err != nil {
+      resp.Diagnostics.AddError("Error creating Rancher HTTP client", err.Error())
+      return
+    }
+  }
+	resp.DataSourceData = rancherClient
+	resp.ResourceData   = rancherClient
 
   tflog.Debug(ctx, fmt.Sprintf("Response Object: %#v", resp))
 }
