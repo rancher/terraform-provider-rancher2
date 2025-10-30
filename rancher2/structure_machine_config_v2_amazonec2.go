@@ -52,22 +52,22 @@ type machineConfigV2Amazonec2 struct {
 	VpcID                   string   `json:"vpcId,omitempty" yaml:"vpcId,omitempty"`
 	Zone                    string   `json:"zone,omitempty" yaml:"zone,omitempty"`
 
-	// Enables or disables the IPv6 endpoint for the instance metadata service.
+	// HttpProtocolIpv6 enables or disables the IPv6 endpoint for the instance metadata service.
 	// Options: enabled, disabled
 	HttpProtocolIpv6 string `json:"httpProtocolIpv6,omitempty" yaml:"httpProtocolIpv6,omitempty"`
 
-	// Indicates whether the instance’s first assigned IPv6 address is set as the primary IPv6 address.
+	// EnablePrimaryIpv6 indicates whether the instance’s first assigned IPv6 address is set as the primary IPv6 address.
 	// Enable this option if the instance requires a stable, persistent IPv6 address.
 	// This option does not affect whether IPv6 addresses are assigned to the instance.
 	// For more information, see EnablePrimaryIpv6 on
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html
 	EnablePrimaryIpv6 bool `json:"enablePrimaryIpv6,omitempty" yaml:"enablePrimaryIpv6,omitempty"`
 
-	// The number of IPv6 addresses to assign to the network interface.
+	// Ipv6AddressCount sets the number of IPv6 addresses to assign to the network interface.
 	// It must be greater than zero when Ipv6AddressOnly is true
 	Ipv6AddressCount string `json:"ipv6AddressCount,omitempty" yaml:"ipv6AddressCount,omitempty"`
 
-	// Indicates whether the instance has only IPv6 address.
+	// Ipv6AddressOnly indicates whether the instance has only IPv6 address.
 	// Useful when the VPC or subnet is configured as IPv6-only.
 	Ipv6AddressOnly bool `json:"ipv6AddressOnly,omitempty" yaml:"ipv6AddressOnly,omitempty"`
 }
