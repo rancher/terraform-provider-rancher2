@@ -15,7 +15,7 @@ var allMachineDriverConfigFields = []string{
 	"google_config",
 }
 
-//Schemas
+// Schemas
 
 func machineConfigV2Fields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
