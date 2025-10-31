@@ -1,5 +1,5 @@
-module.exports = async ({ github, core, process }) => {
-  const execSync = require('child_process').execSync;
+import { execSync } from 'child_process';
+export default async ({ github, core, process }) => {
   const owner = "rancher";
   const repo = "terraform-provider-rancher2";
   const mergeCommitSha = process.env.MERGE_COMMIT_SHA;
