@@ -49,7 +49,7 @@ jobs:
             const response = await github.rest.repos.getContent({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              path: ".github/scripts/create-backport-issue.js",
+              path: "./.github/workflows/scripts/backport-issues.js",
               // 'context.sha' is the SHA of the last commit on the default branch for this trigger
               ref: context.sha,
             });
