@@ -54,6 +54,7 @@
               bashInteractive
               curl
               dig
+              eslint
               gh
               git
               gitleaks
@@ -67,6 +68,7 @@
               kubernetes-helm
               leftovers
               less
+              nodejs_22
               openssh
               openssl
               shellcheck
