@@ -29,7 +29,7 @@ jobs:
             const response = await github.rest.repos.getContent({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              path: "./.github/workflows/scripts/backport-issues.js",
+              path: ".github/workflows/scripts/backport-issues.js",
               ref: context.sha,
             });
             const scriptContent = Buffer.from(response.data.content, "base64").toString();
