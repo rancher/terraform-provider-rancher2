@@ -9,7 +9,7 @@ import (
 
 // Flatteners
 
-func flattenAuthConfigGenericOIDC(d *schema.ResourceData, in *managementClient.OIDCConfig) error {
+func flattenAuthConfigGenericOIDC(d *schema.ResourceData, in *managementClient.GenericOIDCConfig) error {
 	d.SetId(AuthConfigGenericOIDCName)
 	d.Set("name", AuthConfigGenericOIDCName)
 	d.Set("type", managementClient.GenericOIDCConfigType)
@@ -51,8 +51,8 @@ func flattenAuthConfigGenericOIDC(d *schema.ResourceData, in *managementClient.O
 
 // Expanders
 
-func expandAuthConfigGenericOIDC(in *schema.ResourceData) (*managementClient.OIDCConfig, error) {
-	obj := &managementClient.OIDCConfig{}
+func expandAuthConfigGenericOIDC(in *schema.ResourceData) (*managementClient.GenericOIDCConfig, error) {
+	obj := &managementClient.GenericOIDCConfig{}
 	if in == nil {
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigGenericOIDCName)
 	}
