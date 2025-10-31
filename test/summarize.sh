@@ -10,7 +10,7 @@ if ! command -v jq > /dev/null; then
 fi
 
 process_tests() {
-  local action=$1
+  action=$1
   # slurp is important here, it reads the objects into an array for further processing
   # select all objects with a .Test listed that matches $action and store it as $tests
   # then iterate through tests and save the test name as $prefix
@@ -37,14 +37,14 @@ process_tests() {
     report.json
 }
 
-echo "\n==================== TEST SUMMARY ===================="
+printf "\n==================== TEST SUMMARY ===================="
 
-echo "\nPASSED TESTS:"
+printf "\nPASSED TESTS:"
 process_tests "pass"
 
-echo "\nFAILED TESTS:"
+printf "\nFAILED TESTS:"
 process_tests "fail"
 
-echo "\n======================================================"
+printf "\n======================================================"
 
 rm -rf report.json
