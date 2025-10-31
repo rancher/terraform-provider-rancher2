@@ -53,5 +53,5 @@ jobs:
           MERGE_COMMIT_SHA: ${{ steps.wait_for_settle.outputs.merge_commit_sha }}
         with:
           script: |
-            const script = require('./.github/workflows/scripts/backport-pr.js');
+            const { default: script } = await import('./.github/workflows/scripts/backport-pr.js');
             await script({github, core, process});

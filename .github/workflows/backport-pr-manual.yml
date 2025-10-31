@@ -53,5 +53,5 @@ jobs:
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
         with:
           script: |
-            const script = require('./.github/workflows/scripts/backport-pr.js');
+            const { default: script } = await import('./.github/workflows/scripts/backport-pr.js');
             await script({github, core, process});
