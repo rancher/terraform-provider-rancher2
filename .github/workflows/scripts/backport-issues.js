@@ -1,4 +1,4 @@
-module.exports = async ({ github, context, core, process }) => {
+async ({ github, context, core, process }) => {
   const labelName = context.payload.label.name;
   const parentIssue = context.payload.issue;
   const parentIssueTitle = parentIssue.title;

@@ -29,11 +29,11 @@ jobs:
             const response = await github.rest.repos.getContent({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              path: ".github/workflows/scripts/backport-issues.js",
+              path: ".github/workflows/scripts/main-issue.js",
               ref: context.sha,
             });
             const scriptContent = Buffer.from(response.data.content, "base64").toString();
 
             // The script will be executed in an async context
             const script = eval(scriptContent);
-            await script({github, context, core, process});
+            await script({github, core, context, process});
