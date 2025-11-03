@@ -4,9 +4,9 @@ export default async ({ github, core, process }) => {
   const repo = "terraform-provider-rancher2";
   const mergeCommitSha = process.env.MERGE_COMMIT_SHA;
   const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
+  let response; // used to hold all github responses
 
   // https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#list-pull-requests-associated-with-a-commit
-  let response;
   try {
     response = await github.rest.repos.listPullRequestsAssociatedWithCommit({
       owner,
@@ -72,8 +72,8 @@ export default async ({ github, core, process }) => {
   core.info(`Found ${subIssues.length} sub-issues.`);
 
   for (const subIssue of subIssues) {
-    core.info(`Processing sub-issue #${subIssue.number}...`);
     const subIssueNumber = subIssue.number;
+    core.info(`Processing sub-issue #${subIssueNumber}...`);
 
     // Find the release label directly on the sub-issue object
     const releaseLabel = subIssue.labels.find(label => label.name.startsWith('release/v'));
