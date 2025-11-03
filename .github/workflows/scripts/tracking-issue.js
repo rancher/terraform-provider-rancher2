@@ -32,7 +32,7 @@ async ({ github, core, context, process }) => {
   const newIssue = response.data;
   if (releaseLabel) {
     // if release label detected, then add appropriate sub-issues
-    const parentIssue = newIssue.data;
+    const parentIssue = newIssue;
     const parentIssueTitle = parentIssue.title;
     const parentIssueNumber = parentIssue.number;
     // Note: can't get terraform-maintainers team, the default token can't access org level objects
@@ -51,7 +51,7 @@ async ({ github, core, context, process }) => {
       core.setFailed(`Failed to create backport issue: ${error.message}`);
     }
     const newSubIssue = response.data;
-    const subIssueId = newSubIssue.data.id;
+    const subIssueId = newSubIssue.id;
     // Attach the sub-issue to the parent using API request
     try {
       await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {

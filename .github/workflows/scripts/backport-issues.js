@@ -27,7 +27,7 @@ async ({ github, context, core, process }) => {
   let newIssue;
   let subIssueId;
   try {
-    newIssue = await github.rest.issues.create({
+    response = await github.rest.issues.create({
       owner: owner,
       repo: repo,
       title: `[Backport][${labelName}] ${parentIssueTitle}`,
@@ -42,7 +42,8 @@ async ({ github, context, core, process }) => {
   } catch (error) {
     core.setFailed(`Failed to create backport issue: ${error.message}`);
   }
-  subIssueId = newIssue.data.id;
+  newIssue = response.data;
+  subIssueId = newIssue.id;
 
   // Attach the sub-issue to the parent, use REST API because there isn't a github-script API yet.
   try {
