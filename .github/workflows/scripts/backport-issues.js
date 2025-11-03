@@ -56,6 +56,6 @@ async ({ github, context, core, process }) => {
       }
     });
   } catch (error) {
-    core.setFailed(`Failed to link backport issue to main issue: ${error.message}`);
+    core.setFailed(`Failed to link backport issue to tracking issue: ${error.message}`);
   }
 };

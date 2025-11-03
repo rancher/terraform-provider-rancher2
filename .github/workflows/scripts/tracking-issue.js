@@ -19,7 +19,7 @@ async ({ github, core, context, process }) => {
       owner: owner,
       repo: repo,
       title: pr.title,
-      body:  `This is the main issue tracking #${pr.number} \n\n` +
+      body:  `This is the tracking issue for #${pr.number} \n\n` +
         `Please add labels indicating the release versions eg. 'release/v13' \n\n` +
         `Please add comments for user issues which this issue addresses. \n\n` +
         `Description copied from PR: \n${pr.body}`,
@@ -27,7 +27,7 @@ async ({ github, core, context, process }) => {
       assignees: assignees
     });
   } catch (error) {
-    core.setFailed(`Failed to create main issue: ${error.message}`);
+    core.setFailed(`Failed to create tracking issue: ${error.message}`);
   }
   const newIssue = response.data;
   if (releaseLabel) {
@@ -64,7 +64,7 @@ async ({ github, core, context, process }) => {
         }
       });
     } catch (error) {
-      core.setFailed(`Failed to link backport issue to main issue: ${error.message}`);
+      core.setFailed(`Failed to link backport issue to tracking issue: ${error.message}`);
     }
   }
 };

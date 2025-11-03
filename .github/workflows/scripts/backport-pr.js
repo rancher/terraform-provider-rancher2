@@ -30,43 +30,43 @@ export default async ({ github, core, process }) => {
   core.info(`Found associated PR: #${pr.number}`);
 
   // https://docs.github.com/en/rest/search/search?apiVersion=2022-11-28#search-issues-and-pull-requests
-  core.info(`Searching for 'internal/main' issue linked to PR #${pr.number}`);
+  core.info(`Searching for 'internal/tracking' issue linked to PR #${pr.number}`);
   try {
     response = await github.request('GET /search/issues', {
-      q: `is:issue state:open label:"internal/main" repo:${owner}/${repo} in:body #${pr.number}`,
+      q: `is:issue state:open label:"internal/tracking" repo:${owner}/${repo} in:body #${pr.number}`,
       advanced_search: true,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
       }
     });
   } catch (error) {
-    core.setFailed(`Failed to search for main issue for PR #${pr.number}: ${error.message}`);
+    core.setFailed(`Failed to search for internal/tracking issue for PR #${pr.number}: ${error.message}`);
   }
   const searchResults = response.data;
   if (searchResults.total_count === 0) {
-    core.info(`No 'internal/main' issue found for PR #${pr.number}. Exiting.`);
+    core.info(`No 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
     return;
   }
-  const mainIssue = searchResults.items[0];
-  core.info(`Found main issue: #${mainIssue.number}`);
+  const trackingIssue = searchResults.items[0];
+  core.info(`Found tracking issue: #${trackingIssue.number}`);
 
   // https://docs.github.com/en/rest/issues/sub-issues?apiVersion=2022-11-28#add-sub-issue
-  core.info(`Fetching sub-issues for main issue #${mainIssue.number}`);
+  core.info(`Fetching sub-issues for tracking issue #${trackingIssue.number}`);
   try {
     response = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
       owner: owner,
       repo: repo,
-      issue_number: mainIssue.number,
+      issue_number: trackingIssue.number,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
       }
     });
   } catch (error) {
-    core.setFailed(`Failed to fetch sub-issues for main issue #${mainIssue.number}: ${error.message}`);
+    core.setFailed(`Failed to fetch sub-issues for tracking issue #${trackingIssue.number}: ${error.message}`);
   }
-  const subIssues = response.data.sub_issues;
+  const subIssues = response.data;
   if (subIssues.length === 0) {
-    core.info(`No sub-issues found for issue #${mainIssue.number}. Exiting.`);
+    core.info(`No sub-issues found for issue #${trackingIssue.number}. Exiting.`);
     return;
   }
   core.info(`Found ${subIssues.length} sub-issues.`);
@@ -105,7 +105,7 @@ export default async ({ github, core, process }) => {
         base: targetBranch,
         body: [
           `This pull request cherry-picks the changes from #${pr.number} into ${targetBranch}`,
-          `Addresses #${subIssueNumber} for #${mainIssue.number}`,
+          `Addresses #${subIssueNumber} for #${trackingIssue.number}`,
           `**WARNING!**: to avoid having to resolve merge conflicts this PR is generated with 'git cherry-pick -X theirs'.`,
           `Please make sure to carefully inspect this PR so that you don't accidentally revert anything!`,
           `Please add the proper milestone to this PR`,
