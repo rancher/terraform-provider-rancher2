@@ -7,9 +7,9 @@ async ({ github, context, core, process }) => {
   const owner = context.repo.owner;
   const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
   const extractedPrNumber = JSON.parse(process.env.PR);
+  let response; // used to hold all github responses
 
   // Retrieve the PR to get its data
-  let response;
   try {
     response = await github.rest.issues.get({
       owner: owner,
@@ -19,15 +19,13 @@ async ({ github, context, core, process }) => {
   } catch (error) {
     core.setFailed(`Failed to retrieve PR #${extractedPrNumber}: ${error.message}`);
   }
-  let pr = response.data;
-  let prNumber = pr.number;
+  const pr = response.data;
+  const prNumber = pr.number;
 
   // Note: can't get terraform-maintainers team, the default token can't access org level objects
   // Create the sub-issue
-  let newIssue;
-  let subIssueId;
   try {
-    newIssue = await github.rest.issues.create({
+    response = await github.rest.issues.create({
       owner: owner,
       repo: repo,
       title: `[Backport][${labelName}] ${parentIssueTitle}`,
@@ -42,7 +40,8 @@ async ({ github, context, core, process }) => {
   } catch (error) {
     core.setFailed(`Failed to create backport issue: ${error.message}`);
   }
-  subIssueId = newIssue.data.id;
+  const newIssue = response.data;
+  const subIssueId = newIssue.id;
 
   // Attach the sub-issue to the parent, use REST API because there isn't a github-script API yet.
   try {
@@ -56,6 +55,6 @@ async ({ github, context, core, process }) => {
       }
     });
   } catch (error) {
-    core.setFailed(`Failed to link backport issue to main issue: ${error.message}`);
+    core.setFailed(`Failed to link backport issue to tracking issue: ${error.message}`);
   }
 };

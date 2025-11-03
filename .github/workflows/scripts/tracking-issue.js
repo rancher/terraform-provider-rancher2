@@ -19,7 +19,7 @@ async ({ github, core, context, process }) => {
       owner: owner,
       repo: repo,
       title: pr.title,
-      body:  `This is the main issue tracking #${pr.number} \n\n` +
+      body:  `This is the tracking issue for #${pr.number} \n\n` +
         `Please add labels indicating the release versions eg. 'release/v13' \n\n` +
         `Please add comments for user issues which this issue addresses. \n\n` +
         `Description copied from PR: \n${pr.body}`,
@@ -27,12 +27,12 @@ async ({ github, core, context, process }) => {
       assignees: assignees
     });
   } catch (error) {
-    core.setFailed(`Failed to create main issue: ${error.message}`);
+    core.setFailed(`Failed to create tracking issue: ${error.message}`);
   }
   const newIssue = response.data;
   if (releaseLabel) {
     // if release label detected, then add appropriate sub-issues
-    const parentIssue = newIssue.data;
+    const parentIssue = newIssue;
     const parentIssueTitle = parentIssue.title;
     const parentIssueNumber = parentIssue.number;
     // Note: can't get terraform-maintainers team, the default token can't access org level objects
@@ -51,7 +51,7 @@ async ({ github, core, context, process }) => {
       core.setFailed(`Failed to create backport issue: ${error.message}`);
     }
     const newSubIssue = response.data;
-    const subIssueId = newSubIssue.data.id;
+    const subIssueId = newSubIssue.id;
     // Attach the sub-issue to the parent using API request
     try {
       await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
@@ -64,7 +64,7 @@ async ({ github, core, context, process }) => {
         }
       });
     } catch (error) {
-      core.setFailed(`Failed to link backport issue to main issue: ${error.message}`);
+      core.setFailed(`Failed to link backport issue to tracking issue: ${error.message}`);
     }
   }
 };
