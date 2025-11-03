@@ -1,5 +1,5 @@
-name: MainIssue
-# This workflow generates a "main" issue when a PR is created targeting main.
+name: TrackingIssue
+# This workflow generates a "tracking" issue when a PR is created targeting main.
 on:
   pull_request_target:
     branches: [main]
@@ -10,7 +10,7 @@ env :
 
 jobs:
   generate-issue:
-    name: 'Create Main Issue'
+    name: 'Create Tracking Issue'
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -29,7 +29,7 @@ jobs:
             const response = await github.rest.repos.getContent({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              path: ".github/workflows/scripts/main-issue.js",
+              path: ".github/workflows/scripts/tracking-issue.js",
               ref: context.sha,
             });
             const scriptContent = Buffer.from(response.data.content, "base64").toString();
