@@ -65,6 +65,11 @@ export default async ({ github, core, process }) => {
     core.setFailed(`Failed to fetch sub-issues for tracking issue #${trackingIssue.number}: ${error.message}`);
   }
   const subIssues = response.data;
+  core.info(`Sub-issues data: ${JSON.stringify(subIssues)}`);
+  if (!Array.isArray(subIssues)) {
+    core.warning(`Unexpected sub-issues data format: ${JSON.stringify(subIssues)}`);
+    return;
+  }
   if (subIssues.length === 0) {
     core.info(`No sub-issues found for issue #${trackingIssue.number}. Exiting.`);
     return;
@@ -117,6 +122,7 @@ export default async ({ github, core, process }) => {
       core.setFailed(`Failed to create pull request for branch ${newBranchName}: ${error.message}`);
     }
     const newPR = response.data;
+    core.info(`Created backport PR data: ${JSON.stringify(newPR)}`);
     const prNumber = newPR.number;
     try {
       await github.rest.issues.addAssignees({

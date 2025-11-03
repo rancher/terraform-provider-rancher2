@@ -30,6 +30,7 @@ async ({ github, core, context, process }) => {
     core.setFailed(`Failed to create tracking issue: ${error.message}`);
   }
   const newIssue = response.data;
+  core.info(`New tracking issue data: ${JSON.stringify(newIssue)}`);
   if (releaseLabel) {
     // if release label detected, then add appropriate sub-issues
     const parentIssue = newIssue;
@@ -51,6 +52,7 @@ async ({ github, core, context, process }) => {
       core.setFailed(`Failed to create backport issue: ${error.message}`);
     }
     const newSubIssue = response.data;
+    core.info(`New backport issue data: ${JSON.stringify(newSubIssue)}`);
     const subIssueId = newSubIssue.id;
     // Attach the sub-issue to the parent using API request
     try {

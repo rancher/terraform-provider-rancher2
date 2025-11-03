@@ -20,6 +20,7 @@ async ({ github, context, core, process }) => {
     core.setFailed(`Failed to retrieve PR #${extractedPrNumber}: ${error.message}`);
   }
   const pr = response.data;
+  core.info(`PR data: ${JSON.stringify(pr)}`);
   const prNumber = pr.number;
 
   // Note: can't get terraform-maintainers team, the default token can't access org level objects
@@ -41,6 +42,7 @@ async ({ github, context, core, process }) => {
     core.setFailed(`Failed to create backport issue: ${error.message}`);
   }
   const newIssue = response.data;
+  core.info(`New backport issue data: ${JSON.stringify(newIssue)}`);
   const subIssueId = newIssue.id;
 
   // Attach the sub-issue to the parent, use REST API because there isn't a github-script API yet.
