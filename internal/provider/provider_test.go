@@ -2,9 +2,9 @@ package provider
 
 import (
 	"context"
+  "encoding/json"
   "fmt"
 	"testing"
-  // "time"
   "strings"
   "reflect"
 
@@ -35,7 +35,7 @@ func TestProviderMetadata(t *testing.T) {
 			tc.fit.Metadata(ctx, req, &res)
 			got := res
 			if got != tc.want {
-				t.Errorf("%#v.Metadata() is %v; want %v", tc.fit, got, tc.want)
+				t.Errorf("%#v.Metadata() is %s; want %s", tc.fit, prettyPrint(got), prettyPrint(tc.want))
 			}
 		})
 	}
@@ -50,15 +50,16 @@ func TestProviderSchema(t *testing.T) {
     {
       "Basic",
       RancherProvider{version: "test"},
-      []string{
+      []string{ // want
         "api_url",
         "ca_certs",
+        "ignore_system_ca",
         "insecure",
+        "max_redirects",
+        "timeout",
         "access_key",
         "secret_key",
         "token_key",
-        "timeout",
-        "bootstrap",
       },
     },
   }
@@ -94,48 +95,120 @@ func TestProviderConfigure(t *testing.T) {
     name string
     fit  RancherProvider
     have RancherProviderModel
+    want string
   }{
     {
       "Basic",
       RancherProvider{version: "test"},
       RancherProviderModel{ // have
-        ApiURL:    types.StringValue("https://my-rancher-server.com"),
-        CACerts:   types.StringValue(""),
-        Insecure:  types.BoolValue(true),
-        AccessKey: types.StringValue("my-access-key"),
-        SecretKey: types.StringValue("my-secret-key"),
-        TokenKey:  types.StringValue(""),
-        Timeout:   types.StringValue("30s"),
-        Bootstrap: types.BoolValue(false),
+        ApiURL:         types.StringValue("https://my-rancher-server.com"),
+        CACerts:        types.StringValue(""),
+        IgnoreSystemCA: types.BoolValue(false),
+        Insecure:       types.BoolValue(false),
+        MaxRedirects:   types.Int64Value(3),
+        Timeout:        types.StringValue("30s"),
+        AccessKey:      types.StringValue("my-access-key"),
+        SecretKey:      types.StringValue("my-secret-key"),
+        TokenKey:       types.StringValue(""),
       },
-    },
-    {
-      "Bootstrap",
-      RancherProvider{version: "test"},
-      RancherProviderModel{ // have
-        ApiURL:    types.StringValue("https://my-rancher-server.com"),
-        CACerts:   types.StringValue(""),
-        Insecure:  types.BoolValue(true),
-        AccessKey: types.StringValue("my-access-key"),
-        SecretKey: types.StringValue("my-secret-key"),
-        TokenKey:  types.StringValue(""),
-        Timeout:   types.StringValue("30s"),
-        Bootstrap: types.BoolValue(true),
-      },
+      "succeed",
     },
     {
       "Token",
       RancherProvider{version: "test"},
       RancherProviderModel{ // have
-        ApiURL:    types.StringValue("https://my-rancher-server.com"),
-        CACerts:   types.StringValue(""),
-        Insecure:  types.BoolValue(true),
-        AccessKey: types.StringValue(""),
-        SecretKey: types.StringValue(""),
-        TokenKey:  types.StringValue("my-token-key"),
-        Timeout:   types.StringValue("30s"),
-        Bootstrap: types.BoolValue(true),
+        ApiURL:         types.StringValue("https://my-rancher-server.com"),
+        CACerts:        types.StringValue(""),
+        IgnoreSystemCA: types.BoolValue(false),
+        Insecure:       types.BoolValue(false),
+        MaxRedirects:   types.Int64Value(3),
+        Timeout:        types.StringValue("30s"),
+        AccessKey:      types.StringValue(""),
+        SecretKey:      types.StringValue(""),
+        TokenKey:       types.StringValue("my-token-key"),
       },
+      "succeed",
+    },
+    {
+      "Missing Credentials",
+      RancherProvider{version: "test"},
+      RancherProviderModel{ // have
+        ApiURL:         types.StringValue("https://my-rancher-server.com"),
+        CACerts:        types.StringValue(""),
+        IgnoreSystemCA: types.BoolValue(false),
+        Insecure:       types.BoolValue(false),
+        MaxRedirects:   types.Int64Value(3),
+        Timeout:        types.StringValue("30s"),
+        AccessKey:      types.StringValue(""),
+        SecretKey:      types.StringValue(""),
+        TokenKey:       types.StringValue(""),
+      },
+      "fail",
+    },
+    {
+      "Invalid ApiURL",
+      RancherProvider{version: "test"},
+      RancherProviderModel{ // have
+        ApiURL:         types.StringValue("my-rancher-server.com"),
+        CACerts:        types.StringValue(""),
+        IgnoreSystemCA: types.BoolValue(false),
+        Insecure:       types.BoolValue(false),
+        MaxRedirects:   types.Int64Value(3),
+        Timeout:        types.StringValue("30s"),
+        AccessKey:      types.StringValue(""),
+        SecretKey:      types.StringValue(""),
+        TokenKey:       types.StringValue("my-token-key"),
+      },
+      "fail",
+    },
+    {
+      "IP address ApiURL",
+      RancherProvider{version: "test"},
+      RancherProviderModel{ // have
+        ApiURL:         types.StringValue("https://192.168.1.1"),
+        CACerts:        types.StringValue(""),
+        IgnoreSystemCA: types.BoolValue(false),
+        Insecure:       types.BoolValue(false),
+        MaxRedirects:   types.Int64Value(3),
+        Timeout:        types.StringValue("30s"),
+        AccessKey:      types.StringValue(""),
+        SecretKey:      types.StringValue(""),
+        TokenKey:       types.StringValue("my-token-key"),
+      },
+      "succeed",
+    },
+    {
+      "Insecure ApiURL without insecure flag",
+      RancherProvider{version: "test"},
+      RancherProviderModel{ // have
+        ApiURL:         types.StringValue("http://192.168.1.1"),
+        CACerts:        types.StringValue(""),
+        IgnoreSystemCA: types.BoolValue(false),
+        Insecure:       types.BoolValue(false),
+        MaxRedirects:   types.Int64Value(3),
+        Timeout:        types.StringValue("30s"),
+        AccessKey:      types.StringValue(""),
+        SecretKey:      types.StringValue(""),
+        TokenKey:       types.StringValue("my-token-key"),
+      },
+      "fail",
+    },
+    {
+      "Secure ApiURL with insecure flag",
+      RancherProvider{version: "test"},
+      RancherProviderModel{ // have
+        ApiURL:         types.StringValue("https://192.168.1.1"),
+        CACerts:        types.StringValue(""),
+        IgnoreSystemCA: types.BoolValue(false),
+        Insecure:       types.BoolValue(true),
+        MaxRedirects:   types.Int64Value(3),
+        Timeout:        types.StringValue("30s"),
+        AccessKey:      types.StringValue(""),
+        SecretKey:      types.StringValue(""),
+        TokenKey:       types.StringValue("my-token-key"),
+      },
+      "succeed", // insecure flag should not cause failure for https URLs
+      // This allows users to set insecure flag for https URLs if they want to skip cert validation
     },
   }
   for _, tc := range testCases {
@@ -150,18 +223,18 @@ func TestProviderConfigure(t *testing.T) {
       }}
       res := provider.ConfigureResponse{}
       tc.fit.Configure(ctx, req, &res)
-      t.Logf("Configured provider: %+v", res)
-      if res.Diagnostics.HasError() {
-        t.Errorf("%#v.Configure() returned error diagnostics: %v", tc.fit, res.Diagnostics)
+      t.Logf("Configured provider: %s", prettyPrint(res))
+      if (tc.want == "succeed") && res.Diagnostics.HasError() {
+        t.Errorf("%#v.Configure() returned unexpected error diagnostics: %s", tc.fit, prettyPrint(res.Diagnostics))
+      }
+      if (tc.want == "fail") && !res.Diagnostics.HasError() {
+        t.Errorf("%#v.Configure() did not return error diagnostics: %s", tc.fit, prettyPrint(res.Diagnostics))
       }
     })
   }
 }
 
-
-
 // helpers
-
 func getSchema() schema.Schema {
   testProvider := RancherProvider{version: "test"}
   r := provider.SchemaResponse{}
@@ -240,4 +313,13 @@ func getObjectAttributeValues(t *testing.T, config RancherProviderModel) map[str
 		values[attrName] = tftypes.NewValue(attrType, value)
 	}
 	return values
+}
+
+// A helper function to do the pretty-printing.
+func prettyPrint(i any) string {
+	s, err := json.MarshalIndent(i, "", "  ")
+	if err != nil {
+		return "failed to pretty-print object"
+	}
+	return string(s)
 }
