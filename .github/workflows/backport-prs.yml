@@ -1,0 +1,58 @@
+name: 'Auto Cherry-Pick to Release Branches'
+
+on:
+  push:
+    branches:
+      - 'main'
+
+env :
+  TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }} # eg. '["matttrach"]'
+
+jobs:
+  create-cherry-pick-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+
+    steps:
+      - name: 'Wait for merge to settle'
+        id: wait_for_settle
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const mergeCommitSha = context.payload.head_commit.id;
+            // wait 10 seconds to allow GitHub to index the commit and associated PRs
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            // just in case the GitHub API is still having trouble, try to fetch associated PRs
+            try {
+              const { data: associatedPrs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: mergeCommitSha
+              });
+            } catch (error) {
+              core.setFailed(`Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`);
+            }
+            // set output for next steps
+            core.setOutput('merge_commit_sha', mergeCommitSha);
+      - name: 'Checkout Repository'
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
+        with:
+          fetch-depth: 0
+      - name: 'Find Issues and Create Cherry-Pick PRs'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+          MERGE_COMMIT_SHA: ${{ steps.wait_for_settle.outputs.merge_commit_sha }}
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backport-pr.js`;
+            const { default: script } = await import(scriptPath);
+            await script({github, core, process});

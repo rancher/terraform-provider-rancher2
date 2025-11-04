@@ -11,6 +11,7 @@ git_status() {
       fi
     fi
 }
+
 get_repo_basename() {
   basename "$(git rev-parse --show-toplevel)"
 }
@@ -31,74 +32,6 @@ parse_git_dirty() {
     if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "renamed:" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" ">"; fi # renamed files
     if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "deleted:" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" "x"; fi # deleted files
     if [ "0" = "$(printf "%s" "${status}" 2> /dev/null | grep "Your branch is ahead of" >/dev/null 2>&1; printf "%s" $?)" ]; then printf "%s" "*"; fi # ahead of
-}
-
-encrypt_secrets() {
-  workspace="$(git rev-parse --show-toplevel)";
-  dir="$(pwd)";
-  cd "$workspace" || return;
-  while read -r file; do
-    if [ -f "$file" ]; then
-      if [ -f "$file.backup" ]; then
-        rm -rf "$file.backup"
-        cp "$file" "$file.backup"
-      fi
-      rm -rf "$file.age"
-      age -e -R "$workspace"/age_recipients.txt -o "$file.age" "$file"
-    fi
-  done <secret_file_list.txt
-  cd "$dir" || return;
-}
-
-decrypt_secrets() {
-  workspace="$(git rev-parse --show-toplevel)";
-  dir="$(pwd)";
-  cd "$workspace" || return;
-  while read -r file; do
-    if [ -f "$file.age" ]; then
-      printf "decrypting %s\n" "$file"
-      rm -rf "$file"
-      printf "%s" "$AGE_SECRET_KEY" | age -d -i - -o "$file" "$file.age"
-    fi
-  done <secret_file_list.txt
-  cd "$dir" || return;
-}
-
-encrypt_file() {
-  workspace="$(git rev-parse --show-toplevel)";
-  dir="$(pwd)";
-  printf "%s" "enter file to encrypt:";
-  while read -r file; do
-    if [ ! -f "$file" ]; then printf "%s" 'file not found'; exit 1; fi
-    printf "encrypting %s as %s.age" "$file" "$file";
-    if [ -f "$file.backup.age" ]; then
-      if [ -f "$file.age" ]; then
-        printf "found %s.backup.age, so saving %s.age as %s.backup.age" "$file" "$file" "$file"
-        rm -f "$file.backup.age"
-        cp "$file.age" "$file.backup.age"
-      fi
-    fi
-    rm -f "$file.age"
-    age -e -R "$workspace"/age_recipients.txt -o "$file.age" "$file";
-    break;
-  done <"${1:-/dev/stdin}"
-}
-
-# this clears out secrets and temp files that are only saved locally
-clear_local() {
-  echo "Removing secret files..."
-  workspace="$(git rev-parse --show-toplevel)";
-  dir="$(pwd)"
-  cd "$workspace" || exit
-  while read -r file; do
-    if [ -f "$file" ]; then
-      rm -rf "$file";
-    fi
-  done <secret_file_list.txt
-  cd "$dir" || exit
-  echo "removing tf cache..."
-  while read -r file; do echo "removing $file..."; rm -rf "$file"; done <<<"$(find . -type d -name '.terraform')"
-  while read -r file; do echo "removing $file..."; rm -rf "$file"; done <<<"$(find . -type f -name '.terraform.lock.hcl')"
 }
 
 # Function to recursively find shell script files
@@ -161,21 +94,6 @@ yellow() {
 # color end
 ce() {
   printf '\e[m'
-}
-
-reset_state() {
-  # WARNING! This will delete all saved state and encrypt the state files back for saving
-  echo "Removing state..."
-  workspace="$(git rev-parse --show-toplevel)";
-  dir="$(pwd)"
-  cd "$workspace" || return;
-  for lc in project prototypes servers; do
-    cd "$workspace/$lc" || return;
-    echo '{"version": 4,"serial": 3,"outputs": {},"resources": [],"check_results": null}' > terraform.tfstate
-    rm -f terraform.tfstate.age
-    age -e -R "$workspace/age_recipients.txt" -o terraform.tfstate.age terraform.tfstate
-  done
-  cd "$dir" || return;
 }
 
 ts(){

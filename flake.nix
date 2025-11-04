@@ -54,11 +54,13 @@
               bashInteractive
               curl
               dig
+              eslint
               gh
               git
               gitleaks
               gnupg
               go
+              goreleaser
               gotestfmt
               gotestsum
               jq
@@ -66,6 +68,7 @@
               kubernetes-helm
               leftovers
               less
+              nodejs_22
               openssh
               openssl
               shellcheck
