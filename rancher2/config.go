@@ -727,6 +727,19 @@ func (c *Config) WaitForClusterState(clusterID, state string, interval time.Dura
 	}
 }
 
+// getObjectV2ByID uses the Steve API to get a resource by ID.
+//
+// The clusterID must be the cluster to access the resource from e.g. "local" or
+// "c-wt9cd".
+// For remote clusters, this will be queried using the cluster-proxy.
+//
+// The id must be in namespace/name format e.g. "local/my-resource".
+//
+// The APIType must be fully qualified e.g. "configmap" or
+// "rke-machine-config.cattle.io.amazonec2config".
+//
+// The response is stored in resp which should be a pointer to a struct for
+// receiving the resource.
 func (c *Config) getObjectV2ByID(clusterID, id, APIType string, resp interface{}) error {
 	if id == "" {
 		return fmt.Errorf("Object V2 id is nil")
@@ -785,6 +798,7 @@ func (c *Config) createObjectV2(clusterID string, APIType string, obj, resp inte
 	if err != nil {
 		return err
 	}
+
 	return client.Create(APIType, obj, resp)
 }
 
