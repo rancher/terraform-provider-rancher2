@@ -1,4 +1,4 @@
-name: manual-rc-release
+name: Manually Create RC Release
 
 on:
   workflow_dispatch:
@@ -11,8 +11,9 @@ jobs:
   rc-release:
     runs-on: ubuntu-latest
     steps:
-      # If the e2e tests pass we automatically generate an RC release
-      #   this shouldn't happen when the release PR is merged, only when it's opened or updated
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
+        with:
+          fetch-depth: 0
       - name: Create and Push RC Tag with Git
         id: create-push-rc-tag
         env:
