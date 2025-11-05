@@ -16,6 +16,7 @@ pre
 pre-release
 prerelease
 rancher
+rc
 rke
 rke2
 terraform
