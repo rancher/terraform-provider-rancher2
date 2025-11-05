@@ -20,3 +20,6 @@ rke
 rke2
 terraform
 variablize
+IPv
+IPv4
+IPv6

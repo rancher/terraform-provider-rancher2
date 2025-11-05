@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-//Schemas
+// Schemas
 
 func machineConfigV2Amazonec2Fields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
@@ -202,6 +202,36 @@ func machineConfigV2Amazonec2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "gp2",
 			Description: "Amazon EBS volume type",
+		},
+		"http_protocol_ipv6": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "",
+			Description: "Enables or disables the IPv6 endpoint for the instance metadata service. " +
+				"Options: enabled, disabled",
+		},
+		"ipv6_address_count": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "0",
+			Description: "The number of IPv6 addresses to assign to the network interface (default: 0). " +
+				"Must be greater than zero when ipv6_address_only is true.",
+		},
+		"enable_primary_ipv6": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			Description: "Indicates whether the first IPv6 address assigned to the instance should be marked as the primary IPv6 address. " +
+				"Enable this option if the instance requires a stable, non-changing IPv6 address. " +
+				"This option does not affect whether IPv6 addresses are assigned to the instance.",
+		},
+		"ipv6_address_only": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			Description: "Indicates whether the instance has only IPv6 address. Useful when the VPC or subnet is configured as IPv6-only." +
+				" When set to true, the instance will have IPv6 as its sole address." +
+				" When set to true, ipv6_address_count must be greater than zero.",
 		},
 	}
 
