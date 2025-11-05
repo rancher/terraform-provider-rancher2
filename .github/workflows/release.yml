@@ -5,6 +5,14 @@ on:
     branches:
     - release/v*
 
+env:
+  AWS_REGION: us-west-2
+  AWS_ROLE: arn:aws:iam::270074865685:role/terraform-module-ci-test
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  ACME_SERVER_URL: https://acme-v02.api.letsencrypt.org/directory
+  AWS_MAX_ATTEMPTS: 100
+  AWS_RETRY_MODE: adaptive
+
 jobs:
   release:
     runs-on: ubuntu-latest
