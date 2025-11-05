@@ -19,6 +19,7 @@ rancher
 rc
 rke
 rke2
+sha
 terraform
 variablize
 IPv
