@@ -1,0 +1,63 @@
+name: manual-rc-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The rc tag to create, e.g. v1.2.3-rc.1'
+        required: true
+
+jobs:
+  rc-release:
+    runs-on: ubuntu-latest
+    steps:
+      # If the e2e tests pass we automatically generate an RC release
+      #   this shouldn't happen when the release PR is merged, only when it's opened or updated
+      - name: Create and Push RC Tag with Git
+        id: create-push-rc-tag
+        env:
+          NEXT_RC_TAG: ${{ inputs.tag }}
+        run: |
+          # Configure git user
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+
+          # Create and push the new tag
+          git tag "$NEXT_RC_TAG" -m "Release Candidate $NEXT_RC_TAG"
+          git push origin "$NEXT_RC_TAG"
+      - name: retrieve GPG Credentials
+        id: retrieve-gpg-credentials
+        uses: rancher-eio/read-vault-secrets@main
+        with:
+          secrets: |
+            secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
+      - name: import_gpg_key
+        id: import-gpg-key
+        env:
+          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
+          GPG_KEY: ${{ env.GPG_KEY }}
+        run: |
+          cleanup() {
+            # clear history just in case
+            history -c
+          }
+          trap cleanup EXIT TERM
+
+          # sanitize variables
+          if [ -z "${GPG_PASSPHRASE}" ]; then echo "gpg passphrase empty"; exit 1; fi
+          if [ -z "${GPG_KEY_ID}" ]; then echo "key id empty"; exit 1; fi
+          if [ -z "${GPG_KEY}" ]; then echo "key contents empty"; exit 1; fi
+
+          echo "Importing gpg key"
+          echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
+        with:
+          args: release --clean --config .goreleaser_rc.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
