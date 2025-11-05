@@ -13,18 +13,19 @@ env:
   AWS_MAX_ATTEMPTS: 100
   AWS_RETRY_MODE: adaptive
 
+permissions:
+  contents: write
+  id-token: write
+  issues: write
+  pull-requests: write
+  actions: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
       release_pr: ${{ steps.release-please.outputs.pr }}
       release_version: ${{ steps.release-please.outputs.version }}
-    permissions:
-      contents: write
-      id-token: write
-      issues: write
-      pull-requests: write
-      actions: read
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
         with:
