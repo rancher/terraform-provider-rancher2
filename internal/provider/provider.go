@@ -51,49 +51,58 @@ func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest
 		Attributes: map[string]schema.Attribute{
       "api_url": schema.StringAttribute{
         Description: "The URL to the rancher API. Example: https://rancher.my-domain.com. "+
-          "This can also be set using the RANCHER_API_URL environment variable.",
+          "This can also be set using the RANCHER_API_URL environment variable. "+
+          "Environment variable takes precedence over this setting if both are set.",
         Optional:    true,
       },
       "ca_certs": schema.StringAttribute{
         Description: "CA certificates used to sign rancher server TLS certificates. "+
-          "This can also be set using the RANCHER_CA_CERTS environment variable.",
+          "This can also be set using the RANCHER_CA_CERTS environment variable. "+
+          "Environment variable takes precedence over this setting if both are set.",
         Optional:    true,
       },
       "ignore_system_ca": schema.BoolAttribute{
         Description: "Ignore system CA certificates when validating TLS connections to Rancher. Defaults to false. "+
-          "This can also be set using the RANCHER_IGNORE_SYSTEM_CA environment variable.",
+          "This can also be set using the RANCHER_IGNORE_SYSTEM_CA environment variable. "+
+          "Environment variable takes precedence over this setting if both are set.",
         Optional:    true,
       },
       "insecure": schema.BoolAttribute{
         Description: "Allow insecure TLS connections. Defaults to false. "+
-          "This can also be set using the RANCHER_INSECURE environment variable.",
+          "This can also be set using the RANCHER_INSECURE environment variable. "+
+          "Environment variable takes precedence over this setting if both are set.",
         Optional:    true,
       },
       "max_redirects": schema.Int64Attribute{
         Description: "Maximum number of redirects to follow when making requests to the Rancher API. Defaults to 0 (no redirects)."+
-          "This can also be set using the RANCHER_MAX_REDIRECTS environment variable.",
+          "This can also be set using the RANCHER_MAX_REDIRECTS environment variable. "+
+          "Environment variable takes precedence over this setting if both are set.",
         Optional:    true,
       },
       "timeout": schema.StringAttribute{
         Description: "Rancher connection timeout. Golang duration format, ex: '60s'. Defaults to '30s'. "+
-          "This can also be set using the RANCHER_TIMEOUT environment variable.",
+          "This can also be set using the RANCHER_TIMEOUT environment variable. "+
+          "Environment variable takes precedence over this setting if both are set.",
         Optional:    true,
       },
       "access_key": schema.StringAttribute{
         Description: "API Key used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided."+
-          "This can also be set using the RANCHER_ACCESS_KEY environment variable.",
+          "This can also be set using the RANCHER_ACCESS_KEY environment variable. "+
+          "Environment variable takes precedence over this setting if both are set.",
         Optional:    true,
         Sensitive:   true,
       },
       "secret_key": schema.StringAttribute{
         Description: "API secret used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided."+
-          "This can also be set using the RANCHER_SECRET_KEY environment variable.",
+          "This can also be set using the RANCHER_SECRET_KEY environment variable. "+
+          "Environment variable takes precedence over this setting if both are set.",
         Optional:    true,
         Sensitive:   true,
       },
       "token_key": schema.StringAttribute{
         Description: "API token used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided. "+
-          "This can also be set using the RANCHER_TOKEN_KEY environment variable.",
+          "This can also be set using the RANCHER_TOKEN_KEY environment variable. "+
+          "Environment variable takes precedence over this setting if both are set.",
         Optional:    true,
         Sensitive:   true,
       },
@@ -112,30 +121,43 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
-  // Connection settings
-  ApiURL := os.Getenv("RANCHER_API_URL")
+  // Connection settings, environment variables override config settings
+  var ApiURL string
   if !config.ApiURL.IsNull() {
     ApiURL = config.ApiURL.ValueString()
   }
-  CACerts := os.Getenv("RANCHER_CA_CERTS")
+  if os.Getenv("RANCHER_API_URL") != "" {
+    ApiURL = os.Getenv("RANCHER_API_URL")
+  }
+
+  var CACerts string
   if !config.CACerts.IsNull() {
     CACerts = config.CACerts.ValueString()
   }
-  IgnoreSystemCA := false
-  if os.Getenv("RANCHER_IGNORE_SYSTEM_CA") == "true" {
-    IgnoreSystemCA = true
+  if os.Getenv("RANCHER_CA_CERTS") != "" {
+    CACerts = os.Getenv("RANCHER_CA_CERTS")
   }
+
+  IgnoreSystemCA := false
   if !config.IgnoreSystemCA.IsNull() {
     IgnoreSystemCA = config.IgnoreSystemCA.ValueBool()
   }
-  Insecure := false
-  if os.Getenv("RANCHER_INSECURE") == "true" {
-    Insecure = true
+  if os.Getenv("RANCHER_IGNORE_SYSTEM_CA") == "true" {
+    IgnoreSystemCA = true
   }
+
+  Insecure := false
   if !config.Insecure.IsNull() {
     Insecure = config.Insecure.ValueBool()
   }
+  if os.Getenv("RANCHER_INSECURE") == "true" {
+    Insecure = true
+  }
+
   MaxRedirects := 0
+  if !config.MaxRedirects.IsNull() {
+    MaxRedirects = int(config.MaxRedirects.ValueInt64())
+  }
   if os.Getenv("RANCHER_MAX_REDIRECTS") != "" {
     MaxRedirects, err = strconv.Atoi(os.Getenv("RANCHER_MAX_REDIRECTS"))
     if err != nil {
@@ -143,24 +165,32 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
       return
     }
   }
-  if !config.MaxRedirects.IsNull() {
-    MaxRedirects = int(config.MaxRedirects.ValueInt64())
-  }
 
   // Auth settings
-  AccessKey := os.Getenv("RANCHER_ACCESS_KEY")
+  var AccessKey string
   if !config.AccessKey.IsNull() {
     AccessKey = config.AccessKey.ValueString()
   }
-  SecretKey := os.Getenv("RANCHER_SECRET_KEY")
+  if os.Getenv("RANCHER_ACCESS_KEY") != "" {
+    AccessKey = os.Getenv("RANCHER_ACCESS_KEY")
+  }
+
+  var SecretKey string
   if !config.SecretKey.IsNull() {
     SecretKey = config.SecretKey.ValueString()
   }
-  TokenKey  := os.Getenv("RANCHER_TOKEN_KEY")
+  if os.Getenv("RANCHER_SECRET_KEY") != "" {
+    SecretKey = os.Getenv("RANCHER_SECRET_KEY")
+  }
+
+  var TokenKey string
   if !config.TokenKey.IsNull() {
     TokenKey = config.TokenKey.ValueString()
   }
-  
+  if os.Getenv("RANCHER_TOKEN_KEY") != "" {
+    TokenKey = os.Getenv("RANCHER_TOKEN_KEY")
+  }
+
   // Validate settings below here //
 
   to := config.Timeout.ValueString()
