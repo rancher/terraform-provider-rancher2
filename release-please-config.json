@@ -1,0 +1,13 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "go",
+      "prerelease": true,
+      "include-v-in-tag": true,
+      "include-component-in-tag": false,
+      "always-update": true,
+      "initial-version": "v13.0.0"
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}
