@@ -19,6 +19,22 @@ jobs:
   rc-release:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/commits/main
+        id: check-user-in-maintainers
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          script: |
+            const isMaintainer = ${{ vars.TERRAFORM_MAINTAINERS }}.includes(context.actor);
+            return isMaintainer;
+      - run: |
+          # if the tag doesn't contain "rc" we should not be in this workflow
+          if grep -q "rc" <<< "${{ inputs.tag }}"; then
+            echo "Tag contains 'rc', continuing with RC release"
+          else
+            echo "Tag doesn't contain 'rc', please use the manual-release workflow"
+            exit 1
+          fi
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
         with:
           fetch-depth: 0
