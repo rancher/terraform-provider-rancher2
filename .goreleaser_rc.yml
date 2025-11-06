@@ -34,7 +34,7 @@ archives:
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 checksum:
   extra_files:
-    - glob: '{{ .Env.MANIFEST_PATH | default "terraform-registry-manifest.json" }}'
+    - glob: '{{ .Env.MANIFEST_PATH }}'
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
@@ -54,7 +54,7 @@ signs:
       - "${artifact}"
 release:
   extra_files:
-    - glob: '{{ .Env.MANIFEST_PATH | default "terraform-registry-manifest.json" }}'
+    - glob: '{{ .Env.MANIFEST_PATH }}'
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   prerelease: auto
 changelog:
