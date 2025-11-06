@@ -57,6 +57,12 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
           path: ${{ github.workspace }}/tags/${{ inputs.tag }}
+      - run: |
+          # remove any tags that are not the one specified (to avoid goreleaser confusion)
+          DIR="$(pwd)"
+          cd "${{ github.workspace }}/tags/${{ inputs.tag }}"
+          git tag | grep -v -e "^${{ inputs.tag }}$" | xargs git tag -d
+          cd "$DIR"
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
         uses: rancher-eio/read-vault-secrets@main
