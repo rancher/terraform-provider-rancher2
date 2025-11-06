@@ -1,11 +1,14 @@
-name: Manually Create RC Release
+name: Manually Create Full Release
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'The rc tag to create, e.g. v1.2.3-rc.1'
+        description: 'The tag to create, make sure to select the correct branch.'
         required: true
+      sha:
+        description: 'The commit SHA to create the tag from, defaults to HEAD of the selected branch.'
+        required: false
 
 permissions:
   contents: write
@@ -13,24 +16,27 @@ permissions:
   actions: read
 
 jobs:
-  rc-release:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
         with:
           fetch-depth: 0
-      - name: Create and Push RC Tag with Git
-        id: create-push-rc-tag
+      - name: Create and Push Tag with Git
+        id: create-push-tag
         env:
-          NEXT_RC_TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.tag }}
+          SHA: ${{ inputs.sha }}
         run: |
           # Configure git user
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-
+          if [ -n "${SHA}" ]; then
+            git checkout $SHA
+          fi
           # Create and push the new tag
-          git tag "$NEXT_RC_TAG" -m "Release Candidate $NEXT_RC_TAG"
-          git push origin "$NEXT_RC_TAG"
+          git tag "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
         uses: rancher-eio/read-vault-secrets@main
