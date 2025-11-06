@@ -28,13 +28,11 @@ jobs:
           TAG: ${{ inputs.tag }}
           SHA: ${{ inputs.sha }}
         run: |
-          # Configure git user
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           if [ -n "${SHA}" ]; then
-            git checkout $SHA
+            git checkout "$SHA"
           fi
-          # Create and push the new tag
           git tag "$TAG" -m "Release $TAG"
           git push origin "$TAG"
       - name: retrieve GPG Credentials

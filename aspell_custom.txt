@@ -5,6 +5,7 @@ aws
 azure
 config
 eks
+globbing
 git
 github
 kubeconfig
