@@ -29,7 +29,9 @@ jobs:
             return isMaintainer;
       - run: |
           # if the tag doesn't contain "rc" we should not be in this workflow
-          if [[ "${{ inputs.tag }}" != *"rc"* ]]; then
+          if grep -q "rc" <<< "${{ inputs.tag }}"; then
+            echo "Tag contains 'rc', continuing with RC release"
+          else
             echo "Tag doesn't contain 'rc', please use the manual-release workflow"
             exit 1
           fi
