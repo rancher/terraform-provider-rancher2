@@ -71,7 +71,8 @@ jobs:
           echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0 https://github.com/actions/setup-go
         with:
-          go-version-file: 'go.mod'
+          go-version-file: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.mod
+          cache-dependency-path: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.sum
           cache: true
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
