@@ -8,6 +8,7 @@ eks
 globbing
 git
 github
+goreleaser
 kubeconfig
 kubernetes
 oci
