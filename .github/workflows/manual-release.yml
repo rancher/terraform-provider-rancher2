@@ -30,10 +30,11 @@ jobs:
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-          if [ -n "${SHA}" ]; then
-            git checkout "$SHA"
+          if [ -n "$SHA" ]; then
+            git tag "$TAG" -m "Release $TAG" "$SHA"
+          else
+            git tag "$TAG" -m "Release $TAG"
           fi
-          git tag "$TAG" -m "Release $TAG"
           git push origin "$TAG"
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
@@ -66,7 +67,7 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
         with:
-          args: release --clean --config .goreleaser_rc.yml
+          args: release --clean --config .goreleaser.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
