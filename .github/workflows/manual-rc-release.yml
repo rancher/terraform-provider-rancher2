@@ -6,6 +6,9 @@ on:
       tag:
         description: 'The rc tag to create, e.g. v1.2.3-rc.1'
         required: true
+      sha:
+        description: 'The commit SHA to create the tag from, defaults to HEAD of the selected branch.'
+        required: false
 
 permissions:
   contents: write
@@ -22,15 +25,17 @@ jobs:
       - name: Create and Push RC Tag with Git
         id: create-push-rc-tag
         env:
-          NEXT_RC_TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.tag }}
+          SHA: ${{ inputs.sha }}
         run: |
-          # Configure git user
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-
-          # Create and push the new tag
-          git tag "$NEXT_RC_TAG" -m "Release Candidate $NEXT_RC_TAG"
-          git push origin "$NEXT_RC_TAG"
+          if [ -n "$SHA" ]; then
+            git tag "$TAG" -m "Release Candidate $TAG" "$SHA"
+          else
+            git tag "$TAG" -m "Release Candidate $TAG"
+          fi
+          git push origin "$TAG"
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
         uses: rancher-eio/read-vault-secrets@main
