@@ -1,0 +1,117 @@
+name: Manually Create Full Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The tag to create, make sure to select the correct branch.'
+        required: true
+      sha:
+        description: 'The commit SHA to create the tag from, defaults to HEAD of the selected branch.'
+        required: false
+
+permissions:
+  contents: write
+  id-token: write
+  actions: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/commits/main
+        id: check-user-in-maintainers
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          script: |
+            const isMaintainer = ${{ vars.TERRAFORM_MAINTAINERS }}.includes(context.actor);
+            return isMaintainer;
+      - run: |
+          # if the tag contains "rc" we should not be in this workflow
+          if grep -q "rc" <<< "${{ inputs.tag }}"; then
+            echo "Tag contains 'rc', please use the manual-rc-release workflow"
+            exit 1
+          fi
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
+        with:
+          fetch-depth: 0
+      - name: Create and Push Tag with Git
+        id: create-push-tag
+        env:
+          TAG: ${{ inputs.tag }}
+          SHA: ${{ inputs.sha }}
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          if [ -n "$SHA" ]; then
+            git tag "$TAG" -m "Release $TAG" "$SHA"
+          else
+            git tag "$TAG" -m "Release $TAG"
+          fi
+          git push origin "$TAG"
+      - name: Check out new tag into a new directory
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
+        with:
+          ref: ${{ inputs.tag }}
+          path: ${{ github.workspace }}/tags/${{ inputs.tag }}
+      - run: |
+          # remove any tags that are not the one specified (to avoid goreleaser confusion)
+          DIR="$(pwd)"
+          cd "${{ github.workspace }}/tags/${{ inputs.tag }}"
+          git tag | grep -v -e "^${{ inputs.tag }}$" | xargs git tag -d
+          # check for terraform-registry-manifest.json presence and create if missing
+          if [ ! -f "terraform-registry-manifest.json" ]; then
+            echo "terraform-registry-manifest.json not found, creating a default one."
+            cat <<EOF > terraform-registry-manifest.json
+          {
+              "version": 1,
+              "metadata": {
+                  "protocol_versions": ["4.0", "5.0", "6.0"]
+              }
+          }
+          EOF
+          fi
+          cd "$DIR"
+      - name: retrieve GPG Credentials
+        id: retrieve-gpg-credentials
+        uses: rancher-eio/read-vault-secrets@main
+        with:
+          secrets: |
+            secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
+      - name: import_gpg_key
+        id: import-gpg-key
+        env:
+          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
+          GPG_KEY: ${{ env.GPG_KEY }}
+        run: |
+          cleanup() {
+            # clear history just in case
+            history -c
+          }
+          trap cleanup EXIT TERM
+
+          # sanitize variables
+          if [ -z "${GPG_PASSPHRASE}" ]; then echo "gpg passphrase empty"; exit 1; fi
+          if [ -z "${GPG_KEY_ID}" ]; then echo "key id empty"; exit 1; fi
+          if [ -z "${GPG_KEY}" ]; then echo "key contents empty"; exit 1; fi
+
+          echo "Importing gpg key"
+          echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0 https://github.com/actions/setup-go
+        with:
+          go-version-file: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.mod
+          cache-dependency-path: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.sum
+          cache: true
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
+        with:
+          args: release --clean --skip=validate --config ../../.goreleaser.yml
+          workdir: ${{ github.workspace }}/tags/${{ inputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}

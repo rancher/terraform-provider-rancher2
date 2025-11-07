@@ -12,6 +12,8 @@ var (
 	testClusterV2RKEConfigETCDSnapshotS3Interface []interface{}
 	testClusterV2RKEConfigETCDConf                *rkev1.ETCD
 	testClusterV2RKEConfigETCDInterface           []interface{}
+	testClusterV2RKEConfigNetworkingConf          *rkev1.Networking
+	testClusterV2RKEConfigNetworkingInterface     []interface{}
 )
 
 func init() {
@@ -49,6 +51,15 @@ func init() {
 			"snapshot_schedule_cron": "snapshot_schedule_cron",
 			"snapshot_retention":     10,
 			"s3_config":              testClusterV2RKEConfigETCDSnapshotS3Interface,
+		},
+	}
+
+	testClusterV2RKEConfigNetworkingConf = &rkev1.Networking{
+		StackPreference: rkev1.SingleStackIPv4Preference,
+	}
+	testClusterV2RKEConfigNetworkingInterface = []interface{}{
+		map[string]interface{}{
+			"stack_preference": "ipv4",
 		},
 	}
 }
