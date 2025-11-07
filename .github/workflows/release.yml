@@ -5,18 +5,27 @@ on:
     branches:
     - release/v*
 
+env:
+  AWS_REGION: us-west-2
+  AWS_ROLE: arn:aws:iam::270074865685:role/terraform-module-ci-test
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  ACME_SERVER_URL: https://acme-v02.api.letsencrypt.org/directory
+  AWS_MAX_ATTEMPTS: 100
+  AWS_RETRY_MODE: adaptive
+
+permissions:
+  contents: write
+  id-token: write
+  issues: write
+  pull-requests: write
+  actions: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
       release_pr: ${{ steps.release-please.outputs.pr }}
       release_version: ${{ steps.release-please.outputs.version }}
-    permissions:
-      contents: write
-      id-token: write
-      issues: write
-      pull-requests: write
-      actions: read
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
         with:
@@ -180,6 +189,9 @@ jobs:
     steps:
       # If the e2e tests pass we automatically generate an RC release
       #   this shouldn't happen when the release PR is merged, only when it's opened or updated
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout
+        with:
+          fetch-depth: 0
       - name: Create and Push RC Tag with Git
         id: create-push-rc-tag
         run: |

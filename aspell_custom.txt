@@ -5,8 +5,10 @@ aws
 azure
 config
 eks
+globbing
 git
 github
+goreleaser
 kubeconfig
 kubernetes
 oci
@@ -16,7 +18,12 @@ pre
 pre-release
 prerelease
 rancher
+rc
 rke
 rke2
+sha
 terraform
 variablize
+IPv
+IPv4
+IPv6
