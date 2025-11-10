@@ -12,6 +12,62 @@ ENHANCEMENTS:
 BUGFIXES:
 
 
+## [13.0.0](https://github.com/rancher/terraform-provider-rancher2/compare/v13.0.0...v13.0.0) (2025-11-10)
+
+
+### Features
+
+* Add support for machine configurations ([6a2e4e6](https://github.com/rancher/terraform-provider-rancher2/commit/6a2e4e658c3079a5dcfe96bdffea764d93581ee3))
+* support generic OIDC provider ([#1644](https://github.com/rancher/terraform-provider-rancher2/issues/1644)) ([#1648](https://github.com/rancher/terraform-provider-rancher2/issues/1648)) ([a97b5f5](https://github.com/rancher/terraform-provider-rancher2/commit/a97b5f539b77742fe6ac7d9d63e8c83a5bc3b67d))
+
+
+### Bug Fixes
+
+* [v9] change launch template version ([#1621](https://github.com/rancher/terraform-provider-rancher2/issues/1621)) ([97e8f04](https://github.com/rancher/terraform-provider-rancher2/commit/97e8f048da4b1667cb68617cbb5814b4cf707ec0))
+* add all protocols to metadata ([#1797](https://github.com/rancher/terraform-provider-rancher2/issues/1797)) ([f1cf58e](https://github.com/rancher/terraform-provider-rancher2/commit/f1cf58e222b3364e6381bf608d1192070f371346))
+* add common environment variables to workflow ([#1745](https://github.com/rancher/terraform-provider-rancher2/issues/1745)) ([788d9eb](https://github.com/rancher/terraform-provider-rancher2/commit/788d9eb6c363a8963bc2f92171668003c7dcc1a5))
+* add config for release-please ([#1740](https://github.com/rancher/terraform-provider-rancher2/issues/1740)) ([3adbc38](https://github.com/rancher/terraform-provider-rancher2/commit/3adbc3862e503e0b9cf9fee11863efb936bbd112))
+* add deploy example of metrics operator ([#1608](https://github.com/rancher/terraform-provider-rancher2/issues/1608)) ([e28af8f](https://github.com/rancher/terraform-provider-rancher2/commit/e28af8ffcfed73a578e21dc42d3c1f09105bcc43))
+* Add Doc for Rancher pod security admission configuration template ([752ed1b](https://github.com/rancher/terraform-provider-rancher2/commit/752ed1b56532cc4656894ec2c5eb0918261558d5))
+* add manual rc release and update permissions ([#1749](https://github.com/rancher/terraform-provider-rancher2/issues/1749)) ([fe8c50c](https://github.com/rancher/terraform-provider-rancher2/commit/fe8c50c54251661e9d16a36b1671a50d058fa9e7))
+* Add Oracle Kubernetes Engine back to terraform ([#1537](https://github.com/rancher/terraform-provider-rancher2/issues/1537)) ([00d15d7](https://github.com/rancher/terraform-provider-rancher2/commit/00d15d7ebd7b72c2c2c5d6a670226aaa2e3e3864))
+* add recently added options to Oracle config ([328523d](https://github.com/rancher/terraform-provider-rancher2/commit/328523ddb75b773e5ae0e816310fc01ca55175e8))
+* add support for data directories ([#1665](https://github.com/rancher/terraform-provider-rancher2/issues/1665)) ([#1684](https://github.com/rancher/terraform-provider-rancher2/issues/1684)) ([570d171](https://github.com/rancher/terraform-provider-rancher2/commit/570d171abc8b3cb54a1483e76adeea2b8f7873b3))
+* add support for imported cluster config ([#1528](https://github.com/rancher/terraform-provider-rancher2/issues/1528)) ([e9e2669](https://github.com/rancher/terraform-provider-rancher2/commit/e9e2669896ffe76aebf5c0ce67816c2765351883))
+* adjust path and remove module context ([#1706](https://github.com/rancher/terraform-provider-rancher2/issues/1706)) ([#1725](https://github.com/rancher/terraform-provider-rancher2/issues/1725)) ([df63d8e](https://github.com/rancher/terraform-provider-rancher2/commit/df63d8ee20ca8f4d190f736c561d689ee81dc9ba))
+* allow specifying sha ([#1767](https://github.com/rancher/terraform-provider-rancher2/issues/1767)) ([3f3453b](https://github.com/rancher/terraform-provider-rancher2/commit/3f3453b9056523247240e1a35c3a25c21666be72))
+* block use of deprecated Rke config ([535beb1](https://github.com/rancher/terraform-provider-rancher2/commit/535beb1387429d2df79d2f0c1236915c490e24eb))
+* change from "main" to "tracking" ([#1712](https://github.com/rancher/terraform-provider-rancher2/issues/1712)) ([#1728](https://github.com/rancher/terraform-provider-rancher2/issues/1728)) ([8d06a68](https://github.com/rancher/terraform-provider-rancher2/commit/8d06a6862715e734de983dcc8406d45332ec34f4))
+* change IP for server URL in docs ([#1613](https://github.com/rancher/terraform-provider-rancher2/issues/1613)) ([338812e](https://github.com/rancher/terraform-provider-rancher2/commit/338812e8a4b170b86bb79c49970847e0a4f16687))
+* change log from info to error ([#1604](https://github.com/rancher/terraform-provider-rancher2/issues/1604)) ([2e64ed4](https://github.com/rancher/terraform-provider-rancher2/commit/2e64ed4d4d69493b8924cc700b3c60c80a009b2d))
+* check out repository ([#1754](https://github.com/rancher/terraform-provider-rancher2/issues/1754)) ([04e9bd7](https://github.com/rancher/terraform-provider-rancher2/commit/04e9bd7575f6c31c5622594228ace164df3aea2a))
+* Clean up test suite ([#1587](https://github.com/rancher/terraform-provider-rancher2/issues/1587)) ([e8a3de0](https://github.com/rancher/terraform-provider-rancher2/commit/e8a3de02253548394437a8f3b5f146ff4dc4cc60))
+* cluster proxy config ([#1737](https://github.com/rancher/terraform-provider-rancher2/issues/1737)) ([71c12ba](https://github.com/rancher/terraform-provider-rancher2/commit/71c12ba201fa8ca4c1145cfe49b19193effdc0b7))
+* do not check user state on creation ([#1734](https://github.com/rancher/terraform-provider-rancher2/issues/1734)) ([ab0fb60](https://github.com/rancher/terraform-provider-rancher2/commit/ab0fb600cf2ad509f9a141ed0033ffa354c5bcdb))
+* do not use dot syntax in path ([#1705](https://github.com/rancher/terraform-provider-rancher2/issues/1705)) ([#1724](https://github.com/rancher/terraform-provider-rancher2/issues/1724)) ([4635e85](https://github.com/rancher/terraform-provider-rancher2/commit/4635e85516a534c2f86763e2e594dde42362b8c2))
+* emit all response data for troubleshooting ([#1714](https://github.com/rancher/terraform-provider-rancher2/issues/1714)) ([#1729](https://github.com/rancher/terraform-provider-rancher2/issues/1729)) ([c55a983](https://github.com/rancher/terraform-provider-rancher2/commit/c55a9832b8ca80c3a62290414d807080948ddca2))
+* ensure the correct workflow, users, and tags ([#1775](https://github.com/rancher/terraform-provider-rancher2/issues/1775)) ([ee9311f](https://github.com/rancher/terraform-provider-rancher2/commit/ee9311f4211fff29d0bd69d3f47eecaf13a61621))
+* export GitHub scripts and validate in CI ([#1702](https://github.com/rancher/terraform-provider-rancher2/issues/1702)) ([#1722](https://github.com/rancher/terraform-provider-rancher2/issues/1722)) ([bacb1a1](https://github.com/rancher/terraform-provider-rancher2/commit/bacb1a1781f60d3a5291d34d6b87c942dcb34340))
+* for manual releases skip the git validation ([#1791](https://github.com/rancher/terraform-provider-rancher2/issues/1791)) ([09b1ce0](https://github.com/rancher/terraform-provider-rancher2/commit/09b1ce06ac6c50da65b9ea3a425e05b61e0b2b72))
+* force directory path ([#1710](https://github.com/rancher/terraform-provider-rancher2/issues/1710)) ([#1727](https://github.com/rancher/terraform-provider-rancher2/issues/1727)) ([b3a177c](https://github.com/rancher/terraform-provider-rancher2/commit/b3a177c61df93324222d673c29ddf7459993f11c))
+* goreleaser needs git state at the new tag ([#1771](https://github.com/rancher/terraform-provider-rancher2/issues/1771)) ([3a7a325](https://github.com/rancher/terraform-provider-rancher2/commit/3a7a325a5cc32a582c106548f1599eeb127c03fd))
+* improve registry documentation ([#1664](https://github.com/rancher/terraform-provider-rancher2/issues/1664)) ([#1679](https://github.com/rancher/terraform-provider-rancher2/issues/1679)) ([e7ef96a](https://github.com/rancher/terraform-provider-rancher2/commit/e7ef96a3aa6d60fea95c93396b704333255af997))
+* make sure to only match the tag specified ([#1779](https://github.com/rancher/terraform-provider-rancher2/issues/1779)) ([6cc8710](https://github.com/rancher/terraform-provider-rancher2/commit/6cc8710d137bd2b4dc73f8fa7658f221cb77b6a5))
+* manual full release workflow ([#1763](https://github.com/rancher/terraform-provider-rancher2/issues/1763)) ([a8ab38b](https://github.com/rancher/terraform-provider-rancher2/commit/a8ab38b2c8be770a2a88be9e6ec146e3754c11c0))
+* PSACT deletion hanging ([#1653](https://github.com/rancher/terraform-provider-rancher2/issues/1653)) ([#1672](https://github.com/rancher/terraform-provider-rancher2/issues/1672)) ([452fc1a](https://github.com/rancher/terraform-provider-rancher2/commit/452fc1aabe62c83990427e0190dbd51ab2a8565a))
+* registry configuration for imported hosted clusters ([#1596](https://github.com/rancher/terraform-provider-rancher2/issues/1596)) ([826f513](https://github.com/rancher/terraform-provider-rancher2/commit/826f51349ea3af617600fb1046b341b04cc9015c))
+* remove the default template ([#1783](https://github.com/rancher/terraform-provider-rancher2/issues/1783)) ([3fbfc6e](https://github.com/rancher/terraform-provider-rancher2/commit/3fbfc6ef28c64ea0e17b341a660930483c59f1c8))
+* remove unused RKE version retrieval logic ([c9b2417](https://github.com/rancher/terraform-provider-rancher2/commit/c9b24176c89e8ed16c8f9180882bfc86ae82fad7))
+* Sanitize secrets ([#1568](https://github.com/rancher/terraform-provider-rancher2/issues/1568)) ([057d9cb](https://github.com/rancher/terraform-provider-rancher2/commit/057d9cbbc4dc907b8b8761fa04c00ed64c066119))
+* script paths ([#1704](https://github.com/rancher/terraform-provider-rancher2/issues/1704)) ([#1723](https://github.com/rancher/terraform-provider-rancher2/issues/1723)) ([6a9c227](https://github.com/rancher/terraform-provider-rancher2/commit/6a9c227b9ffdc45f2d05c45bae027eb8649ec048))
+* set bootstrap sha and release version ([#1758](https://github.com/rancher/terraform-provider-rancher2/issues/1758)) ([e42cccb](https://github.com/rancher/terraform-provider-rancher2/commit/e42cccb958dd8443f662841992806cd33a491669))
+* specify signing key ([71a0c51](https://github.com/rancher/terraform-provider-rancher2/commit/71a0c51c9b892d51fa9ac1b8c60277f483a6b358))
+* update label field to match latest version ([fc7015b](https://github.com/rancher/terraform-provider-rancher2/commit/fc7015bf0d46cb0c4690d6386dc67a2dd3880356))
+* update pre-release to see new tag format ([#1623](https://github.com/rancher/terraform-provider-rancher2/issues/1623)) ([#1681](https://github.com/rancher/terraform-provider-rancher2/issues/1681)) ([2061872](https://github.com/rancher/terraform-provider-rancher2/commit/2061872a88b7240fdba187759d6bb2284cfa6dcd))
+* use modern import logic ([#1708](https://github.com/rancher/terraform-provider-rancher2/issues/1708)) ([#1726](https://github.com/rancher/terraform-provider-rancher2/issues/1726)) ([d435b19](https://github.com/rancher/terraform-provider-rancher2/commit/d435b198653ba558f9e7f6736a5c3e1d34f5db8f))
+* use separate goreleaser files for manual ([#1787](https://github.com/rancher/terraform-provider-rancher2/issues/1787)) ([1886bc3](https://github.com/rancher/terraform-provider-rancher2/commit/1886bc3149d45f1377bfd8d9e65674fe89b2ab6a))
+* validate connection ([#1585](https://github.com/rancher/terraform-provider-rancher2/issues/1585)) ([1fad9c4](https://github.com/rancher/terraform-provider-rancher2/commit/1fad9c4f4069fe5c56d6a33be10e417fe4dee5c4))
+
 ## v4.0.0 (February 5, 2024)
 
 FEATURES:
