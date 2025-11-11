@@ -11,6 +11,16 @@ import (
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
+const (
+	amazonec2ConfigDriver     = "amazonec2"
+	azureConfigDriver         = "azure"
+	digitaloceanConfigDriver  = "digitalocean"
+	harvesterConfigDriver     = "harvester"
+	linodeConfigDriver        = "linode"
+	openstackConfigDriver     = "openstack"
+	vmwarevsphereConfigDriver = "vmwarevsphere"
+)
+
 func resourceRancher2CloudCredential() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRancher2CloudCredentialCreate,
