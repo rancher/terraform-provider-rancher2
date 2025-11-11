@@ -9,13 +9,13 @@ import (
 )
 
 var (
-	testAuthConfigGenericOIDCConf      *managementClient.OIDCConfig
+	testAuthConfigGenericOIDCConf      *managementClient.GenericOIDCConfig
 	testAuthConfigGenericOIDCInterface map[string]interface{}
 	groupSearchEnabled                 = true
 )
 
 func init() {
-	testAuthConfigGenericOIDCConf = &managementClient.OIDCConfig{
+	testAuthConfigGenericOIDCConf = &managementClient.GenericOIDCConfig{
 		Name:                AuthConfigGenericOIDCName,
 		Type:                managementClient.GenericOIDCConfigType,
 		AccessMode:          "access",
@@ -57,7 +57,7 @@ func init() {
 
 func TestFlattenAuthConfigGenericOIDC(t *testing.T) {
 	cases := []struct {
-		Input          *managementClient.OIDCConfig
+		Input          *managementClient.GenericOIDCConfig
 		ExpectedOutput map[string]interface{}
 	}{
 		{
@@ -83,7 +83,7 @@ func TestFlattenAuthConfigGenericOIDC(t *testing.T) {
 func TestExpandAuthConfigGenericOIDC(t *testing.T) {
 	cases := []struct {
 		Input          map[string]interface{}
-		ExpectedOutput *managementClient.OIDCConfig
+		ExpectedOutput *managementClient.GenericOIDCConfig
 	}{
 		{
 			testAuthConfigGenericOIDCInterface,
