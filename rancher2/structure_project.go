@@ -7,10 +7,10 @@ import (
 
 // Flatteners
 
-func flattenProjectContainerResourceLimit(in *managementClient.ContainerResourceLimit) []interface{} {
-	obj := make(map[string]interface{})
+func flattenProjectContainerResourceLimit(in *managementClient.ContainerResourceLimit) []any {
+	obj := make(map[string]any)
 	if in == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	if len(in.LimitsCPU) > 0 {
@@ -26,17 +26,21 @@ func flattenProjectContainerResourceLimit(in *managementClient.ContainerResource
 		obj["requests_memory"] = in.RequestsMemory
 	}
 
-	return []interface{}{obj}
+	return []any{obj}
 }
 
-func flattenProjectResourceQuotaLimit(in *managementClient.ResourceQuotaLimit) []interface{} {
-	obj := make(map[string]interface{})
+func flattenProjectResourceQuotaLimit(in *managementClient.ResourceQuotaLimit) []any {
+	obj := make(map[string]any)
 	if in == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	if len(in.ConfigMaps) > 0 {
 		obj["config_maps"] = in.ConfigMaps
+	}
+
+	if len(in.Extended) > 0 {
+		obj["extended"] = in.Extended
 	}
 
 	if len(in.LimitsCPU) > 0 {
@@ -87,13 +91,13 @@ func flattenProjectResourceQuotaLimit(in *managementClient.ResourceQuotaLimit) [
 		obj["services_node_ports"] = in.ServicesNodePorts
 	}
 
-	return []interface{}{obj}
+	return []any{obj}
 }
 
-func flattenProjectResourceQuota(pQuota *managementClient.ProjectResourceQuota, nsQuota *managementClient.NamespaceResourceQuota) []interface{} {
-	obj := make(map[string]interface{})
+func flattenProjectResourceQuota(pQuota *managementClient.ProjectResourceQuota, nsQuota *managementClient.NamespaceResourceQuota) []any {
+	obj := make(map[string]any)
 	if pQuota == nil || nsQuota == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	if pQuota.Limit != nil {
@@ -106,7 +110,7 @@ func flattenProjectResourceQuota(pQuota *managementClient.ProjectResourceQuota, 
 		obj["namespace_default_limit"] = limit
 	}
 
-	return []interface{}{obj}
+	return []any{obj}
 }
 
 func flattenProject(d *schema.ResourceData, in *managementClient.Project) error {
@@ -151,12 +155,12 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 
 // Expanders
 
-func expandProjectContainerResourceLimit(p []interface{}) *managementClient.ContainerResourceLimit {
+func expandProjectContainerResourceLimit(p []any) *managementClient.ContainerResourceLimit {
 	obj := &managementClient.ContainerResourceLimit{}
 	if len(p) == 0 || p[0] == nil {
 		return nil
 	}
-	in := p[0].(map[string]interface{})
+	in := p[0].(map[string]any)
 
 	if v, ok := in["limits_cpu"].(string); ok && len(v) > 0 {
 		obj.LimitsCPU = v
@@ -174,16 +178,29 @@ func expandProjectContainerResourceLimit(p []interface{}) *managementClient.Cont
 	return obj
 }
 
-func expandProjectResourceQuotaLimit(p []interface{}) *managementClient.ResourceQuotaLimit {
+func mapAnyToString(in map[string]any) map[string]string {
+	out := map[string]string{}
+	for k, v := range in {
+		out[k] = v.(string)
+	}
+
+	return out
+}
+
+func expandProjectResourceQuotaLimit(p []any) *managementClient.ResourceQuotaLimit {
 	obj := &managementClient.ResourceQuotaLimit{}
 
 	if len(p) == 0 || p[0] == nil {
 		return nil
 	}
-	in := p[0].(map[string]interface{})
+	in := p[0].(map[string]any)
 
 	if v, ok := in["config_maps"].(string); ok && len(v) > 0 {
 		obj.ConfigMaps = v
+	}
+
+	if v, ok := in["extended"].(map[string]any); ok && len(v) > 0 {
+		obj.Extended = mapAnyToString(v)
 	}
 
 	if v, ok := in["limits_cpu"].(string); ok && len(v) > 0 {
@@ -237,21 +254,21 @@ func expandProjectResourceQuotaLimit(p []interface{}) *managementClient.Resource
 	return obj
 }
 
-func expandProjectResourceQuota(p []interface{}) (*managementClient.ProjectResourceQuota, *managementClient.NamespaceResourceQuota) {
+func expandProjectResourceQuota(p []any) (*managementClient.ProjectResourceQuota, *managementClient.NamespaceResourceQuota) {
 	pQuota := &managementClient.ProjectResourceQuota{}
 	nsQuota := &managementClient.NamespaceResourceQuota{}
 
 	if len(p) == 0 || p[0] == nil {
 		return nil, nil
 	}
-	in := p[0].(map[string]interface{})
+	in := p[0].(map[string]any)
 
-	if v, ok := in["project_limit"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := in["project_limit"].([]any); ok && len(v) > 0 {
 		pLimit := expandProjectResourceQuotaLimit(v)
 		pQuota.Limit = pLimit
 	}
 
-	if v, ok := in["namespace_default_limit"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := in["namespace_default_limit"].([]any); ok && len(v) > 0 {
 		nsLimit := expandProjectResourceQuotaLimit(v)
 		nsQuota.Limit = nsLimit
 	}
@@ -273,22 +290,22 @@ func expandProject(in *schema.ResourceData) *managementClient.Project {
 	obj.Name = in.Get("name").(string)
 	obj.Description = in.Get("description").(string)
 
-	if v, ok := in.Get("container_resource_limit").([]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("container_resource_limit").([]any); ok && len(v) > 0 {
 		containerLimit := expandProjectContainerResourceLimit(v)
 		obj.ContainerDefaultResourceLimit = containerLimit
 	}
 
-	if v, ok := in.Get("resource_quota").([]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("resource_quota").([]any); ok && len(v) > 0 {
 		resourceQuota, nsResourceQuota := expandProjectResourceQuota(v)
 		obj.ResourceQuota = resourceQuota
 		obj.NamespaceDefaultResourceQuota = nsResourceQuota
 	}
 
-	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("annotations").(map[string]any); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
 	}
 
-	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("labels").(map[string]any); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
 	}
 
