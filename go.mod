@@ -6,8 +6,8 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
-	github.com/rancher/norman v0.7.1
-	github.com/rancher/rancher v0.0.0-20251022154639-6291f0239b7f
+	github.com/rancher/norman v0.8.0
+	github.com/rancher/rancher v0.0.0-20251114145111-1ede64712337
 	github.com/rancher/rancher/pkg/apis v0.0.0
 	github.com/rancher/rancher/pkg/client v0.0.0
 	github.com/stretchr/testify v1.11.1
@@ -122,13 +122,13 @@ require (
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.17.0 // indirect
-	github.com/rancher/aks-operator v1.13.0-rc.1 // indirect
-	github.com/rancher/ali-operator v0.0.3-0.20251001142421-ca64da576db5 // indirect
-	github.com/rancher/apiserver v0.7.6 // indirect
+	github.com/rancher/aks-operator v1.13.0-rc.4 // indirect
+	github.com/rancher/ali-operator v1.13.0-rc.2 // indirect
+	github.com/rancher/apiserver v0.8.0 // indirect
 	github.com/rancher/channelserver v0.7.0 // indirect
-	github.com/rancher/eks-operator v1.13.0-rc.1 // indirect
-	github.com/rancher/fleet/pkg/apis v0.14.0-beta.1 // indirect
-	github.com/rancher/gke-operator v1.13.0-rc.1 // indirect
+	github.com/rancher/eks-operator v1.13.0-rc.4 // indirect
+	github.com/rancher/fleet/pkg/apis v0.14.0-rc.1 // indirect
+	github.com/rancher/gke-operator v1.13.0-rc.3 // indirect
 	github.com/rancher/lasso v0.2.5 // indirect
 	github.com/rancher/rke v1.8.0-rc.4 // indirect
 	github.com/rancher/wrangler/v3 v3.3.1 // indirect
@@ -188,8 +188,8 @@ replace (
 	github.com/crewjam/saml => github.com/crewjam/saml v0.4.5
 	github.com/docker/distribution => github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/docker => github.com/docker/docker v20.10.17+incompatible
-	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20251023101703-73e6898b0472
-	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20251023101703-73e6898b0472
+	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20251114145111-1ede64712337
+	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20251114145111-1ede64712337
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2
 	go.qase.io/client => github.com/rancher/qase-go/client v0.0.0-20231114201952-65195ec001fa
 	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.9.0-rancher1
