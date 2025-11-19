@@ -16,18 +16,20 @@ var exceptions = []string{
 	"rancher.io/imported-cluster-version-management",
 }
 
-// supressFunc is a DiffSuppressFunc that prevents Terraform from trying to remove Rancher-managed annotations/labels;
-// it ignores the annotation from a predefined list of annotation/label keys.
-var supressFunc = func(k, old, new string, d *schema.ResourceData) bool {
+// suppressFunc is a DiffSuppressFunc that prevents Terraform from removing Rancher-managed annotations or labels.
+// It also ignores changes to a predefined set of Rancher-managed annotation/label keys.
+//
+// Thought it is not recommended, users can still add annotations or labels whose keys contain Rancher-managed keys,
+// but they won't be able to remove them once added.
+// Note: Terraform prefixes the key `k` with either "annotations." or "labels."
+var suppressFunc = func(k, old, new string, d *schema.ResourceData) bool {
 	for _, exception := range exceptions {
-		// The key `k` is prefixed with "annotations." or "labels."
-		// suppress the diff if the key contains the exception
-		if strings.Contains(k, exception) {
+		// Explicitly check if the key ends with the exception
+		if strings.HasSuffix(k, exception) {
 			return false
 		}
 	}
 
-	// Suppress the diff for Rancher-managed annotations/labels
 	if (strings.Contains(k, commonAnnotationLabelCattle) || strings.Contains(k, commonAnnotationLabelRancher)) && new == "" {
 		return true
 	}
@@ -44,14 +46,14 @@ func commonAnnotationLabelFields() map[string]*schema.Schema {
 			Optional:         true,
 			Computed:         true,
 			Description:      "Annotations of the resource",
-			DiffSuppressFunc: supressFunc,
+			DiffSuppressFunc: suppressFunc,
 		},
 		"labels": {
 			Type:             schema.TypeMap,
 			Optional:         true,
 			Computed:         true,
 			Description:      "Labels of the resource",
-			DiffSuppressFunc: supressFunc,
+			DiffSuppressFunc: suppressFunc,
 		},
 	}
 	return s
