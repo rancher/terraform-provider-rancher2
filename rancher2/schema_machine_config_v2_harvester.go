@@ -30,6 +30,11 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 			Default:     "4",
 			Description: "Memory size (in GiB)",
 		},
+		"reserved_memory_size": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Reserved memory size (in MiB)",
+		},
 		"disk_size": {
 			Type:     schema.TypeString,
 			Optional: true,
