@@ -4,13 +4,21 @@ page_title: "rancher2_cluster Resource"
 
 # rancher2\_cluster Resource
 
-Provides a Rancher v2 Cluster resource. This can be used to create Clusters for Rancher v2 environments and retrieve their information.
+Provides a Rancher v2 Cluster resource. This can be used to create imported Clusters for Rancher v2 environments and retrieve their information.
+
+**Hint**: To create node-driver and custom RKE2 and K3s Clusters, use the Rancher v2 Cluster v2 resource instead.
+
+**Important:** 
+
+Rancher Kubernetes Engine (RKE/RKE1) has reached end of life as of July 31, 2025. 
+Rancher versions **2.12.0 and later** no longer support provisioning or managing downstream RKE1 clusters. 
+We recommend replatforming RKE1 clusters to RKE2 to ensure continued support and security updates. Learn more about the transition [here](https://support.scc.suse.com/s/kb/RKE-to-RKE2-replatforming-instructions-and-FAQs).
 
 ## Example Usage
 
 **Note optional/computed arguments** If any `optional/computed` argument of this resource is defined by the user, removing it from tf file will NOT reset its value. To reset it, let its definition at tf file as empty/false object. Ex: `cloud_provider {}`, `name = ""`
 
-### Creating Rancher v2 imported cluster
+### Creating a Rancher v2 imported cluster and retrieving the registration commands
 
 ```hcl
 # Create a new rancher2 imported Cluster
@@ -18,9 +26,34 @@ resource "rancher2_cluster" "foo-imported" {
   name = "foo-imported"
   description = "Foo rancher2 imported cluster"
 }
+
+output "kubectl-command" {
+  value = ["${rancher2_cluster.foo-imported.cluster_registration_token.0.command}"]
+}
+
+output "insecure-kubectl-command" {
+  value = ["${rancher2_cluster.foo-imported.cluster_registration_token.0.insecure_command}"]
+}
 ```
 
-### Creating Rancher v2 imported cluster with custom configuration. For Rancher v2.11.x and above.
+### Creating an imported cluster and configuring the version-management feature. For Rancher v2.11.0 and above.
+
+The `rancher.io/imported-cluster-version-management` annotation controls the version-management feature for an imported cluster.
+
+Expected values: "true", "false", or "system-default".
+
+```hcl
+# Create a new rancher2 imported Cluster
+resource "rancher2_cluster" "foo-imported" {
+  name = "foo-imported"
+  description = "Foo rancher2 imported cluster"
+  annotations = {
+    "rancher.io/imported-cluster-version-management" = "false"
+  }
+}
+```
+
+### Creating Rancher v2 imported cluster with custom configuration. For Rancher v2.11.0 and above.
 
 This configuration can be used to indicate that system images (such as the rancher-agent) should be pulled from an unauthenticated private registry. This can be used for all imported cluster types, including imported hosted clusters (AKS, EKS, GKE).
 
@@ -30,362 +63,6 @@ resource "rancher2_cluster" "foo-imported" {
   name        = "foo-imported"
   imported_config {
     private_registry_url = "test.io"
-  }
-}
-```
-
-### Creating Rancher v2 RKE cluster
-
-```hcl
-# Create auditlog policy yaml file
-auditlog_policy.yaml
-apiVersion: audit.k8s.io/v1
-kind: Policy
-rules:
-  - level: RequestResponse
-    resources:
-    - group: ""
-      resources: ["pods"]
-
-# Create a new rancher2 RKE Cluster
-resource "rancher2_cluster" "foo-custom" {
-  name = "foo-custom"
-  description = "Foo rancher2 custom cluster"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-    services {
-      kube_api {
-        audit_log {
-          enabled = true
-          configuration {
-            max_age = 5
-            max_backup = 5
-            max_size = 100
-            path = "-"
-            format = "json"
-            policy = file("auditlog_policy.yaml")
-          }
-        }
-      }
-    }
-  }
-}
-```
-
-### Creating Rancher v2 RKE cluster enabling
-
-```hcl
-# Create a new rancher2 RKE Cluster
-resource "rancher2_cluster" "foo-custom" {
-  name = "foo-custom"
-  description = "Foo rancher2 custom cluster"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-  }
-}
-```
-
-### Creating Rancher v2 RKE cluster enabling/customizing istio
-
-```hcl
-# Create a new rancher2 RKE Cluster
-resource "rancher2_cluster" "foo-custom" {
-  name = "foo-custom"
-  description = "Foo rancher2 custom cluster"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-  }
-}
-# Create a new rancher2 Cluster Sync for foo-custom cluster
-resource "rancher2_cluster_sync" "foo-custom" {
-  cluster_id =  rancher2_cluster.foo-custom.id
-}
-# Create a new rancher2 Namespace
-resource "rancher2_namespace" "foo-istio" {
-  name = "istio-system"
-  project_id = rancher2_cluster_sync.foo-custom.system_project_id
-  description = "istio namespace"
-}
-# Create a new rancher2 App deploying istio
-resource "rancher2_app" "istio" {
-  catalog_name = "system-library"
-  name = "cluster-istio"
-  description = "Terraform app acceptance test"
-  project_id = rancher2_namespace.foo-istio.project_id
-  template_name = "rancher-istio"
-  template_version = "0.1.1"
-  target_namespace = rancher2_namespace.foo-istio.id
-  answers = {
-    "certmanager.enabled" = false
-    "enableCRDs" = true
-    "galley.enabled" = true
-    "gateways.enabled" = false
-    "gateways.istio-ingressgateway.resources.limits.cpu" = "2000m"
-    "gateways.istio-ingressgateway.resources.limits.memory" = "1024Mi"
-    "gateways.istio-ingressgateway.resources.requests.cpu" = "100m"
-    "gateways.istio-ingressgateway.resources.requests.memory" = "128Mi"
-    "gateways.istio-ingressgateway.type" = "NodePort"
-    "global.rancher.clusterId" = rancher2_cluster_sync.foo-custom.cluster_id
-    "istio_cni.enabled" = "false"
-    "istiocoredns.enabled" = "false"
-    "kiali.enabled" = "true"
-    "mixer.enabled" = "true"
-    "mixer.policy.enabled" = "true"
-    "mixer.policy.resources.limits.cpu" = "4800m"
-    "mixer.policy.resources.limits.memory" = "4096Mi"
-    "mixer.policy.resources.requests.cpu" = "1000m"
-    "mixer.policy.resources.requests.memory" = "1024Mi"
-    "mixer.telemetry.resources.limits.cpu" = "4800m",
-    "mixer.telemetry.resources.limits.memory" = "4096Mi"
-    "mixer.telemetry.resources.requests.cpu" = "1000m"
-    "mixer.telemetry.resources.requests.memory" = "1024Mi"
-    "mtls.enabled" = false
-    "nodeagent.enabled" = false
-    "pilot.enabled" = true
-    "pilot.resources.limits.cpu" = "1000m"
-    "pilot.resources.limits.memory" = "4096Mi"
-    "pilot.resources.requests.cpu" = "500m"
-    "pilot.resources.requests.memory" = "2048Mi"
-    "pilot.traceSampling" = "1"
-    "security.enabled" = true
-    "sidecarInjectorWebhook.enabled" = true
-    "tracing.enabled" = true
-    "tracing.jaeger.resources.limits.cpu" = "500m"
-    "tracing.jaeger.resources.limits.memory" = "1024Mi"
-    "tracing.jaeger.resources.requests.cpu" = "100m"
-    "tracing.jaeger.resources.requests.memory" = "100Mi"
-  }
-}
-```
-
-### Creating Rancher v2 RKE cluster assigning a node pool (overlapped planes)
-
-```hcl
-# Create a new rancher2 RKE Cluster
-resource "rancher2_cluster" "foo-custom" {
-  name = "foo-custom"
-  description = "Foo rancher2 custom cluster"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-  }
-}
-
-# Create a new rancher2 Node Template
-resource "rancher2_node_template" "foo" {
-  name = "foo"
-  description = "foo test"
-  amazonec2_config {
-    access_key = "<AWS_ACCESS_KEY>"
-    secret_key = "<AWS_SECRET_KEY>"
-    ami =  "<AMI_ID>"
-    region = "<REGION>"
-    security_group = ["<AWS_SECURITY_GROUP>"]
-    subnet_id = "<SUBNET_ID>"
-    vpc_id = "<VPC_ID>"
-    zone = "<ZONE>"
-  }
-}
-
-# Create a new rancher2 Node Pool
-resource "rancher2_node_pool" "foo" {
-  cluster_id =  rancher2_cluster.foo-custom.id
-  name = "foo"
-  hostname_prefix =  "foo-cluster-0"
-  node_template_id = rancher2_node_template.foo.id
-  quantity = 3
-  control_plane = true
-  etcd = true
-  worker = true
-}
-```
-
-### Creating Rancher v2 RKE cluster from template. For Rancher v2.3.x and above.
-
-```hcl
-# Create a new rancher2 cluster template
-resource "rancher2_cluster_template" "foo" {
-  name = "foo"
-  members {
-    access_type = "owner"
-    user_principal_id = "local://user-XXXXX"
-  }
-  template_revisions {
-    name = "V1"
-    cluster_config {
-      rke_config {
-        network {
-          plugin = "canal"
-        }
-        services {
-          etcd {
-            creation = "6h"
-            retention = "24h"
-          }
-        }
-      }
-    }
-    default = true
-  }
-  description = "Test cluster template v2"
-}
-
-# Create a new rancher2 RKE Cluster from template
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  cluster_template_id = rancher2_cluster_template.foo.id
-  cluster_template_revision_id = rancher2_cluster_template.foo.template_revisions.0.id
-}
-```
-
-### Creating Rancher v2 RKE cluster with upgrade strategy. For Rancher v2.4.x and above.
-
-```hcl
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform custom cluster"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-    services {
-      etcd {
-        creation = "6h"
-        retention = "24h"
-      }
-      kube_api {
-        audit_log {
-          enabled = true
-          configuration {
-            max_age = 5
-            max_backup = 5
-            max_size = 100
-            path = "-"
-            format = "json"
-            policy = "apiVersion: audit.k8s.io/v1\nkind: Policy\nmetadata:\n  creationTimestamp: null\nomitStages:\n- RequestReceived\nrules:\n- level: RequestResponse\n  resources:\n  - resources:\n    - pods\n"
-          }
-        }
-      }
-    }
-    upgrade_strategy {
-      drain = true
-      max_unavailable_worker = "20%"
-    }
-  }
-}
-```
-
-### Creating Rancher v2 RKE cluster with cluster agent customization. For Rancher v2.7.5 and above.
-
-```hcl
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform cluster with agent customization"
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-  }
-  cluster_agent_deployment_customization {
-    append_tolerations {
-      effect = "NoSchedule"
-      key    = "tolerate/control-plane"
-      value  = "true"
-}
-    override_affinity = <<EOF
-{
-  "nodeAffinity": {
-    "requiredDuringSchedulingIgnoredDuringExecution": {
-      "nodeSelectorTerms": [{
-        "matchExpressions": [{
-          "key": "not.this/nodepool",
-          "operator": "In",
-          "values": [
-            "true"
-          ]
-        }]
-      }]
-    }
-  }
-}
-EOF
-    override_resource_requirements {
-      cpu_limit      = "800"
-      cpu_request    = "500"
-      memory_limit   = "800"
-      memory_request = "500"
-    }
-  }
-}
-```
-
-### Creating Rancher v2 RKE cluster with cluster agent scheduling customization. For Custom and Imported clusters provisioned by Rancher v2.11.0 and above.
-
-```hcl
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform cluster with agent customization"
-  rke_config {
-  }
-  cluster_agent_deployment_customization {
-    scheduling_customization {
-      priority_class {
-        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted. 
-        # If omitted, the default of 'PreemptLowerPriority' is used.
-        preemption_policy = "PreemptLowerPriority"
-        # The value cannot be less than negative 1 billion, or greater than 1 billion
-        value = 1000000000
-      }
-      pod_disruption_budget {
-        # min_available and max_unavailable must either be non-negative whole integers, 
-        # or whole number percentages greater than 0 and less than or equal to 100 (e.g. "50%").
-        # You cannot set both min_available and max_unavailable at the same time.
-        min_available = "1"
-        #max_unavailable
-      }
-    }
-  }
-}
-```
-
-### Creating Rancher v2 RKE cluster with Pod Security Admission Configuration Template (PSACT). For Rancher v2.7.2 and above.
-
-```hcl
-# Custom PSACT (if you wish to use your own)
-resource "rancher2_pod_security_admission_configuration_template" "foo" {
-  name = "custom-psact"
-  description = "This is my custom Pod Security Admission Configuration Template"
-  defaults {
-    audit = "restricted"
-    audit_version = "latest"
-    enforce = "restricted"
-    enforce_version = "latest"
-    warn = "restricted"
-    warn_version = "latest"
-  }
-  exemptions {
-    usernames = ["testuser"]
-    runtime_classes = ["testclass"]
-    namespaces = ["ingress-nginx","kube-system"]
-  }
-}
-
-resource "rancher2_cluster" "foo" {
-  name = "foo"
-  description = "Terraform cluster with PSACT"
-  default_pod_security_admission_configuration_template_name = "<name>" # privileged, baseline, restricted or name of custom template
-  rke_config {
-    network {
-      plugin = "canal"
-    }
-    # ...
   }
 }
 ```
