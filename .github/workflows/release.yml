@@ -21,7 +21,20 @@ permissions:
   actions: read
 
 jobs:
+  clear-space:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Clear out GitHub Runner'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        with:
+          script: |
+            const scriptPath = '${{ github.workspace }}/.github/workflows/scripts/clear-runner.js';
+            const { default: script } = await import(scriptPath);
+            await script();
+
   release:
+    needs:
+      - clear-space
     runs-on: ubuntu-latest
     outputs:
       release_pr: ${{ steps.release-please.outputs.pr }}
@@ -57,6 +70,7 @@ jobs:
 
   test:
     needs:
+      - clear-space
       - release
     if: needs.release.outputs.release_pr
     runs-on: ubuntu-latest
@@ -105,6 +119,7 @@ jobs:
 
   cleanup:
     needs:
+      - clear-space
       - release
       - test
     if: always() && needs.release.outputs.release_pr
@@ -141,6 +156,7 @@ jobs:
 
   report:
     needs:
+      - clear-space
       - release
       - test
       - cleanup
@@ -180,6 +196,7 @@ jobs:
 
   rc-release:
     needs:
+      - clear-space
       - release
       - test
       - cleanup
@@ -223,6 +240,8 @@ jobs:
           # Create and push the new tag
           git tag "$NEXT_RC_TAG" -m "Release Candidate $NEXT_RC_TAG"
           git push origin "$NEXT_RC_TAG"
+          echo "RC_TAG=$NEXT_RC_TAG" >> "$GITHUB_ENV"
+          echo "RC_BRANCH=release/$BASE_VERSION" >> "$GITHUB_ENV"
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
         uses: rancher-eio/read-vault-secrets@main
@@ -259,10 +278,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+      - name: 'Find Issues and Create Comments'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          TAG: ${{ env.RC_TAG }}
+          BRANCH: ${{ env.RC_BRANCH }}
+        with:
+          script: |
+            const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/notify-rc.js`;
+            const { default: script } = await import(scriptPath);
+            await script({github, process});
 
   # This runs after release-please generates a release, so when the release PR is merged
   publish:
     needs:
+      - clear-space
       - release
       - test
       - cleanup
