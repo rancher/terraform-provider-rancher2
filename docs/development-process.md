@@ -5,7 +5,6 @@ Terraform has recently evolved into a spotlight infrastructure provisioning tool
 Improvements to note since Jan 2023
 * Rancher2 Provider docs
 * Branching into `master 3.x.x` for Rancher 2.7 clusters and `release/v2 2.x.x` for Rancher 2.6 clusters
-* Scripts to test Terraform RCs locally on unix and windows
 
 ### Development Process
 
