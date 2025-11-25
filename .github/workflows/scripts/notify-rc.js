@@ -21,7 +21,7 @@ async ({ github, context }) => {
   }
 
   const releaseUrl = release.html_url;
-  const commentBody = `New Release Candidate Available for Validation: [${tagName}](${releaseUrl})\n\n`
+  const commentBody = `New Release Candidate Available for Validation: [${tagName}](${releaseUrl})\n\n`;
 
   let commentedCount = 0;
   for (const issue of issues) {
@@ -42,4 +42,4 @@ async ({ github, context }) => {
   }
   
   console.log(`Success! Notified ${commentedCount} issues.`);
-}
+};
