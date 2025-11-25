@@ -34,9 +34,9 @@ If you're building the provider, follow the instructions to [install it as a plu
 Developing the Provider
 ---------------------------
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.20+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.20+ is *required*). A Nix flake is also available in the repo which is used to generate an environment for build and test.
 
-To compile the provider, run `make build`. This will build the provider and put the provider binary in `$GOPATH/bin` .
+To compile the provider, run `make build`. This will build the provider and put the provider binary in a bin directory where the repo was cloned.
 
 ```sh
 $ make build
@@ -45,13 +45,13 @@ $ $GOPATH/bin/terraform-provider-rancher2
 ...
 ```
 
-To just compile provider binary on repo path and test on terraform:
+There are a few full implementation examples in the "examples" directory, these are run by the CI using the "run_tests.sh" script.
+The run_tests script will build and run the examples to test.
+WARNING! These are real implementations, you will need AWS credentials in your environment and there will be a cost associated.
+The following example runs a single implementation, the most basic one:
 
 ```sh
-$ make bin
-$ terraform init
-$ terraform plan
-$ terraform apply
+./run_tests.sh -t TestOneBasic
 ```
 
 See [development process](docs/development-process.md) for more details.
@@ -59,26 +59,18 @@ See [development process](docs/development-process.md) for more details.
 Testing the Provider
 ---------------------------
 
-In order to test the provider, simply run `make test`.
+To run unit tests run `make test`, the unit tests are currently non-functional.
 
 ```sh
 $ make test
 ```
 
-In order to run the full suite of Acceptance tests, a running rancher system, a rancher API key and a working k8s cluster imported are needed. Acceptance tests cover a Rancher server upgrade, v2.3.6 and v2.4.2.
-
-To run the Acceptance tests, simply run `make testacc`. `scripts/gotestacc.sh` will be run, deploying all needed requirements, running tests and cleanup.
-
-```sh
-$ make testacc
-```
-
-There is no way to run dockerized acceptance tests.
-
-To run the structure tests, run
+To run acceptance tests, use the `run_tests.sh` script.
+WARNING! These are real implementations, you will need AWS credentials in your environment and there will be a cost associated.
+The following example runs a every acceptance test, one at a time.
 
 ```sh
-$ go clean --testcache && go test -v ./rancher2
+./run_tests.sh -s
 ```
 
 See [test process](docs/test-process.md) for details on release testing (_Terraform Maintainers Only_).
@@ -87,9 +79,11 @@ Branching the Provider
 ---------------------------
 
 This provider is branched in correlation with minor versions of Rancher:
-* the `release/v5` branch with 5.0.0+ is aligned with Rancher 2.9
-* the `release/v6` branch with 6.0.0+ is aligned with Rancher 2.10 
-* the `master` branch with 7.0.0+ is aligned with Rancher 2.11
+* the `release/v7` branch with v7.0.0+ is aligned with Rancher 2.11
+* the `release/v8` branch with v8.0.0+ is aligned with Rancher 2.12
+* the `release/v13` branch with v13.0.0+ is aligned with Rancher 2.13
+
+We no longer release from the main branch, this allows us to test integration early and often.
 
 The lifecycle of each major provider version is aligned with the lifecycle of each Rancher minor version.
 For example, provider versions 4.x are aligned with Rancher 2.8.x will only be actively maintained until the EOM for Rancher 2.8.x and supported until EOL for Rancher 2.8.x.
@@ -104,21 +98,41 @@ Aligning major provider releases with minor Rancher releases means:
 
 See the [compatibility matrix](docs/compatibility-matrix.md) for details.
 
-If you are using Terraform to provision clusters on instances of Rancher 2.8 and 2.9,
-  you must have a separate configuration in a separate dir for each provider.
-Otherwise, Terraform will overwrite the `.tfstate` file every time you switch versions.
-
 Releasing the Provider
 ---------------------------
 
 As of v2.0.0 and v3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version.
-For example, v7.0.0 will be released 1-2 weeks after Rancher 2.11.x and fixes and features in the 7.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.11.x.
-A critical bug fix can be released immediately as a patch release. For instance, as v7.0.1
+As of v13.0.0, the provider's major number aligns with Rancher's minor number.
+For example, v13.0.0 will be released 1-2 weeks after Rancher 2.13.x and fixes and features in the v13.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.13.x.
+A critical bug fix can be released immediately as a patch release. For instance, as v13.0.1
 
-To release the provider
 
-* Make sure that the various QA teams have approved the rc versions, see [test process](./docs/test-process.md) for more information.
-* Update the `CHANGELOG.md` with the release notes
-* Push a tag to the release branch (`release/v2`, `release/v3`, or `master`) which does not have a `-rc` suffix
-* The CI will build the provider and generate a release on GitHub
-* Make sure to validate that the release is picked up by the Terraform registry, you may need to find the "resync" button to accomplish this.
+To release the provider:
+
+Version 13+
+
+* Make sure that all backport issues are approved by QA teams and closed, they should be assigned to the related milestone.
+* Find the release PR generated by release-please.
+* Make sure the e2e tests pass, the link should be in the PR.
+* Approve the PR and merge the changelog.
+
+Version 7 & 8
+
+* Make sure that all backport issues are approved by QA teams and closed, they should be assigned to the related milestone.
+* Run e2e tests manually and verify that they work properly.
+* Use the `Manually Create RC Release` workflow to manually trigger the release process.
+
+Making sure the release automation works:
+
+1. Create a PR with the proper release branches specified by the labels, add the labels before creating the PR.
+2. When a PR is created a tracking issue will be generated automatically for it, if the PR has the proper labels they will be automatically added to the tracking issue.
+3. If the PR was created without the proper labels, add them to the tracking issue.
+4. Adding the labels to the tracking issue will generate "backport" issues used to track the PR's release.
+5. The labels should be added before the PR is merged to main.
+6. If the labels and issues are generated properly, when the PR merges to main, backport PRs will be generated automatically.
+7. If the backport PRs weren't generated, you can generate them manually using the `Manually Cherry-Pick to Release Branches` workflow.
+8. When the backport PRs merge into their respective release branch an RC release should be generated automatically.
+9. If an RC wasn't generated you can create one manually using the `Manually Create RC Release` workflow.
+10. When a release is generated all open backport PRs should get a comment with a link to the new release.
+11. For version 13+ there should be a "release PR" generated by release-please, review and merge this to finalize the release.
+12. The release workflow will generate a release when the "release PR" merges.
