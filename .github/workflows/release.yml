@@ -241,8 +241,8 @@ jobs:
           # Create and push the new tag
           git tag "$NEXT_RC_TAG" -m "Release Candidate $NEXT_RC_TAG"
           git push origin "$NEXT_RC_TAG"
-          echo "RC_TAG=$NEXT_RC_TAG" >> $GITHUB_ENV
-          echo "RC_BRANCH=release/$BASE_VERSION" >> $GITHUB_ENV
+          echo "RC_TAG=$NEXT_RC_TAG" >> "$GITHUB_ENV"
+          echo "RC_BRANCH=release/$BASE_VERSION" >> "$GITHUB_ENV"
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
         uses: rancher-eio/read-vault-secrets@main
