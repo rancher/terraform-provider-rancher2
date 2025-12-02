@@ -1,4 +1,5 @@
-async () => {
+import { execSync } from 'child_process';
+export default async ({ core }) => {
   const pathsToRemove = [
     '/usr/lib/jvm',
     '/usr/share/dotnet',
@@ -15,20 +16,37 @@ async () => {
   ];
 
   core.info('Disk space before cleanup:');
-  await exec.exec('df', ['-h']);
+  try {
+    execSync(`df -h`);
+  } catch (error) {
+    core.setFailed(`Failed running df to see disk space.`);
+  }
 
   // Iterate over paths and remove them
   for (const path of pathsToRemove) {
     core.info(`Removing ${path}...`);
-    // We use 'bash -c' to ensure wildcards (like julia*) are expanded correctly
-    // We use ignoreReturnCode: true so the build doesn't fail if a folder is already missing
-    await exec.exec('sudo', ['bash', '-c', `rm -rf ${path}`], { ignoreReturnCode: true });
+    try {
+      // We use 'bash -c' to ensure wildcards (like julia*) are expanded correctly
+      execSync(`sudo bash -c "rm -rf ${path}"`)
+    } catch (error) {
+      core.setFailed(`Failed to remove ${path}`)
+    }
   }
 
   core.info('Pruning Docker...');
-  await exec.exec('docker', ['system', 'prune', '-af'], { ignoreReturnCode: true });
-  await exec.exec('docker', ['builder', 'prune', '-af'], { ignoreReturnCode: true });
+  try {
+    execSync(`docker system prune -af`)
+    execSync(`docker builder prune -af`)
+    execSync(`docker image prune -af`)
+    execSync(`docker volume prune -af`)
+  } catch(error) {
+    core.setFailed(`Failed pruning Docker`)
+  }
 
   core.info('Disk space after cleanup:');
-  await exec.exec('df', ['-h']);
+  try {
+    execSync(`df -h`);
+  } catch (error) {
+    core.setFailed(`Failed running df to see disk space.`);
+  }
 };
