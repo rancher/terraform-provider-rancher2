@@ -1,4 +1,4 @@
-async ({ github, process }) => {
+export default async ({ github, process }) => {
   const tagName = process.env.TAG;
   const branchLabel = process.env.BRANCH;
   const owner = github.repo.owner;
