@@ -19,7 +19,7 @@ export default async ({ core }) => {
   try {
     execSync(`df -h`);
   } catch (error) {
-    core.setFailed(`Failed running df to see disk space.`);
+    core.setFailed(`Failed running df to see disk space: ${error}`);
   }
 
   // Iterate over paths and remove them
@@ -27,26 +27,26 @@ export default async ({ core }) => {
     core.info(`Removing ${path}...`);
     try {
       // We use 'bash -c' to ensure wildcards (like julia*) are expanded correctly
-      execSync(`sudo bash -c "rm -rf ${path}"`)
+      execSync(`sudo bash -c "rm -rf ${path}"`);
     } catch (error) {
-      core.setFailed(`Failed to remove ${path}`)
+      core.setFailed(`Failed to remove ${path}: ${error}`);
     }
   }
 
   core.info('Pruning Docker...');
   try {
-    execSync(`docker system prune -af`)
-    execSync(`docker builder prune -af`)
-    execSync(`docker image prune -af`)
-    execSync(`docker volume prune -af`)
+    execSync(`docker system prune -af`);
+    execSync(`docker builder prune -af`);
+    execSync(`docker image prune -af`);
+    execSync(`docker volume prune -af`);
   } catch(error) {
-    core.setFailed(`Failed pruning Docker`)
+    core.setFailed(`Failed pruning Docker: ${error}`);
   }
 
   core.info('Disk space after cleanup:');
   try {
     execSync(`df -h`);
   } catch (error) {
-    core.setFailed(`Failed running df to see disk space.`);
+    core.setFailed(`Failed running df to see disk space: ${error}`);
   }
 };
