@@ -14,10 +14,11 @@ export default async ({ core }) => {
     '/usr/local/share/powershell',
     '/opt/hostedtoolcache'
   ];
+  let output = "";
 
-  core.info('Disk space before cleanup:');
   try {
-    execSync(`df -h`);
+    output = execSync(`df -h /`).toString();
+    core.info(`Disk space before cleanup: \n${output}`);
   } catch (error) {
     core.setFailed(`Failed running df to see disk space: ${error}`);
   }
@@ -43,9 +44,9 @@ export default async ({ core }) => {
     core.setFailed(`Failed pruning Docker: ${error}`);
   }
 
-  core.info('Disk space after cleanup:');
   try {
-    execSync(`df -h`);
+    output = execSync(`df -h /`).toString();
+    core.info(`Disk space after cleanup: \n${output}`);
   } catch (error) {
     core.setFailed(`Failed running df to see disk space: ${error}`);
   }
