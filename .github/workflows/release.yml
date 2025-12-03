@@ -21,7 +21,19 @@ permissions:
   actions: read
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.set-matrix.outputs.tests }}
+    steps:
+      - id: set-matrix
+        run: |
+          # Define your list here (Minimizing JSON escaping issues)
+          JSON_LIST='["TestOneBasic","TestThreeBasic","TestProductionBasic"]'
+          echo "tests=$JSON_LIST" >> "$GITHUB_OUTPUT"
   release:
+    needs:
+      - setup
     runs-on: ubuntu-latest
     outputs:
       release_pr: ${{ steps.release-please.outputs.pr }}
@@ -75,18 +87,29 @@ jobs:
   #   each iteration of the loop is in its own job
   #   this is important because we want each iteration to be a separate VM
   #   we are trying to get a clean filesystem and different IP for each test
+  # for each test we try to get a new IP three times
+  #   the first time a test gets a new IP the other attempts will fail, this is expected
+  #   this creates a lot of false negatives though, so we have to compile the actual successes
+  # this is confusing at first, but remember that all attempts are running at the same time
+  #   we want the attempts to start sequentially,
+  #   and have enough time in between to update the IP file which works as a transfer medium
+  #   we do this with the jitter step,
+  #   ensuring that each matrix iteration has 45 seconds before the next one starts
+  #   if the previous iteration got a unique IP and is the same test as the current then the current iteration will fail
+  #   this ensures that each test only runs once and only if it has a unique IP address
   test:
     needs:
+      - setup
       - release
       - create-ip-list-artifact
     if: needs.release.outputs.release_pr
+    outputs:
+      outcome: ${{ steps.report.outputs.outcome }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false # some jobs are expected to fail
       matrix:
-        test_name:
-          - TestOneBasic
-          - TestThreeBasic
-          - TestProductionBasic
+        test_name: ${{ fromJSON(needs.setup.outputs.tests) }}
         attempts: [1,2,3]
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
@@ -113,19 +136,33 @@ jobs:
         with:
           name: ip-list
           path: ip_data/ip.txt
+      - name: Check for Already Running Test
+        run: |
+          ls -l ip_data
+          IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
+          if [ ! -f "$IP_DATA_FILE" ]; then echo "failed to find IP list..."; exit 1; fi
+          echo "IP Data: "
+          cat $IP_DATA_FILE
+
+          CURRENT_TEST="${{matrix.test_name}}"
+          if grep -q "$CURRENT_TEST" "$IP_DATA_FILE"; then
+            echo "$CURRENT_TEST is already in IP list, skipping..."
+            exit 1
+          fi
       - name: Check for Unique IP
         id: get_ip
         run: |
-          IP_DATA_FILE="ip_data/ip.txt"
+          ls -l ip_data
+          IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
           if [ ! -f "$IP_DATA_FILE" ]; then echo "failed to find IP list..."; exit 1; fi
-          echo "IP list: "
+          echo "IP Data: "
           cat $IP_DATA_FILE
 
           CURRENT_IP="$(curl -s https://ipinfo.io/ip)"
-
           if ! grep -q "$CURRENT_IP" "$IP_DATA_FILE"; then
             echo "$CURRENT_IP is not in IP list..."
             echo "$CURRENT_IP" >> "$IP_DATA_FILE"
+            echo "${{matrix.test_name}}" >> "$IP_DATA_FILE"
           else
             echo "$CURRENT_IP is already in IP list, failing..."
             exit 1
@@ -163,6 +200,7 @@ jobs:
           role-duration-seconds: 21600 # 6 hours is the maximum GitHub execution time
           output-credentials: true
       - name: run_tests
+        id: run-tests
         shell: '/home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep IDENTIFIER --keep GITHUB_TOKEN --keep GITHUB_OWNER --keep ZONE --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}'
         env:
           AWS_ACCESS_KEY_ID: ${{ steps.aws-creds.outputs.aws-access-key-id }}
@@ -177,7 +215,45 @@ jobs:
           export AWS_RETRY_MODE="adaptive"
           export ACME_SERVER_URL="https://acme-v02.api.letsencrypt.org/directory"
           export RANCHER_INSECURE="false"
+          export IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
           ./run_tests.sh -t ${{matrix.test_name}}
+      - name: Download IP List
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0 https://github.com/actions/download-artifact/releases
+        with:
+          name: ip-list
+          path: ip_data/ip.txt
+      - name: Update IP List with Success
+        run: |
+          ls -l ip_data
+          IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
+          if [ ! -f "$IP_DATA_FILE" ]; then echo "failed to find IP list..."; exit 1; fi
+          echo "${{matrix.test_name}}=SUCCESS" >> "$IP_DATA_FILE"
+      - name: Upload IP List for next Job
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0 https://github.com/actions/upload-artifact
+        with:
+          name: ip-list
+          path: ip_data/ip.txt
+          overwrite: true
+      - name: Report Current Status
+        id: report
+        run: |
+          ls -l ip_data
+          IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
+          if [ ! -f "$IP_DATA_FILE" ]; then echo "failed to find IP list..."; exit 1; fi
+          echo "DATA:"
+          cat "$IP_DATA_FILE"
+          OUTCOME=""
+          echo "The full list of tests is: $ALL_TESTS_JSON"
+          for test in $(echo "$ALL_TESTS_JSON" | jq -r '.[]'); do
+            if [ "$OUTCOME" != "FAIL" ]; then
+              if grep -q "$test=SUCCESS" "$IP_DATA_FILE"; then
+                OUTCOME="SUCCESS"
+              else
+                OUTCOME="FAIL"
+              fi
+            fi
+          done
+          echo "outcome=$OUTCOME" >> "$GITHUB_OUTPUT"
 
   cleanup:
     needs:

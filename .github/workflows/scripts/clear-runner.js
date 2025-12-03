@@ -15,9 +15,9 @@ export default async ({ core }) => {
     '/opt/hostedtoolcache'
   ];
 
-  core.info('Disk space before cleanup:');
   try {
-    execSync(`df -h`);
+    const output = execSync(`df -h / --total | grep total | awk '{print $4}'`).toString();
+    core.info(`Available disk space before cleanup: ${output}`);
   } catch (error) {
     core.setFailed(`Failed running df to see disk space: ${error}`);
   }
@@ -45,7 +45,8 @@ export default async ({ core }) => {
 
   core.info('Disk space after cleanup:');
   try {
-    execSync(`df -h`);
+    const output = execSync(`df -h / --total | grep total | awk '{print $4}'`).toString();
+    core.info(`Available disk space after cleanup: ${output}`);
   } catch (error) {
     core.setFailed(`Failed running df to see disk space: ${error}`);
   }
