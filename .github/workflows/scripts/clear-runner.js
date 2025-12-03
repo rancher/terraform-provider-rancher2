@@ -17,7 +17,7 @@ export default async ({ core }) => {
 
   try {
     const output = execSync(`df -h / --total | grep total | awk '{print $4}'`).toString();
-    core.info(`Available disk space before cleanup: ${output}`)
+    core.info(`Available disk space before cleanup: ${output}`);
   } catch (error) {
     core.setFailed(`Failed running df to see disk space: ${error}`);
   }
@@ -46,7 +46,7 @@ export default async ({ core }) => {
   core.info('Disk space after cleanup:');
   try {
     const output = execSync(`df -h / --total | grep total | awk '{print $4}'`).toString();
-    core.info(`Available disk space after cleanup: ${output}`)
+    core.info(`Available disk space after cleanup: ${output}`);
   } catch (error) {
     core.setFailed(`Failed running df to see disk space: ${error}`);
   }
