@@ -12,6 +12,7 @@ env:
   ACME_SERVER_URL: https://acme-v02.api.letsencrypt.org/directory
   AWS_MAX_ATTEMPTS: 100
   AWS_RETRY_MODE: adaptive
+  ALL_TESTS_JSON: '["TestOneBasic","TestThreeBasic","TestProductionBasic"]'
 
 permissions:
   contents: write
@@ -28,8 +29,7 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          # Define your list here (Minimizing JSON escaping issues)
-          JSON_LIST='["TestOneBasic","TestThreeBasic","TestProductionBasic"]'
+          JSON_LIST=${{env.ALL_TESTS_JSON}}
           echo "tests=$JSON_LIST" >> "$GITHUB_OUTPUT"
   release:
     needs:
@@ -67,20 +67,20 @@ jobs:
               core.setFailed(`Failed to create comment on release PR: ${error.message}`);
             }
 
-  # using a workflow artifact to share IP data between jobs
-  create-ip-list-artifact:
+  # using a workflow artifact to share data between jobs
+  create-test-data:
     runs-on: ubuntu-latest
     steps:
-      - name: Create Empty IP List
+      - name: Create Empty File
         run: |
-          install -d ip_data
-          touch ip_data/ip.txt
-          echo "List Initialized" > ip_data/ip.txt
-      - name: Upload IP List
+          install -d test_data
+          touch test_data/test.txt
+          echo "Initialized" > test_data/test.txt
+      - name: Upload File
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0 https://github.com/actions/upload-artifact
         with:
-          name: ip-list
-          path: ip_data/ip.txt
+          name: test-data
+          path: test_data/test.txt
           overwrite: true
 
   # this creates a loop using workflow logic,
@@ -101,7 +101,7 @@ jobs:
     needs:
       - setup
       - release
-      - create-ip-list-artifact
+      - create-test-data
     if: needs.release.outputs.release_pr
     outputs:
       outcome: ${{ steps.report.outputs.outcome }}
@@ -127,51 +127,50 @@ jobs:
       - name: Add jitter
         run: |
           # this jitter aligns the tests so that they don't all start at the same time
-          # the first test to run should have time to upload its IP information before the second one in line
+          # the first test to run should have time to upload its IP information before the next one in line
           JOB_INDEX=${{ strategy.job-index }}
           DELAY=$(( JOB_INDEX * 45 )) # adjust this to the time it takes to upload the IP information
           sleep $DELAY
-      - name: Download IP List
+      - name: Download Data File
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0 https://github.com/actions/download-artifact/releases
         with:
-          name: ip-list
-          path: ip_data/ip.txt
+          name: test-data
+          path: test_data/test.txt
       - name: Check for Already Running Test
         run: |
-          ls -l ip_data
-          IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
-          if [ ! -f "$IP_DATA_FILE" ]; then echo "failed to find IP list..."; exit 1; fi
-          echo "IP Data: "
-          cat $IP_DATA_FILE
+          DATA_FILE="test_data/test.txt"
+          whoami
+          ls -l "$DATA_FILE"
+          echo "Data: "
+          cat "$DATA_FILE"
 
-          CURRENT_TEST="${{matrix.test_name}}"
-          if grep -q "$CURRENT_TEST" "$IP_DATA_FILE"; then
-            echo "$CURRENT_TEST is already in IP list, skipping..."
+          CURRENT_TEST="${{ matrix.test_name }}"
+          if grep -q "$CURRENT_TEST" "$DATA_FILE"; then
+            echo "$CURRENT_TEST is already data, skipping..."
             exit 1
           fi
       - name: Check for Unique IP
         id: get_ip
         run: |
-          ls -l ip_data
-          IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
-          if [ ! -f "$IP_DATA_FILE" ]; then echo "failed to find IP list..."; exit 1; fi
-          echo "IP Data: "
-          cat $IP_DATA_FILE
+          ls -l test_data
+          DATA_FILE="test_data/test.txt"
+          echo "Data: "
+          cat $DATA_FILE
 
           CURRENT_IP="$(curl -s https://ipinfo.io/ip)"
-          if ! grep -q "$CURRENT_IP" "$IP_DATA_FILE"; then
-            echo "$CURRENT_IP is not in IP list..."
-            echo "$CURRENT_IP" >> "$IP_DATA_FILE"
-            echo "${{matrix.test_name}}" >> "$IP_DATA_FILE"
+          if ! grep -q "$CURRENT_IP" "$DATA_FILE"; then
+            echo "$CURRENT_IP is not in data..."
+            echo "$CURRENT_IP" >> "$DATA_FILE"
+            echo "${{matrix.test_name}}" >> "$DATA_FILE"
           else
-            echo "$CURRENT_IP is already in IP list, failing..."
+            echo "$CURRENT_IP is already in data file, failing..."
             exit 1
           fi
-      - name: Upload IP List for next Job
+      - name: Upload data for other Jobs
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0 https://github.com/actions/upload-artifact
         with:
-          name: ip-list
-          path: ip_data/ip.txt
+          name: test-data
+          path: test_data/test.txt
           overwrite: true
       - name: Ready
         run: |
@@ -215,38 +214,35 @@ jobs:
           export AWS_RETRY_MODE="adaptive"
           export ACME_SERVER_URL="https://acme-v02.api.letsencrypt.org/directory"
           export RANCHER_INSECURE="false"
-          export IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
           ./run_tests.sh -t ${{matrix.test_name}}
-      - name: Download IP List
+      - name: Download Test Data
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0 https://github.com/actions/download-artifact/releases
         with:
-          name: ip-list
-          path: ip_data/ip.txt
-      - name: Update IP List with Success
+          name: test-data
+          path: test_data/test.txt
+      - name: Update Data File with Success
         run: |
-          ls -l ip_data
-          IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
-          if [ ! -f "$IP_DATA_FILE" ]; then echo "failed to find IP list..."; exit 1; fi
-          echo "${{matrix.test_name}}=SUCCESS" >> "$IP_DATA_FILE"
-      - name: Upload IP List for next Job
+          ls -l test_data
+          DATA_FILE="test_data/test.txt"
+          echo "${{matrix.test_name}}=SUCCESS" >> "$DATA_FILE"
+      - name: Upload Data for Other Jobs
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0 https://github.com/actions/upload-artifact
         with:
-          name: ip-list
-          path: ip_data/ip.txt
+          name: test-data
+          path: test_data/test.txt
           overwrite: true
       - name: Report Current Status
         id: report
         run: |
-          ls -l ip_data
-          IP_DATA_FILE="${{ github.workspace }}/ip_data/ip.txt"
-          if [ ! -f "$IP_DATA_FILE" ]; then echo "failed to find IP list..."; exit 1; fi
+          ls -l test_data
+          DATA_FILE="test_data/test.txt"
           echo "DATA:"
-          cat "$IP_DATA_FILE"
+          cat "$DATA_FILE"
           OUTCOME=""
           echo "The full list of tests is: $ALL_TESTS_JSON"
           for test in $(echo "$ALL_TESTS_JSON" | jq -r '.[]'); do
             if [ "$OUTCOME" != "FAIL" ]; then
-              if grep -q "$test=SUCCESS" "$IP_DATA_FILE"; then
+              if grep -q "$test=SUCCESS" "$DATA_FILE"; then
                 OUTCOME="SUCCESS"
               else
                 OUTCOME="FAIL"
@@ -345,7 +341,7 @@ jobs:
       - test
       - cleanup
       - report
-    if: always() && needs.release.outputs.release_pr && (needs.test.result == 'success') #Ensure the test jobs succeeded, and that a release PR was created.
+    if: always() && needs.release.outputs.release_pr && (needs.test.outputs.outcome == 'SUCCESS') #Ensure the test jobs succeeded, and that a release PR was created.
     runs-on: ubuntu-latest
     steps:
       # If the e2e tests pass we automatically generate an RC release
@@ -441,7 +437,7 @@ jobs:
       - cleanup
       - report
       - rc-release
-    if: always() && needs.release.outputs.release_version && (needs.test.result == 'success')  #Ensure the test jobs succeeded, and that a release PR was created.
+    if: always() && needs.release.outputs.release_version && (needs.test.outputs.outcome == 'SUCCESS')  #Ensure the test jobs succeeded, and that a release PR was created.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
