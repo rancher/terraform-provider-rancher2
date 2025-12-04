@@ -405,7 +405,7 @@ jobs:
           BRANCH: ${{ env.RC_BRANCH }}
         with:
           script: |
-            const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/notify-rc.js`;
+            const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/rc-notify.js`;
             const { default: script } = await import(scriptPath);
             await script({github, process});
 
