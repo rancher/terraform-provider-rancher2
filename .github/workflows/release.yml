@@ -138,7 +138,7 @@ jobs:
         env:
           IP: ${{ steps.get-ip.outputs.ip }}
           INDEX: ${{ strategy.job-index }}
-          OWNER: ${{ github.event.repository.owner }}
+          OWNER: ${{ github.event.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           RUN_ID: ${{ github.run_id }}
         with:
