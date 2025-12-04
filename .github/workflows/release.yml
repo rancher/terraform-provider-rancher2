@@ -123,7 +123,7 @@ jobs:
         env:
           TEST_NAME: ${{ matrix.test_name }}
           INDEX: ${{ strategy.job-index }}
-          OWNER: ${{ github.event.repository_owner }}
+          OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           RUN_ID: ${{ github.run_id }}
         with:
@@ -139,7 +139,7 @@ jobs:
         env:
           IP: ${{ steps.get-ip.outputs.ip }}
           INDEX: ${{ strategy.job-index }}
-          OWNER: ${{ github.event.repository_owner }}
+          OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           RUN_ID: ${{ github.run_id }}
         with:
@@ -189,7 +189,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
           AWS_SESSION_TOKEN: ${{ steps.aws-creds.outputs.aws-session-token }}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          GITHUB_OWNER: ${{github.event.repository_owner}}
+          GITHUB_OWNER: ${{github.repository_owner}}
           IDENTIFIER: ${{github.run_id}}
           ZONE: ${{secrets.ZONE}}
         run: |
@@ -214,7 +214,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
         env:
           ALL_TESTS_JSON: ${{ env.ALL_TESTS_JSON }}
-          OWNER: ${{ github.event.repository_owner }}
+          OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           RUN_ID: ${{ github.run_id }}
         with:
