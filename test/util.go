@@ -113,7 +113,7 @@ func filterPrimeOnly(r *[]*github.RepositoryRelease) {
 	*r = fr
 }
 
-// this effectively removes release candidates as well as pending releases
+// this effectively removes release candidates as well as pending releases.
 func filterPrerelease(r *[]*github.RepositoryRelease) {
 	var fr []*github.RepositoryRelease
 	releases := *r
@@ -286,7 +286,7 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	input = &ec2.DescribeKeyPairsInput{
 		Filters: []ec2types.Filter{keyNameFilter},
 	}
-	result, err = client.DescribeKeyPairs(context.Background(), input)
+	_, err = client.DescribeKeyPairs(context.Background(), input)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	input = &ec2.DescribeKeyPairsInput{
 		Filters: []ec2types.Filter{keyNameFilter},
 	}
-	result, err = client.DescribeKeyPairs(context.Background(), input)
+	_, err = client.DescribeKeyPairs(context.Background(), input)
 	if err != nil {
 		return nil, err
 	}
