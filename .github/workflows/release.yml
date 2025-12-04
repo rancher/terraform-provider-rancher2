@@ -213,7 +213,7 @@ jobs:
       - name: Check for Tests Run
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
         env:
-          ALL_TESTS_JSON: ${{ env.ALL_TESTS_JSON }}
+          ALL_TESTS_JSON: '${{ env.ALL_TESTS_JSON }}'
           OWNER: ${{ github.repository_owner }}
           REPO: ${{ github.event.repository.name }}
           RUN_ID: ${{ github.run_id }}
