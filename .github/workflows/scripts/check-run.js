@@ -4,7 +4,7 @@ export default async ({ process, github, core }) => {
   const repo = process.env.REPO;
   const runId = process.env.RUN_ID;
 
-  core.info(`Checking for lock files.`)
+  core.info(`Checking for lock files.`);
 
   const { data: { artifacts } } = await github.rest.actions.listWorkflowRunArtifacts({
     owner: owner,
@@ -17,10 +17,10 @@ export default async ({ process, github, core }) => {
     const prefix = `lock-${testName}-`;
     const locks = artifacts.filter(a => a.name.startsWith(prefix));
     if (locks.length == 0) {
-      core.setFailed(`No lock found for ${testName}, failing.`)
+      core.setFailed(`No lock found for ${testName}, failing.`);
     }
     for (const lock of locks) {
-      core.info(`Found lock ${lock.name}`)
+      core.info(`Found lock ${lock.name}`);
     }
   }
 };
