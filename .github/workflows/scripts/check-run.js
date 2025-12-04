@@ -1,5 +1,5 @@
 export default async ({ process, github, core }) => {
-  const testNames = JSON.parse(process.env.ALL_TEST_JSON);
+  const testNames = JSON.parse(process.env.ALL_TESTS_JSON);
   const owner = process.env.OWNER;
   const repo = process.env.REPO;
   const runId = process.env.RUN_ID;
