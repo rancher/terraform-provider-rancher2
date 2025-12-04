@@ -243,6 +243,8 @@ if [ -z "$cleanup_id" ]; then
   if ! tflint --recursive; then C=$?; echo "tflint failed, exit code $C"; exit $C; fi
   echo "terraform configs valid..."
 
+  make build
+
   # Run tests initially
   run_tests false "$slow_mode"
   sleep 60
