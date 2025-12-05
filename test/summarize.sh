@@ -37,14 +37,14 @@ process_tests() {
     report.json
 }
 
-printf "\n==================== TEST SUMMARY ===================="
+printf "\n==================== TEST SUMMARY ====================\n"
 
-printf "\nPASSED TESTS:"
+printf "\nPASSED TESTS:\n"
 process_tests "pass"
 
-printf "\nFAILED TESTS:"
+printf "\nFAILED TESTS:\n"
 process_tests "fail"
 
-printf "\n======================================================"
+printf "\n======================================================\n"
 
 rm -rf report.json
