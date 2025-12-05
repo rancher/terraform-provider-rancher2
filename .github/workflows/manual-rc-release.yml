@@ -40,7 +40,6 @@ jobs:
           fi
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
         with:
-          ref: ${{ inputs.branch }}
           fetch-depth: 0
       - name: Create and Push RC Tag with Git
         id: create-push-rc-tag
