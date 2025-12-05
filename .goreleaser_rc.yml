@@ -1,0 +1,61 @@
+# https://goreleaser.com for documentation
+version: 2
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - binary: '{{ .ProjectName }}_v{{ .Version }}'
+    env:
+      # goreleaser does not work with CGO, it could also complicate
+      # usage by users in CI/CD systems like HCP Terraform where
+      # they are unable to install libraries.
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
+    goos:
+      - freebsd
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
+archives:
+  - formats: [ 'zip' ]
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+checksum:
+  extra_files:
+    - glob: './terraform-registry-manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+signs:
+  - artifacts: checksum
+    args:
+      - "--detach-sig"
+      - "--pinentry-mode"
+      - "loopback"
+      - "--passphrase"
+      - "{{ .Env.GPG_PASSPHRASE }}"
+      - "--local-user"
+      - "{{ .Env.GPG_KEY_ID }}"
+      - "--output"
+      - "${signature}"
+      - "--sign"
+      - "${artifact}"
+release:
+  extra_files:
+    - glob: './terraform-registry-manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
+  prerelease: auto
+changelog:
+  disable: true

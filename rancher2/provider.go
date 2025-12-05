@@ -113,6 +113,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_auth_config_azuread":                           resourceRancher2AuthConfigAzureAD(),
 			"rancher2_auth_config_freeipa":                           resourceRancher2AuthConfigFreeIpa(),
 			"rancher2_auth_config_github":                            resourceRancher2AuthConfigGithub(),
+			"rancher2_auth_config_githubapp":                         resourceRancher2AuthConfigGithubApp(),
 			"rancher2_auth_config_keycloak":                          resourceRancher2AuthConfigKeyCloak(),
 			"rancher2_auth_config_okta":                              resourceRancher2AuthConfigOKTA(),
 			"rancher2_auth_config_generic_oidc":                      resourceRancher2AuthConfigGenericOIDC(),
@@ -125,12 +126,11 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_cluster":                                       resourceRancher2Cluster(),
 			"rancher2_cluster_v2":                                    resourceRancher2ClusterV2(),
 			"rancher2_cluster_driver":                                resourceRancher2ClusterDriver(),
+			"rancher2_cluster_proxy_config_v2":                       resourceRancher2ClusterProxyConfigV2(),
 			"rancher2_cluster_role_template_binding":                 resourceRancher2ClusterRoleTemplateBinding(),
 			"rancher2_cluster_sync":                                  resourceRancher2ClusterSync(),
-			"rancher2_cluster_template":                              resourceRancher2ClusterTemplate(),
 			"rancher2_config_map_v2":                                 resourceRancher2ConfigMapV2(),
 			"rancher2_custom_user_token":                             resourceRancher2CustomUserToken(),
-			"rancher2_etcd_backup":                                   resourceRancher2EtcdBackup(),
 			"rancher2_feature":                                       resourceRancher2Feature(),
 			"rancher2_global_role":                                   resourceRancher2GlobalRole(),
 			"rancher2_global_role_binding":                           resourceRancher2GlobalRoleBinding(),
@@ -138,7 +138,6 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_namespace":                                     resourceRancher2Namespace(),
 			"rancher2_node_driver":                                   resourceRancher2NodeDriver(),
 			"rancher2_node_pool":                                     resourceRancher2NodePool(),
-			"rancher2_node_template":                                 resourceRancher2NodeTemplate(),
 			"rancher2_pod_security_admission_configuration_template": resourceRancher2PodSecurityAdmissionConfigurationTemplate(),
 			"rancher2_project":                                       resourceRancher2Project(),
 			"rancher2_project_role_template_binding":                 resourceRancher2ProjectRoleTemplateBinding(),
@@ -160,15 +159,12 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_cluster_v2":                                    dataSourceRancher2ClusterV2(),
 			"rancher2_cluster_driver":                                dataSourceRancher2ClusterDriver(),
 			"rancher2_cluster_role_template_binding":                 dataSourceRancher2ClusterRoleTemplateBinding(),
-			"rancher2_cluster_template":                              dataSourceRancher2ClusterTemplate(),
 			"rancher2_config_map_v2":                                 dataSourceRancher2ConfigMapV2(),
-			"rancher2_etcd_backup":                                   dataSourceRancher2EtcdBackup(),
 			"rancher2_global_role":                                   dataSourceRancher2GlobalRole(),
 			"rancher2_global_role_binding":                           dataSourceRancher2GlobalRoleBinding(),
 			"rancher2_namespace":                                     dataSourceRancher2Namespace(),
 			"rancher2_node_driver":                                   dataSourceRancher2NodeDriver(),
 			"rancher2_node_pool":                                     dataSourceRancher2NodePool(),
-			"rancher2_node_template":                                 dataSourceRancher2NodeTemplate(),
 			"rancher2_pod_security_admission_configuration_template": dataSourceRancher2PodSecurityAdmissionConfigurationTemplate(),
 			"rancher2_principal":                                     dataSourceRancher2Principal(),
 			"rancher2_project":                                       dataSourceRancher2Project(),
@@ -180,6 +176,7 @@ func Provider() terraform.ResourceProvider {
 			"rancher2_setting":                                       dataSourceRancher2Setting(),
 			"rancher2_storage_class_v2":                              dataSourceRancher2StorageClassV2(),
 			"rancher2_user":                                          dataSourceRancher2User(),
+			"rancher2_cluster_proxy_config_v2":                       dataSourceRancher2ClusterProxyConfig(),
 		},
 
 		ConfigureFunc: providerConfigure,
@@ -239,7 +236,7 @@ func providerValidateConfig(config *Config) (*Config, error) {
 	if config.Bootstrap {
 		// If bootstrap tokenkey accesskey nor secretkey can be provided
 		if config.TokenKey != providerDefaultEmptyString {
-			return &Config{}, fmt.Errorf("[ERROR] Bootsrap mode activated. Token_key or access_key and secret_key can not be provided")
+			return &Config{}, fmt.Errorf("[ERROR] Bootsrap mode activated. token_key or access_key and secret_key can not be provided")
 		}
 	} else {
 		// Else token or access key and secret key should be provided

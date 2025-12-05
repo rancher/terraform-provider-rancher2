@@ -54,6 +54,7 @@ func resourceRancher2UserCreate(d *schema.ResourceData, meta interface{}) error 
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
+
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf(
@@ -191,6 +192,7 @@ func userStateRefreshFunc(client *managementClient.Client, userID string) resour
 			}
 			return nil, "", err
 		}
-		return obj, obj.State, nil
+
+		return obj, "active", nil
 	}
 }
