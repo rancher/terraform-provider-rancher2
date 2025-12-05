@@ -403,6 +403,8 @@ jobs:
         env:
           TAG: ${{ env.RC_TAG }}
           BRANCH: ${{ env.RC_BRANCH }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
         with:
           script: |
             const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/rc-notify.js`;
