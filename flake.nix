@@ -60,6 +60,7 @@
               gitleaks
               gnupg
               go
+              golangci-lint
               goreleaser
               gotestfmt
               gotestsum
