@@ -9,9 +9,7 @@ import (
 )
 
 func TestProvider(t *testing.T) {
-	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
-		assert.FailNow(t, "err: %s", err)
-	}
+	assert.NoError(t, Provider().(*schema.Provider).InternalValidate())
 }
 
 func TestProvider_impl(t *testing.T) {
