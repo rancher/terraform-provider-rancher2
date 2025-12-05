@@ -121,3 +121,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+      - name: 'Find Issues and Create Comments'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          TAG: ${{ inputs.tag }}
+          BRANCH: ${{ inputs.branch }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        with:
+          script: |
+            const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/rc-notify.js`;
+            const { default: script } = await import(scriptPath);
+            await script({github, process});
