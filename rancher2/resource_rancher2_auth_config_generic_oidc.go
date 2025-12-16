@@ -45,7 +45,7 @@ func resourceRancher2AuthConfigGenericOIDCCreate(d *schema.ResourceData, meta in
 		}
 	}
 
-	newAuth := &managementClient.OIDCConfig{}
+	newAuth := &managementClient.GenericOIDCConfig{}
 	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOIDC, newAuth)
 	if err != nil {
 		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigGenericOIDCName, err)
@@ -76,7 +76,7 @@ func resourceRancher2AuthConfigGenericOIDCRead(d *schema.ResourceData, meta inte
 		return err
 	}
 
-	err = flattenAuthConfigGenericOIDC(d, authOIDC.(*managementClient.OIDCConfig))
+	err = flattenAuthConfigGenericOIDC(d, authOIDC.(*managementClient.GenericOIDCConfig))
 	if err != nil {
 		return err
 	}

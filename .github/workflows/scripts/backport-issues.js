@@ -29,7 +29,7 @@ async ({ github, context, core, process }) => {
     response = await github.rest.issues.create({
       owner: owner,
       repo: repo,
-      title: `[Backport][${labelName}] ${parentIssueTitle}`,
+      title: `[${labelName}] ${parentIssueTitle}`,
       body:  [
         `Backport #${prNumber} to ${labelName} for #${parentIssueNumber}`,
         `Copied from PR:`,
