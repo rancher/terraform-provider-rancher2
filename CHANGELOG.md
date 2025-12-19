@@ -12,6 +12,14 @@ ENHANCEMENTS:
 BUGFIXES:
 
 
+## [13.1.4](https://github.com/rancher/terraform-provider-rancher2/compare/v13.1.3...v13.1.4) (2025-12-19)
+
+
+### Bug Fixes
+
+* update release version ([#1971](https://github.com/rancher/terraform-provider-rancher2/issues/1971)) ([6d16fee](https://github.com/rancher/terraform-provider-rancher2/commit/6d16feeca6870d0cbb781b10a0fd5ade94f7ba96))
+* update versions in registry manifest ([#1966](https://github.com/rancher/terraform-provider-rancher2/issues/1966)) ([71ed6ea](https://github.com/rancher/terraform-provider-rancher2/commit/71ed6ea4f8526a992a0cd2e4e85e15debdb23d7d))
+
 ## [13.1.3](https://github.com/rancher/terraform-provider-rancher2/compare/v13.1.2...v13.1.3) (2025-12-16)
 
 
