@@ -57,7 +57,7 @@ for id in $resources_ids; do
       if [ -z "$arn" ]; then
         continue
       fi
-      echo "removing secret $arn..."
+      echo "    removing secret $arn..."
       aws secretsmanager delete-secret --secret-id "$arn" --force-delete-without-recovery
     done <<<"$(aws resourcegroupstaggingapi get-resources --no-cli-pager --resource-type-filters "secretsmanager:secret" --tag-filters "Key=Id,Values=$IDENTIFIER" | jq -r '.ResourceTagMappingList[]?.ResourceARN')"
     sleep $((attempts * 10))
@@ -137,6 +137,33 @@ for id in $resources_ids; do
     attempts=$((attempts + 1))
   done
 done
+
+# cognito
+#  users, user pools, user pool clients, and user pool domains
+echo "Clearing out cognito resources..."
+USER_POOL_ID="$(aws cognito-idp list-user-pools --max-results=10 | jq -r --arg ID "$IDENTIFIER" '.UserPools[] | select(.Name == $ID).Id')"
+if [ -n "$USER_POOL_ID" ]; then
+  USERNAME="$(aws cognito-idp list-users --user-pool-id="$USER_POOL_ID" | jq -r '.Users[].Username')"
+  if [ -n "$USERNAME" ]; then
+    echo "    removing user: $USERNAME"
+    aws cognito-idp admin-delete-user --user-pool-id="$USER_POOL_ID" --username="$USERNAME"
+  fi
+
+  DOMAIN="$(aws cognito-idp describe-user-pool --user-pool-id="$USER_POOL_ID" | jq -r '.UserPool.Domain' | grep -v null)"
+  if [ -n "$DOMAIN" ]; then
+    echo "    removing domain: $DOMAIN"
+    aws cognito-idp delete-user-pool-domain --user-pool-id="$USER_POOL_ID" --domain="$DOMAIN"
+  fi
+
+  CLIENT_ID="$(aws cognito-idp list-user-pool-clients --user-pool-id="$USER_POOL_ID" | jq -r '.UserPoolClients[].ClientId')"
+  if [ -n "$CLIENT_ID" ]; then
+    echo "    removing client: $CLIENT_ID"
+    aws cognito-idp delete-user-pool-client --user-pool-id="$USER_POOL_ID" --client-id="$CLIENT_ID"
+  fi
+
+  echo "    removing user pool: $USER_POOL_ID"
+  aws cognito-idp delete-user-pool --user-pool-id="$USER_POOL_ID"
+fi
 
 echo "Cleanup completed."
 
