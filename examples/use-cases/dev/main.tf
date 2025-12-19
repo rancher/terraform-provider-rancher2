@@ -7,10 +7,6 @@ provider "aws" {
   }
 }
 
-provider "acme" {
-  server_url = local.acme_server_url
-}
-
 provider "github" {}
 provider "kubernetes" {} # make sure you set the env variable KUBE_CONFIG_PATH to local_file_path (file_path variable)
 provider "helm" {}       # make sure you set the env variable KUBE_CONFIG_PATH to local_file_path (file_path variable)
@@ -28,14 +24,13 @@ terraform {
 
 locals {
   identifier           = var.identifier
-  example              = "one"
+  example              = "dev"
   project_name         = "tf-${substr(md5(join("-", [local.example, local.identifier])), 0, 5)}"
   username             = local.project_name
   domain               = local.project_name
   zone                 = var.zone
   key_name             = var.key_name
   key                  = var.key
-  acme_server_url      = "https://acme-staging-v02.api.letsencrypt.org/directory"
   owner                = var.owner
   rke2_version         = var.rke2_version
   rancher_helm_repo    = "https://releases.rancher.com/server-charts"
@@ -46,7 +41,7 @@ locals {
   helm_chart_values = {
     "hostname"               = "${local.domain}.${local.zone}"
     "replicas"               = "1"
-    "bootstrapPassword"      = "admin"
+    "bootstrapPassword"      = random_password.admin_password.result
     "tls"                    = "ingress"
     "ingress.enabled"        = "true"
     "ingress.tls.source"     = "secret"
@@ -68,8 +63,14 @@ locals {
   local_file_path      = var.file_path
   runner_ip            = chomp(data.http.myip.response_body) # "runner" is the server running Terraform
   rancher_version      = var.rancher_version
-  cert_manager_version = "1.18.3"
+  cert_manager_version = "1.18.1"
   os                   = "sle-micro-61"
+}
+
+resource "random_password" "admin_password" {
+  length           = 16
+  special          = true
+  override_special = "!#$%&-_=+"
 }
 
 data "http" "myip" {
@@ -88,7 +89,7 @@ module "rancher" {
     module.tls,
   ]
   source  = "rancher/aws/rancher2"
-  version = "3.1.1"
+  version = "3.1.2"
   # project
   identifier   = local.identifier
   owner        = local.owner
@@ -103,7 +104,7 @@ module "rancher" {
   # rke2
   rke2_version       = local.rke2_version
   local_file_path    = local.local_file_path
-  install_method     = "rpm" # rpm only for now, need to figure out local helm chart installs otherwise
+  install_method     = "tar" # tar install method allows for Rancher upgrades, but it isn't air-gapped
   cni                = "canal"
   node_configuration = local.node_configuration
   # rancher
@@ -117,43 +118,5 @@ module "rancher" {
   rancher_helm_channel            = local.rancher_helm_channel
   rancher_helm_chart_use_strategy = local.helm_chart_strategy
   rancher_helm_chart_values       = local.helm_chart_values
-  acme_server_url                 = local.acme_server_url
-}
-
-provider "rancher2" {
-  alias     = "authenticate"
-  bootstrap = true
-  api_url   = "https://${local.domain}.${local.zone}"
-  timeout   = "300s"
-  ca_certs  = module.rancher.tls_certificate_chain
-}
-
-resource "rancher2_bootstrap" "authenticate" {
-  depends_on = [
-    module.tls,
-    module.rancher,
-  ]
-  provider         = rancher2.authenticate
-  initial_password = module.rancher.admin_password
-  password         = module.rancher.admin_password
-  token_update     = true
-  token_ttl        = 7200 # 2 hours
-}
-
-provider "rancher2" {
-  alias     = "default"
-  api_url   = "https://${local.domain}.${local.zone}"
-  token_key = rancher2_bootstrap.authenticate.token
-  timeout   = "300s"
-  ca_certs  = module.rancher.tls_certificate_chain
-}
-
-data "rancher2_cluster" "local" {
-  depends_on = [
-    module.tls,
-    module.rancher,
-    rancher2_bootstrap.authenticate,
-  ]
-  provider = rancher2.default
-  name     = "local"
+  bootstrap_rancher               = false
 }

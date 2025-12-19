@@ -41,10 +41,6 @@ terraform {
       source  = "hashicorp/helm"
       version = "2.14"
     }
-    rancher2 = {
-      source  = "rancher/rancher2"
-      version = ">= 5.0.0"
-    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = ">= 2.31.0"
