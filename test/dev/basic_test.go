@@ -1,16 +1,18 @@
-package three
+package dev
 
 import (
+	// "os" .
+	// "path/filepath" .
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	// util "github.com/rancher/terraform-provider-rancher2/test" .
 	cfg "github.com/rancher/terraform-provider-rancher2/test/config"
 )
 
-func TestThreeBasic(t *testing.T) {
+func TestDevBasic(t *testing.T) {
 	t.Parallel()
-	config := cfg.NewTestConfig(t, "use-cases/three")
-
+	config := cfg.NewTestConfig(t, "use-cases/dev", nil, nil)
 	defer config.Teardown(t)
 	defer config.GetErrorLogs(t)
 	_, err := terraform.InitAndApplyE(t, config.TerraformOptions)
@@ -20,7 +22,6 @@ func TestThreeBasic(t *testing.T) {
 	}
 	config.CheckReady(t)
 	config.CheckRunning(t)
-
 	if t.Failed() {
 		t.Log("Test failed...")
 	} else {

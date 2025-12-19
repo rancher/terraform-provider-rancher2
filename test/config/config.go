@@ -32,7 +32,7 @@ type TestConfig struct {
 	TfOptions               []*terraform.Options
 }
 
-func NewTestConfig(t *testing.T, directory string) *TestConfig {
+func NewTestConfig(t *testing.T, directory string, TfVars map[string]interface{}, TfEnvVars map[string]string) *TestConfig {
 
 	id := util.GetId()
 	region := util.GetRegion()
@@ -108,28 +108,48 @@ func NewTestConfig(t *testing.T, directory string) *TestConfig {
 		t.Fatalf("Error writing Terraform RC file: %s", err)
 	}
 
+	var vars map[string]interface{}
+
+	defaultVars := map[string]interface{}{
+		"identifier":      id,
+		"owner":           owner,
+		"key_name":        keyPair.Name,
+		"key":             kp.PublicKey,
+		"zone":            dnsZone,
+		"rke2_version":    rke2Version,
+		"rancher_version": rancherVersion,
+		"file_path":       testDir,
+	}
+
+	if len(TfVars) == 0 {
+		vars = defaultVars
+	} else {
+		vars = TfVars
+	}
+
+	var envVars map[string]string
+
+	defaultEnvVars := map[string]string{
+		"AWS_DEFAULT_REGION": region,
+		"AWS_REGION":         region,
+		"TF_DATA_DIR":        testDir,
+		"TF_IN_AUTOMATION":   "1",
+		"TF_CLI_CONFIG_FILE": terraformRcPath,
+	}
+
+	if len(TfEnvVars) == 0 {
+		envVars = defaultEnvVars
+	} else {
+		envVars = TfEnvVars
+	}
+
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		// https://pkg.go.dev/github.com/gruntwork-io/terratest/modules/terraform#Options
 		TerraformDir: exampleDir,
 		// Variables to pass to our Terraform code using -var options
-		Vars: map[string]interface{}{
-			"identifier":      id,
-			"owner":           owner,
-			"key_name":        keyPair.Name,
-			"key":             kp.PublicKey,
-			"zone":            dnsZone,
-			"rke2_version":    rke2Version,
-			"rancher_version": rancherVersion,
-			"file_path":       testDir,
-		},
+		Vars: vars,
 		// Environment variables to set when running Terraform
-		EnvVars: map[string]string{
-			"AWS_DEFAULT_REGION": region,
-			"AWS_REGION":         region,
-			"TF_DATA_DIR":        testDir,
-			"TF_IN_AUTOMATION":   "1",
-			"TF_CLI_CONFIG_FILE": terraformRcPath,
-		},
+		EnvVars:                  envVars,
 		RetryableTerraformErrors: util.GetRetryableTerraformErrors(),
 		NoColor:                  true,
 		SshAgent:                 sshAgent,

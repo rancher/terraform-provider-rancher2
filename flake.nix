@@ -95,6 +95,7 @@
               install -d $homebin;
               tfswitch -b $homebin/terraform 1.5.7 &>/dev/null;
               export PATH="$homebin:$PATH";
+              export PATH="$(which go):$PATH";
               export PS1="nix:# ";
             '';
           };

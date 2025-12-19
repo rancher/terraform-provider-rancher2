@@ -419,6 +419,10 @@ func Teardown(t *testing.T, dataDir string, exampleDir string, options []*terraf
 		if err != nil {
 			t.Logf("Failed to delete test data directory: %v", err)
 		}
+		err = os.RemoveAll(dataDir + "-backend")
+		if err != nil {
+			t.Logf("Failed to delete test data backend directory: %v", err)
+		}
 	}
 	agent.Stop()
 	err = aws.DeleteEC2KeyPairE(t, keyPair)
