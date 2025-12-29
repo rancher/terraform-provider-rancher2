@@ -328,10 +328,10 @@ resource "rancher2_cluster_v2" "foo-harvester-v2-cloud-provider" {
     }
     # The kubeconfig file of the Harvester cluster is sent to all nodes via the machine_selector_config
     machine_selector_config {
-      config = {
+      config = jsonencode({
         cloud-provider-config = file("${path.module}/foo-harvester-v2-cloud-provider-kubeconfig")
         cloud-provider-name = "harvester"
-      }
+      })
     }
     machine_global_config = <<EOF
 cni: "calico"
