@@ -215,11 +215,11 @@ func expandMachineConfigV2Openstack(p []interface{}, source *MachineConfigV2) *M
 	if v, ok := in["sec_groups"].(string); ok && len(v) > 0 {
 		obj.SecGroups = v
 	}
-	if v, ok := in["server_group_name"].(string); ok && len(v) > 0 {
-		obj.ServerGroupName = v
-	}
 	if v, ok := in["server_group_id"].(string); ok && len(v) > 0 {
 		obj.ServerGroupId = v
+	}
+	if v, ok := in["server_group_name"].(string); ok && len(v) > 0 {
+		obj.ServerGroupName = v
 	}
 	if v, ok := in["ssh_port"].(string); ok && len(v) > 0 {
 		obj.SSHPort = v
