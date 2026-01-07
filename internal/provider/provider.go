@@ -2,14 +2,14 @@ package provider
 
 import (
 	"context"
-  "fmt"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
-  "github.com/hashicorp/terraform-plugin-framework/resource"
-  "github.com/hashicorp/terraform-plugin-log/tflog"
-  c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
-  "github.com/rancher/terraform-provider-rancher2/internal/provider/rancher_client"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
+	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher_client"
 )
 
 // The `var _` is a special Go construct that results in an unusable variable.
@@ -22,9 +22,9 @@ type RancherProvider struct {
 }
 
 func New(version string) func() provider.Provider {
-  return func() provider.Provider {
-    return &RancherProvider{
-      version: version,
+	return func() provider.Provider {
+		return &RancherProvider{
+			version: version,
 		}
 	}
 }
@@ -38,32 +38,32 @@ func (p *RancherProvider) Metadata(ctx context.Context, req provider.MetadataReq
 }
 
 // This provider has no configuration arguments.
-func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {}
+func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+}
 
 func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("Request Object: %#v", req))
+	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Request Object: %#v", req))
 
-  var config RancherProviderModel
+	var config RancherProviderModel
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-  registry := c.NewRegistry()
-  resp.ResourceData   = registry
-  resp.DataSourceData = registry
+	registry := c.NewRegistry()
+	resp.ResourceData = registry
+	resp.DataSourceData = registry
 
-  tflog.Debug(ctx, fmt.Sprintf("Response Object: %#v", resp))
+	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Response Object: %#v", resp))
 }
 
 func (p *RancherProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-    rancher_client.NewRancherClientResource,
+		rancher_client.NewRancherClientResource,
 	}
 }
 
 func (p *RancherProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-	}
+	return []func() datasource.DataSource{}
 }
