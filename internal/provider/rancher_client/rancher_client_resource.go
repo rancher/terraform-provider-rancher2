@@ -29,7 +29,7 @@ func NewRancherClientResource() resource.Resource {
 }
 
 type RancherClientResource struct {
-	registry *c.ClientRegistry
+	Registry *c.ClientRegistry
 }
 
 // RancherClientResourceModel describes the resource data model.
@@ -136,11 +136,10 @@ func (r *RancherClientResource) Schema(ctx context.Context, req resource.SchemaR
 }
 
 func (r *RancherClientResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
-		return
+		return // Prevent panic if the provider has not been configured.
 	}
-	r.registry = req.ProviderData.(*c.ClientRegistry)
+	r.Registry = req.ProviderData.(*c.ClientRegistry)
 }
 
 // - Create generates reality and state to match plan.
@@ -179,11 +178,11 @@ func (r *RancherClientResource) Create(ctx context.Context, req resource.CreateR
 	pSecretKey := plan.SecretKey.ValueString()
 	pTokenKey := plan.TokenKey.ValueString()
 
-	_, found := r.registry.Load(ID)
+	_, found := r.Registry.Load(ID)
 	if !found {
 		tflog.Debug(ctx, "Using default http client.")
 		newClient := c.NewHttpClient(ctx, pApiURL, pCACerts, pIgnoreSystemCA, pInsecure, pAccessKey, pSecretKey, pTokenKey, pMaxRedirects, pTimeout)
-		r.registry.Store(ID, newClient)
+		r.Registry.Store(ID, newClient)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -205,7 +204,7 @@ func (r *RancherClientResource) Read(ctx context.Context, req resource.ReadReque
 	// On a new terraform run, the registry is empty.
 	// We check if the client is in the registry. If not, we re-create it from state and add it.
 	// This ensures other resources can find the client and that we don't plan a "destroy and re-create" on every run.
-	_, found := r.registry.Load(ID)
+	_, found := r.Registry.Load(ID)
 	if !found {
 		tflog.Debug(ctx, "Client not found in registry. Re-creating from state for ID: "+ID)
 
@@ -233,7 +232,7 @@ func (r *RancherClientResource) Read(ctx context.Context, req resource.ReadReque
 			resp.Diagnostics.AddError("Client Creation Error", "Failed to create new HTTP client from state.")
 			return
 		}
-		r.registry.Store(ID, newClient)
+		r.Registry.Store(ID, newClient)
 	} else {
 		tflog.Debug(ctx, "Client found in registry for ID: "+ID)
 	}
@@ -270,7 +269,7 @@ func (r *RancherClientResource) Update(ctx context.Context, req resource.UpdateR
 
 	tflog.Debug(ctx, "Using default http client.")
 	newClient := c.NewHttpClient(ctx, cApiURL, cCACerts, cIgnoreSystemCA, cInsecure, cAccessKey, cSecretKey, cTokenKey, cMaxRedirects, cTimeout)
-	r.registry.Store(ID, newClient)
+	r.Registry.Store(ID, newClient)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 	tflog.Debug(ctx, fmt.Sprintf("Update Response Object: %+v", *resp))
@@ -293,9 +292,9 @@ func (r *RancherClientResource) Delete(ctx context.Context, req resource.DeleteR
 
 	ID := state.Id.ValueString()
 
-	_, found := r.registry.Load(ID)
+	_, found := r.Registry.Load(ID)
 	if found {
-		r.registry.Delete(ID)
+		r.Registry.Delete(ID)
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("Delete Response Object: %+v", *resp))
