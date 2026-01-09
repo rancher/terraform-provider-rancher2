@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// ClientRegistry handles the storage of authenticated clients.
+// ClientRegistry handles the storage of unauthenticated clients.
 // It is thread-safe to allow concurrent resource operations.
 type ClientRegistry struct {
 	clients map[string]Client

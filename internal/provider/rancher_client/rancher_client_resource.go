@@ -2,7 +2,7 @@ package rancher_client
 
 import (
 	"context"
-	"encoding/base64"
+	// "encoding/base64"
 	"fmt"
 	"net/url"
 	"os"
@@ -44,9 +44,9 @@ type RancherClientResourceModel struct {
 	Insecure       types.Bool   `tfsdk:"insecure"`
 	MaxRedirects   types.String `tfsdk:"max_redirects"`
 	ConnectTimeout types.String `tfsdk:"connect_timeout"`
-	AccessKey      types.String `tfsdk:"access_key"`
-	SecretKey      types.String `tfsdk:"secret_key"`
-	TokenKey       types.String `tfsdk:"token_key"`
+	// AccessKey      types.String `tfsdk:"access_key"`
+	// SecretKey      types.String `tfsdk:"secret_key"`
+	// TokenKey       types.String `tfsdk:"token_key"`
 }
 
 func (r *RancherClientResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -114,30 +114,30 @@ func (r *RancherClientResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 			},
-			"access_key": schema.StringAttribute{
-				Description: "API Key used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided." +
-					"This can also be set using the RANCHER_ACCESS_KEY environment variable. " +
-					"Environment variable takes precedence over this setting if both are set.",
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"secret_key": schema.StringAttribute{
-				Description: "API secret used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided." +
-					"This can also be set using the RANCHER_SECRET_KEY environment variable. " +
-					"Environment variable takes precedence over this setting if both are set.",
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"token_key": schema.StringAttribute{
-				Description: "API token used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided. " +
-					"This can also be set using the RANCHER_TOKEN_KEY environment variable. " +
-					"Environment variable takes precedence over this setting if both are set.",
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
-			},
+			// "access_key": schema.StringAttribute{
+			// 	Description: "API Key used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided." +
+			// 		"This can also be set using the RANCHER_ACCESS_KEY environment variable. " +
+			// 		"Environment variable takes precedence over this setting if both are set.",
+			// 	Optional:  true,
+			// 	Computed:  true,
+			// 	Sensitive: true,
+			// },
+			// "secret_key": schema.StringAttribute{
+			// 	Description: "API secret used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided." +
+			// 		"This can also be set using the RANCHER_SECRET_KEY environment variable. " +
+			// 		"Environment variable takes precedence over this setting if both are set.",
+			// 	Optional:  true,
+			// 	Computed:  true,
+			// 	Sensitive: true,
+			// },
+			// "token_key": schema.StringAttribute{
+			// 	Description: "API token used to authenticate with the rancher server. One of access_key and secret_key or token_key must be provided. " +
+			// 		"This can also be set using the RANCHER_TOKEN_KEY environment variable. " +
+			// 		"Environment variable takes precedence over this setting if both are set.",
+			// 	Optional:  true,
+			// 	Computed:  true,
+			// 	Sensitive: true,
+			// },
 		},
 	}
 }
@@ -201,20 +201,20 @@ func (r *RancherClientResource) Create(ctx context.Context, req resource.CreateR
 	pInsecure := data.Insecure.ValueBool()
 	pMaxRedirects := data.MaxRedirects.ValueString()
 	pTimeout := data.ConnectTimeout.ValueString()
-	pAccessKey := data.AccessKey.ValueString()
-	pSecretKey := data.SecretKey.ValueString()
-	pTokenKey := data.TokenKey.ValueString()
+	// pAccessKey := data.AccessKey.ValueString()
+	// pSecretKey := data.SecretKey.ValueString()
+	// pTokenKey := data.TokenKey.ValueString()
 
 	pMR, err := strconv.ParseInt(pMaxRedirects, 10, 64)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("[ERROR] Invalid MaxRedirects value: %v", pMaxRedirects), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Invalid MaxRedirects value: %v", pMaxRedirects), err.Error())
 		return
 	}
 
 	_, found := r.Registry.Load(ID)
 	if !found {
 		tflog.Debug(ctx, "Using default http client.")
-		newClient := c.NewHttpClient(ctx, pApiURL, pCACerts, pIgnoreSystemCA, pInsecure, pAccessKey, pSecretKey, pTokenKey, pMR, pTimeout)
+		newClient := c.NewHttpClient(ctx, pApiURL, pCACerts, pIgnoreSystemCA, pInsecure, pMR, pTimeout)
 		r.Registry.Store(ID, newClient)
 	}
 
@@ -254,9 +254,9 @@ func (r *RancherClientResource) Read(ctx context.Context, req resource.ReadReque
 		sInsecure := state.Insecure.ValueBool()
 		sMaxRedirects := state.MaxRedirects.ValueString()
 		sTimeout := state.ConnectTimeout.ValueString()
-		sAccessKey := state.AccessKey.ValueString()
-		sSecretKey := state.SecretKey.ValueString()
-		sTokenKey := state.TokenKey.ValueString()
+		// sAccessKey := state.AccessKey.ValueString()
+		// sSecretKey := state.SecretKey.ValueString()
+		// sTokenKey := state.TokenKey.ValueString()
 
 		sMR, err := strconv.ParseInt(sMaxRedirects, 10, 64)
 		if err != nil {
@@ -266,7 +266,7 @@ func (r *RancherClientResource) Read(ctx context.Context, req resource.ReadReque
 
 		// When re-hydrating, we assume the standard HttpClient. A testing client would be
 		// already defined by the test logic, so would never hit this point.
-		newClient := c.NewHttpClient(ctx, sApiURL, sCACerts, sIgnoreSystemCA, sInsecure, sAccessKey, sSecretKey, sTokenKey, sMR, sTimeout)
+		newClient := c.NewHttpClient(ctx, sApiURL, sCACerts, sIgnoreSystemCA, sInsecure, sMR, sTimeout)
 		if newClient == nil {
 			resp.Diagnostics.AddError("Client Creation Error", "Failed to create new HTTP client from state.")
 			return
@@ -303,9 +303,9 @@ func (r *RancherClientResource) Update(ctx context.Context, req resource.UpdateR
 	cInsecure := config.Insecure.ValueBool()
 	cMaxRedirects := config.MaxRedirects.ValueString()
 	cTimeout := config.ConnectTimeout.ValueString()
-	cAccessKey := config.AccessKey.ValueString()
-	cSecretKey := config.SecretKey.ValueString()
-	cTokenKey := config.TokenKey.ValueString()
+	// cAccessKey := config.AccessKey.ValueString()
+	// cSecretKey := config.SecretKey.ValueString()
+	// cTokenKey := config.TokenKey.ValueString()
 	ID := config.Id.ValueString()
 
 	cMR, err := strconv.ParseInt(cMaxRedirects, 10, 64)
@@ -315,7 +315,7 @@ func (r *RancherClientResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	tflog.Debug(ctx, "Using default http client.")
-	newClient := c.NewHttpClient(ctx, cApiURL, cCACerts, cIgnoreSystemCA, cInsecure, cAccessKey, cSecretKey, cTokenKey, cMR, cTimeout)
+	newClient := c.NewHttpClient(ctx, cApiURL, cCACerts, cIgnoreSystemCA, cInsecure, cMR, cTimeout)
 	r.Registry.Store(ID, newClient)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
@@ -361,11 +361,6 @@ func getDefaultValues(d *RancherClientResourceModel) {
 	if d.ConnectTimeout.ValueString() == "" {
 		d.ConnectTimeout = types.StringValue("30s")
 	}
-
-	if d.TokenKey.ValueString() == "" && (d.AccessKey.ValueString() != "") && (d.SecretKey.ValueString() != "") {
-		t := base64.StdEncoding.EncodeToString([]byte(d.AccessKey.ValueString() + ":" + d.SecretKey.ValueString()))
-		d.TokenKey = types.StringValue(t)
-	}
 }
 
 func validateValues(d *RancherClientResourceModel) error {
@@ -405,19 +400,19 @@ func getEnvironmentValues(d *RancherClientResourceModel) {
 	if os.Getenv("RANCHER_TIMEOUT") != "" {
 		d.ConnectTimeout = types.StringValue(os.Getenv("RANCHER_TIMEOUT"))
 	}
-	if os.Getenv("RANCHER_ACCESS_KEY") != "" {
-		d.AccessKey = types.StringValue(os.Getenv("RANCHER_ACCESS_KEY"))
-	}
-	if os.Getenv("RANCHER_SECRET_KEY") != "" {
-		d.SecretKey = types.StringValue(os.Getenv("RANCHER_SECRET_KEY"))
-	}
-	if os.Getenv("RANCHER_TOKEN_KEY") != "" {
-		d.TokenKey = types.StringValue(os.Getenv("RANCHER_TOKEN_KEY"))
-	}
-	if d.TokenKey.ValueString() == "" && (d.AccessKey.ValueString() != "") && (d.SecretKey.ValueString() != "") {
-		t := base64.StdEncoding.EncodeToString([]byte(d.AccessKey.ValueString() + ":" + d.SecretKey.ValueString()))
-		d.TokenKey = types.StringValue(t)
-	}
+	// if os.Getenv("RANCHER_ACCESS_KEY") != "" {
+	// 	d.AccessKey = types.StringValue(os.Getenv("RANCHER_ACCESS_KEY"))
+	// }
+	// if os.Getenv("RANCHER_SECRET_KEY") != "" {
+	// 	d.SecretKey = types.StringValue(os.Getenv("RANCHER_SECRET_KEY"))
+	// }
+	// if os.Getenv("RANCHER_TOKEN_KEY") != "" {
+	// 	d.TokenKey = types.StringValue(os.Getenv("RANCHER_TOKEN_KEY"))
+	// }
+	// if d.TokenKey.ValueString() == "" && (d.AccessKey.ValueString() != "") && (d.SecretKey.ValueString() != "") {
+	// 	t := base64.StdEncoding.EncodeToString([]byte(d.AccessKey.ValueString() + ":" + d.SecretKey.ValueString()))
+	// 	d.TokenKey = types.StringValue(t)
+	// }
 }
 
 func isValidURL(u string, insecure bool) error {
