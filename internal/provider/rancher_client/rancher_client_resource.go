@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
@@ -30,6 +32,7 @@ func NewRancherClientResource() resource.Resource {
 
 type RancherClientResource struct {
 	Registry *c.ClientRegistry
+	Version  string
 }
 
 // RancherClientResourceModel describes the resource data model.
@@ -39,8 +42,8 @@ type RancherClientResourceModel struct {
 	CACerts        types.String `tfsdk:"ca_certs"`
 	IgnoreSystemCA types.Bool   `tfsdk:"ignore_system_ca"`
 	Insecure       types.Bool   `tfsdk:"insecure"`
-	MaxRedirects   types.Int64  `tfsdk:"max_redirects"`
-	Timeout        types.String `tfsdk:"timeout"`
+	MaxRedirects   types.String `tfsdk:"max_redirects"`
+	ConnectTimeout types.String `tfsdk:"connect_timeout"`
 	AccessKey      types.String `tfsdk:"access_key"`
 	SecretKey      types.String `tfsdk:"secret_key"`
 	TokenKey       types.String `tfsdk:"token_key"`
@@ -83,6 +86,7 @@ func (r *RancherClientResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Ignore system CA certificates when validating TLS connections to Rancher. Defaults to false. " +
 					"This can also be set using the RANCHER_IGNORE_SYSTEM_CA environment variable. " +
 					"Environment variable takes precedence over this setting if both are set.",
+				Default:  booldefault.StaticBool(false),
 				Optional: true,
 				Computed: true,
 			},
@@ -90,20 +94,23 @@ func (r *RancherClientResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Allow insecure TLS connections. Defaults to false. " +
 					"This can also be set using the RANCHER_INSECURE environment variable. " +
 					"Environment variable takes precedence over this setting if both are set.",
+				Default:  booldefault.StaticBool(false),
 				Optional: true,
 				Computed: true,
 			},
-			"max_redirects": schema.Int64Attribute{
-				Description: "Maximum number of redirects to follow when making requests to the Rancher API. Defaults to 0 (no redirects)." +
+			"max_redirects": schema.StringAttribute{
+				Description: "Maximum number of redirects to follow when making requests to the Rancher API, defaults to 3." +
 					"This can also be set using the RANCHER_MAX_REDIRECTS environment variable. " +
 					"Environment variable takes precedence over this setting if both are set.",
+				Default:  stringdefault.StaticString("3"),
 				Optional: true,
 				Computed: true,
 			},
-			"timeout": schema.StringAttribute{
+			"connect_timeout": schema.StringAttribute{
 				Description: "Rancher connection timeout. Golang duration format, ex: '60s'. Defaults to '30s'. " +
 					"This can also be set using the RANCHER_TIMEOUT environment variable. " +
 					"Environment variable takes precedence over this setting if both are set.",
+				Default:  stringdefault.StaticString("30s"),
 				Optional: true,
 				Computed: true,
 			},
@@ -139,7 +146,17 @@ func (r *RancherClientResource) Configure(ctx context.Context, req resource.Conf
 	if req.ProviderData == nil {
 		return // Prevent panic if the provider has not been configured.
 	}
-	r.Registry = req.ProviderData.(*c.ClientRegistry)
+
+	registry, ok := req.ProviderData.(*c.ClientRegistry)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *c.ClientRegistry, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+
+	r.Registry = registry
 }
 
 // - Create generates reality and state to match plan.
@@ -155,33 +172,49 @@ func (r *RancherClientResource) Configure(ctx context.Context, req resource.Conf
 
 func (r *RancherClientResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Create Request Object: %+v", req))
+	var err error
 
 	var plan RancherClientResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	getDefaultValues(&plan)
 
-	err := getValues(&plan)
+	var data RancherClientResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	getDefaultValues(&data)
+	getEnvironmentValues(&data)
+	err = validateValues(&data)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting values for create: ", err.Error())
 		return
 	}
-	ID := plan.Id.ValueString()
-	pApiURL := plan.ApiURL.ValueString()
-	pCACerts := plan.CACerts.ValueString()
-	pIgnoreSystemCA := plan.IgnoreSystemCA.ValueBool()
-	pInsecure := plan.Insecure.ValueBool()
-	pMaxRedirects := plan.MaxRedirects.ValueInt64()
-	pTimeout := plan.Timeout.ValueString()
-	pAccessKey := plan.AccessKey.ValueString()
-	pSecretKey := plan.SecretKey.ValueString()
-	pTokenKey := plan.TokenKey.ValueString()
+
+	ID := data.Id.ValueString()
+	pApiURL := data.ApiURL.ValueString()
+	pCACerts := data.CACerts.ValueString()
+	pIgnoreSystemCA := data.IgnoreSystemCA.ValueBool()
+	pInsecure := data.Insecure.ValueBool()
+	pMaxRedirects := data.MaxRedirects.ValueString()
+	pTimeout := data.ConnectTimeout.ValueString()
+	pAccessKey := data.AccessKey.ValueString()
+	pSecretKey := data.SecretKey.ValueString()
+	pTokenKey := data.TokenKey.ValueString()
+
+	pMR, err := strconv.ParseInt(pMaxRedirects, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("[ERROR] Invalid MaxRedirects value: %v", pMaxRedirects), err.Error())
+		return
+	}
 
 	_, found := r.Registry.Load(ID)
 	if !found {
 		tflog.Debug(ctx, "Using default http client.")
-		newClient := c.NewHttpClient(ctx, pApiURL, pCACerts, pIgnoreSystemCA, pInsecure, pAccessKey, pSecretKey, pTokenKey, pMaxRedirects, pTimeout)
+		newClient := c.NewHttpClient(ctx, pApiURL, pCACerts, pIgnoreSystemCA, pInsecure, pAccessKey, pSecretKey, pTokenKey, pMR, pTimeout)
 		r.Registry.Store(ID, newClient)
 	}
 
@@ -208,10 +241,10 @@ func (r *RancherClientResource) Read(ctx context.Context, req resource.ReadReque
 	if !found {
 		tflog.Debug(ctx, "Client not found in registry. Re-creating from state for ID: "+ID)
 
-		// The getValues function handles environment variables and defaults, which we need.
-		err := getValues(&state)
+		getDefaultValues(&state)
+		err := validateValues(&state)
 		if err != nil {
-			resp.Diagnostics.AddError("Error getting values for read: ", err.Error())
+			resp.Diagnostics.AddError("Error getting values for create: ", err.Error())
 			return
 		}
 
@@ -219,15 +252,21 @@ func (r *RancherClientResource) Read(ctx context.Context, req resource.ReadReque
 		sCACerts := state.CACerts.ValueString()
 		sIgnoreSystemCA := state.IgnoreSystemCA.ValueBool()
 		sInsecure := state.Insecure.ValueBool()
-		sMaxRedirects := state.MaxRedirects.ValueInt64()
-		sTimeout := state.Timeout.ValueString()
+		sMaxRedirects := state.MaxRedirects.ValueString()
+		sTimeout := state.ConnectTimeout.ValueString()
 		sAccessKey := state.AccessKey.ValueString()
 		sSecretKey := state.SecretKey.ValueString()
 		sTokenKey := state.TokenKey.ValueString()
 
+		sMR, err := strconv.ParseInt(sMaxRedirects, 10, 64)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("[ERROR] Invalid MaxRedirects value: %v", sMaxRedirects), err.Error())
+			return
+		}
+
 		// When re-hydrating, we assume the standard HttpClient. A testing client would be
 		// already defined by the test logic, so would never hit this point.
-		newClient := c.NewHttpClient(ctx, sApiURL, sCACerts, sIgnoreSystemCA, sInsecure, sAccessKey, sSecretKey, sTokenKey, sMaxRedirects, sTimeout)
+		newClient := c.NewHttpClient(ctx, sApiURL, sCACerts, sIgnoreSystemCA, sInsecure, sAccessKey, sSecretKey, sTokenKey, sMR, sTimeout)
 		if newClient == nil {
 			resp.Diagnostics.AddError("Client Creation Error", "Failed to create new HTTP client from state.")
 			return
@@ -251,24 +290,32 @@ func (r *RancherClientResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	err := getValues(&config)
+	getDefaultValues(&config)
+	err := validateValues(&config)
 	if err != nil {
-		resp.Diagnostics.AddError("Error getting values for update: ", err.Error())
+		resp.Diagnostics.AddError("Error getting values for create: ", err.Error())
 		return
 	}
+
 	cApiURL := config.ApiURL.ValueString()
 	cCACerts := config.CACerts.ValueString()
 	cIgnoreSystemCA := config.IgnoreSystemCA.ValueBool()
 	cInsecure := config.Insecure.ValueBool()
-	cMaxRedirects := config.MaxRedirects.ValueInt64()
-	cTimeout := config.Timeout.ValueString()
+	cMaxRedirects := config.MaxRedirects.ValueString()
+	cTimeout := config.ConnectTimeout.ValueString()
 	cAccessKey := config.AccessKey.ValueString()
 	cSecretKey := config.SecretKey.ValueString()
 	cTokenKey := config.TokenKey.ValueString()
 	ID := config.Id.ValueString()
 
+	cMR, err := strconv.ParseInt(cMaxRedirects, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("[ERROR] Invalid MaxRedirects value: %v", cMaxRedirects), err.Error())
+		return
+	}
+
 	tflog.Debug(ctx, "Using default http client.")
-	newClient := c.NewHttpClient(ctx, cApiURL, cCACerts, cIgnoreSystemCA, cInsecure, cAccessKey, cSecretKey, cTokenKey, cMaxRedirects, cTimeout)
+	newClient := c.NewHttpClient(ctx, cApiURL, cCACerts, cIgnoreSystemCA, cInsecure, cAccessKey, cSecretKey, cTokenKey, cMR, cTimeout)
 	r.Registry.Store(ID, newClient)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
@@ -284,9 +331,10 @@ func (r *RancherClientResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	err := getValues(&state)
+	getDefaultValues(&state)
+	err := validateValues(&state)
 	if err != nil {
-		resp.Diagnostics.AddError("Error getting values for delete: ", err.Error())
+		resp.Diagnostics.AddError("Error getting values for create: ", err.Error())
 		return
 	}
 
@@ -304,130 +352,87 @@ func (r *RancherClientResource) ImportState(ctx context.Context, req resource.Im
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func getValues(d *RancherClientResourceModel) error {
-	// Environment variables override config settings
-	var err error
+func getDefaultValues(d *RancherClientResourceModel) {
 
-	var ApiURL string
-	if !d.ApiURL.IsNull() {
-		ApiURL = d.ApiURL.ValueString()
-	}
-	if os.Getenv("RANCHER_API_URL") != "" {
-		ApiURL = os.Getenv("RANCHER_API_URL")
+	if d.MaxRedirects.ValueString() == "" {
+		d.MaxRedirects = types.StringValue("3")
 	}
 
-	var CACerts string
-	if !d.CACerts.IsNull() {
-		CACerts = d.CACerts.ValueString()
-	}
-	if os.Getenv("RANCHER_CA_CERTS") != "" {
-		CACerts = os.Getenv("RANCHER_CA_CERTS")
+	if d.ConnectTimeout.ValueString() == "" {
+		d.ConnectTimeout = types.StringValue("30s")
 	}
 
-	IgnoreSystemCA := false
-	if !d.IgnoreSystemCA.IsNull() {
-		IgnoreSystemCA = d.IgnoreSystemCA.ValueBool()
+	if d.TokenKey.ValueString() == "" && (d.AccessKey.ValueString() != "") && (d.SecretKey.ValueString() != "") {
+		t := base64.StdEncoding.EncodeToString([]byte(d.AccessKey.ValueString() + ":" + d.SecretKey.ValueString()))
+		d.TokenKey = types.StringValue(t)
 	}
-	if os.Getenv("RANCHER_IGNORE_SYSTEM_CA") == "true" {
-		IgnoreSystemCA = true
-	}
+}
 
-	Insecure := false
-	if !d.Insecure.IsNull() {
-		Insecure = d.Insecure.ValueBool()
+func validateValues(d *RancherClientResourceModel) error {
+	if d.ApiURL.ValueString() == "" {
+		return fmt.Errorf("[ERROR] No API URL detected, please either specify one in your config or in the RANCHER_API_URL environment variable")
 	}
-	if os.Getenv("RANCHER_INSECURE") == "true" {
-		Insecure = true
-	}
-
-	MaxRedirects := 0
-	if !d.MaxRedirects.IsNull() {
-		MaxRedirects = int(d.MaxRedirects.ValueInt64())
-	}
-	if os.Getenv("RANCHER_MAX_REDIRECTS") != "" {
-		MaxRedirects, err = strconv.Atoi(os.Getenv("RANCHER_MAX_REDIRECTS"))
-		if err != nil {
-			return fmt.Errorf("[ERROR] Invalid RANCHER_MAX_REDIRECTS value: %v", err)
-		}
-	}
-
-	var Timeout string
-	if !d.Timeout.IsNull() {
-		Timeout = d.Timeout.ValueString()
-	}
-	if os.Getenv("RANCHER_TIMEOUT") != "" {
-		Timeout = os.Getenv("RANCHER_TIMEOUT")
-	}
-
-	var AccessKey string
-	if !d.AccessKey.IsNull() {
-		AccessKey = d.AccessKey.ValueString()
-	}
-	if os.Getenv("RANCHER_ACCESS_KEY") != "" {
-		AccessKey = os.Getenv("RANCHER_ACCESS_KEY")
-	}
-
-	var SecretKey string
-	if !d.SecretKey.IsNull() {
-		SecretKey = d.SecretKey.ValueString()
-	}
-	if os.Getenv("RANCHER_SECRET_KEY") != "" {
-		SecretKey = os.Getenv("RANCHER_SECRET_KEY")
-	}
-
-	var TokenKey string
-	if !d.TokenKey.IsNull() {
-		TokenKey = d.TokenKey.ValueString()
-	}
-	if os.Getenv("RANCHER_TOKEN_KEY") != "" {
-		TokenKey = os.Getenv("RANCHER_TOKEN_KEY")
-	}
-
-	// Validate Data Here //
-	if ApiURL == "" {
-		return fmt.Errorf("[ERROR] No API URL detected, please either specify one in your config or in the RANCHER_API_URL environment variable.")
-	}
-	err = isValidURL(ApiURL, Insecure)
+	err := isValidURL(d.ApiURL.ValueString(), d.Insecure.ValueBool())
 	if err != nil {
 		return fmt.Errorf("[ERROR] Invalid Rancher API URL, error: %v", err.Error())
 	}
 
 	// this is just validating that the string supplied is a valid duration
-	_, err = time.ParseDuration(Timeout)
+	_, err = time.ParseDuration(d.ConnectTimeout.ValueString())
 	if err != nil {
-		return fmt.Errorf("[ERROR] Timeout must be in golang duration format, error: %v", err.Error())
+		return fmt.Errorf("[ERROR] Timeout must be in golang duration format, have %v, error: %v", d.ConnectTimeout.ValueString(), err.Error())
 	}
-
-	if TokenKey == "" && (AccessKey != "") && (SecretKey != "") {
-		TokenKey = base64.StdEncoding.EncodeToString([]byte(AccessKey + ":" + SecretKey))
-	}
-
-	d.ApiURL = types.StringValue(ApiURL)
-	d.CACerts = types.StringValue(CACerts)
-	d.IgnoreSystemCA = types.BoolValue(IgnoreSystemCA)
-	d.Insecure = types.BoolValue(Insecure)
-	d.MaxRedirects = types.Int64Value(int64(MaxRedirects))
-	d.Timeout = types.StringValue(Timeout)
-	d.AccessKey = types.StringValue(AccessKey)
-	d.SecretKey = types.StringValue(SecretKey)
-	d.TokenKey = types.StringValue(TokenKey)
 
 	return nil
 }
 
+func getEnvironmentValues(d *RancherClientResourceModel) {
+	if os.Getenv("RANCHER_API_URL") != "" {
+		d.ApiURL = types.StringValue(os.Getenv("RANCHER_API_URL"))
+	}
+	if os.Getenv("RANCHER_CA_CERTS") != "" {
+		d.CACerts = types.StringValue(os.Getenv("RANCHER_CA_CERTS"))
+	}
+	if os.Getenv("RANCHER_IGNORE_SYSTEM_CA") == "true" {
+		d.IgnoreSystemCA = types.BoolValue(true)
+	}
+	if os.Getenv("RANCHER_INSECURE") == "true" {
+		d.Insecure = types.BoolValue(true)
+	}
+	if os.Getenv("RANCHER_MAX_REDIRECTS") != "" {
+		d.MaxRedirects = types.StringValue(os.Getenv("RANCHER_MAX_REDIRECTS"))
+	}
+	if os.Getenv("RANCHER_TIMEOUT") != "" {
+		d.ConnectTimeout = types.StringValue(os.Getenv("RANCHER_TIMEOUT"))
+	}
+	if os.Getenv("RANCHER_ACCESS_KEY") != "" {
+		d.AccessKey = types.StringValue(os.Getenv("RANCHER_ACCESS_KEY"))
+	}
+	if os.Getenv("RANCHER_SECRET_KEY") != "" {
+		d.SecretKey = types.StringValue(os.Getenv("RANCHER_SECRET_KEY"))
+	}
+	if os.Getenv("RANCHER_TOKEN_KEY") != "" {
+		d.TokenKey = types.StringValue(os.Getenv("RANCHER_TOKEN_KEY"))
+	}
+	if d.TokenKey.ValueString() == "" && (d.AccessKey.ValueString() != "") && (d.SecretKey.ValueString() != "") {
+		t := base64.StdEncoding.EncodeToString([]byte(d.AccessKey.ValueString() + ":" + d.SecretKey.ValueString()))
+		d.TokenKey = types.StringValue(t)
+	}
+}
+
 func isValidURL(u string, insecure bool) error {
 	if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
-		return fmt.Errorf("Invalid URL scheme: %s", u)
+		return fmt.Errorf("invalid URL scheme: %s", u)
 	}
 	if strings.HasPrefix(u, "http://") && !insecure {
-		return fmt.Errorf("Insecure URL scheme 'http' not allowed without insecure flag set to true: %s", u)
+		return fmt.Errorf("insecure URL scheme 'http' not allowed without insecure flag set to true: %s", u)
 	}
 	if strings.Count(u, "/") > 2 {
-		return fmt.Errorf("URL path not allowed: %s", u)
+		return fmt.Errorf("url path not allowed: %s", u)
 	}
 	_, err := url.ParseRequestURI(u)
 	if err != nil {
-		return fmt.Errorf("URL parsing error: %s", err.Error())
+		return fmt.Errorf("url parsing error: %s", err.Error())
 	}
 	return nil
 }

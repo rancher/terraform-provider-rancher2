@@ -74,7 +74,6 @@ func TestProviderSchema(t *testing.T) {
 	}
 }
 
-// test provider configuration giving some basic values
 func TestProviderConfigure(t *testing.T) {
 	testCases := []struct {
 		name string
@@ -101,7 +100,7 @@ func TestProviderConfigure(t *testing.T) {
 			}}
 			res := provider.ConfigureResponse{}
 			tc.fit.Configure(ctx, req, &res)
-			t.Logf("Configured provider: %s", prettyPrint(res))
+			// t.Logf("Configured provider: %s", prettyPrint(res)).
 			if (tc.want == "succeed") && res.Diagnostics.HasError() {
 				t.Errorf("%#v.Configure() returned unexpected error diagnostics: %s", tc.fit, prettyPrint(res.Diagnostics))
 			}
@@ -112,7 +111,7 @@ func TestProviderConfigure(t *testing.T) {
 	}
 }
 
-// helpers
+// Helpers.
 func getSchema() schema.Schema {
 	testProvider := RancherProvider{version: "test"}
 	r := provider.SchemaResponse{}
@@ -120,7 +119,6 @@ func getSchema() schema.Schema {
 	return r.Schema
 }
 
-// getObjectAttributeTypes returns the tftypes.Object for the provider configuration by parsing the schema
 func getObjectAttributeTypes() tftypes.Object {
 	schema := getSchema()
 	attrTypes := map[string]tftypes.Type{}
@@ -135,11 +133,9 @@ func getObjectAttributeTypes() tftypes.Object {
 var tfsdkTagFieldMap = map[string]string{}
 
 func getStructFieldByTfsdkTag(v reflect.Value, tagName string) (reflect.Value, error) {
-	// first check if the tagName is in the map
 	if fieldName, ok := tfsdkTagFieldMap[tagName]; ok {
 		return v.FieldByName(fieldName), nil
 	}
-	// otherwise build the map and look again
 	for i := 0; i < v.Type().NumField(); i++ {
 		field := v.Type().Field(i)
 		tag := field.Tag.Get("tfsdk")
@@ -150,12 +146,11 @@ func getStructFieldByTfsdkTag(v reflect.Value, tagName string) (reflect.Value, e
 	if fieldName, ok := tfsdkTagFieldMap[tagName]; ok {
 		return v.FieldByName(fieldName), nil
 	}
-	// if still not found, return zero Value and error
 	return reflect.Value{}, fmt.Errorf("no such field with tfsdk tag %s", tagName)
 }
 
-// getObjectAttributeValues converts the RancherProviderModel struct to a map[string]tftypes.Value
-// it parses the schema to get the attribute names and types so that it automatically adapts to schema changes
+// getObjectAttributeValues converts the RancherProviderModel struct to a map[string]tftypes.Value.
+// it parses the schema to get the attribute names and types so that it automatically adapts to schema changes.
 func getObjectAttributeValues(t *testing.T, config RancherProviderModel) map[string]tftypes.Value {
 	values := map[string]tftypes.Value{}
 	attributeTypes := getObjectAttributeTypes().AttributeTypes
@@ -172,9 +167,9 @@ func getObjectAttributeValues(t *testing.T, config RancherProviderModel) map[str
 		}
 
 		// Dynamically call the appropriate Value method based on the tfsdk type.
-		// e.g. for types.StringValue, we call ValueString(), for types.BoolValue, we call ValueBool()
+		// e.g. for types.StringValue, we call ValueString(), for types.BoolValue, we call ValueBool().
 		// this works for all simple types, but not for complex types like lists, maps, sets, etc.
-		// try to avoid complex types in your schema
+		// Try to avoid complex types in your schema.
 		methodName := "Value" + strings.TrimSuffix(fieldVal.Type().Name(), "Value")
 		method := fieldVal.MethodByName(methodName)
 		if !method.IsValid() {
