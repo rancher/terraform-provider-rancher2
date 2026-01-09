@@ -22,14 +22,11 @@ type HttpClient struct {
 	CACert         string
 	IgnoreSystemCA bool
 	Insecure       bool
-	AccessKey      string
-	SecretKey      string
-	Token          string
 	MaxRedirects   int64
 	Timeout        time.Duration
 }
 
-func NewHttpClient(ctx context.Context, apiURL string, caCert string, ignoreSystemCA bool, insecure bool, accessKey string, secretKey string, token string, maxRedirects int64, timeout string) *HttpClient {
+func NewHttpClient(ctx context.Context, apiURL string, caCert string, ignoreSystemCA bool, insecure bool, maxRedirects int64, timeout string) *HttpClient {
 	to, err := time.ParseDuration(timeout)
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("error parsing timeout: %v", err))
@@ -40,9 +37,6 @@ func NewHttpClient(ctx context.Context, apiURL string, caCert string, ignoreSyst
 		CACert:         caCert,
 		IgnoreSystemCA: ignoreSystemCA,
 		Insecure:       insecure,
-		AccessKey:      accessKey,
-		SecretKey:      secretKey,
-		Token:          token,
 		MaxRedirects:   maxRedirects,
 		Timeout:        to,
 	}
@@ -51,7 +45,7 @@ func NewHttpClient(ctx context.Context, apiURL string, caCert string, ignoreSyst
 type HttpRequest struct {
 	Method   string
 	Endpoint string
-	Body     interface{}
+	Body     any
 	Headers  map[string]string
 }
 
@@ -95,10 +89,10 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 			tflog.Error(ctx, fmt.Sprintf("stopped after %d redirects", c.MaxRedirects))
 			return fmt.Errorf("stopped after %d redirects", c.MaxRedirects)
 		}
-		if len(c.Token) > 0 {
-			// make sure the auth token is added to redirected requests
-			req.Header.Add("Authorization", "Bearer "+c.Token)
-		}
+		// if len(c.Token) > 0 {
+		// 	// make sure the auth token is added to redirected requests
+		// 	req.Header.Add("Authorization", "Bearer "+c.Token)
+		// }
 		return nil
 	}
 
@@ -158,9 +152,9 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 		request.Header.Add(key, value)
 	}
 
-	if len(c.Token) > 0 {
-		request.Header.Add("Authorization", "Bearer "+c.Token)
-	}
+	// if len(c.Token) > 0 {
+	// 	request.Header.Add("Authorization", "Bearer "+c.Token)
+	// }
 
 	resp, err := client.Do(request)
 	if err != nil {

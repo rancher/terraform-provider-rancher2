@@ -16,31 +16,31 @@ type TestClient struct {
 	CACert         string
 	IgnoreSystemCA bool
 	Insecure       bool
-	AccessKey      string
-	SecretKey      string
-	Token          string
-	MaxRedirects   int
-	Timeout        time.Duration
+	// AccessKey      string
+	// SecretKey      string
+	// Token          string
+	MaxRedirects int
+	Timeout      time.Duration
 }
 
-func NewTestClient(apiURL string, caCert string, ignoreSystemCA bool, insecure bool, accessKey string, secretKey string, token string, maxRedirects int, timeout time.Duration) *TestClient {
+func NewTestClient(apiURL string, caCert string, ignoreSystemCA bool, insecure bool, maxRedirects int, timeout time.Duration) *TestClient {
 	return &TestClient{
 		ApiURL:         apiURL,
 		CACert:         caCert,
 		Insecure:       insecure,
 		IgnoreSystemCA: ignoreSystemCA,
-		AccessKey:      accessKey,
-		SecretKey:      secretKey,
-		Token:          token,
-		MaxRedirects:   maxRedirects,
-		Timeout:        timeout,
+		// AccessKey:      accessKey,
+		// SecretKey:      secretKey,
+		// Token:          token,
+		MaxRedirects: maxRedirects,
+		Timeout:      timeout,
 	}
 }
 
 type TestRequest struct {
 	Method   string
 	Endpoint string
-	Body     interface{}
+	Body     any
 	Headers  map[string]string
 }
 
@@ -75,11 +75,11 @@ func (r *TestRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 	// This implementation should log the request and client details for debugging.
 	tflog.Info(ctx, fmt.Sprintf("Mock Request: Method=%s, Endpoint=%s, Body=%v, Headers=%v", r.Method, r.Endpoint, r.Body, r.Headers))
 	tflog.Info(ctx, fmt.Sprintf(
-		"Mock Client: CACert=%s, Insecure=%t, IgnoreSystemCA=%t, Token=%s, MaxRedirects=%d, Timeout=%s",
+		"Mock Client: CACert=%s, Insecure=%t, IgnoreSystemCA=%t, MaxRedirects=%d, Timeout=%s",
 		c.CACert,
 		c.Insecure,
 		c.IgnoreSystemCA,
-		c.Token,
+		// c.Token,
 		c.MaxRedirects,
 		c.Timeout,
 	))
