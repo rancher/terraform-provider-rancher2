@@ -33,7 +33,7 @@ func (r *ClientRegistry) Load(id string) (Client, bool) {
 	return c, ok
 }
 
-// LoadOrError is a helper to reduce boilerplate in resources
+// LoadOrError is a helper to reduce boilerplate in resources.
 func (r *ClientRegistry) LoadOrError(id string) (Client, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()

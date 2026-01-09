@@ -7,7 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -32,7 +32,7 @@ type HttpClient struct {
 func NewHttpClient(ctx context.Context, apiURL string, caCert string, ignoreSystemCA bool, insecure bool, accessKey string, secretKey string, token string, maxRedirects int64, timeout string) *HttpClient {
 	to, err := time.ParseDuration(timeout)
 	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("Error parsing timeout: %v", err))
+		tflog.Error(ctx, fmt.Sprintf("error parsing timeout: %v", err))
 		return nil
 	}
 	return &HttpClient{
@@ -79,21 +79,21 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 
 	c, ok := rc.(*HttpClient)
 	if !ok {
-		tflog.Error(ctx, "Doing request: invalid rancher client type")
-		return nil, fmt.Errorf("Doing request: invalid rancher client type")
+		tflog.Error(ctx, "doing request: invalid rancher client type")
+		return nil, fmt.Errorf("doing request: invalid rancher client type")
 	}
 
 	if r.Endpoint == "" {
-		tflog.Error(ctx, "Doing request: URL is nil")
-		return nil, fmt.Errorf("Doing request: URL is nil")
+		tflog.Error(ctx, "doing request: URL is nil")
+		return nil, fmt.Errorf("doing request: URL is nil")
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("Request Object: %#v", r))
 
 	MaxRedirectCheckFunction := func(req *http.Request, via []*http.Request) error {
 		if len(via) >= int(c.MaxRedirects) {
-			tflog.Error(ctx, fmt.Sprintf("Stopped after %d redirects", c.MaxRedirects))
-			return fmt.Errorf("Stopped after %d redirects", c.MaxRedirects)
+			tflog.Error(ctx, fmt.Sprintf("stopped after %d redirects", c.MaxRedirects))
+			return fmt.Errorf("stopped after %d redirects", c.MaxRedirects)
 		}
 		if len(c.Token) > 0 {
 			// make sure the auth token is added to redirected requests
@@ -116,7 +116,7 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 	if c.CACert != "" {
 		// Append our cert to the cert pool
 		if ok := rootCAs.AppendCertsFromPEM([]byte(c.CACert)); !ok {
-			tflog.Warn(ctx, "No certs appended, using system certs only")
+			tflog.Warn(ctx, "no certs appended, using system certs only")
 		}
 	}
 
@@ -140,8 +140,8 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 	if r.Body != nil {
 		bodyBytes, err := json.Marshal(r.Body)
 		if err != nil {
-			tflog.Error(ctx, fmt.Sprintf("Doing request: error marshalling body: %v", err))
-			return nil, fmt.Errorf("Doing request: error marshalling body: %v", err)
+			tflog.Error(ctx, fmt.Sprintf("doing request: error marshalling body: %v", err))
+			return nil, fmt.Errorf("doing request: error marshalling body: %v", err)
 		}
 		reqBody = bytes.NewBuffer(bodyBytes)
 	} else {
@@ -150,8 +150,8 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 
 	request, err := http.NewRequest(r.Method, r.Endpoint, reqBody)
 	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("Doing request: %v", err))
-		return nil, fmt.Errorf("Doing request: %v", err)
+		tflog.Error(ctx, fmt.Sprintf("doing request: %v", err))
+		return nil, fmt.Errorf("doing request: %v", err)
 	}
 
 	for key, value := range r.Headers {
@@ -164,8 +164,8 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 
 	resp, err := client.Do(request)
 	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("Doing request: %v", err))
-		return nil, fmt.Errorf("Doing request: %v", err)
+		tflog.Error(ctx, fmt.Sprintf("doing request: %v", err))
+		return nil, fmt.Errorf("doing request: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -175,5 +175,5 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %#v", resp.Header))
 	tflog.Debug(ctx, fmt.Sprintf("Response Body: %v", resp.Body))
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }

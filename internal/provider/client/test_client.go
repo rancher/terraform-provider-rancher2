@@ -67,8 +67,8 @@ func (r *TestRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 
 	c, ok := rc.(*TestClient)
 	if !ok {
-		tflog.Error(ctx, "Doing request: invalid rancher client type")
-		return nil, fmt.Errorf("Doing request: invalid rancher client type")
+		tflog.Error(ctx, "doing request: invalid rancher client type")
+		return nil, fmt.Errorf("doing request: invalid rancher client type")
 	}
 
 	// This implementation should return mock data for testing purposes.
