@@ -161,7 +161,7 @@ func (r *RancherClientResource) Configure(ctx context.Context, req resource.Conf
 
 // - Create generates reality and state to match plan.
 // - Read updates state to match reality.
-// - Update updates reality and state to match plan/config (don't compare old state, just override).
+// - Update changes reality and state to match plan/config (best practice is don't compare old state, just override).
 // - Destroy destroys reality (state is handled automatically).
 
 // - The Config Phase triggers when the provider loads, it doesn't respect the dependency chain.
@@ -201,9 +201,6 @@ func (r *RancherClientResource) Create(ctx context.Context, req resource.CreateR
 	pInsecure := data.Insecure.ValueBool()
 	pMaxRedirects := data.MaxRedirects.ValueString()
 	pTimeout := data.ConnectTimeout.ValueString()
-	// pAccessKey := data.AccessKey.ValueString()
-	// pSecretKey := data.SecretKey.ValueString()
-	// pTokenKey := data.TokenKey.ValueString()
 
 	pMR, err := strconv.ParseInt(pMaxRedirects, 10, 64)
 	if err != nil {
@@ -231,49 +228,40 @@ func (r *RancherClientResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	getDefaultValues(&state)
 
-	ID := state.Id.ValueString()
+	var data RancherClientResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	getDefaultValues(&data)
+	getEnvironmentValues(&data)
+	err := validateValues(&data)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting values for read: ", err.Error())
+		return
+	}
 
-	// On a new terraform run, the registry is empty.
-	// We check if the client is in the registry. If not, we re-create it from state and add it.
-	// This ensures other resources can find the client and that we don't plan a "destroy and re-create" on every run.
+	ID := data.Id.ValueString()
+	pApiURL := data.ApiURL.ValueString()
+	pCACerts := data.CACerts.ValueString()
+	pIgnoreSystemCA := data.IgnoreSystemCA.ValueBool()
+	pInsecure := data.Insecure.ValueBool()
+	pMaxRedirects := data.MaxRedirects.ValueString()
+	pTimeout := data.ConnectTimeout.ValueString()
+
+	pMR, err := strconv.ParseInt(pMaxRedirects, 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Invalid MaxRedirects value: %v", pMaxRedirects), err.Error())
+		return
+	}
+
 	_, found := r.Registry.Load(ID)
 	if !found {
-		tflog.Debug(ctx, "Client not found in registry. Re-creating from state for ID: "+ID)
-
-		getDefaultValues(&state)
-		err := validateValues(&state)
-		if err != nil {
-			resp.Diagnostics.AddError("Error getting values for create: ", err.Error())
-			return
-		}
-
-		sApiURL := state.ApiURL.ValueString()
-		sCACerts := state.CACerts.ValueString()
-		sIgnoreSystemCA := state.IgnoreSystemCA.ValueBool()
-		sInsecure := state.Insecure.ValueBool()
-		sMaxRedirects := state.MaxRedirects.ValueString()
-		sTimeout := state.ConnectTimeout.ValueString()
-		// sAccessKey := state.AccessKey.ValueString()
-		// sSecretKey := state.SecretKey.ValueString()
-		// sTokenKey := state.TokenKey.ValueString()
-
-		sMR, err := strconv.ParseInt(sMaxRedirects, 10, 64)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("[ERROR] Invalid MaxRedirects value: %v", sMaxRedirects), err.Error())
-			return
-		}
-
-		// When re-hydrating, we assume the standard HttpClient. A testing client would be
-		// already defined by the test logic, so would never hit this point.
-		newClient := c.NewHttpClient(ctx, sApiURL, sCACerts, sIgnoreSystemCA, sInsecure, sMR, sTimeout)
-		if newClient == nil {
-			resp.Diagnostics.AddError("Client Creation Error", "Failed to create new HTTP client from state.")
-			return
-		}
+		tflog.Debug(ctx, "Rehydrating client from state and environment using the default http client.")
+		newClient := c.NewHttpClient(ctx, pApiURL, pCACerts, pIgnoreSystemCA, pInsecure, pMR, pTimeout)
 		r.Registry.Store(ID, newClient)
-	} else {
-		tflog.Debug(ctx, "Client found in registry for ID: "+ID)
 	}
 
 	// The state from the request is the source of truth, so we just set it back to confirm the resource exists.
@@ -289,34 +277,47 @@ func (r *RancherClientResource) Update(ctx context.Context, req resource.UpdateR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	getDefaultValues(&config)
-	err := validateValues(&config)
+
+	var data RancherClientResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	getDefaultValues(&data)
+	getEnvironmentValues(&data)
+	err := validateValues(&data)
 	if err != nil {
-		resp.Diagnostics.AddError("Error getting values for create: ", err.Error())
+		resp.Diagnostics.AddError("Error getting values for read: ", err.Error())
 		return
 	}
 
-	cApiURL := config.ApiURL.ValueString()
-	cCACerts := config.CACerts.ValueString()
-	cIgnoreSystemCA := config.IgnoreSystemCA.ValueBool()
-	cInsecure := config.Insecure.ValueBool()
-	cMaxRedirects := config.MaxRedirects.ValueString()
-	cTimeout := config.ConnectTimeout.ValueString()
-	// cAccessKey := config.AccessKey.ValueString()
-	// cSecretKey := config.SecretKey.ValueString()
-	// cTokenKey := config.TokenKey.ValueString()
-	ID := config.Id.ValueString()
+	ID := data.Id.ValueString()
+	cApiURL := data.ApiURL.ValueString()
+	cCACerts := data.CACerts.ValueString()
+	cIgnoreSystemCA := data.IgnoreSystemCA.ValueBool()
+	cInsecure := data.Insecure.ValueBool()
+	cMaxRedirects := data.MaxRedirects.ValueString()
+	cTimeout := data.ConnectTimeout.ValueString()
 
 	cMR, err := strconv.ParseInt(cMaxRedirects, 10, 64)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("[ERROR] Invalid MaxRedirects value: %v", cMaxRedirects), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Invalid MaxRedirects value: %v", cMaxRedirects), err.Error())
 		return
 	}
 
-	tflog.Debug(ctx, "Using default http client.")
-	newClient := c.NewHttpClient(ctx, cApiURL, cCACerts, cIgnoreSystemCA, cInsecure, cMR, cTimeout)
-	r.Registry.Store(ID, newClient)
+	_, found := r.Registry.Load(ID)
+	if !found {
+		tflog.Debug(ctx, "Client missing, creating new using default http client.")
+		newClient := c.NewHttpClient(ctx, cApiURL, cCACerts, cIgnoreSystemCA, cInsecure, cMR, cTimeout)
+		r.Registry.Store(ID, newClient)
+	} else {
+		tflog.Debug(ctx, "Client found, updating to match plan.")
+		r.Registry.Delete(ID)
+		// potential issue here
+		newClient := c.NewHttpClient(ctx, cApiURL, cCACerts, cIgnoreSystemCA, cInsecure, cMR, cTimeout)
+		r.Registry.Store(ID, newClient)
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
 	tflog.Debug(ctx, fmt.Sprintf("Update Response Object: %+v", *resp))
