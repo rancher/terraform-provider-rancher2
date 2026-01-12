@@ -21,7 +21,33 @@ import (
 )
 
 const (
-	defaultId = "fake123"
+	defaultId     = "fake123"
+	defaultApiURL = "https://my-rancher-server.com"
+)
+
+var (
+	defaultState = RancherClientResourceModel{
+		Id:             types.StringValue(defaultId),
+		ApiURL:         types.StringValue(defaultApiURL),
+		CACerts:        types.StringValue(""),
+		IgnoreSystemCA: types.BoolValue(false),
+		Insecure:       types.BoolValue(false),
+		MaxRedirects:   types.StringValue("3"),
+		ConnectTimeout: types.StringValue("30s"),
+	}
+	defaultClient = c.NewHttpClient(
+		context.Background(),
+		defaultApiURL,
+		"",
+		false,
+		false,
+		3,
+		"30s",
+	)
+	defaultPlan = RancherClientResourceModel{
+		Id:     types.StringValue(defaultId),
+		ApiURL: types.StringValue(defaultApiURL),
+	}
 )
 
 func TestRancherClientResourceMetadata(t *testing.T) {
@@ -64,9 +90,6 @@ func TestRancherClientResourceSchema(t *testing.T) {
 					"insecure",
 					"max_redirects",
 					"connect_timeout",
-					// "access_key",
-					// "secret_key",
-					// "token_key",
 				},
 			},
 		}
@@ -136,37 +159,13 @@ func TestRancherClientResourceCreate(t *testing.T) {
 				RancherClientResourceModel{
 					Id:     types.StringValue(defaultId),
 					ApiURL: types.StringValue("https://my-rancher-server.com"),
-					// AccessKey: types.StringValue("my-access-key"),
-					// SecretKey: types.StringValue("my-secret-key"),
 				},
 				// env
 				map[string]string{},
 				// state expected to match this
-				RancherClientResourceModel{
-					Id:             types.StringValue(defaultId),
-					ApiURL:         types.StringValue("https://my-rancher-server.com"),
-					CACerts:        types.StringValue(""),
-					IgnoreSystemCA: types.BoolValue(false),
-					Insecure:       types.BoolValue(false),
-					MaxRedirects:   types.StringValue("3"),
-					ConnectTimeout: types.StringValue("30s"),
-					// AccessKey:      types.StringValue("my-access-key"),
-					// SecretKey:      types.StringValue("my-secret-key"),
-					// TokenKey:       types.StringValue(""), // state shouldn't save default generated token
-				},
+				defaultState,
 				// generated client expected to match this
-				c.NewHttpClient(
-					context.Background(),
-					"https://my-rancher-server.com",
-					"",
-					false,
-					false,
-					// "my-access-key",
-					// "my-secret-key",
-					// "bXktYWNjZXNzLWtleTpteS1zZWNyZXQta2V5", // base64 encoded "my-access-key:my-secret-key"
-					3,
-					"30s",
-				),
+				defaultClient,
 				// expected outcome
 				"success",
 			},
@@ -178,40 +177,24 @@ func TestRancherClientResourceCreate(t *testing.T) {
 				RancherClientResource{Registry: c.NewRegistry()},
 				// plan
 				RancherClientResourceModel{
-					Id:     types.StringValue(defaultId),
-					ApiURL: types.StringValue("https://my-rancher-server.com"),
+					Id: types.StringValue(defaultId),
 				},
 				// env
 				map[string]string{
-					// "RANCHER_ACCESS_KEY": "my-access-key",
-					// "RANCHER_SECRET_KEY": "my-secret-key",
+					"RANCHER_API_URL": "https://my-rancher-server.com",
 				},
 				// state expected to match this
 				RancherClientResourceModel{
 					Id:             types.StringValue(defaultId),
-					ApiURL:         types.StringValue("https://my-rancher-server.com"),
+					ApiURL:         types.StringValue(""),
 					CACerts:        types.StringValue(""),
 					IgnoreSystemCA: types.BoolValue(false),
 					Insecure:       types.BoolValue(false),
 					MaxRedirects:   types.StringValue("3"),
 					ConnectTimeout: types.StringValue("30s"),
-					// AccessKey:      types.StringValue(""),
-					// SecretKey:      types.StringValue(""),
-					// TokenKey:       types.StringValue(""), // state shouldn't save default generated token
 				},
 				// generated client expected to match this
-				c.NewHttpClient(
-					context.Background(),
-					"https://my-rancher-server.com",
-					"",
-					false,
-					false,
-					// "my-access-key",
-					// "my-secret-key",
-					// "bXktYWNjZXNzLWtleTpteS1zZWNyZXQta2V5", // base64 encoded "my-access-key:my-secret-key"
-					3,
-					"30s",
-				),
+				defaultClient,
 				// expected outcome
 				"success",
 			},
@@ -225,14 +208,10 @@ func TestRancherClientResourceCreate(t *testing.T) {
 				RancherClientResourceModel{
 					Id:     types.StringValue(defaultId),
 					ApiURL: types.StringValue("https://rancher.example.com"),
-					// AccessKey: types.StringValue("fake-access-key"),
-					// SecretKey: types.StringValue("fake-secret-key"),
 				},
 				// env
 				map[string]string{
-					"RANCHER_API_URL":    "https://rancher-staging.example.com",
-					"RANCHER_ACCESS_KEY": "real-access-key",
-					"RANCHER_SECRET_KEY": "real-secret-key",
+					"RANCHER_API_URL": "https://rancher-staging.example.com",
 				},
 				// state expected to match this
 				RancherClientResourceModel{
@@ -243,9 +222,6 @@ func TestRancherClientResourceCreate(t *testing.T) {
 					Insecure:       types.BoolValue(false),
 					MaxRedirects:   types.StringValue("3"),
 					ConnectTimeout: types.StringValue("30s"),
-					// AccessKey:      types.StringValue("fake-access-key"),
-					// SecretKey:      types.StringValue("fake-secret-key"),
-					// TokenKey:       types.StringValue(""), // state shouldn't save default generated token
 				},
 				// generated client expected to match this
 				c.NewHttpClient(
@@ -254,90 +230,6 @@ func TestRancherClientResourceCreate(t *testing.T) {
 					"",
 					false,
 					false,
-					// "real-access-key",
-					// "real-secret-key",
-					// "cmVhbC1hY2Nlc3Mta2V5OnJlYWwtc2VjcmV0LWtleQ==", // base64 encoded "real-access-key:real-secret-key"
-					3,
-					"30s",
-				),
-				// expected outcome
-				"success",
-			},
-			{
-				"Environment Explicit Token",
-				RancherClientResource{Registry: c.NewRegistry()},
-				// plan
-				RancherClientResourceModel{
-					Id:     types.StringValue(defaultId),
-					ApiURL: types.StringValue("https://rancher.example.com"),
-				},
-				// env
-				map[string]string{
-					// "RANCHER_TOKEN_KEY": "cmVhbC1hY2Nlc3Mta2V5OnJlYWwtc2VjcmV0LWtleQ==",
-				},
-				// state expected to match this
-				RancherClientResourceModel{
-					Id:             types.StringValue(defaultId),
-					ApiURL:         types.StringValue("https://rancher.example.com"),
-					CACerts:        types.StringValue(""),
-					IgnoreSystemCA: types.BoolValue(false),
-					Insecure:       types.BoolValue(false),
-					MaxRedirects:   types.StringValue("3"),
-					ConnectTimeout: types.StringValue("30s"),
-					// AccessKey:      types.StringValue(""),
-					// SecretKey:      types.StringValue(""),
-					// TokenKey:       types.StringValue(""),
-				},
-				// generated client expected to match this
-				c.NewHttpClient(
-					context.Background(),
-					"https://rancher.example.com",
-					"",
-					false,
-					false,
-					// "",
-					// "",
-					// "cmVhbC1hY2Nlc3Mta2V5OnJlYWwtc2VjcmV0LWtleQ==", // base64 encoded "real-access-key:real-secret-key"
-					3,
-					"30s",
-				),
-				// expected outcome
-				"success",
-			},
-			// This test enables the client to generate its own token if possible
-			{
-				"Auth Undefined",
-				RancherClientResource{Registry: c.NewRegistry()},
-				// plan
-				RancherClientResourceModel{
-					Id:     types.StringValue(defaultId),
-					ApiURL: types.StringValue("https://rancher.example.com"),
-				},
-				// env
-				map[string]string{},
-				// state expected to match this
-				RancherClientResourceModel{
-					Id:             types.StringValue(defaultId),
-					ApiURL:         types.StringValue("https://rancher.example.com"),
-					CACerts:        types.StringValue(""),
-					IgnoreSystemCA: types.BoolValue(false),
-					Insecure:       types.BoolValue(false),
-					MaxRedirects:   types.StringValue("3"),
-					ConnectTimeout: types.StringValue("30s"),
-					// AccessKey:      types.StringValue(""),
-					// SecretKey:      types.StringValue(""),
-					// TokenKey:       types.StringValue(""),
-				},
-				// generated client expected to match this
-				c.NewHttpClient(
-					context.Background(),
-					"https://rancher.example.com",
-					"",
-					false,
-					false,
-					// "",
-					// "",
-					// "",
 					3,
 					"30s",
 				),
@@ -414,52 +306,78 @@ func TestRancherClientResourceCreate(t *testing.T) {
 func TestRancherClientResourceRead(t *testing.T) {
 	t.Run("Read function", func(t *testing.T) {
 		testCases := []struct {
-			name    string
-			fit     RancherClientResource
-			have    RancherClientResourceModel // what is in the plan, translated to struct
-			env     map[string]string          // a k/v map of environment variables to set
-			want    RancherClientResourceModel // what should be in the state, translated to struct
-			effect  c.Client                   // the actual client generated
-			outcome string                     // expected outcome, one of: "success","failure"
+			name           string
+			fit            RancherClientResource
+			env            map[string]string // a k/v map of environment variables to set
+			existingState  RancherClientResourceModel
+			existingClient c.Client
+			expectedState  RancherClientResourceModel
+			expectedClient c.Client
+			outcome        string // expected outcome, one of: "success","failure"
 		}{
 			{
 				"Basic",
 				RancherClientResource{Registry: c.NewRegistry()},
-				// plan
-				RancherClientResourceModel{
-					Id:     types.StringValue(defaultId),
-					ApiURL: types.StringValue("https://my-rancher-server.com"),
-					// AccessKey: types.StringValue("my-access-key"),
-					// SecretKey: types.StringValue("my-secret-key"),
-				},
 				// env
 				map[string]string{},
-				// state expected to match this
+				// existing state
+				defaultState,
+				// existing client
+				defaultClient,
+				// expected state
+				defaultState,
+				// expected client
+				defaultClient,
+				// expected outcome
+				"success",
+			},
+			{
+				"Environment Passthrough",
+				RancherClientResource{Registry: c.NewRegistry()},
+				// env
+				map[string]string{
+					"RANCHER_API_URL": defaultApiURL,
+				},
+				// existing state
 				RancherClientResourceModel{
 					Id:             types.StringValue(defaultId),
-					ApiURL:         types.StringValue("https://my-rancher-server.com"),
+					ApiURL:         types.StringValue(""),
 					CACerts:        types.StringValue(""),
 					IgnoreSystemCA: types.BoolValue(false),
 					Insecure:       types.BoolValue(false),
 					MaxRedirects:   types.StringValue("3"),
 					ConnectTimeout: types.StringValue("30s"),
-					// AccessKey:      types.StringValue("my-access-key"),
-					// SecretKey:      types.StringValue("my-secret-key"),
-					// TokenKey:       types.StringValue(""), // state shouldn't save default generated token
 				},
-				// generated client expected to match this
-				c.NewHttpClient(
-					context.Background(),
-					"https://my-rancher-server.com",
-					"",
-					false,
-					false,
-					// "my-access-key",
-					// "my-secret-key",
-					// "bXktYWNjZXNzLWtleTpteS1zZWNyZXQta2V5", // base64 encoded "my-access-key:my-secret-key"
-					3,
-					"30s",
-				),
+				// existing client
+				defaultClient,
+				// expected state
+				RancherClientResourceModel{
+					Id:             types.StringValue(defaultId),
+					ApiURL:         types.StringValue(""),
+					CACerts:        types.StringValue(""),
+					IgnoreSystemCA: types.BoolValue(false),
+					Insecure:       types.BoolValue(false),
+					MaxRedirects:   types.StringValue("3"),
+					ConnectTimeout: types.StringValue("30s"),
+				},
+				// expected client
+				defaultClient,
+				// expected outcome
+				"success",
+			},
+			{
+				"Missing client",
+				RancherClientResource{Registry: c.NewRegistry()},
+				// env
+				map[string]string{},
+				// existing state
+				defaultState,
+				// existing client
+				nil,
+				// expected state
+				defaultState,
+				// expected client
+				defaultClient,
 				// expected outcome
 				"success",
 			},
@@ -476,53 +394,217 @@ func TestRancherClientResourceRead(t *testing.T) {
 					// nolint:usetesting
 					os.Setenv(k, v)
 				}
-				req := resource.CreateRequest{
-					Plan: tfsdk.Plan{
-						Raw: tftypes.NewValue(
-							getObjectAttributeTypes(),
-							getObjectAttributeValues(t, tc.have),
-						),
-						Schema: getSchema(),
-					},
+				if tc.existingClient != nil {
+					tc.fit.Registry.Store(defaultId, tc.existingClient)
 				}
-				var plannedState RancherClientResourceModel
-				if diags := req.Plan.Get(context.Background(), &plannedState); diags.HasError() {
-					t.Errorf("Failed to get planned state: %+v", diags)
-				}
-				plannedId := plannedState.Id.ValueString()
-				defer func() { tc.fit.Registry.Delete(plannedId) }()
 
-				expectedState := resource.CreateResponse{
+				req := resource.ReadRequest{
 					State: tfsdk.State{
 						Raw: tftypes.NewValue(
 							getObjectAttributeTypes(),
-							getObjectAttributeValues(t, tc.want),
+							getObjectAttributeValues(t, tc.existingState),
 						),
 						Schema: getSchema(),
 					},
 				}
-				res := resource.CreateResponse{
+				var existingState RancherClientResourceModel
+				if diags := req.State.Get(context.Background(), &existingState); diags.HasError() {
+					t.Errorf("Failed to get state: %+v", diags)
+				}
+				stateId := existingState.Id.ValueString()
+				defer func() { tc.fit.Registry.Delete(stateId) }()
+
+				expectedState := resource.ReadResponse{
+					State: tfsdk.State{
+						Raw: tftypes.NewValue(
+							getObjectAttributeTypes(),
+							getObjectAttributeValues(t, tc.expectedState),
+						),
+						Schema: getSchema(),
+					},
+				}
+				res := resource.ReadResponse{
 					State: tfsdk.State{
 						Schema: getSchema(),
 					},
 				}
-				tc.fit.Create(context.Background(), req, &res)
-				expectedClient := tc.effect
-				actualClient, err := tc.fit.Registry.LoadOrError(plannedId)
+				tc.fit.Read(context.Background(), req, &res)
+				actualState := res
+
+				actualClient, err := tc.fit.Registry.LoadOrError(stateId)
 				if err != nil {
 					t.Errorf("Error loading client: %+v", err)
 				}
-				if diff := cmp.Diff(expectedClient, actualClient); diff != "" {
-					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
-				}
 				// t.Logf("Resource State: %s", prettyPrint(res))
+				// verify outcome is correct before comparing objects
 				if (tc.outcome == "failure") && !res.Diagnostics.HasError() {
 					t.Errorf("%#v.Configure() did not return expected error diagnostics: %s", tc.fit, prettyPrint(res.Diagnostics))
 				}
 				if (tc.outcome == "success") && res.Diagnostics.HasError() {
 					t.Errorf("%#v.Configure() returned unexpected error diagnostics: %s", tc.fit, prettyPrint(res.Diagnostics))
 				}
-				if diff := cmp.Diff(expectedState, res); diff != "" {
+				if diff := cmp.Diff(tc.expectedClient, actualClient); diff != "" {
+					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
+				}
+				if diff := cmp.Diff(expectedState, actualState); diff != "" {
+					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
+				}
+			})
+		}
+	})
+}
+
+func TestRancherClientResourceUpdate(t *testing.T) {
+	t.Run("Update function", func(t *testing.T) {
+		testCases := []struct {
+			name           string
+			fit            RancherClientResource
+			env            map[string]string // a k/v map of environment variables to set
+			plan           RancherClientResourceModel
+			existingState  RancherClientResourceModel
+			existingClient c.Client
+			expectedState  RancherClientResourceModel
+			expectedClient c.Client
+			outcome        string // expected outcome, one of: "success","failure"
+		}{
+			{
+				"Basic",
+				RancherClientResource{Registry: c.NewRegistry()},
+				// env
+				map[string]string{},
+				// plan
+				defaultPlan,
+				// existing state
+				defaultState,
+				// existing client
+				defaultClient,
+				// expected state
+				defaultState,
+				// expected client
+				defaultClient,
+				// expected outcome
+				"success",
+			},
+			{
+				"Environment Passthrough",
+				RancherClientResource{Registry: c.NewRegistry()},
+				// env
+				map[string]string{
+					"RANCHER_API_URL": defaultApiURL,
+				},
+				// plan
+				defaultPlan,
+				// existing state
+				RancherClientResourceModel{
+					Id:             types.StringValue(defaultId),
+					ApiURL:         types.StringValue(""),
+					CACerts:        types.StringValue(""),
+					IgnoreSystemCA: types.BoolValue(false),
+					Insecure:       types.BoolValue(false),
+					MaxRedirects:   types.StringValue("3"),
+					ConnectTimeout: types.StringValue("30s"),
+				},
+				// existing client
+				defaultClient,
+				// expected state
+				RancherClientResourceModel{
+					Id:             types.StringValue(defaultId),
+					ApiURL:         types.StringValue(""),
+					CACerts:        types.StringValue(""),
+					IgnoreSystemCA: types.BoolValue(false),
+					Insecure:       types.BoolValue(false),
+					MaxRedirects:   types.StringValue("3"),
+					ConnectTimeout: types.StringValue("30s"),
+				},
+				// expected client
+				defaultClient,
+				// expected outcome
+				"success",
+			},
+			{
+				"Missing client",
+				RancherClientResource{Registry: c.NewRegistry()},
+				// env
+				map[string]string{},
+				// plan
+				defaultPlan,
+				// existing state
+				defaultState,
+				// existing client
+				nil,
+				// expected state
+				defaultState,
+				// expected client
+				defaultClient,
+				// expected outcome
+				"success",
+			},
+		}
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				defer func() {
+					for k := range tc.env {
+						// nolint:usetesting
+						os.Unsetenv(k)
+					}
+				}()
+				for k, v := range tc.env {
+					// nolint:usetesting
+					os.Setenv(k, v)
+				}
+				if tc.existingClient != nil {
+					tc.fit.Registry.Store(defaultId, tc.existingClient)
+				}
+
+				req := resource.ReadRequest{
+					State: tfsdk.State{
+						Raw: tftypes.NewValue(
+							getObjectAttributeTypes(),
+							getObjectAttributeValues(t, tc.existingState),
+						),
+						Schema: getSchema(),
+					},
+				}
+				var existingState RancherClientResourceModel
+				if diags := req.State.Get(context.Background(), &existingState); diags.HasError() {
+					t.Errorf("Failed to get state: %+v", diags)
+				}
+				stateId := existingState.Id.ValueString()
+				defer func() { tc.fit.Registry.Delete(stateId) }()
+
+				expectedState := resource.ReadResponse{
+					State: tfsdk.State{
+						Raw: tftypes.NewValue(
+							getObjectAttributeTypes(),
+							getObjectAttributeValues(t, tc.expectedState),
+						),
+						Schema: getSchema(),
+					},
+				}
+				res := resource.ReadResponse{
+					State: tfsdk.State{
+						Schema: getSchema(),
+					},
+				}
+				tc.fit.Read(context.Background(), req, &res)
+				actualState := res
+
+				actualClient, err := tc.fit.Registry.LoadOrError(stateId)
+				if err != nil {
+					t.Errorf("Error loading client: %+v", err)
+				}
+				// t.Logf("Resource State: %s", prettyPrint(res))
+				// verify outcome is correct before comparing objects
+				if (tc.outcome == "failure") && !res.Diagnostics.HasError() {
+					t.Errorf("%#v.Configure() did not return expected error diagnostics: %s", tc.fit, prettyPrint(res.Diagnostics))
+				}
+				if (tc.outcome == "success") && res.Diagnostics.HasError() {
+					t.Errorf("%#v.Configure() returned unexpected error diagnostics: %s", tc.fit, prettyPrint(res.Diagnostics))
+				}
+				if diff := cmp.Diff(tc.expectedClient, actualClient); diff != "" {
+					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
+				}
+				if diff := cmp.Diff(expectedState, actualState); diff != "" {
 					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
 				}
 			})
