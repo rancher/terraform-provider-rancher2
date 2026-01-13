@@ -1,5 +1,5 @@
 
-provider "rancher2" {}
+provider "rancher" {}
 
 provider "aws" {
   default_tags {
@@ -21,12 +21,12 @@ terraform {
 }
 
 locals {
-  identifier    = var.identifier
-  owner         = var.owner
-  rancher_url   = var.rancher_url
-  client_id     = var.client_id     # "4cus7h997mtfb3fqoo5b3v4amj"
-  client_secret = var.client_secret # "plaintextpassword"
-  issuer        = var.issuer        # "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_YtjZFSwyl"
+  identifier  = var.identifier
+  owner       = var.owner
+  rancher_url = var.rancher_url
+  # client_id     = var.client_id     # "4cus7h997mtfb3fqoo5b3v4amj"
+  # client_secret = var.client_secret # "plaintextpassword"
+  # issuer        = var.issuer        # "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_YtjZFSwyl"
 }
 
 module "cognito" {
@@ -39,6 +39,7 @@ module "cognito" {
 # It is much better to configure the client using environment variables,
 #  this keeps these secure values out of your state file.
 resource "rancher_client" "admin" {
+  id      = "admin"
   api_url = local.rancher_url # RANCHER_API_URL
   # access_key        = "" RANCHER_ACCESS_KEY
   # secret_key        = "" RANCHER_SECRET_KEY

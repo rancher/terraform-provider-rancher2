@@ -2,7 +2,6 @@ package rancher_client
 
 import (
 	"context"
-	// "encoding/base64"
 	"fmt"
 	"net/url"
 	"os"
