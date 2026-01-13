@@ -9,7 +9,6 @@ import (
 	"slices"
 	"strings"
 	"testing"
-	// "time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -493,7 +492,10 @@ func TestRancherClientResourceUpdate(t *testing.T) {
 					"RANCHER_API_URL": defaultApiURL,
 				},
 				// plan
-				defaultPlan,
+				RancherClientResourceModel{
+					Id:     types.StringValue(defaultId),
+					ApiURL: types.StringValue(""),
+				},
 				// existing state
 				RancherClientResourceModel{
 					Id:             types.StringValue(defaultId),
@@ -539,6 +541,96 @@ func TestRancherClientResourceUpdate(t *testing.T) {
 				// expected outcome
 				"success",
 			},
+			{
+				"Update state and client",
+				RancherClientResource{Registry: c.NewRegistry()},
+				// env
+				map[string]string{},
+				// plan
+				defaultPlan,
+				// existing state
+				RancherClientResourceModel{
+					Id:             types.StringValue(defaultId),
+					ApiURL:         types.StringValue("https://fake.example.com"),
+					CACerts:        types.StringValue(""),
+					IgnoreSystemCA: types.BoolValue(false),
+					Insecure:       types.BoolValue(false),
+					MaxRedirects:   types.StringValue("3"),
+					ConnectTimeout: types.StringValue("30s"),
+				},
+				// existing client
+				defaultClient,
+				// expected state
+				defaultState,
+				// expected client
+				defaultClient,
+				// expected outcome
+				"success",
+			},
+			{
+				"Update state and client with nil client",
+				RancherClientResource{Registry: c.NewRegistry()},
+				// env
+				map[string]string{},
+				// plan
+				defaultPlan,
+				// existing state
+				RancherClientResourceModel{
+					Id:             types.StringValue(defaultId),
+					ApiURL:         types.StringValue("https://fake.example.com"),
+					CACerts:        types.StringValue(""),
+					IgnoreSystemCA: types.BoolValue(false),
+					Insecure:       types.BoolValue(false),
+					MaxRedirects:   types.StringValue("3"),
+					ConnectTimeout: types.StringValue("30s"),
+				},
+				// existing client
+				nil,
+				// expected state
+				defaultState,
+				// expected client
+				defaultClient,
+				// expected outcome
+				"success",
+			},
+			{
+				"Update state and client with nil client and env passthrough",
+				RancherClientResource{Registry: c.NewRegistry()},
+				// env
+				map[string]string{
+					"RANCHER_API_URL": defaultApiURL,
+				},
+				// plan
+				RancherClientResourceModel{
+					Id: types.StringValue(defaultId),
+				},
+				// existing state
+				RancherClientResourceModel{
+					Id:             types.StringValue(defaultId),
+					ApiURL:         types.StringValue("https://fake.example.com"),
+					CACerts:        types.StringValue(""),
+					IgnoreSystemCA: types.BoolValue(false),
+					Insecure:       types.BoolValue(false),
+					MaxRedirects:   types.StringValue("3"),
+					ConnectTimeout: types.StringValue("30s"),
+				},
+				// existing client
+				nil,
+				// expected state
+				RancherClientResourceModel{
+					Id:             types.StringValue(defaultId),
+					ApiURL:         types.StringValue(""), // environment variables aren't translated to state
+					CACerts:        types.StringValue(""),
+					IgnoreSystemCA: types.BoolValue(false),
+					Insecure:       types.BoolValue(false),
+					MaxRedirects:   types.StringValue("3"),
+					ConnectTimeout: types.StringValue("30s"),
+				},
+				// expected client
+				defaultClient,
+				// expected outcome
+				"success",
+			},
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -556,7 +648,14 @@ func TestRancherClientResourceUpdate(t *testing.T) {
 					tc.fit.Registry.Store(defaultId, tc.existingClient)
 				}
 
-				req := resource.ReadRequest{
+				req := resource.UpdateRequest{
+					Plan: tfsdk.Plan{
+						Raw: tftypes.NewValue(
+							getObjectAttributeTypes(),
+							getObjectAttributeValues(t, tc.plan),
+						),
+						Schema: getSchema(),
+					},
 					State: tfsdk.State{
 						Raw: tftypes.NewValue(
 							getObjectAttributeTypes(),
@@ -572,7 +671,7 @@ func TestRancherClientResourceUpdate(t *testing.T) {
 				stateId := existingState.Id.ValueString()
 				defer func() { tc.fit.Registry.Delete(stateId) }()
 
-				expectedState := resource.ReadResponse{
+				expectedState := resource.UpdateResponse{
 					State: tfsdk.State{
 						Raw: tftypes.NewValue(
 							getObjectAttributeTypes(),
@@ -581,12 +680,12 @@ func TestRancherClientResourceUpdate(t *testing.T) {
 						Schema: getSchema(),
 					},
 				}
-				res := resource.ReadResponse{
+				res := resource.UpdateResponse{
 					State: tfsdk.State{
 						Schema: getSchema(),
 					},
 				}
-				tc.fit.Read(context.Background(), req, &res)
+				tc.fit.Update(context.Background(), req, &res)
 				actualState := res
 
 				actualClient, err := tc.fit.Registry.LoadOrError(stateId)
@@ -619,6 +718,7 @@ func getSchema() schema.Schema {
 	testResource.Schema(context.Background(), resource.SchemaRequest{}, &r)
 	return r.Schema
 }
+
 func getObjectAttributeTypes() tftypes.Object {
 	schema := getSchema()
 	attrTypes := map[string]tftypes.Type{}

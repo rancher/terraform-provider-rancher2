@@ -5,9 +5,9 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.11"
     }
-    rancher2 = {
+    rancher = {
       source  = "rancher/rancher2"
-      version = ">= 8.0.0"
+      version = ">= 13.0.0"
     }
     random = {
       source  = "hashicorp/random"

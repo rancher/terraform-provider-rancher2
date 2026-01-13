@@ -33,7 +33,7 @@ func TestDevAuthenticate(t *testing.T) {
 	}
 
 	// Apply auth config
-	authVars := map[string]interface{}{
+	authVars := map[string]any{
 		"rancher_url": output["address"],
 		"identifier":  fit.ID,
 		"owner":       fit.Owner,
