@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
-	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher_client"
+	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_client"
 )
 
 // The `var _` is a special Go construct that results in an unusable variable.
@@ -33,7 +33,7 @@ func New(version string) func() provider.Provider {
 type RancherProviderModel struct{}
 
 func (p *RancherProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "rancher"
+	resp.TypeName = "rancher2"
 	resp.Version = p.version
 }
 
@@ -60,7 +60,7 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 func (p *RancherProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		rancher_client.NewRancherClientResource,
+		rancher2_client.NewRancherClientResource,
 	}
 }
 

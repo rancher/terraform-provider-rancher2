@@ -39,7 +39,7 @@ func (r *ClientRegistry) LoadOrError(id string) (Client, error) {
 	defer r.lock.RUnlock()
 	c, ok := r.clients[id]
 	if !ok {
-		return nil, fmt.Errorf("client with id '%s' not found. Ensure the rancher_client resource is configured correctly", id)
+		return nil, fmt.Errorf("client with id '%s' not found. Ensure the rancher2_client resource is configured correctly", id)
 	}
 	return c, nil
 }

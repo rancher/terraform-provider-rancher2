@@ -25,7 +25,7 @@ func TestProviderMetadata(t *testing.T) {
 		{
 			"Basic",
 			RancherProvider{version: "test"},
-			provider.MetadataResponse{TypeName: "rancher", Version: "test"},
+			provider.MetadataResponse{TypeName: "rancher2", Version: "test"},
 		},
 	}
 	for _, tc := range testCases {

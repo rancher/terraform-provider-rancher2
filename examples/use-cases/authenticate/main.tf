@@ -1,5 +1,5 @@
 
-provider "rancher" {}
+provider "rancher2" {}
 
 provider "aws" {
   default_tags {
@@ -38,7 +38,7 @@ module "cognito" {
 
 # It is much better to configure the client using environment variables,
 #  this keeps these secure values out of your state file.
-resource "rancher_client" "admin" {
+resource "rancher2_client_basic" "admin" {
   id      = "admin"
   api_url = local.rancher_url # RANCHER_API_URL
   # access_key        = "" RANCHER_ACCESS_KEY
@@ -51,6 +51,8 @@ resource "rancher_client" "admin" {
   # timeout           = "" RANCHER_TIMEOUT // this is http client connection timeout not token TTL
 }
 
+# at this point the provider is configured
+
 # The name of the resource reflects the API endpoint
 # https://<rancher url>/<API path>/authconfigs/cognito
 # https://rancher.example.com/apis/management.cattle.io/v3/authconfigs/cognito
@@ -60,7 +62,8 @@ resource "rancher_client" "admin" {
 # the schema for the payload isn't found in the CRD, which has a dynamic mapping
 # since the CRD is dynamic you need to create an object using the UI first to get the actual fields
 # since the payload is essentially generating an object from the CRD it should reflect the object's fields
-# rancher_client_id = rancher_client.admin.id
+# rancher_client_id = rancher2_client_basic.admin.id
+
 # rancher_url       = join("/", [local.rancher_url, "auth-verify"]) #<<-- required
 # enabled     = true #<<-- optional with default (true)
 
@@ -124,5 +127,15 @@ resource "rancher_client" "admin" {
 # }
 # }
 
-# resource "rancher_authenticate_aws_cognito" {
+# resource "rancher2_client_aws_cognito" "admin" {
+#   id               = "admin"
+#   api_url          = local.rancher_url # RANCHER_API_URL
+#   access_key       = "" RANCHER_ACCESS_KEY
+#   secret_key       = "" RANCHER_SECRET_KEY
+#   token_key        = "" RANCHER_TOKEN_KEY
+#   ca_certs         = "" RANCHER_CA_CERTS
+#   ignore_system_ca = "" RANCHER_IGNORE_SYSTEM_CA
+#   insecure         = "" RANCHER_INSECURE
+#   max_redirects    = "" RANCHER_MAX_REDIRECTS
+#   timeout          = "" RANCHER_TIMEOUT // this is http client connection timeout not token TTL
 # }
