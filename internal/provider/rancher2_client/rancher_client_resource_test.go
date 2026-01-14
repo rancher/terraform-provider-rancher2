@@ -1,4 +1,4 @@
-package rancher_client
+package rancher2_client
 
 import (
 	"context"
@@ -56,12 +56,12 @@ func TestRancherClientResourceMetadata(t *testing.T) {
 			fit  RancherClientResource
 			want resource.MetadataResponse
 		}{
-			{"Basic test", RancherClientResource{}, resource.MetadataResponse{TypeName: "rancher_client"}},
+			{"Basic test", RancherClientResource{}, resource.MetadataResponse{TypeName: "rancher2_client"}},
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				res := resource.MetadataResponse{}
-				tc.fit.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "rancher"}, &res)
+				tc.fit.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "rancher2"}, &res)
 				got := res
 				if got != tc.want {
 					t.Errorf("%+v.Metadata() is %+v; want %+v", tc.fit, got, tc.want)

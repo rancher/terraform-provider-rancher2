@@ -5,7 +5,7 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 5.11"
     }
-    rancher = {
+    rancher2 = {
       source  = "rancher/rancher2"
       version = ">= 13.0.0"
     }

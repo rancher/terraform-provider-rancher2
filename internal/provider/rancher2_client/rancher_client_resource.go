@@ -1,4 +1,4 @@
-package rancher_client
+package rancher2_client
 
 import (
 	"context"
@@ -49,7 +49,7 @@ type RancherClientResourceModel struct {
 }
 
 func (r *RancherClientResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_client" // rancher_client
+	resp.TypeName = req.ProviderTypeName + "_client" // rancher2_client
 }
 
 func (r *RancherClientResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -59,7 +59,7 @@ func (r *RancherClientResource) Schema(ctx context.Context, req resource.SchemaR
 			"Since this is a resource it prevents the provider from accessing Rancher until apply time, respecting the dependency chain." +
 			"This also acts as a way to separate out access between resources; " +
 			"you can implement least privilege access to resources by tailoring the client to your resources." +
-			"Every other resource has a required argument 'rancher_client_id' which refers to this resource's id attribute." +
+			"Every other resource has a required argument 'rancher2_client_id' which refers to this resource's id attribute." +
 			"When set up properly, in subsequent applies, only the client which has experienced a resource change will be updated, " +
 			"meaning the user making the changes will only have access appropriate to the change.",
 		Attributes: map[string]schema.Attribute{
