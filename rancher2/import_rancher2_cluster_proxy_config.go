@@ -9,7 +9,7 @@ const (
 )
 
 func resourceRancher2ClusterProxyConfigV2Import(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	err := resourceRancher2ClusterProxyConfigV2Read(d, meta)
+	err := readClusterProxyConfigV2(d.Id(), d, meta)
 	if err != nil || d.Id() == "" {
 		return nil, err
 	}
