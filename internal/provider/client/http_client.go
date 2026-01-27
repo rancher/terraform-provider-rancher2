@@ -14,90 +14,49 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-var _ Client = &HttpClient{}   // make sure the HttpClient implements the Client
-var _ Request = &HttpRequest{} // make sure the HttpRequest implements the Request
+var _ Client = &HttpClient{}
 
 type HttpClient struct {
-	ApiURL         string
-	CACert         string
-	IgnoreSystemCA bool
-	Insecure       bool
-	MaxRedirects   int64
-	Timeout        time.Duration
+	ctx            context.Context
+	apiURL         string
+	caCert         string
+	ignoreSystemCA bool
+	insecure       bool
+	maxRedirects   int64
+	timeout        time.Duration
 }
 
-func NewHttpClient(ctx context.Context, apiURL string, caCert string, ignoreSystemCA bool, insecure bool, maxRedirects int64, timeout string) *HttpClient {
-	to, err := time.ParseDuration(timeout)
-	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("error parsing timeout: %v", err))
-		return nil
-	}
+func NewHttpClient(ctx context.Context, apiURL, caCert string, insecure, ignoreSystemCA bool, timeout time.Duration, maxRedirects int64) *HttpClient {
 	return &HttpClient{
-		ApiURL:         apiURL,
-		CACert:         caCert,
-		IgnoreSystemCA: ignoreSystemCA,
-		Insecure:       insecure,
-		MaxRedirects:   maxRedirects,
-		Timeout:        to,
+		ctx:            ctx,
+		apiURL:         apiURL,
+		caCert:         caCert,
+		insecure:       insecure,
+		ignoreSystemCA: ignoreSystemCA,
+		timeout:        timeout,
+		maxRedirects:   maxRedirects,
 	}
 }
 
-type HttpRequest struct {
-	Method   string
-	Endpoint string
-	Body     any
-	Headers  map[string]string
-}
-
-func (c *HttpClient) Create(ctx context.Context, r Request) error {
-	_, err := r.DoRequest(ctx, c)
-	return err
-}
-
-func (c *HttpClient) Read(ctx context.Context, r Request) ([]byte, error) {
-	return r.DoRequest(ctx, c)
-}
-
-func (c *HttpClient) Update(ctx context.Context, r Request) error {
-	_, err := r.DoRequest(ctx, c)
-	return err
-}
-
-func (c *HttpClient) Delete(ctx context.Context, r Request) error {
-	_, err := r.DoRequest(ctx, c)
-	return err
-}
-
-func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) {
+func (c *HttpClient) Do(req *Request, resp *Response) error {
 	start := time.Now()
+	ctx := c.ctx
 
-	c, ok := rc.(*HttpClient)
-	if !ok {
-		tflog.Error(ctx, "doing request: invalid rancher client type")
-		return nil, fmt.Errorf("doing request: invalid rancher client type")
+	if req.Endpoint == "" {
+		return fmt.Errorf("doing request: URL is nil")
 	}
 
-	if r.Endpoint == "" {
-		tflog.Error(ctx, "doing request: URL is nil")
-		return nil, fmt.Errorf("doing request: URL is nil")
-	}
+	tflog.Debug(ctx, fmt.Sprintf("Request Object: %#v", req))
 
-	tflog.Debug(ctx, fmt.Sprintf("Request Object: %#v", r))
-
-	MaxRedirectCheckFunction := func(req *http.Request, via []*http.Request) error {
-		if len(via) >= int(c.MaxRedirects) {
-			tflog.Error(ctx, fmt.Sprintf("stopped after %d redirects", c.MaxRedirects))
-			return fmt.Errorf("stopped after %d redirects", c.MaxRedirects)
+	MaxRedirectCheckFunction := func(r *http.Request, via []*http.Request) error {
+		if len(via) >= int(c.maxRedirects) {
+			return fmt.Errorf("stopped after %d redirects", c.maxRedirects)
 		}
-		// if len(c.Token) > 0 {
-		// 	// make sure the auth token is added to redirected requests
-		// 	req.Header.Add("Authorization", "Bearer "+c.Token)
-		// }
 		return nil
 	}
 
 	var rootCAs *x509.CertPool
-	if c.IgnoreSystemCA {
+	if c.ignoreSystemCA {
 		rootCAs = x509.NewCertPool()
 	} else {
 		// Get the SystemCertPool, continue with an empty pool on error
@@ -107,15 +66,15 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 		}
 	}
 
-	if c.CACert != "" {
+	if c.caCert != "" {
 		// Append our cert to the cert pool
-		if ok := rootCAs.AppendCertsFromPEM([]byte(c.CACert)); !ok {
+		if ok := rootCAs.AppendCertsFromPEM([]byte(c.caCert)); !ok {
 			tflog.Warn(ctx, "no certs appended, using system certs only")
 		}
 	}
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: c.Insecure,
+		InsecureSkipVerify: c.insecure,
 		RootCAs:            rootCAs,
 	}
 
@@ -125,49 +84,82 @@ func (r *HttpRequest) DoRequest(ctx context.Context, rc Client) ([]byte, error) 
 	}
 
 	client := &http.Client{
-		Timeout:       c.Timeout,
+		Timeout:       c.timeout,
 		CheckRedirect: MaxRedirectCheckFunction,
 		Transport:     transport,
 	}
 
 	var reqBody *bytes.Buffer
-	if r.Body != nil {
-		bodyBytes, err := json.Marshal(r.Body)
+	if req.Body != nil {
+		bodyBytes, err := json.Marshal(req.Body)
 		if err != nil {
-			tflog.Error(ctx, fmt.Sprintf("doing request: error marshalling body: %v", err))
-			return nil, fmt.Errorf("doing request: error marshalling body: %v", err)
+			return fmt.Errorf("doing request: error marshalling body: %v", err)
 		}
 		reqBody = bytes.NewBuffer(bodyBytes)
 	} else {
 		reqBody = &bytes.Buffer{}
 	}
 
-	request, err := http.NewRequest(r.Method, r.Endpoint, reqBody)
+	url := fmt.Sprintf("%s", req.Endpoint)
+	request, err := http.NewRequest(req.Method, url, reqBody)
 	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("doing request: %v", err))
-		return nil, fmt.Errorf("doing request: %v", err)
+		return fmt.Errorf("doing request: %v", err)
 	}
 
-	for key, value := range r.Headers {
+	for key, value := range req.Headers {
 		request.Header.Add(key, value)
 	}
 
-	// if len(c.Token) > 0 {
-	// 	request.Header.Add("Authorization", "Bearer "+c.Token)
-	// }
-
-	resp, err := client.Do(request)
+	res, err := client.Do(request)
 	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("doing request: %v", err))
-		return nil, fmt.Errorf("doing request: %v", err)
+		return fmt.Errorf("doing request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
 	// Timings recorded as part of internal metrics
 	tflog.Debug(ctx, fmt.Sprintf("Response Time: %f ms", float64((time.Since(start))/time.Millisecond)))
-	tflog.Debug(ctx, fmt.Sprintf("Response Status: %s", resp.Status))
-	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %#v", resp.Header))
-	tflog.Debug(ctx, fmt.Sprintf("Response Body: %v", resp.Body))
+	tflog.Debug(ctx, fmt.Sprintf("Response Status: %s", res.Status))
+	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %#v", res.Header))
 
-	return io.ReadAll(resp.Body)
+	switch resp.StatusCode {
+	case 200:
+		tflog.Debug(ctx, "Successful response! (200)")
+	case 202:
+		tflog.Debug(ctx, "Accepted! (202)")
+	case 400:
+		return fmt.Errorf("Bad request! (400)")
+	case 401:
+		return fmt.Errorf("Unauthorized! (401)")
+	case 403:
+		return fmt.Errorf("Forbidden! (403)")
+	case 404:
+		return fmt.Errorf("Not found! (404)")
+	case 500:
+		return fmt.Errorf("Internal server error! (500)")
+	default:
+		return fmt.Errorf("Unknown status code! (%d)", resp.StatusCode)
+	}
+
+	responseBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("reading response body: %v", err)
+	}
+	tflog.Debug(ctx, fmt.Sprintf("Response Body: %v", string(responseBody)))
+
+	return nil
+}
+
+func (c *HttpClient) Set(client Client) (Client, error) {
+	c.ctx = client.(*HttpClient).ctx
+	c.apiURL = client.(*HttpClient).apiURL
+	c.caCert = client.(*HttpClient).caCert
+	c.ignoreSystemCA = client.(*HttpClient).ignoreSystemCA
+	c.insecure = client.(*HttpClient).insecure
+	c.maxRedirects = client.(*HttpClient).maxRedirects
+	c.timeout = client.(*HttpClient).timeout
+	return c, nil
+}
+
+func (c *HttpClient) GetApiUrl() string {
+	return c.apiURL
 }

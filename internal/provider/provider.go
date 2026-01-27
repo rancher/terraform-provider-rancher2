@@ -3,13 +3,22 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"regexp"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
-	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_client"
+	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
+	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_dev"
+	"github.com/rancher/terraform-provider-rancher2/internal/provider/validators"
 )
 
 // The `var _` is a special Go construct that results in an unusable variable.
@@ -29,38 +38,142 @@ func New(version string) func() provider.Provider {
 	}
 }
 
-// This provider has no configuration.
-type RancherProviderModel struct{}
+type RancherProviderModel struct {
+	ApiUrl         types.String `tfsdk:"api_url"`
+	CaCert         types.String `tfsdk:"ca_cert"`
+	Insecure       types.Bool   `tfsdk:"insecure"`
+	IgnoreSystemCa types.Bool   `tfsdk:"ignore_system_ca"`
+	Timeout        types.Int64  `tfsdk:"timeout"`
+	MaxRedirects   types.Int64  `tfsdk:"max_redirects"`
+}
 
 func (p *RancherProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "rancher2"
 	resp.Version = p.version
 }
 
-// This provider has no configuration arguments.
 func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"api_url": schema.StringAttribute{
+				Description: "The URL of the rancher API without paths included, e.g. https://rancher.example.com.",
+				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^https?:\/\/`),
+						"must be a valid URL starting with http:// or https://",
+					),
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}`),
+						"must be a valid domain",
+					),
+				},
+			},
+			"ca_cert": schema.StringAttribute{
+				Description: "The CA certificate to use for the Rancher API.",
+				Optional:    true,
+				Validators: []validator.String{
+					validators.IsCertificate(),
+				},
+			},
+			"insecure": schema.BoolAttribute{
+				Description: "Whether to allow insecure connections to the Rancher API.",
+				Optional:    true,
+			},
+			"ignore_system_ca": schema.BoolAttribute{
+				Description: "Whether to ignore the system's CA certificates.",
+				Optional:    true,
+			},
+			"timeout": schema.Int64Attribute{
+				Description: "The connection timeout to use for the Rancher API.",
+				Optional:    true,
+			},
+			"max_redirects": schema.Int64Attribute{
+				Description: "The maximum number of redirects to follow.",
+				Optional:    true,
+			},
+		},
+	}
 }
 
 func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Request Object: %#v", req))
+	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Request: %v", pp.PrettyPrint(req)))
 
 	var config RancherProviderModel
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	registry := c.NewRegistry()
-	resp.ResourceData = registry
-	resp.DataSourceData = registry
+	if config.ApiUrl.IsNull() || config.ApiUrl.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Missing Rancher API URL",
+			"The API URL must be set at the provider level for resources to work properly.",
+		)
+		return
+	}
+	tflog.Debug(ctx, fmt.Sprintf("Rancher API URL: %s", config.ApiUrl.ValueString()))
 
-	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Response Object: %#v", resp))
+	if config.Insecure.IsNull() {
+		config.Insecure = types.BoolValue(false)
+	}
+
+	if config.IgnoreSystemCa.IsNull() {
+		config.IgnoreSystemCa = types.BoolValue(false)
+	}
+
+	if config.Timeout.IsNull() {
+		config.Timeout = types.Int64Value(30)
+	}
+
+	if config.MaxRedirects.IsNull() {
+		config.MaxRedirects = types.Int64Value(10)
+	}
+
+	_, err := url.ParseRequestURI(config.ApiUrl.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Invalid Rancher API URL",
+			fmt.Sprintf("The provider received an invalid Rancher API URL: %s", err.Error()),
+		)
+		return
+	}
+
+	var client c.Client
+	if p.version == "test" {
+		client = c.NewTestClient(
+			ctx,
+			config.ApiUrl.ValueString(),
+			config.CaCert.ValueString(),
+			config.Insecure.ValueBool(),
+			config.IgnoreSystemCa.ValueBool(),
+			time.Duration(config.Timeout.ValueInt64())*time.Second,
+			config.MaxRedirects.ValueInt64(),
+		)
+	} else {
+		client = c.NewHttpClient(
+			ctx,
+			config.ApiUrl.ValueString(),
+			config.CaCert.ValueString(),
+			config.Insecure.ValueBool(),
+			config.IgnoreSystemCa.ValueBool(),
+			time.Duration(config.Timeout.ValueInt64())*time.Second,
+			config.MaxRedirects.ValueInt64(),
+		)
+	}
+
+	// The client variable is an interface that holds a pointer to a struct.
+	resp.ResourceData = client
+	resp.DataSourceData = client
+
+	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Response: %v", pp.PrettyPrint(resp)))
 }
 
 func (p *RancherProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		rancher2_client.NewRancherClientResource,
+		rancher2_dev.NewRancherDevResource,
 	}
 }
 
