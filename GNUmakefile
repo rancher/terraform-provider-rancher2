@@ -23,7 +23,7 @@ testacc: # run all acceptance tests
 	./run_tests.sh
 
 dt: # run specific unit test eg. `make dt -- t=<testname>`
-	gotestsum --format standard-verbose -- $(t)
+	gotestsum --format standard-verbose -- ./... -v -run "$(t)"
 
 et: build # run specific acceptance test eg. `make et -- t=<testname>`
 	./run_tests.sh -t $(t)
