@@ -65,13 +65,17 @@ func resourceRancher2ClusterProxyConfigV2Create(d *schema.ResourceData, meta int
 
 func resourceRancher2ClusterProxyConfigV2Read(d *schema.ResourceData, meta interface{}) error {
 	clusterID := d.Get("cluster_id").(string)
+	clusterProxyConfigV2Id := clusterID + "/" + clusterProxyConfigV2Name
 
 	log.Printf("[INFO] Refreshing ClusterProxyConfig for cluster %s", clusterID)
 
+	return readClusterProxyConfigV2(clusterProxyConfigV2Id, d, meta)
+}
+
+func readClusterProxyConfigV2(id string, d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	clusterProxyConfigV2Id := clusterID + "/" + clusterProxyConfigV2Name
 	resp := &ClusterProxyConfigV2{}
-	err := config.getObjectV2ByID(rancher2DefaultLocalClusterID, clusterProxyConfigV2Id, clusterProxyConfigV2ApiType, resp)
+	err := config.getObjectV2ByID(rancher2DefaultLocalClusterID, id, clusterProxyConfigV2ApiType, resp)
 	if err != nil {
 		if IsNotFound(err) || IsNotAccessibleByID(err) {
 			log.Printf("[INFO] Cluster V2 %s not found", d.Id())
@@ -80,6 +84,7 @@ func resourceRancher2ClusterProxyConfigV2Read(d *schema.ResourceData, meta inter
 		}
 		return err
 	}
+
 	return flattenClusterProxyConfigV2(d, resp)
 }
 
