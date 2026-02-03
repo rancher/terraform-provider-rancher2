@@ -17,6 +17,9 @@ func resourceRancher2MachineConfigV2() *schema.Resource {
 		Read:   resourceRancher2MachineConfigV2Read,
 		Update: resourceRancher2MachineConfigV2Update,
 		Delete: resourceRancher2MachineConfigV2Delete,
+		Importer: &schema.ResourceImporter{
+			State: resourceRancher2MachineConfigV2Import,
+		},
 		Schema: machineConfigV2Fields(),
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(3 * time.Minute),

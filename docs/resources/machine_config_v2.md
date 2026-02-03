@@ -372,3 +372,11 @@ The following attributes are exported:
 - `create` - (Default `10 minutes`) Used for creating machine configs.
 - `update` - (Default `10 minutes`) Used for machine config modifications.
 - `delete` - (Default `10 minutes`) Used for deleting machine configs.
+
+## Import
+
+Machine config v2 can be imported using the Machine config ID - &lt;FLEET_NAMESPACE&gt;/&lt;MACHINE_CONFIG_ID&gt;
+
+```bash
+terraform import rancher2_machine_config_v2.foo "fleet-default/nc-pool1-yc3fg6"
+```
