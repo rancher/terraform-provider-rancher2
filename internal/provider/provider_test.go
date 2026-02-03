@@ -99,7 +99,12 @@ func TestProviderConfigure(t *testing.T) {
 			ctx := h.GenerateTestContext(t, &buf, nil)
 			defer h.PrintLog(t, &buf, "ERROR") // change to debug when troubleshooting
 
-			req := provider.ConfigureRequest{Config: h.GetConfig(t, &tc.fit, tc.have)}
+			config, dgs := tc.have.ToConfig(ctx)
+			if dgs.HasError() {
+				t.Errorf("error generating config: %s", pp.PrettyPrint(dgs))
+			}
+
+			req := provider.ConfigureRequest{Config: config}
 			res := provider.ConfigureResponse{}
 			tc.fit.Configure(ctx, req, &res)
 			if (tc.outcome == "succeed") && res.Diagnostics.HasError() {

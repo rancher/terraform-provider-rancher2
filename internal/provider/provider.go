@@ -8,11 +8,14 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
@@ -45,6 +48,31 @@ type RancherProviderModel struct {
 	IgnoreSystemCa types.Bool   `tfsdk:"ignore_system_ca"`
 	Timeout        types.Int64  `tfsdk:"timeout"`
 	MaxRedirects   types.Int64  `tfsdk:"max_redirects"`
+}
+
+// ToPlan returns a tfsdk.Plan with the data from the model.
+func (m *RancherProviderModel) ToConfig(ctx context.Context) (tfsdk.Config, diag.Diagnostics) {
+	p := RancherProvider{}
+	s := &provider.SchemaResponse{}
+	p.Schema(ctx, provider.SchemaRequest{}, s)
+
+	var raw attr.Value
+	diags := tfsdk.ValueFrom(ctx, m, s.Schema.Type(), &raw)
+	if diags.HasError() {
+		return tfsdk.Config{}, diags
+	}
+
+	tfRaw, err := raw.ToTerraformValue(ctx)
+	if err != nil {
+		dgs := diag.Diagnostics{}
+		dgs.AddError("Error converting to terraform value", err.Error())
+		return tfsdk.Config{}, dgs
+	}
+
+	return tfsdk.Config{
+		Raw:    tfRaw,
+		Schema: s.Schema,
+	}, nil
 }
 
 func (p *RancherProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {

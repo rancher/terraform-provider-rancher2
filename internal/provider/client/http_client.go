@@ -11,10 +11,66 @@ import (
 	"net/http"
 	"time"
 
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var _ Client = &HttpClient{}
+var _ retryablehttp.LeveledLogger = &retryableHTTPLogger{}
+
+type retryableHTTPLogger struct {
+	ctx context.Context
+}
+
+func (l *retryableHTTPLogger) toMap(keysAndValues ...any) map[string]any {
+	if len(keysAndValues) == 0 {
+		return nil
+	}
+	if len(keysAndValues)%2 != 0 {
+		keysAndValues = append(keysAndValues, "MISSING")
+	}
+	fields := make(map[string]any, len(keysAndValues)/2)
+	for i := 0; i < len(keysAndValues); i += 2 {
+		k, ok := keysAndValues[i].(string)
+		if !ok {
+			k = fmt.Sprintf("%v", keysAndValues[i])
+		}
+		fields[k] = keysAndValues[i+1]
+	}
+	return fields
+}
+
+func (l *retryableHTTPLogger) Error(msg string, keysAndValues ...any) {
+	if fields := l.toMap(keysAndValues...); fields != nil {
+		tflog.Error(l.ctx, msg, fields)
+	} else {
+		tflog.Error(l.ctx, msg)
+	}
+}
+
+func (l *retryableHTTPLogger) Info(msg string, keysAndValues ...any) {
+	if fields := l.toMap(keysAndValues...); fields != nil {
+		tflog.Info(l.ctx, msg, fields)
+	} else {
+		tflog.Info(l.ctx, msg)
+	}
+}
+
+func (l *retryableHTTPLogger) Debug(msg string, keysAndValues ...any) {
+	if fields := l.toMap(keysAndValues...); fields != nil {
+		tflog.Debug(l.ctx, msg, fields)
+	} else {
+		tflog.Debug(l.ctx, msg)
+	}
+}
+
+func (l *retryableHTTPLogger) Warn(msg string, keysAndValues ...any) {
+	if fields := l.toMap(keysAndValues...); fields != nil {
+		tflog.Warn(l.ctx, msg, fields)
+	} else {
+		tflog.Warn(l.ctx, msg)
+	}
+}
 
 type HttpClient struct {
 	ctx            context.Context
@@ -48,13 +104,6 @@ func (c *HttpClient) Do(req *Request, resp *Response) error {
 
 	tflog.Debug(ctx, fmt.Sprintf("Request Object: %#v", req))
 
-	MaxRedirectCheckFunction := func(r *http.Request, via []*http.Request) error {
-		if len(via) >= int(c.maxRedirects) {
-			return fmt.Errorf("stopped after %d redirects", c.maxRedirects)
-		}
-		return nil
-	}
-
 	var rootCAs *x509.CertPool
 	if c.ignoreSystemCA {
 		rootCAs = x509.NewCertPool()
@@ -73,78 +122,77 @@ func (c *HttpClient) Do(req *Request, resp *Response) error {
 		}
 	}
 
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: c.insecure,
-		RootCAs:            rootCAs,
+	retryClient := retryablehttp.NewClient()
+	retryClient.Logger = &retryableHTTPLogger{ctx: ctx}
+	retryClient.HTTPClient = &http.Client{
+		Timeout: c.timeout,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: c.insecure,
+				RootCAs:            rootCAs,
+			},
+		},
+		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+			if len(via) >= int(c.maxRedirects) {
+				return fmt.Errorf("stopped after %d redirects", c.maxRedirects)
+			}
+			return nil
+		},
 	}
 
-	transport := &http.Transport{
-		TLSClientConfig: tlsConfig,
-		Proxy:           http.ProxyFromEnvironment,
-	}
-
-	client := &http.Client{
-		Timeout:       c.timeout,
-		CheckRedirect: MaxRedirectCheckFunction,
-		Transport:     transport,
-	}
-
-	var reqBody *bytes.Buffer
+	var reqBody io.Reader
 	if req.Body != nil {
 		bodyBytes, err := json.Marshal(req.Body)
 		if err != nil {
 			return fmt.Errorf("doing request: error marshalling body: %v", err)
 		}
 		reqBody = bytes.NewBuffer(bodyBytes)
-	} else {
-		reqBody = &bytes.Buffer{}
 	}
 
 	url := fmt.Sprintf("%s", req.Endpoint)
-	request, err := http.NewRequest(req.Method, url, reqBody)
+	request, err := retryablehttp.NewRequest(req.Method, url, reqBody)
 	if err != nil {
 		return fmt.Errorf("doing request: %v", err)
 	}
+	request = request.WithContext(ctx)
 
 	for key, value := range req.Headers {
 		request.Header.Add(key, value)
 	}
 
-	res, err := client.Do(request)
+	res, err := retryClient.Do(request)
 	if err != nil {
 		return fmt.Errorf("doing request: %v", err)
 	}
 	defer res.Body.Close()
 
-	// Timings recorded as part of internal metrics
-	tflog.Debug(ctx, fmt.Sprintf("Response Time: %f ms", float64((time.Since(start))/time.Millisecond)))
-	tflog.Debug(ctx, fmt.Sprintf("Response Status: %s", res.Status))
-	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %#v", res.Header))
-
-	switch resp.StatusCode {
-	case 200:
-		tflog.Debug(ctx, "Successful response! (200)")
-	case 202:
-		tflog.Debug(ctx, "Accepted! (202)")
-	case 400:
-		return fmt.Errorf("Bad request! (400)")
-	case 401:
-		return fmt.Errorf("Unauthorized! (401)")
-	case 403:
-		return fmt.Errorf("Forbidden! (403)")
-	case 404:
-		return fmt.Errorf("Not found! (404)")
-	case 500:
-		return fmt.Errorf("Internal server error! (500)")
-	default:
-		return fmt.Errorf("Unknown status code! (%d)", resp.StatusCode)
-	}
+	resp.StatusCode = res.StatusCode
+	resp.Headers = res.Header
 
 	responseBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return fmt.Errorf("reading response body: %v", err)
 	}
-	tflog.Debug(ctx, fmt.Sprintf("Response Body: %v", string(responseBody)))
+	resp.Body = responseBody
+
+	// Timings recorded as part of internal metrics
+	tflog.Debug(ctx, fmt.Sprintf("Response Time: %f ms", float64((time.Since(start))/time.Millisecond)))
+	tflog.Debug(ctx, fmt.Sprintf("Response Status: %s", res.Status))
+	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %#v", res.Header))
+	tflog.Debug(ctx, fmt.Sprintf("Response Body: %s", string(responseBody)))
+
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		tflog.Debug(ctx, fmt.Sprintf("Successful response! (%d)", resp.StatusCode))
+		return nil
+	}
+
+	if resp.StatusCode >= 400 {
+		return &ApiError{
+			StatusCode: resp.StatusCode,
+			Message:    string(responseBody),
+		}
+	}
 
 	return nil
 }

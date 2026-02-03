@@ -50,29 +50,22 @@ func (c *TestClient) Do(req *Request, resp *Response) error {
 	resp.Headers = c.response.Headers
 	resp.StatusCode = c.response.StatusCode
 
-	res := *resp
+	tflog.Debug(ctx, fmt.Sprintf("Response Time: %f ms", float64((time.Since(start))/time.Millisecond)))
+	tflog.Debug(ctx, fmt.Sprintf("Response Status Code: %d", resp.StatusCode))
+	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %#v", resp.Headers))
+	tflog.Debug(ctx, fmt.Sprintf("Response Body: %s", string(resp.Body)))
 
-	switch resp.StatusCode {
-	case 200:
-		tflog.Debug(ctx, "Successful response! (200)")
-	case 202:
-		tflog.Debug(ctx, "Accepted! (202)")
-	case 400:
-		return fmt.Errorf("Bad request! (400)")
-	case 401:
-		return fmt.Errorf("Unauthorized! (401)")
-	case 403:
-		return fmt.Errorf("Forbidden! (403)")
-	case 404:
-		return fmt.Errorf("Not found! (404)")
-	case 500:
-		return fmt.Errorf("Internal server error! (500)")
-	default:
-		return fmt.Errorf("Unknown status code! (%d)", resp.StatusCode)
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		tflog.Debug(ctx, fmt.Sprintf("Successful response! (%d)", resp.StatusCode))
+		return nil
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("Response Object: %v", pp.PrettyPrint(res)))
-	tflog.Debug(ctx, fmt.Sprintf("Response Time: %f ms", float64((time.Since(start))/time.Millisecond)))
+	if resp.StatusCode >= 400 {
+		return &ApiError{
+			StatusCode: resp.StatusCode,
+			Message:    string(resp.Body),
+		}
+	}
 
 	return nil
 }
@@ -100,4 +93,9 @@ func (c *TestClient) SetResponse(response Response) {
 
 func (c *TestClient) GetLastRequest() Request {
 	return c.request
+}
+
+type ErrorResponse struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
 }

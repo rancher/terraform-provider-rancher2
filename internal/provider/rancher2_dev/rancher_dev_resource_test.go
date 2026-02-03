@@ -4,13 +4,18 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+
+	"math/big"
+	"net/http"
 	"os"
 	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
 	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
 	h "github.com/rancher/terraform-provider-rancher2/internal/provider/test_helpers"
@@ -20,6 +25,7 @@ const (
 	apiUrl      = "https://rancher.example.com"
 	endpoint    = "dev"
 	apiEndpoint = apiUrl + "/" + endpoint
+	defaultId   = "dev-test"
 )
 
 func TestRancherDevResourceMetadata(t *testing.T) {
@@ -56,6 +62,19 @@ func TestRancherDevResourceSchema(t *testing.T) {
 				RancherDevResource{},
 				[]string{
 					"id",
+					"bool_attribute",
+					"number_attribute",
+					"int64_attribute",
+					"int32_attribute",
+					"float64_attribute",
+					"float32_attribute",
+					"string_attribute",
+					"list_attribute",
+					"set_attribute",
+					"map_attribute",
+					"nested_object",
+					"nested_object_list",
+					"nested_object_map",
 				},
 			},
 		}
@@ -109,12 +128,12 @@ func TestRancherDevResourceCreate(t *testing.T) {
 		testCases := []struct {
 			name          string
 			fit           RancherDevResource
-			env           map[string]string       // a k/v map of environment variables to set
-			plan          RancherDevResourceModel // what is in the plan, translated to struct
-			expectedState RancherDevResourceModel // what should be in the state, translated to struct
-			apiRequest    c.Request               // what the request should look like as reported by the client
-			apiResponse   c.Response              // the API response to inject into the client
-			outcome       string                  // expected outcome, one of: "success","failure"
+			env           map[string]string // a k/v map of environment variables to set
+			plan          RancherDevModel   // what is in the plan, translated to struct
+			expectedState RancherDevModel   // what should be in the state, translated to struct
+			apiRequest    c.Request         // what the request should look like as reported by the client
+			apiResponse   c.Response        // the API response to inject into the client
+			outcome       string            // expected outcome, one of: "success","failure"
 		}{
 			{
 				"Basic",
@@ -122,217 +141,240 @@ func TestRancherDevResourceCreate(t *testing.T) {
 				// env
 				map[string]string{},
 				// plan
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
+				RancherDevModel{
+					Id:               defaultId,
+					BoolAttribute:    false,
+					NumberAttribute:  big.NewFloat(1.0),
+					Int64Attribute:   1,
+					Int32Attribute:   1,
+					Float64Attribute: 1,
+					Float32Attribute: 1,
+					StringAttribute:  "test",
+					ListAttribute:    []string{"test"},
+					SetAttribute:     map[string]bool{"test": true},
+					MapAttribute:     map[string]string{"test": "test"},
+					NestedObject: NestedObject{
+						StringAttribute: "test",
+						NestedNestedObject: NestedNestedObject{
+							StringAttribute: "test",
+							BoolAttribute:   true,
+						},
+					},
+					NestedObjectList: []NestedObject{
+						{
+							StringAttribute: "test",
+							NestedNestedObject: NestedNestedObject{
+								StringAttribute: "test",
+								BoolAttribute:   true,
+							},
+						},
+					},
+					NestedObjectMap: map[string]NestedObject{
+						"test": {
+							StringAttribute: "test",
+							NestedNestedObject: NestedNestedObject{
+								StringAttribute: "test",
+								BoolAttribute:   true,
+							},
+						},
+					},
 				},
 				// state expected to match this
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
+				RancherDevModel{
+					Id:               defaultId,
+					BoolAttribute:    false,
+					NumberAttribute:  big.NewFloat(1.0),
+					Int64Attribute:   1,
+					Int32Attribute:   1,
+					Float64Attribute: 1,
+					Float32Attribute: 1,
+					StringAttribute:  "test",
+					ListAttribute:    []string{"test"},
+					SetAttribute:     map[string]bool{"test": true},
+					MapAttribute:     map[string]string{"test": "test"},
+					NestedObject: NestedObject{
+						StringAttribute: "test",
+						NestedNestedObject: NestedNestedObject{
+							StringAttribute: "test",
+							BoolAttribute:   true,
+						},
+					},
+					NestedObjectList: []NestedObject{
+						{
+							StringAttribute: "test",
+							NestedNestedObject: NestedNestedObject{
+								StringAttribute: "test",
+								BoolAttribute:   true,
+							},
+						},
+					},
+					NestedObjectMap: map[string]NestedObject{
+						"test": {
+							StringAttribute: "test",
+							NestedNestedObject: NestedNestedObject{
+								StringAttribute: "test",
+								BoolAttribute:   true,
+							},
+						},
+					},
 				},
 				// the client should report this request object
 				c.Request{
 					Endpoint: apiEndpoint,
 					Method:   "POST",
 					Body: RancherDevModel{
-						Id:              "test",
-						BoolAttribute:   false,
-						NumberAttribute: 1,
-						StringAttribute: "test",
+						Id:               defaultId,
+						BoolAttribute:    false,
+						NumberAttribute:  big.NewFloat(1.0),
+						Int64Attribute:   1,
+						Int32Attribute:   1,
+						Float64Attribute: 1,
+						Float32Attribute: 1,
+						StringAttribute:  "test",
+						ListAttribute:    []string{"test"},
+						SetAttribute:     map[string]bool{"test": true},
+						MapAttribute:     map[string]string{"test": "test"},
+						NestedObject: NestedObject{
+							StringAttribute: "test",
+							NestedNestedObject: NestedNestedObject{
+								StringAttribute: "test",
+								BoolAttribute:   true,
+							},
+						},
+						NestedObjectList: []NestedObject{
+							{
+								StringAttribute: "test",
+								NestedNestedObject: NestedNestedObject{
+									StringAttribute: "test",
+									BoolAttribute:   true,
+								},
+							},
+						},
+						NestedObjectMap: map[string]NestedObject{
+							"test": {
+								StringAttribute: "test",
+								NestedNestedObject: NestedNestedObject{
+									StringAttribute: "test",
+									BoolAttribute:   true,
+								},
+							},
+						},
 					},
 				},
 				// the response to inject into the client
 				c.Response{
-					StatusCode: 200,
-					Headers:    map[string][]string{},
+					StatusCode: http.StatusOK,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
 					Body: resBodyMarshall(RancherDevModel{
-						Id:              "test",
-						BoolAttribute:   false,
-						NumberAttribute: 1,
-						StringAttribute: "test",
+						Id:               defaultId,
+						BoolAttribute:    false,
+						NumberAttribute:  big.NewFloat(1.0),
+						Int64Attribute:   1,
+						Int32Attribute:   1,
+						Float64Attribute: 1,
+						Float32Attribute: 1,
+						StringAttribute:  "test",
+						ListAttribute:    []string{"test"},
+						SetAttribute:     map[string]bool{"test": true},
+						MapAttribute:     map[string]string{"test": "test"},
+						NestedObject: NestedObject{
+							StringAttribute: "test",
+							NestedNestedObject: NestedNestedObject{
+								StringAttribute: "test",
+								BoolAttribute:   true,
+							},
+						},
+						NestedObjectList: []NestedObject{
+							{
+								StringAttribute: "test",
+								NestedNestedObject: NestedNestedObject{
+									StringAttribute: "test",
+									BoolAttribute:   true,
+								},
+							},
+						},
+						NestedObjectMap: map[string]NestedObject{
+							"test": {
+								StringAttribute: "test",
+								NestedNestedObject: NestedNestedObject{
+									StringAttribute: "test",
+									BoolAttribute:   true,
+								},
+							},
+						},
 					}),
 				},
 				// expected outcome
 				"success",
 			},
-		}
-		for _, tc := range testCases {
-			t.Run(tc.name, func(t *testing.T) {
-				defer func() {
-					for k := range tc.env {
-						// nolint:usetesting
-						os.Unsetenv(k)
-					}
-				}()
-				for k, v := range tc.env {
-					// nolint:usetesting
-					os.Setenv(k, v)
-				}
-				var buf bytes.Buffer
-				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
-				ctx := h.GenerateTestContext(t, &buf, nil)
-
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10)
-				client.SetResponse(tc.apiResponse)
-
-				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
-				if err != nil {
-					t.Errorf("Error configuring resource: %+v", err)
-				}
-
-				req := resource.CreateRequest{Plan: h.GetPlan(t, &RancherDevResource{}, tc.plan)}
-				res := resource.CreateResponse{State: h.GetState(t, &RancherDevResource{}, nil)}
-				tc.fit.Create(ctx, req, &res)
-				actualState := res
-				expectedState := resource.CreateResponse{State: h.GetState(t, &RancherDevResource{}, tc.expectedState)}
-
-				actualApiRequest := client.GetLastRequest()
-				expectedApiRequest := tc.apiRequest
-
-				// Always verify outcome before comparing objects
-				if tc.outcome == "failure" {
-					if !res.Diagnostics.HasError() {
-						t.Errorf("%#v.Configure() did not return expected error diagnostics: %+v", tc.fit, pp.PrettyPrint(res.Diagnostics))
-					} else {
-						return
-					}
-				}
-				if (tc.outcome == "success") && res.Diagnostics.HasError() {
-					t.Errorf("%#v.Configure() returned unexpected error diagnostics: %s", tc.fit, pp.PrettyPrint(res.Diagnostics))
-				}
-				if diff := cmp.Diff(expectedApiRequest, actualApiRequest); diff != "" {
-					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
-				}
-				if diff := cmp.Diff(expectedState, actualState); diff != "" {
-					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
-				}
-			})
-		}
-	})
-}
-
-func TestRancherDevResourceRead(t *testing.T) {
-	t.Run("Read function", func(t *testing.T) {
-		testCases := []struct {
-			name               string
-			fit                RancherDevResource
-			env                map[string]string       // a k/v map of environment variables to set
-			existingState      RancherDevResourceModel // this will get injected in the read request
-			expectedState      RancherDevResourceModel
-			apiResponse        c.Response // this will be injected into the client
-			expectedApiRequest c.Request  // the API request expected to be reported from the client
-			outcome            string     // expected outcome, one of: "success","failure"
-		}{
 			{
-				"Basic",
+				"API Conflict",
 				RancherDevResource{},
 				// env
 				map[string]string{},
-				// existing state set in read request
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
+				// plan
+				RancherDevModel{
+					Id: defaultId,
 				},
-				// resulting state expected to match this
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
+				// state expected to match this
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// the client should report this request object
+				c.Request{
+					Endpoint: apiEndpoint,
+					Method:   "POST",
+					Body: RancherDevModel{
+						Id: defaultId,
+					},
 				},
 				// the response to inject into the client
 				c.Response{
-					StatusCode: 200,
-					Headers:    map[string][]string{},
-					Body: resBodyMarshall(RancherDevModel{
-						Id:              "test",
-						BoolAttribute:   false,
-						NumberAttribute: 1,
-						StringAttribute: "test",
+					StatusCode: http.StatusConflict,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(c.ErrorResponse{
+						Status:  "409",
+						Message: "resource already exists",
 					}),
 				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/test", // add the id to the path
-					Method:   "GET",
-				},
 				// expected outcome
-				"success",
+				"failure",
 			},
 			{
-				"Update object",
+				"Server Error",
 				RancherDevResource{},
 				// env
 				map[string]string{},
-				// existing state set in read request
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
+				// plan
+				RancherDevModel{
+					Id: defaultId,
 				},
-				// resulting state expected to match this
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("this is different"),
+				// state expected to match this
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// the client should report this request object
+				c.Request{
+					Endpoint: apiEndpoint,
+					Method:   "POST",
+					Body: RancherDevModel{
+						Id: "test",
+					},
 				},
 				// the response to inject into the client
 				c.Response{
-					StatusCode: 200,
-					Headers:    map[string][]string{},
-					Body: resBodyMarshall(RancherDevModel{
-						Id:              "test",
-						BoolAttribute:   false,
-						NumberAttribute: 1,
-						StringAttribute: "this is different",
+					StatusCode: http.StatusInternalServerError,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(c.ErrorResponse{
+						Status:  "500",
+						Message: "something went wrong",
 					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/test", // add the id to the path
-					Method:   "GET",
-				},
-				// expected outcome
-				"success",
-			},
-			{
-				"Failed Response",
-				RancherDevResource{},
-				// env
-				map[string]string{},
-				// existing state set in read request
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
-				},
-				// resulting state expected to match this
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("this is different"),
-				},
-				// the response to inject into the client
-				c.Response{
-					StatusCode: 500,
-					Headers:    map[string][]string{},
-					Body:       []byte(""),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/test", // add the id to the path
-					Method:   "GET",
 				},
 				// expected outcome
 				"failure",
@@ -359,12 +401,246 @@ func TestRancherDevResourceRead(t *testing.T) {
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
-					t.Errorf("Error configuring resource: %+v", err)
+					t.Fatalf("error configuring resource: %+v", err)
+				}
+				dgs := diag.Diagnostics{}
+				plan := tc.plan.ToResource(ctx, &dgs).ToPlan(ctx, &dgs)
+				if dgs.HasError() {
+					t.Fatalf("error generating plan: %s", pp.PrettyPrint(dgs))
+				}
+				req := resource.CreateRequest{Plan: plan}
+
+				// get empty state
+				emptyResource := NewRancherDevResource()
+				schemaResponseContainer := &resource.SchemaResponse{}
+				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
+				state := tfsdk.State{
+					Schema: schemaResponseContainer.Schema,
 				}
 
-				req := resource.ReadRequest{State: h.GetState(t, &RancherDevResource{}, tc.existingState)}
-				expectedState := resource.ReadResponse{State: h.GetState(t, &RancherDevResource{}, tc.expectedState)}
-				res := resource.ReadResponse{State: h.GetState(t, &RancherDevResource{}, nil)}
+				res := resource.CreateResponse{State: state}
+				tc.fit.Create(ctx, req, &res)
+				actualState := res
+
+				state = tc.expectedState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				if dgs.HasError() {
+					t.Fatalf("error generating expected state: %s", pp.PrettyPrint(dgs))
+				}
+				expectedState := resource.CreateResponse{State: state}
+
+				actualApiRequest := client.GetLastRequest()
+				expectedApiRequest := tc.apiRequest
+
+				// Always verify outcome before comparing objects
+				if tc.outcome == "failure" {
+					if !res.Diagnostics.HasError() {
+						t.Errorf("%#v.Configure() did not return expected error diagnostics: %+v", tc.fit, pp.PrettyPrint(res.Diagnostics))
+					} else {
+						return
+					}
+				}
+				if (tc.outcome == "success") && res.Diagnostics.HasError() {
+					t.Errorf("%#v.Configure() returned unexpected error diagnostics: %s", tc.fit, pp.PrettyPrint(res.Diagnostics))
+				}
+
+				if diff := cmp.Diff(expectedApiRequest, actualApiRequest, cmpopts.IgnoreUnexported(big.Float{})); diff != "" {
+					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
+				}
+				if diff := cmp.Diff(expectedState, actualState, cmpopts.IgnoreUnexported(big.Float{})); diff != "" {
+					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
+				}
+			})
+		}
+	})
+}
+
+func TestRancherDevResourceRead(t *testing.T) {
+	t.Run("Read function", func(t *testing.T) {
+		testCases := []struct {
+			name               string
+			fit                RancherDevResource
+			env                map[string]string // a k/v map of environment variables to set
+			existingState      RancherDevModel   // this will get injected in the read request
+			expectedState      RancherDevModel
+			apiResponse        c.Response // this will be injected into the client
+			expectedApiRequest c.Request  // the API request expected to be reported from the client
+			outcome            string     // expected outcome, one of: "success","failure"
+		}{
+			{
+				"Basic",
+				RancherDevResource{},
+				// env
+				map[string]string{},
+				// existing state set in read request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// resulting state expected to match this
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// the response to inject into the client
+				c.Response{
+					StatusCode: http.StatusOK,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(RancherDevModel{
+						Id: defaultId,
+					}),
+				},
+				// the API request expected to be reported
+				c.Request{
+					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+					Method:   "GET",
+				},
+				// expected outcome
+				"success",
+			},
+			{
+				"Update object",
+				RancherDevResource{},
+				// env
+				map[string]string{},
+				// existing state set in read request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// resulting state expected to match this
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// the response to inject into the client
+				c.Response{
+					StatusCode: http.StatusOK,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(RancherDevModel{
+						Id: defaultId,
+					}),
+				},
+				// the API request expected to be reported
+				c.Request{
+					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+					Method:   "GET",
+				},
+				// expected outcome
+				"success",
+			},
+			{
+				"Failed Response",
+				RancherDevResource{},
+				// env
+				map[string]string{},
+				// existing state set in read request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// resulting state expected to match this
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// the response to inject into the client
+				c.Response{
+					StatusCode: http.StatusInternalServerError,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(c.ErrorResponse{
+						Status:  "500",
+						Message: "something went wrong",
+					}),
+				},
+				// the API request expected to be reported
+				c.Request{
+					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+					Method:   "GET",
+				},
+				// expected outcome
+				"failure",
+			},
+			{
+				"Unmanaged API data",
+				RancherDevResource{},
+				// env
+				map[string]string{},
+				// existing state set in read request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// resulting state expected to match this
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// the response to inject into the client
+				c.Response{
+					StatusCode: http.StatusOK,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(struct {
+						Id                 string `json:"id"`
+						UntrackedAttribute string `json:"untracked_attribute,omitempty"`
+					}{
+						Id:                 defaultId,
+						UntrackedAttribute: "untracked",
+					}),
+				},
+				// the API request expected to be reported
+				c.Request{
+					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+					Method:   "GET",
+				},
+				// expected outcome
+				"success",
+			},
+		}
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				defer func() {
+					for k := range tc.env {
+						// nolint:usetesting
+						os.Unsetenv(k)
+					}
+				}()
+				for k, v := range tc.env {
+					// nolint:usetesting
+					os.Setenv(k, v)
+				}
+				var buf bytes.Buffer
+				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
+				ctx := h.GenerateTestContext(t, &buf, nil)
+
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10)
+				client.SetResponse(tc.apiResponse)
+
+				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
+				if err != nil {
+					t.Errorf("error configuring resource: %+v", err)
+				}
+				var dgs diag.Diagnostics
+				state := tc.existingState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				if dgs.HasError() {
+					t.Errorf("error generating existing state: %s", pp.PrettyPrint(dgs))
+				}
+				req := resource.ReadRequest{State: state}
+
+				state = tc.expectedState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				if dgs.HasError() {
+					t.Errorf("error generating expected state: %s", pp.PrettyPrint(dgs))
+				}
+				expectedState := resource.ReadResponse{State: state}
+
+				// get empty state
+				emptyResource := NewRancherDevResource()
+				schemaResponseContainer := &resource.SchemaResponse{}
+				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
+				state = tfsdk.State{
+					Schema: schemaResponseContainer.Schema,
+				}
+				res := resource.ReadResponse{State: state}
+
 				tc.fit.Read(context.Background(), req, &res)
 				actualState := res
 				expectedApiRequest := tc.expectedApiRequest
@@ -398,9 +674,9 @@ func TestRancherDevResourceUpdate(t *testing.T) {
 			name               string
 			fit                RancherDevResource
 			env                map[string]string // a k/v map of environment variables to set
-			plan               RancherDevResourceModel
-			existingState      RancherDevResourceModel
-			expectedState      RancherDevResourceModel
+			plan               RancherDevModel
+			existingState      RancherDevModel
+			expectedState      RancherDevModel
 			apiResponse        c.Response // this will be injected into the client
 			expectedApiRequest c.Request  // the API request expected to be reported from the client
 			outcome            string     // expected outcome, one of: "success","failure"
@@ -410,47 +686,146 @@ func TestRancherDevResourceUpdate(t *testing.T) {
 				RancherDevResource{},
 				// env
 				map[string]string{},
-				// plan set in update request
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
+				// plan
+				RancherDevModel{
+					Id: defaultId,
 				},
-				// existing state set in update request
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
+				// existing state
+				RancherDevModel{
+					Id: defaultId,
 				},
 				// resulting state expected to match this
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
+				RancherDevModel{
+					Id: defaultId,
 				},
 				// this response will be injected into the client
 				c.Response{
-					StatusCode: 200,
-					Headers:    map[string][]string{},
+					StatusCode: http.StatusOK,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
 					Body: resBodyMarshall(RancherDevModel{
-						Id:              "test",
-						BoolAttribute:   false,
-						NumberAttribute: 1,
-						StringAttribute: "test",
+						Id: defaultId,
 					}),
 				},
 				// the API request expected to be reported
 				c.Request{
-					Endpoint: apiEndpoint + "/test", // add the id to the path
+					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "PUT",
 					Body: RancherDevModel{
-						Id:              "test",
-						BoolAttribute:   false,
-						NumberAttribute: 1,
-						StringAttribute: "test",
+						Id: defaultId,
+					},
+				},
+				// expected outcome
+				"success",
+			},
+			{
+				"Update on Deleted Resource",
+				RancherDevResource{},
+				// env
+				map[string]string{},
+				// plan set in update request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// existing state set in update request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// resulting state expected to match this
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// this response will be injected into the client
+				c.Response{
+					StatusCode: http.StatusNotFound,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(c.ErrorResponse{
+						Status:  "404",
+						Message: "resource not found",
+					}),
+				},
+				// the API request expected to be reported
+				c.Request{
+					Endpoint: apiEndpoint + "/" + defaultId,
+					Method:   "PUT",
+					Body:     RancherDevModel{Id: defaultId},
+				},
+				// expected outcome
+				"failure",
+			},
+			{
+				"Server Error on Update",
+				RancherDevResource{},
+				// env
+				map[string]string{},
+				// plan set in update request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// existing state set in update request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// resulting state expected to match this
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// this response will be injected into the client
+				c.Response{
+					StatusCode: http.StatusInternalServerError,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(c.ErrorResponse{
+						Status:  "500",
+						Message: "server error",
+					}),
+				},
+				// the API request expected to be reported
+				c.Request{
+					Endpoint: apiEndpoint + "/" + defaultId,
+					Method:   "PUT",
+					Body:     RancherDevModel{Id: defaultId},
+				},
+				// expected outcome
+				"failure",
+			},
+			{
+				"Partial Attribute Update",
+				RancherDevResource{},
+				// env
+				map[string]string{},
+				// plan set in update request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// existing state set in update request
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// resulting state expected to match this
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// this response will be injected into the client
+				c.Response{
+					StatusCode: http.StatusOK,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(RancherDevModel{
+						Id: defaultId,
+					}),
+				},
+				// the API request expected to be reported
+				c.Request{
+					Endpoint: apiEndpoint + "/" + defaultId,
+					Method:   "PUT",
+					Body: RancherDevModel{
+						Id: defaultId,
 					},
 				},
 				// expected outcome
@@ -480,19 +855,38 @@ func TestRancherDevResourceUpdate(t *testing.T) {
 				if err != nil {
 					t.Errorf("Error configuring resource: %+v", err)
 				}
-
+				var dgs diag.Diagnostics
+				plan := tc.plan.ToResource(ctx, &dgs).ToPlan(ctx, &dgs)
+				if dgs.HasError() {
+					t.Errorf("error generating plan: %s", pp.PrettyPrint(dgs))
+				}
+				state := tc.existingState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				if dgs.HasError() {
+					t.Errorf("error generating existing state: %s", pp.PrettyPrint(dgs))
+				}
 				req := resource.UpdateRequest{
-					Plan:  h.GetPlan(t, &RancherDevResource{}, tc.plan),
-					State: h.GetState(t, &RancherDevResource{}, tc.existingState),
+					Plan:  plan,
+					State: state,
+				}
+				// get empty state
+				emptyResource := NewRancherDevResource()
+				schemaResponseContainer := &resource.SchemaResponse{}
+				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
+				state = tfsdk.State{
+					Schema: schemaResponseContainer.Schema,
 				}
 				res := resource.UpdateResponse{
-					State: h.GetState(t, &RancherDevResource{}, nil),
+					State: state,
 				}
 				tc.fit.Update(ctx, req, &res)
 
 				actualState := res
+				state = tc.expectedState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				if dgs.HasError() {
+					t.Errorf("error generating expected state: %s", pp.PrettyPrint(dgs))
+				}
 				expectedState := resource.UpdateResponse{
-					State: h.GetState(t, &RancherDevResource{}, tc.expectedState),
+					State: state,
 				}
 
 				actualApiRequest := client.GetLastRequest()
@@ -526,7 +920,7 @@ func TestRancherDevResourceDelete(t *testing.T) {
 			name               string
 			fit                RancherDevResource
 			env                map[string]string // a k/v map of environment variables to set
-			existingState      RancherDevResourceModel
+			existingState      RancherDevModel
 			apiResponse        c.Response // this will be injected into the client
 			expectedApiRequest c.Request  // the API request expected to be reported from the client
 			outcome            string     // expected outcome, one of: "success","failure"
@@ -537,30 +931,78 @@ func TestRancherDevResourceDelete(t *testing.T) {
 				// env
 				map[string]string{},
 				// existing state
-				RancherDevResourceModel{
-					Id:              types.StringValue("test"),
-					BoolAttribute:   types.BoolValue(false),
-					NumberAttribute: types.Int64Value(1),
-					StringAttribute: types.StringValue("test"),
+				RancherDevModel{
+					Id: defaultId,
 				},
 				// this response will be injected into the client
 				c.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusNoContent,
 					Headers:    map[string][]string{},
-					Body: resBodyMarshall(RancherDevModel{
-						Id:              "test",
-						BoolAttribute:   false,
-						NumberAttribute: 1,
-						StringAttribute: "test",
-					}),
+					Body:       []byte{},
 				},
 				// the API request expected to be reported
 				c.Request{
-					Endpoint: apiEndpoint + "/test", // add the id to the path
+					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "DELETE",
 				},
 				// expected outcome
 				"success",
+			},
+			{
+				"Resource Already Deleted",
+				RancherDevResource{},
+				// env
+				map[string]string{},
+				// existing state
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// this response will be injected into the client
+				c.Response{
+					StatusCode: http.StatusNotFound,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(c.ErrorResponse{
+						Status:  "404",
+						Message: "resource not found",
+					}),
+				},
+				// the API request expected to be reported
+				c.Request{
+					Endpoint: apiEndpoint + "/" + defaultId,
+					Method:   "DELETE",
+				},
+				// expected outcome
+				"success",
+			},
+			{
+				"Server Error on Delete",
+				RancherDevResource{},
+				// env
+				map[string]string{},
+				// existing state
+				RancherDevModel{
+					Id: defaultId,
+				},
+				// this response will be injected into the client
+				c.Response{
+					StatusCode: http.StatusInternalServerError,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: resBodyMarshall(c.ErrorResponse{
+						Status:  "500",
+						Message: "server error",
+					}),
+				},
+				// the API request expected to be reported
+				c.Request{
+					Endpoint: apiEndpoint + "/" + defaultId,
+					Method:   "DELETE",
+				},
+				// expected outcome
+				"failure",
 			},
 		}
 		for _, tc := range testCases {
@@ -587,11 +1029,23 @@ func TestRancherDevResourceDelete(t *testing.T) {
 					t.Errorf("Error configuring resource: %+v", err)
 				}
 
+				var dgs diag.Diagnostics
+				state := tc.existingState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				if dgs.HasError() {
+					t.Errorf("error generating existing state: %s", pp.PrettyPrint(dgs))
+				}
 				req := resource.DeleteRequest{
-					State: h.GetState(t, &RancherDevResource{}, tc.existingState),
+					State: state,
+				}
+				// get empty state
+				emptyResource := NewRancherDevResource()
+				schemaResponseContainer := &resource.SchemaResponse{}
+				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
+				state = tfsdk.State{
+					Schema: schemaResponseContainer.Schema,
 				}
 				res := resource.DeleteResponse{
-					State: h.GetState(t, &RancherDevResource{}, nil),
+					State: state,
 				}
 				tc.fit.Delete(ctx, req, &res)
 
