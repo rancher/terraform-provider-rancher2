@@ -36,3 +36,12 @@ func (r *Response) Set(resp Response) *Response {
 	r.StatusCode = resp.StatusCode
 	return r
 }
+
+type ApiError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *ApiError) Error() string {
+	return e.Message
+}
