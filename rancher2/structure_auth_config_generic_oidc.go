@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/mitchellh/mapstructure"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
@@ -13,38 +14,10 @@ func flattenAuthConfigGenericOIDC(d *schema.ResourceData, in *managementClient.G
 	d.SetId(AuthConfigGenericOIDCName)
 	d.Set("name", AuthConfigGenericOIDCName)
 	d.Set("type", managementClient.GenericOIDCConfigType)
-	d.Set("access_mode", in.AccessMode)
 
-	err := d.Set("allowed_principal_ids", toArrayInterface(in.AllowedPrincipalIDs))
-	if err != nil {
-		return err
+	if err := flattenOIDCConfig(d, in); err != nil {
+		return fmt.Errorf("flattening AuthConfig for GenericOIDC: %s", err)
 	}
-
-	d.Set("enabled", in.Enabled)
-
-	err = d.Set("annotations", toMapInterface(in.Annotations))
-	if err != nil {
-		return err
-	}
-	err = d.Set("labels", toMapInterface(in.Labels))
-	if err != nil {
-		return err
-	}
-
-	d.Set("client_id", in.ClientID)
-	d.Set("issuer", in.Issuer)
-	d.Set("rancher_url", in.RancherURL)
-	d.Set("auth_endpoint", in.AuthEndpoint)
-	d.Set("token_endpoint", in.TokenEndpoint)
-	d.Set("userinfo_endpoint", in.UserInfoEndpoint)
-	d.Set("jwks_url", in.JWKSUrl)
-	d.Set("scopes", in.Scopes)
-	if in.GroupSearchEnabled != nil {
-		d.Set("group_search_enabled", *in.GroupSearchEnabled)
-	}
-	d.Set("groups_field", in.GroupsClaim)
-	d.Set("certificate", in.Certificate)
-	d.Set("private_key", in.PrivateKey)
 
 	return nil
 }
@@ -136,5 +109,83 @@ func expandAuthConfigGenericOIDC(in *schema.ResourceData) (*managementClient.Gen
 		obj.PrivateKey = v
 	}
 
+	if v, ok := in.Get("name_claim").(string); ok && len(v) > 0 {
+		obj.NameClaim = v
+	}
+
+	if v, ok := in.Get("email_claim").(string); ok && len(v) > 0 {
+		obj.EmailClaim = v
+	}
+
+	if v, ok := in.Get("logout_all_enabled").(bool); ok {
+		obj.LogoutAllEnabled = v
+	}
+
+	if v, ok := in.Get("logout_all_forced").(bool); ok {
+		obj.LogoutAllForced = v
+	}
+
+	if v, ok := in.Get("end_session_endpoint").(string); ok && v != "" {
+		obj.EndSessionEndpoint = v
+	}
+
 	return obj, nil
+}
+
+// flattenOIDCConfig is a generic OIDC flattener.
+//
+// It converts the provided input to a map and looks up known keys in the map.
+func flattenOIDCConfig(d *schema.ResourceData, in any) error {
+	var oidcData map[string]any
+	if err := mapstructure.Decode(in, &oidcData); err != nil {
+		return fmt.Errorf("decoding struct: %w", err)
+	}
+
+	d.Set("access_mode", oidcData["AccessMode"].(string))
+
+	err := d.Set("allowed_principal_ids", oidcData["AllowedPrincipalIDs"])
+	if err != nil {
+		return err
+	}
+
+	d.Set("enabled", oidcData["Enabled"].(bool))
+
+	err = d.Set("annotations", oidcData["Annotations"])
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("labels", oidcData["Labels"])
+	if err != nil {
+		return err
+	}
+
+	d.Set("client_id", oidcData["ClientID"])
+	d.Set("issuer", oidcData["Issuer"])
+	d.Set("rancher_url", oidcData["RancherURL"])
+	d.Set("auth_endpoint", oidcData["AuthEndpoint"])
+	d.Set("token_endpoint", oidcData["TokenEndpoint"])
+	d.Set("userinfo_endpoint", oidcData["UserInfoEndpoint"])
+	d.Set("jwks_url", oidcData["JWKSUrl"])
+	d.Set("scopes", oidcData["Scopes"])
+
+	groupSearchEnabled := oidcData["GroupSearchEnabled"]
+	if groupSearchEnabled != nil {
+		d.Set("group_search_enabled", groupSearchEnabled)
+	}
+	d.Set("groups_field", oidcData["GroupsClaim"])
+	d.Set("certificate", oidcData["Certificate"])
+	d.Set("private_key", oidcData["PrivateKey"])
+
+	d.Set("name_claim", oidcData["NameClaim"])
+	d.Set("email_claim", oidcData["EmailClaim"])
+
+	d.Set("logout_all_enabled", oidcData["LogoutAllEnabled"])
+	d.Set("logout_all_forced", oidcData["LogoutAllForced"])
+
+	if v, ok := oidcData["EndSessionEndpoint"]; ok {
+		d.Set("end_session_endpoint", v)
+	}
+
+	return nil
 }
