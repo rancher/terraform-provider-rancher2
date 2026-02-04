@@ -9,6 +9,10 @@ const AuthConfigGenericOIDCName = "genericoidc"
 //Schemas
 
 func authConfigGenericOIDCFields() map[string]*schema.Schema {
+	return oidcSchemaFields()
+}
+
+func oidcSchemaFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"client_id": {
 			Type:        schema.TypeString,
@@ -87,6 +91,20 @@ func authConfigGenericOIDCFields() map[string]*schema.Schema {
 			Sensitive:   true,
 			StateFunc:   TrimSpace,
 			Description: "A PEM-encoded private key for the OIDC provider.",
+		},
+		"name_claim": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Sensitive:   false,
+			StateFunc:   TrimSpace,
+			Description: "The OIDC Claim to use for the user name.",
+		},
+		"email_claim": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Sensitive:   false,
+			StateFunc:   TrimSpace,
+			Description: "The OIDC Claim to use for the user email.",
 		},
 	}
 
