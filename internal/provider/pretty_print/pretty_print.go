@@ -38,8 +38,7 @@ func toPrintableFramework[T any](v unknownAndNullable, valuer func() T) any {
 
 // toPrintable is a helper that recursively converts data structures,
 // especially those containing terraform-plugin-framework types and tftypes.Value,
-// into a representation that is friendly for JSON marshaling. It redacts
-// potentially sensitive data.
+// into a representation that is friendly for JSON marshaling.
 func toPrintable(data any) any {
 	if data == nil {
 		return nil
@@ -71,7 +70,7 @@ func toPrintable(data any) any {
 	val := reflect.ValueOf(data)
 
 	// Dereference pointer first.
-	if val.Kind() == reflect.Ptr {
+	if val.Kind() == reflect.Pointer {
 		if val.IsNil() {
 			return nil
 		}
@@ -88,8 +87,12 @@ func toPrintable(data any) any {
 		return toPrintableFramework(v, v.ValueBool)
 	case types.Int64:
 		return toPrintableFramework(v, v.ValueInt64)
+	case types.Int32:
+		return toPrintableFramework(v, v.ValueInt32)
 	case types.Float64:
 		return toPrintableFramework(v, v.ValueFloat64)
+	case types.Float32:
+		return toPrintableFramework(v, v.ValueFloat32)
 	case types.Number:
 		return toPrintableFramework(v, v.ValueBigFloat)
 	}
