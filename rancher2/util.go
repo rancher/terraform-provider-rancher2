@@ -6,8 +6,9 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -138,37 +139,75 @@ func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 }
 
 func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
-	loginURL := url + "/v3-public/localProviders/local?action=login"
-	loginData := `{"username": "` + user + `", "password": "` + pass + `", "ttl": ` + ttl + `, "description": "` + desc + `"}`
+	loginURL := url + "/v1-public/login"
+	v3loginURL := url + "/v3-public/localProviders/local?action=login"
+
+	loginData, err := json.Marshal(map[string]string{
+		"type":        "localProvider",
+		"username":    user,
+		"password":    pass,
+		"ttl":         ttl,
+		"description": desc,
+	})
+	if err != nil {
+		return "", "", err
+	}
+
 	loginHead := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	}
 
 	// Login with user and pass
-	loginResp, err := DoPost(loginURL, loginData, cacert, insecure, loginHead)
+	respBody, resp, err := DoPost(loginURL, string(loginData), cacert, insecure, loginHead)
 	if err != nil {
 		return "", "", err
 	}
 
-	if loginResp["type"].(string) != "token" || loginResp["token"] == nil {
-		return "", "", fmt.Errorf("Doing user login: %s %s", loginResp["type"].(string), loginResp["code"].(string))
+	if resp.StatusCode == http.StatusNotFound {
+		// /v1-public/login endpoint is not available
+		// try to fall back to /v3-public endpoint.
+		respBody, _, err = DoPost(v3loginURL, string(loginData), cacert, insecure, loginHead)
+		if err != nil {
+			return "", "", err
+		}
 	}
 
-	return loginResp["id"].(string), loginResp["token"].(string), nil
+	token := ""
+	errMsg := "Doing user login"
+
+	if respBody["token"] != nil {
+		token, _ = respBody["token"].(string)
+	}
+
+	if token == "" {
+		if respBody["code"] != nil {
+			code, _ := respBody["code"].(string)
+			errMsg += ": " + code
+		}
+		return "", "", errors.New(errMsg)
+	}
+
+	id, _, ok := strings.Cut(token, ":")
+	if !ok {
+		return "", "", errors.New(errMsg + ": invalid token format")
+	}
+	id = strings.TrimPrefix(id, "ext/")
+
+	return id, token, nil
 }
 
-func DoPost(url, data, cacert string, insecure bool, headers map[string]string) (map[string]interface{}, error) {
+func DoPost(url, data, cacert string, insecure bool, headers map[string]string) (map[string]interface{}, *http.Response, error) {
 	response := make(map[string]interface{})
 
 	if url == "" {
-		return response, fmt.Errorf("Doing post: URL is nil")
+		return response, nil, fmt.Errorf("Doing post: URL is nil")
 	}
 
 	jsonBytes := []byte(data)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
 	if err != nil {
-		return response, err
+		return response, nil, err
 	}
 
 	for k, v := range headers {
@@ -200,17 +239,17 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return response, err
+		return response, nil, err
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return response, err
+		return response, nil, err
 	}
 
-	return response, nil
+	return response, resp, nil
 }
 
 func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte, error) {
@@ -276,7 +315,7 @@ func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte
 	// Timings recorded as part of internal metrics
 	log.Println("Time to get req: ", float64((time.Since(start))/time.Millisecond), " ms")
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 
 }
 
