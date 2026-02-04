@@ -28,14 +28,18 @@ const (
 	defaultId   = "dev-test"
 )
 
-func TestRancherDevResourceMetadata(t *testing.T) {
-	t.Run("Metadata function", func(t *testing.T) {
+func TestRancherDevResource(t *testing.T) {
+	t.Run("Metadata", func(t *testing.T) {
 		testCases := []struct {
 			name string
 			fit  RancherDevResource
 			want resource.MetadataResponse
 		}{
-			{"Basic test", RancherDevResource{}, resource.MetadataResponse{TypeName: "rancher2_dev"}},
+			{
+				"Basic",
+				RancherDevResource{},
+				resource.MetadataResponse{TypeName: "rancher2_dev_resource"},
+			},
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -48,10 +52,7 @@ func TestRancherDevResourceMetadata(t *testing.T) {
 			})
 		}
 	})
-}
-
-func TestRancherDevResourceSchema(t *testing.T) {
-	t.Run("Schema function", func(t *testing.T) {
+	t.Run("Schema", func(t *testing.T) {
 		testCases := []struct {
 			name string
 			fit  RancherDevResource
@@ -97,10 +98,7 @@ func TestRancherDevResourceSchema(t *testing.T) {
 			})
 		}
 	})
-}
-
-func TestRancherDevResourceConfig(t *testing.T) {
-	t.Run("Config function", func(t *testing.T) {
+	t.Run("Config", func(t *testing.T) {
 		testCases := []struct {
 			name string
 			fit  RancherDevResource
@@ -121,10 +119,7 @@ func TestRancherDevResourceConfig(t *testing.T) {
 			})
 		}
 	})
-}
-
-func TestRancherDevResourceCreate(t *testing.T) {
-	t.Run("Create function", func(t *testing.T) {
+	t.Run("Create", func(t *testing.T) {
 		testCases := []struct {
 			name          string
 			fit           RancherDevResource
@@ -404,7 +399,7 @@ func TestRancherDevResourceCreate(t *testing.T) {
 					t.Fatalf("error configuring resource: %+v", err)
 				}
 				dgs := diag.Diagnostics{}
-				plan := tc.plan.ToResource(ctx, &dgs).ToPlan(ctx, &dgs)
+				plan := tc.plan.ToResourceModel(ctx, &dgs).ToPlan(ctx, &dgs)
 				if dgs.HasError() {
 					t.Fatalf("error generating plan: %s", pp.PrettyPrint(dgs))
 				}
@@ -422,7 +417,7 @@ func TestRancherDevResourceCreate(t *testing.T) {
 				tc.fit.Create(ctx, req, &res)
 				actualState := res
 
-				state = tc.expectedState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				state = tc.expectedState.ToResourceModel(ctx, &dgs).ToState(ctx, &dgs)
 				if dgs.HasError() {
 					t.Fatalf("error generating expected state: %s", pp.PrettyPrint(dgs))
 				}
@@ -452,10 +447,7 @@ func TestRancherDevResourceCreate(t *testing.T) {
 			})
 		}
 	})
-}
-
-func TestRancherDevResourceRead(t *testing.T) {
-	t.Run("Read function", func(t *testing.T) {
+	t.Run("Read", func(t *testing.T) {
 		testCases := []struct {
 			name               string
 			fit                RancherDevResource
@@ -620,13 +612,13 @@ func TestRancherDevResourceRead(t *testing.T) {
 					t.Errorf("error configuring resource: %+v", err)
 				}
 				var dgs diag.Diagnostics
-				state := tc.existingState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				state := tc.existingState.ToResourceModel(ctx, &dgs).ToState(ctx, &dgs)
 				if dgs.HasError() {
 					t.Errorf("error generating existing state: %s", pp.PrettyPrint(dgs))
 				}
 				req := resource.ReadRequest{State: state}
 
-				state = tc.expectedState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				state = tc.expectedState.ToResourceModel(ctx, &dgs).ToState(ctx, &dgs)
 				if dgs.HasError() {
 					t.Errorf("error generating expected state: %s", pp.PrettyPrint(dgs))
 				}
@@ -666,9 +658,6 @@ func TestRancherDevResourceRead(t *testing.T) {
 			})
 		}
 	})
-}
-
-func TestRancherDevResourceUpdate(t *testing.T) {
 	t.Run("Update function", func(t *testing.T) {
 		testCases := []struct {
 			name               string
@@ -856,11 +845,11 @@ func TestRancherDevResourceUpdate(t *testing.T) {
 					t.Errorf("Error configuring resource: %+v", err)
 				}
 				var dgs diag.Diagnostics
-				plan := tc.plan.ToResource(ctx, &dgs).ToPlan(ctx, &dgs)
+				plan := tc.plan.ToResourceModel(ctx, &dgs).ToPlan(ctx, &dgs)
 				if dgs.HasError() {
 					t.Errorf("error generating plan: %s", pp.PrettyPrint(dgs))
 				}
-				state := tc.existingState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				state := tc.existingState.ToResourceModel(ctx, &dgs).ToState(ctx, &dgs)
 				if dgs.HasError() {
 					t.Errorf("error generating existing state: %s", pp.PrettyPrint(dgs))
 				}
@@ -881,7 +870,7 @@ func TestRancherDevResourceUpdate(t *testing.T) {
 				tc.fit.Update(ctx, req, &res)
 
 				actualState := res
-				state = tc.expectedState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				state = tc.expectedState.ToResourceModel(ctx, &dgs).ToState(ctx, &dgs)
 				if dgs.HasError() {
 					t.Errorf("error generating expected state: %s", pp.PrettyPrint(dgs))
 				}
@@ -912,9 +901,6 @@ func TestRancherDevResourceUpdate(t *testing.T) {
 			})
 		}
 	})
-}
-
-func TestRancherDevResourceDelete(t *testing.T) {
 	t.Run("Delete function", func(t *testing.T) {
 		testCases := []struct {
 			name               string
@@ -1030,7 +1016,7 @@ func TestRancherDevResourceDelete(t *testing.T) {
 				}
 
 				var dgs diag.Diagnostics
-				state := tc.existingState.ToResource(ctx, &dgs).ToState(ctx, &dgs)
+				state := tc.existingState.ToResourceModel(ctx, &dgs).ToState(ctx, &dgs)
 				if dgs.HasError() {
 					t.Errorf("error generating existing state: %s", pp.PrettyPrint(dgs))
 				}
