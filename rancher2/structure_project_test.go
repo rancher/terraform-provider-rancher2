@@ -52,6 +52,9 @@ func init() {
 		Services:               "services",
 		ServicesLoadBalancers:  "lb",
 		ServicesNodePorts:      "np",
+		Extended: map[string]string{
+			"count/gpu": "anumber",
+		},
 	}
 	testProjectResourceQuotaLimitInterface = []interface{}{
 		map[string]interface{}{
@@ -68,6 +71,9 @@ func init() {
 			"services":                 "services",
 			"services_load_balancers":  "lb",
 			"services_node_ports":      "np",
+			"extended": map[string]string{
+				"count/gpu": "anumber",
+			},
 		},
 	}
 	testProjectResourceQuotaLimitNamespaceConf = &managementClient.ResourceQuotaLimit{
