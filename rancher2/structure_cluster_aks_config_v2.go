@@ -114,6 +114,10 @@ func flattenClusterAKSConfigV2(in *managementClient.AKSClusterConfigSpec, p []in
 	if in.DNSPrefix != nil && len(*in.DNSPrefix) > 0 {
 		obj["dns_prefix"] = *in.DNSPrefix
 	}
+
+	if in.DualStack != nil {
+		obj["enable_dual_stack"] = *in.DualStack
+	}
 	if in.HTTPApplicationRouting != nil {
 		obj["http_application_routing"] = *in.HTTPApplicationRouting
 	}
@@ -290,6 +294,9 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	// These fields should be assigned just when import=false, no matter if empty
 	if v, ok := in["dns_prefix"].(string); ok {
 		obj.DNSPrefix = &v
+	}
+	if v, ok := in["enable_dual_stack"].(bool); ok {
+		obj.DualStack = &v
 	}
 	if v, ok := in["kubernetes_version"].(string); ok {
 		obj.KubernetesVersion = &v
