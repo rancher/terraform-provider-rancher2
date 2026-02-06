@@ -1,7 +1,6 @@
 package rancher2
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -11,16 +10,16 @@ import (
 
 var (
 	testProjectContainerResourceLimitConf           *managementClient.ContainerResourceLimit
-	testProjectContainerResourceLimitInterface      []interface{}
+	testProjectContainerResourceLimitInterface      []any
 	testProjectResourceQuotaLimitConf               *managementClient.ResourceQuotaLimit
-	testProjectResourceQuotaLimitInterface          []interface{}
+	testProjectResourceQuotaLimitInterface          []any
 	testProjectResourceQuotaLimitNamespaceConf      *managementClient.ResourceQuotaLimit
-	testProjectResourceQuotaLimitNamespaceInterface []interface{}
+	testProjectResourceQuotaLimitNamespaceInterface []any
 	testProjectResourceQuotaConf                    *managementClient.ProjectResourceQuota
 	testProjectNamespaceResourceQuotaConf           *managementClient.NamespaceResourceQuota
-	testProjectResourceQuotaInterface               []interface{}
+	testProjectResourceQuotaInterface               []any
 	testProjectConf                                 *managementClient.Project
-	testProjectInterface                            map[string]interface{}
+	testProjectInterface                            map[string]any
 )
 
 func init() {
@@ -30,8 +29,8 @@ func init() {
 		RequestsCPU:    "requests_cpu",
 		RequestsMemory: "requests_memory",
 	}
-	testProjectContainerResourceLimitInterface = []interface{}{
-		map[string]interface{}{
+	testProjectContainerResourceLimitInterface = []any{
+		map[string]any{
 			"limits_cpu":      "limits_cpu",
 			"limits_memory":   "limits_memory",
 			"requests_cpu":    "requests_cpu",
@@ -56,8 +55,8 @@ func init() {
 			"count/gpu": "anumber",
 		},
 	}
-	testProjectResourceQuotaLimitInterface = []interface{}{
-		map[string]interface{}{
+	testProjectResourceQuotaLimitInterface = []any{
+		map[string]any{
 			"config_maps":              "config",
 			"limits_cpu":               "cpu",
 			"limits_memory":            "memory",
@@ -71,7 +70,7 @@ func init() {
 			"services":                 "services",
 			"services_load_balancers":  "lb",
 			"services_node_ports":      "np",
-			"extended": map[string]string{
+			"extended": map[string]any{
 				"count/gpu": "anumber",
 			},
 		},
@@ -91,9 +90,10 @@ func init() {
 		ServicesLoadBalancers:  "lb",
 		ServicesNodePorts:      "np",
 	}
-	testProjectResourceQuotaLimitNamespaceInterface = []interface{}{
-		map[string]interface{}{
+	testProjectResourceQuotaLimitNamespaceInterface = []any{
+		map[string]any{
 			"config_maps":              "config",
+			"extended":                 map[string]any{},
 			"limits_cpu":               "cpu",
 			"limits_memory":            "memory",
 			"persistent_volume_claims": "pvc",
@@ -114,8 +114,8 @@ func init() {
 	testProjectNamespaceResourceQuotaConf = &managementClient.NamespaceResourceQuota{
 		Limit: testProjectResourceQuotaLimitNamespaceConf,
 	}
-	testProjectResourceQuotaInterface = []interface{}{
-		map[string]interface{}{
+	testProjectResourceQuotaInterface = []any{
+		map[string]any{
 			"project_limit":           testProjectResourceQuotaLimitInterface,
 			"namespace_default_limit": testProjectResourceQuotaLimitNamespaceInterface,
 		},
@@ -128,7 +128,7 @@ func init() {
 		ResourceQuota:                 testProjectResourceQuotaConf,
 		NamespaceDefaultResourceQuota: testProjectNamespaceResourceQuotaConf,
 	}
-	testProjectInterface = map[string]interface{}{
+	testProjectInterface = map[string]any{
 		"cluster_id":               "cluster-test",
 		"name":                     "test",
 		"container_resource_limit": testProjectContainerResourceLimitInterface,
@@ -138,170 +138,81 @@ func init() {
 }
 
 func TestFlattenProjectContainerResourceLimit(t *testing.T) {
+	output := flattenProjectContainerResourceLimit(testProjectContainerResourceLimitConf)
 
-	cases := []struct {
-		Input          *managementClient.ContainerResourceLimit
-		ExpectedOutput []interface{}
-	}{
-		{
-			testProjectContainerResourceLimitConf,
-			testProjectContainerResourceLimitInterface,
-		},
-	}
-
-	for _, tc := range cases {
-		output := flattenProjectContainerResourceLimit(tc.Input)
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
-	}
+	assert.Equal(t, testProjectContainerResourceLimitInterface, output, "Unexpected output from flattener")
 }
 
 func TestFlattenProjectResourceQuotaLimit(t *testing.T) {
+	output := flattenProjectResourceQuotaLimit(testProjectResourceQuotaLimitConf)
 
-	cases := []struct {
-		Input          *managementClient.ResourceQuotaLimit
-		ExpectedOutput []interface{}
-	}{
-		{
-			testProjectResourceQuotaLimitConf,
-			testProjectResourceQuotaLimitInterface,
-		},
-	}
-
-	for _, tc := range cases {
-		output := flattenProjectResourceQuotaLimit(tc.Input)
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
-	}
+	assert.Equal(t, testProjectResourceQuotaLimitInterface, output, "Unexpected output from flattener")
 }
 
 func TestFlattenProjectResourceQuota(t *testing.T) {
-
-	cases := []struct {
-		Input1         *managementClient.ProjectResourceQuota
-		Input2         *managementClient.NamespaceResourceQuota
-		ExpectedOutput []interface{}
-	}{
-		{
-			testProjectResourceQuotaConf,
-			testProjectNamespaceResourceQuotaConf,
-			testProjectResourceQuotaInterface,
+	output := flattenProjectResourceQuota(testProjectResourceQuotaConf, testProjectNamespaceResourceQuotaConf)
+	// testProjectNamespaceResourceQuotaConf has no extended limits and so
+	// namespace_default_limit has no extended quotas.
+	want := []any{
+		map[string]any{
+			"project_limit": testProjectResourceQuotaLimitInterface,
+			"namespace_default_limit": []any{
+				map[string]any{
+					"config_maps":              "config",
+					"limits_cpu":               "cpu",
+					"limits_memory":            "memory",
+					"persistent_volume_claims": "pvc",
+					"pods":                     "pods",
+					"replication_controllers":  "rc",
+					"requests_cpu":             "r_cpu",
+					"requests_memory":          "r_memory",
+					"requests_storage":         "r_storage",
+					"secrets":                  "secrets",
+					"services":                 "services",
+					"services_load_balancers":  "lb",
+					"services_node_ports":      "np",
+				},
+			},
 		},
 	}
 
-	for _, tc := range cases {
-		output := flattenProjectResourceQuota(tc.Input1, tc.Input2)
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
-	}
+	assert.Equal(t, want, output, "Unexpected output from flattener")
 }
 
 func TestFlattenProject(t *testing.T) {
+	output := schema.TestResourceDataRaw(t, projectFields(), map[string]any{})
+	err := flattenProject(output, testProjectConf)
+	assert.NoError(t, err)
 
-	cases := []struct {
-		Input          *managementClient.Project
-		ExpectedOutput map[string]interface{}
-	}{
-		{
-			testProjectConf,
-			testProjectInterface,
-		},
+	result := map[string]any{}
+	for k := range testProjectInterface {
+		result[k] = output.Get(k)
 	}
-
-	for _, tc := range cases {
-		output := schema.TestResourceDataRaw(t, projectFields(), map[string]interface{}{})
-		err := flattenProject(output, tc.Input)
-		if err != nil {
-			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
-		}
-		expectedOutput := map[string]interface{}{}
-		for k := range tc.ExpectedOutput {
-			expectedOutput[k] = output.Get(k)
-		}
-		if !reflect.DeepEqual(expectedOutput, tc.ExpectedOutput) {
-			assert.FailNow(t, "Unexpected output from flattener.\nExpected: %#v\nGiven:    %#v",
-				expectedOutput, output)
-		}
-	}
+	assert.Equal(t, testProjectInterface, result, "Unexpected output from flattener")
 }
 
 func TestExpandProjectContainerResourceLimit(t *testing.T) {
+	output := expandProjectContainerResourceLimit(testProjectContainerResourceLimitInterface)
 
-	cases := []struct {
-		Input          []interface{}
-		ExpectedOutput *managementClient.ContainerResourceLimit
-	}{
-		{
-			testProjectContainerResourceLimitInterface,
-			testProjectContainerResourceLimitConf,
-		},
-	}
-
-	for _, tc := range cases {
-		output := expandProjectContainerResourceLimit(tc.Input)
-		if !reflect.DeepEqual(output, tc.ExpectedOutput) {
-			assert.FailNow(t, "Unexpected output from expander.\nExpected: %#v\nGiven: %#v", tc.ExpectedOutput, output)
-		}
-	}
+	assert.Equal(t, testProjectContainerResourceLimitConf, output, "Unexpected output from expander")
 }
 
 func TestExpandProjectResourceQuotaLimit(t *testing.T) {
+	output := expandProjectResourceQuotaLimit(testProjectResourceQuotaLimitInterface)
 
-	cases := []struct {
-		Input          []interface{}
-		ExpectedOutput *managementClient.ResourceQuotaLimit
-	}{
-		{
-			testProjectResourceQuotaLimitInterface,
-			testProjectResourceQuotaLimitConf,
-		},
-	}
-
-	for _, tc := range cases {
-		output := expandProjectResourceQuotaLimit(tc.Input)
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-	}
+	assert.Equal(t, testProjectResourceQuotaLimitConf, output, "Unexpected output from expander")
 }
 
 func TestExpandProjectResourceQuota(t *testing.T) {
+	output1, output2 := expandProjectResourceQuota(testProjectResourceQuotaInterface)
 
-	cases := []struct {
-		Input           []interface{}
-		ExpectedOutput1 *managementClient.ProjectResourceQuota
-		ExpectedOutput2 *managementClient.NamespaceResourceQuota
-	}{
-		{
-			testProjectResourceQuotaInterface,
-			testProjectResourceQuotaConf,
-			testProjectNamespaceResourceQuotaConf,
-		},
-	}
-
-	for _, tc := range cases {
-		output1, output2 := expandProjectResourceQuota(tc.Input)
-		if !reflect.DeepEqual(output1, tc.ExpectedOutput1) {
-			assert.FailNow(t, "Unexpected output from expander on project quota.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput1, output1)
-		}
-		if !reflect.DeepEqual(output2, tc.ExpectedOutput2) {
-			assert.FailNow(t, "Unexpected output from expander on namespace quouta.\nExpected: %#v\nGiven:    %#v",
-				tc.ExpectedOutput2, output2)
-		}
-	}
+	assert.Equal(t, testProjectResourceQuotaConf, output1, "Unexpected output from expander")
+	assert.Equal(t, testProjectNamespaceResourceQuotaConf, output2, "Unexpected output from expander on namespace quota")
 }
 
 func TestExpandProject(t *testing.T) {
+	inputResourceData := schema.TestResourceDataRaw(t, projectFields(), testProjectInterface)
+	output := expandProject(inputResourceData)
 
-	cases := []struct {
-		Input          map[string]interface{}
-		ExpectedOutput *managementClient.Project
-	}{
-		{
-			testProjectInterface,
-			testProjectConf,
-		},
-	}
-
-	for _, tc := range cases {
-		inputResourceData := schema.TestResourceDataRaw(t, projectFields(), tc.Input)
-		output := expandProject(inputResourceData)
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-	}
+	assert.Equal(t, testProjectConf, output, "Unexpected output from expander")
 }
