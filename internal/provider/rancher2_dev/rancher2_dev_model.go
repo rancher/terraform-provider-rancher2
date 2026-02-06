@@ -53,6 +53,7 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 	}
 
 	// simple types (map, list, set)
+	// map
 	mapElems := make(map[string]attr.Value)
 	if obj.MapAttribute != nil {
 		for k, v := range obj.MapAttribute {
@@ -70,6 +71,7 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 	}
 	data.MapAttribute = mapVal
 
+	// list
 	var listElems []attr.Value
 	for _, v := range obj.ListAttribute {
 		listElems = append(listElems, basetypes.NewStringValue(v))
@@ -85,6 +87,7 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 	}
 	data.ListAttribute = listVal
 
+	// set
 	var setAttributeElems []attr.Value
 	for k := range obj.SetAttribute {
 		setAttributeElems = append(setAttributeElems, basetypes.NewStringValue(k))
@@ -109,6 +112,7 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 		return &data
 	}
 
+	// list of nested objects
 	if len(obj.NestedObjectList) > 0 {
 		for _, v := range obj.NestedObjectList {
 			r := NestedResourceModel{}
@@ -122,6 +126,7 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 		}
 	}
 
+	// map of nested objects
 	if len(obj.NestedObjectMap) > 0 {
 		data.NestedObjectMap = make(map[string]NestedResourceModel)
 
