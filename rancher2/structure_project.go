@@ -40,7 +40,7 @@ func flattenProjectResourceQuotaLimit(in *managementClient.ResourceQuotaLimit) [
 	}
 
 	if len(in.Extended) > 0 {
-		obj["extended"] = in.Extended
+		obj["extended"] = mapStringToAny(in.Extended)
 	}
 
 	if len(in.LimitsCPU) > 0 {
@@ -150,7 +150,6 @@ func flattenProject(d *schema.ResourceData, in *managementClient.Project) error 
 	}
 
 	return nil
-
 }
 
 // Expanders
@@ -310,4 +309,13 @@ func expandProject(in *schema.ResourceData) *managementClient.Project {
 	}
 
 	return obj
+}
+
+func mapStringToAny(m map[string]string) map[string]any {
+	result := map[string]any{}
+	for k, v := range m {
+		result[k] = v
+	}
+
+	return result
 }
