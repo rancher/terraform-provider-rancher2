@@ -13,6 +13,7 @@ type Request struct {
 	Endpoint string
 	Body     any // this will be marshalled to json
 	Headers  map[string]string
+	Token    string
 }
 
 func (r *Request) Set(req Request) *Request {
@@ -20,6 +21,7 @@ func (r *Request) Set(req Request) *Request {
 	r.Endpoint = req.Endpoint
 	r.Body = req.Body
 	r.Headers = req.Headers
+	r.Token = req.Token
 	return r
 }
 

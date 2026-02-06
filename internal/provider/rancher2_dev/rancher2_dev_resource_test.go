@@ -63,6 +63,7 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevResource{},
 				[]string{
 					"id",
+					"user_token",
 					"bool_attribute",
 					"number_attribute",
 					"int64_attribute",
@@ -138,6 +139,7 @@ func TestRancherDevResource(t *testing.T) {
 				// plan
 				RancherDevModel{
 					Id:               defaultId,
+					UserToken:        "",
 					BoolAttribute:    false,
 					NumberAttribute:  big.NewFloat(1.0),
 					Int64Attribute:   1,
@@ -177,6 +179,7 @@ func TestRancherDevResource(t *testing.T) {
 				// state expected to match this
 				RancherDevModel{
 					Id:               defaultId,
+					UserToken:        "",
 					BoolAttribute:    false,
 					NumberAttribute:  big.NewFloat(1.0),
 					Int64Attribute:   1,
@@ -217,8 +220,9 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint,
 					Method:   "POST",
-					Body: RancherDevModel{
+					Body: rBodyMarshal(RancherDevModel{
 						Id:               defaultId,
+						UserToken:        "",
 						BoolAttribute:    false,
 						NumberAttribute:  big.NewFloat(1.0),
 						Int64Attribute:   1,
@@ -254,7 +258,7 @@ func TestRancherDevResource(t *testing.T) {
 								},
 							},
 						},
-					},
+					}),
 				},
 				// the response to inject into the client
 				c.Response{
@@ -262,7 +266,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(RancherDevModel{
+					Body: rBodyMarshal(RancherDevModel{
 						Id:               defaultId,
 						BoolAttribute:    false,
 						NumberAttribute:  big.NewFloat(1.0),
@@ -331,7 +335,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(c.ErrorResponse{
+					Body: rBodyMarshal(c.ErrorResponse{
 						Status:  "409",
 						Message: "resource already exists",
 					}),
@@ -366,7 +370,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(c.ErrorResponse{
+					Body: rBodyMarshal(c.ErrorResponse{
 						Status:  "500",
 						Message: "something went wrong",
 					}),
@@ -391,7 +395,7 @@ func TestRancherDevResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, "")
 				client.SetResponse(tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
@@ -477,7 +481,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(RancherDevModel{
+					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
 					}),
 				},
@@ -485,6 +489,7 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "GET",
+					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -508,7 +513,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(RancherDevModel{
+					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
 					}),
 				},
@@ -516,6 +521,7 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "GET",
+					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -539,7 +545,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(c.ErrorResponse{
+					Body: rBodyMarshal(c.ErrorResponse{
 						Status:  "500",
 						Message: "something went wrong",
 					}),
@@ -548,6 +554,7 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "GET",
+					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"failure",
@@ -571,7 +578,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(struct {
+					Body: rBodyMarshal(struct {
 						Id                 string `json:"id"`
 						UntrackedAttribute string `json:"untracked_attribute,omitempty"`
 					}{
@@ -583,6 +590,7 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "GET",
+					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -604,7 +612,7 @@ func TestRancherDevResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, "")
 				client.SetResponse(tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
@@ -693,7 +701,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(RancherDevModel{
+					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
 					}),
 				},
@@ -701,9 +709,9 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "PUT",
-					Body: RancherDevModel{
+					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
-					},
+					}),
 				},
 				// expected outcome
 				"success",
@@ -731,7 +739,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(c.ErrorResponse{
+					Body: rBodyMarshal(c.ErrorResponse{
 						Status:  "404",
 						Message: "resource not found",
 					}),
@@ -740,7 +748,7 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
 					Method:   "PUT",
-					Body:     RancherDevModel{Id: defaultId},
+					Body:     rBodyMarshal(RancherDevModel{Id: defaultId}),
 				},
 				// expected outcome
 				"failure",
@@ -768,7 +776,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(c.ErrorResponse{
+					Body: rBodyMarshal(c.ErrorResponse{
 						Status:  "500",
 						Message: "server error",
 					}),
@@ -777,7 +785,7 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
 					Method:   "PUT",
-					Body:     RancherDevModel{Id: defaultId},
+					Body:     rBodyMarshal(RancherDevModel{Id: defaultId}),
 				},
 				// expected outcome
 				"failure",
@@ -805,7 +813,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(RancherDevModel{
+					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
 					}),
 				},
@@ -813,9 +821,9 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
 					Method:   "PUT",
-					Body: RancherDevModel{
+					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
-					},
+					}),
 				},
 				// expected outcome
 				"success",
@@ -837,7 +845,7 @@ func TestRancherDevResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, "")
 				client.SetResponse(tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
@@ -930,6 +938,7 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "DELETE",
+					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -949,7 +958,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(c.ErrorResponse{
+					Body: rBodyMarshal(c.ErrorResponse{
 						Status:  "404",
 						Message: "resource not found",
 					}),
@@ -958,6 +967,7 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
 					Method:   "DELETE",
+					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -977,7 +987,7 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: resBodyMarshall(c.ErrorResponse{
+					Body: rBodyMarshal(c.ErrorResponse{
 						Status:  "500",
 						Message: "server error",
 					}),
@@ -986,6 +996,7 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
 					Method:   "DELETE",
+					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"failure",
@@ -1007,7 +1018,7 @@ func TestRancherDevResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, "")
 				client.SetResponse(tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
@@ -1058,7 +1069,10 @@ func TestRancherDevResource(t *testing.T) {
 }
 
 // helpers.
-func resBodyMarshall(obj any) []byte {
-	b, _ := json.Marshal(obj)
+func rBodyMarshal(obj any) []byte {
+	b, err := json.Marshal(obj)
+	if err != nil {
+		panic(err)
+	}
 	return b
 }

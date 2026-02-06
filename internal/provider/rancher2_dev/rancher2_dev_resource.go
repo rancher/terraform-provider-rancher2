@@ -61,6 +61,11 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"user_token": schema.StringAttribute{
+				MarkdownDescription: "A token to inject into the client for any requests this resource needs to make.",
+				Optional:            true,
+				Computed:            true,
+			},
 			"bool_attribute": schema.BoolAttribute{
 				MarkdownDescription: "A boolean attribute.",
 				Optional:            true,
@@ -254,11 +259,14 @@ func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequ
 		resp.Diagnostics.AddError("Error validating data: ", err.Error())
 		return
 	}
+	token := plan.UserToken.ValueString()
+	plan.UserToken = types.StringValue("") // this implicitly removes the user_token from any request body because omitempty and jsonMarshal
 
 	request := c.Request{
 		Endpoint: fmt.Sprintf("%s/%s", client.GetApiUrl(), endpointPath),
 		Method:   "POST",
 		Body:     plan.ToGoModel(ctx),
+		Token:    token,
 	}
 
 	response := c.Response{}

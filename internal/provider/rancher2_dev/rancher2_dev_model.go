@@ -12,6 +12,7 @@ import (
 
 type RancherDevModel struct {
 	Id               string                  `json:"id"`
+	UserToken        string                  `json:"user_token,omitempty"`
 	BoolAttribute    bool                    `json:"bool_attribute,omitempty"`
 	NumberAttribute  *big.Float              `json:"number_attribute,omitempty"`
 	Int64Attribute   int64                   `json:"int64_attribute,omitempty"`
@@ -39,6 +40,7 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 
 	// primitive types (string, bool, int, etc)
 	data.Id = types.StringValue(obj.Id)
+	data.UserToken = types.StringValue(obj.UserToken)
 	data.BoolAttribute = types.BoolValue(obj.BoolAttribute)
 	data.Int32Attribute = types.Int32Value(obj.Int32Attribute)
 	data.Int64Attribute = types.Int64Value(obj.Int64Attribute)

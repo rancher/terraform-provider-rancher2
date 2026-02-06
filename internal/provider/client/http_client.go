@@ -80,9 +80,46 @@ type HttpClient struct {
 	insecure       bool
 	maxRedirects   int64
 	timeout        time.Duration
+	token          string
+	client         *retryablehttp.Client
 }
 
-func NewHttpClient(ctx context.Context, apiURL, caCert string, insecure, ignoreSystemCA bool, timeout time.Duration, maxRedirects int64) *HttpClient {
+func NewHttpClient(ctx context.Context, apiURL, caCert string, insecure, ignoreSystemCA bool, timeout time.Duration, maxRedirects int64, token string) *HttpClient {
+	var rootCAs *x509.CertPool
+	if ignoreSystemCA {
+		rootCAs = x509.NewCertPool()
+	} else {
+		// Get the SystemCertPool, continue with an empty pool on error
+		rootCAs, _ = x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+	}
+	if caCert != "" {
+		// Append our cert to the cert pool
+		if ok := rootCAs.AppendCertsFromPEM([]byte(caCert)); !ok {
+			tflog.Warn(ctx, "no certs appended, using system certs only")
+		}
+	}
+	retryClient := retryablehttp.NewClient()
+	retryClient.Logger = &retryableHTTPLogger{ctx: ctx}
+	retryClient.HTTPClient = &http.Client{
+		Timeout: timeout,
+		Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: insecure,
+				RootCAs:            rootCAs,
+			},
+		},
+		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+			if len(via) >= int(maxRedirects) {
+				return fmt.Errorf("stopped after %d redirects", maxRedirects)
+			}
+			return nil
+		},
+	}
+
 	return &HttpClient{
 		ctx:            ctx,
 		apiURL:         apiURL,
@@ -91,6 +128,7 @@ func NewHttpClient(ctx context.Context, apiURL, caCert string, insecure, ignoreS
 		ignoreSystemCA: ignoreSystemCA,
 		timeout:        timeout,
 		maxRedirects:   maxRedirects,
+		client:         retryClient,
 	}
 }
 
@@ -104,41 +142,9 @@ func (c *HttpClient) Do(req *Request, resp *Response) error {
 
 	tflog.Debug(ctx, fmt.Sprintf("Request Object: %#v", req))
 
-	var rootCAs *x509.CertPool
-	if c.ignoreSystemCA {
-		rootCAs = x509.NewCertPool()
-	} else {
-		// Get the SystemCertPool, continue with an empty pool on error
-		rootCAs, _ = x509.SystemCertPool()
-		if rootCAs == nil {
-			rootCAs = x509.NewCertPool()
-		}
-	}
-
-	if c.caCert != "" {
-		// Append our cert to the cert pool
-		if ok := rootCAs.AppendCertsFromPEM([]byte(c.caCert)); !ok {
-			tflog.Warn(ctx, "no certs appended, using system certs only")
-		}
-	}
-
-	retryClient := retryablehttp.NewClient()
-	retryClient.Logger = &retryableHTTPLogger{ctx: ctx}
-	retryClient.HTTPClient = &http.Client{
-		Timeout: c.timeout,
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: c.insecure,
-				RootCAs:            rootCAs,
-			},
-		},
-		CheckRedirect: func(r *http.Request, via []*http.Request) error {
-			if len(via) >= int(c.maxRedirects) {
-				return fmt.Errorf("stopped after %d redirects", c.maxRedirects)
-			}
-			return nil
-		},
+	// This allows the resource to overwrite the token.
+	if req.Token != "" {
+		c.token = req.Token
 	}
 
 	var reqBody io.Reader
@@ -161,7 +167,7 @@ func (c *HttpClient) Do(req *Request, resp *Response) error {
 		request.Header.Add(key, value)
 	}
 
-	res, err := retryClient.Do(request)
+	res, err := c.client.Do(request)
 	if err != nil {
 		return fmt.Errorf("doing request: %v", err)
 	}
