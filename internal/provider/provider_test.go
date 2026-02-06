@@ -54,6 +54,7 @@ func TestProviderSchema(t *testing.T) {
 				"ignore_system_ca",
 				"timeout",
 				"max_redirects",
+				"token",
 			},
 		},
 	}

@@ -12,6 +12,7 @@ import (
 
 type RancherDevResourceModel struct {
 	Id               types.String                   `tfsdk:"id"`
+	UserToken        types.String                   `tfsdk:"user_token"`
 	BoolAttribute    types.Bool                     `tfsdk:"bool_attribute"`
 	NumberAttribute  types.Number                   `tfsdk:"number_attribute"`
 	Int64Attribute   types.Int64                    `tfsdk:"int64_attribute"`
@@ -77,6 +78,7 @@ func (m *RancherDevResourceModel) ToState(ctx context.Context, diags *diag.Diagn
 func (data *RancherDevResourceModel) ToGoModel(ctx context.Context) RancherDevModel {
 	obj := RancherDevModel{
 		Id:               data.Id.ValueString(),
+		UserToken:        data.UserToken.ValueString(),
 		BoolAttribute:    data.BoolAttribute.ValueBool(),
 		Int32Attribute:   data.Int32Attribute.ValueInt32(),
 		Int64Attribute:   data.Int64Attribute.ValueInt64(),

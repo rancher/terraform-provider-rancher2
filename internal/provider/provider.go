@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"regexp"
 	"time"
 
@@ -48,6 +49,7 @@ type RancherProviderModel struct {
 	IgnoreSystemCa types.Bool   `tfsdk:"ignore_system_ca"`
 	Timeout        types.Int64  `tfsdk:"timeout"`
 	MaxRedirects   types.Int64  `tfsdk:"max_redirects"`
+	Token          types.String `tfsdk:"token"`
 }
 
 // ToPlan returns a tfsdk.Plan with the data from the model.
@@ -120,6 +122,10 @@ func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest
 				Description: "The maximum number of redirects to follow.",
 				Optional:    true,
 			},
+			"token": schema.StringAttribute{
+				Description: "The token to use for authentication, can be set with RANCHER_TOKEN.",
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -169,6 +175,11 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
+	token := config.Token.ValueString()
+	if config.Token.IsNull() {
+		token = os.Getenv("RANCHER_TOKEN")
+	}
+
 	var client c.Client
 	if p.version == "test" {
 		client = c.NewTestClient(
@@ -179,6 +190,7 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 			config.IgnoreSystemCa.ValueBool(),
 			time.Duration(config.Timeout.ValueInt64())*time.Second,
 			config.MaxRedirects.ValueInt64(),
+			token,
 		)
 	} else {
 		client = c.NewHttpClient(
@@ -189,6 +201,7 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 			config.IgnoreSystemCa.ValueBool(),
 			time.Duration(config.Timeout.ValueInt64())*time.Second,
 			config.MaxRedirects.ValueInt64(),
+			token,
 		)
 	}
 

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -19,11 +20,12 @@ type TestClient struct {
 	insecure       bool
 	maxRedirects   int64
 	timeout        time.Duration
+	token          string
 	response       Response
 	request        Request
 }
 
-func NewTestClient(ctx context.Context, apiURL, caCert string, insecure, ignoreSystemCA bool, timeout time.Duration, maxRedirects int64) *TestClient {
+func NewTestClient(ctx context.Context, apiURL, caCert string, insecure, ignoreSystemCA bool, timeout time.Duration, maxRedirects int64, token string) *TestClient {
 	return &TestClient{
 		ctx:            ctx,
 		apiURL:         apiURL,
@@ -32,6 +34,7 @@ func NewTestClient(ctx context.Context, apiURL, caCert string, insecure, ignoreS
 		ignoreSystemCA: ignoreSystemCA,
 		timeout:        timeout,
 		maxRedirects:   maxRedirects,
+		token:          token,
 	}
 }
 
@@ -44,7 +47,15 @@ func (c *TestClient) Do(req *Request, resp *Response) error {
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("Request Object: %v", pp.PrettyPrint(req)))
-	c.request = *req
+
+	c.request.Method = req.Method
+	c.request.Headers = req.Headers
+	c.request.Endpoint = req.Endpoint
+	reqBody, err := json.Marshal(req.Body)
+	if err != nil {
+		return err
+	}
+	c.request.Body = reqBody
 
 	resp.Body = c.response.Body
 	resp.Headers = c.response.Headers

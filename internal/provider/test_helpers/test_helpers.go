@@ -91,5 +91,5 @@ func GetConfiguredResource(ctx context.Context, t *testing.T, rsc resource.Resou
 }
 
 func GetTestClient(t *testing.T, ctx context.Context) *c.TestClient {
-	return c.NewTestClient(ctx, "https://rancher.example.com", "", false, false, 30, 10)
+	return c.NewTestClient(ctx, "https://rancher.example.com", "", false, false, 30, 10, "")
 }
