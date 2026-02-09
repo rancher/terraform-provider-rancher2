@@ -278,6 +278,8 @@ The following attributes are exported:
 * `password` - (Optional/Sensitive) OpenStack password. Mandatory on Rancher v2.0.x and v2.1.x. Use `rancher2_cloud_credential` from Rancher v2.2.x (string)
 * `private_key_file` - (Optional/Sensitive) Private key content to use for SSH (string)
 * `sec_groups` - (Optional) OpenStack comma separated security groups for the machine (string)
+* `server_group_id` - (Optional) OpenStack server group id to use for the instance (string)
+* `server_group_name` - (Optional) OpenStack server group name to use for the instance (string)
 * `ssh_port` - (Optional) OpenStack SSH port * Default `22` (string)
 * `ssh_user` - (Optional) OpenStack SSH user * Default: `root` (string)
 * `tenant_id` - (Required++) OpenStack tenant id. Conflicts with `tenant_name` (string)
