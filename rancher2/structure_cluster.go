@@ -70,11 +70,11 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	}
 
 	if in.ClusterAgentDeploymentCustomization != nil {
-		d.Set("cluster_agent_deployment_customization", flattenAgentDeploymentCustomization(in.ClusterAgentDeploymentCustomization, true))
+		d.Set("cluster_agent_deployment_customization", flattenAgentDeploymentCustomization(in.ClusterAgentDeploymentCustomization))
 	}
 
 	if in.FleetAgentDeploymentCustomization != nil {
-		d.Set("fleet_agent_deployment_customization", flattenAgentDeploymentCustomization(in.FleetAgentDeploymentCustomization, false))
+		d.Set("fleet_agent_deployment_customization", flattenAgentDeploymentCustomization(in.FleetAgentDeploymentCustomization))
 	}
 
 	if len(in.ClusterTemplateID) > 0 {
@@ -394,7 +394,7 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 	}
 
 	if v, ok := in.Get("cluster_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
-		clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v, true)
+		clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v)
 		if err != nil {
 			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
 		}
@@ -402,7 +402,7 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 	}
 
 	if v, ok := in.Get("fleet_agent_deployment_customization").([]interface{}); ok && len(v) > 0 {
-		fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v, false)
+		fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(v)
 		if err != nil {
 			return nil, fmt.Errorf("[ERROR] expanding cluster: %w", err)
 		}
