@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -139,43 +140,48 @@ func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 }
 
 func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
-	loginURL := url + "/v1-public/login"
-	v3loginURL := url + "/v3-public/localProviders/local?action=login"
+	TTL, err := strconv.ParseInt(ttl, 10, 64)
+	if err != nil || TTL < 0 {
+		return "", "", fmt.Errorf("Invalid ttl value: %s", ttl)
+	}
 
-	loginData, err := json.Marshal(map[string]string{
+	payload, err := json.Marshal(map[string]any{
 		"type":        "localProvider",
 		"username":    user,
 		"password":    pass,
-		"ttl":         ttl,
+		"ttl":         TTL,
 		"description": desc,
 	})
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("Marshalling login data: %v", err)
 	}
+
+	loginURL := url + "/v1-public/login"
+	v3loginURL := url + "/v3-public/localProviders/local?action=login"
 
 	loginHead := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	}
 
+	errPrefix := "Doing user login"
+
 	// Login with user and pass
-	respBody, resp, err := DoPost(loginURL, string(loginData), cacert, insecure, loginHead)
+	respBody, resp, err := DoPost(loginURL, string(payload), cacert, insecure, loginHead)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("%s: %v", errPrefix, err)
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
 		// /v1-public/login endpoint is not available
 		// try to fall back to /v3-public endpoint.
-		respBody, _, err = DoPost(v3loginURL, string(loginData), cacert, insecure, loginHead)
+		respBody, _, err = DoPost(v3loginURL, string(payload), cacert, insecure, loginHead)
 		if err != nil {
-			return "", "", err
+			return "", "", fmt.Errorf("%s: %v", errPrefix, err)
 		}
 	}
 
-	token := ""
-	errMsg := "Doing user login"
-
+	var token string
 	if respBody["token"] != nil {
 		token, _ = respBody["token"].(string)
 	}
@@ -183,14 +189,14 @@ func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (stri
 	if token == "" {
 		if respBody["code"] != nil {
 			code, _ := respBody["code"].(string)
-			errMsg += ": " + code
+			errPrefix += ": " + code
 		}
-		return "", "", errors.New(errMsg)
+		return "", "", errors.New(errPrefix)
 	}
 
 	id, _, ok := strings.Cut(token, ":")
 	if !ok {
-		return "", "", errors.New(errMsg + ": invalid token format")
+		return "", "", errors.New(errPrefix + ": invalid token format")
 	}
 	id = strings.TrimPrefix(id, "ext/")
 
