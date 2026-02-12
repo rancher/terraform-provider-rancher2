@@ -4,6 +4,7 @@ import (
 	"maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const AuthConfigGenericOIDCName = "genericoidc"
@@ -118,9 +119,10 @@ func oidcSchemaFields() map[string]*schema.Schema {
 			Description: "Force the user to logout of their session with the IdP.",
 		},
 		"end_session_endpoint": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "The provider specific URL used for logging a user out of their session.",
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.IsURLWithHTTPS,
+			Description:  "The provider specific URL used for logging a user out of their session.",
 		},
 	}
 

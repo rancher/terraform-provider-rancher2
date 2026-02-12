@@ -182,7 +182,10 @@ func flattenOIDCConfig(d *schema.ResourceData, in any) error {
 
 	d.Set("logout_all_enabled", oidcData["LogoutAllEnabled"])
 	d.Set("logout_all_forced", oidcData["LogoutAllForced"])
-	d.Set("end_session_endpoint", oidcData["EndSessionEndpoint"])
+
+	if v, ok := oidcData["EndSessionEndpoint"]; ok {
+		d.Set("end_session_endpoint", v)
+	}
 
 	return nil
 }
