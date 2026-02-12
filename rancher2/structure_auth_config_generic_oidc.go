@@ -117,6 +117,18 @@ func expandAuthConfigGenericOIDC(in *schema.ResourceData) (*managementClient.Gen
 		obj.EmailClaim = v
 	}
 
+	if v, ok := in.Get("logout_all_enabled").(bool); ok {
+		obj.LogoutAllEnabled = v
+	}
+
+	if v, ok := in.Get("logout_all_forced").(bool); ok {
+		obj.LogoutAllForced = v
+	}
+
+	if v, ok := in.Get("end_session_endpoint").(string); ok && v != "" {
+		obj.EndSessionEndpoint = v
+	}
+
 	return obj, nil
 }
 
@@ -167,6 +179,10 @@ func flattenOIDCConfig(d *schema.ResourceData, in any) error {
 
 	d.Set("name_claim", oidcData["NameClaim"])
 	d.Set("email_claim", oidcData["EmailClaim"])
+
+	d.Set("logout_all_enabled", oidcData["LogoutAllEnabled"])
+	d.Set("logout_all_forced", oidcData["LogoutAllForced"])
+	d.Set("end_session_endpoint", oidcData["EndSessionEndpoint"])
 
 	return nil
 }

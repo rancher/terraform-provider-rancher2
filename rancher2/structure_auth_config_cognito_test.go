@@ -10,7 +10,7 @@ import (
 
 var (
 	testAuthConfigCognitoConf      *managementClient.CognitoConfig
-	testAuthConfigCognitoInterface map[string]interface{}
+	testAuthConfigCognitoInterface map[string]any
 )
 
 func init() {
@@ -36,8 +36,11 @@ func init() {
 		PrivateKey:          "private_key",
 		NameClaim:           "preferred_username",
 		EmailClaim:          "alt_email",
+		LogoutAllEnabled:    true,
+		LogoutAllForced:     true,
+		EndSessionEndpoint:  "https://example.com/end-session",
 	}
-	testAuthConfigCognitoInterface = map[string]interface{}{
+	testAuthConfigCognitoInterface = map[string]any{
 		"name":                  AuthConfigCognitoName,
 		"type":                  managementClient.CognitoConfigType,
 		"access_mode":           "access",
@@ -63,16 +66,19 @@ func init() {
 		"private_key":          "private_key",
 		"name_claim":           "preferred_username",
 		"email_claim":          "alt_email",
+		"logout_all_enabled":   true,
+		"logout_all_forced":    true,
+		"end_session_endpoint": "https://example.com/end-session",
 	}
 }
 
 func TestFlattenAuthConfigCognito(t *testing.T) {
-	output := schema.TestResourceDataRaw(t, authConfigCognitoFields(), map[string]interface{}{})
+	output := schema.TestResourceDataRaw(t, authConfigCognitoFields(), map[string]any{})
 	err := flattenAuthConfigCognito(output, testAuthConfigCognitoConf)
 	if err != nil {
 		assert.NoError(t, err, "flattenAuthConfigCognito failed")
 	}
-	expectedOutput := map[string]interface{}{}
+	expectedOutput := map[string]any{}
 	for k := range testAuthConfigCognitoInterface {
 		expectedOutput[k] = output.Get(k)
 	}
