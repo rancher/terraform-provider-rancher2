@@ -35,11 +35,11 @@ func TestDevAuthenticate(t *testing.T) {
 		"identifier":  fit.ID,
 		"owner":       fit.Owner,
 	}
-  loginEnvVars := map[string]string{
-    "RANCHER_URL": output["address"].(string),
-    "RANCHER_USERNAME": "admin",
-    "RANCHER_PASSWORD": output["admin_password"].(string),
-  }
+	loginEnvVars := map[string]string{
+		"RANCHER_URL":      output["address"].(string),
+		"RANCHER_USERNAME": "admin",
+		"RANCHER_PASSWORD": output["admin_password"].(string),
+	}
 	login := cfg.NewTestConfig(t, "use-cases/login", loginVars, loginEnvVars)
 	defer login.Teardown(t)
 	_, err = terraform.InitAndApplyE(t, login.TerraformOptions)

@@ -19,3 +19,4 @@ tf-*
 *.tgz
 terraform-provider-rancher2
 node_modules
+terraformrc

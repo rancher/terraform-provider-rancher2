@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	apiUrl      = "https://rancher.example.com"
-	endpoint    = "login"
-	apiEndpoint = apiUrl + "/" + endpoint
-	defaultId   = "test"
+	apiUrl        = "https://rancher.example.com"
+	loginEndpoint = "v1-public/login"
+	tokenEndpoint = "/apis/ext.cattle.io/v1/tokens"
+	defaultId     = "test"
 )
 
 func TestRancherLoginResource(t *testing.T) {
@@ -122,6 +122,8 @@ func TestRancherLoginResource(t *testing.T) {
 			env           map[string]string
 			plan          RancherLoginModel
 			expectedState RancherLoginModel
+			loginRequest  c.Request
+			loginResponse c.Response
 			apiRequest    c.Request
 			apiResponse   c.Response
 			outcome       string
@@ -131,33 +133,101 @@ func TestRancherLoginResource(t *testing.T) {
 				RancherLoginResource{},
 				map[string]string{},
 				RancherLoginModel{
-					Id:       defaultId,
 					Username: "user",
 					Password: "password",
 				},
 				RancherLoginModel{
-					Id:        defaultId,
-					UserToken: "a-token",
+					Id:                          defaultId,
+					Username:                    "user",
+					Password:                    "password",
+					UsernameEnvironmentVariable: "RANCHER_USERNAME",
+					PasswordEnvironmentVariable: "RANCHER_PASSWORD",
+					UserToken:                   "a-token",
+					SessionToken:                "a-token",
+					TokenTtl:                    "90d",
+					RefreshAt:                   "10d",
+					IgnoreToken:                 false,
+					UserTokenStartDate:          "",
+					UserTokenEndDate:            "",
+					UserTokenRefreshDate:        "",
 				},
+				// login
 				c.Request{
-					Endpoint: apiEndpoint,
+					Endpoint: apiUrl + "/" + loginEndpoint,
 					Method:   "POST",
-					Body: rBodyMarshal(RancherLoginModel{
-						Id:                          defaultId,
-						Username:                    "user",
-						Password:                    "password",
-						UsernameEnvironmentVariable: "RANCHER_USERNAME",
-						PasswordEnvironmentVariable: "RANCHER_PASSWORD",
-						TokenTtl:                    "90d",
-						RefreshAt:                   "10d",
+					Body: rBodyMarshal(map[string]any{
+						"type":         "localProvider",
+						"username":     "user",
+						"password":     "password",
+						"responseType": "json",
 					}),
 				},
+				// login
 				c.Response{
 					StatusCode: http.StatusOK,
 					Headers:    map[string][]string{"Content-Type": {"application/json"}},
-					Body: rBodyMarshal(RancherLoginModel{
-						Id:        defaultId,
-						UserToken: "a-token",
+					Body: rBodyMarshal(map[string]any{
+						"baseType":  "token",
+						"expiresAt": "2026-02-13T13:08:30Z",
+						"id":        "token-r6kwh",
+						"token":     "token-r6kwh:bzljw8trcgwq6vltxv74445c2zlspwd5nl828kbbnhwp8jr7bwpq92",
+						"type":      "token",
+					}),
+				},
+				// token
+				c.Request{
+					Endpoint: apiUrl + "/" + tokenEndpoint,
+					Method:   "POST",
+					Body: rBodyMarshal(map[string]any{
+						"apiVersion": "ext.cattle.io/v1",
+						"kind":       "Token",
+						"spec": map[string]any{
+							"description": "terraform-login-49fb2932-8f0c-4f39-ad6b-6e91e40bad78",
+							"ttl":         7776000000,
+						},
+					}),
+				},
+				// token
+				c.Response{
+					StatusCode: http.StatusOK,
+					Headers:    map[string][]string{"Content-Type": {"application/json"}},
+					Body: rBodyMarshal(map[string]any{
+						"kind":       "Token",
+						"apiVersion": "ext.cattle.io/v1",
+						"metadata": map[string]any{
+							"name":              "token-t9d75",
+							"generateName":      "token-",
+							"uid":               "b9f42296-de97-4150-bd2d-dcc211b9621c",
+							"resourceVersion":   "288311",
+							"creationTimestamp": "2026-02-12T21:49:07Z",
+							"labels": map[string]any{
+								"authn.management.cattle.io/kind": "",
+								"cattle.io/user-id":               "user-5k5wm",
+							},
+						},
+						"spec": map[string]any{
+							"userID": "user-5k5wm",
+							"userPrincipal": map[string]any{
+								"name":          "local://user-5k5wm",
+								"displayName":   "Default Admin",
+								"loginName":     "admin",
+								"principalType": "user",
+								"me":            true,
+								"provider":      "local",
+							},
+							"kind":        "",
+							"description": "terraform-login-49fb2932-8f0c-4f39-ad6b-6e91e40bad78",
+							"ttl":         7776000000,
+							"enabled":     true,
+						},
+						"status": map[string]any{
+							"value":          "ndc7njll8wt4tf2mvzdg4rckgwrkshrckbmj527klt8zs966twpz6h",
+							"current":        false,
+							"expired":        false,
+							"expiresAt":      "2026-05-13T16:49:07-05:00",
+							"lastUpdateTime": "2026-02-12T15:49:07-06:00",
+							"bearerToken":    "ext/token-t9d75:ndc7njll8wt4tf2mvzdg4rckgwrkshrckbmj527klt8zs966twpz6h",
+						},
 					}),
 				},
 				"success",
@@ -171,8 +241,31 @@ func TestRancherLoginResource(t *testing.T) {
 					Password: "password",
 				},
 				RancherLoginModel{},
+				// login
 				c.Request{
-					Endpoint: apiEndpoint,
+					Endpoint: apiUrl + "/" + loginEndpoint,
+					Method:   "POST",
+					Body: rBodyMarshal(map[string]any{
+						"type":         "localProvider",
+						"username":     "user",
+						"password":     "password",
+						"responseType": "json",
+					}),
+				},
+				// login
+				c.Response{
+					StatusCode: http.StatusOK,
+					Headers:    map[string][]string{"Content-Type": {"application/json"}},
+					Body: rBodyMarshal(map[string]any{
+						"baseType":  "token",
+						"expiresAt": "2026-02-13T13:08:30Z",
+						"id":        "token-r6kwh",
+						"token":     "token-r6kwh:bzljw8trcgwq6vltxv74445c2zlspwd5nl828kbbnhwp8jr7bwpq92",
+						"type":      "token",
+					}),
+				},
+				c.Request{
+					Endpoint: apiUrl + "/" + tokenEndpoint,
 					Method:   "POST",
 					Body: rBodyMarshal(RancherLoginModel{
 						Id:                          defaultId,
@@ -285,7 +378,7 @@ func TestRancherLoginResource(t *testing.T) {
 					Body:       rBodyMarshal(RancherLoginModel{Id: defaultId}),
 				},
 				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
+					Endpoint: apiUrl + "/" + tokenEndpoint + "/" + defaultId,
 					Method:   "GET",
 					Body:     rBodyMarshal(nil),
 				},
@@ -301,7 +394,7 @@ func TestRancherLoginResource(t *testing.T) {
 					StatusCode: http.StatusNotFound,
 				},
 				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
+					Endpoint: apiUrl + "/" + tokenEndpoint + "/" + defaultId,
 					Method:   "GET",
 					Body:     rBodyMarshal(nil),
 				},
@@ -397,7 +490,7 @@ func TestRancherLoginResource(t *testing.T) {
 					Body:       rBodyMarshal(RancherLoginModel{Id: defaultId, RefreshAt: "5d"}),
 				},
 				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
+					Endpoint: apiUrl + "/" + tokenEndpoint + "/" + defaultId,
 					Method:   "PUT",
 					Body:     rBodyMarshal(RancherLoginModel{Id: defaultId, RefreshAt: "5d"}),
 				},
@@ -489,7 +582,7 @@ func TestRancherLoginResource(t *testing.T) {
 					StatusCode: http.StatusNoContent,
 				},
 				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
+					Endpoint: apiUrl + "/" + tokenEndpoint + "/" + defaultId,
 					Method:   "DELETE",
 					Body:     rBodyMarshal(nil),
 				},
@@ -503,7 +596,7 @@ func TestRancherLoginResource(t *testing.T) {
 					StatusCode: http.StatusNotFound,
 				},
 				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
+					Endpoint: apiUrl + "/" + tokenEndpoint + "/" + defaultId,
 					Method:   "DELETE",
 					Body:     rBodyMarshal(nil),
 				},

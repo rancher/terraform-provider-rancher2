@@ -279,7 +279,7 @@ func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequ
 
 	response := c.Response{}
 
-	err = client.Do(&request, &response)
+	err = client.Do(ctx, &request, &response)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating dev resource: ", err.Error())
 		return
@@ -327,7 +327,7 @@ func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	response := c.Response{}
 
-	err := client.Do(&request, &response)
+	err := client.Do(ctx, &request, &response)
 	if err != nil {
 		if e, ok := err.(*c.ApiError); ok && e.StatusCode == 404 {
 			// resource not found, remove from state
@@ -382,7 +382,7 @@ func (r *RancherDevResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	response := c.Response{}
 
-	err = client.Do(&request, &response)
+	err = client.Do(ctx, &request, &response)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating dev resource: ", err.Error())
 		return
@@ -431,7 +431,7 @@ func (r *RancherDevResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	response := c.Response{}
 
-	err = client.Do(&request, &response)
+	err = client.Do(ctx, &request, &response)
 	if err != nil {
 		if e, ok := err.(*c.ApiError); ok && e.StatusCode == 404 {
 			// resource already deleted

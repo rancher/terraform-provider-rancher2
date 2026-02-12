@@ -22,6 +22,7 @@ import (
 	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
 	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
 	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_dev"
+	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_login"
 	"github.com/rancher/terraform-provider-rancher2/internal/provider/validators"
 )
 
@@ -131,7 +132,7 @@ func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest
 }
 
 func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Request: %v", pp.PrettyPrint(req)))
+	tflog.Debug(ctx, fmt.Sprintf("Provider Config: %s", pp.PrettyPrint(req.Config.Raw)))
 
 	var config RancherProviderModel
 	diags := req.Config.Get(ctx, &config)
@@ -209,12 +210,13 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 	resp.ResourceData = client
 	resp.DataSourceData = client
 
-	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Response: %v", pp.PrettyPrint(resp)))
+	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Response: %+v", pp.PrettyPrint(resp)))
 }
 
 func (p *RancherProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		rancher2_dev.NewRancherDevResource,
+		rancher2_login.NewRancherLoginResource,
 	}
 }
 

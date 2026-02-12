@@ -13,6 +13,7 @@ import (
 
 	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
 )
 
 var _ Client = &HttpClient{}
@@ -73,7 +74,6 @@ func (l *retryableHTTPLogger) Warn(msg string, keysAndValues ...any) {
 }
 
 type HttpClient struct {
-	ctx            context.Context
 	apiURL         string
 	caCert         string
 	ignoreSystemCA bool
@@ -102,7 +102,7 @@ func NewHttpClient(ctx context.Context, apiURL, caCert string, insecure, ignoreS
 		}
 	}
 	retryClient := retryablehttp.NewClient()
-	retryClient.Logger = &retryableHTTPLogger{ctx: ctx}
+	retryClient.Logger = &retryableHTTPLogger{ctx: context.Background()}
 	retryClient.HTTPClient = &http.Client{
 		Timeout: timeout,
 		Transport: &http.Transport{
@@ -121,7 +121,6 @@ func NewHttpClient(ctx context.Context, apiURL, caCert string, insecure, ignoreS
 	}
 
 	return &HttpClient{
-		ctx:            ctx,
 		apiURL:         apiURL,
 		caCert:         caCert,
 		insecure:       insecure,
@@ -132,15 +131,14 @@ func NewHttpClient(ctx context.Context, apiURL, caCert string, insecure, ignoreS
 	}
 }
 
-func (c *HttpClient) Do(req *Request, resp *Response) error {
+func (c *HttpClient) Do(ctx context.Context, req *Request, resp *Response) error {
 	start := time.Now()
-	ctx := c.ctx
 
 	if req.Endpoint == "" {
 		return fmt.Errorf("doing request: URL is nil")
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("Request Object: %#v", req))
+	tflog.Debug(ctx, fmt.Sprintf("Request Object: %s", pp.PrettyPrint(req)))
 
 	// This allows the resource to overwrite the token.
 	if req.Token != "" {
@@ -156,12 +154,24 @@ func (c *HttpClient) Do(req *Request, resp *Response) error {
 		reqBody = bytes.NewBuffer(bodyBytes)
 	}
 
-	request, err := retryablehttp.NewRequest(req.Method, req.Endpoint, reqBody)
+	request, err := retryablehttp.NewRequestWithContext(ctx, req.Method, req.Endpoint, reqBody)
 	if err != nil {
 		return fmt.Errorf("doing request: %v", err)
 	}
-	request = request.WithContext(ctx)
 
+	c.client.HTTPClient.CheckRedirect = func(r *http.Request, via []*http.Request) error {
+		if len(via) >= int(c.maxRedirects) {
+			return fmt.Errorf("stopped after %d redirects", c.maxRedirects)
+		}
+		if c.token != "" {
+			r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.token))
+		}
+		return nil
+	}
+
+	if c.token != "" {
+		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.token))
+	}
 	for key, value := range req.Headers {
 		request.Header.Add(key, value)
 	}
@@ -184,8 +194,11 @@ func (c *HttpClient) Do(req *Request, resp *Response) error {
 	// Timings recorded as part of internal metrics
 	tflog.Debug(ctx, fmt.Sprintf("Response Time: %f ms", float64((time.Since(start))/time.Millisecond)))
 	tflog.Debug(ctx, fmt.Sprintf("Response Status: %s", res.Status))
-	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %#v", res.Header))
-	tflog.Debug(ctx, fmt.Sprintf("Response Body: %s", string(responseBody)))
+	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %s", pp.PrettyPrint(res.Header)))
+	var prettyBody bytes.Buffer
+	if err := json.Indent(&prettyBody, responseBody, "", "  "); err == nil {
+		tflog.Debug(ctx, fmt.Sprintf("Response Body: \n%s", prettyBody.String()))
+	}
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		tflog.Debug(ctx, fmt.Sprintf("Successful response! (%d)", resp.StatusCode))
@@ -207,7 +220,6 @@ func (c *HttpClient) Set(client Client) (Client, error) {
 	if !ok {
 		return nil, fmt.Errorf("invalid client type, expected: '*HttpClient', got: '%T'", client)
 	}
-	c.ctx = httpClient.ctx
 	c.apiURL = httpClient.apiURL
 	c.caCert = httpClient.caCert
 	c.ignoreSystemCA = httpClient.ignoreSystemCA

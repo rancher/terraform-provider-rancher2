@@ -1,8 +1,10 @@
 package client
 
+import "context"
+
 // Client is the interface for a client that can make requests to the Rancher API.
 type Client interface {
-	Do(req *Request, resp *Response) error
+	Do(ctx context.Context, req *Request, resp *Response) error
 	Set(client Client) (Client, error)
 	GetApiUrl() string
 }
