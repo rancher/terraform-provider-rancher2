@@ -156,7 +156,7 @@ func TestNestedNestedResourceModel(t *testing.T) {
 	})
 }
 
-// helpers
+// helpers.
 func getDefaultResourceModel() RancherDevResourceModel {
 	return RancherDevResourceModel{
 		Id:               types.StringValue("test"),

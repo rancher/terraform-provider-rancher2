@@ -135,7 +135,7 @@ type NestedResourceModel struct {
 	NestedNestedObject NestedNestedResourceModel `tfsdk:"nested_nested_object"`
 }
 
-// Fills the target with the values set in the current NestedResourceModel
+// Fills the target with the values set in the current NestedResourceModel.
 func (r *NestedResourceModel) ToGoModel(ctx context.Context, target *NestedObject) diag.Diagnostics {
 	dgs := diag.Diagnostics{}
 
@@ -158,7 +158,7 @@ type NestedNestedResourceModel struct {
 	BoolAttribute   types.Bool   `tfsdk:"bool_attribute"`
 }
 
-// Fills the target with the values set in the current NestedNestedResourceModel
+// Fills the target with the values set in the current NestedNestedResourceModel.
 func (r *NestedNestedResourceModel) ToGoModel(ctx context.Context, target *NestedNestedObject) diag.Diagnostics {
 	dgs := diag.Diagnostics{}
 

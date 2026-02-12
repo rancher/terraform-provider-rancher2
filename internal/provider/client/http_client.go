@@ -156,8 +156,7 @@ func (c *HttpClient) Do(req *Request, resp *Response) error {
 		reqBody = bytes.NewBuffer(bodyBytes)
 	}
 
-	url := fmt.Sprintf("%s", req.Endpoint)
-	request, err := retryablehttp.NewRequest(req.Method, url, reqBody)
+	request, err := retryablehttp.NewRequest(req.Method, req.Endpoint, reqBody)
 	if err != nil {
 		return fmt.Errorf("doing request: %v", err)
 	}
@@ -204,13 +203,17 @@ func (c *HttpClient) Do(req *Request, resp *Response) error {
 }
 
 func (c *HttpClient) Set(client Client) (Client, error) {
-	c.ctx = client.(*HttpClient).ctx
-	c.apiURL = client.(*HttpClient).apiURL
-	c.caCert = client.(*HttpClient).caCert
-	c.ignoreSystemCA = client.(*HttpClient).ignoreSystemCA
-	c.insecure = client.(*HttpClient).insecure
-	c.maxRedirects = client.(*HttpClient).maxRedirects
-	c.timeout = client.(*HttpClient).timeout
+	httpClient, ok := client.(*HttpClient)
+	if !ok {
+		return nil, fmt.Errorf("invalid client type, expected: '*HttpClient', got: '%T'", client)
+	}
+	c.ctx = httpClient.ctx
+	c.apiURL = httpClient.apiURL
+	c.caCert = httpClient.caCert
+	c.ignoreSystemCA = httpClient.ignoreSystemCA
+	c.insecure = httpClient.insecure
+	c.maxRedirects = httpClient.maxRedirects
+	c.timeout = httpClient.timeout
 	return c, nil
 }
 

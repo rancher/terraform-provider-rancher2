@@ -223,14 +223,22 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-// configure runs at compile time, don't overload the context
+// configure runs at compile time, don't overload the context.
 func (r *RancherDevResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return // Prevent panic if the provider has not been configured.
 	}
 
 	// Retrieving the client from the provider
-	r.client = req.ProviderData.(c.Client)
+	client, ok := req.ProviderData.(c.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected c.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	r.client = client
 }
 
 // Create generates reality and state to match plan.
@@ -440,13 +448,13 @@ func (r *RancherDevResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// note this function also enforces default values
+// note this function also enforces default values.
 func validateData(data *RancherDevResourceModel) error {
 	if data.Id.ValueString() == "" {
 		return fmt.Errorf("id cannot be empty")
 	}
-	if regexp.MustCompile(`^dev-.*`).MatchString(data.Id.ValueString()) == false {
-		return fmt.Errorf("Id must start with 'dev-'")
+	if !regexp.MustCompile(`^dev-.*`).MatchString(data.Id.ValueString()) {
+		return fmt.Errorf("id must start with 'dev-'")
 	}
 	if data.BoolAttribute.IsNull() || data.BoolAttribute.IsUnknown() {
 		data.BoolAttribute = types.BoolValue(true)

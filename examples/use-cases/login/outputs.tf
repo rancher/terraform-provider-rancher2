@@ -11,7 +11,7 @@ output "admin_user_token_end_date" {
   value = rancher2_login.initial_admin.user_token_end_date
 }
 output "admin_refresh_date" {
-  value = rancher2_login.initial_admin.refresh_date
+  value = rancher2_login.initial_admin.user_token_refresh_date
 }
 
 output "kate_session_token" {
@@ -27,5 +27,5 @@ output "kate_user_token_end_date" {
   value = rancher2_login.kate.user_token_end_date
 }
 output "kate_refresh_date" {
-  value = rancher2_login.kate.refresh_date
+  value = rancher2_login.kate.user_token_refresh_date
 }
