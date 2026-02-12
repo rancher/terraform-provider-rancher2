@@ -82,15 +82,19 @@ func (c *TestClient) Do(req *Request, resp *Response) error {
 }
 
 func (c *TestClient) Set(client Client) (Client, error) {
-	c.ctx = client.(*TestClient).ctx
-	c.apiURL = client.(*TestClient).apiURL
-	c.caCert = client.(*TestClient).caCert
-	c.ignoreSystemCA = client.(*TestClient).ignoreSystemCA
-	c.insecure = client.(*TestClient).insecure
-	c.maxRedirects = client.(*TestClient).maxRedirects
-	c.timeout = client.(*TestClient).timeout
-	c.response = client.(*TestClient).response
-	c.request = client.(*TestClient).request
+	testClient, ok := client.(*TestClient)
+	if !ok {
+		return nil, fmt.Errorf("invalid client type, expected: '*TestClient', got: '%T'", client)
+	}
+	c.ctx = testClient.ctx
+	c.apiURL = testClient.apiURL
+	c.caCert = testClient.caCert
+	c.ignoreSystemCA = testClient.ignoreSystemCA
+	c.insecure = testClient.insecure
+	c.maxRedirects = testClient.maxRedirects
+	c.timeout = testClient.timeout
+	c.response = testClient.response
+	c.request = testClient.request
 	return c, nil
 }
 

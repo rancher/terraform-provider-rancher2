@@ -1,13 +1,10 @@
 package dev
 
 import (
-	// "os" .
-	// "path/filepath" .
 	"testing"
 	"time"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	// util "github.com/rancher/terraform-provider-rancher2/test" .
 	cfg "github.com/rancher/terraform-provider-rancher2/test/config"
 )
 
@@ -32,15 +29,20 @@ func TestDevAuthenticate(t *testing.T) {
 		t.Fatalf("Error getting cluster outputs: %s", err)
 	}
 
-	// Apply auth config
-	authVars := map[string]any{
+	// Apply login config
+	loginVars := map[string]any{
 		"rancher_url": output["address"],
 		"identifier":  fit.ID,
 		"owner":       fit.Owner,
 	}
-	auth := cfg.NewTestConfig(t, "use-cases/authenticate", authVars, nil)
-	defer auth.Teardown(t)
-	_, err = terraform.InitAndApplyE(t, auth.TerraformOptions)
+  loginEnvVars := map[string]string{
+    "RANCHER_URL": output["address"].(string),
+    "RANCHER_USERNAME": "admin",
+    "RANCHER_PASSWORD": output["admin_password"].(string),
+  }
+	login := cfg.NewTestConfig(t, "use-cases/login", loginVars, loginEnvVars)
+	defer login.Teardown(t)
+	_, err = terraform.InitAndApplyE(t, login.TerraformOptions)
 	if err != nil {
 		t.Log("Test failed, tearing down...")
 		t.Fatalf("Error creating cluster: %s", err)

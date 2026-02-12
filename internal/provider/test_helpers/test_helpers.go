@@ -77,7 +77,7 @@ func PrintLog(t *testing.T, buf *bytes.Buffer, level ...string) {
 
 // rsc is a pointer to the resource you want to be configured, eg. *RancherDevResource
 // client is the data sent to the resource, this is what the provider configure outputs
-// this is where you can inject a custom client for testing
+// this is where you can inject a custom client for testing.
 func GetConfiguredResource(ctx context.Context, t *testing.T, rsc resource.ResourceWithConfigure, client c.Client) error {
 	req := resource.ConfigureRequest{
 		ProviderData: client,
