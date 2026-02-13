@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -128,8 +129,9 @@ func (r *RancherLoginResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			// read only attributes below here
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Unique identifier generated on create for the resource.",
-				Computed:            true,
+				MarkdownDescription: "Unique identifier generated on create for the resource." +
+					"This value will be used as the name of the user token.",
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -271,12 +273,14 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 	tokenReqBody := map[string]any{
 		"apiVersion": "ext.cattle.io/v1",
 		"kind":       "Token",
+		"metadata": map[string]any{
+			"name": plan.Id.ValueString(),
+		},
 		"spec": map[string]any{
-			"description": fmt.Sprintf("terraform-login-%s", plan.Id.ValueString()),
+			"description": "Terraform login token.",
 			"ttl":         ttlMillis,
 		},
 	}
-
 	tokenRequest := c.Request{
 		Endpoint: fmt.Sprintf("%s/apis/ext.cattle.io/v1/tokens", client.GetApiUrl()),
 		Method:   "POST",
@@ -289,50 +293,11 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating user token: ", err.Error())
 	}
-	var tokenData struct {
-		Metadata struct {
-			CreationTimestamp string `json:"creationTimestamp"`
-		} `json:"metadata"`
-		Status struct {
-			BearerToken string `json:"bearerToken"`
-			ExpiresAt   string `json:"expiresAt"`
-		} `json:"status"`
-	}
-	err = json.Unmarshal(tokenResponse.Body, &tokenData)
-	if err != nil {
-		resp.Diagnostics.AddError("Error unmarshaling token response:", err.Error())
+	diags := processTokenResponse(&plan, tokenResponse)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if tokenData.Status.BearerToken == "" {
-		resp.Diagnostics.AddError("Token creation failed", "No bearer token returned from Rancher")
-		return
-	}
-	plan.UserToken = types.StringValue(tokenData.Status.BearerToken)
-
-	creationTime, err := time.Parse(time.RFC3339, tokenData.Metadata.CreationTimestamp)
-	if err != nil {
-		resp.Diagnostics.AddError("Error parsing creation timestamp", err.Error())
-		return
-	}
-	plan.UserTokenStartDate = types.StringValue(creationTime.Format(time.RFC3339))
-	plan.UserTokenEndDate = types.StringValue(tokenData.Status.ExpiresAt)
-
-	expiresAt, err := time.Parse(time.RFC3339, tokenData.Status.ExpiresAt)
-	if err != nil {
-		resp.Diagnostics.AddError("Error parsing token expiration date", err.Error())
-		return
-	}
-
-	refreshDuration, err := parseCustomDuration(plan.RefreshAt.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Error parsing refresh_at duration", err.Error())
-		return
-	}
-
-	refreshDate := expiresAt.Add(-refreshDuration)
-
-	plan.UserTokenRefreshDate = types.StringValue(refreshDate.Format(time.RFC3339))
 
 	if plan.IgnoreToken.ValueBool() {
 		plan.UserToken = types.StringValue("")
@@ -368,17 +333,26 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	validateData(&state)
+	tflog.Debug(ctx, fmt.Sprintf("State after validate in read function: %+v", pp.PrettyPrint(state)))
+
+	if state.Id.ValueString() == "" {
+		resp.Diagnostics.AddWarning("Id missing", "State missing id during read, recreating.")
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString()),
+		Endpoint: fmt.Sprintf("%s/apis/ext.cattle.io/v1/tokens/%s", client.GetApiUrl(), state.Id.ValueString()),
 		Method:   "GET",
+		Token:    state.UserToken.ValueString(),
 	}
 	response := c.Response{}
 
 	err := client.Do(ctx, &request, &response)
 	if err != nil {
 		if e, ok := err.(*c.ApiError); ok && e.StatusCode == 404 {
-			// resource not found, remove from state.
+			resp.Diagnostics.AddWarning("Token not found", "Got 404 from API when attempting to get token in Read function, recreating.")
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -386,15 +360,11 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	var respBody RancherLoginModel
-	err = json.Unmarshal(response.Body, &respBody)
-	if err != nil {
-		resp.Diagnostics.AddError("Error unmarshalling dev resource: ", err.Error())
-		return
-	}
-
-	state = *respBody.ToResourceModel(ctx, &resp.Diagnostics)
+	diags := processTokenResponse(&state, response)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		resp.Diagnostics.AddWarning("Error processing response", "Error found when processing get token response.")
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
@@ -590,4 +560,54 @@ func parseCustomDuration(durationStr string) (time.Duration, error) {
 	}
 
 	return totalDuration, nil
+}
+
+func processTokenResponse(data *RancherLoginResourceModel, tokenResponse c.Response) diag.Diagnostics {
+	var diags diag.Diagnostics
+	var err error
+	var tokenData struct {
+		Metadata struct {
+			CreationTimestamp string `json:"creationTimestamp"`
+			Name              string `json:"name"`
+		} `json:"metadata"`
+		Status struct {
+			BearerToken string `json:"bearerToken"`
+			ExpiresAt   string `json:"expiresAt"`
+		} `json:"status"`
+	}
+	err = json.Unmarshal(tokenResponse.Body, &tokenData)
+	if err != nil {
+		diags.AddError("Error unmarshaling token response:", err.Error())
+		return diags
+	}
+	// id
+	data.Id = types.StringValue(tokenData.Metadata.Name)
+	// user token
+	if tokenData.Status.BearerToken != "" {
+		data.UserToken = types.StringValue(tokenData.Status.BearerToken)
+	}
+	// start date
+	creationTime, err := time.Parse(time.RFC3339, tokenData.Metadata.CreationTimestamp)
+	if err != nil {
+		diags.AddError("Error parsing creation timestamp", err.Error())
+		return diags
+	}
+	data.UserTokenStartDate = types.StringValue(creationTime.Format(time.RFC3339))
+	// end date
+	expiresAt, err := time.Parse(time.RFC3339, tokenData.Status.ExpiresAt)
+	if err != nil {
+		diags.AddError("Error parsing token expiration date", err.Error())
+		return diags
+	}
+	data.UserTokenEndDate = types.StringValue(expiresAt.Format(time.RFC3339))
+	// refresh date
+	refreshDuration, err := parseCustomDuration(data.RefreshAt.ValueString())
+	if err != nil {
+		diags.AddError("Error parsing refresh_at duration", err.Error())
+		return diags
+	}
+	refreshDate := expiresAt.Add(-refreshDuration)
+	data.UserTokenRefreshDate = types.StringValue(refreshDate.Format(time.RFC3339))
+
+	return diags
 }
