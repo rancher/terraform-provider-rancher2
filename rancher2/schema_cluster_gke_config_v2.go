@@ -25,6 +25,7 @@ type GoogleKubernetesEngineConfig struct {
 	DisplayName                        string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
 	DriverName                         string            `json:"driverName,omitempty" yaml:"driverName,omitempty"`
 	EnableAlphaFeature                 bool              `json:"enableAlphaFeature,omitempty" yaml:"enableAlphaFeature,omitempty"`
+	EnableDataplaneV2                  *bool             `json:"enableDataplaneV2,omitempty" yaml:"enableDataplaneV2,omitempty"`
 	EnableAutoRepair                   bool              `json:"enableAutoRepair,omitempty" yaml:"enableAutoRepair,omitempty"`
 	EnableAutoUpgrade                  bool              `json:"enableAutoUpgrade,omitempty" yaml:"enableAutoUpgrade,omitempty"`
 	EnableHorizontalPodAutoscaling     *bool             `json:"enableHorizontalPodAutoscaling,omitempty" yaml:"enableHorizontalPodAutoscaling,omitempty"`
@@ -42,6 +43,8 @@ type GoogleKubernetesEngineConfig struct {
 	IPPolicyClusterIpv4CidrBlock       string            `json:"ipPolicyClusterIpv4CidrBlock,omitempty" yaml:"ipPolicyClusterIpv4CidrBlock,omitempty"`
 	IPPolicyClusterSecondaryRangeName  string            `json:"ipPolicyClusterSecondaryRangeName,omitempty" yaml:"ipPolicyClusterSecondaryRangeName,omitempty"`
 	IPPolicyCreateSubnetwork           bool              `json:"ipPolicyCreateSubnetwork,omitempty" yaml:"ipPolicyCreateSubnetwork,omitempty"`
+	IPPolicyIPv6AccessType             string            `json:"ipPolicyIpv6AccessType,omitempty" yaml:"ipPolicyIpv6AccessType,omitempty"`
+	IPPolicyStackType                  string            `json:"ipPolicyStackType,omitempty" yaml:"ipPolicyStackType,omitempty"`
 	IPPolicyNodeIpv4CidrBlock          string            `json:"ipPolicyNodeIpv4CidrBlock,omitempty" yaml:"ipPolicyNodeIpv4CidrBlock,omitempty"`
 	IPPolicyServicesIpv4CidrBlock      string            `json:"ipPolicyServicesIpv4CidrBlock,omitempty" yaml:"ipPolicyServicesIpv4CidrBlock,omitempty"`
 	IPPolicyServicesSecondaryRangeName string            `json:"ipPolicyServicesSecondaryRangeName,omitempty" yaml:"ipPolicyServicesSecondaryRangeName,omitempty"`
@@ -140,6 +143,18 @@ func clusterGKEConfigV2IPAllocationPolicyFields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "Create GKE subnetwork?",
+		},
+		"ipv6_access_type": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "The GKE cluster ipv6 access type",
+		},
+		"stack_type": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "The GKE cluster stack type",
 		},
 		"node_ipv4_cidr_block": {
 			Type:        schema.TypeString,
@@ -454,6 +469,12 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "The GKE cluster description",
+		},
+		"enable_dataplane_v2": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Computed:    true,
+			Description: "Enable GKE Dataplane V2",
 		},
 		"enable_kubernetes_alpha": {
 			Type:        schema.TypeBool,
