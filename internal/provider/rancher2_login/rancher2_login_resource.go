@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -141,11 +140,6 @@ func (r *RancherLoginResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:            true,
 				Sensitive:           true,
 			},
-			"session_token": schema.StringAttribute{
-				MarkdownDescription: "The session token retrieved from login.",
-				Computed:            true,
-				Sensitive:           true,
-			},
 			"user_token_start_date": schema.StringAttribute{
 				MarkdownDescription: "The unix timestamp of when the user token was created.",
 				Computed:            true,
@@ -201,7 +195,7 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	err = validateData(&plan) // we validate data here because tests will bypass the schema validators.
+	err = validateData(&plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error validating data: ", err.Error())
 		return
@@ -212,55 +206,15 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 	var userIsInEnv bool
 	var password string
 	var passIsInEnv bool
-
-	if plan.Username.IsNull() || plan.Username.IsUnknown() {
-		userIsInEnv, username = getValueFromEnv(plan.Username, plan.UsernameEnvironmentVariable.ValueString())
-	}
+	userIsInEnv, username = getValueFromEnv(plan.Username, plan.UsernameEnvironmentVariable.ValueString())
 	if !userIsInEnv {
 		username = plan.Username.ValueString()
 	}
-	if plan.Password.IsNull() || plan.Password.IsUnknown() {
-		passIsInEnv, password = getValueFromEnv(plan.Password, plan.PasswordEnvironmentVariable.ValueString())
-	}
+	passIsInEnv, password = getValueFromEnv(plan.Password, plan.PasswordEnvironmentVariable.ValueString())
 	if !passIsInEnv {
 		password = plan.Password.ValueString()
 	}
-
-	// Login
-	loginReqBody := map[string]any{
-		"type":         "localProvider",
-		"username":     username,
-		"password":     password,
-		"responseType": "json",
-	}
-
-	loginRequest := c.Request{
-		Endpoint: fmt.Sprintf("%s/v1-public/login", client.GetApiUrl()),
-		Method:   "POST",
-		Body:     loginReqBody,
-	}
-
-	loginResponse := c.Response{}
-	err = client.Do(ctx, &loginRequest, &loginResponse)
-	if err != nil {
-		resp.Diagnostics.AddError("Error logging in to Rancher: ", err.Error())
-		return
-	}
-
-	var loginData struct {
-		Token string `json:"token"`
-	}
-	err = json.Unmarshal(loginResponse.Body, &loginData)
-	if err != nil {
-		resp.Diagnostics.AddError("Error unmarshaling login response:", err.Error())
-		return
-	}
-
-	if loginData.Token == "" {
-		resp.Diagnostics.AddError("Login failed", "No session token returned from Rancher")
-		return
-	}
-	plan.SessionToken = types.StringValue(loginData.Token)
+	err, sessionToken := login(ctx, client, username, password)
 
 	ttlDuration, err := parseCustomDuration(plan.TokenTtl.ValueString())
 	if err != nil {
@@ -285,7 +239,7 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 		Endpoint: fmt.Sprintf("%s/apis/ext.cattle.io/v1/tokens", client.GetApiUrl()),
 		Method:   "POST",
 		Body:     tokenReqBody,
-		Token:    loginData.Token,
+		Token:    sessionToken,
 	}
 
 	tokenResponse := c.Response{}
@@ -301,13 +255,12 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 
 	if plan.IgnoreToken.ValueBool() {
 		plan.UserToken = types.StringValue("")
-		plan.SessionToken = types.StringValue("")
 	}
-	if passIsInEnv {
-		plan.Password = types.StringValue("")
-	}
-	if userIsInEnv {
+	if plan.Username.IsNull() || plan.Username.IsUnknown() {
 		plan.Username = types.StringValue("")
+	}
+	if plan.Password.IsNull() || plan.Password.IsUnknown() {
+		plan.Password = types.StringValue("")
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -356,8 +309,33 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError("Error reading dev resource: ", err.Error())
-		return
+		if e, ok := err.(*c.ApiError); ok && e.StatusCode == 401 {
+			tflog.Debug(ctx, "Token in state is invalid, logging in to try again.")
+			var username string
+			var userIsInEnv bool
+			var password string
+			var passIsInEnv bool
+			userIsInEnv, username = getValueFromEnv(state.Username, state.UsernameEnvironmentVariable.ValueString())
+			if !userIsInEnv {
+				username = state.Username.ValueString()
+			}
+			passIsInEnv, password = getValueFromEnv(state.Password, state.PasswordEnvironmentVariable.ValueString())
+			if !passIsInEnv {
+				password = state.Password.ValueString()
+			}
+			err, sessionToken := login(ctx, client, username, password)
+			if err != nil {
+				resp.Diagnostics.AddError("Error logging in to Rancher: ", err.Error())
+				return
+			}
+			request.Token = sessionToken
+			response = c.Response{}
+			err = client.Do(ctx, &request, &response)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading login resource: ", err.Error())
+				return
+			}
+		}
 	}
 
 	diags := processTokenResponse(&state, response)
@@ -373,20 +351,11 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 // Update changes reality and state to match plan (best practice is don't compare old state, just override).
+// Recreate is decided in Read?
 func (r *RancherLoginResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Config: %+v", pp.PrettyPrint(req.Config.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Plan: %+v", pp.PrettyPrint(req.Plan.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request State: %+v", pp.PrettyPrint(req.State.Raw)))
-	var err error
-
-	var client c.Client
-	if r.client != nil {
-		client = r.client
-	} else {
-		// no client found, seems like the provider wasn't configured properly.
-		resp.Diagnostics.AddError("initial client not found, please configure the provider", "")
-		return
-	}
 
 	var plan RancherLoginResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -394,36 +363,18 @@ func (r *RancherLoginResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// attributes that can be updated:
-	// username_environment_variable,
-	// password_environment_variable,
-	// refresh_at
-
-	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, plan.Id.ValueString()),
-		Method:   "PUT",
-		Body:     plan.ToGoModel(ctx),
-	}
-
-	response := c.Response{}
-
-	err = client.Do(ctx, &request, &response)
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating dev resource: ", err.Error())
-		return
-	}
-
-	var respBody RancherLoginModel
-	err = json.Unmarshal(response.Body, &respBody)
-	if err != nil {
-		resp.Diagnostics.AddError("Error unmarshalling dev resource: ", err.Error())
-		return
-	}
-
-	state := *respBody.ToResourceModel(ctx, &resp.Diagnostics)
+	var state RancherLoginResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// attributes that can be updated: username_environment_variable, password_environment_variable, refresh_at
+	// none of these are "real", nothing needs to be updated in the remote API
+	// all changes are in the state only, making this really easy
+	state.UsernameEnvironmentVariable = plan.UsernameEnvironmentVariable
+	state.PasswordEnvironmentVariable = plan.PasswordEnvironmentVariable
+	state.RefreshAt = plan.RefreshAt
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("Update Response State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
@@ -450,27 +401,25 @@ func (r *RancherLoginResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString()),
+		Endpoint: fmt.Sprintf("%s/apis/ext.cattle.io/v1/tokens/%s", client.GetApiUrl(), state.Id.ValueString()),
 		Method:   "DELETE",
+		Token:    state.UserToken.ValueString(),
 	}
-
 	response := c.Response{}
 
 	err = client.Do(ctx, &request, &response)
 	if err != nil {
-		if e, ok := err.(*c.ApiError); ok && e.StatusCode == 404 {
-			// resource already deleted
+		if e, ok := err.(*c.ApiError); ok && (e.StatusCode == 404 || e.StatusCode == 401) {
 			return
 		}
-		resp.Diagnostics.AddError("Error deleting dev resource: ", err.Error())
+		resp.Diagnostics.AddError("Error deleting login resource: ", err.Error())
 		return
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("Delete Response Object: %+v", pp.PrettyPrint(*resp)))
 }
 
 func (r *RancherLoginResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	//resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resp.Diagnostics.AddError("Import not available", "This resource is not able to be imported.")
 }
 
 func getValueFromEnv(s types.String, env string) (bool, string) {
@@ -610,4 +559,38 @@ func processTokenResponse(data *RancherLoginResourceModel, tokenResponse c.Respo
 	data.UserTokenRefreshDate = types.StringValue(refreshDate.Format(time.RFC3339))
 
 	return diags
+}
+
+func login(ctx context.Context, client c.Client, username, password string) (error, string) {
+	loginReqBody := map[string]any{
+		"type":         "localProvider",
+		"username":     username,
+		"password":     password,
+		"responseType": "json",
+	}
+
+	loginRequest := c.Request{
+		Endpoint: fmt.Sprintf("%s/v1-public/login", client.GetApiUrl()),
+		Method:   "POST",
+		Body:     loginReqBody,
+	}
+
+	loginResponse := c.Response{}
+	err := client.Do(ctx, &loginRequest, &loginResponse)
+	if err != nil {
+		return fmt.Errorf("Error logging in to Rancher: %s", err.Error()), ""
+	}
+
+	var loginData struct {
+		Token string `json:"token"`
+	}
+	err = json.Unmarshal(loginResponse.Body, &loginData)
+	if err != nil {
+		return fmt.Errorf("Error unmarshaling login response: %s", err.Error()), ""
+	}
+
+	if loginData.Token == "" {
+		return fmt.Errorf("Login failed: No session token returned from Rancher"), ""
+	}
+	return nil, loginData.Token
 }

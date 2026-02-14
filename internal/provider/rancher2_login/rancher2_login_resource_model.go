@@ -20,7 +20,6 @@ type RancherLoginResourceModel struct {
 	RefreshAt                   types.String `tfsdk:"refresh_at"`
 	IgnoreToken                 types.Bool   `tfsdk:"ignore_token"`
 	UserToken                   types.String `tfsdk:"user_token"`
-	SessionToken                types.String `tfsdk:"session_token"`
 	UserTokenStartDate          types.String `tfsdk:"user_token_start_date"`
 	UserTokenEndDate            types.String `tfsdk:"user_token_end_date"`
 	UserTokenRefreshDate        types.String `tfsdk:"user_token_refresh_date"`
@@ -80,7 +79,6 @@ func (data *RancherLoginResourceModel) ToGoModel(ctx context.Context) RancherLog
 		TokenTtl:                    data.TokenTtl.ValueString(),
 		RefreshAt:                   data.RefreshAt.ValueString(),
 		IgnoreToken:                 data.IgnoreToken.ValueBool(),
-		SessionToken:                data.SessionToken.ValueString(),
 		UserToken:                   data.UserToken.ValueString(),
 		UserTokenStartDate:          data.UserTokenStartDate.ValueString(),
 		UserTokenEndDate:            data.UserTokenEndDate.ValueString(),

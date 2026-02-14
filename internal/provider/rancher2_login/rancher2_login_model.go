@@ -17,7 +17,6 @@ type RancherLoginModel struct {
 	RefreshAt                   string `json:"refresh_at,omitempty"`
 	IgnoreToken                 bool   `json:"ignore_token,omitempty"`
 	UserToken                   string `json:"user_token"`
-	SessionToken                string `json:"session_token"`
 	UserTokenStartDate          string `json:"user_token_start_date"`
 	UserTokenEndDate            string `json:"user_token_end_date"`
 	UserTokenRefreshDate        string `json:"user_token_refresh_date"`
@@ -37,7 +36,6 @@ func (obj *RancherLoginModel) ToResourceModel(ctx context.Context, diags *diag.D
 		RefreshAt:                   types.StringValue(obj.RefreshAt),
 		IgnoreToken:                 types.BoolValue(obj.IgnoreToken),
 		UserToken:                   types.StringValue(obj.UserToken),
-		SessionToken:                types.StringValue(obj.SessionToken),
 		UserTokenStartDate:          types.StringValue(obj.UserTokenStartDate),
 		UserTokenEndDate:            types.StringValue(obj.UserTokenEndDate),
 		UserTokenRefreshDate:        types.StringValue(obj.UserTokenRefreshDate),
