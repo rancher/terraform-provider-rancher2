@@ -143,7 +143,6 @@ func TestRancherLoginResource(t *testing.T) {
 					UsernameEnvironmentVariable: "RANCHER_USERNAME",
 					PasswordEnvironmentVariable: "RANCHER_PASSWORD",
 					UserToken:                   "a-token",
-					SessionToken:                "a-token",
 					TokenTtl:                    "90d",
 					RefreshAt:                   "10d",
 					IgnoreToken:                 false,
