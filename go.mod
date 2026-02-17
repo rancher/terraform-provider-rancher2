@@ -4,6 +4,7 @@ go 1.24.0
 
 require (
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/rancher/norman v0.8.0
