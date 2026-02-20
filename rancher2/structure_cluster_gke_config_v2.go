@@ -42,6 +42,12 @@ func flattenClusterGKEConfigV2IPAllocationPolicy(in *managementClient.GKEIPAlloc
 	if len(in.NodeIpv4CidrBlock) > 0 {
 		obj["node_ipv4_cidr_block"] = in.NodeIpv4CidrBlock
 	}
+	if len(in.IPv6AccessType) > 0 {
+		obj["ipv6_access_type"] = in.IPv6AccessType
+	}
+	if len(in.StackType) > 0 {
+		obj["stack_type"] = in.StackType
+	}
 	if len(in.ServicesIpv4CidrBlock) > 0 {
 		obj["services_ipv4_cidr_block"] = in.ServicesIpv4CidrBlock
 	}
@@ -273,6 +279,9 @@ func flattenClusterGKEConfigV2(in *managementClient.GKEClusterConfigSpec, p []in
 	if len(in.Description) > 0 {
 		obj["description"] = in.Description
 	}
+	if in.EnableDataplaneV2 != nil {
+		obj["enable_dataplane_v2"] = *in.EnableDataplaneV2
+	}
 	if in.EnableKubernetesAlpha != nil {
 		obj["enable_kubernetes_alpha"] = *in.EnableKubernetesAlpha
 	}
@@ -358,6 +367,12 @@ func expandClusterGKEConfigV2IPAllocationPolicy(p []interface{}) *managementClie
 	}
 	if v, ok := in["create_subnetwork"].(bool); ok {
 		obj.CreateSubnetwork = v
+	}
+	if v, ok := in["ipv6_access_type"].(string); ok && len(v) > 0 {
+		obj.IPv6AccessType = v
+	}
+	if v, ok := in["stack_type"].(string); ok && len(v) > 0 {
+		obj.StackType = v
 	}
 	if v, ok := in["node_ipv4_cidr_block"].(string); ok && len(v) > 0 {
 		obj.NodeIpv4CidrBlock = v
@@ -615,6 +630,9 @@ func expandClusterGKEConfigV2(p []interface{}) *managementClient.GKEClusterConfi
 
 	if v, ok := in["description"].(string); ok && len(v) > 0 {
 		obj.Description = v
+	}
+	if v, ok := in["enable_dataplane_v2"].(bool); ok {
+		obj.EnableDataplaneV2 = &v
 	}
 	if v, ok := in["enable_kubernetes_alpha"].(bool); ok {
 		obj.EnableKubernetesAlpha = &v

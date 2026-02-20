@@ -36,6 +36,7 @@ type AzureKubernetesServiceConfig struct {
 	DriverName                         string   `json:"driverName,omitempty" yaml:"driverName,omitempty"`
 	DNSServiceIP                       string   `json:"dnsServiceIp,omitempty" yaml:"dnsServiceIp,omitempty"`
 	DockerBridgeCIDR                   string   `json:"dockerBridgeCidr,omitempty" yaml:"dockerBridgeCidr,omitempty"`
+	DualStack                          *bool    `json:"dualStack,omitempty" yaml:"dualStack,omitempty"`
 	EnableHTTPApplicationRouting       bool     `json:"enableHttpApplicationRouting,omitempty" yaml:"enableHttpApplicationRouting,omitempty"`
 	EnableMonitoring                   *bool    `json:"enableMonitoring,omitempty" yaml:"enableMonitoring,omitempty"`
 	KubernetesVersion                  string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
@@ -205,6 +206,12 @@ func clusterAKSConfigV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			ForceNew:    true,
 			Description: "The AKS dns prefix. Required if `import=false`",
+		},
+		"enable_dual_stack": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Enable AKS dual-stack networking (IPv4 + IPv6)",
 		},
 		"http_application_routing": {
 			Type:        schema.TypeBool,
