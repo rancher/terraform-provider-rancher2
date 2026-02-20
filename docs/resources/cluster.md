@@ -447,7 +447,7 @@ The following attributes are exported:
 * `append_tolerations` - (Optional) User defined tolerations to append to agent (list)
 * `override_affinity` - (Optional) User defined affinity to override default agent affinity (string)
 * `override_resource_requirements` - (Optional) User defined resource requirements to set on the agent (list)
-* `scheduling_customization` - (Optional) Supported in Rancher 2.11.0 and above. Defines the configuration of a Priority Class and or Pod Disruption Budget. Currently only supported by the `cluster_agent_deployment_customization` field, and requires the `cattle_cluster_agent_scheduling_customization` feature to be enabled.
+* `scheduling_customization` - (Optional) Supported in Rancher 2.11.0 and above for `cluster_agent_deployment_customization`, and in Rancher 2.14.0 and above for `fleet_agent_deployment_customization`. Defines the configuration of a Priority Class and or Pod Disruption Budget, and requires the `cluster-agent-scheduling-customization` feature to be enabled.
 
 #### `append_tolerations`
 
