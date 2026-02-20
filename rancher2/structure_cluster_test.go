@@ -109,6 +109,14 @@ func testCluster() {
 		AppendTolerations:            testClusterAppendTolerations,
 		OverrideAffinity:             testClusterOverrideAffinity,
 		OverrideResourceRequirements: testClusterOverrideResourceRequirements,
+		SchedulingCustomization: &managementClient.AgentSchedulingCustomization{
+			// note: Priority Classes are intentionally omitted, as the generated v3 cluster object
+			// uses an int64 which causes a panic when parsing the interface to cty.Value objects.
+			// see: https://github.com/hashicorp/terraform-plugin-sdk/blob/2c03a32a9d1be63a12eb18aaf12d2c5270c42346/internal/configs/hcl2shim/values.go#L204-L228
+			PodDisruptionBudget: &managementClient.PodDisruptionBudgetSpec{
+				MinAvailable: "1",
+			},
+		},
 	}
 	testFleetAgentDeploymentCustomizationInterface = []interface{}{
 		map[string]interface{}{
@@ -118,6 +126,15 @@ func testCluster() {
 					"key":      "tolerate/test",
 					"operator": "Equal",
 					"value":    "true",
+				},
+			},
+			"scheduling_customization": []interface{}{
+				map[string]interface{}{
+					"pod_disruption_budget": []interface{}{
+						map[string]interface{}{
+							"min_available": "1",
+						},
+					},
 				},
 			},
 			"override_affinity": "{\"nodeAffinity\":{\"requiredDuringSchedulingIgnoredDuringExecution\":{\"nodeSelectorTerms\":[{\"matchExpressions\":[{\"key\":\"not.this/nodepool\",\"operator\":\"NotIn\",\"values\":[\"true\"]}]}]}}}",
@@ -585,10 +602,10 @@ func TestFlattenCluster(t *testing.T) {
 			expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig, []interface{}{})
 		}
 		if tc.ExpectedOutput["cluster_agent_deployment_customization"] != nil {
-			expectedOutput["cluster_agent_deployment_customization"] = flattenAgentDeploymentCustomization(tc.Input.ClusterAgentDeploymentCustomization, true)
+			expectedOutput["cluster_agent_deployment_customization"] = flattenAgentDeploymentCustomization(tc.Input.ClusterAgentDeploymentCustomization)
 		}
 		if tc.ExpectedOutput["fleet_agent_deployment_customization"] != nil {
-			expectedOutput["fleet_agent_deployment_customization"] = flattenAgentDeploymentCustomization(tc.Input.FleetAgentDeploymentCustomization, false)
+			expectedOutput["fleet_agent_deployment_customization"] = flattenAgentDeploymentCustomization(tc.Input.FleetAgentDeploymentCustomization)
 		}
 		expectedOutput["id"] = "id"
 

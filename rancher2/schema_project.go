@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -16,6 +18,25 @@ func projectResourceQuotaLimitFields() map[string]*schema.Schema {
 		"config_maps": {
 			Type:     schema.TypeString,
 			Optional: true,
+		},
+		"extended": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			ValidateFunc: func(val any, key string) (warns []string, errs []error) {
+				// Ensure that `extended`s value is a `map[string]string`.
+				vmap, ok := val.(map[string]any)
+				if !ok || len(vmap) == 0 {
+					return
+				}
+				for k, v := range vmap {
+					_, ok := v.(string)
+					if ok {
+						continue
+					}
+					errs = append(errs, fmt.Errorf("'%s.%s' must have a string value", key, k))
+				}
+				return
+			},
 		},
 		"limits_cpu": {
 			Type:     schema.TypeString,

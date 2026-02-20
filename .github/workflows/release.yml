@@ -343,8 +343,12 @@ jobs:
           echo "Latest rc num: $LATEST_RC_NUM"
           if [ -z "$LATEST_RC_NUM" ]; then
             # the last minor was a full release, we need to start the next minor release candidate
-            # this sort of assumes there wont be a patch release
-            LATEST_MINOR_NUM=$((LATEST_MINOR_NUM + 1))
+            if [ -z "$LATEST_MINOR_NUM" ]; then
+              # this is a new minor branch
+              LATEST_MINOR_NUM=0
+            else
+              LATEST_MINOR_NUM=$((LATEST_MINOR_NUM + 1))
+            fi
             LATEST_PATCH_NUM=0
             NEXT_RC_NUM=0
           else

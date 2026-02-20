@@ -32,11 +32,11 @@ func agentDeploymentCustomizationOverrideResourceRequirementFields() map[string]
 	return s
 }
 
-func agentDeploymentCustomizationFields(includeScheduling bool) map[string]*schema.Schema {
+func agentDeploymentCustomizationFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"append_tolerations": {
 			Type:        schema.TypeList,
-			Description: "User defined tolerations to append to agent",
+			Description: "User-defined tolerations to append to agent",
 			Optional:    true,
 			Elem: &schema.Resource{
 				Schema: tolerationFields(),
@@ -44,12 +44,12 @@ func agentDeploymentCustomizationFields(includeScheduling bool) map[string]*sche
 		},
 		"override_affinity": {
 			Type:        schema.TypeString,
-			Description: "User defined affinity to override default agent affinity",
+			Description: "User-defined affinity to override default agent affinity",
 			Optional:    true,
 		},
 		"override_resource_requirements": {
 			Type:        schema.TypeList,
-			Description: "User defined resource requirements to set on the agent",
+			Description: "User-defined resource requirements to set on the agent",
 			Optional:    true,
 			Elem: &schema.Resource{
 				Schema: agentDeploymentCustomizationOverrideResourceRequirementFields(),
@@ -57,15 +57,13 @@ func agentDeploymentCustomizationFields(includeScheduling bool) map[string]*sche
 		},
 	}
 
-	if includeScheduling {
-		s["scheduling_customization"] = &schema.Schema{
-			Type:        schema.TypeList,
-			Description: "User defined scheduling customization for the cattle cluster agent",
-			Optional:    true,
-			Elem: &schema.Resource{
-				Schema: agentSchedulingCustomizationFields(),
-			},
-		}
+	s["scheduling_customization"] = &schema.Schema{
+		Type:        schema.TypeList,
+		Description: "User-defined scheduling customization for the cattle or fleet cluster agent",
+		Optional:    true,
+		Elem: &schema.Resource{
+			Schema: agentSchedulingCustomizationFields(),
+		},
 	}
 
 	return s
