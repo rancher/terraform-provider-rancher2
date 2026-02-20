@@ -3,13 +3,13 @@ package rancher2
 import (
 	"encoding/json"
 
-	"github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
+	v1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // Flatteners
 
-func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization, includeScheduling bool) []interface{} {
+func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -28,16 +28,14 @@ func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization, 
 		obj["override_resource_requirements"] = in.OverrideResourceRequirements
 	}
 
-	if includeScheduling {
-		obj["scheduling_customization"] = flattenAgentSchedulingCustomizationV2(in.SchedulingCustomization)
-	}
+	obj["scheduling_customization"] = flattenAgentSchedulingCustomizationV2(in.SchedulingCustomization)
 
 	return []interface{}{obj}
 }
 
 // Expanders
 
-func expandAgentDeploymentCustomizationV2(p []interface{}, includeScheduling bool) (*v1.AgentDeploymentCustomization, error) {
+func expandAgentDeploymentCustomizationV2(p []interface{}) (*v1.AgentDeploymentCustomization, error) {
 	if len(p) == 0 || p[0] == nil {
 		return nil, nil
 	}
@@ -66,10 +64,8 @@ func expandAgentDeploymentCustomizationV2(p []interface{}, includeScheduling boo
 		obj.OverrideResourceRequirements = overrideResourceRequirements
 	}
 
-	if includeScheduling {
-		if v, ok := in["scheduling_customization"].([]interface{}); ok && len(v) > 0 {
-			obj.SchedulingCustomization = expandAgentSchedulingCustomizationV2(v)
-		}
+	if v, ok := in["scheduling_customization"].([]interface{}); ok && len(v) > 0 {
+		obj.SchedulingCustomization = expandAgentSchedulingCustomizationV2(v)
 	}
 
 	return obj, nil
