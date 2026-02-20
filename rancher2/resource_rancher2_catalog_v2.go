@@ -48,7 +48,7 @@ func resourceRancher2CatalogV2Create(d *schema.ResourceData, meta interface{}) e
 	d.SetId(clusterID + catalogV2ClusterIDsep + newCatalog.ID)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{"downloaded"},
+		Target:     []string{"downloaded", "ociDownloaded"},
 		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, newCatalog.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
@@ -103,7 +103,7 @@ func resourceRancher2CatalogV2Update(d *schema.ResourceData, meta interface{}) e
 	d.SetId(clusterID + catalogV2ClusterIDsep + newCatalog.ID)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{"downloaded"},
+		Target:     []string{"downloaded", "ociDownloaded"},
 		Refresh:    catalogV2StateRefreshFunc(meta, clusterID, newCatalog.ID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      1 * time.Second,
@@ -166,6 +166,15 @@ func catalogV2StateRefreshFunc(meta interface{}, clusterID, catalogID string) re
 				}
 				if obj.Status.Conditions[i].Status == "True" {
 					return obj, "downloaded", nil
+				}
+				return nil, "error", fmt.Errorf("%s", obj.Status.Conditions[i].Message)
+			}
+			if obj.Status.Conditions[i].Type == string(v1.OCIDownloaded) {
+				if obj.Status.Conditions[i].Status == "Unknown" {
+					return obj, "transitioning", nil
+				}
+				if obj.Status.Conditions[i].Status == "True" {
+					return obj, "ociDownloaded", nil
 				}
 				return nil, "error", fmt.Errorf("%s", obj.Status.Conditions[i].Message)
 			}
@@ -317,7 +326,7 @@ func waitCatalogV2Downloaded(c *Config, clusterID, catalogID string) (*ClusterRe
 			return nil, fmt.Errorf("Getting catalog V2 ID (%s): %v", catalogID, err)
 		}
 		for i := range obj.Status.Conditions {
-			if obj.Status.Conditions[i].Type == string(v1.RepoDownloaded) {
+			if obj.Status.Conditions[i].Type == string(v1.RepoDownloaded) || obj.Status.Conditions[i].Type == string(v1.OCIDownloaded) {
 				// Status of the condition, one of True, False, Unknown.
 				if obj.Status.Conditions[i].Status == "Unknown" {
 					break

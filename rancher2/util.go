@@ -6,14 +6,16 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -138,37 +140,80 @@ func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 }
 
 func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
-	loginURL := url + "/v3-public/localProviders/local?action=login"
-	loginData := `{"username": "` + user + `", "password": "` + pass + `", "ttl": ` + ttl + `, "description": "` + desc + `"}`
+	TTL, err := strconv.ParseInt(ttl, 10, 64)
+	if err != nil || TTL < 0 {
+		return "", "", fmt.Errorf("Invalid ttl value: %s", ttl)
+	}
+
+	payload, err := json.Marshal(map[string]any{
+		"type":        "localProvider",
+		"username":    user,
+		"password":    pass,
+		"ttl":         TTL,
+		"description": desc,
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("Marshalling login data: %v", err)
+	}
+
+	loginURL := url + "/v1-public/login"
+	v3loginURL := url + "/v3-public/localProviders/local?action=login"
+
 	loginHead := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	}
 
+	errPrefix := "Doing user login"
+
 	// Login with user and pass
-	loginResp, err := DoPost(loginURL, loginData, cacert, insecure, loginHead)
+	respBody, resp, err := DoPost(loginURL, string(payload), cacert, insecure, loginHead)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("%s: %v", errPrefix, err)
 	}
 
-	if loginResp["type"].(string) != "token" || loginResp["token"] == nil {
-		return "", "", fmt.Errorf("Doing user login: %s %s", loginResp["type"].(string), loginResp["code"].(string))
+	if resp.StatusCode == http.StatusNotFound {
+		// /v1-public/login endpoint is not available
+		// try to fall back to /v3-public endpoint.
+		respBody, _, err = DoPost(v3loginURL, string(payload), cacert, insecure, loginHead)
+		if err != nil {
+			return "", "", fmt.Errorf("%s: %v", errPrefix, err)
+		}
 	}
 
-	return loginResp["id"].(string), loginResp["token"].(string), nil
+	var token string
+	if respBody["token"] != nil {
+		token, _ = respBody["token"].(string)
+	}
+
+	if token == "" {
+		if respBody["code"] != nil {
+			code, _ := respBody["code"].(string)
+			errPrefix += ": " + code
+		}
+		return "", "", errors.New(errPrefix)
+	}
+
+	id, _, ok := strings.Cut(token, ":")
+	if !ok {
+		return "", "", errors.New(errPrefix + ": invalid token format")
+	}
+	id = strings.TrimPrefix(id, "ext/")
+
+	return id, token, nil
 }
 
-func DoPost(url, data, cacert string, insecure bool, headers map[string]string) (map[string]interface{}, error) {
+func DoPost(url, data, cacert string, insecure bool, headers map[string]string) (map[string]interface{}, *http.Response, error) {
 	response := make(map[string]interface{})
 
 	if url == "" {
-		return response, fmt.Errorf("Doing post: URL is nil")
+		return response, nil, fmt.Errorf("Doing post: URL is nil")
 	}
 
 	jsonBytes := []byte(data)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
 	if err != nil {
-		return response, err
+		return response, nil, err
 	}
 
 	for k, v := range headers {
@@ -200,17 +245,17 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return response, err
+		return response, nil, err
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return response, err
+		return response, nil, err
 	}
 
-	return response, nil
+	return response, resp, nil
 }
 
 func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte, error) {
@@ -276,7 +321,7 @@ func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte
 	// Timings recorded as part of internal metrics
 	log.Println("Time to get req: ", float64((time.Since(start))/time.Millisecond), " ms")
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 
 }
 
@@ -395,6 +440,8 @@ func splitBySep(data, sep string) []string {
 	return strings.Split(data, sep)
 }
 
+// eg. "abc123.def456"(id) returns "abc123"(clusterID), "def456"(resourceID)
+// eg. "abc123"(id) returns ""(clusterID), "abc123"(resourceID)
 func splitID(id string) (clusterID, resourceID string) {
 	separator := "."
 
@@ -437,6 +484,8 @@ func splitProjectIDPart(id string) (projectID string) {
 	return ""
 }
 
+// eg. "abc123:def456"(id) would return "abc123"(clusterID),"abc123:def456"(projectID)
+// eg. "abc123"(id) would return "abc123"(clusterID),""(projectID)
 func splitProjectID(id string) (clusterID, projectID string) {
 	id = strings.TrimSuffix(id, clusterProjectIDSeparator)
 
@@ -457,27 +506,6 @@ func splitAppID(id string) (projectID, appID string, err error) {
 	}
 
 	return fields[0] + separator + fields[1], fields[1] + separator + fields[2], nil
-}
-
-func updateVersionExternalID(externalID, version string) string {
-	//Global catalog url: catalog://?catalog=demo&template=test&version=1.23.0
-	//Cluster catalog url: catalog://?catalog=c-XXXXX/test&type=clusterCatalog&template=test&version=1.23.0
-	//Project catalog url: catalog://?catalog=p-XXXXX/test&type=projectCatalog&template=test&version=1.23.0
-
-	str := strings.TrimPrefix(externalID, AppTemplateExternalIDPrefix)
-	values := strings.Split(str, "&")
-	out := AppTemplateExternalIDPrefix
-	for _, v := range values {
-		if strings.Contains(v, "version=") {
-			pair := strings.Split(v, "=")
-			if pair[0] == "version" {
-				pair[1] = version
-			}
-			v = pair[0] + "=" + pair[1]
-		}
-		out = out + "&" + v
-	}
-	return out
 }
 
 func toArrayString(in []interface{}) []string {

@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	clusterDrivers                = []string{clusterDriverImported, clusterDriverAKS, clusterDriverEKS, clusterDriverGKE, clusterDriverGKEV2, clusterDriverK3S, clusterDriverOKE, clusterDriverRKE, clusterDriverRKE2}
+	clusterDrivers                = []string{clusterDriverImported, clusterDriverGKEV2, clusterDriverK3S, clusterDriverOKE, clusterDriverRKE, clusterDriverRKE2}
 	clusterRegistrationTokenNames = []string{clusterRegistrationTokenName, "system"}
 )
 
@@ -141,33 +141,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterK3SConfigFields(),
-			},
-		},
-		"eks_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
-			Optional:      true,
-			ConflictsWith: []string{"aks_config", "gke_config", "k3s_config", "rke_config"},
-			Elem: &schema.Resource{
-				Schema: clusterEKSConfigFields(),
-			},
-		},
-		"aks_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
-			Optional:      true,
-			ConflictsWith: []string{"eks_config", "gke_config", "k3s_config", "rke_config"},
-			Elem: &schema.Resource{
-				Schema: clusterAKSConfigFields(),
-			},
-		},
-		"gke_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
-			Optional:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "k3s_config", "rke_config"},
-			Elem: &schema.Resource{
-				Schema: clusterGKEConfigFields(),
 			},
 		},
 		"default_project_id": {
@@ -332,7 +305,7 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "eks_config_v2", "gke_config", "gke_config_v2", "k3s_config", "oke_config", "rke2_config"},
+			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "k3s_config", "oke_config", "rke2_config", "imported_config"},
 			Elem: &schema.Resource{
 				Schema: clusterRKEConfigFields(),
 			},
@@ -342,7 +315,7 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "eks_config_v2", "gke_config", "gke_config_v2", "k3s_config", "oke_config", "rke_config"},
+			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "k3s_config", "oke_config", "rke_config", "imported_config"},
 			Elem: &schema.Resource{
 				Schema: clusterRKE2ConfigFields(),
 			},
@@ -352,18 +325,9 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "eks_config_v2", "gke_config", "gke_config_v2", "oke_config", "rke_config", "rke2_config"},
+			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "rke_config", "oke_config", "rke2_config", "imported_config"},
 			Elem: &schema.Resource{
 				Schema: clusterK3SConfigFields(),
-			},
-		},
-		"eks_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
-			Optional:      true,
-			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config_v2", "gke_config", "gke_config_v2", "k3s_config", "oke_config", "rke_config", "rke2_config"},
-			Elem: &schema.Resource{
-				Schema: clusterEKSConfigFields(),
 			},
 		},
 		"eks_config_v2": {
@@ -371,43 +335,25 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "gke_config", "gke_config_v2", "k3s_config", "oke_config", "rke_config", "rke2_config"},
+			ConflictsWith: []string{"aks_config_v2", "gke_config_v2", "k3s_config", "rke_config", "oke_config", "rke2_config"},
 			Elem: &schema.Resource{
 				Schema: clusterEKSConfigV2Fields(),
-			},
-		},
-		"aks_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
-			Optional:      true,
-			ConflictsWith: []string{"eks_config", "aks_config_v2", "eks_config_v2", "gke_config", "gke_config_v2", "k3s_config", "oke_config", "rke_config", "rke2_config"},
-			Elem: &schema.Resource{
-				Schema: clusterAKSConfigFields(),
 			},
 		},
 		"aks_config_v2": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "eks_config_v2", "gke_config", "gke_config_v2", "k3s_config", "oke_config", "rke_config", "rke2_config"},
+			ConflictsWith: []string{"eks_config_v2", "gke_config_v2", "k3s_config", "rke_config", "oke_config", "rke2_config"},
 			Elem: &schema.Resource{
 				Schema: clusterAKSConfigV2Fields(),
-			},
-		},
-		"gke_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
-			Optional:      true,
-			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "eks_config_v2", "gke_config_v2", "k3s_config", "oke_config", "rke_config", "rke2_config"},
-			Elem: &schema.Resource{
-				Schema: clusterGKEConfigFields(),
 			},
 		},
 		"gke_config_v2": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "eks_config_v2", "gke_config", "k3s_config", "oke_config", "rke_config", "rke2_config"},
+			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "k3s_config", "rke_config", "oke_config", "rke2_config"},
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigV2Fields(),
 			},
@@ -416,9 +362,18 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"aks_config", "aks_config_v2", "eks_config", "eks_config_v2", "gke_config", "gke_config_v2", "k3s_config", "rke_config", "rke2_config"},
+			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "k3s_config", "rke_config", "rke2_config", "imported_config"},
 			Elem: &schema.Resource{
 				Schema: clusterOKEConfigFields(),
+			},
+		},
+		"imported_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: []string{"k3s_config", "rke_config", "oke_config", "rke2_config"},
+			Elem: &schema.Resource{
+				Schema: clusterImportedConfigFields(),
 			},
 		},
 		"default_project_id": {
