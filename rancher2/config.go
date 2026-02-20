@@ -1268,10 +1268,14 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 		return &managementClient.LdapConfig{}, nil
 	case managementClient.GithubConfigType:
 		return &managementClient.GithubConfig{}, nil
+	case managementClient.GithubAppConfigType:
+		return &managementClient.GithubAppConfig{}, nil
 	case managementClient.KeyCloakConfigType:
 		return &managementClient.KeyCloakConfig{}, nil
 	case managementClient.GenericOIDCConfigType:
 		return &managementClient.GenericOIDCConfig{}, nil
+	case managementClient.OIDCConfigType:
+		return &managementClient.OIDCConfig{}, nil
 	case managementClient.OKTAConfigType:
 		return &managementClient.OKTAConfig{}, nil
 	case managementClient.OpenLdapConfigType:

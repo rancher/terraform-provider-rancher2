@@ -1,8 +1,8 @@
-async ({ github, process }) => {
+export default async ({ github, process }) => {
   const tagName = process.env.TAG;
   const branchLabel = process.env.BRANCH;
-  const owner = github.repo.owner;
-  const repo = github.repo.repo;
+  const owner = process.env.OWNER;
+  const repo = process.env.REPO;
   
   if (!tagName.toLowerCase().includes('rc')) {
     console.log(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);

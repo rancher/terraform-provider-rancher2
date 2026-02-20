@@ -5,11 +5,12 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	util "github.com/rancher/terraform-provider-rancher2/test"
+	cfg "github.com/rancher/terraform-provider-rancher2/test/config"
 )
 
 func TestProductionBasic(t *testing.T) {
 	t.Parallel()
-	config := util.NewTestConfig(t, "use-cases/production")
+	config := cfg.NewTestConfig(t, "use-cases/production")
 
 	config.AddVars(map[string]interface{}{
 		"aws_access_key_id":     util.GetAwsAccessKey(),

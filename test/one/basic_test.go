@@ -7,11 +7,12 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	util "github.com/rancher/terraform-provider-rancher2/test"
+	cfg "github.com/rancher/terraform-provider-rancher2/test/config"
 )
 
 func TestOneBasic(t *testing.T) {
 	t.Parallel()
-	config := util.NewTestConfig(t, "use-cases/one")
+	config := cfg.NewTestConfig(t, "use-cases/one")
 
 	defer config.Teardown(t)
 	defer config.GetErrorLogs(t)
@@ -33,7 +34,7 @@ func TestOneBasic(t *testing.T) {
 
 	// Running the apply again should re-create everything from state in S3
 	// This should only recreate the files, the AWS and Rancher resources should be untouched
-	err = os.WriteFile(filepath.Join(config.TestDir, "id_rsa"), []byte(config.KeyPair.KeyPair.PrivateKey), 0600)
+	err = os.WriteFile(filepath.Join(config.TestDir, "id_rsa"), []byte(config.KP.PrivateKey), 0600)
 	if err != nil {
 		t.Log("Test failed, tearing down...")
 		t.Fatalf("Error creating cluster: %s", err)

@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	util "github.com/rancher/terraform-provider-rancher2/test"
+	cfg "github.com/rancher/terraform-provider-rancher2/test/config"
 )
 
 func TestThreeBasic(t *testing.T) {
 	t.Parallel()
-	config := util.NewTestConfig(t, "use-cases/three")
+	config := cfg.NewTestConfig(t, "use-cases/three")
 
 	defer config.Teardown(t)
 	defer config.GetErrorLogs(t)
