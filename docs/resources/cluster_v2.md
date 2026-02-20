@@ -253,10 +253,11 @@ RANCHER_ACCESS_KEY="<RANCHER_ACCESS_KEY>"
 RANCHER_SECRET_KEY="<RANCHER_SECRET_KEY>"
 HARVESTER_CLUSTER_ID="<HARVESTER_CLUSTER_ID>"
 CLUSTER_NAME="foo-harvester-v2-cloud-provider"
+NAMESPACE="default"
 curl -k -X POST ${RANCHER_SERVER_URL}/k8s/clusters/${HARVESTER_CLUSTER_ID}/v1/harvester/kubeconfig \
    -H 'Content-Type: application/json' \
    -u ${RANCHER_ACCESS_KEY}:${RANCHER_SECRET_KEY} \
-   -d '{"clusterRoleName": "harvesterhci.io:cloudprovider", "namespace": "default", "serviceAccountName": "'${CLUSTER_NAME}'"}' | xargs | sed 's/\\n/\n/g' > ${CLUSTER_NAME}-kubeconfig
+   -d '{"clusterRoleName": "harvesterhci.io:cloudprovider", "namespace": "'${NAMESPACE}'", "serviceAccountName": "'${CLUSTER_NAME}'"}' | xargs | sed 's/\\n/\n/g' > ${CLUSTER_NAME}-kubeconfig
 ```
 
 
