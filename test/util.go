@@ -1,8 +1,9 @@
-package tests
+package test
 
 import (
 	"cmp"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -11,12 +12,14 @@ import (
 	"strings"
 	"testing"
 
-	ec2 "github.com/aws/aws-sdk-go/service/ec2"
+	ec2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/google/go-github/v53/github"
 	aws "github.com/gruntwork-io/terratest/modules/aws"
 	g "github.com/gruntwork-io/terratest/modules/git"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/shell"
+	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"golang.org/x/oauth2"
 )
@@ -110,7 +113,7 @@ func filterPrimeOnly(r *[]*github.RepositoryRelease) {
 	*r = fr
 }
 
-// this effectively removes release candidates as well as pending releases
+// this effectively removes release candidates as well as pending releases.
 func filterPrerelease(r *[]*github.RepositoryRelease) {
 	var fr []*github.RepositoryRelease
 	releases := *r
@@ -257,14 +260,14 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	}
 
 	k := "key-name"
-	keyNameFilter := ec2.Filter{
+	keyNameFilter := ec2types.Filter{
 		Name:   &k,
-		Values: []*string{&keyPairName},
+		Values: []string{keyPairName},
 	}
 	input := &ec2.DescribeKeyPairsInput{
-		Filters: []*ec2.Filter{&keyNameFilter},
+		Filters: []ec2types.Filter{keyNameFilter},
 	}
-	result, err := client.DescribeKeyPairs(input)
+	result, err := client.DescribeKeyPairs(context.Background(), input)
 	if err != nil {
 		return nil, err
 	}
@@ -276,27 +279,27 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 
 	// Verify that the name and owner tags were placed properly
 	k = "tag:Name"
-	keyNameFilter = ec2.Filter{
+	keyNameFilter = ec2types.Filter{
 		Name:   &k,
-		Values: []*string{&keyPairName},
+		Values: []string{keyPairName},
 	}
 	input = &ec2.DescribeKeyPairsInput{
-		Filters: []*ec2.Filter{&keyNameFilter},
+		Filters: []ec2types.Filter{keyNameFilter},
 	}
-	result, err = client.DescribeKeyPairs(input)
+	_, err = client.DescribeKeyPairs(context.Background(), input)
 	if err != nil {
 		return nil, err
 	}
 
 	k = "tag:Owner"
-	keyNameFilter = ec2.Filter{
+	keyNameFilter = ec2types.Filter{
 		Name:   &k,
-		Values: []*string{&owner},
+		Values: []string{owner},
 	}
 	input = &ec2.DescribeKeyPairsInput{
-		Filters: []*ec2.Filter{&keyNameFilter},
+		Filters: []ec2types.Filter{keyNameFilter},
 	}
-	result, err = client.DescribeKeyPairs(input)
+	_, err = client.DescribeKeyPairs(context.Background(), input)
 	if err != nil {
 		return nil, err
 	}
@@ -373,9 +376,10 @@ func CreateTestDirectories(t *testing.T, id string) error {
 		return err
 	}
 	paths := []string{
-		filepath.Join(fwd, "test/data"),
-		filepath.Join(fwd, "test/data", id),
-		filepath.Join(fwd, "test/data", id, "data"),
+		filepath.Join(fwd, "test", "data"),
+		filepath.Join(fwd, "test", "data", id),
+		filepath.Join(fwd, "test", "data", id+"-backend"),
+		filepath.Join(fwd, "test", "data", id, "data"),
 	}
 	for _, path := range paths {
 		err = os.Mkdir(path, 0755)
@@ -386,26 +390,42 @@ func CreateTestDirectories(t *testing.T, id string) error {
 	return nil
 }
 
-func Teardown(t *testing.T, directory string, options *terraform.Options, keyPair *aws.Ec2Keypair) {
+func Teardown(t *testing.T, dataDir string, exampleDir string, options []*terraform.Options, keyPair *aws.Ec2Keypair, agent *ssh.SshAgent) {
 	directoryExists := true
-	_, err := os.Stat(directory)
+	_, err := os.Stat(dataDir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			directoryExists = false
 		}
 	}
 	if directoryExists {
-		_, err := terraform.DestroyE(t, options)
-		if err != nil {
-			t.Logf("Failed to destroy: %v", err)
+		for _, option := range options {
+			t.Logf("Tearing down %v", option.TerraformDir)
+			jsonOptions, err := json.Marshal(option)
+			if err != nil {
+				t.Logf("Failed to marshal options for destroy log: %v", err)
+			}
+			fmt.Println(string(jsonOptions))
+			_, err = terraform.InitE(t, option)
+			if err != nil {
+				t.Logf("Failed to init for destroy: %v", err)
+			}
+			_, err = terraform.DestroyE(t, option)
+			if err != nil {
+				t.Logf("Failed to destroy: %v", err)
+			}
 		}
-
-		err = os.RemoveAll(directory)
+		err = os.RemoveAll(dataDir)
 		if err != nil {
 			t.Logf("Failed to delete test data directory: %v", err)
 		}
 	}
-	aws.DeleteEC2KeyPair(t, keyPair)
+	agent.Stop()
+	err = aws.DeleteEC2KeyPairE(t, keyPair)
+	if err != nil {
+		t.Logf("Failed to destroy key pair: %v", err)
+	}
+	os.Remove(filepath.Join(exampleDir, ".terraform.lock.hcl"))
 }
 
 func GetErrorLogs(t *testing.T, kubeconfigPath string) {
@@ -413,7 +433,7 @@ func GetErrorLogs(t *testing.T, kubeconfigPath string) {
 	if err != nil {
 		t.Logf("Error getting git root directory: %v", err)
 	}
-	script, err := os.ReadFile(repoRoot + "/test/scripts/getLogs.sh")
+	script, err := os.ReadFile(filepath.Join(repoRoot, "test", "scripts", "getLogs.sh"))
 	if err != nil {
 		t.Logf("Error reading script: %v", err)
 	}
@@ -437,7 +457,7 @@ func CheckReady(t *testing.T, kubeconfigPath string) {
 		t.Logf("Error getting git root directory: %v", err)
 		t.Fail()
 	}
-	script, err := os.ReadFile(repoRoot + "/test/scripts/readyNodes.sh")
+	script, err := os.ReadFile(filepath.Join(repoRoot, "test", "scripts", "readyNodes.sh"))
 	if err != nil {
 		t.Logf("Error reading script: %v", err)
 		t.Fail()
@@ -463,7 +483,7 @@ func CheckRunning(t *testing.T, kubeconfigPath string) {
 		t.Logf("Error getting git root directory: %v", err)
 		t.Fail()
 	}
-	script, err := os.ReadFile(repoRoot + "/test/scripts/runningPods.sh")
+	script, err := os.ReadFile(filepath.Join(repoRoot, "test", "scripts", "runningPods.sh"))
 	if err != nil {
 		t.Logf("Error reading script: %v", err)
 		t.Fail()
@@ -481,4 +501,57 @@ func CheckRunning(t *testing.T, kubeconfigPath string) {
 		t.Fail()
 	}
 	t.Logf("Ready script output: %s", out)
+}
+
+func CreateObjectStorageBackend(t *testing.T, id string, owner string, region string) (*terraform.Options, error) {
+	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
+	if err != nil {
+		t.Fatalf("Error getting git root directory: %v", err)
+	}
+	exampleDir := filepath.Join(repoRoot, "examples", "use-cases", "backend_s3")
+	backendDir := filepath.Join(repoRoot, "test", "data", id+"-backend")
+
+	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
+		// https://pkg.go.dev/github.com/gruntwork-io/terratest/modules/terraform#Options
+		TerraformDir: exampleDir,
+		// Variables to pass to our Terraform code using -var options
+		Vars: map[string]interface{}{
+			"identifier": id,
+			"owner":      owner,
+		},
+		// Environment variables to set when running Terraform
+		EnvVars: map[string]string{
+			"AWS_DEFAULT_REGION": region,
+			"AWS_REGION":         region,
+			"TF_IN_AUTOMATION":   "1",
+			"TF_DATA_DIR":        backendDir,
+		},
+		RetryableTerraformErrors: GetRetryableTerraformErrors(),
+		BackendConfig: map[string]interface{}{
+			"path": filepath.Join(backendDir, "tfstate"),
+		},
+		Reconfigure: true,
+		NoColor:     true,
+		Upgrade:     true,
+	})
+
+	_, err = terraform.InitAndApplyE(t, terraformOptions)
+	return terraformOptions, err
+}
+
+func WriteTerraformRc(t *testing.T, path string) error {
+	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
+	if err != nil {
+		t.Fatalf("Error getting git root directory: %v", err)
+	}
+	formatString := `provider_installation {
+  dev_overrides {
+    "rancher/rancher2" = "%s/bin"
+  }
+  direct {
+    exclude = []
+  }
+}`
+	content := fmt.Sprintf(formatString, repoRoot)
+	return os.WriteFile(path, []byte(content), 0644)
 }

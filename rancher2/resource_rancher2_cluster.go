@@ -48,6 +48,15 @@ func resourceRancher2Cluster() *schema.Resource {
 				}
 			}
 
+			// Allow the configuration of the imported_config field only if the
+			// cluster is an imported generic cluster or an imported hosted cluster (e.g. AKS, GKE, EKS).
+			// Previously defined 'conflictsWith' entries already handle other cluster types (rke, rke2, k3s)
+			// so they do not need to be reconsidered here.
+			importCnf, ok := d.Get("imported_config").([]interface{})
+			if ok && len(importCnf) > 0 && !isImportedCluster(d) {
+				return fmt.Errorf("The rancher2_cluster.imported_config field can only be used when working with generic imported clusters or imported hosted clusters (e.g. AKS, GKE, EKS)")
+			}
+
 			return nil
 		},
 		Schema:        clusterFields(),
@@ -272,11 +281,11 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 	enableNetworkPolicy := d.Get("enable_network_policy").(bool)
 
-	clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("cluster_agent_deployment_customization").([]interface{}), true)
+	clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("cluster_agent_deployment_customization").([]interface{}))
 	if err != nil {
 		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
 	}
-	fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("fleet_agent_deployment_customization").([]interface{}), false)
+	fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("fleet_agent_deployment_customization").([]interface{}))
 	if err != nil {
 		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
 	}
@@ -312,6 +321,18 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	// imported_config is special because it applies to *any imported cluster*,
+	// including hosted providers (AKS, EKS, GKE) where `imported = true` is set.
+	// If we keep it inside the driver-specific switch, it only gets processed
+	// for the "imported" driver, but NOT for hosted imported clusters.
+	// To avoid this bug, we always check imported_config here before switching on driver.
+	if v, ok := d.GetOk("imported_config"); ok {
+		importedConfig := v.([]interface{})
+		if len(importedConfig) > 0 {
+			update["importedConfig"] = expandClusterImportedConfig(importedConfig)
+		}
+	}
+
 	replace := false
 	switch driver := ToLower(d.Get("driver").(string)); driver {
 	case ToLower(clusterDriverAKSV2):
@@ -333,12 +354,10 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 	case clusterDriverK3S:
 		update["k3sConfig"] = expandClusterK3SConfig(d.Get("k3s_config").([]interface{}))
-		replace = d.HasChange("cluster_agent_deployment_customization")
+		replace = d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
 	case clusterDriverRKE2:
 		update["rke2Config"] = expandClusterRKE2Config(d.Get("rke2_config").([]interface{}))
-		replace = d.HasChange("cluster_agent_deployment_customization")
-	case clusterDriverImported:
-		update["importedConfig"] = expandClusterImportedConfig(d.Get("imported_config").([]interface{}))
+		replace = d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
 	}
 
 	// update the cluster; retry til timeout or non retryable error is returned. If api 500 error is received,
@@ -547,7 +566,11 @@ func isKubeConfigValid(c *Config, config string) (string, bool, error) {
 	if err != nil {
 		return "", false, fmt.Errorf("checking Kubeconfig: %v", err)
 	}
-	_, err = kubernetes.NewForConfig(kubeconfig)
+	client, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		return token, false, nil
+	}
+	_, err = client.DiscoveryClient.ServerVersion()
 	if err != nil {
 		return token, false, nil
 	}
@@ -670,4 +693,33 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 			return nil, fmt.Errorf("Timeout getting cluster Kubeconfig: %v", err)
 		}
 	}
+}
+
+func isImportedCluster(d *schema.ResourceDiff) bool {
+	eks := d.Get("eks_config_v2")
+	newEksArray, ok := eks.([]interface{})
+	isEks := ok && len(newEksArray) > 0
+	if isEks {
+		return expandClusterEKSConfigV2(newEksArray).Imported
+	}
+
+	gke := d.Get("gke_config_v2")
+	newGkeArray, ok := gke.([]interface{})
+	isGke := ok && len(newGkeArray) > 0
+	if isGke {
+		return expandClusterGKEConfigV2(newGkeArray).Imported
+	}
+
+	aks := d.Get("aks_config_v2")
+	newAksArray, ok := aks.([]interface{})
+	isAks := ok && len(newAksArray) > 0
+	if isAks {
+		return expandClusterAKSConfigV2(newAksArray).Imported
+	}
+
+	// if this is a generic imported cluster,
+	// we should always allow for the field to be used.
+	// Other non-imported cluster types (rke, rke2, k3s, etc.)
+	// are already being blocked via the static ConflictsWith field.
+	return true
 }
