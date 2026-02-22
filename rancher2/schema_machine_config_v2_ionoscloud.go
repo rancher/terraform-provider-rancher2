@@ -16,6 +16,7 @@ func machineConfigV2IonoscloudFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Ionos Cloud NAT Gateway name. Note that setting this will NOT implicitly create a NAT, this flag will only be read if need be",
+			Computed:    true,
 		},
 		"nat_id": {
 			Type:        schema.TypeString,
@@ -191,6 +192,7 @@ func machineConfigV2IonoscloudFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "docker-machine-data-center",
 			Description: "Ionos Cloud Virtual Data Center Name",
+			Computed:    true,
 		},
 		"lan_id": {
 			Type:        schema.TypeString,
@@ -202,6 +204,7 @@ func machineConfigV2IonoscloudFields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     "docker-machine-lan",
 			Description: "Ionos Cloud LAN Name",
+			Computed:    true,
 		},
 		"volume_availability_zone": {
 			Type:        schema.TypeString,
