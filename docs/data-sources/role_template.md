@@ -31,6 +31,7 @@ The following attributes are exported:
 * `default_role` - (Computed) Default role template for new created cluster or project (bool)
 * `description` - (Computed) Role template description (string)
 * `external` - (Computed) External role template (bool)
+* `external_rules` - (Computed) External rules used for authorization. (list)
 * `hidden` - (Computed) Hidden role template (bool)
 * `locked` - (Computed) Locked role template (bool)
 * `role_template_ids` - (Computed) Inherit role template IDs (list)

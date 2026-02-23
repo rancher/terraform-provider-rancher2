@@ -12,9 +12,10 @@ var allMachineDriverConfigFields = []string{
 	"linode_config",
 	"openstack_config",
 	"vsphere_config",
+	"google_config",
 }
 
-//Schemas
+// Schemas
 
 func machineConfigV2Fields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
@@ -99,6 +100,15 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 			ConflictsWith: getConflicts(allMachineDriverConfigFields, "vsphere_config"),
 			Elem: &schema.Resource{
 				Schema: machineConfigV2VmwarevsphereFields(),
+			},
+		},
+		"google_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "google_config"),
+			Elem: &schema.Resource{
+				Schema: machineConfigV2GoogleGCEFields(),
 			},
 		},
 		"resource_version": {

@@ -24,13 +24,15 @@ var (
 
 func init() {
 	testClusterV2RKEConfigMachinePoolMachineConfigConf = &corev1.ObjectReference{
-		Kind: "kind",
-		Name: "name",
+		Kind:       "kind",
+		Name:       "name",
+		APIVersion: "api_version",
 	}
 	testClusterV2RKEConfigMachinePoolMachineConfigInterface = []interface{}{
 		map[string]interface{}{
-			"kind": "kind",
-			"name": "name",
+			"kind":        "kind",
+			"name":        "name",
+			"api_version": "api_version",
 		},
 	}
 	maxSurge := intstr.FromString("max_surge")
@@ -79,6 +81,7 @@ func init() {
 			MaxUnhealthy:         stringPtr("2"),
 			UnhealthyRange:       stringPtr("[2,5]"),
 			HostnameLengthLimit:  16,
+			MachineOS:            "linux",
 		},
 	}
 	testClusterV2RKEConfigMachinePoolsConf[0].CloudCredentialSecretName = "cloud_credential_secret_name"
@@ -126,6 +129,7 @@ func init() {
 			"max_unhealthy":                  "2",
 			"unhealthy_range":                "[2,5]",
 			"hostname_length_limit":          16,
+			"machine_os":                     "linux",
 		},
 	}
 }

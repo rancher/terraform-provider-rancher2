@@ -14,6 +14,67 @@ const (
 	clusterGKEV2LoggingAuthenticator     = "authenticator"
 )
 
+//Types
+
+type GoogleKubernetesEngineConfig struct {
+	ClusterIpv4Cidr                    string            `json:"clusterIpv4Cidr,omitempty" yaml:"clusterIpv4Cidr,omitempty"`
+	Credential                         string            `json:"credential,omitempty" yaml:"credential,omitempty"`
+	Description                        string            `json:"description,omitempty" yaml:"description,omitempty"`
+	DiskSizeGb                         int64             `json:"diskSizeGb,omitempty" yaml:"diskSizeGb,omitempty"`
+	DiskType                           string            `json:"diskType,omitempty" yaml:"diskType,omitempty"`
+	DisplayName                        string            `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	DriverName                         string            `json:"driverName,omitempty" yaml:"driverName,omitempty"`
+	EnableAlphaFeature                 bool              `json:"enableAlphaFeature,omitempty" yaml:"enableAlphaFeature,omitempty"`
+	EnableAutoRepair                   bool              `json:"enableAutoRepair,omitempty" yaml:"enableAutoRepair,omitempty"`
+	EnableAutoUpgrade                  bool              `json:"enableAutoUpgrade,omitempty" yaml:"enableAutoUpgrade,omitempty"`
+	EnableHorizontalPodAutoscaling     *bool             `json:"enableHorizontalPodAutoscaling,omitempty" yaml:"enableHorizontalPodAutoscaling,omitempty"`
+	EnableHTTPLoadBalancing            *bool             `json:"enableHttpLoadBalancing,omitempty" yaml:"enableHttpLoadBalancing,omitempty"`
+	EnableKubernetesDashboard          bool              `json:"enableKubernetesDashboard,omitempty" yaml:"enableKubernetesDashboard,omitempty"`
+	EnableLegacyAbac                   bool              `json:"enableLegacyAbac,omitempty" yaml:"enableLegacyAbac,omitempty"`
+	EnableMasterAuthorizedNetwork      bool              `json:"enableMasterAuthorizedNetwork,omitempty" yaml:"enableMasterAuthorizedNetwork,omitempty"`
+	EnableNetworkPolicyConfig          *bool             `json:"enableNetworkPolicyConfig,omitempty" yaml:"enableNetworkPolicyConfig,omitempty"`
+	EnableNodepoolAutoscaling          bool              `json:"enableNodepoolAutoscaling,omitempty" yaml:"enableNodepoolAutoscaling,omitempty"`
+	EnablePrivateEndpoint              bool              `json:"enablePrivateEndpoint,omitempty" yaml:"enablePrivateEndpoint,omitempty"`
+	EnablePrivateNodes                 bool              `json:"enablePrivateNodes,omitempty" yaml:"enablePrivateNodes,omitempty"`
+	EnableStackdriverLogging           *bool             `json:"enableStackdriverLogging,omitempty" yaml:"enableStackdriverLogging,omitempty"`
+	EnableStackdriverMonitoring        *bool             `json:"enableStackdriverMonitoring,omitempty" yaml:"enableStackdriverMonitoring,omitempty"`
+	ImageType                          string            `json:"imageType,omitempty" yaml:"imageType,omitempty"`
+	IPPolicyClusterIpv4CidrBlock       string            `json:"ipPolicyClusterIpv4CidrBlock,omitempty" yaml:"ipPolicyClusterIpv4CidrBlock,omitempty"`
+	IPPolicyClusterSecondaryRangeName  string            `json:"ipPolicyClusterSecondaryRangeName,omitempty" yaml:"ipPolicyClusterSecondaryRangeName,omitempty"`
+	IPPolicyCreateSubnetwork           bool              `json:"ipPolicyCreateSubnetwork,omitempty" yaml:"ipPolicyCreateSubnetwork,omitempty"`
+	IPPolicyNodeIpv4CidrBlock          string            `json:"ipPolicyNodeIpv4CidrBlock,omitempty" yaml:"ipPolicyNodeIpv4CidrBlock,omitempty"`
+	IPPolicyServicesIpv4CidrBlock      string            `json:"ipPolicyServicesIpv4CidrBlock,omitempty" yaml:"ipPolicyServicesIpv4CidrBlock,omitempty"`
+	IPPolicyServicesSecondaryRangeName string            `json:"ipPolicyServicesSecondaryRangeName,omitempty" yaml:"ipPolicyServicesSecondaryRangeName,omitempty"`
+	IPPolicySubnetworkName             string            `json:"ipPolicySubnetworkName,omitempty" yaml:"ipPolicySubnetworkName,omitempty"`
+	IssueClientCertificate             bool              `json:"issueClientCertificate,omitempty" yaml:"issueClientCertificate,omitempty"`
+	KubernetesDashboard                bool              `json:"kubernetesDashboard,omitempty" yaml:"kubernetesDashboard,omitempty"`
+	Labels                             map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	LocalSsdCount                      int64             `json:"localSsdCount,omitempty" yaml:"localSsdCount,omitempty"`
+	Locations                          []string          `json:"locations,omitempty" yaml:"locations,omitempty"`
+	MachineType                        string            `json:"machineType,omitempty" yaml:"machineType,omitempty"`
+	MaintenanceWindow                  string            `json:"maintenanceWindow,omitempty" yaml:"maintenanceWindow,omitempty"`
+	MasterAuthorizedNetworkCidrBlocks  []string          `json:"masterAuthorizedNetworkCidrBlocks,omitempty" yaml:"masterAuthorizedNetworkCidrBlocks,omitempty"`
+	MasterIpv4CidrBlock                string            `json:"masterIpv4CidrBlock,omitempty" yaml:"masterIpv4CidrBlock,omitempty"`
+	MasterVersion                      string            `json:"masterVersion,omitempty" yaml:"masterVersion,omitempty"`
+	MaxNodeCount                       int64             `json:"maxNodeCount,omitempty" yaml:"maxNodeCount,omitempty"`
+	MinNodeCount                       int64             `json:"minNodeCount,omitempty" yaml:"minNodeCount,omitempty"`
+	Name                               string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Network                            string            `json:"network,omitempty" yaml:"network,omitempty"`
+	NodeCount                          int64             `json:"nodeCount,omitempty" yaml:"nodeCount,omitempty"`
+	NodePool                           string            `json:"nodePool,omitempty" yaml:"nodePool,omitempty"`
+	NodeVersion                        string            `json:"nodeVersion,omitempty" yaml:"nodeVersion,omitempty"`
+	OauthScopes                        []string          `json:"oauthScopes,omitempty" yaml:"oauthScopes,omitempty"`
+	Preemptible                        bool              `json:"preemptible,omitempty" yaml:"preemptible,omitempty"`
+	ProjectID                          string            `json:"projectId,omitempty" yaml:"projectId,omitempty"`
+	Region                             string            `json:"region,omitempty" yaml:"region,omitempty"`
+	ResourceLabels                     map[string]string `json:"resourceLabels,omitempty" yaml:"resourceLabels,omitempty"`
+	ServiceAccount                     string            `json:"serviceAccount,omitempty" yaml:"serviceAccount,omitempty"`
+	SubNetwork                         string            `json:"subNetwork,omitempty" yaml:"subNetwork,omitempty"`
+	UseIPAliases                       bool              `json:"useIpAliases,omitempty" yaml:"useIpAliases,omitempty"`
+	Taints                             []string          `json:"taints,omitempty" yaml:"taints,omitempty"`
+	Zone                               string            `json:"zone,omitempty" yaml:"zone,omitempty"`
+}
+
 //Schemas
 
 func clusterGKEConfigV2NodeTaintFields() map[string]*schema.Schema {
@@ -243,6 +304,11 @@ func clusterGKEConfigV2NodeConfigFields() map[string]*schema.Schema {
 				Schema: clusterGKEConfigV2NodeTaintFields(),
 			},
 		},
+		"service_account": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The GKE node config service account",
+		},
 	}
 
 	return s
@@ -298,7 +364,6 @@ func clusterGKEConfigV2NodePoolConfigFields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			MaxItems:    1,
 			Description: "The GKE node pool node config",
 			Elem: &schema.Resource{
@@ -355,7 +420,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster name",
 		},
 		"google_credential_secret": {
@@ -367,7 +431,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 		"project_id": {
 			Type:        schema.TypeString,
 			Required:    true,
-			ForceNew:    true,
 			Description: "The GKE project id",
 		},
 		"cluster_addons": {
@@ -384,28 +447,24 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE ip v4 cidr block",
 		},
 		"description": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster description",
 		},
 		"enable_kubernetes_alpha": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "Enable Kubernetes alpha",
 		},
 		"ip_allocation_policy": {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			MaxItems:    1,
 			Description: "The GKE ip allocation policy",
 			Elem: &schema.Resource{
@@ -416,7 +475,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			ForceNew:    true,
 			Description: "Is GKE cluster imported?",
 		},
 		"kubernetes_version": {
@@ -456,7 +514,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			MaxItems:    1,
 			Description: "The GKE cluster master authorized networks config",
 			Elem: &schema.Resource{
@@ -473,7 +530,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster network",
 		},
 		"network_policy_enabled": {
@@ -495,7 +551,6 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			MaxItems:    1,
 			Description: "The GKE private cluster config",
 			Elem: &schema.Resource{
@@ -506,21 +561,18 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster region. Required if `zone` is empty",
 		},
 		"subnetwork": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster subnetwork",
 		},
 		"zone": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			ForceNew:    true,
 			Description: "The GKE cluster zone. Required if `region` is empty",
 		},
 	}

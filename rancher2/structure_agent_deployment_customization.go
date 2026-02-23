@@ -28,6 +28,8 @@ func flattenAgentDeploymentCustomization(in *managementClient.AgentDeploymentCus
 		obj["override_resource_requirements"] = flattenResourceRequirements(in.OverrideResourceRequirements)
 	}
 
+	obj["scheduling_customization"] = flattenAgentSchedulingCustomization(in.SchedulingCustomization)
+
 	return []interface{}{obj}
 }
 
@@ -56,6 +58,10 @@ func expandAgentDeploymentCustomization(p []interface{}) (*managementClient.Agen
 
 	if v, ok := in["override_resource_requirements"].([]interface{}); ok && len(v) > 0 {
 		obj.OverrideResourceRequirements = expandResourceRequirements(v)
+	}
+
+	if v, ok := in["scheduling_customization"].([]interface{}); ok {
+		obj.SchedulingCustomization = expandAgentSchedulingCustomization(v)
 	}
 
 	return obj, nil

@@ -1,34 +1,26 @@
 # Rancher2 Provider
 
-### Version compatibility matrix
+## Version compatibility matrix
 
-The version matrix specifies the Terraform provider version _recommended_ to use with the associated minor Rancher version that it was released for. When updating the version matrix, add a row for each Terraform version released with a minor Rancher release.
+The version matrix specifies the Terraform provider version _recommended_ to use with the associated minor Rancher version that it was released for.
+When updating the version matrix, add a row for each Terraform version released with a minor Rancher release.
+This shouldn't be a changelog for every branch, each branch has its own CHANGELOG.md file which should be updated with changes.
 
-#### Rancher 2.6
+| Terraform provider version | Rancher version | Terraform provider branch |
+|----------------------------|:---------------:|---------------------------|
+| 2.x                        | 2.6.x           | release/v2 |
+| 3.x                        | 2.7.x           | release/v3 |
+| 4.x                        | 2.8.x           | release/v4 |
+| 5.x                        | 2.9.x           | release/v5 |
+| 6.x                        | 2.10.x          | release/v6 |
+| 7.x                        | 2.11.x          | release/v7 |
+| 8.x                        | 2.12.x          | release/v8 |
+| 13.x                       | 2.13.x          | release/v13 |
 
-| Terraform provider version | Rancher |    Notes    |
-|----------------------------------------|:-------:|:-----------:|
-| 2.0.0                                  | 2.6.11  | Bug fixes   |
+## FAQ
 
-#### Rancher 2.7
+**Can I use an earlier Terraform version?**
+Yes, but Terraform may not support all features and fields supported in your Rancher version so provisioning may be limited.
 
-| Terraform provider version | Rancher | Notes                                                                                               |
-|----------------------------|:-------:|-----------------------------------------------------------------------------------------------------|
-| 3.0.0                      |  2.7.2  | Kubernetes 1.25 support, Azure / EKS / Harvester features<br/>and bug fixes                         |
-| 3.0.1                      |  2.7.4  | Fix to support old Harvester config                                                                 |
-| 3.0.2                      |  2.7.4  | Fix Harvester disk_size default value                                                               |
-| 3.1.0                      |  2.7.5  | Cluster Agent customization, PSACT support for 1.25+ clusters,<br/>custom user tokens and bug fixes |
-| 3.1.1                      |  2.7.5  | Docs patch                                                                                          |
-| 3.2.0                      |  2.7.x  |                                                                                                     |
-
-#### Rancher 2.8
-
-| Terraform provider version | Rancher | Notes |
-|----------------------------|:-------:|-------|
-| 4.0.0                      |  2.8.x  |       |
-
-#### FAQ
-
-**Can I use an earlier Terraform version?** Yes, but Terraform may not support all features and fields supported in your Rancher version so provisioning may be limited.
-
-**Can I use a later Terraform version?** Yes, but you must NOT use any new features and fields that your Rancher version does not support.
+**Can I use a later Terraform version?**
+Yes, but you must NOT use any new features and fields that your Rancher version does not support.

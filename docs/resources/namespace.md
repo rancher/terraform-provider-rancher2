@@ -134,8 +134,8 @@ Namespaces can be imported using the namespace ID in the format `<project_id>.<n
 $ terraform import rancher2_namespace.foo &lt;project_id&gt;.&lt;namespaces_id&gt;
 ```
 
-`<project_id>` is in the format `<cluster_id>:<id>`, but <id> part is optional: 
+`<project_id>` is in the format `<cluster_id>:<id>`, this is the output from `data.rancher2_cluster.downstream_cluster.default_project_id`
 
-- If full project_id is provided, `<project_id>=<cluster_id>:<id>`, the namespace'll be assigned to corresponding cluster project once it's imported. 
-- If `<id>` part is omitted `<project_id>=<cluster_id>`, the namespace'll not be assigned to any project. To move it into a project, `<project_id>=<cluster_id>:<id>` needs to be updated in tf file. Namespace movement is only supported inside same `cluster_id`.
+The `<project_id>` must match the actual resource, importing will error on project mismatch.
 
+In past versions you could modify the namespace while importing it, this functionality is no longer available.

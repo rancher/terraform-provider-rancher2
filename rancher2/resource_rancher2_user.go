@@ -54,6 +54,7 @@ func resourceRancher2UserCreate(d *schema.ResourceData, meta interface{}) error 
 		Delay:      1 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
+
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf(
@@ -108,10 +109,11 @@ func resourceRancher2UserUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	update := map[string]interface{}{
-		"name":        d.Get("name").(string),
-		"enabled":     d.Get("enabled").(bool),
-		"annotations": toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
+		"name":                 d.Get("name").(string),
+		"enabled":              d.Get("enabled").(bool),
+		"must_change_password": d.Get("must_change_password").(bool),
+		"annotations":          toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":               toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newUser, err := client.User.Update(user, update)
@@ -190,6 +192,7 @@ func userStateRefreshFunc(client *managementClient.Client, userID string) resour
 			}
 			return nil, "", err
 		}
-		return obj, obj.State, nil
+
+		return obj, "active", nil
 	}
 }

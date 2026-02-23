@@ -39,6 +39,11 @@ func globalRoleFields() map[string]*schema.Schema {
 				Schema: policyRuleFields(),
 			},
 		},
+		"uuid": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "Global role uuid",
+		},
 		"inherited_cluster_roles": {
 			Type:        schema.TypeList,
 			Optional:    true,

@@ -54,5 +54,5 @@ The following attributes are exported:
 V2 configMaps can be imported using the Rancher cluster ID, ConfigMap V2 namespace and name.
 
 ```
-$ terraform import rancher2_config_map_v2.foo &lt;CLUSTER_ID&gt;.&lt;SECRET_V2_NAMESPACE&gt;/&lt;SECRET_V2_NAME&gt;
+$ terraform import rancher2_config_map_v2.foo &lt;CLUSTER_ID&gt;.&lt;CONFIG_MAP_V2_NAMESPACE&gt;/&lt;CONFIG_MAP_V2_NAME&gt;
 ```

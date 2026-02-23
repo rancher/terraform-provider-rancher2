@@ -2,9 +2,10 @@ package rancher2
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"log"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -110,6 +111,14 @@ func resourceRancher2RoleTemplateUpdate(d *schema.ResourceData, meta interface{}
 			"rules":           expandPolicyRules(d.Get("rules").([]interface{})),
 			"annotations":     toMapString(d.Get("annotations").(map[string]interface{})),
 			"labels":          toMapString(d.Get("labels").(map[string]interface{})),
+		}
+
+		if update["external"].(bool) {
+			if v, ok := d.Get("external_rules").([]interface{}); ok && len(v) > 0 {
+				update["externalRules"] = expandPolicyRules(v)
+			}
+		} else {
+			update["externalRules"] = nil
 		}
 
 		switch update["context"] {

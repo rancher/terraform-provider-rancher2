@@ -86,9 +86,7 @@ The following arguments are supported:
 
 * `cluster_id` - (Required/ForceNew) The cluster ID that is syncing (string)
 * `node_pool_ids` - (Optional) The node pool IDs used by the cluster id (list)
-* `wait_alerting` - (Optional) Wait until alerting is up and running. Default: `false` (bool)
 * `wait_catalogs` - (Optional) Wait until all catalogs are downloaded and active. Default: `false` (bool)
-* `wait_monitoring` - (Optional) Wait until monitoring is up and running. Default: `false` (bool)
 * `state_confirm` - (Optional) Wait until active status is confirmed a number of times (wait interval of 5s). Default: `1` means no confirmation (int)
 
 **Note:** `state_confirm` would be useful, if you have troubles for creating/updating custom clusters that eventually are reaching `active` state before they are fully installed. For example: setting `state_confirm = 2` will assure that the cluster has been in `active` state for at least 5 seconds, `state_confirm = 3` assure at least 10 seconds, etc
