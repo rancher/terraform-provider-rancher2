@@ -20,6 +20,7 @@ The following arguments are supported:
 
 * `name` - (Required) The full name of the principal (string)
 * `type` - (Optional) The type of the identity (string). Defaults to `user`. Only `user` and `group` values are supported (string)
+* `exact_match` - (Optional) If set to `true`, only the exactly matched result is returned. Defaults to `false`, which means a partially matched result can be returned (for example: `foo2` also matches for `foo` search input) (bool)
 
 
 ## Attributes Reference
