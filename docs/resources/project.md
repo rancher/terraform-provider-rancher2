@@ -35,7 +35,7 @@ resource "rancher2_project" "foo" {
 ```
 
 ```hcl
-# Create a new rancher2 Project enabling and customizing monitoring
+# Create a new rancher2 Project
 resource "rancher2_project" "foo" {
   name = "foo"
   cluster_id = "<CLUSTER_ID>"
@@ -57,29 +57,6 @@ resource "rancher2_project" "foo" {
     requests_cpu = "1m"
     requests_memory = "1Mi"
   }
-  enable_project_monitoring = true
-  project_monitoring_input {
-    answers = {
-      "exporter-kubelets.https" = true
-      "exporter-node.enabled" = true
-      "exporter-node.ports.metrics.port" = 9796
-      "exporter-node.resources.limits.cpu" = "200m"
-      "exporter-node.resources.limits.memory" = "200Mi"
-      "grafana.persistence.enabled" = false
-      "grafana.persistence.size" = "10Gi"
-      "grafana.persistence.storageClass" = "default"
-      "operator.resources.limits.memory" = "500Mi"
-      "prometheus.persistence.enabled" = "false"
-      "prometheus.persistence.size" = "50Gi"
-      "prometheus.persistence.storageClass" = "default"
-      "prometheus.persistent.useReleaseName" = "true"
-      "prometheus.resources.core.limits.cpu" = "1000m",
-      "prometheus.resources.core.limits.memory" = "1500Mi"
-      "prometheus.resources.core.requests.cpu" = "750m"
-      "prometheus.resources.core.requests.memory" = "750Mi"
-      "prometheus.retention" = "12h"
-    }
-  }
 }
 ```
 
@@ -91,9 +68,6 @@ The following arguments are supported:
 * `cluster_id` - (Required) The cluster id where create project (string)
 * `container_resource_limit` - (Optional) Default containers resource limits on project (List maxitem:1)
 * `description` - (Optional) A project description (string)
-* `enable_project_monitoring` - (Optional) Enable built-in project monitoring. Default `false` (bool)
-* `pod_security_policy_template_id` - (Optional) Default Pod Security Policy ID for the project (string)
-* `project_monitoring_input` - (Optional) Project monitoring config. Any parameter defined in [rancher-monitoring charts](https://github.com/rancher/system-charts/tree/dev/charts/rancher-monitoring) could be configured (list maxitems:1)
 * `resource_quota` - (Optional) Resource quota for project. Rancher v2.1.x or higher (list maxitems:1)
 * `wait_for_cluster` - (Optional) Wait for cluster becomes active. Default `false` (bool)
 * `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
@@ -115,13 +89,6 @@ The following attributes are exported:
 * `limits_memory` - (Optional) Memory limit for containers (string)
 * `requests_cpu` - (Optional) CPU reservation for containers (string)
 * `requests_memory` - (Optional) Memory reservation for containers (string)
-
-### `project_monitoring_input`
-
-#### Arguments
-
-* `answers` - (Optional/Computed) Key/value answers for monitor input (map)
-* `version` - (Optional) rancher-monitoring chart version (string)
 
 ### `resource_quota`
 

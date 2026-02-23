@@ -3,7 +3,7 @@ package rancher2
 import (
 	"encoding/json"
 
-	"github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
+	v1 "github.com/rancher/rancher/pkg/apis/provisioning.cattle.io/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -27,6 +27,8 @@ func flattenAgentDeploymentCustomizationV2(in *v1.AgentDeploymentCustomization) 
 	if in.OverrideResourceRequirements != nil {
 		obj["override_resource_requirements"] = in.OverrideResourceRequirements
 	}
+
+	obj["scheduling_customization"] = flattenAgentSchedulingCustomizationV2(in.SchedulingCustomization)
 
 	return []interface{}{obj}
 }
@@ -60,6 +62,10 @@ func expandAgentDeploymentCustomizationV2(p []interface{}) (*v1.AgentDeploymentC
 			return nil, err
 		}
 		obj.OverrideResourceRequirements = overrideResourceRequirements
+	}
+
+	if v, ok := in["scheduling_customization"].([]interface{}); ok && len(v) > 0 {
+		obj.SchedulingCustomization = expandAgentSchedulingCustomizationV2(v)
 	}
 
 	return obj, nil

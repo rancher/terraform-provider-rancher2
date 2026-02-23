@@ -41,6 +41,15 @@ func flattenCatalogV2(d *schema.ResourceData, in *ClusterRepo) error {
 		d.Set("secret_name", in.Spec.ClientSecret.Name)
 		d.Set("secret_namespace", in.Spec.ClientSecret.Namespace)
 	}
+
+	if in.Spec.ExponentialBackOffValues != nil {
+		d.Set("exponential_backoff_min_wait", in.Spec.ExponentialBackOffValues.MinWait)
+		d.Set("exponential_backoff_max_wait", in.Spec.ExponentialBackOffValues.MaxWait)
+		d.Set("exponential_backoff_max_retries", in.Spec.ExponentialBackOffValues.MaxRetries)
+	}
+
+	d.Set("insecure_plain_http", in.Spec.InsecurePlainHTTP)
+
 	d.Set("service_account", in.Spec.ServiceAccount)
 	d.Set("service_account_namespace", in.Spec.ServiceAccountNamespace)
 	d.Set("url", in.Spec.URL)
@@ -96,6 +105,39 @@ func expandCatalogV2(in *schema.ResourceData) (*ClusterRepo, error) {
 	if v, ok := in.Get("insecure").(bool); ok {
 		obj.Spec.InsecureSkipTLSverify = v
 	}
+	if v, ok := in.Get("insecure_plain_http").(bool); ok {
+		obj.Spec.InsecurePlainHTTP = v
+	}
+	if v, ok := in.Get("exponential_backoff_min_wait").(int); ok {
+		if obj.Spec.ExponentialBackOffValues != nil {
+			obj.Spec.ExponentialBackOffValues.MinWait = v
+		} else {
+			obj.Spec.ExponentialBackOffValues = &v1.ExponentialBackOffValues{
+				MinWait: v,
+			}
+		}
+	}
+
+	if v, ok := in.Get("exponential_backoff_max_wait").(int); ok {
+		if obj.Spec.ExponentialBackOffValues != nil {
+			obj.Spec.ExponentialBackOffValues.MaxWait = v
+		} else {
+			obj.Spec.ExponentialBackOffValues = &v1.ExponentialBackOffValues{
+				MaxWait: v,
+			}
+		}
+	}
+
+	if v, ok := in.Get("exponential_backoff_max_retries").(int); ok {
+		if obj.Spec.ExponentialBackOffValues != nil {
+			obj.Spec.ExponentialBackOffValues.MaxRetries = v
+		} else {
+			obj.Spec.ExponentialBackOffValues = &v1.ExponentialBackOffValues{
+				MaxRetries: v,
+			}
+		}
+	}
+
 	sName, nok := in.Get("secret_name").(string)
 	sNamespace, nsok := in.Get("secret_namespace").(string)
 	if nok && nsok && len(sName) > 0 {

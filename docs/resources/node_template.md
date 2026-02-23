@@ -234,7 +234,7 @@ The following attributes are exported:
 * `docker_port` - (Optional) Port number for Docker engine. Default `2376` (string)
 * `environment` - (Optional) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud). Default `AzurePublicCloud` (string)
 * `fault_domain_count` - (Optional) Fault domain count to use for availability set. Default `3` (string)
-* `image` - (Optional) Azure virtual machine OS image. Default `canonical:UbuntuServer:18.04-LTS:latest` (string)
+* `image` - (Optional) Azure virtual machine OS image. Default `canonical:ubuntu-24_04-lts:server-gen1:latest` (string)
 * `location` - (Optional) Azure region to create the virtual machine. Default `westus` (string)
 * `managed_disks` - (Optional) Configures VM and availability set for managed disks. For Rancher v2.3.x and above. Default `false` (bool)
 * `no_public_ip` - (Optional) Do not create a public IP address for the machine. Default `false` (bool)
@@ -243,7 +243,7 @@ The following attributes are exported:
 * `open_port` - (Optional) Make the specified port number accessible from the Internet. (list)
 * `private_ip_address` - (Optional) Specify a static private IP address for the machine. (string)
 * `resource_group` - (Optional) Azure Resource Group name (will be created if missing). Default `docker-machine` (string)
-* `size` - (Optional) Size for Azure Virtual Machine. Default `Standard_A2` (string)
+* `size` - (Optional) Size for Azure Virtual Machine. Default `Standard_D2_v2` (string)
 * `ssh_user` - (Optional) Username for SSH login (string)
 * `static_public_ip` - (Optional) Assign a static public IP address to the machine. Default `false` (bool)
 * `storage_type` - (Optional) Type of Storage Account to host the OS Disk for the machine. Default `Standard_LRS` (string)
@@ -487,4 +487,3 @@ $ terraform import rancher2_node_template.foo &lt;node_template_id&gt;
 **Important** This process could update `rancher2_node_template` data on tfstate file. Be sure to save a copy of tfstate file before proceed
 
 Due to [this feature](https://github.com/rancher/rancher/pull/23718) included on Rancher v2.3.3, `rancher2_node_template` are now global scoped objects with RBAC around them, instead of user scoped objects as they were. This means that existing node templates `id` field is changing on upgrade. Provider implements `fixNodeTemplateID()` that will update tfstate with proper id.
-```

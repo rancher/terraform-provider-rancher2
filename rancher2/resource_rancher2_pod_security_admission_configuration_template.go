@@ -147,16 +147,15 @@ func resourceRancher2PodSecurityAdmissionConfigurationTemplateDelete(d *schema.R
 
 // podSecurityAdmissionConfigurationTemplateStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // a Rancher PodSecurityAdmissionConfiguration Template
-func podSecurityAdmissionConfigurationTemplateStateRefreshFunc(client *managementClient.Client, pspID string) resource.StateRefreshFunc {
+func podSecurityAdmissionConfigurationTemplateStateRefreshFunc(client *managementClient.Client, psactID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		obj, err := client.PodSecurityPolicyTemplate.ByID(pspID)
+		obj, err := client.PodSecurityAdmissionConfigurationTemplate.ByID(psactID)
 		if err != nil {
 			if IsNotFound(err) || IsForbidden(err) {
 				return obj, "removed", nil
 			}
 			return nil, "", err
 		}
-
 		return obj, "active", nil
 	}
 }

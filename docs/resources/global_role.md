@@ -11,9 +11,10 @@ Provides a Rancher v2 Global Role resource. This can be used to create Global Ro
 ```hcl
 # Create a new rancher2 Global Role
 resource "rancher2_global_role" "foo" {
-  name             = "foo"
-  new_user_default = true
-  description      = "Terraform global role acceptance test"
+  name                    = "foo"
+  new_user_default        = true
+  description             = "Terraform global role acceptance test"
+  inherited_cluster_roles = ["projects-view"]
 
   rules {
     api_groups = ["*"]
@@ -33,6 +34,7 @@ The following arguments are supported:
 * `rules` - (Optional/Computed) Global role policy rules (list)
 * `annotations` - (Optional/Computed) Annotations for global role object (map)
 * `labels` - (Optional/Computed) Labels for global role object (map)
+* `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
 
 ## Attributes Reference
 
@@ -51,7 +53,7 @@ The following attributes are exported:
 * `non_resource_urls` - (Optional) Policy rule non resource urls (list)
 * `resource_names` - (Optional) Policy rule resource names (list)
 * `resources` - (Optional) Policy rule resources (list)
-* `verbs` - (Optional) Policy rule verbs. `bind`, `create`, `delete`, `deletecollection`, `escalate`, `get`, `impersonate`, `list`, `patch`, `update`, `use`, `view`, `watch`, `own` and `*` values are supported (list)
+* `verbs` - (Optional) Policy rule verbs. `bind`, `create`, `delete`, `deletecollection`, `escalate`, `get`, `impersonate`, `list`, `manage-namespaces`, `patch`, `update`, `updatepsa`, `use`, `view`, `watch`, `own` and `*` values are supported (list)
 
 ## Timeouts
 

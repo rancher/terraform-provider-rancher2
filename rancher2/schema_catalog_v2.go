@@ -53,6 +53,24 @@ func catalogV2Fields() map[string]*schema.Schema {
 			Default:     true,
 			Description: "If disabled the repo clone will not be updated or allowed to be installed from",
 		},
+		"exponential_backoff_max_wait": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Computed:    true,
+			Description: "Maximum amount of seconds to wait before retrying",
+		},
+		"exponential_backoff_min_wait": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Computed:    true,
+			Description: "Minimum amount of seconds to wait before retrying",
+		},
+		"exponential_backoff_max_retries": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Computed:    true,
+			Description: "Maximum number of retries before returning error",
+		},
 		"git_branch": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -64,6 +82,12 @@ func catalogV2Fields() map[string]*schema.Schema {
 			Optional:      true,
 			Description:   "Git Repository containing Helm chart definitions",
 			ConflictsWith: []string{"url"},
+		},
+		"insecure_plain_http": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Only valid for OCI URL's. Allows insecure connections to registries without enforcing TLS checks",
 		},
 		"insecure": {
 			Type:        schema.TypeBool,

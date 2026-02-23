@@ -11,6 +11,16 @@ import (
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
+const (
+	amazonec2ConfigDriver     = "amazonec2"
+	azureConfigDriver         = "azure"
+	digitaloceanConfigDriver  = "digitalocean"
+	harvesterConfigDriver     = "harvester"
+	linodeConfigDriver        = "linode"
+	openstackConfigDriver     = "openstack"
+	vmwarevsphereConfigDriver = "vmwarevsphere"
+)
+
 func resourceRancher2CloudCredential() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRancher2CloudCredentialCreate,
@@ -40,7 +50,7 @@ func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if nodeDriver, ok := d.Get("driver").(string); ok && nodeDriver != s3ConfigDriver {
-		err = meta.(*Config).activateDriver(nodeDriver, d.Timeout(schema.TimeoutCreate))
+		err = meta.(*Config).activateNodeDriver(nodeDriver, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return err
 		}
@@ -117,14 +127,21 @@ func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interfac
 		"labels":      toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
-	switch driver := d.Get("driver").(string); driver {
+	driver := d.Get("driver").(string)
+	// migrate google cloud credential to node driver format, not GKE.
+	if driver == oldGoogleConfigKontainerDriver {
+		driver = googleConfigNodeDriver
+		d.Set("driver", driver)
+	}
+
+	switch driver {
 	case amazonec2ConfigDriver:
 		update["amazonec2credentialConfig"] = expandCloudCredentialAmazonec2(d.Get("amazonec2_credential_config").([]interface{}))
 	case azureConfigDriver:
 		update["azurecredentialConfig"] = expandCloudCredentialAzure(d.Get("azure_credential_config").([]interface{}))
 	case digitaloceanConfigDriver:
 		update["digitaloceancredentialConfig"] = expandCloudCredentialDigitalocean(d.Get("digitalocean_credential_config").([]interface{}))
-	case googleConfigDriver:
+	case googleConfigNodeDriver:
 		update["googlecredentialConfig"] = expandCloudCredentialGoogle(d.Get("google_credential_config").([]interface{}))
 	case harvesterConfigDriver:
 		update["harvestercredentialConfig"] = expandCloudCredentialHarvester(d.Get("harvester_credential_config").([]interface{}))

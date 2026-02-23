@@ -71,11 +71,6 @@ func clusterV2FieldsV0() map[string]*schema.Schema {
 				Schema: agentDeploymentCustomizationFields(),
 			},
 		},
-		"default_pod_security_policy_template_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Cluster V2 default pod security policy template name",
-		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -190,11 +185,6 @@ func clusterV2Fields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: agentDeploymentCustomizationFields(),
 			},
-		},
-		"default_pod_security_policy_template_name": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Cluster V2 default pod security policy template name",
 		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
