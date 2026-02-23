@@ -32,6 +32,11 @@ func dataSourceRancher2Principal() *schema.Resource {
 				Default:      principalTypeUser,
 				ValidateFunc: validation.StringInSlice(principalTypes, true),
 			},
+			"exact_match": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -44,8 +49,9 @@ func dataSourceRancher2PrincipalRead(d *schema.ResourceData, meta interface{}) e
 
 	name := d.Get("name").(string)
 	principalType := d.Get("type").(string)
+	exactMatch := d.Get("exact_match").(bool)
 
-	collection, err := client.Principal.List(nil)
+	collection, err := client.Principal.ListAll(nil)
 	if err != nil {
 		return err
 	}
@@ -61,6 +67,19 @@ func dataSourceRancher2PrincipalRead(d *schema.ResourceData, meta interface{}) e
 	count := len(principals.Data)
 	if count <= 0 {
 		return fmt.Errorf("[ERROR] principal \"%s\" of type \"%s\" not found", name, principalType)
+	}
+
+	// We always had at least one result here, let's find which can match exactly with the inputted name
+	if exactMatch {
+		for _, v := range principals.Data {
+			if v.Name == name {
+				return flattenDataSourcePrincipal(d, &v)
+			}
+		}
+		// This situation will be almost never happened, but we still ensure for the special case
+		return fmt.Errorf(
+			"[ERROR] principal \"%s\" of type \"%s\" not found. Try again with \"exact_match=false\" for partially matched result",
+			name, principalType)
 	}
 
 	return flattenDataSourcePrincipal(d, &principals.Data[0])
