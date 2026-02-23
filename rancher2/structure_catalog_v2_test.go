@@ -28,10 +28,16 @@ func init() {
 		"label1": "one",
 		"label2": "two",
 	}
-	testCatalogV2Conf.Spec.CABundle = []byte("ca_bundle")
+	testCatalogV2Conf.Spec.ExponentialBackOffValues = &managementClient.ExponentialBackOffValues{
+		MinWait:    2,
+		MaxWait:    10,
+		MaxRetries: 5,
+	}
+	testCatalogV2Conf.Spec.CABundle = []byte("test DER data")
 	testCatalogV2Conf.Spec.Enabled = newTrue()
 	testCatalogV2Conf.Spec.GitBranch = "git_branch"
 	testCatalogV2Conf.Spec.GitRepo = "git_repo"
+	testCatalogV2Conf.Spec.InsecurePlainHTTP = false
 	testCatalogV2Conf.Spec.InsecureSkipTLSverify = false
 	testCatalogV2Conf.Spec.ClientSecret = &managementClient.SecretReference{
 		Name:      "secret_name",
@@ -42,17 +48,21 @@ func init() {
 	testCatalogV2Conf.Spec.URL = "url"
 
 	testCatalogV2Interface = map[string]interface{}{
-		"name":                      "name",
-		"ca_bundle":                 "ca_bundle",
-		"enabled":                   true,
-		"git_branch":                "git_branch",
-		"git_repo":                  "git_repo",
-		"insecure":                  false,
-		"secret_name":               "secret_name",
-		"secret_namespace":          "secret_namespace",
-		"service_account":           "service_account",
-		"service_account_namespace": "service_account_namespace",
-		"url":                       "url",
+		"name":                            "name",
+		"ca_bundle":                       "dGVzdCBERVIgZGF0YQ==",
+		"enabled":                         true,
+		"exponential_backoff_min_wait":    2,
+		"exponential_backoff_max_wait":    10,
+		"exponential_backoff_max_retries": 5,
+		"git_branch":                      "git_branch",
+		"git_repo":                        "git_repo",
+		"insecure":                        false,
+		"insecure_plain_http":             false,
+		"secret_name":                     "secret_name",
+		"secret_namespace":                "secret_namespace",
+		"service_account":                 "service_account",
+		"service_account_namespace":       "service_account_namespace",
+		"url":                             "url",
 		"annotations": map[string]interface{}{
 			"value1": "one",
 			"value2": "two",
@@ -104,7 +114,10 @@ func TestExpandCatalogV2(t *testing.T) {
 
 	for _, tc := range cases {
 		inputResourceData := schema.TestResourceDataRaw(t, catalogV2Fields(), tc.Input)
-		output := expandCatalogV2(inputResourceData)
+		output, err := expandCatalogV2(inputResourceData)
+		if err != nil {
+			t.Fatal(err)
+		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
 }

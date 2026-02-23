@@ -7,7 +7,17 @@ import (
 )
 
 const (
-	googleConfigDriver = "googlekubernetesengine"
+	// Before Rancher v2.12 only the GKE Kontainer driver was supported,
+	// and the provider would automatically enable that driver when
+	// a google cloud credential was created. Rancher v2.13 dropped support
+	// for automatically enabling kontainer drivers, so we should migrate existing
+	// google cloud credentials to use the google node driver instead.
+	//
+	// This is done to ensure that terraform state files have a uniform driver value
+	// across all google cloud credentials, both old and new.
+
+	oldGoogleConfigKontainerDriver = "googlekubernetesengine"
+	googleConfigNodeDriver         = "google"
 )
 
 //Types

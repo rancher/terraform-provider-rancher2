@@ -30,7 +30,7 @@ The following arguments are supported:
 
 * `cluster_id` - (Required/ForceNew) The cluster id of the catalog V2 (string)
 * `name` - (Required) The name of the catalog v2 (string)
-* `ca_bundle` - (Optional) PEM encoded CA bundle which will be used to validate the repo's certificate (string)
+* `ca_bundle` - (Optional) CA certificate in base64-encoded DER format which will be used to validate the repo's certificate (string)
 * `enabled` - (Optional) If disabled the repo clone will not be updated or allowed to be installed from. Default: `true` (bool)
 * `git_branch` - (Optional/Computed) Git Repository branch containing Helm chart definitions. Default `master` (string)
 * `git_repo` - (Optional) The url of the catalog v2 repo. Conflicts with `url` (string)

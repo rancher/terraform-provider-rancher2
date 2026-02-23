@@ -17,6 +17,7 @@ resource "rancher2_user" "foo" {
   username = "foo"
   password = "changeme"
   enabled = true
+  must_change_password = true
 }
 # Create a new rancher2 global_role_binding for User
 resource "rancher2_global_role_binding" "foo" {
@@ -33,6 +34,7 @@ The following arguments are supported:
 * `username` - (Required/ForceNew) The user username (string)
 * `password` - (Required/ForceNew) The user password (string)
 * `name` - (Optional) The user full name (string)
+* `must_change_password` - (Optional)The user must change password at first login (bool)
 * `annotations` - (Optional/Computed) Annotations for global role binding (map)
 * `labels` - (Optional/Computed) Labels for global role binding (map)
 

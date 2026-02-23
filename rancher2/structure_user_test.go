@@ -15,14 +15,16 @@ var (
 
 func init() {
 	testUserConf = &managementClient.User{
-		Name:     "name",
-		Username: "username",
-		Enabled:  newTrue(),
+		Name:               "name",
+		Username:           "username",
+		Enabled:            newTrue(),
+		MustChangePassword: *newTrue(),
 	}
 	testUserInterface = map[string]interface{}{
-		"name":     "name",
-		"username": "username",
-		"enabled":  true,
+		"name":                 "name",
+		"username":             "username",
+		"enabled":              true,
+		"must_change_password": true,
 	}
 }
 

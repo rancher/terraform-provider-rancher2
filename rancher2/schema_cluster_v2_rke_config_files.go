@@ -21,7 +21,6 @@ func clusterV2RKEConfigKeyToPathFields() map[string]*schema.Schema {
 		"dynamic": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     true,
 			Description: "If ture, the file is ignored when determining whether the node should be drained before updating the node plan (default: true).",
 		},
 		"permissions": {

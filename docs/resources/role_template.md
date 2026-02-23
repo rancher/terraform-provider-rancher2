@@ -50,13 +50,13 @@ The following arguments are supported:
 * `default_role` - (Optional) Default role template for new created cluster or project. Default `false` (bool)
 * `description` - (Optional/Computed) Role template description (string)
 * `external` - (Optional) External role template. Default `false` (bool)
+* `external_rules` - (Optional/Computed) External rules used for authorization. This field is required when `external=true` and no underlying ClusterRole exists. (list)
 * `hidden` - (Optional) Hidden role template. Default `false` (bool)
 * `locked` - (Optional) Locked role template. Default `false` (bool)
 * `role_template_ids` - (Optional/Computed) Inherit role template IDs (list)
 * `rules` - (Optional/Computed) Role template policy rules (list)
 * `annotations` - (Optional/Computed) Annotations for role template object (map)
 * `labels` - (Optional/Computed) Labels for role template object (map)
-* `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
 
 ## Attributes Reference
 
@@ -75,7 +75,7 @@ The following attributes are exported:
 * `non_resource_urls` - (Optional) Policy rule non resource urls (list)
 * `resource_names` - (Optional) Policy rule resource names (list)
 * `resources` - (Optional) Policy rule resources (list)
-* `verbs` - (Optional) Policy rule verbs. `bind`, `create`, `delete`, `deletecollection`, `escalate`, `get`, `impersonate`, `list`, `patch`, `update`, `use`, `view`, `watch`, `own` and `*` values are supported (list)
+* `verbs` - (Optional) Policy rule verbs. `bind`, `create`, `delete`, `deletecollection`, `escalate`, `get`, `impersonate`, `list`, `manage-namespaces`, `patch`, `update`, `updatepsa`, `use`, `view`, `watch`, `own` and `*` values are supported (list)
 
 ## Timeouts
 

@@ -163,6 +163,12 @@ func flattenClusterAKSConfigV2(in *managementClient.AKSClusterConfigSpec, p []in
 		}
 		obj["node_pools"] = flattenClusterAKSConfigV2NodePools(in.NodePools, v)
 	}
+	if in.NodeResourceGroup != nil && len(*in.NodeResourceGroup) > 0 {
+		obj["node_resource_group"] = *in.NodeResourceGroup
+	}
+	if in.OutboundType != nil && len(*in.OutboundType) > 0 {
+		obj["outbound_type"] = *in.OutboundType
+	}
 	if in.PrivateCluster != nil {
 		obj["private_cluster"] = *in.PrivateCluster
 	}
@@ -345,6 +351,12 @@ func expandClusterAKSConfigV2(p []interface{}) *managementClient.AKSClusterConfi
 	if v, ok := in["node_pools"].([]interface{}); ok && len(v) > 0 {
 		nodePools := expandClusterAKSConfigV2NodePools(v)
 		obj.NodePools = nodePools
+	}
+	if v, ok := in["node_resource_group"].(string); ok && len(v) > 0 {
+		obj.NodeResourceGroup = &v
+	}
+	if v, ok := in["outbound_type"].(string); ok && len(v) > 0 {
+		obj.OutboundType = &v
 	}
 	if v, ok := in["subnet"].(string); ok && len(v) > 0 {
 		obj.Subnet = &v
