@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	projectClient "github.com/rancher/rancher/pkg/client/generated/project/v3"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -36,6 +35,28 @@ func resourceRancher2Cluster() *schema.Resource {
 					d.SetNew("eks_config_v2", flattenClusterEKSConfigV2(newObj, []interface{}{}))
 				}
 			}
+
+			if d.Get("driver") == clusterDriverGKEV2 && d.HasChange("gke_config_v2") {
+				old, new := d.GetChange("gke_config_v2")
+				oldObj := expandClusterGKEConfigV2(old.([]interface{}))
+				newObj := expandClusterGKEConfigV2(new.([]interface{}))
+
+				if reflect.DeepEqual(oldObj, newObj) {
+					d.Clear("gke_config_v2")
+				} else {
+					d.SetNew("gke_config_v2", flattenClusterGKEConfigV2(newObj, []interface{}{}))
+				}
+			}
+
+			// Allow the configuration of the imported_config field only if the
+			// cluster is an imported generic cluster or an imported hosted cluster (e.g. AKS, GKE, EKS).
+			// Previously defined 'conflictsWith' entries already handle other cluster types (rke, rke2, k3s)
+			// so they do not need to be reconsidered here.
+			importCnf, ok := d.Get("imported_config").([]interface{})
+			if ok && len(importCnf) > 0 && !isImportedCluster(d) {
+				return fmt.Errorf("The rancher2_cluster.imported_config field can only be used when working with generic imported clusters or imported hosted clusters (e.g. AKS, GKE, EKS)")
+			}
+
 			return nil
 		},
 		Schema:        clusterFields(),
@@ -64,6 +85,7 @@ func resourceRancher2ClusterResourceV0() *schema.Resource {
 
 func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rkeConfigs, ok := rawState["rke_config"].([]interface{}); ok && len(rkeConfigs) > 0 {
+		log.Printf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 		for i1 := range rkeConfigs {
 			if rkeConfig, ok := rkeConfigs[i1].(map[string]interface{}); ok && len(rkeConfig) > 0 {
 				if services, ok := rkeConfig["services"].([]interface{}); ok && len(services) > 0 {
@@ -136,7 +158,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 	expectedState := []string{"active"}
 
-	if cluster.Driver == clusterDriverImported || (cluster.Driver == clusterDriverEKSV2 && cluster.EKSConfig.Imported) {
+	if cluster.Driver == clusterDriverEKSV2 && cluster.EKSConfig.Imported {
 		expectedState = append(expectedState, "pending")
 	}
 
@@ -144,8 +166,15 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		expectedState = append(expectedState, "provisioning")
 	}
 
+	if cluster.Driver == clusterDriverImported {
+		if cluster.ImportedConfig != nil {
+			expectedState = append(expectedState, "provisioning")
+		} else {
+			expectedState = append(expectedState, "pending")
+		}
+	}
+
 	// Creating cluster with monitoring disabled
-	cluster.EnableClusterMonitoring = false
 	newCluster := &Cluster{}
 	if cluster.EKSConfig != nil && !cluster.EKSConfig.Imported {
 		if !checkClusterEKSConfigV2NodeGroupsDesiredSize(cluster) {
@@ -160,6 +189,8 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		clusterMap, _ := jsonToMapInterface(clusterStr)
 		clusterMap["gkeConfig"] = fixClusterGKEConfigV2(structToMap(cluster.GKEConfig))
 		err = client.APIBaseClient.Create(managementClient.ClusterType, clusterMap, newCluster)
+	} else if cluster.Driver == clusterDriverRKE {
+		return fmt.Errorf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 	} else {
 		err = client.APIBaseClient.Create(managementClient.ClusterType, cluster, newCluster)
 	}
@@ -167,7 +198,6 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	newCluster.EnableClusterMonitoring = d.Get("enable_cluster_monitoring").(bool)
 	d.SetId(newCluster.ID)
 
 	stateConf := &resource.StateChangeConf{
@@ -181,39 +211,6 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 	_, waitErr := stateConf.WaitForState()
 	if waitErr != nil {
 		return fmt.Errorf("[ERROR] waiting for cluster (%s) to be created: %s", newCluster.ID, waitErr)
-	}
-
-	monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
-	if newCluster.EnableClusterMonitoring {
-		if len(newCluster.Actions[monitoringActionEnable]) == 0 {
-			err = client.APIBaseClient.ByID(managementClient.ClusterType, newCluster.ID, newCluster)
-			if err != nil {
-				return err
-			}
-		}
-		clusterResource := &norman.Resource{
-			ID:      newCluster.ID,
-			Type:    newCluster.Type,
-			Links:   newCluster.Links,
-			Actions: newCluster.Actions,
-		}
-		// Retry enable monitoring until timeout if got api error 500
-		ctx, cancel := context.WithTimeout(context.Background(), meta.(*Config).Timeout)
-		defer cancel()
-		for {
-			err = client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
-			if err == nil {
-				return resourceRancher2ClusterRead(d, meta)
-			}
-			if !IsServerError(err) {
-				return err
-			}
-			select {
-			case <-time.After(rancher2RetriesWait * time.Second):
-			case <-ctx.Done():
-				break
-			}
-		}
 	}
 
 	return resourceRancher2ClusterRead(d, meta)
@@ -254,24 +251,13 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 			return resource.NonRetryableError(err)
 		}
 
-		var monitoringInput *managementClient.MonitoringInput
-		if len(cluster.Annotations[monitoringInputAnnotation]) > 0 {
-			monitoringInput = &managementClient.MonitoringInput{}
-			err = jsonToInterface(cluster.Annotations[monitoringInputAnnotation], monitoringInput)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-		}
-
 		if err = flattenCluster(
 			d,
 			cluster,
 			clusterRegistrationToken,
 			kubeConfig,
 			defaultProjectID,
-			systemProjectID,
-			monitoringInput); err != nil {
+			systemProjectID); err != nil {
 			return resource.NonRetryableError(err)
 		}
 
@@ -310,24 +296,16 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"clusterAgentDeploymentCustomization": clusterAgentDeploymentCustomization,
 		"fleetAgentDeploymentCustomization":   fleetAgentDeploymentCustomization,
 		"description":                         d.Get("description").(string),
-		"defaultPodSecurityPolicyTemplateId":  d.Get("default_pod_security_policy_template_id").(string),
 		"defaultPodSecurityAdmissionConfigurationTemplateName": d.Get("default_pod_security_admission_configuration_template_name").(string),
 		"desiredAgentImage":        d.Get("desired_agent_image").(string),
 		"desiredAuthImage":         d.Get("desired_auth_image").(string),
 		"dockerRootDir":            d.Get("docker_root_dir").(string),
 		"fleetWorkspaceName":       d.Get("fleet_workspace_name").(string),
-		"enableClusterAlerting":    d.Get("enable_cluster_alerting").(bool),
-		"enableClusterMonitoring":  d.Get("enable_cluster_monitoring").(bool),
 		"enableNetworkPolicy":      &enableNetworkPolicy,
 		"istioEnabled":             d.Get("enable_cluster_istio").(bool),
 		"localClusterAuthEndpoint": expandClusterAuthEndpoint(d.Get("cluster_auth_endpoint").([]interface{})),
 		"annotations":              toMapString(d.Get("annotations").(map[string]interface{})),
 		"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
-	}
-
-	// cluster_monitoring is not updated here. Setting old `enable_cluster_monitoring` value if it was updated
-	if d.HasChange("enable_cluster_monitoring") {
-		update["enableClusterMonitoring"] = !d.Get("enable_cluster_monitoring").(bool)
 	}
 
 	if clusterTemplateID, ok := d.Get("cluster_template_id").(string); ok && len(clusterTemplateID) > 0 {
@@ -343,32 +321,26 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	// imported_config is special because it applies to *any imported cluster*,
+	// including hosted providers (AKS, EKS, GKE) where `imported = true` is set.
+	// If we keep it inside the driver-specific switch, it only gets processed
+	// for the "imported" driver, but NOT for hosted imported clusters.
+	// To avoid this bug, we always check imported_config here before switching on driver.
+	if v, ok := d.GetOk("imported_config"); ok {
+		importedConfig := v.([]interface{})
+		if len(importedConfig) > 0 {
+			update["importedConfig"] = expandClusterImportedConfig(importedConfig)
+		}
+	}
+
 	replace := false
 	switch driver := ToLower(d.Get("driver").(string)); driver {
-	case clusterDriverAKS:
-		aksConfig, err := expandClusterAKSConfig(d.Get("aks_config").([]interface{}), d.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		update["azureKubernetesServiceConfig"] = aksConfig
 	case ToLower(clusterDriverAKSV2):
 		aksConfigV2 := expandClusterAKSConfigV2(d.Get("aks_config_v2").([]interface{}))
 		update["aksConfig"] = aksConfigV2
-	case clusterDriverEKS:
-		eksConfig, err := expandClusterEKSConfig(d.Get("eks_config").([]interface{}), d.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		update["amazonElasticContainerServiceConfig"] = eksConfig
 	case ToLower(clusterDriverEKSV2):
 		eksConfigV2 := expandClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}))
 		update["eksConfig"] = fixClusterEKSConfigV2(d.Get("eks_config_v2").([]interface{}), structToMap(eksConfigV2))
-	case clusterDriverGKE:
-		gkeConfig, err := expandClusterGKEConfig(d.Get("gke_config").([]interface{}), d.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		update["googleKubernetesEngineConfig"] = gkeConfig
 	case ToLower(clusterDriverGKEV2):
 		gkeConfig := expandClusterGKEConfigV2(d.Get("gke_config_v2").([]interface{}))
 		update["gkeConfig"] = fixClusterGKEConfigV2(structToMap(gkeConfig))
@@ -379,16 +351,13 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 		update["okeEngineConfig"] = okeConfig
 	case ToLower(clusterDriverRKE):
-		rkeConfig, err := expandClusterRKEConfig(d.Get("rke_config").([]interface{}), d.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		update["rancherKubernetesEngineConfig"] = rkeConfig
-		replace = d.HasChange("rke_config")
+		return fmt.Errorf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 	case clusterDriverK3S:
 		update["k3sConfig"] = expandClusterK3SConfig(d.Get("k3s_config").([]interface{}))
+		replace = d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
 	case clusterDriverRKE2:
 		update["rke2Config"] = expandClusterRKE2Config(d.Get("rke2_config").([]interface{}))
+		replace = d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
 	}
 
 	// update the cluster; retry til timeout or non retryable error is returned. If api 500 error is received,
@@ -418,17 +387,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		_, waitErr := stateConf.WaitForState()
 		if waitErr != nil {
 			return resource.NonRetryableError(fmt.Errorf("[ERROR] waiting for cluster (%s) to be updated: %s", newCluster.ID, waitErr))
-		}
-
-		// update cluster monitoring if it has changed
-		if d.HasChange("enable_cluster_monitoring") || d.HasChange("cluster_monitoring_input") {
-			err = updateClusterMonitoring(client, d, meta, *newCluster)
-			if err != nil {
-				if IsServerError(err) {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
 		}
 
 		d.SetId(newCluster.ID)
@@ -608,7 +566,11 @@ func isKubeConfigValid(c *Config, config string) (string, bool, error) {
 	if err != nil {
 		return "", false, fmt.Errorf("checking Kubeconfig: %v", err)
 	}
-	_, err = kubernetes.NewForConfig(kubeconfig)
+	client, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		return token, false, nil
+	}
+	_, err = client.DiscoveryClient.ServerVersion()
 	if err != nil {
 		return token, false, nil
 	}
@@ -733,99 +695,31 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 	}
 }
 
-func updateClusterMonitoring(client *managementClient.Client, d *schema.ResourceData, meta interface{}, newCluster Cluster) error {
-	clusterResource := &norman.Resource{
-		ID:      newCluster.ID,
-		Type:    newCluster.Type,
-		Links:   newCluster.Links,
-		Actions: newCluster.Actions,
-	}
-	enableMonitoring := d.Get("enable_cluster_monitoring").(bool)
-
-	if enableMonitoring {
-		monitoringInput := expandMonitoringInput(d.Get("cluster_monitoring_input").([]interface{}))
-		if len(newCluster.Actions[monitoringActionEnable]) > 0 {
-			err := client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEnable, clusterResource, monitoringInput, nil)
-			if err != nil {
-				return err
-			}
-		} else {
-			monitorVersionChanged := false
-			if d.HasChange("cluster_monitoring_input") {
-				old, new := d.GetChange("cluster_monitoring_input")
-				oldInput := old.([]interface{})
-				oldInputLen := len(oldInput)
-				oldVersion := ""
-				if oldInputLen > 0 {
-					oldRow, oldOK := oldInput[0].(map[string]interface{})
-					if oldOK {
-						oldVersion = oldRow["version"].(string)
-					}
-				}
-				newInput := new.([]interface{})
-				newInputLen := len(newInput)
-				newVersion := ""
-				if newInputLen > 0 {
-					newRow, newOK := newInput[0].(map[string]interface{})
-					if newOK {
-						newVersion = newRow["version"].(string)
-					}
-				}
-				if oldVersion != newVersion {
-					monitorVersionChanged = true
-				}
-			}
-			if monitorVersionChanged && monitoringInput != nil {
-				err := updateClusterMonitoringApps(meta, d.Get("system_project_id").(string), monitoringInput.Version)
-				if err != nil {
-					return err
-				}
-			}
-			err := client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionEdit, clusterResource, monitoringInput, nil)
-			if err != nil {
-				return err
-			}
-		}
-	} else if len(newCluster.Actions[monitoringActionDisable]) > 0 {
-		err := client.APIBaseClient.Action(managementClient.ClusterType, monitoringActionDisable, clusterResource, nil, nil)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func updateClusterMonitoringApps(meta interface{}, systemProjectID, version string) error {
-	cliProject, err := meta.(*Config).ProjectClient(systemProjectID)
-	if err != nil {
-		return err
+func isImportedCluster(d *schema.ResourceDiff) bool {
+	eks := d.Get("eks_config_v2")
+	newEksArray, ok := eks.([]interface{})
+	isEks := ok && len(newEksArray) > 0
+	if isEks {
+		return expandClusterEKSConfigV2(newEksArray).Imported
 	}
 
-	filters := map[string]interface{}{
-		"targetNamespace": clusterMonitoringV1Namespace,
+	gke := d.Get("gke_config_v2")
+	newGkeArray, ok := gke.([]interface{})
+	isGke := ok && len(newGkeArray) > 0
+	if isGke {
+		return expandClusterGKEConfigV2(newGkeArray).Imported
 	}
 
-	listOpts := NewListOpts(filters)
-
-	apps, err := cliProject.App.List(listOpts)
-	if err != nil {
-		return err
+	aks := d.Get("aks_config_v2")
+	newAksArray, ok := aks.([]interface{})
+	isAks := ok && len(newAksArray) > 0
+	if isAks {
+		return expandClusterAKSConfigV2(newAksArray).Imported
 	}
 
-	for _, a := range apps.Data {
-		if a.Name == "cluster-monitoring" || a.Name == "monitoring-operator" {
-			externalID := updateVersionExternalID(a.ExternalID, version)
-			upgrade := &projectClient.AppUpgradeConfig{
-				Answers:      a.Answers,
-				ExternalID:   externalID,
-				ForceUpgrade: true,
-			}
-
-			err = cliProject.App.ActionUpgrade(&a, upgrade)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	// if this is a generic imported cluster,
+	// we should always allow for the field to be used.
+	// Other non-imported cluster types (rke, rke2, k3s, etc.)
+	// are already being blocked via the static ConflictsWith field.
+	return true
 }

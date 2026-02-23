@@ -15,6 +15,7 @@ func flattenUser(d *schema.ResourceData, in *managementClient.User) error {
 	d.SetId(in.ID)
 	d.Set("username", in.Username)
 	d.Set("enabled", in.Enabled)
+	d.Set("must_change_password", in.MustChangePassword)
 
 	if len(in.Name) > 0 {
 		d.Set("name", in.Name)
@@ -55,6 +56,7 @@ func expandUser(in *schema.ResourceData) *managementClient.User {
 	obj.Username = in.Get("username").(string)
 	enabled := in.Get("enabled").(bool)
 	obj.Enabled = &enabled
+	obj.MustChangePassword = in.Get("must_change_password").(bool)
 
 	if v, ok := in.Get("name").(string); ok && len(v) > 0 {
 		obj.Name = v

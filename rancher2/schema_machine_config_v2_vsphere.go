@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	machineConfigV2VmwarevsphereCreationTypeDefault = "legacy"
+	machineConfigV2VmwarevsphereCreationTypeDefault = "template"
 )
 
 var (
@@ -38,6 +38,12 @@ func machineConfigV2VmwarevsphereFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "If you choose creation type clone a name of what you want to clone is required",
+		},
+		"os": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "linux",
+			Description: "Type of virtual machine OS in vSphere",
 		},
 		"cloud_config": {
 			Type:        schema.TypeString,

@@ -1,0 +1,4 @@
+source ~/.config/aws/default # add personal aws auth vars
+source ~/.config/functions/default # add personal functions
+source ~/.config/alias/default # add personal aliases
+source ~/.config/github/default # add personal github auth vars

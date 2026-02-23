@@ -4,9 +4,11 @@ page_title: "rancher2_cluster_v2 Resource"
 
 # rancher2\_cluster\_v2 Resource
 
-Provides a Rancher v2 Cluster v2 resource. This can be used to create RKE2 and K3s Clusters for Rancher v2 environments and retrieve their information. 
+Provides a Rancher v2 Cluster v2 resource. This can be used to create node-driver and custom RKE2 and K3s Clusters for Rancher v2 environments and retrieve their information. 
 
 This resource is available in Rancher v2.6.0 and above.
+
+**Hint**: To create an imported cluster for registering a standalone Kubernetes cluster into rancher, use the Rancher v2 Cluster resource instead.
 
 ## Example Usage
 
@@ -442,6 +444,70 @@ EOF
 }
 ```
 
+#### Customize scheduling for the cluster agent
+
+This argument is available in Rancher 2.11.0 and above for the cluster agent. Support for the fleet agent is available in Rancher 2.14.0 and above.
+
+You can configure a Priority Class and or Pod Disruption Budget to be automatically deployed for the cattle cluster agent and fleet agent when provisioning or updating downstream clusters. 
+
+In order to use this field, you must ensure that the `cluster-agent-scheduling-customization` feature is enabled in the Rancher server. 
+
+
+The example below demonstrates how to set the `scheduling_customization` field to deploy a Priority Class and Pod Disruption Budget for both the cattle cluster agent and fleet agent.
+
+```hcl
+resource "rancher2_cluster_v2" "foo" {
+  name = "foo"
+  kubernetes_version = "rke2/k3s-version"
+  cluster_agent_deployment_customization {
+    scheduling_customization {
+      priority_class {
+        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted. 
+        # If omitted, the default of 'PreemptLowerPriority' is used.
+        preemption_policy = "PreemptLowerPriority"
+        # The value cannot be less than negative 1 billion, or greater than 1 billion
+        value = 1000000000
+      }
+      pod_disruption_budget {
+        # min_available and max_unavailable must either be non-negative whole integers, 
+        # or whole number percentages greater than 0 and less than or equal to 100 (e.g. "50%").
+        # You cannot set both min_available and max_unavailable at the same time.
+        min_available = "1"
+        
+        # max_unavailable = "1"
+      }
+    }
+  }
+
+  fleet_agent_deployment_customization {
+    scheduling_customization {
+      priority_class {
+        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted. 
+        # If omitted, the default of 'PreemptLowerPriority' is used.
+        preemption_policy = "PreemptLowerPriority"
+        # The value cannot be less than negative 1 billion, or greater than 1 billion
+        value = 999999999
+      }
+      pod_disruption_budget {
+        # min_available and max_unavailable must either be non-negative whole integers, 
+        # or whole number percentages greater than 0 and less than or equal to 100 (e.g. "50%").
+        # You cannot set both min_available and max_unavailable at the same time.
+        min_available = "1"
+        
+        # max_unavailable = "1"
+      }
+    }
+  }
+
+  rke_config {
+    # In the case of a node-driver cluster
+    machine_pools {
+      # ...
+    }
+  } 
+}
+```
+
 ### Enable Pod Security Policy Admission Configuration Template (PSACT) on the cluster
 
 This argument is available in Rancher v2.7.2 and above.
@@ -478,7 +544,7 @@ resource "rancher2_cluster_v2" "foo" {
 
 ### Create a cluster that uses a cluster-level authenticated `system-default-registry`
 
-The `<auth-config-secret-name>` represents a generic Kubernetes secret that contains two keys with base64 encoded values: the `username` and `password` for the specified custom registry. If the `system-default-registry` is not authenticated, no secret is required and the section within the `rke_config` can be omitted if not otherwise needed.
+The `<auth-config-secret-name>` represents a generic Kubernetes secret that contains two keys with base64 encoded values: the `username` and `password` for the specified custom registry. If the `system-default-registry` is not authenticated, no secret is required and the section within the `rke_config` can be omitted if not otherwise needed. While the below example shows how to create a registry secret, storing plain text credentials in terraform files is never a good idea. Significant care should be taken to ensure that the username and password values are not committed or otherwise leaked. 
 
 Many registries may be specified in the `rke_config`s `registries` section, however, the `system-default-registry` from which core system images are pulled is always denoted via the `system-default-registry` key of the `machine_selector_config` or the `machine_global_config`. For more information on private registries, please refer to [the Rancher documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/global-default-private-registry#setting-a-private-registry-with-credentials-when-deploying-a-cluster).
 
@@ -488,14 +554,13 @@ resource "rancher2_cluster_v2" "foo_cluster_v2" {
   kubernetes_version = "rke2/k3s-version"
   rke_config {
     machine_selector_config {
-      config = {
-        system-default-registry: "custom-registry-hostname"
-      }
+      # config is a string which represents a yaml object
+      config = "system-default-registry: registry_domain_name"
     }
     registries {
       configs {
-        hostname = "custom-registry-hostname"
-        auth_config_secret_name = "<auth-config-secret-name>"
+        hostname = "registry_domain_name"
+        auth_config_secret_name = var.registry_secret_name 
         insecure = "<tls-insecure-bool>"
         tls_secret_name = ""
         ca_bundle = ""
@@ -505,6 +570,18 @@ resource "rancher2_cluster_v2" "foo_cluster_v2" {
     machine_pools {
       # ...
     }
+  }
+}
+
+# create registry auth secret
+resource "rancher2_secret_v2" "my_registry" {
+  cluster_id = "local"
+  name = var.registry_secret_name
+  namespace = "fleet-default"
+  type = "kubernetes.io/basic-auth"
+  data = {
+    username = var.registry_username
+    password = var.registry_password
   }
 }
 ```
@@ -849,7 +926,6 @@ The following arguments are supported:
 * `rke_config` - (Optional/computed, list, max length: 1) The RKE configuration for the cluster.
 * `local_auth_endpoint` - (Optional, list, max length: 1) Local auth endpoint configures the Authorized Cluster Endpoint (ACE) which can be used to directly access the Kubernetes API server, without requiring communication through Rancher. For more information, please refer to [Rancher Documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/kubernetes-clusters-in-rancher-setup/register-existing-clusters#authorized-cluster-endpoint-support-for-rke2-and-k3s-clusters).
 * `cloud_credential_secret_name` - (Optional, string) Cloud credential secret name is the secret to be used when a cloud credential secret name is not specified at the machine pool level. 
-* `default_pod_security_policy_template_name` - (Optional, string) Default pod security policy template name specifies the default PSP for the cluster. For more information, please refer to [Rancher Documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/create-pod-security-policies).
 * `default_pod_security_admission_configuration_template_name` - (Optional, string) The name of the pre-defined pod security admission configuration template to be applied to the cluster. Rancher admins (or those with the right permissions) can create, manage, and edit those templates. For more information, please refer to [Rancher Documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/psa-config-templates). The argument is available in Rancher v2.7.2 and above.
 * `default_cluster_role_for_project_members` - (Optional, string) Default cluster role for project members.
 * `enable_network_policy` - (Optional, bool, default: false) Enable k8s network policy on the cluster.
@@ -879,13 +955,14 @@ The following attributes are exported:
 
 ### `cluster_agent_deployment_customization` and `fleet_agent_deployment_customization`
 
-Those arguments are available in Rancher v2.7.5 and above.
+These arguments are available in Rancher v2.7.5 and above. The `scheduling_customization` argument is available in Rancher 2.11 and above for `cluster_agent_deployment_customization`, and in Rancher 2.14.0 and above for `fleet_agent_deployment_customization`. The `scheduling_customization` argument requires that the `cattle-cluster-agent-scheduling-customization` feature be enabled.
 
 #### Arguments
 
 * `append_tolerations` - (Optional, list) A list of tolerations to be appended to the default tolerations.
 * `override_affinity` - (Optional, string, JSON format) Override affinity overrides the global default affinity setting.
 * `override_resource_requirements` - (Optional, list) Override resource requirements overrides the default value for requests and/or limits. 
++ `scheduling_customization` - (Optional, list) Supported in Rancher 2.11.0 and above for `cluster_agent_deployment_customization`, and in Rancher 2.14.0 and above for `fleet_agent_deployment_customization`. Defines the configuration of a Priority Class and or Pod Disruption Budget, and requires the `cluster-agent-scheduling-customization` feature to be enabled.
 
 ### `append_tolerations`
 
@@ -909,11 +986,33 @@ see more information on [Resource Management for Pods and Containers](https://ku
 * `memory_limit` - (Optional, string) The maximum memory limit for agent.
 * `memory_request` - (Optional, string) The minimum memory required for agent.
 
+### `scheduling_customization`
+
+#### Arguments
+
+* `pod_disruption_budget` - (Optional, list) The definition of a Pod Disruption Budget deployed for the cluster agent
+* `priority_class` - (Optional, list) The definition of a Priority Class deployed for the cluster agent
+
+### `pod_disruption_budget`
+
+#### Arguments
+
+* `min_available` - (Optional, string) The minimum number of agent replicas that must be running at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `max_unavailable`.
+* `max_unavailable` - (Optional, string) The maximum number of agent replicas that can be unavailable at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `min_available`. 
+
+### `priority_class`
+
+#### Arguments
+
+* `value` - (Optional, int) The priority value set for the Priority Class. Must be greater than or equal to negative 1 billion, and less than or equal to 1 billion. 
+* `preemption_policy` (Optional, string) The preemption policy set for the Priority Class. Must be set to either 'Never', 'PreemptLowerPriority', or omitted.
+
 ### `rke_config`
 
 #### Arguments
 
 * `additional_manifest` - (Optional, string, must be in YAML format) The value of the additional manifest is delivered to the path `/var/lib/rancher/rke2/server/manifests/rancher/addons.yaml` or `/var/lib/rancher/k3s/server/manifests/rancher/addons.yaml` on the control plane nodes.
+* `data_directories` - (Optional, list, max length: 1) Data directory configuration for the kubernetes distro, system-agent, and provisioning resources.
 * `local_auth_endpoint` - (Deprecated) Use rancher2_cluster_v2.local_auth_endpoint instead.
 * `upgrade_strategy` - (Optional, list, max length: 1) Cluster upgrade strategy.
 * `chart_values` - (Optional, string, must be in YAML format) The value for the system charts installed by the distribution. For more information about how RKE2 or K3s manage packaged components, please refer to [RKE2 documentation](https://docs.rke2.io/helm) or [K3s documentation](https://docs.k3s.io/installation/packaged-components).
@@ -923,9 +1022,18 @@ see more information on [Resource Management for Pods and Containers](https://ku
 * `machine_selector_files` - (Optional/computed, list) Machine selector files provide a means to deliver files to nodes so that the files can be in place before initiating RKE2/K3s server or agent processes. Please refer to Rancher documentation for [RKE2 Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/rke2-cluster-configuration#machineselectorfiles) and [K3s Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/k3s-cluster-configuration#machineselectorfiles). This argument is available in Rancher v2.7.2 and later.
 * `registries` - (Optional, list, max length: 1) Docker registries from which the cluster pulls images. 
 * `etcd` - (Optional/computed, list, max length: 1) Etcd configures the behavior of the automatic etcd snapshot feature.
+* `networking` - (Optional, list, max length: 1) The networking stack used by the cluster.
 * `rotate_certificates` (Optional, list, max length: 1) Cluster V2 certificate rotation.
 * `etcd_snapshot_create` (Optional, list, max length: 1) Cluster V2 etcd snapshot create.
 * `etcd_snapshot_restore` (Optional, list, max length: 1) Cluster V2 etcd snapshot restore.
+
+#### `data_directories`
+
+##### Arguments
+
+* `system_agent` - (Optional, string) System agent data directory path, used for all system agent data on provisioning v2 downstream  cluster nodes. If unspecified, the `rancher-system-agent` will use the default: `/var/lib/rancher/agent`.
+* `provisioning` - (Optional, string) Provisioning data directory path, used for all provisioning data on provisioning v2 downstream cluster nodes. If unspecified, Rancher will use the default: `/var/lib/rancher/provisioning`.
+* `k8s_distro` - (Optional, string) Kubernetes distro data directory path, rendered as the `data-dir` argument for provisioning v2 RKE2/K3s clusters. If unspecified, the distro will use the default: `/var/lib/rancher/rke2` for RKE2, and `/var/lib/rancher/k3s` for K3s.
 
 #### `local_auth_endpoint`
 
@@ -979,6 +1087,7 @@ see more information on [Resource Management for Pods and Containers](https://ku
 * `max_unhealthy` - (Optional, string) Max unhealthy nodes for automated replacement to be allowed.
 * `unhealthy_range` - (Optional, string) Range of unhealthy nodes for automated replacement to be allowed.
 * `machine_labels` - (Optional, map) Labels for Machine pool nodes.
+* `machine_os` - (Optional) OS Type in machine pool. Default `linux`(string)
 * `labels` - (Optional, map) Labels for Machine Deployment Resource.
 * `annotations` - (Optional, map) Annotations for Machine Deployment Resource. 
 
@@ -1138,6 +1247,12 @@ This argument is available in Rancher v2.7.2 and later.
 * `name` - (Required, string) ETCD snapshot name to restore.
 * `generation` (Required, int) ETCD snapshot desired generation.
 * `restore_rke_config` (Optional, string) ETCD restore RKE config (set to none, all, or kubernetesVersion).
+
+#### `networking`
+
+##### Arguments
+
+* `stack_preference` - (Optional, string) The networking stack used by the cluster. The selected value configures the address used for health and readiness probes of calico, etcd, kube-apiserver, kube-scheduler, kube-controller-manager, and kubelet. It also defines the server URL in the authentication-token-webhook-config-file for the Authorized Cluster Endpoint and the advertise-client-urls for etcd during snapshot restore.  When set to `dual`, the cluster uses `localhost`; when set to `ipv6`, it uses `[::1]`; when set to `ipv4`, it uses `127.0.0.1`.
 
 ### `cluster_registration_token`
 

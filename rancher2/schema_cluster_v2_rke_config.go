@@ -5,9 +5,15 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 // Types
+
+var (
+	// StackPreference is the networking stack used by the cluster
+	StackPreference = []string{"dual", "ipv6", "ipv4"}
+)
 
 func clusterV2RKEConfigFieldsV0() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
@@ -140,6 +146,16 @@ func clusterV2RKEConfigFieldsV0() map[string]*schema.Schema {
 				Schema: clusterV2RKEConfigETCDFields(),
 			},
 		},
+		"networking": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster V2 networking",
+			Elem: &schema.Resource{
+				Schema: clusterV2Networking(),
+			},
+		},
 		"rotate_certificates": {
 			Type:        schema.TypeList,
 			MaxItems:    1,
@@ -172,12 +188,39 @@ func clusterV2RKEConfigFieldsV0() map[string]*schema.Schema {
 	return s
 }
 
+func clusterV2Networking() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"stack_preference": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Description: "Specify the networking stack used by the cluster. The selected value configures the address " +
+				"used for health and readiness probes of calico, etcd, kube-apiserver, kube-scheduler, kube-controller-manager, and kubelet. " +
+				"It also defines the server URL in the authentication-token-webhook-config-file for " +
+				"the Authorized Cluster Endpoint and the advertise-client-urls for etcd during snapshot restore. " +
+				"When set to dual, the cluster uses localhost; " +
+				"when set to ipv6, it uses [::1]; " +
+				"when set to ipv4, it uses 127.0.0.1",
+			ValidateFunc: validation.StringInSlice(StackPreference, false),
+		},
+	}
+
+	return s
+}
+
 func clusterV2RKEConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"additional_manifest": {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Cluster V2 additional manifest",
+		},
+		"data_directories": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Cluster V2 data directories",
+			Elem: &schema.Resource{
+				Schema: clusterV2RKEConfigDataDirectoriesFields(),
+			},
 		},
 		"local_auth_endpoint": {
 			Type:        schema.TypeList,
@@ -301,6 +344,16 @@ func clusterV2RKEConfigFields() map[string]*schema.Schema {
 			Description: "Cluster V2 etcd",
 			Elem: &schema.Resource{
 				Schema: clusterV2RKEConfigETCDFields(),
+			},
+		},
+		"networking": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Computed:    true,
+			Description: "Cluster V2 networking",
+			Elem: &schema.Resource{
+				Schema: clusterV2Networking(),
 			},
 		},
 		"rotate_certificates": {
