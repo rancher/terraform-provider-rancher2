@@ -1,3 +1,5 @@
+# Changelog
+
 ## [13.1.4](https://github.com/rancher/terraform-provider-rancher2/compare/v13.1.3...v13.1.4) (2025-12-19)
 
 
