@@ -1,17 +1,3 @@
-## v4.1.0 (March 6, 2024)
-
-FEATURES:
-
-* Added support for `rancher2_pod_security_admission_configuration_template` resource and dataSource. See https://github.com/rancher/terraform-provider-rancher2/pull/1302
-
-ENHANCEMENTS:
-
-* [Docs] fix unit and add new example to the documentation for `rancher_cluster_v2`. See  https://github.com/rancher/terraform-provider-rancher2/pull/1309
-* [Docs] add note linking to AWS docs for `eks_config_v2`. See https://github.com/rancher/terraform-provider-rancher2/pull/1247
-
-BUGFIXES:
-
-
 ## [13.1.4](https://github.com/rancher/terraform-provider-rancher2/compare/v13.1.3...v13.1.4) (2025-12-19)
 
 
