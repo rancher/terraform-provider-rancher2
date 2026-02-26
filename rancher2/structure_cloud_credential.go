@@ -108,6 +108,15 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		if err != nil {
 			return err
 		}
+	case ionoscloudConfigDriver:
+		v, ok := d.Get("ionoscloud_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err := d.Set("ionoscloud_credential_config", flattenCloudCredentialIonoscloud(in.IonoscloudCredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on cloud credential: %s", driver)
 	}
@@ -189,6 +198,11 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	if v, ok := in.Get("vsphere_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.VmwarevsphereCredentialConfig = expandCloudCredentialVsphere(v)
 		in.Set("driver", vmwarevsphereConfigDriver)
+	}
+
+	if v, ok := in.Get("ionoscloud_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.IonoscloudCredentialConfig = expandCloudCredentialIonoscloud(v)
+		in.Set("driver", ionoscloudConfigDriver)
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {

@@ -4,7 +4,7 @@ page_title: "rancher2_node_driver Data Source"
 
 # rancher2\_node\_driver Data Source
 
-Use this data source to retrieve information about a Rancher v2 Node Driver resource. 
+Use this data source to retrieve information about a Rancher v2 Node Driver resource.
 
 ## Example Usage
 
@@ -23,6 +23,7 @@ data "rancher2_node_driver" "foo" {
 
 * `id` - (Computed) The ID of the resource (string)
 * `active` - (Computed) Specify if the node driver state (bool)
+* `add_cluster_credential` - (Computed) Specify if the node driver should add cluster credential (bool)
 * `builtin` - (Computed) Specify wheter the node driver is an internal cluster driver or not (bool)
 * `checksum` - (Computed) Verify that the downloaded driver matches the expected checksum (string)
 * `description` - (Computed) Description of the node driver (string)
@@ -31,4 +32,3 @@ data "rancher2_node_driver" "foo" {
 * `whitelist_domains` - (Computed) Domains to whitelist for the ui (list)
 * `annotations` - (Computed) Annotations of the resource (map)
 * `labels` - (Computed) Labels of the resource (map)
-

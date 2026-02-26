@@ -24,6 +24,10 @@ func dataSourceRancher2NodeDriver() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"add_cloud_credential": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"builtin": {
 				Type:     schema.TypeBool,
 				Computed: true,

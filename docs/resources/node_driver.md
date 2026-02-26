@@ -13,6 +13,7 @@ Provides a Rancher v2 Node Driver resource. This can be used to create Node Driv
 resource "rancher2_node_driver" "foo" {
     active = true
     builtin = false
+    add_cluster_credential = true
     checksum = "0x0"
     description = "Foo description"
     external_id = "foo_external"
@@ -31,6 +32,7 @@ The following arguments are supported:
 * `builtin` - (Required) Specify wheter the node driver is an internal node driver or not (bool)
 * `name` - (Required) Name of the node driver (string)
 * `url` - (Required) The URL to download the machine driver binary for 64-bit Linux (string)
+* `add_cluster_credential` - (Optional) Specify if the node driver should add cluster credential (bool)
 * `checksum` - (Optional) Verify that the downloaded driver matches the expected checksum (string)
 * `description` - (Optional) Description of the node driver (string)
 * `external_id` - (Optional) External ID (string)

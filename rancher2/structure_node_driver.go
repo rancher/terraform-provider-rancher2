@@ -14,6 +14,7 @@ func flattenNodeDriver(d *schema.ResourceData, in *managementClient.NodeDriver) 
 
 	d.SetId(in.ID)
 	d.Set("active", in.Active)
+	d.Set("add_cloud_credential", in.AddCloudCredential)
 	d.Set("builtin", in.Builtin)
 	d.Set("checksum", in.Checksum)
 	d.Set("description", in.Description)
@@ -54,6 +55,7 @@ func expandNodeDriver(in *schema.ResourceData) *managementClient.NodeDriver {
 	}
 
 	obj.Active = in.Get("active").(bool)
+	obj.AddCloudCredential = in.Get("add_cloud_credential").(bool)
 	obj.Builtin = in.Get("builtin").(bool)
 	obj.Checksum = in.Get("checksum").(string)
 	obj.Description = in.Get("description").(string)

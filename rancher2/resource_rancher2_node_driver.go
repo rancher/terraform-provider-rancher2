@@ -100,17 +100,18 @@ func resourceRancher2NodeDriverUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	update := map[string]interface{}{
-		"active":           d.Get("active").(bool),
-		"builtin":          d.Get("builtin").(bool),
-		"checksum":         d.Get("checksum").(string),
-		"description":      d.Get("description").(string),
-		"externalId":       d.Get("external_id").(string),
-		"name":             d.Get("name").(string),
-		"uiUrl":            d.Get("ui_url").(string),
-		"url":              d.Get("url").(string),
-		"whitelistDomains": toArrayString(d.Get("whitelist_domains").([]interface{})),
-		"annotations":      toMapString(d.Get("annotations").(map[string]interface{})),
-		"labels":           toMapString(d.Get("labels").(map[string]interface{})),
+		"active":               d.Get("active").(bool),
+		"add_cloud_credential": d.Get("add_cloud_credential").(bool),
+		"builtin":              d.Get("builtin").(bool),
+		"checksum":             d.Get("checksum").(string),
+		"description":          d.Get("description").(string),
+		"externalId":           d.Get("external_id").(string),
+		"name":                 d.Get("name").(string),
+		"uiUrl":                d.Get("ui_url").(string),
+		"url":                  d.Get("url").(string),
+		"whitelistDomains":     toArrayString(d.Get("whitelist_domains").([]interface{})),
+		"annotations":          toMapString(d.Get("annotations").(map[string]interface{})),
+		"labels":               toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
 	newNodeDriver, err := client.NodeDriver.Update(nodeDriver, update)
