@@ -1,5 +1,28 @@
 # Changelog
 
+## [14.0.0](https://github.com/rancher/terraform-provider-rancher2/compare/v14.0.0...v14.0.0) (2026-02-26)
+
+
+### Features
+
+* implement PC and PDB support for the fleet agent ([#2035](https://github.com/rancher/terraform-provider-rancher2/issues/2035)) ([db0748a](https://github.com/rancher/terraform-provider-rancher2/commit/db0748aad4266ee0533e2d4ec88ab23a05fdf173))
+
+
+### Bug Fixes
+
+* [Docs] Add inherited_cluster_roles to docs ([#2056](https://github.com/rancher/terraform-provider-rancher2/issues/2056)) ([451adf4](https://github.com/rancher/terraform-provider-rancher2/commit/451adf403afe9f5ecc3ccb349890381eba8527f1))
+* add FOSSA scanning workflow ([#2032](https://github.com/rancher/terraform-provider-rancher2/issues/2032)) ([78fe9ad](https://github.com/rancher/terraform-provider-rancher2/commit/78fe9ad355410a4c97d0390840e53c9ad1d96665))
+* add search exact match option for principal ([#2067](https://github.com/rancher/terraform-provider-rancher2/issues/2067)) ([cb0cfc7](https://github.com/rancher/terraform-provider-rancher2/commit/cb0cfc722fe00a5a507d15464ec14107ec403282))
+* Bump golang.org/x/crypto from 0.33.0 to 0.35.0 ([#2059](https://github.com/rancher/terraform-provider-rancher2/issues/2059)) ([5203465](https://github.com/rancher/terraform-provider-rancher2/commit/52034653925cafd44c8fbc924a6a0b52d0a82574))
+* login ([#2019](https://github.com/rancher/terraform-provider-rancher2/issues/2019)) ([3a41053](https://github.com/rancher/terraform-provider-rancher2/commit/3a41053af986308c6665b7b86dc53cdde195f9ca))
+* prepare for v14 release ([#2015](https://github.com/rancher/terraform-provider-rancher2/issues/2015)) ([8ca2e99](https://github.com/rancher/terraform-provider-rancher2/commit/8ca2e997f339c883dad32c20d4ed20b656e3c614))
+* rc release calculator for new branches ([#2028](https://github.com/rancher/terraform-provider-rancher2/issues/2028)) ([5b566d7](https://github.com/rancher/terraform-provider-rancher2/commit/5b566d752446a2d6888afad5a7353588e8d8b9cc))
+* Remove ingress Nginx annotation examples ([#2077](https://github.com/rancher/terraform-provider-rancher2/issues/2077)) ([5917b45](https://github.com/rancher/terraform-provider-rancher2/commit/5917b4523a9dbcc0211454e3fe68a4e9a6c7ad3e))
+* set new release version ([#2024](https://github.com/rancher/terraform-provider-rancher2/issues/2024)) ([cffd050](https://github.com/rancher/terraform-provider-rancher2/commit/cffd050fea400699e4b06cfbf12de3ae86f32f6b))
+* update machine selector config example ([#2076](https://github.com/rancher/terraform-provider-rancher2/issues/2076)) ([70cf584](https://github.com/rancher/terraform-provider-rancher2/commit/70cf584fdeef697309d6cec7c171214bbecf0372))
+* update rancher2 config map import command ([#2070](https://github.com/rancher/terraform-provider-rancher2/issues/2070)) ([1020115](https://github.com/rancher/terraform-provider-rancher2/commit/1020115b1770c420dc2288d07d6c07ffcf9c22cc))
+* v3 public fallback logic ([#2086](https://github.com/rancher/terraform-provider-rancher2/issues/2086)) ([fa05d99](https://github.com/rancher/terraform-provider-rancher2/commit/fa05d99c7feb3d2a2b5d76acd40c20c487909707))
+
 ## [13.1.4](https://github.com/rancher/terraform-provider-rancher2/compare/v13.1.3...v13.1.4) (2025-12-19)
 
 
