@@ -168,17 +168,17 @@ func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (stri
 
 	// Login with user and pass
 	respBody, resp, err := DoPost(loginURL, string(payload), cacert, insecure, loginHead)
-	if err != nil {
-		return "", "", fmt.Errorf("%s: %v", errPrefix, err)
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		// /v1-public/login endpoint is not available
 		// try to fall back to /v3-public endpoint.
 		respBody, _, err = DoPost(v3loginURL, string(payload), cacert, insecure, loginHead)
 		if err != nil {
 			return "", "", fmt.Errorf("%s: %v", errPrefix, err)
 		}
+	}
+
+	if err != nil {
+		return "", "", fmt.Errorf("%s: %v", errPrefix, err)
 	}
 
 	var token string
@@ -249,13 +249,9 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 	}
 	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return response, nil, err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&response)
 
-	return response, resp, nil
+	return response, resp, err
 }
 
 func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte, error) {
