@@ -6,7 +6,7 @@ page_title: "rancher2_machine_config_v2 Resource"
 
 Provides a Rancher v2 Machine config v2 resource. This can be used to create Machine Config v2 for Rancher v2 and retrieve their information. This resource is available from Rancher v2.6.0 and above.
 
-The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `openstack`, and `vsphere`.
+The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `nutanix`, `openstack`, and `vsphere`.
 
 
 Starting with Rancher v2.12.0 and above, `google` is also offered as a supported cloud provider.
@@ -90,14 +90,15 @@ The following arguments are supported:
 
 * `generate_name` - (Required/ForceNew) Cluster V2 generate name. The pattern to generate machine config name. e.g  generate_name=\"prod-pool1\" will generate \"nc-prod-pool1-?????\" name computed at `name` attribute (string)
 * `fleet_namespace` - (Optional/ForceNew) Cluster V2 fleet namespace
-* `amazonec2_config` - (Optional) AWS config for the Machine Config V2. Conflicts with `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `azure_config` - (Optional) Azure config for the Machine Config V2. Conflicts with `amazonec2_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `digitalocean_config` - (Optional) Digitalocean config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `harvester_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `harvester_config` - (Optional) Harvester config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `linode_config` - (Optional) Linode config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `google_config` and `openstack_config` (list maxitems:1)
-* `google_config` - (Optional) Google config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `amazonec2_config` - (Optional) AWS config for the Machine Config V2. Conflicts with `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `azure_config` - (Optional) Azure config for the Machine Config V2. Conflicts with `amazonec2_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `digitalocean_config` - (Optional) Digitalocean config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `harvester_config` - (Optional) Harvester config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `linode_config` - (Optional) Linode config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `nutanix_config` - (Optional) Nutanix config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `vsphere_config` (list maxitems:1)
+* `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `openstack_config` (list maxitems:1)
+* `google_config` - (Optional) Google config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
@@ -363,6 +364,33 @@ The following attributes are exported:
 * `user_data` - (Optional) GCE user-data file path (string)
 * `username` - (Optional) The username to be set when logging into the virtual machines (string)
 * `zone` - (Required) The region and zone to create virtual machines within (e.g. us-east1-b) (string)
+
+### `nutanix_config`
+
+#### Arguments
+
+* `endpoint` - (Required) Nutanix management endpoint IP address/FQDN (string)
+* `username` - (Required) Nutanix management username. Use `X-ntnx-api-key` when using Prism Central service accounts (string)
+* `password` - (Required/Sensitive) Nutanix management password or API key for service account mode (string)
+* `cluster` - (Required) Nutanix cluster where the VM is deployed (string)
+* `vm_network` - (Required) Network names or UUIDs to attach to the VM (list)
+* `vm_image` - (Required) Name of the VM disk image/template to clone from (string)
+* `port` - (Optional) Nutanix management endpoint port. Default `9440` (string)
+* `insecure` - (Optional) Allow insecure SSL requests. Default `false` (bool)
+* `vm_mem` - (Optional) Memory in MB of the VM to be created. Default `2048` (string)
+* `vm_cpus` - (Optional) Number of VCPUs of the VM to be created. Default `2` (string)
+* `vm_cores` - (Optional) Number of cores per VCPU of the VM to be created. Default `1` (string)
+* `vm_cpu_passthrough` - (Optional) Enable passthrough of host CPU features to the VM. Default `false` (bool)
+* `vm_image_size` - (Optional) Increase the size of the template image in GiB. Default `0` (string)
+* `vm_categories` - (Optional) Categories to apply to the VM (list)
+* `storage_container` - (Optional) UUID of the storage container for additional disk (string)
+* `disk_size` - (Optional) Size of the additional disk in GiB. Default `0` (string)
+* `cloud_init` - (Optional) Cloud-init configuration (string)
+* `vm_serial_port` - (Optional) Attach a serial port to the VM. Default `false` (bool)
+* `project` - (Optional) Name of the project to assign the VM (string)
+* `boot_type` - (Optional) Boot type of the VM. Supported values are `legacy` and `uefi`. Default `legacy` (string)
+* `timeout` - (Optional) Timeout for Nutanix operations in seconds. Default `300` (string)
+* `vm_gpu` - (Optional) GPU devices to attach to the VM (list)
 
 ## Timeouts
 
