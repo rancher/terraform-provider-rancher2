@@ -32,3 +32,5 @@ backport
 GKE
 PDB
 PC
+AuthConfig
+Cognito

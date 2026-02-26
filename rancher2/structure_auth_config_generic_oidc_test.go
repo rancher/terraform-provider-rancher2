@@ -10,7 +10,7 @@ import (
 
 var (
 	testAuthConfigGenericOIDCConf      *managementClient.GenericOIDCConfig
-	testAuthConfigGenericOIDCInterface map[string]interface{}
+	testAuthConfigGenericOIDCInterface map[string]any
 	groupSearchEnabled                 = true
 )
 
@@ -33,12 +33,17 @@ func init() {
 		GroupsClaim:         "groups_field",
 		Certificate:         "certificate",
 		PrivateKey:          "private_key",
+		NameClaim:           "preferred_username",
+		EmailClaim:          "alt_email",
+		LogoutAllEnabled:    true,
+		LogoutAllForced:     true,
+		EndSessionEndpoint:  "https://example.com/end-session",
 	}
-	testAuthConfigGenericOIDCInterface = map[string]interface{}{
+	testAuthConfigGenericOIDCInterface = map[string]any{
 		"name":                  AuthConfigGenericOIDCName,
 		"type":                  managementClient.GenericOIDCConfigType,
 		"access_mode":           "access",
-		"allowed_principal_ids": []interface{}{"allowed1", "allowed2"},
+		"allowed_principal_ids": []any{"allowed1", "allowed2"},
 		"enabled":               true,
 		"client_id":             "client_id",
 		"issuer":                "issuer",
@@ -52,51 +57,29 @@ func init() {
 		"groups_field":          "groups_field",
 		"certificate":           "certificate",
 		"private_key":           "private_key",
+		"name_claim":            "preferred_username",
+		"email_claim":           "alt_email",
+		"logout_all_enabled":    true,
+		"logout_all_forced":     true,
+		"end_session_endpoint":  "https://example.com/end-session",
 	}
 }
 
 func TestFlattenAuthConfigGenericOIDC(t *testing.T) {
-	cases := []struct {
-		Input          *managementClient.GenericOIDCConfig
-		ExpectedOutput map[string]interface{}
-	}{
-		{
-			testAuthConfigGenericOIDCConf,
-			testAuthConfigGenericOIDCInterface,
-		},
+	output := schema.TestResourceDataRaw(t, authConfigGenericOIDCFields(), map[string]any{})
+	err := flattenAuthConfigGenericOIDC(output, testAuthConfigGenericOIDCConf)
+	assert.NoError(t, err, "Error in flattenAuthConfigGenericOIDC")
+	expectedOutput := map[string]any{}
+	for k := range testAuthConfigGenericOIDCInterface {
+		expectedOutput[k] = output.Get(k)
 	}
-
-	for _, tc := range cases {
-		output := schema.TestResourceDataRaw(t, authConfigGenericOIDCFields(), map[string]interface{}{})
-		err := flattenAuthConfigGenericOIDC(output, tc.Input)
-		if err != nil {
-			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
-		}
-		expectedOutput := map[string]interface{}{}
-		for k := range tc.ExpectedOutput {
-			expectedOutput[k] = output.Get(k)
-		}
-		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
-	}
+	assert.Equal(t, testAuthConfigGenericOIDCInterface, expectedOutput, "Unexpected output from flattenAuthConfigGenericOIDC")
 }
 
 func TestExpandAuthConfigGenericOIDC(t *testing.T) {
-	cases := []struct {
-		Input          map[string]interface{}
-		ExpectedOutput *managementClient.GenericOIDCConfig
-	}{
-		{
-			testAuthConfigGenericOIDCInterface,
-			testAuthConfigGenericOIDCConf,
-		},
-	}
+	inputResourceData := schema.TestResourceDataRaw(t, authConfigGenericOIDCFields(), testAuthConfigGenericOIDCInterface)
+	output, err := expandAuthConfigGenericOIDC(inputResourceData)
 
-	for _, tc := range cases {
-		inputResourceData := schema.TestResourceDataRaw(t, authConfigGenericOIDCFields(), tc.Input)
-		output, err := expandAuthConfigGenericOIDC(inputResourceData)
-		if err != nil {
-			assert.FailNow(t, "[ERROR] on expander: %#v", err)
-		}
-		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
-	}
+	assert.NoError(t, err, "Error in expandAuthConfigGenericOIDC")
+	assert.Equal(t, testAuthConfigGenericOIDCConf, output, "Unexpected output from expandAuthConfigGenericOIDC")
 }
