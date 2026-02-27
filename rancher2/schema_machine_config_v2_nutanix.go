@@ -13,17 +13,17 @@ func machineConfigV2NutanixFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"endpoint": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Nutanix management endpoint IP address/FQDN",
 		},
 		"username": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Nutanix management username",
 		},
 		"password": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "Nutanix management password",
 		},
