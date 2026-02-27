@@ -125,6 +125,15 @@ func init() {
 		AppendTolerations:            testClusterV2AppendTolerations,
 		OverrideAffinity:             testClusterV2OverrideAffinity,
 		OverrideResourceRequirements: testClusterV2OverrideResourceRequirements,
+		SchedulingCustomization: &provisionv1.AgentSchedulingCustomization{
+			PriorityClass: &provisionv1.PriorityClassSpec{
+				Value:            123,
+				PreemptionPolicy: &neverPreemption,
+			},
+			PodDisruptionBudget: &provisionv1.PodDisruptionBudgetSpec{
+				MinAvailable: "1",
+			},
+		},
 	}
 
 	testClusterV2Conf.Spec.ClusterAgentDeploymentCustomization = testClusterV2ClusterAgentDeploymentCustomizationConf
@@ -166,6 +175,22 @@ func init() {
 					"cpu_request":    "500",
 					"memory_limit":   "500",
 					"memory_request": "500",
+				},
+			},
+			"scheduling_customization": []interface{}{
+				map[string]interface{}{
+					"priority_class": []interface{}{
+						map[string]interface{}{
+							"value":             123,
+							"preemption_policy": "Never",
+						},
+					},
+					"pod_disruption_budget": []interface{}{
+						map[string]interface{}{
+							"min_available":   "1",
+							"max_unavailable": "",
+						},
+					},
 				},
 			},
 		},
