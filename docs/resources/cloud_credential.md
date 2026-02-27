@@ -6,7 +6,7 @@ page_title: "rancher2_cloud_credential Resource"
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2.x and retrieve their information.
 
-amazonec2, azure, digitalocean, harvester, linode, openstack and vsphere credentials config are supported for Cloud Credential.
+amazonec2, azure, digitalocean, harvester, linode, nutanix, openstack and vsphere credentials config are supported for Cloud Credential.
 
 ## Example Usage
 
@@ -51,6 +51,7 @@ The following arguments are supported:
 * `google_credential_config` - (Optional) Google config for the Cloud Credential (list maxitems:1)
 * `harvester_credential_config` - (Optional) Harvester config for the Cloud Credential (list maxitems:1)
 * `linode_credential_config` - (Optional) Linode config for the Cloud Credential (list maxitems:1)
+* `nutanix_credential_config` - (Optional) Nutanix config for the Cloud Credential (list maxitems:1)
 * `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
 * `s3_credential_config` - (Optional) S3 config for the Cloud Credential. For Rancher 2.6.0 and above (list maxitems:1)
 * `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
@@ -110,6 +111,15 @@ The following attributes are exported:
 
 * `token` - (Required/Sensitive) Linode API token (string)
 
+### `nutanix_credential_config`
+
+#### Arguments
+
+* `endpoint` - (Required) Nutanix management endpoint IP address/FQDN (string)
+* `username` - (Required) Nutanix management username (string)
+* `password` - (Required/Sensitive) Nutanix management password (string)
+* `port` - (Optional) Nutanix management endpoint port. Default `9440` (string)
+
 ### `openstack_credential_config`
 
 #### Arguments
@@ -162,6 +172,7 @@ The following drivers are supported:
 * digitalocean
 * googlekubernetesengine
 * linode
+* nutanix
 * openstack
 * s3
 * vmwarevsphere

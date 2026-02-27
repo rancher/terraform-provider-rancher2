@@ -136,6 +136,53 @@ resource "rancher2_cluster_v2" "foo-k3s" {
 }
 ```
 
+### Create a node-driver cluster with Nutanix as the infrastructure provider
+
+```hcl
+# Create Nutanix cloud credential
+resource "rancher2_cloud_credential" "foo_nutanix" {
+  name = "foo-nutanix"
+  nutanix_credential_config {
+    endpoint = "<PRISM_ENDPOINT>"
+    username = "X-ntnx-api-key"
+    password = "<NUTANIX_API_KEY_OR_PASSWORD>"
+    port     = "9440"
+  }
+}
+
+# Create Nutanix machine config v2
+resource "rancher2_machine_config_v2" "foo_nutanix" {
+  generate_name = "foo-nutanix"
+  nutanix_config {
+    cluster    = "<NUTANIX_CLUSTER_NAME>"
+    vm_network = ["<NETWORK_NAME_OR_UUID>"]
+    vm_image   = "<IMAGE_NAME>"
+  }
+}
+
+# Create a cluster using Nutanix machine config and cloud credential
+resource "rancher2_cluster_v2" "foo_nutanix" {
+  name               = "foo-nutanix"
+  kubernetes_version = "<rke2/k3s-version>"
+
+  rke_config {
+    machine_pools {
+      name                         = "pool1"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo_nutanix.id
+      control_plane_role           = true
+      etcd_role                    = true
+      worker_role                  = true
+      quantity                     = 1
+
+      machine_config {
+        kind = rancher2_machine_config_v2.foo_nutanix.kind
+        name = rancher2_machine_config_v2.foo_nutanix.name
+      }
+    }
+  }
+}
+```
+
 ### Create a node-driver cluster with Harvester as the infrastructure provider
 
 ```hcl
