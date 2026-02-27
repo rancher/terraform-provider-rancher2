@@ -369,9 +369,9 @@ The following attributes are exported:
 
 #### Arguments
 
-* `endpoint` - (Required) Nutanix management endpoint IP address/FQDN (string)
-* `username` - (Required) Nutanix management username. Use `X-ntnx-api-key` when using Prism Central service accounts (string)
-* `password` - (Required/Sensitive) Nutanix management password or API key for service account mode (string)
+* `endpoint` - (Optional) Nutanix management endpoint IP address/FQDN. Mandatory if `rancher2_cloud_credential.nutanix_credential_config` is not used (string)
+* `username` - (Optional) Nutanix management username. Use `X-ntnx-api-key` when using Prism Central service accounts. Mandatory if `rancher2_cloud_credential.nutanix_credential_config` is not used (string)
+* `password` - (Optional/Sensitive) Nutanix management password or API key for service account mode. Mandatory if `rancher2_cloud_credential.nutanix_credential_config` is not used (string)
 * `cluster` - (Required) Nutanix cluster where the VM is deployed (string)
 * `vm_network` - (Required) Network names or UUIDs to attach to the VM (list)
 * `vm_image` - (Required) Name of the VM disk image/template to clone from (string)

@@ -15,6 +15,7 @@ type CloudCredential struct {
 	GoogleCredentialConfig        *googleCredentialConfig        `json:"googlecredentialConfig,omitempty" yaml:"googlecredentialConfig,omitempty"`
 	HarvesterCredentialConfig     *harvesterCredentialConfig     `json:"harvestercredentialConfig,omitempty" yaml:"harvestercredentialConfig,omitempty"`
 	LinodeCredentialConfig        *linodeCredentialConfig        `json:"linodecredentialConfig,omitempty" yaml:"linodecredentialConfig,omitempty"`
+	NutanixCredentialConfig       *nutanixCredentialConfig       `json:"nutanixcredentialConfig,omitempty" yaml:"nutanixcredentialConfig,omitempty"`
 	OpenstackCredentialConfig     *openstackCredentialConfig     `json:"openstackcredentialConfig,omitempty" yaml:"openstackcredentialConfig,omitempty"`
 	VmwarevsphereCredentialConfig *vmwarevsphereCredentialConfig `json:"vmwarevspherecredentialConfig,omitempty" yaml:"vmwarevspherecredentialConfig,omitempty"`
 }
@@ -26,6 +27,7 @@ var allCloudCredentialDriverConfigFields = []string{
 	"google_credential_config",
 	"harvester_credential_config",
 	"linode_credential_config",
+	"nutanix_credential_config",
 	"openstack_credential_config",
 	"s3_credential_config",
 	"vsphere_credential_config"}
@@ -98,6 +100,15 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "linode_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialLinodeFields(),
+			},
+		},
+		"nutanix_credential_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "nutanix_credential_config"),
+			Elem: &schema.Resource{
+				Schema: cloudCredentialNutanixFields(),
 			},
 		},
 		"openstack_credential_config": {
