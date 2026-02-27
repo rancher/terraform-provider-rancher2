@@ -99,8 +99,8 @@ func TestDoUserLogin(t *testing.T) {
 
 	t.Run("server error", func(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
 			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"type":    "error",
 				"code":    "ServerError",
@@ -120,15 +120,11 @@ func TestDoUserLogin(t *testing.T) {
 
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			callCount++
-			w.Header().Set("Content-Type", "application/json")
 
 			if r.URL.Path == "/v1-public/login" {
 				// Simulate v1 endpoint not available
 				w.WriteHeader(http.StatusNotFound)
-				_ = json.NewEncoder(w).Encode(map[string]any{
-					"type": "error",
-					"code": "NotFound",
-				})
+				w.Write([]byte(http.StatusText(http.StatusNotFound)))
 				return
 			}
 
@@ -140,6 +136,7 @@ func TestDoUserLogin(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, int64(60000), reqBody.TTL)
 
+				w.Header().Set("Content-Type", "application/json")
 				_ = json.NewEncoder(w).Encode(map[string]any{
 					"token": tokenValue,
 				})
@@ -159,18 +156,14 @@ func TestDoUserLogin(t *testing.T) {
 
 	t.Run("fallback to v3-public fails", func(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-
 			if r.URL.Path == "/v1-public/login" {
 				w.WriteHeader(http.StatusNotFound)
-				_ = json.NewEncoder(w).Encode(map[string]any{
-					"type": "error",
-					"code": "NotFound",
-				})
+				w.Write([]byte(http.StatusText(http.StatusNotFound)))
 				return
 			}
 
 			// v3 endpoint also fails with auth error
+			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"type": "error",
 				"code": "Unauthorized",
