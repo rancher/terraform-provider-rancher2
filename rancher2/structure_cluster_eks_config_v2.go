@@ -115,6 +115,9 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 	if len(in.DisplayName) > 0 {
 		obj["name"] = in.DisplayName
 	}
+	if in.IPFamily != nil && *in.IPFamily != "" {
+		obj["ip_family"] = *in.IPFamily
+	}
 	if in.KubernetesVersion != nil && len(*in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = *in.KubernetesVersion
 	}
@@ -298,6 +301,9 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	}
 	if v, ok := in["imported"].(bool); ok {
 		obj.Imported = v
+	}
+	if v, ok := in["ip_family"].(string); ok && len(v) > 0 {
+		obj.IPFamily = newString(v)
 	}
 	if v, ok := in["kms_key"].(string); ok && len(v) > 0 {
 		obj.KmsKey = newString(v)
