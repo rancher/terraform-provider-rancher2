@@ -40,6 +40,8 @@ type machineConfigV2Openstack struct {
 	PrivateKeyFile              string `json:"privateKeyFile,omitempty" yaml:"privateKeyFile,omitempty"`
 	Region                      string `json:"region,omitempty" yaml:"region,omitempty"`
 	SecGroups                   string `json:"secGroups,omitempty" yaml:"secGroups,omitempty"`
+	ServerGroupId               string `json:"serverGroupId,omitempty" yaml:"serverGroupId,omitempty"`
+	ServerGroupName             string `json:"serverGroupName,omitempty" yaml:"serverGroupName,omitempty"`
 	SSHPort                     string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
 	SSHUser                     string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
 	TenantID                    string `json:"tenantId,omitempty" yaml:"tenantId,omitempty"`
@@ -98,6 +100,8 @@ func flattenMachineConfigV2Openstack(in *MachineConfigV2Openstack) []interface{}
 	obj["private_key_file"] = in.PrivateKeyFile
 	obj["region"] = in.Region
 	obj["sec_groups"] = in.SecGroups
+	obj["server_group_name"] = in.ServerGroupName
+	obj["server_group_id"] = in.ServerGroupId
 	obj["ssh_port"] = in.SSHPort
 	obj["ssh_user"] = in.SSHUser
 	obj["tenant_id"] = in.TenantID
@@ -210,6 +214,12 @@ func expandMachineConfigV2Openstack(p []interface{}, source *MachineConfigV2) *M
 	}
 	if v, ok := in["sec_groups"].(string); ok && len(v) > 0 {
 		obj.SecGroups = v
+	}
+	if v, ok := in["server_group_id"].(string); ok && len(v) > 0 {
+		obj.ServerGroupId = v
+	}
+	if v, ok := in["server_group_name"].(string); ok && len(v) > 0 {
+		obj.ServerGroupName = v
 	}
 	if v, ok := in["ssh_port"].(string); ok && len(v) > 0 {
 		obj.SSHPort = v

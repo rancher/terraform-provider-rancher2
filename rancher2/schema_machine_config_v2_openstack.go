@@ -111,6 +111,14 @@ func machineConfigV2OpenstackFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"server_group_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"server_group_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"ssh_port": {
 			Type:     schema.TypeString,
 			Optional: true,
