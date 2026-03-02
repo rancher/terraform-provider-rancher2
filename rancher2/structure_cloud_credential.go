@@ -20,6 +20,12 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 	}
 
 	driver := d.Get("driver").(string)
+	// migrate google cloud credential to node driver format, not GKE.
+	if driver == oldGoogleConfigKontainerDriver {
+		driver = googleConfigNodeDriver
+		d.Set("driver", driver)
+	}
+
 	switch driver {
 	case amazonec2ConfigDriver:
 		v, ok := d.Get("amazonec2_credential_config").([]interface{})
@@ -48,7 +54,7 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		if err != nil {
 			return err
 		}
-	case googleConfigDriver:
+	case googleConfigNodeDriver:
 		v, ok := d.Get("google_credential_config").([]interface{})
 		if !ok {
 			v = []interface{}{}
@@ -157,7 +163,7 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 
 	if v, ok := in.Get("google_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.GoogleCredentialConfig = expandCloudCredentialGoogle(v)
-		in.Set("driver", googleConfigDriver)
+		in.Set("driver", googleConfigNodeDriver)
 	}
 
 	if v, ok := in.Get("harvester_credential_config").([]interface{}); ok && len(v) > 0 {
