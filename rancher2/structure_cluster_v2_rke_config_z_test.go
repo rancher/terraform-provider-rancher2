@@ -18,6 +18,7 @@ func init() {
 		MachinePools: testClusterV2RKEConfigMachinePoolsConf,
 	}
 	testClusterV2RKEConfigConf.AdditionalManifest = "additional_manifest"
+	testClusterV2RKEConfigConf.DataDirectories = testClusterV2RKEConfigDataDirectoriesConf
 	testClusterV2RKEConfigConf.UpgradeStrategy = testClusterV2RKEConfigUpgradeStrategyConf
 	testClusterV2RKEConfigConf.ChartValues = rkev1.GenericMap{
 		Data: map[string]interface{}{
@@ -36,6 +37,7 @@ func init() {
 	testClusterV2RKEConfigConf.MachineSelectorFiles = testClusterV2RKEConfigMachineSelectorFilesConf
 	testClusterV2RKEConfigConf.Registries = testClusterV2RKEConfigRegistryConf
 	testClusterV2RKEConfigConf.ETCD = testClusterV2RKEConfigETCDConf
+	testClusterV2RKEConfigConf.Networking = testClusterV2RKEConfigNetworkingConf
 	testClusterV2RKEConfigConf.RotateCertificates = testClusterV2RKEConfigRotateCertificatesConf
 	testClusterV2RKEConfigConf.ETCDSnapshotCreate = testClusterV2RKEConfigETCDSnapshotCreateConf
 	testClusterV2RKEConfigConf.ETCDSnapshotRestore = testClusterV2RKEConfigETCDSnapshotRestoreConf
@@ -43,6 +45,7 @@ func init() {
 	testClusterV2RKEConfigInterface = []interface{}{
 		map[string]interface{}{
 			"additional_manifest":     "additional_manifest",
+			"data_directories":        testClusterV2RKEConfigDataDirectoriesInterface,
 			"upgrade_strategy":        testClusterV2RKEConfigUpgradeStrategyInterface,
 			"chart_values":            "chart_one: one\nchart_two: two\n",
 			"machine_global_config":   "config_one: one\nconfig_two: two\n",
@@ -52,6 +55,7 @@ func init() {
 			"machine_selector_files":  testClusterV2RKEConfigMachineSelectorFilesInterface,
 			"registries":              testClusterV2RKEConfigRegistryInterface,
 			"etcd":                    testClusterV2RKEConfigETCDInterface,
+			"networking":              testClusterV2RKEConfigNetworkingInterface,
 			"rotate_certificates":     testClusterV2RKEConfigRotateCertificatesInterface,
 			"etcd_snapshot_create":    testClusterV2RKEConfigETCDSnapshotCreateInterface,
 			"etcd_snapshot_restore":   testClusterV2RKEConfigETCDSnapshotRestoreInterface,

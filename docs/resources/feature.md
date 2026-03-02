@@ -4,7 +4,7 @@ page_title: "rancher2_feature Resource"
 
 # rancher2\_feature Resource
 
-Provides a Rancher v2 Feature resource. This can be used to enable/disable [experimental features](https://rancher.com/docs/rancher/v2.x/en/installation/resources/feature-flags/) for Rancher v2 environments.
+Provides a Rancher v2 Feature resource. This can be used to enable/disable [experimental features](https://ranchermanager.docs.rancher.com/how-to-guides/advanced-user-guides/enable-experimental-features) for Rancher v2 environments.
 
 Experimental features already exist at Rancher v2.5.x systems, so they can just be updated: 
 * On create, provider will read Feature from Rancher and update its value. It will return an error if feature doesn't exist

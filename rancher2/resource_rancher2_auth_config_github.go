@@ -22,7 +22,7 @@ func resourceRancher2AuthConfigGithub() *schema.Resource {
 func resourceRancher2AuthConfigGithubCreate(d *schema.ResourceData, meta interface{}) error {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return fmt.Errorf("[ERROR] Failed to get ManagementClient %s", err)
 	}
 
 	auth, err := client.AuthConfig.ByID(AuthConfigGithubName)
@@ -59,7 +59,7 @@ func resourceRancher2AuthConfigGithubRead(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigGithubName)
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return fmt.Errorf("[ERROR] Failed to get ManagementClient %s", err)
 	}
 
 	auth, err := client.AuthConfig.ByID(AuthConfigGithubName)
@@ -96,7 +96,7 @@ func resourceRancher2AuthConfigGithubDelete(d *schema.ResourceData, meta interfa
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return err
+		return fmt.Errorf("[ERROR] Failed to get ManagementClient %s", err)
 	}
 
 	auth, err := client.AuthConfig.ByID(AuthConfigGithubName)
@@ -106,7 +106,7 @@ func resourceRancher2AuthConfigGithubDelete(d *schema.ResourceData, meta interfa
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting the %s AuthConfig: %w", AuthConfigGithubName, err)
 	}
 
 	if auth.Enabled == true {

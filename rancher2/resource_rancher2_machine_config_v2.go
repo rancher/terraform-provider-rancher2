@@ -227,6 +227,13 @@ func createMachineConfigV2(c *Config, obj *MachineConfigV2) (*MachineConfigV2, e
 		out.ID = resp.ID
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2GoogleGCEKind:
+		resp := &MachineConfigV2GoogleGCE{}
+		err = c.createObjectV2(rancher2DefaultLocalClusterID, machineConfigV2GoogleGCEAPIType, obj.GoogleGCEConfig, resp)
+		out.GoogleGCEConfig = resp
+		out.ID = resp.ID
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
 	default:
 		return nil, fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
 	}
@@ -332,6 +339,16 @@ func getMachineConfigV2ByID(c *Config, id, kind string) (*MachineConfigV2, error
 		out.Type = resp.Type
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2GoogleGCEKind:
+		resp := &MachineConfigV2GoogleGCE{}
+		err = c.getObjectV2ByID(rancher2DefaultLocalClusterID, id, machineConfigV2GoogleGCEAPIType, resp)
+		out.GoogleGCEConfig = resp
+		out.ID = resp.ID
+		out.Links = resp.Links
+		out.Actions = resp.Actions
+		out.Type = resp.Type
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
 	default:
 		return nil, fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
 	}
@@ -401,6 +418,13 @@ func updateMachineConfigV2(c *Config, obj *MachineConfigV2) (*MachineConfigV2, e
 		resp := &MachineConfigV2Vmwarevsphere{}
 		err = c.updateObjectV2(rancher2DefaultLocalClusterID, obj.ID, machineConfigV2VmwarevsphereAPIType, obj.VmwarevsphereConfig, resp)
 		out.VmwarevsphereConfig = resp
+		out.ID = resp.ID
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2GoogleGCEKind:
+		resp := &MachineConfigV2GoogleGCE{}
+		err = c.updateObjectV2(rancher2DefaultLocalClusterID, obj.ID, machineConfigV2GoogleGCEAPIType, obj.GoogleGCEConfig, resp)
+		out.GoogleGCEConfig = resp
 		out.ID = resp.ID
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta

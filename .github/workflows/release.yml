@@ -1,0 +1,471 @@
+name: release
+
+on:
+  push:
+    branches:
+      - release/v*
+
+env:
+  AWS_REGION: us-west-2
+  AWS_ROLE: arn:aws:iam::270074865685:role/terraform-module-ci-test
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  ALL_TESTS_JSON: '["TestOneBasic","TestThreeBasic","TestProductionBasic"]'
+
+permissions:
+  contents: write
+  id-token: write
+  issues: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.set-matrix.outputs.tests }}
+    steps:
+      - id: set-matrix
+        run: |
+          JSON_LIST='${{env.ALL_TESTS_JSON}}'
+          echo "tests=$JSON_LIST" >> "$GITHUB_OUTPUT"
+
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_pr: ${{ steps.release-please.outputs.pr }}
+      release_version: ${{ steps.release-please.outputs.version }}
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+        with:
+          fetch-depth: 0
+      - uses: googleapis/release-please-action@c2a5a2bd6a758a0937f1ddb1e8950609867ed15c # v4.3.0 https://github.com/googleapis/release-please-action/commits/main/
+        name: release-please
+        id: release-please
+        with:
+          target-branch: ${{ github.ref_name }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+      # These run only if a release PR was opened or modified, so not when the PR is merged
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/commits/main
+        name: wait-for-e2e
+        if: steps.release-please.outputs.pr
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            try {
+              github.rest.issues.createComment({
+                issue_number: ${{ fromJson(steps.release-please.outputs.pr).number }},
+                owner: "${{ github.repository_owner }}",
+                repo: "${{ github.event.repository.name }}",
+                body: "Please make sure e2e tests pass before merging this PR! \n ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              })
+            } catch (error) {
+              core.setFailed(`Failed to create comment on release PR: ${error.message}`);
+            }
+
+  # this creates a loop using workflow logic,
+  #   each iteration of the loop is in its own job
+  #   this is important because we want each iteration to be a separate VM
+  #   we are trying to get a clean filesystem and different IP for each test
+  #   each loop starts sequentially, but runs at the same time
+  # for each test we make three attempts to get a fresh IP
+  #   the first time a test gets a new IP it will create a lock artifact
+  #   the remaining attempts will effectively cancel themselves when they detect that lock
+  test:
+    needs:
+      - setup
+      - release
+    if: needs.release.outputs.release_pr
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        attempts: [1,2,3] # I want to have jobs specifically in place to retry or cancel a test based on IP collisions
+        test_name: ${{ fromJSON(needs.setup.outputs.tests) }}
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+        with:
+          fetch-depth: 0
+      - name: 'Clear out GitHub Runner'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        with:
+          script: |
+            // requires checkout before step
+            // each job runs in its own ephemeral VM, so each job needs its own clear out step
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/clear-runner.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ core });
+      - name: Get IP
+        id: get-ip
+        run: echo "ip=$(curl -s https://ipinfo.io/ip)" >> "$GITHUB_OUTPUT"
+      # artifacts are available to other jobs as soon as the step completes
+      # unlike job outputs which are only available after the job completes
+      # this artifact is a placeholder only, it has no content
+      #   we use the name of the artifact to broadcast data to other jobs
+      - name: Create IP Artifact
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0 https://github.com/actions/upload-artifact
+        with:
+          name: ip-${{ steps.get-ip.outputs.ip }}-${{ strategy.job-index }}
+          path: /dev/null
+          retention-days: 1
+      # using delays, this lines the jobs up so that
+      #  while they all run at the same time
+      #  they start in sequential order
+      - name: Add jitter
+        run: |
+          # this jitter aligns the tests so that they don't all start at the same time
+          JOB_INDEX=${{ strategy.job-index }}
+          DELAY=$(( JOB_INDEX * 45 ))
+          sleep $DELAY
+      - name: Check for Lock
+        id: check-lock
+        if: strategy.job-index != 0 # the first job doesn't need to check
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          TEST_NAME: ${{ matrix.test_name }}
+          INDEX: ${{ strategy.job-index }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          RUN_ID: ${{ github.run_id }}
+        with:
+          script: |
+            // requires checkout before step
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/check-lock.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ process, github, core });
+      - name: Check for IP Collision
+        id: check-ip
+        if: steps.check-lock.outputs.status == 'clean' && strategy.job-index != 0 # the first job doesn't need to check
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          IP: ${{ steps.get-ip.outputs.ip }}
+          INDEX: ${{ strategy.job-index }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          RUN_ID: ${{ github.run_id }}
+        with:
+          script: |
+            // requires checkout before step
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/check-ip.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ process, github, core });
+      - name: Create Lock Artifact
+        if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0 https://github.com/actions/upload-artifact
+        with:
+          name: lock-${{ matrix.test_name }}-${{ strategy.job-index }}
+          path: /dev/null
+          retention-days: 1
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0 https://github.com/actions/setup-go
+        if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: install-nix
+        if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
+        run: |
+          curl -L https://nixos.org/nix/install | sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          which nix
+      - name: run-unit-tests
+        id: run-unit-tests
+        if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
+        run: make test
+      - id: aws-creds
+        if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0 https://github.com/aws-actions/configure-aws-credentials/tags
+        with:
+          role-to-assume: ${{env.AWS_ROLE}}
+          role-session-name: ${{github.run_id}}
+          aws-region: ${{env.AWS_REGION}}
+          role-duration-seconds: 21600 # 6 hours is the maximum GitHub execution time
+          output-credentials: true
+      - name: run_tests
+        if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
+        shell: '/home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep IDENTIFIER --keep GITHUB_TOKEN --keep GITHUB_OWNER --keep ZONE --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.aws-creds.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.aws-creds.outputs.aws-session-token }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITHUB_OWNER: ${{github.repository_owner}}
+          IDENTIFIER: ${{github.run_id}}
+          ZONE: ${{secrets.ZONE}}
+        run: |
+          export AWS_MAX_ATTEMPTS="100"
+          export AWS_RETRY_MODE="adaptive"
+          export ACME_SERVER_URL="https://acme-v02.api.letsencrypt.org/directory"
+          export RANCHER_INSECURE="false"
+          ./run_tests.sh -t ${{matrix.test_name}} -d
+  audit:
+    needs:
+      - setup
+      - release
+      - test
+    if: always() && needs.release.outputs.release_pr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          fetch-depth: 0
+      - name: Check for Tests Run
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          ALL_TESTS_JSON: '${{ env.ALL_TESTS_JSON }}'
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          RUN_ID: ${{ github.run_id }}
+        with:
+          script: |
+            // requires checkout before step
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/check-run.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ process, github, core });
+
+  cleanup:
+    needs:
+      - setup
+      - release
+      - test
+      - audit
+    if: always() && needs.release.outputs.release_pr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          fetch-depth: 0
+      - name: 'Clear out GitHub Runner'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        with:
+          script: |
+            // requires checkout before step
+            // each job runs in its own ephemeral VM, so each job needs its own clear out step
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/clear-runner.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ core });
+      - id: aws-creds
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0 https://github.com/aws-actions/configure-aws-credentials/tags
+        with:
+          role-to-assume: ${{env.AWS_ROLE}}
+          role-session-name: ${{github.run_id}}-cleanup
+          aws-region: ${{env.AWS_REGION}}
+          role-duration-seconds: 3600 # 1 hour
+          output-credentials: true
+      - name: install-nix
+        run: |
+          curl -L https://nixos.org/nix/install | sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          which nix
+      - name: cleanup
+        shell: '/home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep IDENTIFIER --keep GITHUB_TOKEN --keep GITHUB_OWNER --keep ZONE --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.aws-creds.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.aws-creds.outputs.aws-session-token }}
+          IDENTIFIER: ${{github.run_id}}
+        run: |
+          export AWS_MAX_ATTEMPTS="100"
+          export AWS_RETRY_MODE="adaptive"
+          ./run_tests.sh -c $IDENTIFIER
+
+  report:
+    needs:
+      - setup
+      - release
+      - test
+      - audit
+      - cleanup
+    if: always() && needs.release.outputs.release_pr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/commits/main
+        if: needs.test.result == 'success' && needs.audit.result == 'success'
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            try {
+              github.rest.issues.createComment({
+                issue_number: ${{ fromJson(needs.release.outputs.release_pr).number }},
+                owner: "${{ github.repository_owner }}",
+                repo: "${{ github.event.repository.name }}",
+                body: "End to End Tests Passed! \n ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              })
+            } catch (error) {
+              core.setFailed(`Failed to create comment success on release PR: ${error.message}`);
+            }
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/commits/main
+        if: needs.test.result == 'failure' || needs.audit.result == 'failure'
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            try {
+              github.rest.issues.createComment({
+                issue_number: ${{ fromJson(needs.release.outputs.release_pr).number }},
+                owner: "${{ github.repository_owner }}",
+                repo: "${{ github.event.repository.name }}",
+                body: "End to End Tests Failed! \n ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              })
+            } catch (error) {
+              core.setFailed(`Failed to create comment failure on release PR: ${error.message}`);
+            }
+
+  rc-release:
+    needs:
+      - setup
+      - release
+      - test
+      - audit
+      - cleanup
+      - report
+    if: always() && needs.release.outputs.release_pr && (needs.test.result == 'success' && needs.audit.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      # If the e2e tests pass we automatically generate an RC release
+      #   this shouldn't happen when the release PR is merged, only when it's opened or updated
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+        with:
+          fetch-depth: 0
+      - name: Create and Push RC Tag with Git
+        id: create-push-rc-tag
+        run: |
+          BASE_VERSION=$(echo "$GITHUB_REF" | sed 's/refs\/heads\/release\///')
+          echo "Base version is: $BASE_VERSION" # gets v0 from release/v0 in branch name
+          git fetch --tags
+          LATEST_MINOR_NUM=$(git tag | grep "^${BASE_VERSION}\." | awk -F. '{print $2}' | sort -n | tail -1)
+          echo "Latest minor num: $LATEST_MINOR_NUM"
+          LATEST_PATCH_NUM=$(git tag | grep "^${BASE_VERSION}\.${LATEST_MINOR_NUM}\." | awk -F- '{print $1}' | awk -F. '{print $3}' | sort -n | tail -1)
+          echo "Latest patch num: $LATEST_PATCH_NUM"
+          LATEST_RC_NUM=$(git tag | grep "^${BASE_VERSION}\.${LATEST_MINOR_NUM}\.${LATEST_PATCH_NUM}-rc\." | awk -F. '{print $4}' | grep -v '^$' | sort -n | tail -1)
+          echo "Latest rc num: $LATEST_RC_NUM"
+          if [ -z "$LATEST_RC_NUM" ]; then
+            # the last minor was a full release, we need to start the next minor release candidate
+            if [ -z "$LATEST_MINOR_NUM" ]; then
+              # this is a new minor branch
+              LATEST_MINOR_NUM=0
+            else
+              LATEST_MINOR_NUM=$((LATEST_MINOR_NUM + 1))
+            fi
+            LATEST_PATCH_NUM=0
+            NEXT_RC_NUM=0
+          else
+            NEXT_RC_NUM=$((LATEST_RC_NUM + 1))
+          fi
+          NEXT_RC_TAG="${BASE_VERSION}.${LATEST_MINOR_NUM}.${LATEST_PATCH_NUM}-rc.${NEXT_RC_NUM}"
+          echo "Calculated next RC tag: $NEXT_RC_TAG"
+
+          # Configure git user
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+
+          # Create and push the new tag
+          git tag "$NEXT_RC_TAG" -m "Release Candidate $NEXT_RC_TAG"
+          git push origin "$NEXT_RC_TAG"
+          echo "RC_TAG=$NEXT_RC_TAG" >> "$GITHUB_ENV"
+          echo "RC_BRANCH=release/$BASE_VERSION" >> "$GITHUB_ENV"
+      - name: retrieve GPG Credentials
+        id: retrieve-gpg-credentials
+        uses: rancher-eio/read-vault-secrets@main
+        with:
+          secrets: |
+            secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
+      - name: import_gpg_key
+        id: import-gpg-key
+        env:
+          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
+          GPG_KEY: ${{ env.GPG_KEY }}
+        run: |
+          cleanup() {
+            # clear history just in case
+            history -c
+          }
+          trap cleanup EXIT TERM
+
+          # sanitize variables
+          if [ -z "${GPG_PASSPHRASE}" ]; then echo "gpg passphrase empty"; exit 1; fi
+          if [ -z "${GPG_KEY_ID}" ]; then echo "key id empty"; exit 1; fi
+          if [ -z "${GPG_KEY}" ]; then echo "key contents empty"; exit 1; fi
+
+          echo "Importing gpg key"
+          echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
+        with:
+          args: release --clean --config .goreleaser_rc.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+      - name: 'Find Issues and Create Comments'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          TAG: ${{ env.RC_TAG }}
+          BRANCH: ${{ env.RC_BRANCH }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+        with:
+          script: |
+            const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/rc-notify.js`;
+            const { default: script } = await import(scriptPath);
+            await script({github, process});
+
+  # This runs after release-please generates a release, so when the release PR is merged
+  publish:
+    needs:
+      - setup
+      - release
+      - test
+      - audit
+      - cleanup
+      - report
+      - rc-release
+    if: always() && needs.release.outputs.release_version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0 https://github.com/actions/setup-go
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: retrieve GPG Credentials
+        uses: rancher-eio/read-vault-secrets@main
+        with:
+          secrets: |
+            secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
+            secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
+      - name: import_gpg_key
+        env:
+          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
+          GPG_KEY: ${{ env.GPG_KEY }}
+        run: |
+          cleanup() {
+            # clear history just in case
+            history -c
+          }
+          trap cleanup EXIT TERM
+
+          # sanitize variables
+          if [ -z "${GPG_PASSPHRASE}" ]; then echo "gpg passphrase empty"; exit 1; fi
+          if [ -z "${GPG_KEY_ID}" ]; then echo "key id empty"; exit 1; fi
+          if [ -z "${GPG_KEY}" ]; then echo "key contents empty"; exit 1; fi
+
+          echo "Importing gpg key"
+          echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
+        with:
+          args: release --clean --config .goreleaser.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}

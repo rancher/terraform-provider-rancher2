@@ -3,12 +3,10 @@ package rancher2
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/hashicorp/go-version"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 	clusterClient "github.com/rancher/rancher/pkg/client/generated/cluster/v3"
@@ -148,39 +146,6 @@ func (c *Config) getK8SDefaultVersion() (string, error) {
 	}
 }
 
-func (c *Config) getK8SVersions() ([]string, error) {
-	if len(c.K8SSupportedVersions) > 0 {
-		return c.K8SSupportedVersions, nil
-	}
-
-	if c.Client.Management == nil {
-		_, err := c.ManagementClient()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if ok, _ := c.IsRancherVersionLessThan(rancher2RKEK8sSystemImageVersion); ok {
-		return nil, nil
-	}
-
-	RKEK8sSystemImageCollection, err := c.Client.Management.RkeK8sSystemImage.ListAll(NewListOpts(nil))
-	if err != nil {
-		return nil, fmt.Errorf("[ERROR] Listing RKE K8s System Images: %s", err)
-	}
-	versions := make([]*version.Version, 0, len(RKEK8sSystemImageCollection.Data))
-	for _, RKEK8sSystem := range RKEK8sSystemImageCollection.Data {
-		v, _ := version.NewVersion(RKEK8sSystem.Name)
-		versions = append(versions, v)
-
-	}
-	sort.Sort(sort.Reverse(version.Collection(versions)))
-	for i := range versions {
-		c.K8SSupportedVersions = append(c.K8SSupportedVersions, "v"+versions[i].String())
-	}
-	return c.K8SSupportedVersions, nil
-}
-
 // Fix breaking API change https://github.com/rancher/rancher/pull/23718
 func (c *Config) fixNodeTemplateID(id string) string {
 	if ok, _ := c.IsRancherVersionGreaterThanOrEqual(rancher2NodeTemplateChangeVersion); ok && len(id) > 0 {
@@ -283,10 +248,6 @@ func (c *Config) ManagementClient() (*managementClient.Client, error) {
 	c.Client.Management = mClient
 
 	rancher2ClusterRKEK8SDefaultVersion, err = c.getK8SDefaultVersion()
-	if err != nil {
-		return nil, err
-	}
-	rancher2ClusterRKEK8SVersions, err = c.getK8SVersions()
 	if err != nil {
 		return nil, err
 	}
@@ -766,6 +727,19 @@ func (c *Config) WaitForClusterState(clusterID, state string, interval time.Dura
 	}
 }
 
+// getObjectV2ByID uses the Steve API to get a resource by ID.
+//
+// The clusterID must be the cluster to access the resource from e.g. "local" or
+// "c-wt9cd".
+// For remote clusters, this will be queried using the cluster-proxy.
+//
+// The id must be in namespace/name format e.g. "local/my-resource".
+//
+// The APIType must be fully qualified e.g. "configmap" or
+// "rke-machine-config.cattle.io.amazonec2config".
+//
+// The response is stored in resp which should be a pointer to a struct for
+// receiving the resource.
 func (c *Config) getObjectV2ByID(clusterID, id, APIType string, resp interface{}) error {
 	if id == "" {
 		return fmt.Errorf("Object V2 id is nil")
@@ -824,6 +798,7 @@ func (c *Config) createObjectV2(clusterID string, APIType string, obj, resp inte
 	if err != nil {
 		return err
 	}
+
 	return client.Create(APIType, obj, resp)
 }
 
@@ -1025,55 +1000,6 @@ func (c *Config) GetUserIDByName(name string) (string, error) {
 		return "", err
 	}
 	return user.ID, nil
-}
-
-func (c *Config) activateDriver(id string, interval time.Duration) error {
-	if id == googleConfigDriver {
-		return c.activateKontainerDriver(id, interval)
-	}
-
-	return c.activateNodeDriver(id, interval)
-}
-
-func (c *Config) activateKontainerDriver(id string, interval time.Duration) error {
-	if id == "" {
-		return fmt.Errorf("[ERROR] Node Driver id is nil")
-	}
-
-	client, err := c.ManagementClient()
-	if err != nil {
-		return err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), interval)
-	defer cancel()
-	for updated := false; ; {
-		driver, err := client.KontainerDriver.ByID(id)
-		if err != nil && !IsServerError(err) && !IsUnknownSchemaType(err) && !IsNotFound(err) && !IsForbidden(err) {
-			return fmt.Errorf("[ERROR] Getting Node Driver %s: %v", id, err)
-		}
-		if driver != nil {
-			if driver.State == "active" {
-				return nil
-			}
-
-			if !updated {
-				err = client.KontainerDriver.ActionActivate(driver)
-				if err == nil {
-					updated = true
-					continue
-				}
-				if !IsServerError(err) && !IsUnknownSchemaType(err) {
-					return fmt.Errorf("[ERROR] Activating Node Driver %s: %v", id, err)
-				}
-			}
-		}
-		select {
-		case <-time.After(rancher2RetriesWait * time.Second):
-		case <-ctx.Done():
-			return fmt.Errorf("Timeout activating Node Driver %s: %v", id, err)
-		}
-	}
 }
 
 func (c *Config) activateNodeDriver(id string, interval time.Duration) error {
@@ -1293,8 +1219,16 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 		return &managementClient.LdapConfig{}, nil
 	case managementClient.GithubConfigType:
 		return &managementClient.GithubConfig{}, nil
+	case managementClient.GithubAppConfigType:
+		return &managementClient.GithubAppConfig{}, nil
 	case managementClient.KeyCloakConfigType:
 		return &managementClient.KeyCloakConfig{}, nil
+	case managementClient.GenericOIDCConfigType:
+		return &managementClient.GenericOIDCConfig{}, nil
+	case managementClient.CognitoConfigType:
+		return &managementClient.CognitoConfig{}, nil
+	case managementClient.OIDCConfigType:
+		return &managementClient.OIDCConfig{}, nil
 	case managementClient.OKTAConfigType:
 		return &managementClient.OKTAConfig{}, nil
 	case managementClient.OpenLdapConfigType:
