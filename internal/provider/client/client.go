@@ -7,6 +7,7 @@ type Client interface {
 	Do(ctx context.Context, req *Request, resp *Response) error
 	Set(client Client) (Client, error)
 	GetApiUrl() string
+  ClearToken()
 }
 
 // Request is the request object for the client.
@@ -14,7 +15,7 @@ type Request struct {
 	Method   string
 	Endpoint string
 	Body     any // this will be marshalled to json
-	Headers  map[string]string
+	Headers  map[string][]string
 	Token    string
 }
 

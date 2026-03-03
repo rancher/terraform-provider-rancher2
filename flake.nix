@@ -10,7 +10,15 @@
     flake-utils.lib.eachSystem [ "x86_64-darwin" "aarch64-darwin" "x86_64-linux" ]
       (system:
         let
-          pkgs = nixpkgs.legacyPackages.${system};
+          unconfiguredPkgs = nixpkgs.legacyPackages.${system};
+          pkgs = import nixpkgs {
+            inherit system;
+            config = {
+              allowUnfreePredicate = pkg: unconfiguredPkgs.lib.elem (unconfiguredPkgs.lib.getName pkg) [
+                "ngrok"
+              ];
+            };
+          };
 
           leftovers-version = {
             "selected" = "v0.70.0";
@@ -52,7 +60,9 @@
               aspellWithDicts
               awscli2
               bashInteractive
+              colima
               curl
+              docker
               dig
               eslint
               gh
@@ -65,6 +75,7 @@
               gotestfmt
               gotestsum
               jq
+              k3d
               kubectl
               kubernetes-helm
               leftovers
@@ -76,6 +87,7 @@
               tflint
               tfsec
               tfswitch
+              toybox
               trivy
               updatecli
               vim
@@ -96,6 +108,7 @@
               tfswitch -b $homebin/terraform 1.5.7 &>/dev/null;
               export PATH="$homebin:$PATH";
               export PATH="$(which go):$PATH";
+              ln -sf /usr/bin/sw_vers $homebin || true;
               export PS1="nix:# ";
             '';
           };

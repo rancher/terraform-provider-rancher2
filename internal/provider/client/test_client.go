@@ -21,8 +21,8 @@ type TestClient struct {
 	maxRedirects   int64
 	timeout        time.Duration
 	token          string
-	response       Response
-	requests       []Request
+	responses      map[string]Response
+	requests       map[string]Request
 }
 
 func NewTestClient(ctx context.Context, apiURL, caCert string, insecure, ignoreSystemCA bool, timeout time.Duration, maxRedirects int64, token string) *TestClient {
@@ -34,20 +34,25 @@ func NewTestClient(ctx context.Context, apiURL, caCert string, insecure, ignoreS
 		timeout:        timeout,
 		maxRedirects:   maxRedirects,
 		token:          token,
-		requests:       make([]Request, 0),
+		requests:       map[string]Request{},
+    responses:      map[string]Response{},
 	}
 }
 
 func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error {
-	start := time.Now()
-
 	if req.Endpoint == "" {
 		return fmt.Errorf("doing request: URL is nil")
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("Request Object: %v", pp.PrettyPrint(req)))
+  // This allows the resource to overwrite the client token and the client token to set the request token.
+	if req.Token != "" {
+		c.token = req.Token
+	}
+  if c.token != "" {
+    req.Token = c.token
+  }
 
-	reqBody, err := json.Marshal(req.Body)
+  reqBody, err := json.Marshal(req.Body)
 	if err != nil {
 		return err
 	}
@@ -57,23 +62,52 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 		Headers:  req.Headers,
 		Endpoint: req.Endpoint,
 		Body:     reqBody,
-	}
-	c.requests = append(c.requests, newReq)
-
-	resp.Body = c.response.Body
-	resp.Headers = c.response.Headers
-	resp.StatusCode = c.response.StatusCode
-
-	tflog.Debug(ctx, fmt.Sprintf("Response Time: %f ms", float64((time.Since(start))/time.Millisecond)))
-	tflog.Debug(ctx, fmt.Sprintf("Response Status Code: %d", resp.StatusCode))
-	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %s", pp.PrettyPrint(resp.Headers)))
-	var prettyBody bytes.Buffer
-	if err := json.Indent(&prettyBody, resp.Body, "", "  "); err == nil {
-		tflog.Debug(ctx, fmt.Sprintf("Response Body (Pretty): \n%s", prettyBody.String()))
+    Token:    req.Token,
 	}
 
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		tflog.Debug(ctx, fmt.Sprintf("Successful response! (%d)", resp.StatusCode))
+  if req.Method == "POST" {
+    if newReq.Headers == nil {
+      newReq.Headers = map[string][]string{}
+    }
+    newReq.Headers["Content-Type"] = []string{"application/json"}
+  }
+
+  if c.token != "" {
+    if newReq.Headers == nil {
+      newReq.Headers = map[string][]string{}
+    }
+    if len(newReq.Headers["Authorization"]) == 0 {
+      newReq.Headers["Authorization"] = []string{fmt.Sprintf("Bearer %s", c.token)}
+    } else {
+      tflog.Debug(ctx, "Token already set.")
+    }
+	} else {
+    tflog.Debug(ctx, "Token is empty.")
+  }
+
+  requestId := fmt.Sprintf("%s:%s:%s", newReq.Endpoint, newReq.Method, c.token)
+	c.requests[requestId] = newReq
+
+  response := c.responses[requestId]
+
+	resp.Body = response.Body
+	resp.Headers = response.Headers
+	resp.StatusCode = response.StatusCode
+
+  tflog.Debug(ctx, fmt.Sprintf("\nRequest: %s\n%s\nHeaders:\n%s\nBody:\n%s\n", newReq.Method, newReq.Endpoint, pp.PrettyPrint(newReq.Headers), newReq.Body))
+
+	var prettyResponse bytes.Buffer
+  var rp string
+  err = json.Indent(&prettyResponse, resp.Body, "", "  ")
+  if err != nil {
+    rp = string(resp.Body)
+  } else {
+    rp = prettyResponse.String()
+  }
+  tflog.Debug(ctx, fmt.Sprintf("\nResponse: %d\nHeaders:\n%s\nBody:\n%s\n", resp.StatusCode, pp.PrettyPrint(resp.Headers), rp))
+
+	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+		tflog.Debug(ctx, fmt.Sprintf("\nSuccessful response! (%d)\n", resp.StatusCode))
 		return nil
 	}
 
@@ -98,7 +132,7 @@ func (c *TestClient) Set(client Client) (Client, error) {
 	c.insecure = testClient.insecure
 	c.maxRedirects = testClient.maxRedirects
 	c.timeout = testClient.timeout
-	c.response = testClient.response
+	c.responses = testClient.responses
 	c.requests = testClient.requests
 	return c, nil
 }
@@ -107,23 +141,16 @@ func (c *TestClient) GetApiUrl() string {
 	return c.apiURL
 }
 
-func (c *TestClient) SetResponse(response Response) {
-	c.response = response
+func (c *TestClient) SetResponse(id string, response Response) {
+	c.responses[id] = response
 }
 
-func (c *TestClient) GetLastRequest() Request {
-	if len(c.requests) > 0 {
-		return c.requests[len(c.requests)-1]
-	}
-	return Request{}
+func (c *TestClient) GetRequest(id string) Request {
+	return c.requests[id]
 }
 
-// GetLastRequests returns the last n requests.
-func (c *TestClient) GetLastRequests(n int) []Request {
-	if len(c.requests) < n {
-		return c.requests
-	}
-	return c.requests[len(c.requests)-n:]
+func (c *TestClient) ClearToken() {
+	c.token = ""
 }
 
 type ErrorResponse struct {

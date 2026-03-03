@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -33,7 +32,9 @@ var _ resource.Resource = &RancherLoginResource{}
 var _ resource.ResourceWithImportState = &RancherLoginResource{}
 
 const (
-	endpointPath = "login"
+  apiVersion    = "ext.cattle.io/v1"
+  loginEndpoint = "v1-public/login"
+  tokenEndpoint = "apis/" + apiVersion + "/tokens"
 )
 
 func NewRancherLoginResource() resource.Resource {
@@ -195,7 +196,7 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	err = validateData(&plan)
+	err = validateData(ctx, &plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error validating data: ", err.Error())
 		return
@@ -206,49 +207,23 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 	var userIsInEnv bool
 	var password string
 	var passIsInEnv bool
-	userIsInEnv, username = getValueFromEnv(plan.Username, plan.UsernameEnvironmentVariable.ValueString())
+	userIsInEnv, username = getValueFromEnv(ctx, plan.UsernameEnvironmentVariable.ValueString())
 	if !userIsInEnv {
 		username = plan.Username.ValueString()
 	}
-	passIsInEnv, password = getValueFromEnv(plan.Password, plan.PasswordEnvironmentVariable.ValueString())
+	passIsInEnv, password = getValueFromEnv(ctx, plan.PasswordEnvironmentVariable.ValueString())
 	if !passIsInEnv {
 		password = plan.Password.ValueString()
 	}
-	err, sessionToken := login(ctx, client, username, password)
+	err, sessionToken, tokenId := login(ctx, client, username, password)
 
-	ttlDuration, err := parseCustomDuration(plan.TokenTtl.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Error parsing token_ttl duration", err.Error())
-		return
-	}
-	ttlMillis := ttlDuration.Milliseconds()
-
-	// Create the user token
-	tokenReqBody := map[string]any{
-		"apiVersion": "ext.cattle.io/v1",
-		"kind":       "Token",
-		"metadata": map[string]any{
-			"name": plan.Id.ValueString(),
-		},
-		"spec": map[string]any{
-			"description": "Terraform login token.",
-			"ttl":         ttlMillis,
-		},
-	}
-	tokenRequest := c.Request{
-		Endpoint: fmt.Sprintf("%s/apis/ext.cattle.io/v1/tokens", client.GetApiUrl()),
-		Method:   "POST",
-		Body:     tokenReqBody,
-		Token:    sessionToken,
-	}
-
-	tokenResponse := c.Response{}
-	err = client.Do(ctx, &tokenRequest, &tokenResponse)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating user token: ", err.Error())
-	}
-	diags := processTokenResponse(&plan, tokenResponse)
-	resp.Diagnostics.Append(diags...)
+  plan.UserToken = types.StringValue(sessionToken)
+  plan.Id = types.StringValue(tokenId)
+  status, dgs := createToken(ctx, client, &plan) // createToken will replace UserToken with new token on success
+  if status >= 300 {
+    tflog.Debug(ctx, fmt.Sprintf("Error creating ticket with login session token: %d", status))
+  }
+	resp.Diagnostics.Append(dgs...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -286,59 +261,48 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	validateData(&state)
+	err := validateData(ctx, &state)
+  if err != nil {
+    resp.Diagnostics.AddError("Error validating state", err.Error())
+    return
+  }
 	tflog.Debug(ctx, fmt.Sprintf("State after validate in read function: %+v", pp.PrettyPrint(state)))
 
 	if state.Id.ValueString() == "" {
-		resp.Diagnostics.AddWarning("Id missing", "State missing id during read, recreating.")
+		tflog.Debug(ctx, "State missing id during read, recreating.")
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/apis/ext.cattle.io/v1/tokens/%s", client.GetApiUrl(), state.Id.ValueString()),
+		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), tokenEndpoint, state.Id.ValueString()),
 		Method:   "GET",
 		Token:    state.UserToken.ValueString(),
 	}
 	response := c.Response{}
 
-	err := client.Do(ctx, &request, &response)
-	if err != nil {
+	err = client.Do(ctx, &request, &response)
+  if err != nil {
 		if e, ok := err.(*c.ApiError); ok && e.StatusCode == 404 {
-			resp.Diagnostics.AddWarning("Token not found", "Got 404 from API when attempting to get token in Read function, recreating.")
-			resp.State.RemoveResource(ctx)
-			return
+			tflog.Debug(ctx, "Token not found: Got 404 from API when attempting to get token in Read function, need to update token.")
+			state.UserToken = types.StringValue("")
 		}
 		if e, ok := err.(*c.ApiError); ok && e.StatusCode == 401 {
-			tflog.Debug(ctx, "Token in state is invalid, logging in to try again.")
-			var username string
-			var userIsInEnv bool
-			var password string
-			var passIsInEnv bool
-			userIsInEnv, username = getValueFromEnv(state.Username, state.UsernameEnvironmentVariable.ValueString())
-			if !userIsInEnv {
-				username = state.Username.ValueString()
-			}
-			passIsInEnv, password = getValueFromEnv(state.Password, state.PasswordEnvironmentVariable.ValueString())
-			if !passIsInEnv {
-				password = state.Password.ValueString()
-			}
-			err, sessionToken := login(ctx, client, username, password)
-			if err != nil {
-				resp.Diagnostics.AddError("Error logging in to Rancher: ", err.Error())
-				return
-			}
-			request.Token = sessionToken
-			response = c.Response{}
-			err = client.Do(ctx, &request, &response)
-			if err != nil {
-				resp.Diagnostics.AddError("Error reading login resource: ", err.Error())
-				return
-			}
+			tflog.Debug(ctx, "Token in state is invalid: Got 401 from API when attempting to get token in Read function, need to update token.")
+      state.UserToken = types.StringValue("")
 		}
 	}
 
-	diags := processTokenResponse(&state, response)
+  // we need to compare the current date against the refresh date and set refresh date to nil if we are past the refresh date
+	if !state.UserTokenRefreshDate.IsNull() && !state.UserTokenRefreshDate.IsUnknown() {
+		refreshDate, err := time.Parse(time.RFC3339, state.UserTokenRefreshDate.ValueString())
+		if err == nil && time.Now().After(refreshDate) {
+			tflog.Debug(ctx, "Current time is after refresh date, marking token for update.")
+			state.RefreshAt = types.StringValue("")
+		}
+	}
+
+	diags := processTokenResponse(ctx, &state, response, response.StatusCode)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		resp.Diagnostics.AddWarning("Error processing response", "Error found when processing get token response.")
@@ -351,11 +315,23 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 // Update changes reality and state to match plan (best practice is don't compare old state, just override).
-// Recreate is decided in Read?
+// Recreate != Update
+// Update should refresh the current token in state along with refresh, recreate, and create dates
+// Update should attempt to do this with the current token, then fall back to the username/password
 func (r *RancherLoginResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Config: %+v", pp.PrettyPrint(req.Config.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Plan: %+v", pp.PrettyPrint(req.Plan.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request State: %+v", pp.PrettyPrint(req.State.Raw)))
+	// var err error
+
+	var client c.Client
+	if r.client != nil {
+		client = r.client
+	} else {
+		// no client found, seems like the provider wasn't configured properly.
+		resp.Diagnostics.AddError("client not found, please configure the provider", "")
+		return
+	}
 
 	var plan RancherLoginResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -369,12 +345,57 @@ func (r *RancherLoginResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// attributes that can be updated: username_environment_variable, password_environment_variable, refresh_at
-	// none of these are "real", nothing needs to be updated in the remote API
-	// all changes are in the state only, making this really easy
-	state.UsernameEnvironmentVariable = plan.UsernameEnvironmentVariable
-	state.PasswordEnvironmentVariable = plan.PasswordEnvironmentVariable
-	state.RefreshAt = plan.RefreshAt
+  err := validateData(ctx, &state)
+  if err != nil {
+    resp.Diagnostics.AddError("Error validating state", err.Error())
+    return
+  }
+  tflog.Debug(ctx, fmt.Sprintf("State after validate in update function: %+v", pp.PrettyPrint(state)))
+
+  err = validateData(ctx, &plan)
+  if err != nil {
+    resp.Diagnostics.AddError("Error validating plan", err.Error())
+    return
+  }
+  tflog.Debug(ctx, fmt.Sprintf("Plan after validate in update function: %+v", pp.PrettyPrint(plan)))
+
+  status, dgs := createToken(ctx, client, &state)
+  if status >= 400 && status <= 499 {
+    tflog.Debug(ctx, "Token invalid or not found during update, attempting to login with username and password.")
+  	userIsInEnv, username := getValueFromEnv(ctx, plan.UsernameEnvironmentVariable.ValueString())
+  	if !userIsInEnv {
+  		username = plan.Username.ValueString()
+  	}
+  	passIsInEnv, password := getValueFromEnv(ctx, plan.PasswordEnvironmentVariable.ValueString())
+  	if !passIsInEnv {
+  		password = plan.Password.ValueString()
+  	}
+  	err, sessionToken, tokenId := login(ctx, client, username, password)
+    if err != nil {
+  		resp.Diagnostics.AddError("Error logging in during update: ", err.Error())
+  		return
+  	}
+  	state.Id = types.StringValue(tokenId)
+    state.UserToken = types.StringValue(sessionToken)
+    _, dgs = createToken(ctx, client, &state)
+    if dgs.HasError() {
+      resp.Diagnostics.Append(dgs...)
+      return
+    }
+    // The createToken func will overwrite the UserToken value with the new token.
+  } else {
+    tflog.Debug(ctx, "Token found to be valid.")
+  }
+
+  if !plan.UsernameEnvironmentVariable.IsNull() && plan.UsernameEnvironmentVariable.ValueString() != "" {
+	  state.UsernameEnvironmentVariable = plan.UsernameEnvironmentVariable
+  }
+  if !plan.PasswordEnvironmentVariable.IsNull() && plan.PasswordEnvironmentVariable.ValueString() != "" {
+    state.PasswordEnvironmentVariable = plan.PasswordEnvironmentVariable
+  }
+  if !plan.RefreshAt.IsNull() && plan.RefreshAt.ValueString() != "" {
+	  state.RefreshAt = plan.RefreshAt
+  }
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("Update Response State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
@@ -401,7 +422,7 @@ func (r *RancherLoginResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/apis/ext.cattle.io/v1/tokens/%s", client.GetApiUrl(), state.Id.ValueString()),
+		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), tokenEndpoint, state.Id.ValueString()),
 		Method:   "DELETE",
 		Token:    state.UserToken.ValueString(),
 	}
@@ -422,38 +443,32 @@ func (r *RancherLoginResource) ImportState(ctx context.Context, req resource.Imp
 	resp.Diagnostics.AddError("Import not available", "This resource is not able to be imported.")
 }
 
-func getValueFromEnv(s types.String, env string) (bool, string) {
-	if os.Getenv(env) != "" {
-		return true, os.Getenv(env)
-	}
-	return false, s.ValueString()
+func getValueFromEnv(ctx context.Context, env string) (bool, string) {
+	if os.Getenv(env) == "" {
+    tflog.Debug(ctx, fmt.Sprintf("%s not found in environment.", env))
+    return false, ""
+  }
+  return true, os.Getenv(env)
 }
 
 // note this function also enforces default values.
-func validateData(data *RancherLoginResourceModel) error {
-	u, err := uuid.NewRandom()
-	if err != nil {
-		return fmt.Errorf("failed to generate UUID for login resource id: %v", err)
-	}
-	if data.Id.ValueString() == "" {
-		data.Id = types.StringValue(u.String())
-	}
+func validateData(ctx context.Context, data *RancherLoginResourceModel) error {
 	if data.UsernameEnvironmentVariable.ValueString() == "" {
 		data.UsernameEnvironmentVariable = types.StringValue("RANCHER_USERNAME")
 	}
 	if data.PasswordEnvironmentVariable.ValueString() == "" {
 		data.PasswordEnvironmentVariable = types.StringValue("RANCHER_PASSWORD")
 	}
-	if data.Username.IsNull() || data.Username.IsUnknown() {
-		isInEnv, _ := getValueFromEnv(data.Username, data.UsernameEnvironmentVariable.ValueString())
+	if data.Username.IsNull() || data.Username.IsUnknown() || data.Username.ValueString() == "" {
+		isInEnv, _ := getValueFromEnv(ctx, data.UsernameEnvironmentVariable.ValueString())
 		if !isInEnv {
-			return fmt.Errorf("username not found in config or environment variable")
+			return fmt.Errorf("username not found in config or environment variable, try setting RANCHER_USERNAME in your environment")
 		}
 	}
-	if data.Password.IsNull() || data.Password.IsUnknown() {
-		isInEnv, _ := getValueFromEnv(data.Password, data.PasswordEnvironmentVariable.ValueString())
+	if data.Password.IsNull() || data.Password.IsUnknown() || data.Password.ValueString() == "" {
+		isInEnv, _ := getValueFromEnv(ctx, data.PasswordEnvironmentVariable.ValueString())
 		if !isInEnv {
-			return fmt.Errorf("password not found in config or environment variable")
+			return fmt.Errorf("password not found in config or environment variable, try setting RANCHER_PASSWORD in your environment")
 		}
 	}
 	if !data.TokenTtl.IsNull() && !data.TokenTtl.IsUnknown() {
@@ -511,10 +526,55 @@ func parseCustomDuration(durationStr string) (time.Duration, error) {
 	return totalDuration, nil
 }
 
-func processTokenResponse(data *RancherLoginResourceModel, tokenResponse c.Response) diag.Diagnostics {
+func createToken(ctx context.Context, client c.Client, data *RancherLoginResourceModel) (status int, diagnostics diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	ttlDuration, err := parseCustomDuration(data.TokenTtl.ValueString())
+	if err != nil {
+		diags.AddError("Error parsing token_ttl duration", err.Error())
+		return 0, diags
+	}
+
+  // Create the user token
+	tokenReqBody := map[string]any{
+		"apiVersion": apiVersion,
+		"kind":       "Token",
+		"metadata": map[string]any{
+			"name": data.Id.ValueString(),
+		},
+		"spec": map[string]any{
+			"description": "Terraform login token.",
+			"ttl":         ttlDuration.Milliseconds(),
+		},
+	}
+	tokenRequest := c.Request{
+		Endpoint: fmt.Sprintf("%s/%s", client.GetApiUrl(), tokenEndpoint),
+		Method:   "POST",
+		Body:     tokenReqBody,
+		Token:    data.UserToken.ValueString(),
+	}
+
+	tokenResponse := c.Response{}
+	err = client.Do(ctx, &tokenRequest, &tokenResponse)
+	if err != nil {
+		diags.AddWarning("Error creating user token: ", err.Error())
+	}
+
+  dgs := processTokenResponse(ctx, data, tokenResponse, tokenResponse.StatusCode)
+  diags.Append(dgs...)
+  return tokenResponse.StatusCode, diags
+}
+
+func processTokenResponse(ctx context.Context, data *RancherLoginResourceModel, tokenResponse c.Response, statusCode int) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
-	var tokenData struct {
+
+  if statusCode >= 300 {
+    diags.AddError("Error creating user token: ", string(tokenResponse.Body))
+    return diags
+  }
+
+  var tokenData struct {
 		Metadata struct {
 			CreationTimestamp string `json:"creationTimestamp"`
 			Name              string `json:"name"`
@@ -527,6 +587,8 @@ func processTokenResponse(data *RancherLoginResourceModel, tokenResponse c.Respo
 	err = json.Unmarshal(tokenResponse.Body, &tokenData)
 	if err != nil {
 		diags.AddError("Error unmarshaling token response:", err.Error())
+    tflog.Debug(ctx, fmt.Sprintf("Token response body: %s", string(tokenResponse.Body)))
+    tflog.Debug(ctx, fmt.Sprintf("Token data: %s", pp.PrettyPrint(tokenData)))
 		return diags
 	}
 	// id
@@ -561,36 +623,41 @@ func processTokenResponse(data *RancherLoginResourceModel, tokenResponse c.Respo
 	return diags
 }
 
-func login(ctx context.Context, client c.Client, username, password string) (error, string) {
-	loginReqBody := map[string]any{
+func login(ctx context.Context, client c.Client, username, password string) (err error, token string, tokenId string) {
+  client.ClearToken()
+
+  loginReqBody := map[string]any{
 		"type":         "localProvider",
 		"username":     username,
 		"password":     password,
 		"responseType": "json",
 	}
 
-	loginRequest := c.Request{
-		Endpoint: fmt.Sprintf("%s/v1-public/login", client.GetApiUrl()),
+  loginRequest := c.Request{
+		Endpoint: fmt.Sprintf("%s/%s", client.GetApiUrl(), loginEndpoint),
 		Method:   "POST",
 		Body:     loginReqBody,
+    Token:    "",
+    Headers:  nil,
 	}
 
 	loginResponse := c.Response{}
-	err := client.Do(ctx, &loginRequest, &loginResponse)
+	err = client.Do(ctx, &loginRequest, &loginResponse)
 	if err != nil {
-		return fmt.Errorf("Error logging in to Rancher: %s", err.Error()), ""
+		return fmt.Errorf("Error logging in to Rancher: %s", err.Error()), "", ""
 	}
 
 	var loginData struct {
+    Id    string `json:"id"`
 		Token string `json:"token"`
 	}
 	err = json.Unmarshal(loginResponse.Body, &loginData)
 	if err != nil {
-		return fmt.Errorf("Error unmarshaling login response: %s", err.Error()), ""
+		return fmt.Errorf("Error unmarshaling login response: %s", err.Error()), "", ""
 	}
 
 	if loginData.Token == "" {
-		return fmt.Errorf("Login failed: No session token returned from Rancher"), ""
+		return fmt.Errorf("Login failed: No session token returned from Rancher"), "", ""
 	}
-	return nil, loginData.Token
+	return nil, loginData.Token, loginData.Id
 }

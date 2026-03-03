@@ -20,8 +20,8 @@ func TestProviderMetadata(t *testing.T) {
 	}{
 		{
 			"Basic",
-			RancherProvider{version: "test"},
-			provider.MetadataResponse{TypeName: "rancher2", Version: "test"},
+			RancherProvider{},
+			provider.MetadataResponse{TypeName: "rancher2"},
 		},
 	}
 	for _, tc := range testCases {
@@ -46,7 +46,7 @@ func TestProviderSchema(t *testing.T) {
 	}{
 		{
 			"Basic",
-			RancherProvider{version: "test"},
+			RancherProvider{},
 			[]string{
 				"api_url",
 				"ca_cert",
@@ -87,7 +87,7 @@ func TestProviderConfigure(t *testing.T) {
 	}{
 		{
 			"Basic",
-			RancherProvider{version: "test"},
+			RancherProvider{},
 			RancherProviderModel{
 				ApiUrl: types.StringValue("https://test-rancher.example.com"),
 			},

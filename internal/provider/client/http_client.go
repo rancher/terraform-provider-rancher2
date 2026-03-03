@@ -132,18 +132,17 @@ func NewHttpClient(ctx context.Context, apiURL, caCert string, insecure, ignoreS
 }
 
 func (c *HttpClient) Do(ctx context.Context, req *Request, resp *Response) error {
-	start := time.Now()
-
 	if req.Endpoint == "" {
 		return fmt.Errorf("doing request: URL is nil")
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("Request Object: %s", pp.PrettyPrint(req)))
-
-	// This allows the resource to overwrite the token.
+  // This allows the resource to overwrite the client token and the client token to set the request token.
 	if req.Token != "" {
 		c.token = req.Token
 	}
+  if c.token != "" {
+    req.Token = c.token
+  }
 
 	var reqBody io.Reader
 	if req.Body != nil {
@@ -169,11 +168,18 @@ func (c *HttpClient) Do(ctx context.Context, req *Request, resp *Response) error
 		return nil
 	}
 
+  if req.Method == "POST" {
+    request.Header.Add("Content-Type", "application/json")
+  }
+
 	if c.token != "" {
 		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.token))
 	}
-	for key, value := range req.Headers {
-		request.Header.Add(key, value)
+
+  for key, value := range req.Headers {
+    for _, v := range value {
+      request.Header.Add(key, v)
+    }
 	}
 
 	res, err := c.client.Do(request)
@@ -191,17 +197,37 @@ func (c *HttpClient) Do(ctx context.Context, req *Request, resp *Response) error
 	}
 	resp.Body = responseBody
 
-	// Timings recorded as part of internal metrics
-	tflog.Debug(ctx, fmt.Sprintf("Response Time: %f ms", float64((time.Since(start))/time.Millisecond)))
-	tflog.Debug(ctx, fmt.Sprintf("Response Status: %s", res.Status))
-	tflog.Debug(ctx, fmt.Sprintf("Response Headers: %s", pp.PrettyPrint(res.Header)))
-	var prettyBody bytes.Buffer
-	if err := json.Indent(&prettyBody, responseBody, "", "  "); err == nil {
-		tflog.Debug(ctx, fmt.Sprintf("Response Body: \n%s", prettyBody.String()))
+  requestReader, err := request.GetBody()
+  if err != nil {
+    return fmt.Errorf("getting request body: %v", err)
+  }
+  defer requestReader.Close()
+  requestBody, err := io.ReadAll(requestReader)
+	if err != nil {
+		return fmt.Errorf("reading request body: %v", err)
 	}
 
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		tflog.Debug(ctx, fmt.Sprintf("Successful response! (%d)", resp.StatusCode))
+  var prettyRequest bytes.Buffer
+  var rp string
+	err = json.Indent(&prettyRequest, requestBody, "", "  ")
+  if err != nil {
+    rp = string(requestBody)
+  } else {
+    rp = prettyRequest.String()
+  }
+  tflog.Debug(ctx, fmt.Sprintf("\nRequest: %s\n%s\nHeaders:\n%s\nBody:\n%s\n", req.Method, req.Endpoint, pp.PrettyPrint(request.Header), rp))
+
+	var prettyResponse bytes.Buffer
+  err = json.Indent(&prettyResponse, responseBody, "", "  ")
+  if err != nil {
+    rp = string(responseBody)
+  } else {
+    rp = prettyResponse.String()
+  }
+  tflog.Debug(ctx, fmt.Sprintf("\nResponse: %d\nHeaders:\n%s\nBody:\n%s\n", resp.StatusCode, pp.PrettyPrint(res.Header), rp))
+
+  if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		tflog.Debug(ctx, fmt.Sprintf("\nSuccessful response! (%d)\n", resp.StatusCode))
 		return nil
 	}
 
@@ -231,4 +257,8 @@ func (c *HttpClient) Set(client Client) (Client, error) {
 
 func (c *HttpClient) GetApiUrl() string {
 	return c.apiURL
+}
+
+func (c *HttpClient) ClearToken() {
+	c.token = ""
 }

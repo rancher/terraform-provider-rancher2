@@ -8,7 +8,7 @@ import (
 )
 
 type RancherLoginModel struct {
-	Id                          string `json:"id"`
+	Id                          string `json:"id,omitempty"`
 	Username                    string `json:"username,omitempty"`
 	Password                    string `json:"password,omitempty"`
 	UsernameEnvironmentVariable string `json:"username_environment_variable,omitempty"`
@@ -16,10 +16,10 @@ type RancherLoginModel struct {
 	TokenTtl                    string `json:"token_ttl,omitempty"`
 	RefreshAt                   string `json:"refresh_at,omitempty"`
 	IgnoreToken                 bool   `json:"ignore_token,omitempty"`
-	UserToken                   string `json:"user_token"`
-	UserTokenStartDate          string `json:"user_token_start_date"`
-	UserTokenEndDate            string `json:"user_token_end_date"`
-	UserTokenRefreshDate        string `json:"user_token_refresh_date"`
+	UserToken                   string `json:"user_token,omitempty"`
+	UserTokenStartDate          string `json:"user_token_start_date,omitempty"`
+	UserTokenEndDate            string `json:"user_token_end_date,omitempty"`
+	UserTokenRefreshDate        string `json:"user_token_refresh_date,omitempty"`
 }
 
 func (obj *RancherLoginModel) ToResourceModel(ctx context.Context, diags *diag.Diagnostics) *RancherLoginResourceModel {

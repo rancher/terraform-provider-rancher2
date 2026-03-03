@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"math/big"
 	"net/http"
@@ -22,10 +23,14 @@ import (
 )
 
 const (
-	apiUrl      = "https://rancher.example.com"
-	endpoint    = "dev"
-	apiEndpoint = apiUrl + "/" + endpoint
-	defaultId   = "dev-test"
+	apiUrl        = "https://rancher.example.com"
+	endpoint      = "dev"
+	apiEndpoint   = apiUrl + "/" + endpoint
+	defaultId     = "dev-test"
+	testTokenId   = "token-test"
+  testTokenKey  = "this1is2a3test4token5it6is7fake"
+  testToken     = testTokenId + ":" + testTokenKey
+  testUserToken = "ext/" + testToken
 )
 
 func TestRancherDevResource(t *testing.T) {
@@ -220,7 +225,11 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint,
 					Method:   "POST",
-					Body: rBodyMarshal(RancherDevModel{
+          Headers: map[string][]string{
+            "Content-Type": {"application/json"},
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body: rBodyMarshal(RancherDevModel{
 						Id:               defaultId,
 						UserToken:        "",
 						BoolAttribute:    false,
@@ -259,6 +268,7 @@ func TestRancherDevResource(t *testing.T) {
 							},
 						},
 					}),
+          Token: testUserToken,
 				},
 				// the response to inject into the client
 				c.Response{
@@ -325,9 +335,14 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint,
 					Method:   "POST",
-					Body: RancherDevModel{
+          Headers: map[string][]string{
+            "Content-Type": {"application/json"},
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body: RancherDevModel{
 						Id: defaultId,
 					},
+          Token: testUserToken,
 				},
 				// the response to inject into the client
 				c.Response{
@@ -360,9 +375,14 @@ func TestRancherDevResource(t *testing.T) {
 				c.Request{
 					Endpoint: apiEndpoint,
 					Method:   "POST",
-					Body: RancherDevModel{
+          Headers: map[string][]string{
+            "Content-Type": {"application/json"},
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body: RancherDevModel{
 						Id: "test",
 					},
+          Token: testUserToken,
 				},
 				// the response to inject into the client
 				c.Response{
@@ -395,8 +415,9 @@ func TestRancherDevResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, "")
-				client.SetResponse(tc.apiResponse)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, testUserToken)
+        apiRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testUserToken)
+				client.SetResponse(apiRequestId, tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
@@ -427,7 +448,7 @@ func TestRancherDevResource(t *testing.T) {
 				}
 				expectedState := resource.CreateResponse{State: state}
 
-				actualApiRequest := client.GetLastRequest()
+				actualApiRequest := client.GetRequest(apiRequestId)
 				expectedApiRequest := tc.apiRequest
 
 				// Always verify outcome before comparing objects
@@ -453,14 +474,14 @@ func TestRancherDevResource(t *testing.T) {
 	})
 	t.Run("Read", func(t *testing.T) {
 		testCases := []struct {
-			name               string
-			fit                RancherDevResource
-			env                map[string]string // a k/v map of environment variables to set
-			existingState      RancherDevModel   // this will get injected in the read request
-			expectedState      RancherDevModel
-			apiResponse        c.Response // this will be injected into the client
-			expectedApiRequest c.Request  // the API request expected to be reported from the client
-			outcome            string     // expected outcome, one of: "success","failure"
+			name          string
+			fit           RancherDevResource
+			env           map[string]string // a k/v map of environment variables to set
+			existingState RancherDevModel   // this will get injected in the read request
+			expectedState RancherDevModel
+			apiRequest    c.Request  // the API request expected to be reported from the client
+			apiResponse   c.Response // this will be injected into the client
+			outcome       string     // expected outcome, one of: "success","failure"
 		}{
 			{
 				"Basic",
@@ -475,6 +496,16 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+          Method:   "GET",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body:     rBodyMarshal(nil),
+          Token:    testUserToken,
+        },
 				// the response to inject into the client
 				c.Response{
 					StatusCode: http.StatusOK,
@@ -484,12 +515,6 @@ func TestRancherDevResource(t *testing.T) {
 					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
 					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
-					Method:   "GET",
-					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -507,6 +532,16 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+          Method:   "GET",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body:     rBodyMarshal(nil),
+          Token:    testUserToken,
+        },
 				// the response to inject into the client
 				c.Response{
 					StatusCode: http.StatusOK,
@@ -516,12 +551,6 @@ func TestRancherDevResource(t *testing.T) {
 					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
 					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
-					Method:   "GET",
-					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -539,6 +568,16 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+          Method:   "GET",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body:     rBodyMarshal(nil),
+          Token:    testUserToken,
+        },
 				// the response to inject into the client
 				c.Response{
 					StatusCode: http.StatusInternalServerError,
@@ -549,12 +588,6 @@ func TestRancherDevResource(t *testing.T) {
 						Status:  "500",
 						Message: "something went wrong",
 					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
-					Method:   "GET",
-					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"failure",
@@ -572,6 +605,16 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+          Method:   "GET",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body:     rBodyMarshal(nil),
+          Token:    testUserToken,
+        },
 				// the response to inject into the client
 				c.Response{
 					StatusCode: http.StatusOK,
@@ -585,12 +628,6 @@ func TestRancherDevResource(t *testing.T) {
 						Id:                 defaultId,
 						UntrackedAttribute: "untracked",
 					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
-					Method:   "GET",
-					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -612,8 +649,9 @@ func TestRancherDevResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, "")
-				client.SetResponse(tc.apiResponse)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, testUserToken)
+        apiRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testUserToken)
+				client.SetResponse(apiRequestId, tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
@@ -643,8 +681,8 @@ func TestRancherDevResource(t *testing.T) {
 
 				tc.fit.Read(context.Background(), req, &res)
 				actualState := res
-				expectedApiRequest := tc.expectedApiRequest
-				actualApiRequest := client.GetLastRequest()
+				expectedApiRequest := tc.apiRequest
+				actualApiRequest := client.GetRequest(apiRequestId)
 
 				// Always verify outcome before comparing objects
 				if tc.outcome == "failure" {
@@ -668,15 +706,15 @@ func TestRancherDevResource(t *testing.T) {
 	})
 	t.Run("Update function", func(t *testing.T) {
 		testCases := []struct {
-			name               string
-			fit                RancherDevResource
-			env                map[string]string // a k/v map of environment variables to set
-			plan               RancherDevModel
-			existingState      RancherDevModel
-			expectedState      RancherDevModel
-			apiResponse        c.Response // this will be injected into the client
-			expectedApiRequest c.Request  // the API request expected to be reported from the client
-			outcome            string     // expected outcome, one of: "success","failure"
+			name          string
+			fit           RancherDevResource
+			env           map[string]string // a k/v map of environment variables to set
+			plan          RancherDevModel
+			existingState RancherDevModel
+			expectedState RancherDevModel
+			apiRequest    c.Request  // the API request expected to be reported from the client
+			apiResponse   c.Response // this will be injected into the client
+			outcome       string     // expected outcome, one of: "success","failure"
 		}{
 			{
 				"Basic",
@@ -695,20 +733,24 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+          Method:   "PUT",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body: rBodyMarshal(RancherDevModel{
+            Id: defaultId,
+          }),
+          Token: testUserToken,
+        },
 				// this response will be injected into the client
 				c.Response{
 					StatusCode: http.StatusOK,
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: rBodyMarshal(RancherDevModel{
-						Id: defaultId,
-					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
-					Method:   "PUT",
 					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
 					}),
@@ -733,6 +775,16 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId,
+          Method:   "PUT",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body:     rBodyMarshal(RancherDevModel{Id: defaultId}),
+          Token:    testUserToken,
+        },
 				// this response will be injected into the client
 				c.Response{
 					StatusCode: http.StatusNotFound,
@@ -743,12 +795,6 @@ func TestRancherDevResource(t *testing.T) {
 						Status:  "404",
 						Message: "resource not found",
 					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
-					Method:   "PUT",
-					Body:     rBodyMarshal(RancherDevModel{Id: defaultId}),
 				},
 				// expected outcome
 				"failure",
@@ -770,6 +816,16 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId,
+          Method:   "PUT",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body:     rBodyMarshal(RancherDevModel{Id: defaultId}),
+          Token:    testUserToken,
+        },
 				// this response will be injected into the client
 				c.Response{
 					StatusCode: http.StatusInternalServerError,
@@ -780,12 +836,6 @@ func TestRancherDevResource(t *testing.T) {
 						Status:  "500",
 						Message: "server error",
 					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
-					Method:   "PUT",
-					Body:     rBodyMarshal(RancherDevModel{Id: defaultId}),
 				},
 				// expected outcome
 				"failure",
@@ -807,20 +857,24 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId,
+          Method:   "PUT",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body: rBodyMarshal(RancherDevModel{
+            Id: defaultId,
+          }),
+          Token: testUserToken,
+        },
 				// this response will be injected into the client
 				c.Response{
 					StatusCode: http.StatusOK,
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: rBodyMarshal(RancherDevModel{
-						Id: defaultId,
-					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
-					Method:   "PUT",
 					Body: rBodyMarshal(RancherDevModel{
 						Id: defaultId,
 					}),
@@ -845,8 +899,9 @@ func TestRancherDevResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, "")
-				client.SetResponse(tc.apiResponse)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, testUserToken)
+        apiRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testUserToken)
+				client.SetResponse(apiRequestId, tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
@@ -886,8 +941,8 @@ func TestRancherDevResource(t *testing.T) {
 					State: state,
 				}
 
-				actualApiRequest := client.GetLastRequest()
-				expectedApiRequest := tc.expectedApiRequest
+				actualApiRequest := client.GetRequest(apiRequestId)
+				expectedApiRequest := tc.apiRequest
 
 				// always verify outcome before comparing objects
 				if tc.outcome == "failure" {
@@ -911,13 +966,13 @@ func TestRancherDevResource(t *testing.T) {
 	})
 	t.Run("Delete function", func(t *testing.T) {
 		testCases := []struct {
-			name               string
-			fit                RancherDevResource
-			env                map[string]string // a k/v map of environment variables to set
-			existingState      RancherDevModel
-			apiResponse        c.Response // this will be injected into the client
-			expectedApiRequest c.Request  // the API request expected to be reported from the client
-			outcome            string     // expected outcome, one of: "success","failure"
+			name          string
+			fit           RancherDevResource
+			env           map[string]string // a k/v map of environment variables to set
+			existingState RancherDevModel
+			apiRequest    c.Request  // the API request expected to be reported from the client
+			apiResponse   c.Response // this will be injected into the client
+			outcome       string     // expected outcome, one of: "success","failure"
 		}{
 			{
 				"Basic",
@@ -928,17 +983,21 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
+          Method:   "DELETE",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body:     rBodyMarshal(nil),
+          Token:    testUserToken,
+        },
 				// this response will be injected into the client
 				c.Response{
 					StatusCode: http.StatusNoContent,
 					Headers:    map[string][]string{},
 					Body:       []byte{},
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
-					Method:   "DELETE",
-					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -952,6 +1011,16 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId,
+          Method:   "DELETE",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body:     rBodyMarshal(nil),
+          Token:    testUserToken,
+        },
 				// this response will be injected into the client
 				c.Response{
 					StatusCode: http.StatusNotFound,
@@ -962,12 +1031,6 @@ func TestRancherDevResource(t *testing.T) {
 						Status:  "404",
 						Message: "resource not found",
 					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
-					Method:   "DELETE",
-					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"success",
@@ -981,6 +1044,16 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevModel{
 					Id: defaultId,
 				},
+        // the API request expected to be reported
+        c.Request{
+          Endpoint: apiEndpoint + "/" + defaultId,
+          Method:   "DELETE",
+          Headers: map[string][]string{
+            "Authorization": {"Bearer " + testUserToken},
+          },
+          Body:     rBodyMarshal(nil),
+          Token:    testUserToken,
+        },
 				// this response will be injected into the client
 				c.Response{
 					StatusCode: http.StatusInternalServerError,
@@ -991,12 +1064,6 @@ func TestRancherDevResource(t *testing.T) {
 						Status:  "500",
 						Message: "server error",
 					}),
-				},
-				// the API request expected to be reported
-				c.Request{
-					Endpoint: apiEndpoint + "/" + defaultId,
-					Method:   "DELETE",
-					Body:     rBodyMarshal(nil),
 				},
 				// expected outcome
 				"failure",
@@ -1018,8 +1085,9 @@ func TestRancherDevResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, "")
-				client.SetResponse(tc.apiResponse)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, testUserToken)
+        apiRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testUserToken)
+				client.SetResponse(apiRequestId, tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
@@ -1046,8 +1114,8 @@ func TestRancherDevResource(t *testing.T) {
 				}
 				tc.fit.Delete(ctx, req, &res)
 
-				actualApiRequest := client.GetLastRequest()
-				expectedApiRequest := tc.expectedApiRequest
+				actualApiRequest := client.GetRequest(apiRequestId)
+				expectedApiRequest := tc.apiRequest
 
 				// always verify outcome before comparing objects
 				if tc.outcome == "failure" {

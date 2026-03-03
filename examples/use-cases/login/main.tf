@@ -2,6 +2,7 @@
 provider "rancher2" {
   api_url = local.rancher_url
 }
+
 locals {
   rancher_url = var.rancher_url
 }
@@ -17,11 +18,13 @@ resource "rancher2_login" "initial_admin" {
 }
 
 resource "rancher2_login" "explicit_admin" {
-  username     = "admin"
-  password     = "secret"
-  token_ttl    = "90d" # this token will expire in 90 days from the time it is created or refreshed
-  refresh_at   = "10d" # this token will be refreshed 10 days before it expires, resetting the 90 day ttl
-  ignore_token = false # if set to true this won't save the resulting token to state
+  username_environment_variable = "USERNAME" # optional, tells resource where to look for username, defaults to RANCHER_USERNAME
+  password_environment_variable = "PASSWORD" # optional, tells resource where to look for password, defaults to RANCHER_PASSWORD
+  username                      = "admin"
+  password                      = "admin"
+  token_ttl                     = "90d" # this token will expire in 90 days from the time it is created or refreshed
+  refresh_at                    = "10d" # this token will be refreshed 10 days before it expires, resetting the 90 day ttl
+  ignore_token                  = false # if set to true this won't save the resulting token to state
 }
 
 resource "rancher2_login" "environment_override" {
@@ -41,13 +44,15 @@ resource "rancher2_login" "ignore_token" {
   refresh_at   = "10d" # this token will be refreshed 10 days before it expires, resetting the 90 day ttl
   ignore_token = true  # if set to true this won't save the resulting token to state
   # this token will only work on applies when it is (re)created
+  # taint this resource or set a lifecycle metadata to get a new token
 }
 
 resource "rancher2_login" "most_secure" {
-  token_ttl    = "90d" # this token will expire in 90 days from the time it is created or refreshed
-  refresh_at   = "10d" # this token will be refreshed 10 days before it expires, resetting the 90 day ttl
+  token_ttl    = "10m" # this token will expire in 10 minutes from the time it is created
+  refresh_at   = "2m"  # this token will be refreshed 2 minutes before it expires, resetting the 10 minute ttl
   ignore_token = true  # if set to true this won't save the resulting token to state
   # this token will only work on applies when it is (re)created
+  # taint this resource or set a lifecycle metadata to get a new token
 }
 
 # resource "random_password" "kates_password" {
