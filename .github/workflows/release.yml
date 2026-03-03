@@ -431,6 +431,15 @@ jobs:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
         with:
           fetch-depth: 0
+      - name: 'Clear out GitHub Runner'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        with:
+          script: |
+            // requires checkout before step
+            // each job runs in its own ephemeral VM, so each job needs its own clear out step
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/clear-runner.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ core });
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0 https://github.com/actions/setup-go
         with:
           go-version-file: 'go.mod'

@@ -17,6 +17,7 @@ tf-*
 */*.tfvars
 */*.pem
 *.tgz
-main.tf
 terraform-provider-rancher2
 node_modules
+terraformrc
+rebase.sh

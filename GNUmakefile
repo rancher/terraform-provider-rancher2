@@ -1,4 +1,4 @@
-default: fmt lint build install generate test testacc
+default: fmt lint build install generate test testlong
 
 fmt:
 	gofmt -s -w -e .
@@ -17,18 +17,21 @@ generate:
 	cd tools; go generate ./...
 
 test: # run unit tests
-	gotestsum --format standard-verbose --jsonfile report.json --post-run-command "./test/summarize.sh" -- ./... -v -p=10 -timeout=300s -cover
+	gotestsum --format standard-verbose --jsonfile report.json --post-run-command "./test/unit/summarize.sh" -- ./... -v -p=10 -timeout=300s -cover
 
-testacc: # run all acceptance tests
-	./run_tests.sh
+testshort: # run short acceptance tests
+	
+
+testlong: # run e2e tests
+	./test/long/scripts/run_tests.sh
 
 dt: # run specific unit test eg. `make dt -- t=<testname>`
-	gotestsum --format standard-verbose -- $(t)
+	gotestsum --format standard-verbose -- ./... -v -run "$(t)"
 
 et: build # run specific acceptance test eg. `make et -- t=<testname>`
-	./run_tests.sh -t $(t)
+	./test/long/scripts/run_tests.sh -t $(t)
 
 clean: # clean up test leftovers eg. `make clean -- i=<identifier>`
-	./run_tests.sh -c $(i)
+	./test/long/scripts/run_tests.sh -c $(i)
 
-.PHONY: fmt lint build install generate test testacc dt et clean
+.PHONY: fmt lint build install generate test testlong dt et clean
