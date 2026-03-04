@@ -31,3 +31,6 @@ json
 backport
 PDB
 PC
+AuthConfig
+Cognito
+nutanix
