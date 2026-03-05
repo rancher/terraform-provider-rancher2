@@ -32,3 +32,8 @@ backport
 GKE
 PDB
 PC
+AuthConfig
+Cognito
+nutanix
+Keycloak
+OIDC

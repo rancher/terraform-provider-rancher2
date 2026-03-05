@@ -13,6 +13,7 @@ var allMachineDriverConfigFields = []string{
 	"openstack_config",
 	"vsphere_config",
 	"google_config",
+	"nutanix_config",
 }
 
 // Schemas
@@ -109,6 +110,15 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 			ConflictsWith: getConflicts(allMachineDriverConfigFields, "google_config"),
 			Elem: &schema.Resource{
 				Schema: machineConfigV2GoogleGCEFields(),
+			},
+		},
+		"nutanix_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "nutanix_config"),
+			Elem: &schema.Resource{
+				Schema: machineConfigV2NutanixFields(),
 			},
 		},
 		"resource_version": {
