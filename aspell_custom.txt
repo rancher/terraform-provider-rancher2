@@ -32,3 +32,6 @@ backport
 GKE
 PDB
 PC
+AuthConfig
+Cognito
+nutanix
