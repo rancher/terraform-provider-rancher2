@@ -17,10 +17,18 @@ generate:
 	cd tools; go generate ./...
 
 test: # run unit tests
-	gotestsum --format standard-verbose --jsonfile report.json --post-run-command "./test/unit/summarize.sh" -- ./... -v -p=10 -timeout=300s -cover
+	gotestsum --format standard-verbose --jsonfile report.json --post-run-command "./test/unit/summarize.sh" -- ./internal/provider/... -v -p=10 -timeout=300s -cover
 
-testshort: # run short acceptance tests
-	
+startlocal:
+	./test/short/scripts/local_rancher.sh
+
+stoplocal:
+	./test/short/scripts/local_rancher.sh cleanup
+
+ts: # run short tests without launching Rancher
+	cd ./test/short; go test -count=1 -run='TestAccDevResource' -v; cd ../../;
+
+testshort: startlocal ts stoplocal # run short acceptance tests
 
 testlong: # run e2e tests
 	./test/long/scripts/run_tests.sh
@@ -34,4 +42,5 @@ et: build # run specific acceptance test eg. `make et -- t=<testname>`
 clean: # clean up test leftovers eg. `make clean -- i=<identifier>`
 	./test/long/scripts/run_tests.sh -c $(i)
 
-.PHONY: fmt lint build install generate test testlong dt et clean
+.PHONY: fmt lint build install generate test testlong testshort dt et clean startlocal stoplocal
+

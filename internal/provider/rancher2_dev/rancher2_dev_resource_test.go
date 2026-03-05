@@ -43,7 +43,7 @@ func TestRancherDevResource(t *testing.T) {
 			{
 				"Basic",
 				RancherDevResource{},
-				resource.MetadataResponse{TypeName: "rancher2_dev_resource"},
+				resource.MetadataResponse{TypeName: "rancher2_dev"},
 			},
 		}
 		for _, tc := range testCases {

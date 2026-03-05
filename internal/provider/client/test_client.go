@@ -94,7 +94,7 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 	resp.Headers = response.Headers
 	resp.StatusCode = response.StatusCode
 
-  tflog.Debug(ctx, fmt.Sprintf("\nRequest: %s\n%s\nHeaders:\n%s\nBody:\n%s\n", newReq.Method, newReq.Endpoint, pp.PrettyPrint(newReq.Headers), newReq.Body))
+  tflog.Debug(ctx, fmt.Sprintf("\nRequest: %s\n  %s\n  %s\nHeaders:\n  %s\nBody:\n  %s\n", requestId, newReq.Method, newReq.Endpoint, pp.PrettyPrint(newReq.Headers), newReq.Body))
 
 	var prettyResponse bytes.Buffer
   var rp string
@@ -104,7 +104,7 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
   } else {
     rp = prettyResponse.String()
   }
-  tflog.Debug(ctx, fmt.Sprintf("\nResponse: %d\nHeaders:\n%s\nBody:\n%s\n", resp.StatusCode, pp.PrettyPrint(resp.Headers), rp))
+  tflog.Debug(ctx, fmt.Sprintf("\nResponse: %d\nHeaders:\n  %s\nBody:\n  %s\n", resp.StatusCode, pp.PrettyPrint(resp.Headers), rp))
 
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 		tflog.Debug(ctx, fmt.Sprintf("\nSuccessful response! (%d)\n", resp.StatusCode))

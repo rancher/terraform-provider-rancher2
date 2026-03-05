@@ -3,7 +3,8 @@ bin/
 build/
 dist/
 */*.swp
-test/data
+test/long/data
+test/short/data
 .terraform/terraformrc
 .terraform.lock.hcl
 */.terraform.lock.hcl
@@ -21,3 +22,4 @@ terraform-provider-rancher2
 node_modules
 terraformrc
 rebase.sh
+.DS_Store
