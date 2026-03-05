@@ -3,7 +3,8 @@ bin/
 build/
 dist/
 */*.swp
-test/data
+test/long/data
+test/short/data
 .terraform/terraformrc
 .terraform.lock.hcl
 */.terraform.lock.hcl

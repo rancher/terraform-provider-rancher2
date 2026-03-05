@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -43,7 +44,7 @@ type RancherDevResource struct {
 // RancherDevResourceModel is in rancher2_dev_resource_model.go
 
 func (r *RancherDevResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_dev_resource" // rancher2_dev_resource
+	resp.TypeName = req.ProviderTypeName + "_dev" // rancher2_dev
 }
 
 func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -243,20 +244,10 @@ func (r *RancherDevResource) Configure(ctx context.Context, req resource.Configu
 
 // Create generates reality and state to match plan.
 func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("Create Request Object: %+v", pp.PrettyPrint(req)))
+	tflog.Debug(ctx, fmt.Sprintf("Create Config: %+v", pp.PrettyPrint(req.Config.Raw)))
+	tflog.Debug(ctx, fmt.Sprintf("Create Plan: %+v", pp.PrettyPrint(req.Plan.Raw)))
 	var err error
-
-	var client c.Client
-	if r.client != nil {
-		client = r.client
-	} else {
-		// no client found, seems like the provider wasn't configured properly
-		resp.Diagnostics.AddError("client not found, please configure the provider", "")
-		return
-	}
-
 	plan := RancherDevResourceModel{}
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -270,8 +261,39 @@ func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequ
 	token := plan.UserToken.ValueString()
 	plan.UserToken = types.StringValue("") // this implicitly removes the user_token from any request body because omitempty and jsonMarshal
 
+
+  // TESTING ONLY
+  //
+  // normal resources should do the following
+	// if r.client != nil {
+	// 	client = r.client
+	// } else {
+	// 	// no client found, seems like the provider wasn't configured properly
+	// 	resp.Diagnostics.AddError("client not found, please configure the provider", "")
+	// 	return
+	// }
+  // since this is for dev purposes only, we will force the test client
+  client := c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, "")
+  // since this won't have any real response from the client, we need to set the response
+  requestId := fmt.Sprintf("%s:%s:%s", filepath.Join(client.GetApiUrl(), endpointPath), "POST", token)
+  tflog.Debug(ctx, fmt.Sprintf("create requestId: %s", requestId))
+	body, err := json.Marshal(plan.ToGoModel(ctx))
+	if err != nil {
+		resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
+		return
+	}
+  client.SetResponse(requestId,c.Response{
+    StatusCode: 200,
+    Headers: map[string][]string{
+      "Content-Type": {"application/json"},
+    },
+    Body: body,
+  })
+  //
+  // END TESTING ONLY
+
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s", client.GetApiUrl(), endpointPath),
+		Endpoint: filepath.Join(client.GetApiUrl(), endpointPath),
 		Method:   "POST",
 		Body:     plan.ToGoModel(ctx),
 		Token:    token,
@@ -297,23 +319,19 @@ func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+  // reset the user token after processing the reponse from the API
+  // you would want to follow this pattern for any value that doesn't come directly from the API
+  state.UserToken = types.StringValue(token)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	tflog.Debug(ctx, fmt.Sprintf("Create Response Object: %+v", pp.PrettyPrint(*resp)))
+	tflog.Debug(ctx, fmt.Sprintf("Create State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
 }
 
 // Read updates state to match reality.
 // Read runs at refresh time which happens before all other functions and every time another function would be called.
 // Don't call this function from one of the other functions (eg. don't call the Read function from within the Create function).
 func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("Read Request Object: %+v", pp.PrettyPrint(req)))
-
-	var client c.Client
-	if r.client != nil {
-		client = r.client
-	} else {
-		resp.Diagnostics.AddError("client not found, please configure the provider", "")
-		return
-	}
+	tflog.Debug(ctx, fmt.Sprintf("Read Request: %+v", pp.PrettyPrint(req.State.Raw)))
 
 	var state RancherDevResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -321,13 +339,45 @@ func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+  var client c.Client
+
+  // TESTING ONLY
+  //
+  // normal resources should do the following
+	// if r.client != nil {
+	// 	client = r.client
+	// } else {
+	// 	// no client found, seems like the provider wasn't configured properly
+	// 	resp.Diagnostics.AddError("client not found, please configure the provider", "")
+	// 	return
+	// }
+  // since this is for dev purposes only, we will force the test client
+  client = c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, "")
+  // since this won't have any real response from the client, we need to set the response
+  requestId := fmt.Sprintf("%s:%s:%s", filepath.Join(client.GetApiUrl(), endpointPath, state.Id.ValueString()), "GET", "")
+  tflog.Debug(ctx, fmt.Sprintf("read requestId: %s", requestId))
+	body, err := json.Marshal(state.ToGoModel(ctx))
+	if err != nil {
+		resp.Diagnostics.AddError("Error marshalling dev state for read response: ", err.Error())
+		return
+	}
+  client.(*c.TestClient).SetResponse(requestId,c.Response{
+    StatusCode: 200,
+    Headers: map[string][]string{
+      "Content-Type": {"application/json"},
+    },
+    Body: body,
+  })
+  //
+  // END TESTING ONLY
+
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString()),
+		Endpoint: filepath.Join(client.GetApiUrl(), endpointPath, state.Id.ValueString()),
 		Method:   "GET",
 	}
 	response := c.Response{}
 
-	err := client.Do(ctx, &request, &response)
+	err = client.Do(ctx, &request, &response)
 	if err != nil {
 		if e, ok := err.(*c.ApiError); ok && e.StatusCode == 404 {
 			// resource not found, remove from state
@@ -351,33 +401,45 @@ func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	tflog.Debug(ctx, fmt.Sprintf("Read Response Object: %+v", pp.PrettyPrint(*resp)))
+	tflog.Debug(ctx, fmt.Sprintf("Read State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
 }
 
 // Update changes reality and state to match plan (best practice is don't compare old state, just override).
 func (r *RancherDevResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("Update Request Object: %+v", pp.PrettyPrint(req)))
+	tflog.Debug(ctx, fmt.Sprintf("Update Request Config: %+v", pp.PrettyPrint(req.Config.Raw)))
+	tflog.Debug(ctx, fmt.Sprintf("Update Request Plan: %+v", pp.PrettyPrint(req.Plan.Raw)))
+	tflog.Debug(ctx, fmt.Sprintf("Update Request State: %+v", pp.PrettyPrint(req.State.Raw)))
 	var err error
-
-	var client c.Client
-	if r.client != nil {
-		client = r.client
-	} else {
-		// no client found, seems like the provider wasn't configured properly
-		resp.Diagnostics.AddError("initial client not found, please configure the provider", "")
-		return
-	}
-
 	var plan RancherDevResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+  // TESTING ONLY
+  //
+  // normal resources should do the following
+	// if r.client != nil {
+	// 	client = r.client
+	// } else {
+	// 	// no client found, seems like the provider wasn't configured properly
+	// 	resp.Diagnostics.AddError("client not found, please configure the provider", "")
+	// 	return
+	// }
+  // since this is for dev purposes only, we will force the test client
+  client := c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, "")
+  // since this won't have any real response from the client, we need to set the response
+  requestId := fmt.Sprintf("%s:%s:%s", filepath.Join(client.GetApiUrl(), endpointPath, plan.Id.ValueString()), "PUT", "")
+  tflog.Debug(ctx, fmt.Sprintf("update requestId: %s", requestId))
+  client.SetResponse(requestId,c.Response{
+    StatusCode: 200,
+  })
+  //
+  // END TESTING ONLY
+
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, plan.Id.ValueString()),
+		Endpoint: filepath.Join(client.GetApiUrl(), endpointPath, plan.Id.ValueString()),
 		Method:   "PUT",
-		Body:     plan.ToGoModel(ctx),
 	}
 
 	response := c.Response{}
@@ -388,35 +450,14 @@ func (r *RancherDevResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	var respBody RancherDevModel
-	err = json.Unmarshal(response.Body, &respBody)
-	if err != nil {
-		resp.Diagnostics.AddError("Error unmarshalling dev resource: ", err.Error())
-		return
-	}
-
-	state := *respBody.ToResourceModel(ctx, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	tflog.Debug(ctx, fmt.Sprintf("Update Response Object: %+v", pp.PrettyPrint(*resp)))
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	tflog.Debug(ctx, fmt.Sprintf("Update Response State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
 }
 
 // Destroy destroys reality (state is handled automatically).
 func (r *RancherDevResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("Delete Request Object: %+v", pp.PrettyPrint(req)))
+	tflog.Debug(ctx, fmt.Sprintf("Delete Request State: %+v", pp.PrettyPrint(req.State.Raw)))
 	var err error
-
-	var client c.Client
-	if r.client != nil {
-		client = r.client
-	} else {
-		// no client found, seems like the provider wasn't configured properly
-		resp.Diagnostics.AddError("initial client not found, please configure the provider", "")
-		return
-	}
 
 	var state RancherDevResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -424,8 +465,27 @@ func (r *RancherDevResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString()),
+  // TESTING ONLY
+  //
+  // normal resources should do the following
+	// if r.client != nil {
+	// 	client = r.client
+	// } else {
+	// 	// no client found, seems like the provider wasn't configured properly
+	// 	resp.Diagnostics.AddError("client not found, please configure the provider", "")
+	// 	return
+	// }
+  // since this is for dev purposes only, we will force the test client
+  client := c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, "")
+  // since this won't have any real response from the client, we need to set the response
+  requestId := fmt.Sprintf("%s:%s:%s", filepath.Join(client.GetApiUrl(), endpointPath, state.Id.ValueString()), "DELETE", "")
+  tflog.Debug(ctx, fmt.Sprintf("delete requestId: %s", requestId))
+  client.SetResponse(requestId,c.Response{StatusCode: 200})
+  //
+  // END TESTING ONLY
+
+  request := c.Request{
+		Endpoint: filepath.Join(client.GetApiUrl(), endpointPath, state.Id.ValueString()),
 		Method:   "DELETE",
 	}
 
@@ -440,8 +500,6 @@ func (r *RancherDevResource) Delete(ctx context.Context, req resource.DeleteRequ
 		resp.Diagnostics.AddError("Error deleting dev resource: ", err.Error())
 		return
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("Delete Response Object: %+v", pp.PrettyPrint(*resp)))
 }
 
 func (r *RancherDevResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -453,8 +511,8 @@ func validateData(data *RancherDevResourceModel) error {
 	if data.Id.ValueString() == "" {
 		return fmt.Errorf("id cannot be empty")
 	}
-	if !regexp.MustCompile(`^dev-.*`).MatchString(data.Id.ValueString()) {
-		return fmt.Errorf("id must start with 'dev-'")
+	if !regexp.MustCompile(`^dev-.*`).MatchString(data.StringAttribute.ValueString()) {
+		return fmt.Errorf("string must start with 'dev-'")
 	}
 	if data.BoolAttribute.IsNull() || data.BoolAttribute.IsUnknown() {
 		data.BoolAttribute = types.BoolValue(true)
