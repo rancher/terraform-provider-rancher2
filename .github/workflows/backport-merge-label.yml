@@ -9,6 +9,9 @@ on:
 jobs:
   label:
     if: ${{ github.event.pull_request.merged == true }}
+    permissions:
+      contents: read
+      issues: write
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repository'
