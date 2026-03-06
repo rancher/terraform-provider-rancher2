@@ -57,7 +57,7 @@ export default async ({ github, core, process }) => {
         return versionB - versionA;
       });
 
-      if (releaseLabels[0]) {
+    if (releaseLabels[0]) {
       newLabels.push(releaseLabels[0]);
       releaseName = releaseLabels[0].name;
     } else {
