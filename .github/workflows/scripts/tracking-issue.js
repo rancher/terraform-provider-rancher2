@@ -28,8 +28,10 @@ export default async ({ github, core, process }) => {
       });
 
     if (releaseBranches.length > 0) {
-      latestReleaseBranch = releaseBranches[0].name;
+      latestReleaseBranch = releaseBranches[0];
       core.info(`Latest release branch detected: ${latestReleaseBranch}`);
+    } else {
+      throw new Error('No release branches found');
     }
   } catch (error) {
     throw new Error(`Failed to find latest release branch: ${error.message}`);
