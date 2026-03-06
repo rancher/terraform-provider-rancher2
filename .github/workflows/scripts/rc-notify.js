@@ -3,7 +3,7 @@ export default async ({ github, context, core }) => {
   // https://github.com/actions/github-script?tab=readme-ov-file#this-action
   // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
 
-  const tagName = context.payload.release.tagName;
+  const tagName = context.payload.release.tag_name;
   const branchLabel = context.payload.release.target_commitish;
   const owner = "rancher";
   const repo = "terraform-provider-rancher2";
