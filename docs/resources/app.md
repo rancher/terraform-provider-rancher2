@@ -28,7 +28,6 @@ resource "rancher2_app" "foo" {
   answers = {
     "ingress_host" = "test.xip.io"
     "foo" = "bar"
-    "ingress.annotations.nginx.ingress.kubernetes.io/force-ssl-redirect" = true
   }
 }
 ```
@@ -59,7 +58,6 @@ resource "rancher2_app" "foo" {
   answers = {
     "ingress_host" = "test.xip.io"
     "foo" = "bar"
-    "ingress.annotations.nginx.ingress.kubernetes.io/force-ssl-redirect" = true
   }
 }
 ```

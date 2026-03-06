@@ -12,7 +12,7 @@ const (
 	machineConfigV2Amazonec2ClusterIDsep = "."
 )
 
-//Types
+// Types
 
 type machineConfigV2Amazonec2 struct {
 	metav1.TypeMeta         `json:",inline"`
@@ -51,6 +51,25 @@ type machineConfigV2Amazonec2 struct {
 	VolumeType              string   `json:"volumeType,omitempty" yaml:"volumeType,omitempty"`
 	VpcID                   string   `json:"vpcId,omitempty" yaml:"vpcId,omitempty"`
 	Zone                    string   `json:"zone,omitempty" yaml:"zone,omitempty"`
+
+	// HttpProtocolIpv6 enables or disables the IPv6 endpoint for the instance metadata service.
+	// Options: enabled, disabled
+	HttpProtocolIpv6 string `json:"httpProtocolIpv6,omitempty" yaml:"httpProtocolIpv6,omitempty"`
+
+	// EnablePrimaryIpv6 indicates whether the instance’s first assigned IPv6 address is set as the primary IPv6 address.
+	// Enable this option if the instance requires a stable, persistent IPv6 address.
+	// This option does not affect whether IPv6 addresses are assigned to the instance.
+	// For more information, see EnablePrimaryIpv6 on
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html
+	EnablePrimaryIpv6 bool `json:"enablePrimaryIpv6,omitempty" yaml:"enablePrimaryIpv6,omitempty"`
+
+	// Ipv6AddressCount sets the number of IPv6 addresses to assign to the network interface.
+	// It must be greater than zero when Ipv6AddressOnly is true
+	Ipv6AddressCount string `json:"ipv6AddressCount,omitempty" yaml:"ipv6AddressCount,omitempty"`
+
+	// Ipv6AddressOnly indicates whether the instance has only IPv6 address.
+	// Useful when the VPC or subnet is configured as IPv6-only.
+	Ipv6AddressOnly bool `json:"ipv6AddressOnly,omitempty" yaml:"ipv6AddressOnly,omitempty"`
 }
 
 type MachineConfigV2Amazonec2 struct {
@@ -176,6 +195,18 @@ func flattenMachineConfigV2Amazonec2(in *MachineConfigV2Amazonec2) []interface{}
 	if len(in.Zone) > 0 {
 		obj["zone"] = in.Zone
 	}
+
+	if len(in.HttpProtocolIpv6) > 0 {
+		obj["http_protocol_ipv6"] = in.HttpProtocolIpv6
+	}
+
+	if len(in.Ipv6AddressCount) > 0 {
+		obj["ipv6_address_count"] = in.Ipv6AddressCount
+	}
+
+	obj["enable_primary_ipv6"] = in.EnablePrimaryIpv6
+
+	obj["ipv6_address_only"] = in.Ipv6AddressOnly
 
 	return []interface{}{obj}
 }
@@ -322,6 +353,21 @@ func expandMachineConfigV2Amazonec2(p []interface{}, source *MachineConfigV2) *M
 
 	if v, ok := in["zone"].(string); ok && len(v) > 0 {
 		obj.Zone = v
+	}
+
+	if v, ok := in["http_protocol_ipv6"].(string); ok && len(v) > 0 {
+		obj.HttpProtocolIpv6 = v
+	}
+
+	if v, ok := in["ipv6_address_count"].(string); ok && len(v) > 0 {
+		obj.Ipv6AddressCount = v
+	}
+
+	if v, ok := in["enable_primary_ipv6"].(bool); ok {
+		obj.EnablePrimaryIpv6 = v
+	}
+	if v, ok := in["ipv6_address_only"].(bool); ok {
+		obj.Ipv6AddressOnly = v
 	}
 
 	return obj

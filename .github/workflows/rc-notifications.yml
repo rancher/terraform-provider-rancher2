@@ -1,0 +1,24 @@
+name: ReleaseCandidateNotifications
+
+on:
+  release:
+    types: [published] # Triggers for both "Prereleases" and standard releases
+
+permissions:
+  issues: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+        with:
+          fetch-depth: 0
+      - name: 'Find Issues and Create Comments'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/rc-notify.js`;
+            const { default: script } = await import(scriptPath);
+            await script({github, context});

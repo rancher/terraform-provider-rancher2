@@ -6,21 +6,19 @@ import (
 
 // Flatteners
 
-func flattenClusterEKSConfigV2NodeGroupsLaunchTemplate(in *managementClient.LaunchTemplate, p []interface{}) []interface{} {
+func flattenClusterEKSConfigV2NodeGroupsLaunchTemplate(in *managementClient.LaunchTemplate) []interface{} {
 	if in == nil {
 		return nil
 	}
 	obj := map[string]interface{}{}
-	if len(p) != 0 && p[0] != nil {
-		obj = p[0].(map[string]interface{})
-	}
+
 	if in.ID != nil && len(*in.ID) > 0 {
 		obj["id"] = *in.ID
 	}
 	if in.Name != nil && len(*in.Name) > 0 {
 		obj["name"] = *in.Name
 	}
-	if in.Version != nil {
+	if in.Version != nil && *in.Version > 0 {
 		obj["version"] = int(*in.Version)
 	}
 
@@ -63,11 +61,7 @@ func flattenClusterEKSConfigV2NodeGroups(input []managementClient.NodeGroup, p [
 			obj["labels"] = toMapInterface(in.Labels)
 		}
 		if in.LaunchTemplate != nil {
-			v, ok := obj["launch_template"].([]interface{})
-			if !ok {
-				v = []interface{}{}
-			}
-			obj["launch_template"] = flattenClusterEKSConfigV2NodeGroupsLaunchTemplate(in.LaunchTemplate, v)
+			obj["launch_template"] = flattenClusterEKSConfigV2NodeGroupsLaunchTemplate(in.LaunchTemplate)
 		}
 		if in.MaxSize != nil {
 			obj["max_size"] = int(*in.MaxSize)
@@ -120,6 +114,9 @@ func flattenClusterEKSConfigV2(in *managementClient.EKSClusterConfigSpec, p []in
 	}
 	if len(in.DisplayName) > 0 {
 		obj["name"] = in.DisplayName
+	}
+	if in.IPFamily != nil && *in.IPFamily != "" {
+		obj["ip_family"] = *in.IPFamily
 	}
 	if in.KubernetesVersion != nil && len(*in.KubernetesVersion) > 0 {
 		obj["kubernetes_version"] = *in.KubernetesVersion
@@ -304,6 +301,9 @@ func expandClusterEKSConfigV2(p []interface{}) *managementClient.EKSClusterConfi
 	}
 	if v, ok := in["imported"].(bool); ok {
 		obj.Imported = v
+	}
+	if v, ok := in["ip_family"].(string); ok && len(v) > 0 {
+		obj.IPFamily = newString(v)
 	}
 	if v, ok := in["kms_key"].(string); ok && len(v) > 0 {
 		obj.KmsKey = newString(v)

@@ -281,11 +281,11 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 
 	enableNetworkPolicy := d.Get("enable_network_policy").(bool)
 
-	clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("cluster_agent_deployment_customization").([]interface{}), true)
+	clusterAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("cluster_agent_deployment_customization").([]interface{}))
 	if err != nil {
 		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
 	}
-	fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("fleet_agent_deployment_customization").([]interface{}), false)
+	fleetAgentDeploymentCustomization, err := expandAgentDeploymentCustomization(d.Get("fleet_agent_deployment_customization").([]interface{}))
 	if err != nil {
 		return fmt.Errorf("[ERROR] Updating Cluster ID %s: %s", d.Id(), err)
 	}
@@ -321,6 +321,18 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
+	// imported_config is special because it applies to *any imported cluster*,
+	// including hosted providers (AKS, EKS, GKE) where `imported = true` is set.
+	// If we keep it inside the driver-specific switch, it only gets processed
+	// for the "imported" driver, but NOT for hosted imported clusters.
+	// To avoid this bug, we always check imported_config here before switching on driver.
+	if v, ok := d.GetOk("imported_config"); ok {
+		importedConfig := v.([]interface{})
+		if len(importedConfig) > 0 {
+			update["importedConfig"] = expandClusterImportedConfig(importedConfig)
+		}
+	}
+
 	replace := false
 	switch driver := ToLower(d.Get("driver").(string)); driver {
 	case ToLower(clusterDriverAKSV2):
@@ -342,12 +354,10 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 	case clusterDriverK3S:
 		update["k3sConfig"] = expandClusterK3SConfig(d.Get("k3s_config").([]interface{}))
-		replace = d.HasChange("cluster_agent_deployment_customization")
+		replace = d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
 	case clusterDriverRKE2:
 		update["rke2Config"] = expandClusterRKE2Config(d.Get("rke2_config").([]interface{}))
-		replace = d.HasChange("cluster_agent_deployment_customization")
-	case clusterDriverImported:
-		update["importedConfig"] = expandClusterImportedConfig(d.Get("imported_config").([]interface{}))
+		replace = d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
 	}
 
 	// update the cluster; retry til timeout or non retryable error is returned. If api 500 error is received,

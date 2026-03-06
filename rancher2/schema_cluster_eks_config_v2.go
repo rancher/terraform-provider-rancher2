@@ -26,6 +26,7 @@ type AmazonElasticContainerServiceConfig struct {
 	EBSEncryption               bool     `json:"ebsEncryption,omitempty" yaml:"ebsEncryption,omitempty"`
 	InstanceType                string   `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
 	KeyPairName                 string   `json:"keyPairName,omitempty" yaml:"keyPairName,omitempty"`
+	IPFamily                    string   `json:"ipFamily,omitempty" yaml:"ipFamily,omitempty"`
 	KubernetesVersion           string   `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
 	MaximumNodes                int64    `json:"maximumNodes,omitempty" yaml:"maximumNodes,omitempty"`
 	MinimumNodes                int64    `json:"minimumNodes,omitempty" yaml:"minimumNodes,omitempty"`
@@ -51,14 +52,12 @@ func clusterEKSConfigV2NodeGroupsLaunchTemplateFields() map[string]*schema.Schem
 		},
 		"name": {
 			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
+			Required:    true,
 			Description: "The EKS node group launch template name",
 		},
 		"version": {
 			Type:        schema.TypeInt,
-			Optional:    true,
-			Computed:    true,
+			Required:    true,
 			Description: "The EKS node group launch template version",
 		},
 	}
@@ -199,6 +198,12 @@ func clusterEKSConfigV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Default:     false,
 			Description: "Is EKS cluster imported?",
+		},
+		"ip_family": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`",
 		},
 		"kms_key": {
 			Type:        schema.TypeString,

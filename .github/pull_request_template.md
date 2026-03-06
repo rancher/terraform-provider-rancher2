@@ -1,24 +1,17 @@
-## Issue: <!-- link the issue or issues this PR resolves here -->
-<!-- If your PR depends on changes from another pr link them here and describe why they are needed in your solution section. -->
- 
-## Problem
-<!-- Describe the root cause of the issue you are resolving. This may include what behavior is observed and why it is not desirable. If this is a new feature describe why we need this feature and how it will be used. -->
- 
-## Solution
-<!-- Describe what you changed to fix the issue. Relate your changes back to the original issue / feature and explain how this addresses the issue. -->
- 
+<!--- If there is no user issue related to this then you should remove the next line --->
+Addresses #
+
+<!--- Add labels (eg. release/v13) for each release branch to target --->
+<!--- Labels need to be added before PR is created for automation to run smoothly! --->
+
+## Description
+
+<!--- Describe your change and how it addresses the issue linked above or a problem with the product. --->
+
 ## Testing
-<!-- Note: Confirm if the repro steps in the GitHub issue are valid, if not, please update the issue with accurate repro steps. -->
 
-## Engineering Testing
-### Manual Testing
-<!-- Describe what manual testing you did (if no testing was done, explain why). -->
+<!--- Please describe how you verified this change or why testing isn't relevant. --->
 
-### Automated Testing
-<!--If you added/updated unit/integration/validation tests, describe what cases they cover and do not cover. -->
-
-## QA Testing Considerations
-<!-- Highlight areas or (additional) cases that QA should test w.r.t a fresh install as well as the upgrade scenarios -->
- 
-### Regressions Considerations
-<!-- Dedicated section to specifically call out any areas that with higher chance of regressions caused by this change, include estimation of probability of regressions -->
+<!--- Does this change alter an interface that users of the provider will need to adjust to? --->
+<!--- Will there be any existing configurations broken by this change? If so, change the following line with an explanation. --->
+Not a breaking change.

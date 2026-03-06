@@ -1,0 +1,39 @@
+name: TrackingIssue
+# This workflow generates a "tracking" issue when a PR is created targeting main.
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened]
+
+env :
+  TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }} # eg. ["matttrach"]
+
+jobs:
+  generate-issue:
+    name: 'Create Tracking Issue'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        env:
+          TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+        with:
+          script: |
+            // Checking out the repository is a security risk, so we instead fetch the script content directly
+            // This allows us to validate the script in code reviews before merging
+            // This event (pull_request_target) runs in the context of the base of the pull request,
+            //   which is different from the pull_request event,
+            //   meaning that 'context.sha' is the SHA of the last commit on the branch the PR was opened against
+            //   ie. the target branch 'main' (based on the trigger filters above)
+            const response = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: ".github/workflows/scripts/tracking-issue.js",
+              ref: context.sha,
+            });
+            const scriptContent = Buffer.from(response.data.content, "base64").toString();
+
+            // The script will be executed in an async context
+            const script = eval(scriptContent);
+            await script({github, core, context, process});

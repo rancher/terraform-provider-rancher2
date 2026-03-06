@@ -6,14 +6,16 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -138,37 +140,80 @@ func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 }
 
 func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
-	loginURL := url + "/v3-public/localProviders/local?action=login"
-	loginData := `{"username": "` + user + `", "password": "` + pass + `", "ttl": ` + ttl + `, "description": "` + desc + `"}`
+	TTL, err := strconv.ParseInt(ttl, 10, 64)
+	if err != nil || TTL < 0 {
+		return "", "", fmt.Errorf("Invalid ttl value: %s", ttl)
+	}
+
+	payload, err := json.Marshal(map[string]any{
+		"type":        "localProvider",
+		"username":    user,
+		"password":    pass,
+		"ttl":         TTL,
+		"description": desc,
+	})
+	if err != nil {
+		return "", "", fmt.Errorf("Marshalling login data: %v", err)
+	}
+
+	loginURL := url + "/v1-public/login"
+	v3loginURL := url + "/v3-public/localProviders/local?action=login"
+
 	loginHead := map[string]string{
 		"Accept":       "application/json",
 		"Content-Type": "application/json",
 	}
 
+	errPrefix := "Doing user login"
+
 	// Login with user and pass
-	loginResp, err := DoPost(loginURL, loginData, cacert, insecure, loginHead)
+	respBody, resp, err := DoPost(loginURL, string(payload), cacert, insecure, loginHead)
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
+		// /v1-public/login endpoint is not available
+		// try to fall back to /v3-public endpoint.
+		respBody, _, err = DoPost(v3loginURL, string(payload), cacert, insecure, loginHead)
+		if err != nil {
+			return "", "", fmt.Errorf("%s: %v", errPrefix, err)
+		}
+	}
+
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("%s: %v", errPrefix, err)
 	}
 
-	if loginResp["type"].(string) != "token" || loginResp["token"] == nil {
-		return "", "", fmt.Errorf("Doing user login: %s %s", loginResp["type"].(string), loginResp["code"].(string))
+	var token string
+	if respBody["token"] != nil {
+		token, _ = respBody["token"].(string)
 	}
 
-	return loginResp["id"].(string), loginResp["token"].(string), nil
+	if token == "" {
+		if respBody["code"] != nil {
+			code, _ := respBody["code"].(string)
+			errPrefix += ": " + code
+		}
+		return "", "", errors.New(errPrefix)
+	}
+
+	id, _, ok := strings.Cut(token, ":")
+	if !ok {
+		return "", "", errors.New(errPrefix + ": invalid token format")
+	}
+	id = strings.TrimPrefix(id, "ext/")
+
+	return id, token, nil
 }
 
-func DoPost(url, data, cacert string, insecure bool, headers map[string]string) (map[string]interface{}, error) {
+func DoPost(url, data, cacert string, insecure bool, headers map[string]string) (map[string]interface{}, *http.Response, error) {
 	response := make(map[string]interface{})
 
 	if url == "" {
-		return response, fmt.Errorf("Doing post: URL is nil")
+		return response, nil, fmt.Errorf("Doing post: URL is nil")
 	}
 
 	jsonBytes := []byte(data)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
 	if err != nil {
-		return response, err
+		return response, nil, err
 	}
 
 	for k, v := range headers {
@@ -200,17 +245,13 @@ func DoPost(url, data, cacert string, insecure bool, headers map[string]string) 
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return response, err
+		return response, nil, err
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return response, err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&response)
 
-	return response, nil
+	return response, resp, err
 }
 
 func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte, error) {
@@ -276,7 +317,7 @@ func DoGet(url, username, password, token, cacert string, insecure bool) ([]byte
 	// Timings recorded as part of internal metrics
 	log.Println("Time to get req: ", float64((time.Since(start))/time.Millisecond), " ms")
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 
 }
 
