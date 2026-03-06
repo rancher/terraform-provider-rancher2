@@ -10,10 +10,10 @@ export default async ({ github, process }) => {
   }
   
   console.log(`RC Detected: ${tagName}`);
-  console.log(`Searching for open issues with label: "${branchLabel}"`);
+  console.log(`Searching for open issues with label: "${branchLabel} and internal/merged"`);
 
   const issues = await github.paginate(github.rest.search.issuesAndPullRequests, {
-    q: `repo:${owner}/${repo} is:issue is:open label:${branchLabel} -label:internal/user -label:internal/tracking`
+    q: `repo:${owner}/${repo} is:issue is:open label:${branchLabel} label:internal/merged -label:internal/user -label:internal/tracking`
   });
 
   if (issues.length === 0) {

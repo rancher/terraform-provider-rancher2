@@ -1,5 +1,9 @@
 import { execSync } from 'child_process';
 export default async ({ github, core, process }) => {
+  // Context for this script
+  // https://github.com/actions/github-script?tab=readme-ov-file#this-action
+  // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
+
   const owner = "rancher";
   const repo = "terraform-provider-rancher2";
   const mergeCommitSha = process.env.MERGE_COMMIT_SHA;
@@ -113,7 +117,6 @@ export default async ({ github, core, process }) => {
           `Addresses #${subIssueNumber} for #${trackingIssue.number}`,
           `**WARNING!**: to avoid having to resolve merge conflicts this PR is generated with 'git cherry-pick -X theirs'.`,
           `Please make sure to carefully inspect this PR so that you don't accidentally revert anything!`,
-          `Please add the proper milestone to this PR`,
           `Copied from main PR:`,
           `${pr.body}`
         ].join("\n\n")
@@ -133,6 +136,16 @@ export default async ({ github, core, process }) => {
       });
     } catch (error) {
       core.setFailed(`Failed to assign PR #${prNumber}: ${error.message}`);
+    }
+    try {
+      await github.rest.issues.addLabels({
+        owner,
+        repo,
+        issue_number: prNumber,
+        labels: ["internal/pr-backport"]
+      });
+    } catch (error) {
+      core.setFailed(`Failed to add backport label to PR #${prNumber}: ${error.message}`);
     }
   }
 };

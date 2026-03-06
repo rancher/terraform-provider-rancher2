@@ -1,10 +1,14 @@
 async ({ github, context, core, process }) => {
-  const labelName = context.payload.label.name;
+  // Context for this script
+  // https://github.com/actions/github-script?tab=readme-ov-file#this-action
+  // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
+
+  const owner = "rancher";
+  const repo =  "terraform-provider-rancher2";
+  const releaseLabel = context.payload.label.name;
   const parentIssue = context.payload.issue;
   const parentIssueTitle = parentIssue.title;
   const parentIssueNumber = parentIssue.number;
-  const repo = context.repo.repo;
-  const owner = context.repo.owner;
   const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
   const extractedPrNumber = JSON.parse(process.env.PR);
   let response; // used to hold all github responses
@@ -29,13 +33,13 @@ async ({ github, context, core, process }) => {
     response = await github.rest.issues.create({
       owner: owner,
       repo: repo,
-      title: `[${labelName}] ${parentIssueTitle}`,
+      title: `[${releaseLabel}] ${parentIssueTitle}`,
       body:  [
-        `Backport #${prNumber} to ${labelName} for #${parentIssueNumber}`,
+        `Backport #${prNumber} to ${releaseLabel} for #${parentIssueNumber}`,
         `Copied from PR:`,
         `${pr.body}`
       ].join("\n\n"),
-      labels: [labelName],
+      labels: [releaseLabel, "internal/backport"],
       assignees: assignees
     });
   } catch (error) {
