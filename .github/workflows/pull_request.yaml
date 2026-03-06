@@ -135,7 +135,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
         with:
-          fetch-depth: 0 # fetch all history so that we can validate the commit messages
+          fetch-depth: 0
       - name: install-nix
         run: |
           curl -L https://nixos.org/nix/install | sh

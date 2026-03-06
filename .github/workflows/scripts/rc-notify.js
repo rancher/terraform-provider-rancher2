@@ -1,23 +1,32 @@
-export default async ({ github, process }) => {
-  const tagName = process.env.TAG;
-  const branchLabel = process.env.BRANCH;
-  const owner = process.env.OWNER;
-  const repo = process.env.REPO;
-  
+export default async ({ github, context, core }) => {
+  // Context for this script
+  // https://github.com/actions/github-script?tab=readme-ov-file#this-action
+  // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
+
+  const tagName = context.payload.release.tagName;
+  const branchLabel = context.payload.release.target_commitish;
+  const owner = "rancher";
+  const repo = "terraform-provider-rancher2";
+
+  const isValidBranch = /^release\/v\d{2}$/.test(branchLabel);
+  if (!isValidBranch) {
+    throw new Error(`Target branch label "${branchLabel}" is invalid. It must start with "release/v" and end with exactly two digits.`);
+  }
+
   if (!tagName.toLowerCase().includes('rc')) {
-    console.log(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);
-    return; 
+    core.info(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);
+    return;
   }
   
-  console.log(`RC Detected: ${tagName}`);
-  console.log(`Searching for open issues with labels: "${branchLabel}", "internal/backport", and "internal/merged"`);
+  core.info(`RC Detected: ${tagName}`);
+  core.info(`Searching for open issues with labels: "${branchLabel}", "internal/backport", and "internal/merged"`);
 
   const issues = await github.paginate(github.rest.search.issuesAndPullRequests, {
     q: `repo:${owner}/${repo} is:issue is:open label:${branchLabel} label:internal/backport label:internal/merged`
   });
 
   if (issues.length === 0) {
-    console.log('No matching issues found. Exiting.');
+    core.info('No matching issues found. Exiting.');
     return;
   }
 
@@ -33,12 +42,12 @@ export default async ({ github, process }) => {
         issue_number: issue.number,
         body: commentBody
       });
-      console.log(`Commented on issue #${issue.number}`);
+      core.info(`Commented on issue #${issue.number}`);
       commentedCount++;
     } catch (error) {
-      console.error(`Failed to comment on issue #${issue.number}: ${error.message}`);
+      core.setFailed(`Failed to comment on issue #${issue.number}: ${error.message}`);
     }
   }
   
-  console.log(`Success! Notified ${commentedCount} issues.`);
+  core.info(`Success! Notified ${commentedCount} issues.`);
 };

@@ -18,7 +18,7 @@ export default async ({ github, core, process }) => {
       commit_sha: mergeCommitSha
     });
   } catch (error) {
-    core.setFailed(`Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`);
+    throw new Error(`Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`);
   }
   const associatedPrs = response.data;
   if (associatedPrs.length === 0) {
@@ -37,14 +37,14 @@ export default async ({ github, core, process }) => {
   core.info(`Searching for 'internal/tracking' issue linked to PR #${pr.number}`);
   try {
     response = await github.request('GET /search/issues', {
-      q: `is:issue state:open label:"internal/tracking" repo:${owner}/${repo} in:body #${pr.number}`,
+      q: `repo:${owner}/${repo} is:issue state:open label:"internal/tracking" in:body #${pr.number}`,
       advanced_search: true,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
       }
     });
   } catch (error) {
-    core.setFailed(`Failed to search for internal/tracking issue for PR #${pr.number}: ${error.message}`);
+    throw new Error(`Failed to search for internal/tracking issue for PR #${pr.number}: ${error.message}`);
   }
   const searchResults = response.data;
   if (searchResults.total_count === 0) {
@@ -66,7 +66,7 @@ export default async ({ github, core, process }) => {
       }
     });
   } catch (error) {
-    core.setFailed(`Failed to fetch sub-issues for tracking issue #${trackingIssue.number}: ${error.message}`);
+    throw new Error(`Failed to fetch sub-issues for tracking issue #${trackingIssue.number}: ${error.message}`);
   }
   const subIssues = response.data;
   core.info(`Sub-issues data: ${JSON.stringify(subIssues)}`);
@@ -86,11 +86,19 @@ export default async ({ github, core, process }) => {
 
     // Find the release label directly on the sub-issue object
     const releaseLabel = subIssue.labels.find(label => label.name.startsWith('release/v'));
+
     if (!releaseLabel) {
       core.warning(`Sub-issue #${subIssueNumber} has no 'release/v...' label. Skipping.`);
       continue;
     }
+
     const targetBranch = releaseLabel.name;
+    const isValidBranch = /^release\/v\d{2}$/.test(targetBranch);
+
+    if (!isValidBranch) {
+      throw new Error(`Target branch label "${targetBranch}" is invalid. It must start with "release/v" and end with exactly two digits.`);
+    }
+
     core.info(`Processing sub-issue #${subIssueNumber} for target branch: ${targetBranch}`);
     const newBranchName = `backport-${pr.number}-${targetBranch.replace(/\//g, '-')}`;
     try {
@@ -101,7 +109,7 @@ export default async ({ github, core, process }) => {
       execSync(`git cherry-pick --allow-empty -x ${mergeCommitSha} -X theirs`);
       execSync(`git push origin ${newBranchName}`);
     } catch (error) {
-      core.setFailed(`Failed to create and push branch ${newBranchName}: ${error.message}`);
+      throw new Error(`Failed to create and push branch ${newBranchName}: ${error.message}`);
     }
 
     core.info(`Creating pull request for branch ${newBranchName} targeting ${targetBranch}...`);
@@ -122,7 +130,7 @@ export default async ({ github, core, process }) => {
         ].join("\n\n")
       });
     } catch (error) {
-      core.setFailed(`Failed to create pull request for branch ${newBranchName}: ${error.message}`);
+      throw new Error(`Failed to create pull request for branch ${newBranchName}: ${error.message}`);
     }
     const newPR = response.data;
     core.info(`Created backport PR data: ${JSON.stringify(newPR)}`);
@@ -135,7 +143,7 @@ export default async ({ github, core, process }) => {
         assignees: assignees
       });
     } catch (error) {
-      core.setFailed(`Failed to assign PR #${prNumber}: ${error.message}`);
+      throw new Error(`Failed to assign PR #${prNumber}: ${error.message}`);
     }
     try {
       await github.rest.issues.addLabels({
@@ -145,7 +153,7 @@ export default async ({ github, core, process }) => {
         labels: ["internal/pr-backport"]
       });
     } catch (error) {
-      core.setFailed(`Failed to add backport label to PR #${prNumber}: ${error.message}`);
+      throw new Error(`Failed to add backport label to PR #${prNumber}: ${error.message}`);
     }
   }
 };

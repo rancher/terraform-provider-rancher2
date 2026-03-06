@@ -32,7 +32,7 @@ export default async ({ github, core, process }) => {
       core.info(`Latest release branch detected: ${latestReleaseBranch}`);
     }
   } catch (error) {
-    core.setFailed(`Failed to find latest release branch: ${error.message}`);
+    throw new Error(`Failed to find latest release branch: ${error.message}`);
   }
 
   let pulls;
@@ -41,8 +41,7 @@ export default async ({ github, core, process }) => {
       q: `repo:${owner}/${repo} is:pr state:open base:main -draft:true -label:internal/pr-tracked -label:internal/pr-backport -label:"autorelease: pending" -label:"autorelease: tagged"`
     });
   } catch (error) {
-    // setFailed exits
-    core.setFailed(`Failed to retrieve PRs: ${error.message}`);
+    throw new Error(`Failed to retrieve PRs: ${error.message}`);
   }
 
   for (const pr of pulls) {
@@ -81,7 +80,7 @@ export default async ({ github, core, process }) => {
         assignees: assignees
       });
     } catch (error) {
-      core.setFailed(`Failed to create tracking issue: ${error.message}`);
+      throw new Error(`Failed to create tracking issue: ${error.message}`);
     }
 
     const newIssue = response.data;
@@ -105,7 +104,7 @@ export default async ({ github, core, process }) => {
         assignees: assignees
       });
     } catch (error) {
-      core.setFailed(`Failed to create backport issue: ${error.message}`);
+      throw new Error(`Failed to create backport issue: ${error.message}`);
     }
     const newSubIssue = response.data;
     core.info(`New backport issue data: ${JSON.stringify(newSubIssue)}`);
@@ -122,7 +121,7 @@ export default async ({ github, core, process }) => {
         }
       });
     } catch (error) {
-      core.setFailed(`Failed to link backport issue to tracking issue: ${error.message}`);
+      throw new Error(`Failed to link backport issue to tracking issue: ${error.message}`);
     }
 
     try {
@@ -133,7 +132,7 @@ export default async ({ github, core, process }) => {
         labels: ["internal/pr-tracked"]
       });
     } catch (error) {
-      core.setFailed(`Failed to add label to PR #${pr.number}: ${error.message}`);
+      throw new Error(`Failed to add label to PR #${pr.number}: ${error.message}`);
     }
   }
 };
