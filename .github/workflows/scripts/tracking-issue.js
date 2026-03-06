@@ -57,10 +57,11 @@ export default async ({ github, core, process }) => {
         const versionB = parseInt(b.name.replace('release/v', ''), 10);
         return versionB - versionA;
       });
+    const latestReleaseLabel = (releaseLabels.length > 0) ? releaseLabels[0].name : null;
 
-    if (releaseLabels[0]) {
-      newLabels.push(releaseLabels[0]);
-      releaseName = releaseLabels[0].name;
+    if (latestReleaseLabel) {
+      newLabels.push(latestReleaseLabel);
+      releaseName = latestReleaseLabel;
     } else {
       newLabels.push(latestReleaseBranch);
       releaseName = latestReleaseBranch;

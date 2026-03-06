@@ -407,13 +407,11 @@ jobs:
         env:
           TAG: ${{ env.RC_TAG }}
           BRANCH: ${{ env.RC_BRANCH }}
-          OWNER: ${{ github.repository_owner }}
-          REPO: ${{ github.event.repository.name }}
         with:
           script: |
             const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/rc-notify.js`;
             const { default: script } = await import(scriptPath);
-            await script({github, process});
+            await script({github, context, core, process});
 
   # This runs after release-please generates a release, so when the release PR is merged
   publish:

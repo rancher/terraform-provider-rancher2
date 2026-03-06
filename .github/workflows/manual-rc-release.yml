@@ -128,10 +128,8 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
           BRANCH: ${{ inputs.branch }}
-          OWNER: ${{ github.repository_owner }}
-          REPO: ${{ github.event.repository.name }}
         with:
           script: |
             const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/rc-notify.js`;
             const { default: script } = await import(scriptPath);
-            await script({github, process});
+            await script({github, context, core, process});

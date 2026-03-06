@@ -1,23 +1,31 @@
-export default async ({ github, context, core }) => {
+export default async ({ github, context, core, process }) => {
   // Context for this script
   // https://github.com/actions/github-script?tab=readme-ov-file#this-action
   // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
 
   const tagName = context.payload.release.tag_name;
   const branchLabel = context.payload.release.target_commitish;
+
+  if (process.env.TAG_NAME != undefined && process.env.TAG_NAME != "") {
+    tagName = process.env.TAG_NAME;
+  }
+  if (process.env.BRANCH_LABEL != undefined && process.env.BRANCH_LABEL != "") {
+    branchLabel = process.env.BRANCH_LABEL;
+  }
+
   const owner = "rancher";
   const repo = "terraform-provider-rancher2";
+
+  if (!tagName.toLowerCase().includes('rc')) {
+    core.info(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);
+    return;
+  }
 
   const isValidBranch = /^release\/v\d{2}$/.test(branchLabel);
   if (!isValidBranch) {
     throw new Error(`Target branch label "${branchLabel}" is invalid. It must start with "release/v" and end with exactly two digits.`);
   }
 
-  if (!tagName.toLowerCase().includes('rc')) {
-    core.info(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);
-    return;
-  }
-  
   core.info(`RC Detected: ${tagName}`);
   core.info(`Searching for open issues with labels: "${branchLabel}", "internal/backport", and "internal/merged"`);
 

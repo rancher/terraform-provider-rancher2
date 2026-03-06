@@ -22,4 +22,4 @@ jobs:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/rc-notify.js`;
             const { default: script } = await import(scriptPath);
-            await script({github, context, core});
+            await script({github, context, core, process});
