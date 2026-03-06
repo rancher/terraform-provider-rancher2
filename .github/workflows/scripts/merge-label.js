@@ -11,7 +11,8 @@ export default async ({ github, context, core}) => {
   const pr = context.payload.pull_request;
 
   const issueRegex = /#(\d+)/g;
-  const matches = pr.body.matchAll(issueRegex);
+  const prBody = pr.body ?? "";
+  const matches = prBody.matchAll(issueRegex);
   const issueNumbers = Array.from(matches, m => parseInt(m[1]));
 
   core.info(`Found issue numbers in PR body: ${issueNumbers}`);
