@@ -20,6 +20,12 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 	}
 
 	driver := d.Get("driver").(string)
+	// migrate google cloud credential to node driver format, not GKE.
+	if driver == oldGoogleConfigKontainerDriver {
+		driver = googleConfigNodeDriver
+		d.Set("driver", driver)
+	}
+
 	switch driver {
 	case amazonec2ConfigDriver:
 		v, ok := d.Get("amazonec2_credential_config").([]interface{})
@@ -48,7 +54,7 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		if err != nil {
 			return err
 		}
-	case googleConfigDriver:
+	case googleConfigNodeDriver:
 		v, ok := d.Get("google_credential_config").([]interface{})
 		if !ok {
 			v = []interface{}{}
@@ -72,6 +78,15 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 			v = []interface{}{}
 		}
 		err := d.Set("linode_credential_config", flattenCloudCredentialLinode(in.LinodeCredentialConfig, v))
+		if err != nil {
+			return err
+		}
+	case nutanixConfigDriver:
+		v, ok := d.Get("nutanix_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err := d.Set("nutanix_credential_config", flattenCloudCredentialNutanix(in.NutanixCredentialConfig, v))
 		if err != nil {
 			return err
 		}
@@ -157,7 +172,7 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 
 	if v, ok := in.Get("google_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.GoogleCredentialConfig = expandCloudCredentialGoogle(v)
-		in.Set("driver", googleConfigDriver)
+		in.Set("driver", googleConfigNodeDriver)
 	}
 
 	if v, ok := in.Get("harvester_credential_config").([]interface{}); ok && len(v) > 0 {
@@ -168,6 +183,11 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	if v, ok := in.Get("linode_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.LinodeCredentialConfig = expandCloudCredentialLinode(v)
 		in.Set("driver", linodeConfigDriver)
+	}
+
+	if v, ok := in.Get("nutanix_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.NutanixCredentialConfig = expandCloudCredentialNutanix(v)
+		in.Set("driver", nutanixConfigDriver)
 	}
 
 	if v, ok := in.Get("openstack_credential_config").([]interface{}); ok && len(v) > 0 {

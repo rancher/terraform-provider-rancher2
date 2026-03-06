@@ -1002,55 +1002,6 @@ func (c *Config) GetUserIDByName(name string) (string, error) {
 	return user.ID, nil
 }
 
-func (c *Config) activateDriver(id string, interval time.Duration) error {
-	if id == googleConfigDriver {
-		return c.activateKontainerDriver(id, interval)
-	}
-
-	return c.activateNodeDriver(id, interval)
-}
-
-func (c *Config) activateKontainerDriver(id string, interval time.Duration) error {
-	if id == "" {
-		return fmt.Errorf("[ERROR] Node Driver id is nil")
-	}
-
-	client, err := c.ManagementClient()
-	if err != nil {
-		return err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), interval)
-	defer cancel()
-	for updated := false; ; {
-		driver, err := client.KontainerDriver.ByID(id)
-		if err != nil && !IsServerError(err) && !IsUnknownSchemaType(err) && !IsNotFound(err) && !IsForbidden(err) {
-			return fmt.Errorf("[ERROR] Getting Node Driver %s: %v", id, err)
-		}
-		if driver != nil {
-			if driver.State == "active" {
-				return nil
-			}
-
-			if !updated {
-				err = client.KontainerDriver.ActionActivate(driver)
-				if err == nil {
-					updated = true
-					continue
-				}
-				if !IsServerError(err) && !IsUnknownSchemaType(err) {
-					return fmt.Errorf("[ERROR] Activating Node Driver %s: %v", id, err)
-				}
-			}
-		}
-		select {
-		case <-time.After(rancher2RetriesWait * time.Second):
-		case <-ctx.Done():
-			return fmt.Errorf("Timeout activating Node Driver %s: %v", id, err)
-		}
-	}
-}
-
 func (c *Config) activateNodeDriver(id string, interval time.Duration) error {
 	if id == "" {
 		return fmt.Errorf("[ERROR] Node Driver id is nil")
@@ -1274,6 +1225,10 @@ func getAuthConfigObject(kind string) (interface{}, error) {
 		return &managementClient.KeyCloakConfig{}, nil
 	case managementClient.GenericOIDCConfigType:
 		return &managementClient.GenericOIDCConfig{}, nil
+	case managementClient.CognitoConfigType:
+		return &managementClient.CognitoConfig{}, nil
+	case managementClient.KeyCloakOIDCConfigType:
+		return &managementClient.KeyCloakOIDCConfig{}, nil
 	case managementClient.OIDCConfigType:
 		return &managementClient.OIDCConfig{}, nil
 	case managementClient.OKTAConfigType:
