@@ -3,14 +3,18 @@ export default async ({ github, context, core, process }) => {
   // https://github.com/actions/github-script?tab=readme-ov-file#this-action
   // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
 
-  const tagName = context.payload.release.tag_name;
-  const branchLabel = context.payload.release.target_commitish;
+  let tagName =
+    process.env.TAG ||
+    process.env.TAG_NAME ||
+    context.payload.release?.tag_name;
+  let branchLabel =
+    process.env.BRANCH ||
+    process.env.BRANCH_LABEL ||
+    context.payload.release?.target_commitish;
 
-  if (process.env.TAG_NAME != undefined && process.env.TAG_NAME != "") {
-    tagName = process.env.TAG_NAME;
-  }
-  if (process.env.BRANCH_LABEL != undefined && process.env.BRANCH_LABEL != "") {
-    branchLabel = process.env.BRANCH_LABEL;
+  if (!tagName || !branchLabel) {
+    core.setFailed('tagName and branchLabel must be provided via env (TAG/BRANCH) or release payload.');
+    return;
   }
 
   const owner = "rancher";
