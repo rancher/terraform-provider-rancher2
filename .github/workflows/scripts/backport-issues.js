@@ -36,6 +36,7 @@ async ({ github, context, core, process }) => {
       title: `[${releaseLabel}] ${parentIssueTitle}`,
       body:  [
         `Backport #${prNumber} to ${releaseLabel} for #${parentIssueNumber}`,
+        `Please add this issue to the proper milestone.`,
         `Copied from PR:`,
         `${pr.body}`
       ].join("\n\n"),

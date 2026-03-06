@@ -27,4 +27,4 @@ jobs:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/tracking-issue.js`;
             const { default: script } = await import(scriptPath);
-            await script({github, core, context, process});
+            await script({github, core, process});

@@ -10,10 +10,10 @@ export default async ({ github, process }) => {
   }
   
   console.log(`RC Detected: ${tagName}`);
-  console.log(`Searching for open issues with label: "${branchLabel} and internal/merged"`);
+  console.log(`Searching for open issues with labels: "${branchLabel}", "internal/backport", and "internal/merged"`);
 
   const issues = await github.paginate(github.rest.search.issuesAndPullRequests, {
-    q: `repo:${owner}/${repo} is:issue is:open label:${branchLabel} label:internal/merged -label:internal/user -label:internal/tracking`
+    q: `repo:${owner}/${repo} is:issue is:open label:${branchLabel} label:internal/backport label:internal/merged`
   });
 
   if (issues.length === 0) {
@@ -26,8 +26,6 @@ export default async ({ github, process }) => {
 
   let commentedCount = 0;
   for (const issue of issues) {
-    if (issue.pull_request) continue; // don't inform PRs
-
     try {
       await github.rest.issues.createComment({
         owner: owner,
