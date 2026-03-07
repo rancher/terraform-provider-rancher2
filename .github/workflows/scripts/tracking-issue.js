@@ -1,38 +1,107 @@
-async ({ github, core, context, process }) => {
-  const repo = context.repo.repo;
-  const owner = context.repo.owner;
-  const pr = context.payload.pull_request;
+export default async ({ github, core, process }) => {
+  // Context for this script
+  // https://github.com/actions/github-script?tab=readme-ov-file#this-action
+  // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
+  // https://github.com/actions/toolkit/tree/main/packages/core
+  // https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
+
+  const repo = "terraform-provider-rancher2";
+  const owner = "rancher";
   const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
   let response; // used to hold all github responses
 
-  let newLabels = ['internal/tracking'];
-  const releaseLabel = pr.labels.find(label => label.name.startsWith('release/v'));
-  if (releaseLabel) {
-    newLabels.push(releaseLabel);
+  let latestReleaseBranch = "";
+  try {
+    const { data: branches } = await github.rest.repos.listBranches({
+      owner,
+      repo,
+      protected: true,
+    });
+
+    const releaseBranches = branches
+      .map(b => b.name)
+      .filter(name => name.startsWith('release/v'))
+      .sort((a, b) => {
+        const versionA = parseInt(a.replace('release/v', ''), 10);
+        const versionB = parseInt(b.replace('release/v', ''), 10);
+        return versionB - versionA;
+      });
+
+    if (releaseBranches.length > 0) {
+      latestReleaseBranch = releaseBranches[0];
+      core.info(`Latest release branch detected: ${latestReleaseBranch}`);
+    } else {
+      throw new Error('No release branches found');
+    }
+  } catch (error) {
+    throw new Error(`Failed to find latest release branch: ${error.message}`);
   }
 
-  // Create the tracking issue
-  // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
-  // Note: issues can't have teams assigned to them and our default token can't retrieve org level team members
+  let pulls;
   try {
-    response = await github.rest.issues.create({
-      owner: owner,
-      repo: repo,
-      title: pr.title,
-      body:  `This is the tracking issue for #${pr.number} \n\n` +
-        `Please add labels indicating the release versions eg. 'release/v13' \n\n` +
-        `Please add comments for user issues which this issue addresses. \n\n` +
-        `Description copied from PR: \n${pr.body}`,
-      labels: newLabels,
-      assignees: assignees
+    pulls = await github.paginate(github.rest.search.issuesAndPullRequests, {
+      q: `repo:${owner}/${repo} is:pr state:open base:main -draft:true -label:internal/pr-tracked -label:internal/pr-backport -label:"autorelease: pending" -label:"autorelease: tagged"`
     });
   } catch (error) {
-    core.setFailed(`Failed to create tracking issue: ${error.message}`);
+    throw new Error(`Failed to retrieve PRs: ${error.message}`);
   }
-  const newIssue = response.data;
-  core.info(`New tracking issue data: ${JSON.stringify(newIssue)}`);
-  if (releaseLabel) {
-    // if release label detected, then add appropriate sub-issues
+
+  for (const pr of pulls) {
+    let newLabels = ['internal/tracking'];
+    let releaseName = "";
+
+    const releaseLabels = pr.labels
+      .filter(label => label.name.startsWith('release/v'))
+      .sort((a, b) => {
+        const versionA = parseInt(a.name.replace('release/v', ''), 10);
+        const versionB = parseInt(b.name.replace('release/v', ''), 10);
+        return versionB - versionA;
+      });
+    const latestReleaseLabel = (releaseLabels.length > 0) ? releaseLabels[0].name : null;
+
+    if (latestReleaseLabel) {
+      newLabels.push(latestReleaseLabel);
+      releaseName = latestReleaseLabel;
+    } else {
+      newLabels.push(latestReleaseBranch);
+      releaseName = latestReleaseBranch;
+    }
+
+    try {
+      const existingIssues = await github.rest.search.issuesAndPullRequests({
+        q: `repo:${owner}/${repo} is:issue is:open label:internal/tracking in:body #${pr.number}`
+      });
+      if (existingIssues.data.total_count > 0) {
+        core.info(`Tracking issue already exists for PR #${pr.number}. Skipping.`);
+        continue;
+      }
+    } catch (error) {
+      core.warning(`Failed to check for existing tracking issue for PR #${pr.number}: ${error.message}`);
+    }
+
+    // Create the tracking issue
+    // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
+    // Note: issues can't have teams assigned to them and our default token can't retrieve org level team members
+    try {
+      response = await github.rest.issues.create({
+        owner: owner,
+        repo:  repo,
+        title: pr.title,
+        body:  `This is the tracking issue for #${pr.number} \n\n` +
+          `Please add labels indicating the release versions eg. 'release/v14' \n\n` +
+          `Please add comments for user issues which this issue addresses. \n\n` +
+          `Description copied from PR: \n${pr.body ?? ''}`,
+        labels: newLabels,
+        assignees: assignees
+      });
+    } catch (error) {
+      throw new Error(`Failed to create tracking issue: ${error.message}`);
+    }
+
+    const newIssue = response.data;
+    core.info(`New tracking issue data: ${JSON.stringify(newIssue)}`);
+
+    // add appropriate sub-issues for either release label or latest release branch
     const parentIssue = newIssue;
     const parentIssueTitle = parentIssue.title;
     const parentIssueNumber = parentIssue.number;
@@ -42,14 +111,15 @@ async ({ github, core, context, process }) => {
       response = await github.rest.issues.create({
         owner: owner,
         repo: repo,
-        title: `[${releaseLabel.name}] ${parentIssueTitle}`,
-        body:  `Backport #${pr.number} to ${releaseLabel.name} for #${parentIssueNumber}\n\n` +
-          `Copied from PR: \n${pr.body}`,
-        labels: [releaseLabel],
+        title: `[${releaseName}] ${parentIssueTitle}`,
+        body:  `Backport #${pr.number} to ${releaseName} for #${parentIssueNumber}\n\n` +
+          `Please add this issue to the proper milestone.\n` +
+          `Copied from PR: \n${pr.body ?? ''}`,
+        labels: [releaseName, "internal/backport"],
         assignees: assignees
       });
     } catch (error) {
-      core.setFailed(`Failed to create backport issue: ${error.message}`);
+      throw new Error(`Failed to create backport issue: ${error.message}`);
     }
     const newSubIssue = response.data;
     core.info(`New backport issue data: ${JSON.stringify(newSubIssue)}`);
@@ -66,7 +136,18 @@ async ({ github, core, context, process }) => {
         }
       });
     } catch (error) {
-      core.setFailed(`Failed to link backport issue to tracking issue: ${error.message}`);
+      throw new Error(`Failed to link backport issue to tracking issue: ${error.message}`);
+    }
+
+    try {
+      await github.rest.issues.addLabels({
+        owner: owner,
+        repo: repo,
+        issue_number: pr.number,
+        labels: ["internal/pr-tracked"]
+      });
+    } catch (error) {
+      throw new Error(`Failed to add label to PR #${pr.number}: ${error.message}`);
     }
   }
 };

@@ -33,9 +33,10 @@ jobs:
             echo "Tag contains 'rc', please use the manual-rc-release workflow"
             exit 1
           fi
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
         with:
           fetch-depth: 0
+          ref: 'main'
       - name: Create and Push Tag with Git
         id: create-push-tag
         env:
@@ -51,7 +52,7 @@ jobs:
           fi
           git push origin "$TAG"
       - name: Check out new tag into a new directory
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
         with:
           ref: ${{ inputs.tag }}
           path: ${{ github.workspace }}/tags/${{ inputs.tag }}
@@ -101,7 +102,7 @@ jobs:
 
           echo "Importing gpg key"
           echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
-      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0 https://github.com/actions/setup-go
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0 https://github.com/actions/setup-go
         with:
           go-version-file: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.mod
           cache-dependency-path: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.sum

@@ -1,23 +1,44 @@
-export default async ({ github, process }) => {
-  const tagName = process.env.TAG;
-  const branchLabel = process.env.BRANCH;
-  const owner = process.env.OWNER;
-  const repo = process.env.REPO;
-  
-  if (!tagName.toLowerCase().includes('rc')) {
-    console.log(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);
-    return; 
+export default async ({ github, context, core, process }) => {
+  // Context for this script
+  // https://github.com/actions/github-script?tab=readme-ov-file#this-action
+  // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
+
+  let tagName =
+    process.env.TAG ||
+    process.env.TAG_NAME ||
+    context.payload.release?.tag_name;
+  let branchLabel =
+    process.env.BRANCH ||
+    process.env.BRANCH_LABEL ||
+    context.payload.release?.target_commitish;
+
+  if (!tagName || !branchLabel) {
+    core.setFailed('tagName and branchLabel must be provided via env (TAG/BRANCH) or release payload.');
+    return;
   }
-  
-  console.log(`RC Detected: ${tagName}`);
-  console.log(`Searching for open issues with label: "${branchLabel}"`);
+
+  const owner = "rancher";
+  const repo = "terraform-provider-rancher2";
+
+  if (!tagName.toLowerCase().includes('rc')) {
+    core.info(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);
+    return;
+  }
+
+  const isValidBranch = /^release\/v\d{2}$/.test(branchLabel);
+  if (!isValidBranch) {
+    throw new Error(`Target branch label "${branchLabel}" is invalid. It must start with "release/v" and end with exactly two digits.`);
+  }
+
+  core.info(`RC Detected: ${tagName}`);
+  core.info(`Searching for open issues with labels: "${branchLabel}", "internal/backport", and "internal/merged"`);
 
   const issues = await github.paginate(github.rest.search.issuesAndPullRequests, {
-    q: `repo:${owner}/${repo} is:issue is:open label:${branchLabel} -label:internal/user -label:internal/tracking`
+    q: `repo:${owner}/${repo} is:issue is:open label:${branchLabel} label:internal/backport label:internal/merged`
   });
 
   if (issues.length === 0) {
-    console.log('No matching issues found. Exiting.');
+    core.info('No matching issues found. Exiting.');
     return;
   }
 
@@ -26,8 +47,6 @@ export default async ({ github, process }) => {
 
   let commentedCount = 0;
   for (const issue of issues) {
-    if (issue.pull_request) continue; // don't inform PRs
-
     try {
       await github.rest.issues.createComment({
         owner: owner,
@@ -35,12 +54,12 @@ export default async ({ github, process }) => {
         issue_number: issue.number,
         body: commentBody
       });
-      console.log(`Commented on issue #${issue.number}`);
+      core.info(`Commented on issue #${issue.number}`);
       commentedCount++;
     } catch (error) {
-      console.error(`Failed to comment on issue #${issue.number}: ${error.message}`);
+      core.setFailed(`Failed to comment on issue #${issue.number}: ${error.message}`);
     }
   }
   
-  console.log(`Success! Notified ${commentedCount} issues.`);
+  core.info(`Success! Notified ${commentedCount} issues.`);
 };
