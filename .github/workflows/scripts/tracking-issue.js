@@ -67,6 +67,18 @@ export default async ({ github, core, process }) => {
       releaseName = latestReleaseBranch;
     }
 
+    try {
+      const existingIssues = await github.rest.search.issuesAndPullRequests({
+        q: `repo:${owner}/${repo} is:issue is:open label:internal/tracking in:body #${pr.number}`
+      });
+      if (existingIssues.data.total_count > 0) {
+        core.info(`Tracking issue already exists for PR #${pr.number}. Skipping.`);
+        continue;
+      }
+    } catch (error) {
+      core.warning(`Failed to check for existing tracking issue for PR #${pr.number}: ${error.message}`);
+    }
+
     // Create the tracking issue
     // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
     // Note: issues can't have teams assigned to them and our default token can't retrieve org level team members
@@ -78,7 +90,7 @@ export default async ({ github, core, process }) => {
         body:  `This is the tracking issue for #${pr.number} \n\n` +
           `Please add labels indicating the release versions eg. 'release/v14' \n\n` +
           `Please add comments for user issues which this issue addresses. \n\n` +
-          `Description copied from PR: \n${pr.body}`,
+          `Description copied from PR: \n${pr.body ?? ''}`,
         labels: newLabels,
         assignees: assignees
       });
@@ -102,7 +114,7 @@ export default async ({ github, core, process }) => {
         title: `[${releaseName}] ${parentIssueTitle}`,
         body:  `Backport #${pr.number} to ${releaseName} for #${parentIssueNumber}\n\n` +
           `Please add this issue to the proper milestone.\n` +
-          `Copied from PR: \n${pr.body}`,
+          `Copied from PR: \n${pr.body ?? ''}`,
         labels: [releaseName, "internal/backport"],
         assignees: assignees
       });
