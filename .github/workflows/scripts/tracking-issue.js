@@ -72,6 +72,16 @@ export default async ({ github, core, process }) => {
         q: `repo:${owner}/${repo} is:issue is:open label:internal/tracking in:body #${pr.number}`
       });
       if (existingIssues.length > 0) {
+        try {
+          await github.rest.issues.addLabels({
+            owner: owner,
+            repo: repo,
+            issue_number: pr.number,
+            labels: ["internal/pr-tracked"]
+          });
+        } catch (error) {
+          throw new Error(`Failed to add tracking label to PR #${pr.number}: ${error.message}`);
+        }
         core.info(`Tracking issue already exists for PR #${pr.number}. Skipping.`);
         continue;
       }
