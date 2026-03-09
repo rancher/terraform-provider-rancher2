@@ -12,7 +12,7 @@ export default async ({ github, core, process }) => {
 
   let latestReleaseBranch = "";
   try {
-    const { data: branches } = await github.paginate(github.rest.repos.listBranches,{
+    const branches = await github.paginate(github.rest.repos.listBranches,{
       owner,
       repo,
       protected: true,
