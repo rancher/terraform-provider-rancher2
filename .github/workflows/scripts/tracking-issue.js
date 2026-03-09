@@ -12,7 +12,7 @@ export default async ({ github, core, process }) => {
 
   let latestReleaseBranch = "";
   try {
-    const { data: branches } = await github.rest.repos.listBranches({
+    const { data: branches } = await github.paginate(github.rest.repos.listBranches,{
       owner,
       repo,
       protected: true,
@@ -68,7 +68,7 @@ export default async ({ github, core, process }) => {
     }
 
     try {
-      const existingIssues = await github.rest.search.issuesAndPullRequests({
+      const existingIssues = await github.paginate(github.rest.search.issuesAndPullRequests, {
         q: `repo:${owner}/${repo} is:issue is:open label:internal/tracking in:body #${pr.number}`
       });
       if (existingIssues.data.total_count > 0) {
@@ -88,7 +88,7 @@ export default async ({ github, core, process }) => {
         repo:  repo,
         title: pr.title,
         body:  `This is the tracking issue for #${pr.number} \n\n` +
-          `Please add labels indicating the release versions eg. 'release/v14' \n\n` +
+          `Please add labels indicating the release versions eg. '${releaseName}' \n\n` +
           `Please add comments for user issues which this issue addresses. \n\n` +
           `Description copied from PR: \n${pr.body ?? ''}`,
         labels: newLabels,
