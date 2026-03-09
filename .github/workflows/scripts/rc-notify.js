@@ -25,9 +25,9 @@ export default async ({ github, context, core, process }) => {
     return;
   }
 
-  const isValidBranch = /^release\/v\d{2}$/.test(branchLabel);
+  const isValidBranch = /^release\/v\d{1,2}$/.test(branchLabel);
   if (!isValidBranch) {
-    throw new Error(`Target branch label "${branchLabel}" is invalid. It must start with "release/v" and end with exactly two digits.`);
+    throw new Error(`Target branch label "${branchLabel}" is invalid. It must start with "release/v" and end with exactly one or two digits.`);
   }
 
   core.info(`RC Detected: ${tagName}`);

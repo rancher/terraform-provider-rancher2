@@ -93,10 +93,10 @@ export default async ({ github, core, process }) => {
     }
 
     const targetBranch = releaseLabel.name;
-    const isValidBranch = /^release\/v\d{2}$/.test(targetBranch);
+    const isValidBranch = /^release\/v\d{1,2}$/.test(targetBranch);
 
     if (!isValidBranch) {
-      throw new Error(`Target branch label "${targetBranch}" is invalid. It must start with "release/v" and end with exactly two digits.`);
+      throw new Error(`Target branch label "${targetBranch}" is invalid. It must start with "release/v" and end with exactly one or two digits.`);
     }
 
     core.info(`Processing sub-issue #${subIssueNumber} for target branch: ${targetBranch}`);
@@ -150,7 +150,7 @@ export default async ({ github, core, process }) => {
         owner,
         repo,
         issue_number: prNumber,
-        labels: ["internal/pr-backport"]
+        labels: ["internal/pr-backport", targetBranch]
       });
     } catch (error) {
       throw new Error(`Failed to add backport label to PR #${prNumber}: ${error.message}`);
