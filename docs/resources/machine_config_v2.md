@@ -229,6 +229,8 @@ The following attributes are exported:
 * `user_data` - (Optional) UserData content of cloud-init, base64 is supported. If the image does not contain the qemu-guest-agent package, you must install and start qemu-guest-agent using userdata (string)
 * `network_data` - (Optional) NetworkData content of cloud-init, base64 is supported (string)
 * `vm_affinity` - (Optional) Virtual machine affinity, only base64 format is supported. For Rancher v2.6.7 and above (string)
+* `vgpu_info` - (Optional) A list of vGPU devices to attach to the VM. Each element contains `name` and `device_name`. (list)
+* `host_device_info` - (Optional) A list of Host Devices (e.g PCI passthrough) to attach to the VM. Each element contains `name` and `device_name`. (list)
 
 ### `linode_config`
 

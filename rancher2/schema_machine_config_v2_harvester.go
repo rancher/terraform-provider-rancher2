@@ -127,7 +127,38 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "NetworkData content of cloud-init, base64 is supported",
 		},
+		"vgpu_info": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "A list of vGPU devices to attach to the VM",
+			Elem: &schema.Resource{
+				Schema: harvesterDeviceFields(),
+			},
+		},
+		"host_device_info": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "A list of Host Devices (e.g. PCI passthrough) to attach to the VM",
+			Elem: &schema.Resource{
+				Schema: harvesterDeviceFields(),
+			},
+		},
 	}
 
 	return s
+}
+
+func harvesterDeviceFields() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The name of the device",
+		},
+		"device_name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The device name (e.g. nvidia.com/GH100_H200_SXM_141GB)",
+		},
+	}
 }

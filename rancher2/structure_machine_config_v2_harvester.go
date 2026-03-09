@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"encoding/json"
+
 	norman "github.com/rancher/norman/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -33,6 +35,8 @@ type machineConfigV2Harvester struct {
 	NetworkInfo        string `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
 	UserData           string `json:"userData,omitempty" yaml:"userData,omitempty"`
 	NetworkData        string `json:"networkData,omitempty" yaml:"networkData,omitempty"`
+	VGPUInfo           string `json:"vgpuInfo,omitempty" yaml:"vgpuInfo,omitempty"`
+	HostDeviceInfo     string `json:"hostDeviceInfo,omitempty" yaml:"hostDeviceInfo,omitempty"`
 }
 
 type MachineConfigV2Harvester struct {
@@ -111,6 +115,40 @@ func flattenMachineConfigV2Harvester(in *MachineConfigV2Harvester) []interface{}
 
 	if len(in.NetworkData) > 0 {
 		obj["network_data"] = in.NetworkData
+	}
+
+	if len(in.VGPUInfo) > 0 {
+		var vgpuMap map[string][]map[string]string
+		err := json.Unmarshal([]byte(in.VGPUInfo), &vgpuMap)
+		if err == nil {
+			if gpuDevices, ok := vgpuMap["gpuDevices"]; ok {
+				var devices []any
+				for _, d := range gpuDevices {
+					devices = append(devices, map[string]any{
+						"name":        d["name"],
+						"device_name": d["deviceName"],
+					})
+				}
+				obj["vgpu_info"] = devices
+			}
+		}
+	}
+
+	if len(in.HostDeviceInfo) > 0 {
+		var hostMap map[string][]map[string]string
+		err := json.Unmarshal([]byte(in.HostDeviceInfo), &hostMap)
+		if err == nil {
+			if hostDevices, ok := hostMap["hostDevices"]; ok {
+				var devices []any
+				for _, d := range hostDevices {
+					devices = append(devices, map[string]any{
+						"name":        d["name"],
+						"device_name": d["deviceName"],
+					})
+				}
+				obj["host_device_info"] = devices
+			}
+		}
 	}
 
 	return []interface{}{obj}
@@ -196,6 +234,42 @@ func expandMachineConfigV2Harvester(p []interface{}, source *MachineConfigV2) *M
 
 	if v, ok := in["network_data"].(string); ok && len(v) > 0 {
 		obj.NetworkData = v
+	}
+
+	if v, ok := in["vgpu_info"].([]any); ok && len(v) > 0 {
+		gpuDevices := []map[string]string{}
+		for _, raw := range v {
+			d := raw.(map[string]any)
+			gpuDevices = append(gpuDevices, map[string]string{
+				"name":       d["name"].(string),
+				"deviceName": d["device_name"].(string),
+			})
+		}
+		vgpuMap := map[string][]map[string]string{
+			"gpuDevices": gpuDevices,
+		}
+		vgpuJSON, err := json.Marshal(vgpuMap)
+		if err == nil {
+			obj.VGPUInfo = string(vgpuJSON)
+		}
+	}
+
+	if v, ok := in["host_device_info"].([]any); ok && len(v) > 0 {
+		hostDevices := []map[string]string{}
+		for _, raw := range v {
+			d := raw.(map[string]any)
+			hostDevices = append(hostDevices, map[string]string{
+				"name":       d["name"].(string),
+				"deviceName": d["device_name"].(string),
+			})
+		}
+		hostMap := map[string][]map[string]string{
+			"hostDevices": hostDevices,
+		}
+		hostJSON, err := json.Marshal(hostMap)
+		if err == nil {
+			obj.HostDeviceInfo = string(hostJSON)
+		}
 	}
 
 	return obj
