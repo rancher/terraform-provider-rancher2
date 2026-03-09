@@ -36,7 +36,7 @@ export default async ({ github, context, core}) => {
         });
       }
     } catch (error) {
-      core.info(`Could not process issue #${issueNumber}: ${error.message}`);
+      core.setFailed(`Could not process issue #${issueNumber}: ${error.message}`);
     }
   }
 };
