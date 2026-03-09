@@ -80,7 +80,7 @@ export default async ({ github, core, process }) => {
             labels: ["internal/pr-tracked"]
           });
         } catch (error) {
-          throw new Error(`Failed to add tracking label to PR #${pr.number}: ${error.message}`);
+          core.info(`Failed to add tracking label to PR #${pr.number}: ${error.message}`);
         }
         core.info(`Tracking issue already exists for PR #${pr.number}. Skipping.`);
         continue;
