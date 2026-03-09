@@ -71,7 +71,7 @@ export default async ({ github, core, process }) => {
       const existingIssues = await github.paginate(github.rest.search.issuesAndPullRequests, {
         q: `repo:${owner}/${repo} is:issue is:open label:internal/tracking in:body #${pr.number}`
       });
-      if (existingIssues.data.total_count > 0) {
+      if (existingIssues.length > 0) {
         core.info(`Tracking issue already exists for PR #${pr.number}. Skipping.`);
         continue;
       }
