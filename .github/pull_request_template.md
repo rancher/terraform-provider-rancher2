@@ -1,8 +1,8 @@
 <!--- If there is no user issue related to this then you should remove the next line --->
 Addresses #
 
-<!--- Add labels (eg. release/v13) for each release branch to target --->
-<!--- Labels need to be added before PR is created for automation to run smoothly! --->
+<!--- Add labels (eg. release/v14) for each release branch to target --->
+<!--- Please don't manually add "internal" labels, those are for automation only --->
 
 ## Description
 

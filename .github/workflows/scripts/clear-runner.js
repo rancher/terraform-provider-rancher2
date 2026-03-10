@@ -19,7 +19,7 @@ export default async ({ core }) => {
     const output = execSync(`df -h / --total | grep total | awk '{print $4}'`).toString();
     core.info(`Available disk space before cleanup: ${output}`);
   } catch (error) {
-    core.setFailed(`Failed running df to see disk space: ${error}`);
+    throw new Error(`Failed running df to see disk space: ${error}`);
   }
 
   // Iterate over paths and remove them
@@ -29,7 +29,7 @@ export default async ({ core }) => {
       // We use 'bash -c' to ensure wildcards (like julia*) are expanded correctly
       execSync(`sudo bash -c "rm -rf ${path}"`);
     } catch (error) {
-      core.setFailed(`Failed to remove ${path}: ${error}`);
+      throw new Error(`Failed to remove ${path}: ${error}`);
     }
   }
 
@@ -40,7 +40,7 @@ export default async ({ core }) => {
     execSync(`docker image prune -af`);
     execSync(`docker volume prune -af`);
   } catch(error) {
-    core.setFailed(`Failed pruning Docker: ${error}`);
+    throw new Error(`Failed pruning Docker: ${error}`);
   }
 
   core.info('Disk space after cleanup:');
@@ -48,6 +48,6 @@ export default async ({ core }) => {
     const output = execSync(`df -h / --total | grep total | awk '{print $4}'`).toString();
     core.info(`Available disk space after cleanup: ${output}`);
   } catch (error) {
-    core.setFailed(`Failed running df to see disk space: ${error}`);
+    throw new Error(`Failed running df to see disk space: ${error}`);
   }
 };
