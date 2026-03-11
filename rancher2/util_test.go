@@ -29,7 +29,7 @@ func TestDoUserLogin(t *testing.T) {
 
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/v1-public/login", r.URL.Path)
+			assert.Equal(t, "/v3-public/localProviders/local", r.URL.Path)
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
 			var reqBody loginInput
@@ -125,15 +125,15 @@ func TestDoUserLogin(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			callCount++
 
-			if r.URL.Path == "/v1-public/login" {
-				// Simulate v1 endpoint not available
+			if r.URL.Path == "/v3-public/localProviders/local" {
+				assert.Equal(t, "login", r.URL.Query().Get("action"))
+				// Simulate v3 endpoint not available
 				w.WriteHeader(http.StatusNotFound)
 				w.Write([]byte(http.StatusText(http.StatusNotFound)))
 				return
 			}
 
-			if r.URL.Path == "/v3-public/localProviders/local" {
-				assert.Equal(t, "login", r.URL.Query().Get("action"))
+			if r.URL.Path == "/v1-public/login" {
 
 				var reqBody loginInput
 				err := json.NewDecoder(r.Body).Decode(&reqBody)

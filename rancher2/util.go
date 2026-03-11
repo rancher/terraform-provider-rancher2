@@ -145,8 +145,22 @@ func DoUserLogin(url, provider, user, pass, ttl, desc, cacert string, insecure b
 		return "", "", fmt.Errorf("Invalid ttl value: %s", ttl)
 	}
 
+	authType := map[string]string{
+		"local":           "local",
+		"activedirectory": "activeDirectory",
+		"adfs":            "adfs",
+		"azuread":         "azureAD",
+		"freeipa":         "freeIpa",
+		"generic_oidc":    "generic_oidc",
+		"github":          "github",
+		"keycloak":        "keyCloak",
+		"okta":            "okta",
+		"openldap":        "openLdap",
+		"ping":            "ping",
+	}
+
 	payload, err := json.Marshal(map[string]any{
-		"type":        fmt.Sprintf("%sProvider", provider),
+		"type":        fmt.Sprintf("%sProvider", authType[provider]),
 		"username":    user,
 		"password":    pass,
 		"ttl":         TTL,
@@ -157,7 +171,7 @@ func DoUserLogin(url, provider, user, pass, ttl, desc, cacert string, insecure b
 	}
 
 	loginURL := url + "/v1-public/login"
-	v3loginURL := fmt.Sprintf("%s/v3-public/%sProviders/%s?action=login", url, provider, provider)
+	v3loginURL := fmt.Sprintf("%s/v3-public/%sProviders/%s?action=login", url, authType[provider], provider)
 
 	loginHead := map[string]string{
 		"Accept":       "application/json",
@@ -167,11 +181,11 @@ func DoUserLogin(url, provider, user, pass, ttl, desc, cacert string, insecure b
 	errPrefix := "Doing user login"
 
 	// Login with user and pass
-	respBody, resp, err := DoPost(loginURL, string(payload), cacert, insecure, loginHead)
+	respBody, resp, err := DoPost(v3loginURL, string(payload), cacert, insecure, loginHead)
 	if resp != nil && resp.StatusCode == http.StatusNotFound {
-		// /v1-public/login endpoint is not available
-		// try to fall back to /v3-public endpoint.
-		respBody, _, err = DoPost(v3loginURL, string(payload), cacert, insecure, loginHead)
+		// /v3-public/login endpoint is not available
+		// try to fall back to /v1-public endpoint.
+		respBody, _, err = DoPost(loginURL, string(payload), cacert, insecure, loginHead)
 		if err != nil {
 			return "", "", fmt.Errorf("%s: %v", errPrefix, err)
 		}
