@@ -2,12 +2,33 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 //Schemas
 
 func customUserTokenFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		"auth_provider": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			ForceNew:    true,
+			Description: "The provider to use for authentication",
+			Default:     "local",
+			ValidateFunc: validation.StringInSlice([]string{
+				"local",
+				"activedirectory",
+				"adfs",
+				"azuread",
+				"freeipa",
+				"generic_oidc",
+				"github",
+				"keycloak",
+				"okta",
+				"openldap",
+				"ping",
+			}, false),
+		},
 		"password": {
 			Type:        schema.TypeString,
 			Required:    true,

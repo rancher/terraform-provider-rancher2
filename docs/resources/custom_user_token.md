@@ -47,6 +47,7 @@ resource "rancher2_custom_user_token" "foo" {
 
 The following arguments are supported:
 
+* `auth_provider` - (Optional/ForceNew) The auth provider to use. Default `local` (string). One of `local`, `activedirectory`, `adfs`, `azuread`, `freeipa`, `generic_oidc`, `github`, `keycloak`, `okta`, `openldap`, `ping`
 * `username` - (Required/ForceNew) The user username (string)
 * `password` - (Required/ForceNew) The user password (string)
 * `cluster_id` - (Optional/ForceNew) Cluster ID for scoped token (string)

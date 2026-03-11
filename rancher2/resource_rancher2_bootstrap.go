@@ -238,7 +238,7 @@ logged:
 	for {
 		for _, pass := range loginPass {
 			if len(pass) > 0 {
-				tokenID, token, err = DoUserLogin(meta.(*Config).URL, bootstrapDefaultUser, pass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
+				tokenID, token, err = DoUserLogin(meta.(*Config).URL, "local", bootstrapDefaultUser, pass, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, meta.(*Config).CACerts, meta.(*Config).Insecure)
 				if err == nil {
 					break logged
 				}

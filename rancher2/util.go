@@ -139,14 +139,14 @@ func NewListOpts(filters map[string]interface{}) *types.ListOpts {
 	return listOpts
 }
 
-func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
+func DoUserLogin(url, provider, user, pass, ttl, desc, cacert string, insecure bool) (string, string, error) {
 	TTL, err := strconv.ParseInt(ttl, 10, 64)
 	if err != nil || TTL < 0 {
 		return "", "", fmt.Errorf("Invalid ttl value: %s", ttl)
 	}
 
 	payload, err := json.Marshal(map[string]any{
-		"type":        "localProvider",
+		"type":        fmt.Sprintf("%sProvider", provider),
 		"username":    user,
 		"password":    pass,
 		"ttl":         TTL,
@@ -157,7 +157,7 @@ func DoUserLogin(url, user, pass, ttl, desc, cacert string, insecure bool) (stri
 	}
 
 	loginURL := url + "/v1-public/login"
-	v3loginURL := url + "/v3-public/localProviders/local?action=login"
+	v3loginURL := fmt.Sprintf("%s/v3-public/%sProviders/%s?action=login", url, provider, provider)
 
 	loginHead := map[string]string{
 		"Accept":       "application/json",
