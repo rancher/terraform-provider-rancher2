@@ -10,6 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	localProdvider = "local"
+)
+
 type loginInput struct {
 	Type        string `json:"type"`
 	Username    string `json:"username"`
@@ -25,7 +29,7 @@ func TestDoUserLogin(t *testing.T) {
 
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "/v1-public/login", r.URL.Path)
+			assert.Equal(t, "/v3-public/localProviders/local", r.URL.Path)
 			assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 
 			var reqBody loginInput
@@ -44,7 +48,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		id, token, err := DoUserLogin(srv.URL, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
+		id, token, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
 		require.NoError(t, err)
 		assert.Equal(t, tokenID, id)
 		assert.Equal(t, tokenValue, token)
@@ -62,7 +66,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		id, token, err := DoUserLogin(srv.URL, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
+		id, token, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
 		require.NoError(t, err)
 		assert.Equal(t, "saml-user-abc123", id, "ext/ prefix should be stripped from ID")
 		assert.Equal(t, tokenValue, token)
@@ -78,7 +82,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		_, _, err := DoUserLogin(srv.URL, bootstrapDefaultUser, "wrongpass", bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
+		_, _, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, "wrongpass", bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "Unauthorized")
 	})
@@ -92,7 +96,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		_, _, err := DoUserLogin(srv.URL, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
+		_, _, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "invalid token format")
 	})
@@ -109,7 +113,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		_, _, err := DoUserLogin(srv.URL, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
+		_, _, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
 		require.Error(t, err)
 	})
 
@@ -121,15 +125,15 @@ func TestDoUserLogin(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			callCount++
 
-			if r.URL.Path == "/v1-public/login" {
-				// Simulate v1 endpoint not available
+			if r.URL.Path == "/v3-public/localProviders/local" {
+				assert.Equal(t, "login", r.URL.Query().Get("action"))
+				// Simulate v3 endpoint not available
 				w.WriteHeader(http.StatusNotFound)
 				w.Write([]byte(http.StatusText(http.StatusNotFound)))
 				return
 			}
 
-			if r.URL.Path == "/v3-public/localProviders/local" {
-				assert.Equal(t, "login", r.URL.Query().Get("action"))
+			if r.URL.Path == "/v1-public/login" {
 
 				var reqBody loginInput
 				err := json.NewDecoder(r.Body).Decode(&reqBody)
@@ -147,7 +151,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		id, token, err := DoUserLogin(srv.URL, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
+		id, token, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, bootstrapDefaultPassword, bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
 		require.NoError(t, err)
 		assert.Equal(t, tokenID, id)
 		assert.Equal(t, tokenValue, token)
@@ -171,7 +175,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		_, _, err := DoUserLogin(srv.URL, bootstrapDefaultUser, "wrongpass", bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
+		_, _, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, "wrongpass", bootstrapDefaultTTL, bootstrapDefaultSessionDesc, "", true)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "Unauthorized")
 	})
@@ -182,7 +186,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		_, _, err := DoUserLogin(srv.URL, bootstrapDefaultUser, bootstrapDefaultPassword, "not-a-number", bootstrapDefaultSessionDesc, "", true)
+		_, _, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, bootstrapDefaultPassword, "not-a-number", bootstrapDefaultSessionDesc, "", true)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "Invalid ttl value")
 	})
@@ -193,7 +197,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		_, _, err := DoUserLogin(srv.URL, bootstrapDefaultUser, bootstrapDefaultPassword, "-1000", bootstrapDefaultSessionDesc, "", true)
+		_, _, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, bootstrapDefaultPassword, "-1000", bootstrapDefaultSessionDesc, "", true)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "Invalid ttl value")
 	})
@@ -215,7 +219,7 @@ func TestDoUserLogin(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		id, token, err := DoUserLogin(srv.URL, bootstrapDefaultUser, bootstrapDefaultPassword, "0", bootstrapDefaultSessionDesc, "", true)
+		id, token, err := DoUserLogin(srv.URL, localProdvider, bootstrapDefaultUser, bootstrapDefaultPassword, "0", bootstrapDefaultSessionDesc, "", true)
 		require.NoError(t, err)
 		assert.Equal(t, tokenID, id)
 		assert.Equal(t, tokenValue, token)
