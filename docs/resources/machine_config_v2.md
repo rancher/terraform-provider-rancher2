@@ -6,7 +6,7 @@ page_title: "rancher2_machine_config_v2 Resource"
 
 Provides a Rancher v2 Machine config v2 resource. This can be used to create Machine Config v2 for Rancher v2 and retrieve their information. This resource is available from Rancher v2.6.0 and above.
 
-The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `nutanix`, `openstack`, and `vsphere`.
+The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `nutanix`, `openstack`, `vsphere` and `ionoscloud`.
 
 
 Starting with Rancher v2.12.0 and above, `google` is also offered as a supported cloud provider.
@@ -99,6 +99,7 @@ The following arguments are supported:
 * `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `vsphere_config` (list maxitems:1)
 * `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `openstack_config` (list maxitems:1)
 * `google_config` - (Optional) Google config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `ionoscloud_config` - (Optional) Ionoscloud config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
@@ -391,6 +392,52 @@ The following attributes are exported:
 * `boot_type` - (Optional) Boot type of the VM. Supported values are `legacy` and `uefi`. Default `legacy` (string)
 * `timeout` - (Optional) Timeout for Nutanix operations in seconds. Default `300` (string)
 * `vm_gpu` - (Optional) GPU devices to attach to the VM (list)
+
+
+### `ionoscloud_config`
+
+#### Arguments
+
+* `additional_lans` - (Optional) Names of existing IONOS LANs to connect the machine to. Names that are not found are ignored (list of strings)
+* `append_rke_userdata` - (Optional) Should the driver append the RKE user-data to the user-data sent to the Ionos server. (bool)
+* `cloud_init_b64` - (Optional) The cloud-init configuration for the volume as a base64 encoded string (string)
+* `cloud_init` - (Optional) The cloud-init configuration for the volume as a multi-line string (string)
+* `create_nat` - (Optional) If set, will create a default NAT. Requires private LAN (bool)
+* `datacenter_id` - (Optional) Ionos Cloud Virtual Data Center ID (string)
+* `datacenter_name` - (Optional) Ionos Cloud Virtual Data Center Name. Default `docker-machine-data-center` (string)
+* `disk_size` - (Optional) Ionos Cloud Volume Disk-Size in GB (10, 50, 100, 200, 400). Default `50` (int)
+* `disk_type` - (Optional) Ionos Cloud Volume Disk-Type (HDD, SSD). Default `HDD` (string)
+* `endpoint` - (Optional) Ionos Cloud API Endpoint. Default `https://api.ionos.com/cloudapi/v6` (string)
+* `image_password` - (Optional/Sensitive) Ionos Cloud Image Password to be able to access the server from DCD platform (string)
+* `image` - (Optional) Ionos Cloud Image ID or Alias (ubuntu:latest, debian:latest, etc.). Default `ubuntu:latest` (string)
+* `lan_id` - (Optional) Ionos Cloud LAN ID (string)
+* `lan_name` - (Optional) Ionos Cloud LAN Name. Default `docker-machine-lan` (string)
+* `location` - (Optional) Ionos Cloud Location. Default `us/las` (string)
+* `nat_flowlogs` - (Optional) Ionos Cloud NAT Gateway Flowlogs (list of strings)
+* `nat_id` - (Optional) Ionos Cloud existing and configured NAT Gateway (string)
+* `nat_lans_to_gateways` - (Optional) Ionos Cloud NAT map of LANs to a slice of their Gateway IPs. Example: "1=10.0.0.1,10.0.0.2:2=10.0.0.10" (string)
+* `nat_name` - (Optional) Ionos Cloud NAT Gateway name. Note that setting this will NOT implicitly create a NAT, this flag will only be read if need be (string)
+* `nat_public_ips` - (Optional) Ionos Cloud NAT Gateway public IPs (list of strings)
+* `nat_rules` - (Optional) Ionos Cloud NAT Gateway Rules (list of strings)
+* `nic_dhcp` - (Optional) Should the created NIC have DHCP set to true or false? (bool)
+* `nic_ips` - (Optional) Ionos Cloud NIC IPs (list of strings)
+* `password` - (Optional/Sensitive) Ionos Cloud Password (string)
+* `private_lan` - (Optional) Should the created LAN be private? Does nothing if LAN ID is provided (bool)
+* `server_availability_zone` - (Optional) Ionos Cloud Server Availability Zone (AUTO, ZONE_1, ZONE_2). Default `AUTO` (string)
+* `server_cores` - (Optional) Ionos Cloud Server Cores (2, 3, 4, 5, 6, etc.). Default `2` (int)
+* `server_cpu_family` - (Optional) Ionos Cloud Server CPU families (INTEL_XEON, INTEL_SKYLAKE, INTEL_ICELAKE, AMD_EPYC, INTEL_SIERRAFOREST) (string)
+* `server_ram` - (Optional) Ionos Cloud Server RAM in MB (1024, 2048, 3072, 4096, etc.). Default `2048` (int)
+* `server_type` - (Optional) Ionos Cloud Server Type (ENTERPRISE or CUBE). CUBE servers are only available in certain locations. Default `ENTERPRISE` (string)
+* `skip_default_nat_rules` - (Optional) Should the driver skip creating default NAT rules if creating a NAT, creating only the specified rules (bool)
+* `ssh_in_cloud_init` - (Optional) Should the driver only add the SSH info in the user data? (required for custom images) (bool)
+* `ssh_user` - (Optional) The name of the user the driver will use for SSH. Default `root` (string)
+* `template` - (Optional) Ionos Cloud CUBE Template, only used for CUBE servers. Default `Basic Cube XS` (string)
+* `token` - (Optional/Sensitive) Ionos Cloud Token (string)
+* `username` - (Optional/Sensitive) Ionos Cloud Username (string)
+* `volume_availability_zone` - (Optional) Ionos Cloud Volume Availability Zone (AUTO, ZONE_1, ZONE_2, ZONE_3). Default `AUTO` (string)
+* `wait_for_ip_change_timeout` - (Optional) Timeout used when waiting for NIC IP changes. Default `600` (int)
+* `wait_for_ip_change` - (Optional) Should the driver wait for the NIC IP to be set by external sources? (bool)
+
 
 ## Timeouts
 
