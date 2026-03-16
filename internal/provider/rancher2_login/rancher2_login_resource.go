@@ -277,7 +277,6 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 	request := c.Request{
 		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), tokenEndpoint, state.Id.ValueString()),
 		Method:   "GET",
-		Token:    state.UserToken.ValueString(),
 	}
 	response := c.Response{}
 
@@ -424,7 +423,6 @@ func (r *RancherLoginResource) Delete(ctx context.Context, req resource.DeleteRe
 	request := c.Request{
 		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), tokenEndpoint, state.Id.ValueString()),
 		Method:   "DELETE",
-		Token:    state.UserToken.ValueString(),
 	}
 	response := c.Response{}
 
@@ -551,7 +549,6 @@ func createToken(ctx context.Context, client c.Client, data *RancherLoginResourc
 		Endpoint: fmt.Sprintf("%s/%s", client.GetApiUrl(), tokenEndpoint),
 		Method:   "POST",
 		Body:     tokenReqBody,
-		Token:    data.UserToken.ValueString(),
 	}
 
 	tokenResponse := c.Response{}
@@ -624,7 +621,6 @@ func processTokenResponse(ctx context.Context, data *RancherLoginResourceModel, 
 }
 
 func login(ctx context.Context, client c.Client, username, password string) (err error, token string, tokenId string) {
-  client.ClearToken()
 
   loginReqBody := map[string]any{
 		"type":         "localProvider",
@@ -637,7 +633,6 @@ func login(ctx context.Context, client c.Client, username, password string) (err
 		Endpoint: fmt.Sprintf("%s/%s", client.GetApiUrl(), loginEndpoint),
 		Method:   "POST",
 		Body:     loginReqBody,
-    Token:    "",
     Headers:  nil,
 	}
 

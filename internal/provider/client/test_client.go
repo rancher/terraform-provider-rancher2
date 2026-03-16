@@ -45,12 +45,12 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 	}
 
   // This allows the resource to overwrite the client token and the client token to set the request token.
-	if req.Token != "" {
-		c.token = req.Token
-	}
-  if c.token != "" {
-    req.Token = c.token
-  }
+	// if req.Token != "" {
+	// 	c.token = req.Token
+	// }
+  // if c.token != "" {
+  //   req.Token = c.token
+  // }
 
   reqBody, err := json.Marshal(req.Body)
 	if err != nil {
@@ -62,7 +62,6 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 		Headers:  req.Headers,
 		Endpoint: req.Endpoint,
 		Body:     reqBody,
-    Token:    req.Token,
 	}
 
   if req.Method == "POST" {
@@ -149,8 +148,16 @@ func (c *TestClient) GetRequest(id string) Request {
 	return c.requests[id]
 }
 
+func (c *TestClient) GetRequests() map[string]Request {
+	return c.requests
+}
+
 func (c *TestClient) ClearToken() {
 	c.token = ""
+}
+
+func (c *TestClient) GetToken() string{
+	return c.token
 }
 
 type ErrorResponse struct {

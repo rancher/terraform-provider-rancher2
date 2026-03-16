@@ -68,7 +68,6 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevResource{},
 				[]string{
 					"id",
-					"user_token",
 					"bool_attribute",
 					"number_attribute",
 					"int64_attribute",
@@ -144,14 +143,13 @@ func TestRancherDevResource(t *testing.T) {
 				// plan
 				RancherDevModel{
 					Id:               defaultId,
-					UserToken:        "",
 					BoolAttribute:    false,
 					NumberAttribute:  big.NewFloat(1.0),
 					Int64Attribute:   1,
 					Int32Attribute:   1,
 					Float64Attribute: 1,
 					Float32Attribute: 1,
-					StringAttribute:  "test",
+					StringAttribute:  "dev-test",
 					ListAttribute:    []string{"test"},
 					SetAttribute:     map[string]bool{"test": true},
 					MapAttribute:     map[string]string{"test": "test"},
@@ -184,14 +182,13 @@ func TestRancherDevResource(t *testing.T) {
 				// state expected to match this
 				RancherDevModel{
 					Id:               defaultId,
-					UserToken:        "",
 					BoolAttribute:    false,
 					NumberAttribute:  big.NewFloat(1.0),
 					Int64Attribute:   1,
 					Int32Attribute:   1,
 					Float64Attribute: 1,
 					Float32Attribute: 1,
-					StringAttribute:  "test",
+					StringAttribute:  "dev-test",
 					ListAttribute:    []string{"test"},
 					SetAttribute:     map[string]bool{"test": true},
 					MapAttribute:     map[string]string{"test": "test"},
@@ -231,14 +228,13 @@ func TestRancherDevResource(t *testing.T) {
           },
           Body: rBodyMarshal(RancherDevModel{
 						Id:               defaultId,
-						UserToken:        "",
 						BoolAttribute:    false,
 						NumberAttribute:  big.NewFloat(1.0),
 						Int64Attribute:   1,
 						Int32Attribute:   1,
 						Float64Attribute: 1,
 						Float32Attribute: 1,
-						StringAttribute:  "test",
+						StringAttribute:  "dev-test",
 						ListAttribute:    []string{"test"},
 						SetAttribute:     map[string]bool{"test": true},
 						MapAttribute:     map[string]string{"test": "test"},
@@ -268,7 +264,6 @@ func TestRancherDevResource(t *testing.T) {
 							},
 						},
 					}),
-          Token: testUserToken,
 				},
 				// the response to inject into the client
 				c.Response{
@@ -284,7 +279,7 @@ func TestRancherDevResource(t *testing.T) {
 						Int32Attribute:   1,
 						Float64Attribute: 1,
 						Float32Attribute: 1,
-						StringAttribute:  "test",
+						StringAttribute:  "dev-test",
 						ListAttribute:    []string{"test"},
 						SetAttribute:     map[string]bool{"test": true},
 						MapAttribute:     map[string]string{"test": "test"},
@@ -342,7 +337,6 @@ func TestRancherDevResource(t *testing.T) {
           Body: RancherDevModel{
 						Id: defaultId,
 					},
-          Token: testUserToken,
 				},
 				// the response to inject into the client
 				c.Response{
@@ -382,7 +376,6 @@ func TestRancherDevResource(t *testing.T) {
           Body: RancherDevModel{
 						Id: "test",
 					},
-          Token: testUserToken,
 				},
 				// the response to inject into the client
 				c.Response{
@@ -412,7 +405,7 @@ func TestRancherDevResource(t *testing.T) {
 					os.Setenv(k, v)
 				}
 				var buf bytes.Buffer
-				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
+				defer h.PrintLog(t, &buf, "DEBUG") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
 				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, testUserToken)
@@ -504,7 +497,6 @@ func TestRancherDevResource(t *testing.T) {
             "Authorization": {"Bearer " + testUserToken},
           },
           Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
         },
 				// the response to inject into the client
 				c.Response{
@@ -540,7 +532,6 @@ func TestRancherDevResource(t *testing.T) {
             "Authorization": {"Bearer " + testUserToken},
           },
           Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
         },
 				// the response to inject into the client
 				c.Response{
@@ -576,7 +567,6 @@ func TestRancherDevResource(t *testing.T) {
             "Authorization": {"Bearer " + testUserToken},
           },
           Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
         },
 				// the response to inject into the client
 				c.Response{
@@ -613,7 +603,6 @@ func TestRancherDevResource(t *testing.T) {
             "Authorization": {"Bearer " + testUserToken},
           },
           Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
         },
 				// the response to inject into the client
 				c.Response{
@@ -743,7 +732,6 @@ func TestRancherDevResource(t *testing.T) {
           Body: rBodyMarshal(RancherDevModel{
             Id: defaultId,
           }),
-          Token: testUserToken,
         },
 				// this response will be injected into the client
 				c.Response{
@@ -783,7 +771,6 @@ func TestRancherDevResource(t *testing.T) {
             "Authorization": {"Bearer " + testUserToken},
           },
           Body:     rBodyMarshal(RancherDevModel{Id: defaultId}),
-          Token:    testUserToken,
         },
 				// this response will be injected into the client
 				c.Response{
@@ -824,7 +811,6 @@ func TestRancherDevResource(t *testing.T) {
             "Authorization": {"Bearer " + testUserToken},
           },
           Body:     rBodyMarshal(RancherDevModel{Id: defaultId}),
-          Token:    testUserToken,
         },
 				// this response will be injected into the client
 				c.Response{
@@ -867,7 +853,6 @@ func TestRancherDevResource(t *testing.T) {
           Body: rBodyMarshal(RancherDevModel{
             Id: defaultId,
           }),
-          Token: testUserToken,
         },
 				// this response will be injected into the client
 				c.Response{
@@ -991,7 +976,6 @@ func TestRancherDevResource(t *testing.T) {
             "Authorization": {"Bearer " + testUserToken},
           },
           Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
         },
 				// this response will be injected into the client
 				c.Response{
@@ -1019,7 +1003,6 @@ func TestRancherDevResource(t *testing.T) {
             "Authorization": {"Bearer " + testUserToken},
           },
           Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
         },
 				// this response will be injected into the client
 				c.Response{
@@ -1052,7 +1035,6 @@ func TestRancherDevResource(t *testing.T) {
             "Authorization": {"Bearer " + testUserToken},
           },
           Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
         },
 				// this response will be injected into the client
 				c.Response{

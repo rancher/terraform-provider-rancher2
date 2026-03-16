@@ -43,6 +43,11 @@ func New(version string) func() provider.Provider {
 	}
 }
 
+type RancherProviderMeta struct {
+  Client     c.Client
+  TokenStore *c.TokenStore
+}
+
 type RancherProviderModel struct {
 	ApiUrl         types.String `tfsdk:"api_url"`
 	CaCert         types.String `tfsdk:"ca_cert"`
@@ -200,21 +205,32 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if config.Token.IsNull() {
 		token = os.Getenv("RANCHER_TOKEN")
 	}
+  // Initialize the shared token store
+	tokenStore := &c.TokenStore{}
+  if token != "" {
+    tokenStore.SetToken(token)
+  }
 
 	client := c.NewHttpClient(
-	  context.Background(),
+	  ctx,
 		config.ApiUrl.ValueString(),
 		config.CaCert.ValueString(),
 		config.Insecure.ValueBool(),
 		config.IgnoreSystemCa.ValueBool(),
 		time.Duration(config.Timeout.ValueInt64())*time.Second,
 		config.MaxRedirects.ValueInt64(),
-		token,
+    tokenStore,
 	)
 
-	// The client variable is an interface that holds a pointer to a struct.
-	resp.ResourceData = client
-	resp.DataSourceData = client
+	// Make the client and the token store available to all resources
+	meta := &RancherProviderMeta{
+		Client:     client,
+		TokenStore: tokenStore,
+	}
+
+  // The client variable is an interface that holds a pointer to a struct.
+	resp.ResourceData = meta
+	resp.DataSourceData = meta
 
 	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Response: %+v", pp.PrettyPrint(resp)))
 }

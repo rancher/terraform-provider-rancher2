@@ -23,7 +23,6 @@ func TestRancherDevModel(t *testing.T) {
 				"Basic",
 				RancherDevModel{
 					Id:               "test",
-					UserToken:        "",
 					BoolAttribute:    true,
 					NumberAttribute:  big.NewFloat(1.23),
 					Int64Attribute:   123,
@@ -62,7 +61,6 @@ func TestRancherDevModel(t *testing.T) {
 				},
 				RancherDevResourceModel{
 					Id:               types.StringValue("test"),
-					UserToken:        types.StringValue(""),
 					BoolAttribute:    types.BoolValue(true),
 					NumberAttribute:  types.NumberValue(big.NewFloat(1.23)),
 					Int64Attribute:   types.Int64Value(123),

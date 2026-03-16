@@ -160,7 +160,6 @@ func TestNestedNestedResourceModel(t *testing.T) {
 func getDefaultResourceModel() RancherDevResourceModel {
 	return RancherDevResourceModel{
 		Id:               types.StringValue("test"),
-		UserToken:        types.StringValue(""),
 		BoolAttribute:    types.BoolValue(true),
 		NumberAttribute:  types.NumberValue(big.NewFloat(1.23)),
 		Int64Attribute:   types.Int64Value(123),
@@ -202,7 +201,6 @@ func getDefaultResourceModel() RancherDevResourceModel {
 func getDefaultGoModel() RancherDevModel {
 	return RancherDevModel{
 		Id:               "test",
-		UserToken:        "",
 		BoolAttribute:    true,
 		NumberAttribute:  big.NewFloat(1.23),
 		Int64Attribute:   123,

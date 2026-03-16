@@ -26,6 +26,7 @@ const (
   testTokenKey     = "this1is2a3test4token5it6is7fake"
   testToken        = testTokenId + ":" + testTokenKey
   testUserToken    = "ext/" + testToken
+  testInitialToken = "ext/test-token:this1is2the3initial4test5token6it7is8fake"
 )
 
 func TestRancherLoginResource(t *testing.T) {
@@ -181,7 +182,6 @@ func TestRancherLoginResource(t *testing.T) {
             "Content-Type": {"application/json"},
             "Authorization": {"Bearer " + testSessionToken},
           },
-          Token:    testSessionToken,
 					Body:     rBodyMarshal(map[string]any{
 						"apiVersion": apiVersion,
 						"kind":       "Token",
@@ -276,7 +276,6 @@ func TestRancherLoginResource(t *testing.T) {
             "Content-Type": {"application/json"},
             "Authorization": {"Bearer " + testSessionToken},
           },
-          Token: testSessionToken,
 					Body: rBodyMarshal(RancherLoginModel{
 						Id:                          testTokenId,
 						Username:                    "user",
@@ -418,7 +417,6 @@ func TestRancherLoginResource(t *testing.T) {
 					Method:   "GET",
           Headers:  map[string][]string{"Authorization": {"Bearer " + testUserToken}}, // read will use the token in state
 					Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
 				},
         c.Response{
 					StatusCode: http.StatusOK,
@@ -475,7 +473,6 @@ func TestRancherLoginResource(t *testing.T) {
 					Method:   "GET",
           Headers:  map[string][]string{"Authorization": {"Bearer " + testUserToken}}, // read will use the token in state
 					Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
 				},
 				c.Response{
 					StatusCode: http.StatusNotFound,
@@ -676,7 +673,7 @@ func TestRancherLoginResource(t *testing.T) {
 					Password:                    "password",
 					UsernameEnvironmentVariable: "RANCHER_USERNAME",
 					PasswordEnvironmentVariable: "RANCHER_PASSWORD",
-					UserToken:                   "ext/test-token:this1is2a3test4token5it6is7fake",
+					UserToken:                   testInitialToken,
 					TokenTtl:                    "90d",
 					RefreshAt:                   "10d",
 					IgnoreToken:                 false,
@@ -689,7 +686,7 @@ func TestRancherLoginResource(t *testing.T) {
 					Method:   "POST",
           Headers: map[string][]string{
             "Content-Type": {"application/json"},
-            "Authorization": {"Bearer " + "ext/test-token:this1is2a3test4token5it6is7fake"},
+            "Authorization": {"Bearer " + testInitialToken},
           },
 					Body: rBodyMarshal(map[string]any{
 						"apiVersion": apiVersion,
@@ -702,7 +699,6 @@ func TestRancherLoginResource(t *testing.T) {
 							"ttl":         7776000000,
 						},
 					}),
-          Token: "ext/test-token:this1is2a3test4token5it6is7fake",
 				},
         c.Response{ // initial token response
 					StatusCode: http.StatusForbidden,
@@ -828,13 +824,13 @@ func TestRancherLoginResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR")
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, tc.initalTokenRequest.Token)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, testInitialToken)
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
 					t.Errorf("Error configuring resource: %+v", err)
 				}
 
-        intialRequestId := fmt.Sprintf("%s:%s:%s", tc.initalTokenRequest.Endpoint, tc.initalTokenRequest.Method, tc.initalTokenRequest.Token)
+        intialRequestId := fmt.Sprintf("%s:%s:%s", tc.initalTokenRequest.Endpoint, tc.initalTokenRequest.Method, testInitialToken)
         client.SetResponse(intialRequestId, tc.initialTokenResponse)
 
         loginRequestId := fmt.Sprintf("%s:%s:%s", tc.loginRequest.Endpoint, tc.loginRequest.Method, "")
@@ -911,7 +907,6 @@ func TestRancherLoginResource(t *testing.T) {
           Method:   "DELETE",
           Headers:  map[string][]string{"Authorization": {fmt.Sprintf("Bearer %s", testUserToken)}},
           Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
         },
 				c.Response{
 					StatusCode: http.StatusNoContent,
@@ -927,7 +922,6 @@ func TestRancherLoginResource(t *testing.T) {
           Method:   "DELETE",
           Headers:  map[string][]string{"Authorization": {fmt.Sprintf("Bearer %s", testUserToken)}},
           Body:     rBodyMarshal(nil),
-          Token:    testUserToken,
         },
 				c.Response{
 					StatusCode: http.StatusNotFound,

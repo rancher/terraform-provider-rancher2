@@ -7,7 +7,6 @@ type Client interface {
 	Do(ctx context.Context, req *Request, resp *Response) error
 	Set(client Client) (Client, error)
 	GetApiUrl() string
-  ClearToken()
 }
 
 // Request is the request object for the client.
@@ -16,15 +15,13 @@ type Request struct {
 	Endpoint string
 	Body     any // this will be marshalled to json
 	Headers  map[string][]string
-	Token    string
 }
 
 func (r *Request) Set(req Request) *Request {
-	r.Method = req.Method
+	r.Method   = req.Method
 	r.Endpoint = req.Endpoint
-	r.Body = req.Body
-	r.Headers = req.Headers
-	r.Token = req.Token
+	r.Body     = req.Body
+	r.Headers  = req.Headers
 	return r
 }
 
