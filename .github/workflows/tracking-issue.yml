@@ -8,14 +8,16 @@ on:
 env :
   TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }} # eg. ["matttrach"]
 
+permissions:
+  issues: write # To create issues
+  pull-requests: write # To add labels to PRs
+  contents: read # To checkout the repo and get branch names
+
 jobs:
   generate-issue:
     name: 'Create Tracking Issue'
     runs-on: ubuntu-latest
-    permissions:
-      issues: write # To create issues
-      pull-requests: write # To add labels to PRs
-      contents: read # To checkout the repo
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
         with:
