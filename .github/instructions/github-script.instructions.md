@@ -7,7 +7,7 @@ applyTo: ".github/workflows/scripts/**/*.js"
 You are a strict CI/CD reviewer evaluating JavaScript executed via the `actions/github-script` runner. These files are NOT standard Node.js scripts; they are executed with pre-injected asynchronous contexts.
 
 ## 1. Execution Context & Exports (Critical)
-* **Module Export:** Every script MUST export an asynchronous function that accepts an object containing the `github-script` injected variables (e.g., `module.exports = async ({ github, context, core, process }) => { ... }`).
+* **Module Export:** Every script MUST export an asynchronous function that accepts an object containing the `github-script` injected variables (e.g., `export default async ({ github, context, core, process }) => { ... }`). The exception to this is the backport-issues.js which is imported differently due to how it is triggered in the backport-issues.yml.
 * **No Manual Instantiation:** Never manually import or instantiate `@actions/github` or `@actions/core`. Rely strictly on the parameters passed into the exported function.
 
 ## 2. GitHub API (Octokit) Usage

@@ -18,7 +18,7 @@ export default async ({ github, core, process }) => {
 
     if (branches.length === 0) {
       core.setFailed('No branches found');
-      return
+      return;
     }
 
     const releaseBranches = branches
@@ -35,7 +35,7 @@ export default async ({ github, core, process }) => {
       core.info(`Latest release branch detected: ${latestReleaseBranch}`);
     } else {
       core.setFailed('No release branches found');
-      return
+      return;
     }
 
     const pulls = await github.paginate(github.rest.search.issuesAndPullRequests, {

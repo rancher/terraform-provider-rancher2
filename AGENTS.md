@@ -12,3 +12,4 @@ This repository enforces strict coding standards depending on the file type. Whe
 * **For Terraform (`**/*.tf`)**: Read and strictly adhere to `.github/instructions/terraform.instructions.md`
 * **For GitHub Actions (`.github/workflows/**/*.yml`)**: Read and strictly adhere to `.github/instructions/workflows.instructions.md`
 * **For GitHub Scripts (`.github/workflows/scripts/**/*.js`)**: Read and strictly adhere to `.github/instructions/github-script.instructions.md`
+* **For Spelling Changes (`aspell_custom.txt`)**: Read and strictly adhere to `.github/instructions/aspell.instructions.md`

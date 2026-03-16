@@ -1,5 +1,5 @@
 ---
-applyTo: ".github/workflows/**/*.yml, .github/workflows/**/*.yaml"
+applyTo: ".github/workflows/**/*.{yml,yaml}"
 ---
 
 # GitHub Actions Workflow PR Review Standards
