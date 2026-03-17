@@ -134,7 +134,7 @@ export default async ({ github, core, process }) => {
           labels: ["internal/pr-tracked"]
         });
       } catch (error) {
-        errors.push(`Failed to process PR [${pr.title}](${pr.html_url}): ${error.message}`);
+        errors.push(`Failed to process PR [${pr.number}](${pr.html_url}): ${error.message}`);
       }
     }
 
