@@ -103,7 +103,7 @@ export default async ({ github, core, process }) => {
       });
 
       const newIssue = response.data;
-      core.info(`New tracking issue data: ${JSON.stringify(newIssue)}`);
+      core.info(`Created tracking issue #${newIssue.number}: ${newIssue.html_url}`);
 
       // add appropriate sub-issues for either release label or latest release branch
       const parentIssue = newIssue;
@@ -122,7 +122,7 @@ export default async ({ github, core, process }) => {
         assignees: assignees
       });
       const newSubIssue = response.data;
-      core.info(`New backport issue data: ${JSON.stringify(newSubIssue)}`);
+      core.info(`Created backport issue #${newSubIssue.number}: ${newSubIssue.html_url}`);
       const subIssueId = newSubIssue.id;
       // Attach the sub-issue to the parent using API request
       await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
