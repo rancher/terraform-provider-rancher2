@@ -63,9 +63,15 @@ export default async ({ github, core, process }) => {
         releaseName = latestReleaseBranch;
       }
 
-      const existingIssues = await github.paginate(github.rest.search.issuesAndPullRequests, {
-        q: `repo:${owner}/${repo} is:issue is:open label:internal/tracking in:body #${pr.number}`
-      });
+      let existingIssues;
+      try {
+        existingIssues = await github.paginate(github.rest.search.issuesAndPullRequests, {
+          q: `repo:${owner}/${repo} is:issue is:open label:internal/tracking in:body #${pr.number}`
+        });
+      } catch (error) {
+        core.info(`Failed to search existing tracking issues for PR #${pr.number}: ${error.message}`);
+        continue;
+      }
       if (existingIssues.length > 0) {
         try {
           await github.rest.issues.addLabels({
