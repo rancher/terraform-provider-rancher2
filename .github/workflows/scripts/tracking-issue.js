@@ -81,7 +81,8 @@ export default async ({ github, core, process }) => {
             labels: ["internal/pr-tracked"]
           });
         } catch (error) {
-          core.info(`Failed to add tracking label to PR #${pr.number}: ${error.message}`);
+          core.setFailed(`Failed to add tracking label to PR #${pr.number}: ${error.message}`);
+          continue;
         }
         core.info(`Tracking issue already exists for PR #${pr.number}. Skipping.`);
         continue;
@@ -90,17 +91,22 @@ export default async ({ github, core, process }) => {
       // Create the tracking issue
       // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
       // Note: issues can't have teams assigned to them and our default token can't retrieve org level team members
-      response = await github.rest.issues.create({
-        owner: owner,
-        repo:  repo,
-        title: pr.title,
-        body:  `This is the tracking issue for #${pr.number} \n\n` +
-          `Please add labels indicating the release versions eg. '${releaseName}' \n\n` +
-          `Please add comments for user issues which this issue addresses. \n\n` +
-          `Description copied from PR: \n${pr.body ?? ''}`,
-        labels: newLabels,
-        assignees: assignees
-      });
+      try {
+        response = await github.rest.issues.create({
+          owner: owner,
+          repo:  repo,
+          title: pr.title,
+          body:  `This is the tracking issue for #${pr.number} \n\n` +
+            `Please add labels indicating the release versions eg. '${releaseName}' \n\n` +
+            `Please add comments for user issues which this issue addresses. \n\n` +
+            `Description copied from PR: \n${pr.body ?? ''}`,
+          labels: newLabels,
+          assignees: assignees
+        });
+      } catch (error) {
+        core.setFailed(`Failed to create tracking issue for PR #${pr.number}: ${error.message}`);
+        continue;
+      }
 
       const newIssue = response.data;
       core.info(`Created tracking issue #${newIssue.number}: ${newIssue.html_url}`);
@@ -111,36 +117,48 @@ export default async ({ github, core, process }) => {
       const parentIssueNumber = parentIssue.number;
       // Note: can't get terraform-maintainers team, the default token can't access org level objects
       // Create the sub-issue
-      response = await github.rest.issues.create({
-        owner: owner,
-        repo: repo,
-        title: `[${releaseName}] ${parentIssueTitle}`,
-        body:  `Backport #${pr.number} to ${releaseName} for #${parentIssueNumber}\n\n` +
-          `Please add this issue to the proper milestone.\n` +
-          `Copied from PR: \n${pr.body ?? ''}`,
-        labels: [releaseName, "internal/backport"],
-        assignees: assignees
-      });
+      try {
+        response = await github.rest.issues.create({
+          owner: owner,
+          repo: repo,
+          title: `[${releaseName}] ${parentIssueTitle}`,
+          body:  `Backport #${pr.number} to ${releaseName} for #${parentIssueNumber}\n\n` +
+            `Please add this issue to the proper milestone.\n` +
+            `Copied from PR: \n${pr.body ?? ''}`,
+          labels: [releaseName, "internal/backport"],
+          assignees: assignees
+        });
+      } catch (error) {
+        core.setFailed(`Failed to create backport issue for PR #${pr.number}: ${error.message}`);
+        continue;
+      }
       const newSubIssue = response.data;
       core.info(`Created backport issue #${newSubIssue.number}: ${newSubIssue.html_url}`);
       const subIssueId = newSubIssue.id;
       // Attach the sub-issue to the parent using API request
-      await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
-        owner: owner,
-        repo: repo,
-        issue_number: parentIssueNumber,
-        sub_issue_id: subIssueId,
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
-      });
-
-      await github.rest.issues.addLabels({
-        owner: owner,
-        repo: repo,
-        issue_number: pr.number,
-        labels: ["internal/pr-tracked"]
-      });
+      try {
+        await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
+          owner: owner,
+          repo: repo,
+          issue_number: parentIssueNumber,
+          sub_issue_id: subIssueId,
+          headers: {
+            'X-GitHub-Api-Version': '2022-11-28'
+          }
+        });
+      } catch (error) {
+        core.setFailed(`Failed to link backport issue to tracking issue #${parentIssueNumber}: ${error.message}`);
+      }
+      try {
+        await github.rest.issues.addLabels({
+          owner: owner,
+          repo: repo,
+          issue_number: pr.number,
+          labels: ["internal/pr-tracked"]
+        });
+      } catch (error) {
+        core.setFailed(`Failed to add tracking label to PR #${pr.number}: ${error.message}`);
+      }
     }
   } catch (error) {
     core.setFailed(`Script failed with error: ${error.message}`);
