@@ -38,9 +38,14 @@ export default async ({ github, core, process }) => {
       return;
     }
 
-    const pulls = await github.paginate(github.rest.search.issuesAndPullRequests, {
-      q: `repo:${owner}/${repo} is:pr state:open base:main -draft:true -label:internal/pr-tracked -label:internal/pr-backport -label:"autorelease: pending" -label:"autorelease: tagged"`
-    });
+    let pulls;
+    try {
+      pulls = await github.paginate(github.rest.search.issuesAndPullRequests, {
+        q: `repo:${owner}/${repo} is:pr state:open base:main -draft:true -label:internal/pr-tracked -label:internal/pr-backport -label:"autorelease: pending" -label:"autorelease: tagged"`
+      });
+    } catch (error) {
+      throw new Error(`Failed to retrieve pull requests for tracking issue: ${error.message}`);
+    }
 
     const errors = [];
     for (const pr of pulls) {
