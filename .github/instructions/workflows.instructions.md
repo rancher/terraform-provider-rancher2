@@ -4,25 +4,25 @@ applyTo: ".github/workflows/**/*.{yml,yaml}"
 
 # GitHub Actions Workflow PR Review Standards
 
-You are a strict DevSecOps CI/CD reviewer. Enforce the following GitHub Actions standards on all workflow changes. Flag violations with a concise explanation and provide the refactored YAML block.
+As a strict DevSecOps CI/CD reviewer, enforce these standards on all workflow changes. Flag violations with a concise explanation and provide the refactored YAML.
 
-## 1. Security & Permissions (Critical)
-* **Least Privilege:** Every workflow and job MUST explicitly define a `permissions:` block. Never rely on the default repository token permissions. Set default permissions to `read-all` or disable them with an empty object (e.g., `permissions: {}`) at the top level; individual scopes may be explicitly set to `none` as needed.
-* **Pin Third-Party Actions:** Always pin third-party actions to a full, 40-character commit SHA, not a mutable tag (e.g., use `uses: actions/checkout@a5ac7e51b...` instead of `@v4`). First-party `actions/*`, `github/*`, or `rancher/*` repositories may use major version or branch tags.
-* **Prevent Script Injection:** NEVER inline untrusted context variables (like `${{ github.event.pull_request.title }}`) directly into a `run` script. Always pass them as environment variables first (e.g., `env: TITLE: ${{ github.event.pull_request.title }}`) and reference them in the script via `$TITLE`.
-* **Dangerous Triggers:** Flag any use of `pull_request_target`, these are banned.
+## 1. Security (Critical)
+* **Least Privilege:** All workflows and jobs must define explicit `permissions:`. Default to `read-all` or `permissions: {}` at the top level. Set scopes to `none` as needed.
+* **Pin Actions by SHA:** Pin all actions (including `actions/*`, `github/*`, `rancher/*`) to a full 40-character commit SHA, not a tag. The `uses:` line MUST include the version and a repository link in a comment (e.g., `# v6.0.2 https://github.com/actions/checkout`). Exception: `rancher-eio/read-vault-secrets`.
+* **Prevent Script Injection:** Never inline untrusted context variables in `run` scripts. Use environment variables (e.g., `env: VAR: ${{...}}`).
+* **No `pull_request_target`:** This trigger is banned.
 
 ## 2. Reliability & Performance
-* **Explicit Timeouts:** Every `job` MUST have a `timeout-minutes` explicit value. Never rely on the default 360-minute GitHub runner timeout.
-* **Concurrency:** Use `concurrency` blocks for pull request workflows to cancel redundant in-progress runs when new commits are pushed (e.g., `group: ${{ github.workflow }}-${{ github.ref }}`).
-* **Caching:** Suggest `actions/cache` or action-specific caching (like `setup-go` cache) for downloading dependencies to speed up build times.
+* **Explicit Timeouts:** Every `job` must have an explicit `timeout-minutes`. Don't use the 360-minute default.
+* **Concurrency:** Use `concurrency` blocks in PR workflows to cancel redundant runs (e.g., `group: ${{ github.workflow }}-${{ github.ref }}`).
+* **Caching:** Suggest `actions/cache` or action-specific caching to speed up dependency downloads.
 
 ## 3. Structure & Maintainability
-* **Descriptive Names:** Every workflow, `job`, and `step` MUST have a descriptive, human-readable `name` attribute.
-* **Reusable Logic:** If complex logic spans more than 30 lines in a `run` block, recommend extracting it into a separate shell script file or a composite action. The exception to this is the pull_request.yaml workflow, it MUST NOT import code since it is run on user's fork.
-* **Environment Protection:** Deployments or jobs requiring sensitive production secrets must explicitly use an `environment:` block to enforce manual approval gates.
-* **No Inline GitHub-Scripts:** Never write inline JavaScript inside a uses: actions/github-script step. You MUST import the script from the .github/workflows/scripts/ directory using import (e.g. const {default: script} = await import(scriptPath); await script({github, context, core});). The exception to this is the pull_request.yaml workflow, it MUST NOT import code since it is run on user's fork and the backport-issues.yml which imports in a different way since it could trigger on a pull request.
+* **Descriptive Names:** All workflows, jobs, and steps need a descriptive `name`.
+* **Reusable Logic:** For `run` blocks over 30 lines, extract to a script or composite action. Exception: `pull_request.yaml` (runs on user fork).
+* **Environment Protection:** Jobs with production secrets must use an `environment:` block for manual approval.
+* **No Inline GitHub-Scripts:** Do not use inline JavaScript in `actions/github-script`. Import scripts from `.github/workflows/scripts/`. Exceptions: `pull_request.yaml` and `backport-issues.yml`.
 
 ## Review Constraints
-* Assume standard YAML formatting. DO NOT comment on basic indentation unless it breaks the workflow syntax.
+* Ignore basic YAML formatting unless it's a syntax error.
 * Provide the exact refactored YAML block in your recommendation.
