@@ -39,3 +39,4 @@ keycloak
 oidc
 eslint
 destructuring
+yaml
