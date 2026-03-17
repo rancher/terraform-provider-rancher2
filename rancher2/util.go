@@ -181,11 +181,11 @@ func DoUserLogin(url, provider, user, pass, ttl, desc, cacert string, insecure b
 	errPrefix := "Doing user login"
 
 	// Login with user and pass
-	respBody, resp, err := DoPost(v3loginURL, string(payload), cacert, insecure, loginHead)
+	respBody, resp, err := DoPost(loginURL, string(payload), cacert, insecure, loginHead)
 	if resp != nil && resp.StatusCode == http.StatusNotFound {
-		// /v3-public/login endpoint is not available
-		// try to fall back to /v1-public endpoint.
-		respBody, _, err = DoPost(loginURL, string(payload), cacert, insecure, loginHead)
+		// /v1-public/login endpoint is not available
+		// try to fall back to /v3-public endpoint.
+		respBody, _, err = DoPost(v3loginURL, string(payload), cacert, insecure, loginHead)
 		if err != nil {
 			return "", "", fmt.Errorf("%s: %v", errPrefix, err)
 		}
