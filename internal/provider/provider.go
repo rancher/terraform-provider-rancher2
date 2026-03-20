@@ -43,11 +43,6 @@ func New(version string) func() provider.Provider {
 	}
 }
 
-type RancherProviderMeta struct {
-  Client     c.Client
-  TokenStore *c.TokenStore
-}
-
 type RancherProviderModel struct {
 	ApiUrl         types.String `tfsdk:"api_url"`
 	CaCert         types.String `tfsdk:"ca_cert"`
@@ -93,8 +88,8 @@ func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				Description: "The URL of the rancher API without paths included, e.g. https://rancher.example.com." +
-          "Can be set with the RANCHER_API_URL environment variable.",
-				Required:    true,
+					"Can be set with the RANCHER_API_URL environment variable.",
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
 						regexp.MustCompile(`^https?:\/\/`),
@@ -108,16 +103,16 @@ func (p *RancherProvider) Schema(ctx context.Context, req provider.SchemaRequest
 			},
 			"ca_cert": schema.StringAttribute{
 				Description: "The CA certificate to use for the Rancher API." +
-          "Can be set with the RANCHER_CA_CERT environment variable.",
-				Optional:    true,
+					"Can be set with the RANCHER_CA_CERT environment variable.",
+				Optional: true,
 				Validators: []validator.String{
 					validators.IsCertificate(),
 				},
 			},
 			"insecure": schema.BoolAttribute{
 				Description: "Whether to allow insecure connections to the Rancher API." +
-          "Can be set with the RANCHER_INSECURE environment variable.",
-				Optional:    true,
+					"Can be set with the RANCHER_INSECURE environment variable.",
+				Optional: true,
 			},
 			"ignore_system_ca": schema.BoolAttribute{
 				Description: "Whether to ignore the system's CA certificates.",
@@ -151,34 +146,34 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 	}
 
 	if config.ApiUrl.IsNull() || config.ApiUrl.ValueString() == "" {
-    apiUrl := os.Getenv("RANCHER_API_URL")
-    if apiUrl == "" {
-      resp.Diagnostics.AddError(
-			"Missing Rancher API URL",
-			"The provider cannot create the Rancher API client as there is a missing or empty value for the Rancher API URL." +
-      "Try setting the RANCHER_API_URL environment variable.",
-		)
-		return
-    }
-    config.ApiUrl = types.StringValue(apiUrl)
+		apiUrl := os.Getenv("RANCHER_API_URL")
+		if apiUrl == "" {
+			resp.Diagnostics.AddError(
+				"Missing Rancher API URL",
+				"The provider cannot create the Rancher API client as there is a missing or empty value for the Rancher API URL."+
+					"Try setting the RANCHER_API_URL environment variable.",
+			)
+			return
+		}
+		config.ApiUrl = types.StringValue(apiUrl)
 	}
 	tflog.Debug(ctx, fmt.Sprintf("Rancher API URL: %s", config.ApiUrl.ValueString()))
 
 	if config.Insecure.IsNull() {
-    insecure := os.Getenv("RANCHER_INSECURE")
-    if insecure == "true" {
-      config.Insecure = types.BoolValue(true)
-    } else {
-      config.Insecure = types.BoolValue(false)
-    }
+		insecure := os.Getenv("RANCHER_INSECURE")
+		if insecure == "true" {
+			config.Insecure = types.BoolValue(true)
+		} else {
+			config.Insecure = types.BoolValue(false)
+		}
 	}
 
-  if config.CaCert.IsNull() {
-    caCert := os.Getenv("RANCHER_CA_CERT")
-    if caCert != "" {
-      config.CaCert = types.StringValue(caCert)
-    }
-  }
+	if config.CaCert.IsNull() {
+		caCert := os.Getenv("RANCHER_CA_CERT")
+		if caCert != "" {
+			config.CaCert = types.StringValue(caCert)
+		}
+	}
 
 	if config.IgnoreSystemCa.IsNull() {
 		config.IgnoreSystemCa = types.BoolValue(false)
@@ -205,32 +200,27 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 	if config.Token.IsNull() {
 		token = os.Getenv("RANCHER_TOKEN")
 	}
-  // Initialize the shared token store
+	// Initialize the shared token store
 	tokenStore := &c.TokenStore{}
-  if token != "" {
-    tokenStore.SetToken(token)
-  }
+	if token != "" {
+		tokenStore.SetToken(token)
+	}
 
 	client := c.NewHttpClient(
-	  ctx,
+		ctx,
 		config.ApiUrl.ValueString(),
 		config.CaCert.ValueString(),
 		config.Insecure.ValueBool(),
 		config.IgnoreSystemCa.ValueBool(),
 		time.Duration(config.Timeout.ValueInt64())*time.Second,
 		config.MaxRedirects.ValueInt64(),
-    tokenStore,
+		tokenStore,
 	)
 
-	// Make the client and the token store available to all resources
-	meta := &RancherProviderMeta{
-		Client:     client,
-		TokenStore: tokenStore,
-	}
+  tflog.Debug(ctx, fmt.Sprintf("Provider Configure Client: %+v", pp.PrettyPrint(client)))
 
-  // The client variable is an interface that holds a pointer to a struct.
-	resp.ResourceData = meta
-	resp.DataSourceData = meta
+	resp.ResourceData = client
+	resp.DataSourceData = client
 
 	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Response: %+v", pp.PrettyPrint(resp)))
 }

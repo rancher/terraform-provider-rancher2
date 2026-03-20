@@ -1,7 +1,7 @@
 package rancher2_dev
 
 import (
-	"context"
+	"bytes"
 	"math/big"
 	"testing"
 
@@ -10,10 +10,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	h "github.com/rancher/terraform-provider-rancher2/internal/provider/test_helpers"
 )
 
 func TestRancherDevModel(t *testing.T) {
 	t.Run("ToResource", func(t *testing.T) {
+
+    nestedNestedObjectValue := types.ObjectValueMust(
+			nestedNestedObjectAttrTypes,
+			map[string]attr.Value{
+				"string_attribute": types.StringValue("test"),
+				"bool_attribute":   types.BoolValue(true),
+			},
+		)
+
+		nestedObjectValue := types.ObjectValueMust(
+			nestedObjectAttrTypes,
+			map[string]attr.Value{
+				"string_attribute":     types.StringValue("test"),
+				"nested_nested_object": nestedNestedObjectValue,
+			},
+		)
+
 		testCases := []struct {
 			name string
 			fit  RancherDevModel
@@ -22,19 +40,19 @@ func TestRancherDevModel(t *testing.T) {
 			{
 				"Basic",
 				RancherDevModel{
-					Id:               "test",
+					Id:               "test",             // required
+					StringAttribute:  "test",             // required
+					NumberAttribute:  big.NewFloat(1.23), // required
+					Int32Attribute:   int32(123),  // read only
 					BoolAttribute:    true,
-					NumberAttribute:  big.NewFloat(1.23),
-					Int64Attribute:   123,
-					Int32Attribute:   123,
+					Int64Attribute:   int64(123),
 					Float64Attribute: 1.23,
-					Float32Attribute: 1.23,
-					StringAttribute:  "test",
+					Float32Attribute: float32(1.23),
 					ListAttribute:    []string{"test"},
 					SetAttribute:     map[string]bool{"test": true},
 					MapAttribute:     map[string]string{"test": "test"},
-					NestedObject: NestedObject{
-						StringAttribute: "test",
+					NestedObject:     NestedObject{
+						StringAttribute:    "test",
 						NestedNestedObject: NestedNestedObject{
 							StringAttribute: "test",
 							BoolAttribute:   true,
@@ -42,7 +60,7 @@ func TestRancherDevModel(t *testing.T) {
 					},
 					NestedObjectList: []NestedObject{
 						{
-							StringAttribute: "test",
+							StringAttribute:    "test",
 							NestedNestedObject: NestedNestedObject{
 								StringAttribute: "test",
 								BoolAttribute:   true,
@@ -51,7 +69,7 @@ func TestRancherDevModel(t *testing.T) {
 					},
 					NestedObjectMap: map[string]NestedObject{
 						"test": {
-							StringAttribute: "test",
+							StringAttribute:    "test",
 							NestedNestedObject: NestedNestedObject{
 								StringAttribute: "test",
 								BoolAttribute:   true,
@@ -61,47 +79,35 @@ func TestRancherDevModel(t *testing.T) {
 				},
 				RancherDevResourceModel{
 					Id:               types.StringValue("test"),
-					BoolAttribute:    types.BoolValue(true),
 					NumberAttribute:  types.NumberValue(big.NewFloat(1.23)),
-					Int64Attribute:   types.Int64Value(123),
+					StringAttribute:  types.StringValue("test"),
 					Int32Attribute:   types.Int32Value(123),
+					BoolAttribute:    types.BoolValue(true),
+					Int64Attribute:   types.Int64Value(123),
 					Float64Attribute: types.Float64Value(1.23),
 					Float32Attribute: types.Float32Value(1.23),
-					StringAttribute:  types.StringValue("test"),
 					ListAttribute:    types.ListValueMust(types.StringType, []attr.Value{types.StringValue("test")}),
 					SetAttribute:     types.SetValueMust(types.StringType, []attr.Value{types.StringValue("test")}),
 					MapAttribute:     types.MapValueMust(types.StringType, map[string]attr.Value{"test": types.StringValue("test")}),
-					NestedObject: NestedResourceModel{
-						StringAttribute: types.StringValue("test"),
-						NestedNestedObject: NestedNestedResourceModel{
-							StringAttribute: types.StringValue("test"),
-							BoolAttribute:   types.BoolValue(true),
-						},
-					},
-					NestedObjectList: []NestedResourceModel{
-						{
-							StringAttribute: types.StringValue("test"),
-							NestedNestedObject: NestedNestedResourceModel{
-								StringAttribute: types.StringValue("test"),
-								BoolAttribute:   types.BoolValue(true),
-							},
-						},
-					},
-					NestedObjectMap: map[string]NestedResourceModel{
-						"test": {
-							StringAttribute: types.StringValue("test"),
-							NestedNestedObject: NestedNestedResourceModel{
-								StringAttribute: types.StringValue("test"),
-								BoolAttribute:   types.BoolValue(true),
-							},
-						},
-					},
+					NestedObject:     nestedObjectValue,
+					NestedObjectList: types.ListValueMust(
+						types.ObjectType{AttrTypes: nestedObjectAttrTypes},
+						[]attr.Value{nestedObjectValue},
+					),
+					NestedObjectMap: types.MapValueMust(
+						types.ObjectType{AttrTypes: nestedObjectAttrTypes},
+						map[string]attr.Value{"test": nestedObjectValue},
+					),
 				},
 			},
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				got := tc.fit.ToResourceModel(context.Background(), &diag.Diagnostics{})
+				var buf bytes.Buffer
+				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
+				ctx := h.GenerateTestContext(t, &buf, nil)
+
+        got := tc.fit.ToResourceModel(ctx, &diag.Diagnostics{})
 				if diff := cmp.Diff(tc.want, *got, cmp.AllowUnexported(tftypes.Value{}, big.Float{})); diff != "" {
 					t.Errorf("unexpected diff (-want, +got) = %s", diff)
 				}
@@ -112,7 +118,15 @@ func TestRancherDevModel(t *testing.T) {
 
 func TestNestedObject(t *testing.T) {
 	t.Run("ToResource", func(t *testing.T) {
-		testCases := []struct {
+		nestedNestedObjectValue := types.ObjectValueMust(
+			nestedNestedObjectAttrTypes,
+			map[string]attr.Value{
+				"string_attribute": types.StringValue("test"),
+				"bool_attribute":   types.BoolValue(true),
+			},
+		)
+
+    testCases := []struct {
 			name string
 			fit  NestedObject
 			want NestedResourceModel
@@ -120,27 +134,28 @@ func TestNestedObject(t *testing.T) {
 			{
 				"Basic",
 				NestedObject{
-					StringAttribute: "test",
+					StringAttribute:    "test",
 					NestedNestedObject: NestedNestedObject{
 						StringAttribute: "test",
 						BoolAttribute:   true,
 					},
 				},
 				NestedResourceModel{
-					StringAttribute: types.StringValue("test"),
-					NestedNestedObject: NestedNestedResourceModel{
-						StringAttribute: types.StringValue("test"),
-						BoolAttribute:   types.BoolValue(true),
-					},
+					StringAttribute:           types.StringValue("test"),
+					NestedNestedResourceModel: nestedNestedObjectValue,
 				},
 			},
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				got := NestedResourceModel{}
-				tc.fit.ToResourceModel(context.Background(), &got)
-				if got != tc.want {
-					t.Errorf("got %v, want %v", got, tc.want)
+				var buf bytes.Buffer
+				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
+				ctx := h.GenerateTestContext(t, &buf, nil)
+
+        got := NestedResourceModel{}
+				tc.fit.ToResourceModel(ctx, &got)
+				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(tftypes.Value{})); diff != "" {
+					t.Errorf("unexpected diff (-want, +got) = %s", diff)
 				}
 			})
 		}
@@ -168,8 +183,12 @@ func TestNestedNestedObject(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				got := NestedNestedResourceModel{}
-				tc.fit.ToResourceModel(context.Background(), &got)
+				var buf bytes.Buffer
+				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
+				ctx := h.GenerateTestContext(t, &buf, nil)
+
+        got := NestedNestedResourceModel{}
+				tc.fit.ToResourceModel(ctx, &got)
 				if got != tc.want {
 					t.Errorf("got %v, want %v", got, tc.want)
 				}

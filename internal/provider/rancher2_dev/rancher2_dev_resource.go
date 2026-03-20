@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -39,7 +37,6 @@ func NewRancherDevResource() resource.Resource {
 
 type RancherDevResource struct {
 	client     c.Client // client is an interface holding a pointer to a struct
-  tokenStore *c.TokenStore
 }
 
 // RancherDevResourceModel is in rancher2_dev_resource_model.go
@@ -122,7 +119,7 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 				ElementType:         types.StringType,
 			},
 			// Don't use "object" type, use "single nested attribute" type instead
-			"nested_object": schema.SingleNestedAttribute{
+			"object": schema.SingleNestedAttribute{
 				MarkdownDescription: "A single nested object." +
 					"This represents a single object, not a list or set of objects.",
 				Optional: true,
@@ -130,8 +127,7 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Attributes: map[string]schema.Attribute{
 					"string_attribute": schema.StringAttribute{
 						MarkdownDescription: "A string attribute.",
-						Optional:            true,
-						Computed:            true,
+						Required:            true, // nested_object is optional, but within it string_attribute is required
 					},
 					"nested_nested_object": schema.SingleNestedAttribute{
 						MarkdownDescription: "A nested object within a nested object.",
@@ -140,8 +136,7 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 						Attributes: map[string]schema.Attribute{
 							"string_attribute": schema.StringAttribute{
 								MarkdownDescription: "A string attribute.",
-								Optional:            true,
-								Computed:            true,
+								Required:            true,
 							},
 							"bool_attribute": schema.BoolAttribute{
 								MarkdownDescription: "A boolean attribute.",
@@ -220,29 +215,27 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-// Warning: this needs to be updated to match the provider.go's RancherProviderMeta object
-type ProviderStruct struct {
-  Client     c.Client
-  TokenStore *c.TokenStore
-}
 
 // configure runs at compile time, don't overload the context.
 func (r *RancherDevResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+  tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure request: %#v", req))
+  tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure object: %#v", r))
 	if req.ProviderData == nil {
 		return // Prevent panic if the provider has not been configured.
 	}
 
 	// Retrieving the client from the provider
-	meta, ok := req.ProviderData.(ProviderStruct)
+	client, ok := req.ProviderData.(c.Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected %T, got: %T. Please report this issue to the provider developers.", ProviderStruct{}, req.ProviderData),
+			fmt.Sprintf("Expected c.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
-	r.client = meta.Client
-  r.tokenStore = meta.TokenStore
+	r.client = client
+  tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure object after config: %#v", r))
+  tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure response: %#v", resp))
 }
 
 // Create generates reality and state to match plan.
@@ -271,36 +264,43 @@ func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-  // TESTING ONLY
-  // remove this when generating a new resource
+  // DEV ONLY
+  //
+  // This is special to the dev resource and
+  // is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
+  // When using the dev resource as a template for other resources, remove this.
   //
   var clnt c.TestClient
-  if client, ok := client.(*c.HttpClient); ok {
+  rc, ok := client.(*c.HttpClient)
+  if ok {
     // found a real client, need to inject a test client
-    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, "")
-    requestId := fmt.Sprintf("%s:%s:%s", filepath.Join(client.GetApiUrl(), endpointPath), "POST", "")
+    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
+    requestId := fmt.Sprintf("%s/%s:%s:%s", client.GetApiUrl(), endpointPath, "POST", "")
     tflog.Debug(ctx, fmt.Sprintf("create requestId: %s", requestId))
-  	body, err := json.Marshal(plan.ToGoModel(ctx))
+    rbp := plan // copy the plan so it can still be used to generate the request
+    rgm := rbp.ToGoModel(ctx)
+    rgm.Int32Attribute = int32(1) // simulating the API returning an attribute that isn't set by the provider
+    responseBody, err := json.Marshal(rgm)
   	if err != nil {
   		resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
   		return
   	}
-    clnt.SetResponse(requestId,c.Response{
+    clnt.SetResponse(ctx, requestId,c.Response{
       StatusCode: 200,
       Headers: map[string][]string{
         "Content-Type": {"application/json"},
       },
-      Body: body,
+      Body: responseBody,
     })
-  }
-  if len(clnt.GetRequests()) > 0 {
-      client = &clnt
+    client = &clnt
   }
   //
-  // END TESTING ONLY
+  // END DEV ONLY
+
+  tflog.Debug(ctx, fmt.Sprintf("Create Client: %+v", pp.PrettyPrint(client)))
 
 	request := c.Request{
-		Endpoint: filepath.Join(client.GetApiUrl(), endpointPath),
+		Endpoint: fmt.Sprintf("%s/%s", client.GetApiUrl(), endpointPath),
 		Method:   "POST",
 		Body:     plan.ToGoModel(ctx),
 	}
@@ -351,36 +351,39 @@ func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-  // TESTING ONLY
-  // remove this when generating a new resource
+  // DEV ONLY
+  //
+  // This is special to the dev resource and
+  // is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
+  // When using the dev resource as a template for other resources, remove this.
   //
   var clnt c.TestClient
-  if client, ok := client.(*c.HttpClient); ok {
+  rc, ok := client.(*c.HttpClient)
+  if ok {
     // found a real client, need to inject a test client
-    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, "")
-    requestId := fmt.Sprintf("%s:%s:%s", filepath.Join(client.GetApiUrl(), endpointPath, state.Id.ValueString()), "GET", "")
+    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
+    ep := fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString())
+    requestId := fmt.Sprintf("%s:%s:%s", ep, "GET", "")
     tflog.Debug(ctx, fmt.Sprintf("read requestId: %s", requestId))
-  	body, err := json.Marshal(state.ToGoModel(ctx))
+    responseBody, err := json.Marshal(state)
   	if err != nil {
-  		resp.Diagnostics.AddError("Error marshalling dev state for read response: ", err.Error())
+  		resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
   		return
   	}
-    clnt.SetResponse(requestId,c.Response{
+    clnt.SetResponse(ctx, requestId,c.Response{
       StatusCode: 200,
       Headers: map[string][]string{
         "Content-Type": {"application/json"},
       },
-      Body: body,
+      Body: responseBody,
     })
-  }
-  if len(clnt.GetRequests()) > 0 {
-      client = &clnt
+    client = &clnt
   }
   //
-  // END TESTING ONLY
+  // END DEV ONLY
 
 	request := c.Request{
-		Endpoint: filepath.Join(client.GetApiUrl(), endpointPath, state.Id.ValueString()),
+		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString()),
 		Method:   "GET",
 	}
 	response := c.Response{}
@@ -424,6 +427,13 @@ func (r *RancherDevResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	err = validateData(&plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error validating plan: ", err.Error())
+		return
+	}
+  tflog.Debug(ctx, fmt.Sprintf("Update Plan after validate: %+v", pp.PrettyPrint(plan)))
+
   var client c.Client
 	if r.client != nil {
 		client = r.client
@@ -433,28 +443,44 @@ func (r *RancherDevResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-  // TESTING ONLY
-  // remove this when generating a new resource
+  // DEV ONLY
+  //
+  // This is special to the dev resource and
+  // is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
+  // When using the dev resource as a template for other resources, remove this.
   //
   var clnt c.TestClient
-  if client, ok := client.(*c.HttpClient); ok {
+  rc, ok := client.(*c.HttpClient)
+  if ok {
     // found a real client, need to inject a test client
-    clnt := c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, "")
-    requestId := fmt.Sprintf("%s:%s:%s", filepath.Join(client.GetApiUrl(), endpointPath, plan.Id.ValueString()), "PUT", "")
+    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
+    ep := fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, plan.Id.ValueString())
+    requestId := fmt.Sprintf("%s:%s:%s", ep, "PUT", "")
     tflog.Debug(ctx, fmt.Sprintf("update requestId: %s", requestId))
-    clnt.SetResponse(requestId,c.Response{
+    rbp := plan // copy the plan so it can still be used to generate the request
+    rgm := rbp.ToGoModel(ctx)
+    rgm.Int32Attribute = int32(1) // simulating the API returning an attribute that isn't set by the provider
+    responseBody, err := json.Marshal(rgm)
+  	if err != nil {
+  		resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
+  		return
+  	}
+    clnt.SetResponse(ctx, requestId,c.Response{
       StatusCode: 200,
+      Headers: map[string][]string{
+        "Content-Type": {"application/json"},
+      },
+      Body: responseBody,
     })
-  }
-  if len(clnt.GetRequests()) > 0 {
-      client = &clnt
+    client = &clnt
   }
   //
-  // END TESTING ONLY
+  // END DEV ONLY
 
 	request := c.Request{
-		Endpoint: filepath.Join(client.GetApiUrl(), endpointPath, plan.Id.ValueString()),
+		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, plan.Id.ValueString()),
 		Method:   "PUT",
+		Body:     plan.ToGoModel(ctx),
 	}
 
 	response := c.Response{}
@@ -488,25 +514,28 @@ func (r *RancherDevResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-  // TESTING ONLY
-  // remove this when generating a new resource
+  // DEV ONLY
+  //
+  // This is special to the dev resource and
+  // is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
+  // When using the dev resource as a template for other resources, remove this.
   //
   var clnt c.TestClient
-  if client, ok := client.(*c.HttpClient); ok {
+  rc, ok := client.(*c.HttpClient)
+  if ok {
     // found a real client, need to inject a test client
-    clnt := c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, "")
-    requestId := fmt.Sprintf("%s:%s:%s", filepath.Join(client.GetApiUrl(), endpointPath, state.Id.ValueString()), "DELETE", "")
+    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
+    ep := fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString())
+    requestId := fmt.Sprintf("%s:%s:%s", ep, "DELETE", "")
     tflog.Debug(ctx, fmt.Sprintf("delete requestId: %s", requestId))
-    clnt.SetResponse(requestId,c.Response{StatusCode: 200})
-  }
-  if len(clnt.GetRequests()) > 0 {
+    clnt.SetResponse(ctx, requestId,c.Response{StatusCode: 200})
     client = &clnt
   }
   //
-  // END TESTING ONLY
+  // END DEV ONLY
 
   request := c.Request{
-		Endpoint: filepath.Join(client.GetApiUrl(), endpointPath, state.Id.ValueString()),
+		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString()),
 		Method:   "DELETE",
 	}
 
@@ -527,24 +556,22 @@ func (r *RancherDevResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// note this function also enforces default values.
+// This function also enforces default values.
 func validateData(data *RancherDevResourceModel) error {
 	if data.Id.ValueString() == "" {
 		return fmt.Errorf("id cannot be empty")
 	}
+  if data.StringAttribute.IsNull() || data.StringAttribute.IsUnknown() || data.StringAttribute.ValueString() == "" {
+		return fmt.Errorf("string_attribute cannot be empty")
+	}
 	if !regexp.MustCompile(`^dev-.*`).MatchString(data.StringAttribute.ValueString()) {
 		return fmt.Errorf("string must start with 'dev-'")
+	}
+  if data.NumberAttribute.IsNull() || data.NumberAttribute.IsUnknown() {
+		return fmt.Errorf("number_attribute cannot be empty")
 	}
 	if data.BoolAttribute.IsNull() || data.BoolAttribute.IsUnknown() {
 		data.BoolAttribute = types.BoolValue(true)
 	}
-	if data.MapAttribute.IsNull() || data.MapAttribute.IsUnknown() {
-		defaultMap, diags := types.MapValue(types.MapType{ElemType: types.StringType}, map[string]attr.Value{})
-		if diags.HasError() {
-			return fmt.Errorf("error generating default map for partially tracked attribute")
-		}
-		data.MapAttribute = defaultMap
-	}
-
 	return nil
 }

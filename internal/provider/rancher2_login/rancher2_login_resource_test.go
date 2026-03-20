@@ -21,12 +21,12 @@ import (
 
 const (
 	apiUrl           = "https://rancher.example.com"
-  testSessionToken = "ext/test-token:this1is2a3session4token5it6is7fake"
+	testSessionToken = "ext/test-token:this1is2a3session4token5it6is7fake"
 	testTokenId      = "token-test"
-  testTokenKey     = "this1is2a3test4token5it6is7fake"
-  testToken        = testTokenId + ":" + testTokenKey
-  testUserToken    = "ext/" + testToken
-  testInitialToken = "ext/test-token:this1is2the3initial4test5token6it7is8fake"
+	testTokenKey     = "this1is2a3test4token5it6is7fake"
+	testToken        = testTokenId + ":" + testTokenKey
+	testUserToken    = "ext/" + testToken
+	testInitialToken = "ext/test-token:this1is2the3initial4test5token6it7is8fake"
 )
 
 func TestRancherLoginResource(t *testing.T) {
@@ -124,39 +124,25 @@ func TestRancherLoginResource(t *testing.T) {
 			fit           RancherLoginResource
 			env           map[string]string
 			plan          RancherLoginModel
-			expectedState RancherLoginModel
 			loginRequest  c.Request
 			loginResponse c.Response
 			apiRequest    c.Request
 			apiResponse   c.Response
+			expectedState RancherLoginModel
 			outcome       string
 		}{
 			{
 				"Basic",
 				RancherLoginResource{},
 				map[string]string{},
-				RancherLoginModel{
+				RancherLoginModel{ // plan
 					Username: "user",
 					Password: "password",
-				},
-				RancherLoginModel{
-					Id:                          testTokenId,
-					Username:                    "user",
-					Password:                    "password",
-					UsernameEnvironmentVariable: "RANCHER_USERNAME",
-					PasswordEnvironmentVariable: "RANCHER_PASSWORD",
-					UserToken:                   testUserToken,
-					TokenTtl:                    "90d",
-					RefreshAt:                   "10d",
-					IgnoreToken:                 false,
-					UserTokenStartDate:          "2026-02-12T21:49:07Z",
-					UserTokenEndDate:            "2026-05-13T16:49:07-05:00",
-					UserTokenRefreshDate:        "2026-05-03T16:49:07-05:00",
 				},
 				c.Request{ // login
 					Endpoint: fmt.Sprintf("%s/%s", apiUrl, loginEndpoint),
 					Method:   "POST",
-          Headers: map[string][]string{"Content-Type": {"application/json"}},
+					Headers:  map[string][]string{"Content-Type": {"application/json"}},
 					Body: rBodyMarshal(map[string]any{
 						"type":         "localProvider",
 						"username":     "user",
@@ -178,16 +164,16 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Request{ // token
 					Endpoint: fmt.Sprintf("%s/%s", apiUrl, tokenEndpoint),
 					Method:   "POST",
-          Headers:  map[string][]string{
-            "Content-Type": {"application/json"},
-            "Authorization": {"Bearer " + testSessionToken},
-          },
-					Body:     rBodyMarshal(map[string]any{
+					Headers: map[string][]string{
+						"Content-Type":  {"application/json"},
+						"Authorization": {"Bearer " + testSessionToken},
+					},
+					Body: rBodyMarshal(map[string]any{
 						"apiVersion": apiVersion,
 						"kind":       "Token",
-            "metadata": map[string]any{
-              "name": testTokenId,
-            },  
+						"metadata": map[string]any{
+							"name": testTokenId,
+						},
 						"spec": map[string]any{
 							"description": "Terraform login token.",
 							"ttl":         7776000000,
@@ -197,7 +183,7 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Response{ // token
 					StatusCode: http.StatusOK,
 					Headers:    map[string][]string{"Content-Type": {"application/json"}},
-					Body:       rBodyMarshal(map[string]any{
+					Body: rBodyMarshal(map[string]any{
 						"kind":       "Token",
 						"apiVersion": apiVersion,
 						"metadata": map[string]any{
@@ -236,21 +222,34 @@ func TestRancherLoginResource(t *testing.T) {
 						},
 					}),
 				},
+				RancherLoginModel{ // expected state
+					Id:                          testTokenId,
+					Username:                    "user",
+					Password:                    "password",
+					UsernameEnvironmentVariable: "RANCHER_USERNAME",
+					PasswordEnvironmentVariable: "RANCHER_PASSWORD",
+					UserToken:                   testUserToken,
+					TokenTtl:                    "90d",
+					RefreshAt:                   "10d",
+					IgnoreToken:                 false,
+					UserTokenStartDate:          "2026-02-12T21:49:07Z",
+					UserTokenEndDate:            "2026-05-13T16:49:07-05:00",
+					UserTokenRefreshDate:        "2026-05-03T16:49:07-05:00",
+				},
 				"success",
 			},
 			{
 				"API Conflict",
 				RancherLoginResource{},
 				map[string]string{},
-				RancherLoginModel{
+				RancherLoginModel{ // plan
 					Username: "user",
 					Password: "password",
 				},
-				RancherLoginModel{},
 				c.Request{ // login
 					Endpoint: apiUrl + "/" + loginEndpoint,
 					Method:   "POST",
-          Headers: map[string][]string{"Content-Type": {"application/json"}},
+					Headers:  map[string][]string{"Content-Type": {"application/json"}},
 					Body: rBodyMarshal(map[string]any{
 						"type":         "localProvider",
 						"username":     "user",
@@ -272,10 +271,10 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Request{ // token
 					Endpoint: apiUrl + "/" + tokenEndpoint,
 					Method:   "POST",
-          Headers: map[string][]string{
-            "Content-Type": {"application/json"},
-            "Authorization": {"Bearer " + testSessionToken},
-          },
+					Headers: map[string][]string{
+						"Content-Type":  {"application/json"},
+						"Authorization": {"Bearer " + testSessionToken},
+					},
 					Body: rBodyMarshal(RancherLoginModel{
 						Id:                          testTokenId,
 						Username:                    "user",
@@ -294,6 +293,7 @@ func TestRancherLoginResource(t *testing.T) {
 						Message: "resource already exists",
 					}),
 				},
+				RancherLoginModel{}, // expected state
 				"failure",
 			},
 		}
@@ -311,13 +311,13 @@ func TestRancherLoginResource(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR")
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, "")
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, &c.TokenStore{})
 
-        loginRequestId := fmt.Sprintf("%s:%s:%s", tc.loginRequest.Endpoint, tc.loginRequest.Method, "")
-				client.SetResponse(loginRequestId, tc.loginResponse)
+				loginRequestId := fmt.Sprintf("%s:%s:%s", tc.loginRequest.Endpoint, tc.loginRequest.Method, "")
+				client.SetResponse(ctx, loginRequestId, tc.loginResponse)
 
-        tokenRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testSessionToken)
-        client.SetResponse(tokenRequestId, tc.apiResponse)
+				tokenRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testSessionToken)
+				client.SetResponse(ctx, tokenRequestId, tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
@@ -415,13 +415,13 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Request{
 					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
 					Method:   "GET",
-          Headers:  map[string][]string{"Authorization": {"Bearer " + testUserToken}}, // read will use the token in state
+					Headers:  map[string][]string{"Authorization": {"Bearer " + testUserToken}}, // read will use the token in state
 					Body:     rBodyMarshal(nil),
 				},
-        c.Response{
+				c.Response{
 					StatusCode: http.StatusOK,
 					Headers:    map[string][]string{"Content-Type": {"application/json"}},
-					Body:       rBodyMarshal(map[string]any{
+					Body: rBodyMarshal(map[string]any{
 						"kind":       "Token",
 						"apiVersion": apiVersion,
 						"metadata": map[string]any{
@@ -459,7 +459,7 @@ func TestRancherLoginResource(t *testing.T) {
 							"bearerToken":    testUserToken,
 						},
 					}),
-        },
+				},
 				"success",
 			},
 			{
@@ -471,7 +471,7 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Request{
 					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
 					Method:   "GET",
-          Headers:  map[string][]string{"Authorization": {"Bearer " + testUserToken}}, // read will use the token in state
+					Headers:  map[string][]string{"Authorization": {"Bearer " + testUserToken}}, // read will use the token in state
 					Body:     rBodyMarshal(nil),
 				},
 				c.Response{
@@ -490,14 +490,16 @@ func TestRancherLoginResource(t *testing.T) {
 				for k, v := range tc.env {
 					os.Setenv(k, v) //nolint:usetesting
 				}
-        var buf bytes.Buffer
+				var buf bytes.Buffer
 				defer h.PrintLog(t, &buf, "ERROR") // enables printing tflog messages, set to DEBUG when coding
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, testUserToken)
+				ts := &c.TokenStore{}
+				ts.SetToken(testUserToken)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, ts)
 
-        apiRequestId := fmt.Sprintf("%s:%s:%s", tc.expectedApiRequest.Endpoint, tc.expectedApiRequest.Method, testUserToken)
-				client.SetResponse(apiRequestId, tc.apiResponse)
+				apiRequestId := fmt.Sprintf("%s:%s:%s", tc.expectedApiRequest.Endpoint, tc.expectedApiRequest.Method, testUserToken)
+				client.SetResponse(ctx, apiRequestId, tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
@@ -561,12 +563,12 @@ func TestRancherLoginResource(t *testing.T) {
 			env                  map[string]string
 			plan                 RancherLoginModel
 			existingState        RancherLoginModel
-      initalTokenRequest   c.Request
-      initialTokenResponse c.Response
-      loginRequest         c.Request
-      loginResponse        c.Response
-      apiRequest           c.Request
-      apiResponse          c.Response
+			initalTokenRequest   c.Request
+			initialTokenResponse c.Response
+			loginRequest         c.Request
+			loginResponse        c.Response
+			apiRequest           c.Request
+			apiResponse          c.Response
 			expectedState        RancherLoginModel
 			outcome              string
 		}{
@@ -575,9 +577,9 @@ func TestRancherLoginResource(t *testing.T) {
 				RancherLoginResource{},
 				map[string]string{},
 				RancherLoginModel{ //plan
-          Username:                    "user",
-					Password:                    "password",
-        },
+					Username: "user",
+					Password: "password",
+				},
 				RancherLoginModel{ //current state
 					Id:                          testTokenId,
 					Username:                    "user",
@@ -638,12 +640,12 @@ func TestRancherLoginResource(t *testing.T) {
 							"bearerToken":    testUserToken,
 						},
 					}),
-        },
-        c.Request{}, // no login request should be made
-        c.Response{}, // no login response
-        c.Request{}, // no token create should be made
-        c.Response{}, // no token create response
-        RancherLoginModel{ // expected state should match inital state
+				},
+				c.Request{},  // no login request should be made
+				c.Response{}, // no login response
+				c.Request{},  // no token create should be made
+				c.Response{}, // no token create response
+				RancherLoginModel{ // expected state should match inital state
 					Id:                          testTokenId,
 					Username:                    "user",
 					Password:                    "password",
@@ -663,9 +665,9 @@ func TestRancherLoginResource(t *testing.T) {
 				"Update Token",
 				RancherLoginResource{},
 				map[string]string{
-          "RANCHER_USERNAME": "user",
+					"RANCHER_USERNAME": "user",
 					"RANCHER_PASSWORD": "password",
-        },
+				},
 				RancherLoginModel{}, //plan
 				RancherLoginModel{ //existing state
 					Id:                          testTokenId,
@@ -684,36 +686,36 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Request{ //initial token request
 					Endpoint: fmt.Sprintf("%s/%s", apiUrl, tokenEndpoint),
 					Method:   "POST",
-          Headers: map[string][]string{
-            "Content-Type": {"application/json"},
-            "Authorization": {"Bearer " + testInitialToken},
-          },
+					Headers: map[string][]string{
+						"Content-Type":  {"application/json"},
+						"Authorization": {"Bearer " + testInitialToken},
+					},
 					Body: rBodyMarshal(map[string]any{
 						"apiVersion": apiVersion,
 						"kind":       "Token",
-            "metadata": map[string]any{
-              "name": testTokenId,
-            },  
+						"metadata": map[string]any{
+							"name": testTokenId,
+						},
 						"spec": map[string]any{
 							"description": "Terraform login token.",
 							"ttl":         7776000000,
 						},
 					}),
 				},
-        c.Response{ // initial token response
+				c.Response{ // initial token response
 					StatusCode: http.StatusForbidden,
-					Headers:    map[string][]string{
-            "Content-Type": {"application/json"},
-          },
-          Body: rBodyMarshal(c.ErrorResponse{
-            Status:  "403",
-            Message: "Forbidden",
-          }),
-        },
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: rBodyMarshal(c.ErrorResponse{
+						Status:  "403",
+						Message: "Forbidden",
+					}),
+				},
 				c.Request{ // login
-					Endpoint: apiUrl + "/" + loginEndpoint,
+					Endpoint: fmt.Sprintf("%s/%s", apiUrl, loginEndpoint),
 					Method:   "POST",
-          Headers:  map[string][]string{"Content-Type": {"application/json"}},
+					Headers:  map[string][]string{"Content-Type": {"application/json"}},
 					Body: rBodyMarshal(map[string]any{
 						"type":         "localProvider",
 						"username":     "user",
@@ -724,7 +726,7 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Response{ // login
 					StatusCode: http.StatusOK,
 					Headers:    map[string][]string{"Content-Type": {"application/json"}},
-					Body:       rBodyMarshal(map[string]any{
+					Body: rBodyMarshal(map[string]any{
 						"baseType":  "token",
 						"expiresAt": "2026-02-13T13:08:30Z",
 						"id":        testTokenId,
@@ -735,16 +737,16 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Request{ // create token
 					Endpoint: fmt.Sprintf("%s/%s", apiUrl, tokenEndpoint),
 					Method:   "POST",
-          Headers: map[string][]string{
-            "Content-Type": {"application/json"},
-            "Authorization": {"Bearer " + testSessionToken},
-          },
+					Headers: map[string][]string{
+						"Content-Type":  {"application/json"},
+						"Authorization": {"Bearer " + testSessionToken},
+					},
 					Body: rBodyMarshal(map[string]any{
 						"apiVersion": apiVersion,
 						"kind":       "Token",
-            "metadata": map[string]any{
-              "name": testTokenId,
-            },  
+						"metadata": map[string]any{
+							"name": testTokenId,
+						},
 						"spec": map[string]any{
 							"description": "Terraform login token.",
 							"ttl":         7776000000,
@@ -793,7 +795,7 @@ func TestRancherLoginResource(t *testing.T) {
 						},
 					}),
 				},
-        RancherLoginModel{ //expected state
+				RancherLoginModel{ //expected state
 					Id:                          testTokenId,
 					Username:                    "user",
 					Password:                    "password",
@@ -809,7 +811,7 @@ func TestRancherLoginResource(t *testing.T) {
 				},
 				"success",
 			},
-    }
+		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				defer func() {
@@ -820,26 +822,28 @@ func TestRancherLoginResource(t *testing.T) {
 				for k, v := range tc.env {
 					os.Setenv(k, v) //nolint:usetesting
 				}
-        var buf bytes.Buffer
+				var buf bytes.Buffer
 				defer h.PrintLog(t, &buf, "ERROR")
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, testInitialToken)
+				ts := &c.TokenStore{}
+				ts.SetToken(testInitialToken)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, ts)
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
 					t.Errorf("Error configuring resource: %+v", err)
 				}
 
-        intialRequestId := fmt.Sprintf("%s:%s:%s", tc.initalTokenRequest.Endpoint, tc.initalTokenRequest.Method, testInitialToken)
-        client.SetResponse(intialRequestId, tc.initialTokenResponse)
+				intialRequestId := fmt.Sprintf("%s:%s:%s", tc.initalTokenRequest.Endpoint, tc.initalTokenRequest.Method, testInitialToken)
+				client.SetResponse(ctx, intialRequestId, tc.initialTokenResponse)
 
-        loginRequestId := fmt.Sprintf("%s:%s:%s", tc.loginRequest.Endpoint, tc.loginRequest.Method, "")
-        client.SetResponse(loginRequestId, tc.loginResponse)
-        
-        tokenRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testSessionToken)
-        client.SetResponse(tokenRequestId, tc.apiResponse)
+				loginRequestId := fmt.Sprintf("%s:%s:%s", tc.loginRequest.Endpoint, tc.loginRequest.Method, "")
+				client.SetResponse(ctx, loginRequestId, tc.loginResponse)
 
-        var dgs diag.Diagnostics
+				tokenRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testSessionToken)
+				client.SetResponse(ctx, tokenRequestId, tc.apiResponse)
+
+				var dgs diag.Diagnostics
 				plan := tc.plan.ToResourceModel(ctx, &dgs).ToPlan(ctx, &dgs)
 				if dgs.HasError() {
 					t.Errorf("error generating plan: %s", pp.PrettyPrint(dgs))
@@ -863,7 +867,7 @@ func TestRancherLoginResource(t *testing.T) {
 				}
 				tc.fit.Update(ctx, req, &res)
 
-        state = tc.expectedState.ToResourceModel(ctx, &dgs).ToState(ctx, &dgs)
+				state = tc.expectedState.ToResourceModel(ctx, &dgs).ToState(ctx, &dgs)
 				if dgs.HasError() {
 					t.Errorf("error generating expected state: %s", pp.PrettyPrint(dgs))
 				}
@@ -871,7 +875,7 @@ func TestRancherLoginResource(t *testing.T) {
 					State: state,
 				}
 
-        actualState := res
+				actualState := res
 
 				if tc.outcome == "failure" {
 					if !res.Diagnostics.HasError() {
@@ -902,12 +906,12 @@ func TestRancherLoginResource(t *testing.T) {
 				"Basic",
 				RancherLoginResource{},
 				RancherLoginModel{Id: testTokenId},
-        c.Request{
-          Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
-          Method:   "DELETE",
-          Headers:  map[string][]string{"Authorization": {fmt.Sprintf("Bearer %s", testUserToken)}},
-          Body:     rBodyMarshal(nil),
-        },
+				c.Request{
+					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
+					Method:   "DELETE",
+					Headers:  map[string][]string{"Authorization": {fmt.Sprintf("Bearer %s", testUserToken)}},
+					Body:     rBodyMarshal(nil),
+				},
 				c.Response{
 					StatusCode: http.StatusNoContent,
 				},
@@ -917,12 +921,12 @@ func TestRancherLoginResource(t *testing.T) {
 				"Resource Already Deleted",
 				RancherLoginResource{},
 				RancherLoginModel{Id: testTokenId},
-        c.Request{
-          Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
-          Method:   "DELETE",
-          Headers:  map[string][]string{"Authorization": {fmt.Sprintf("Bearer %s", testUserToken)}},
-          Body:     rBodyMarshal(nil),
-        },
+				c.Request{
+					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
+					Method:   "DELETE",
+					Headers:  map[string][]string{"Authorization": {fmt.Sprintf("Bearer %s", testUserToken)}},
+					Body:     rBodyMarshal(nil),
+				},
 				c.Response{
 					StatusCode: http.StatusNotFound,
 				},
@@ -931,13 +935,15 @@ func TestRancherLoginResource(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-        var buf bytes.Buffer
+				var buf bytes.Buffer
 				defer h.PrintLog(t, &buf, "ERROR")
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, testUserToken)
-        apiRequestId := fmt.Sprintf("%s:%s:%s", tc.expectedApiRequest.Endpoint, tc.expectedApiRequest.Method, testUserToken)
-				client.SetResponse(apiRequestId, tc.apiResponse)
+				ts := &c.TokenStore{}
+				ts.SetToken(testUserToken)
+				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, ts)
+				apiRequestId := fmt.Sprintf("%s:%s:%s", tc.expectedApiRequest.Endpoint, tc.expectedApiRequest.Method, testUserToken)
+				client.SetResponse(ctx, apiRequestId, tc.apiResponse)
 
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {

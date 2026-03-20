@@ -7,6 +7,9 @@ type Client interface {
 	Do(ctx context.Context, req *Request, resp *Response) error
 	Set(client Client) (Client, error)
 	GetApiUrl() string
+	SetToken(token string)
+	Token() string
+	ClearToken()
 }
 
 // Request is the request object for the client.
@@ -18,10 +21,10 @@ type Request struct {
 }
 
 func (r *Request) Set(req Request) *Request {
-	r.Method   = req.Method
+	r.Method = req.Method
 	r.Endpoint = req.Endpoint
-	r.Body     = req.Body
-	r.Headers  = req.Headers
+	r.Body = req.Body
+	r.Headers = req.Headers
 	return r
 }
 
@@ -46,4 +49,13 @@ type ApiError struct {
 
 func (e *ApiError) Error() string {
 	return e.Message
+}
+
+// This tells the pretty printer that the data is already marshalled.
+type MarshalledData struct {
+	Data any `json:"data"`
+}
+
+func (d MarshalledData) MarshalJSON() ([]byte, error) {
+	return d.Data.([]byte), nil
 }
