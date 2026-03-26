@@ -62,7 +62,6 @@ func (r *RancherLoginResource) Schema(ctx context.Context, req resource.SchemaRe
 					"Optionally you can pass this value in an environment variable and it won't be saved in state." +
 					"You can control the environment variable with the `username_environment_variable` attribute, which defaults to `RANCHER_USERNAME`.",
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -72,7 +71,6 @@ func (r *RancherLoginResource) Schema(ctx context.Context, req resource.SchemaRe
 					"Optionally you can pass this value in an environment variable and it won't be saved in state." +
 					"You can control the environment variable with the `password_environment_variable` attribute, which defaults to `RANCHER_PASSWORD`.",
 				Optional:  true,
-				Computed:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -216,7 +214,7 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 		password = plan.Password.ValueString()
 	}
 	// login to get session token
-	err, sessionToken, tokenId := login(ctx, client, username, password)
+	sessionToken, tokenId, err := login(ctx, client, username, password)
 	if err != nil {
 		resp.Diagnostics.AddError("Error logging in: ", err.Error())
 		return
@@ -326,7 +324,7 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 // Update changes reality and state to match plan (best practice is don't compare old state, just override).
 // Recreate != Update
 // Update should refresh the current token in state along with refresh, recreate, and create dates
-// Update should attempt to do this with the current token, then fall back to the username/password
+// Update should attempt to do this with the current token, then fall back to the username/password.
 func (r *RancherLoginResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Config: %+v", pp.PrettyPrint(req.Config.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Plan: %+v", pp.PrettyPrint(req.Plan.Raw)))
@@ -384,7 +382,7 @@ func (r *RancherLoginResource) Update(ctx context.Context, req resource.UpdateRe
 		state.UserToken = types.StringValue("")
 		r.client.ClearToken()
 		// login to get session token
-		err, sessionToken, tokenId := login(ctx, client, username, password)
+		sessionToken, tokenId, err := login(ctx, client, username, password)
 		if err != nil {
 			resp.Diagnostics.AddError("Error logging in during update: ", err.Error())
 			return
@@ -650,7 +648,7 @@ func processTokenResponse(ctx context.Context, data *RancherLoginResourceModel, 
 	return diags
 }
 
-func login(ctx context.Context, client c.Client, username, password string) (err error, token string, tokenId string) {
+func login(ctx context.Context, client c.Client, username, password string) (token string, tokenId string, err error) {
 
 	loginReqBody := map[string]any{
 		"type":         "localProvider",
@@ -669,7 +667,7 @@ func login(ctx context.Context, client c.Client, username, password string) (err
 	loginResponse := c.Response{}
 	err = client.Do(ctx, &loginRequest, &loginResponse)
 	if err != nil {
-		return fmt.Errorf("Error logging in to Rancher: %s", err.Error()), "", ""
+		return "", "", fmt.Errorf("error logging in to Rancher: %s", err.Error())
 	}
 
 	var loginData struct {
@@ -678,11 +676,11 @@ func login(ctx context.Context, client c.Client, username, password string) (err
 	}
 	err = json.Unmarshal(loginResponse.Body, &loginData)
 	if err != nil {
-		return fmt.Errorf("Error unmarshaling login response: %s", err.Error()), "", ""
+		return "", "", fmt.Errorf("error unmarshaling login response: %s", err.Error())
 	}
 
 	if loginData.Token == "" {
-		return fmt.Errorf("Login failed: No session token returned from Rancher"), "", ""
+		return "", "", fmt.Errorf("login failed: No session token returned from Rancher")
 	}
-	return nil, loginData.Token, loginData.Id
+	return loginData.Token, loginData.Id, nil
 }

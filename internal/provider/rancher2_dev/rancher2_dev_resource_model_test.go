@@ -62,7 +62,7 @@ func TestRancherDevResourceModel(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-        model := getDefaultResourceModel()
+				model := getDefaultResourceModel()
 				got := model.ToPlan(ctx, &diag.Diagnostics{})
 
 				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(tftypes.Value{}, big.Float{})); diff != "" {
@@ -89,7 +89,7 @@ func TestRancherDevResourceModel(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-        model := getDefaultResourceModel()
+				model := getDefaultResourceModel()
 				got := model.ToState(ctx, &diag.Diagnostics{})
 
 				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(tftypes.Value{}, big.Float{})); diff != "" {
@@ -112,7 +112,7 @@ func TestNestedResourceModel(t *testing.T) {
 				"Basic",
 				NestedResourceModel{
 					StringAttribute: types.StringValue("test"),
-					NestedNestedResourceModel: types.ObjectValueMust(
+					NestedNestedObject: types.ObjectValueMust(
 						nestedNestedObjectAttrTypes,
 						map[string]attr.Value{
 							"string_attribute": types.StringValue("test"),
@@ -135,7 +135,7 @@ func TestNestedResourceModel(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-        got := NestedObject{}
+				got := NestedObject{}
 				tc.fit.ToGoModel(ctx, &got)
 				if diff := cmp.Diff(tc.want, got); diff != "" {
 					t.Errorf("unexpected diff (-want, +got) = %s", diff)
@@ -170,7 +170,7 @@ func TestNestedNestedResourceModel(t *testing.T) {
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 				ctx := h.GenerateTestContext(t, &buf, nil)
 
-        got := NestedNestedObject{}
+				got := NestedNestedObject{}
 				tc.fit.ToGoModel(ctx, &got)
 				if diff := cmp.Diff(tc.want, got); diff != "" {
 					t.Errorf("unexpected diff (-want, +got) = %s", diff)
@@ -186,7 +186,7 @@ var nestedNestedObjectAttrTypes = map[string]attr.Type{
 	"bool_attribute":   types.BoolType,
 }
 var nestedObjectAttrTypes = map[string]attr.Type{
-	"string_attribute":     types.StringType,
+	"string_attribute": types.StringType,
 	"nested_nested_object": types.ObjectType{
 		AttrTypes: nestedNestedObjectAttrTypes,
 	},
@@ -210,11 +210,12 @@ func getDefaultResourceModel() RancherDevResourceModel {
 	)
 
 	return RancherDevResourceModel{
-		Id:               types.StringValue("test"),             // required
 		NumberAttribute:  types.NumberValue(big.NewFloat(1.23)), // required
 		StringAttribute:  types.StringValue("test"),             // required
-		Int32Attribute:   types.Int32Value(123),          // include read only as well since ToGoModel can be used on state, not just plan and config
-		BoolAttribute:    types.BoolValue(true),
+		BoolAttribute:    types.BoolValue(true),                 // default value
+		Int32Attribute:   types.Int32Value(123),                 // include read only as well since ToGoModel can be used on state, not just plan and config
+		ID:               types.StringValue("test"),             // include read only as well since ToGoModel can be used on state, not just plan and config
+		Identifier:       types.StringValue("test"),             // include read only as well since ToGoModel can be used on state, not just plan and config
 		Int64Attribute:   types.Int64Value(123),
 		Float64Attribute: types.Float64Value(1.23),
 		Float32Attribute: types.Float32Value(1.23),
@@ -235,7 +236,8 @@ func getDefaultResourceModel() RancherDevResourceModel {
 
 func getDefaultGoModel() RancherDevModel {
 	return RancherDevModel{
-		Id:               "test",
+		ID:               "test",
+		Identifier:       "test",
 		StringAttribute:  "test",
 		NumberAttribute:  big.NewFloat(1),
 		Int32Attribute:   int32(123), // read only
@@ -246,8 +248,8 @@ func getDefaultGoModel() RancherDevModel {
 		ListAttribute:    []string{"test"},
 		SetAttribute:     map[string]bool{"test": true},
 		MapAttribute:     map[string]string{"test": "test"},
-		NestedObject:     NestedObject{
-			StringAttribute:    "test",
+		NestedObject: NestedObject{
+			StringAttribute: "test",
 			NestedNestedObject: NestedNestedObject{
 				StringAttribute: "test",
 				BoolAttribute:   true,
@@ -255,7 +257,7 @@ func getDefaultGoModel() RancherDevModel {
 		},
 		NestedObjectList: []NestedObject{
 			{
-				StringAttribute:    "test",
+				StringAttribute: "test",
 				NestedNestedObject: NestedNestedObject{
 					StringAttribute: "test",
 					BoolAttribute:   true,
@@ -264,7 +266,7 @@ func getDefaultGoModel() RancherDevModel {
 		},
 		NestedObjectMap: map[string]NestedObject{
 			"test": {
-				StringAttribute:    "test",
+				StringAttribute: "test",
 				NestedNestedObject: NestedNestedObject{
 					StringAttribute: "test",
 					BoolAttribute:   true,

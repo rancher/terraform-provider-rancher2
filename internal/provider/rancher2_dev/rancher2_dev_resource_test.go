@@ -68,6 +68,7 @@ func TestRancherDevResource(t *testing.T) {
 				RancherDevResource{},
 				[]string{
 					"id",
+					"identifier",
 					"bool_attribute",
 					"number_attribute",
 					"int64_attribute",
@@ -136,23 +137,25 @@ func TestRancherDevResource(t *testing.T) {
 			outcome       string            // expected outcome, one of: "success","failure"
 		}{
 			{
-				"Basic",
+				"Basic", // create
 				RancherDevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
-					Id:              defaultId,       // required
+					// The ID attribute is set by the provider and is read only, but for testing we add it to validate against known states
+					ID:              defaultId,
 					StringAttribute: "dev-test",      // required
 					NumberAttribute: big.NewFloat(1), // required
-					// Int32Attribute:   1,      // this attribute is read only so it shouldn't be in the plan
-					BoolAttribute:    false,
+					// Int32Attribute:   1,         // this attribute is read only so it shouldn't be in the plan
+					// Identifier: ?                // this attribute is set by the remote API and is read only
+					BoolAttribute:    false, // this attribute has a default value
 					Int64Attribute:   int64(1),
 					Float64Attribute: 1.0,
 					Float32Attribute: float32(1.0),
 					ListAttribute:    []string{"test"},
 					SetAttribute:     map[string]bool{"test": true},
 					MapAttribute:     map[string]string{"test": "test"},
-					NestedObject:     NestedObject{
-						StringAttribute:    "test",
+					NestedObject: NestedObject{
+						StringAttribute: "test",
 						NestedNestedObject: NestedNestedObject{
 							StringAttribute: "test",
 							BoolAttribute:   true,
@@ -185,19 +188,20 @@ func TestRancherDevResource(t *testing.T) {
 						"Authorization": {"Bearer " + testUserToken},
 					},
 					Body: rBodyMarshal(RancherDevModel{
-						Id:               defaultId,
-						BoolAttribute:    false,
-						NumberAttribute:  big.NewFloat(1),
-						// Int32Attribute:   1, // This is a read only attribute, so it shouldn't be in the request
+						StringAttribute: "dev-test",      // required
+						NumberAttribute: big.NewFloat(1), // required
+						// Int32Attribute:   1,         // this attribute is read only so it shouldn't be in the plan
+						// ID:              defaultId,  // this attribute is set by the provider and is read only
+						// Identifier: ?                // this attribute is set by the remote API and is read only
+						BoolAttribute:    true, // this attribute has a default value
 						Int64Attribute:   int64(1),
 						Float64Attribute: 1.0,
 						Float32Attribute: float32(1.0),
-						StringAttribute:  "dev-test",
 						ListAttribute:    []string{"test"},
 						SetAttribute:     map[string]bool{"test": true},
 						MapAttribute:     map[string]string{"test": "test"},
-						NestedObject:     NestedObject{
-							StringAttribute:    "test",
+						NestedObject: NestedObject{
+							StringAttribute: "test",
 							NestedNestedObject: NestedNestedObject{
 								StringAttribute: "test",
 								BoolAttribute:   true,
@@ -205,7 +209,7 @@ func TestRancherDevResource(t *testing.T) {
 						},
 						NestedObjectList: []NestedObject{
 							{
-								StringAttribute:    "test",
+								StringAttribute: "test",
 								NestedNestedObject: NestedNestedObject{
 									StringAttribute: "test",
 									BoolAttribute:   true,
@@ -214,7 +218,7 @@ func TestRancherDevResource(t *testing.T) {
 						},
 						NestedObjectMap: map[string]NestedObject{
 							"test": {
-								StringAttribute:    "test",
+								StringAttribute: "test",
 								NestedNestedObject: NestedNestedObject{
 									StringAttribute: "test",
 									BoolAttribute:   true,
@@ -229,19 +233,20 @@ func TestRancherDevResource(t *testing.T) {
 						"Content-Type": {"application/json"},
 					},
 					Body: rBodyMarshal(RancherDevModel{
-						Id:               defaultId,
-						NumberAttribute:  big.NewFloat(1),
-						StringAttribute:  "dev-test",
-						Int32Attribute:   int32(1),  // respond with the read-only value
-						BoolAttribute:    false,
+						// ID:            defaultId,  // this attribute is set by the provider and shouldn't be sent or received from the API
+						StringAttribute:  "dev-test",      // required
+						NumberAttribute:  big.NewFloat(1), // required
+						BoolAttribute:    true,            // this attribute has a default value
+						Identifier:       defaultId,       // respond with the read-only value
+						Int32Attribute:   int32(1),        // respond with the read-only value
 						Int64Attribute:   int64(1),
 						Float64Attribute: 1.0,
 						Float32Attribute: float32(1.0),
 						ListAttribute:    []string{"test"},
 						SetAttribute:     map[string]bool{"test": true},
 						MapAttribute:     map[string]string{"test": "test"},
-						NestedObject:     NestedObject{
-							StringAttribute:    "test",
+						NestedObject: NestedObject{
+							StringAttribute: "test",
 							NestedNestedObject: NestedNestedObject{
 								StringAttribute: "test",
 								BoolAttribute:   true,
@@ -249,7 +254,7 @@ func TestRancherDevResource(t *testing.T) {
 						},
 						NestedObjectList: []NestedObject{
 							{
-								StringAttribute:    "test",
+								StringAttribute: "test",
 								NestedNestedObject: NestedNestedObject{
 									StringAttribute: "test",
 									BoolAttribute:   true,
@@ -258,7 +263,7 @@ func TestRancherDevResource(t *testing.T) {
 						},
 						NestedObjectMap: map[string]NestedObject{
 							"test": {
-								StringAttribute:    "test",
+								StringAttribute: "test",
 								NestedNestedObject: NestedNestedObject{
 									StringAttribute: "test",
 									BoolAttribute:   true,
@@ -268,19 +273,20 @@ func TestRancherDevResource(t *testing.T) {
 					}),
 				},
 				RancherDevModel{ // expected state
-					Id:               defaultId,        // required
-					StringAttribute:  "dev-test",       // required
-					NumberAttribute:  big.NewFloat(1),  // required
-					Int32Attribute:   int32(1),  // the read only attribute should be available for query
-					BoolAttribute:    false,
+					ID:               defaultId,
+					Identifier:       defaultId,       // required
+					StringAttribute:  "dev-test",      // required
+					NumberAttribute:  big.NewFloat(1), // required
+					Int32Attribute:   int32(1),        // the read only attribute should be available for query
+					BoolAttribute:    true,
 					Int64Attribute:   int64(1),
 					Float64Attribute: 1.0,
 					Float32Attribute: float32(1.0),
 					ListAttribute:    []string{"test"},
 					SetAttribute:     map[string]bool{"test": true},
 					MapAttribute:     map[string]string{"test": "test"},
-					NestedObject:     NestedObject{
-						StringAttribute:    "test",
+					NestedObject: NestedObject{
+						StringAttribute: "test",
 						NestedNestedObject: NestedNestedObject{
 							StringAttribute: "test",
 							BoolAttribute:   true,
@@ -288,7 +294,7 @@ func TestRancherDevResource(t *testing.T) {
 					},
 					NestedObjectList: []NestedObject{
 						{
-							StringAttribute:    "test",
+							StringAttribute: "test",
 							NestedNestedObject: NestedNestedObject{
 								StringAttribute: "test",
 								BoolAttribute:   true,
@@ -297,7 +303,7 @@ func TestRancherDevResource(t *testing.T) {
 					},
 					NestedObjectMap: map[string]NestedObject{
 						"test": {
-							StringAttribute:    "test",
+							StringAttribute: "test",
 							NestedNestedObject: NestedNestedObject{
 								StringAttribute: "test",
 								BoolAttribute:   true,
@@ -308,13 +314,15 @@ func TestRancherDevResource(t *testing.T) {
 				"success", // expected outcome
 			},
 			{
-				"API Conflict",
+				"API Conflict", // create
 				RancherDevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan MUST include required attributes
-					Id:              defaultId,
+					// The ID attribute is set by the provider and is read only, but for testing we add it to validate against known states
+					ID:              defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
 				},
 				c.Request{
 					Endpoint: apiEndpoint,
@@ -324,9 +332,9 @@ func TestRancherDevResource(t *testing.T) {
 						"Authorization": {"Bearer " + testUserToken},
 					},
 					Body: rBodyMarshal(RancherDevModel{ // request should include the required attributes as well
-						Id:              defaultId,
 						StringAttribute: "dev-test",
 						NumberAttribute: big.NewFloat(1),
+						BoolAttribute:   true, // defaulted
 					}),
 				},
 				c.Response{
@@ -340,20 +348,24 @@ func TestRancherDevResource(t *testing.T) {
 					}),
 				},
 				RancherDevModel{ // expected state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
 				},
 				"failure", // expected outcome
 			},
 			{
-				"Server Error",
+				"Server Error", // create
 				RancherDevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
-					Id:              defaultId,
+					// The ID attribute is set by the provider and is read only, but for testing we add it to validate against known states
+					ID:              defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
 				},
 				c.Request{
 					Endpoint: apiEndpoint,
@@ -362,8 +374,10 @@ func TestRancherDevResource(t *testing.T) {
 						"Content-Type":  {"application/json"},
 						"Authorization": {"Bearer " + testUserToken},
 					},
-					Body: rBodyMarshal(RancherDevModel{
-						Id: "test",
+					Body: rBodyMarshal(RancherDevModel{ // request should include the required attributes as well
+						StringAttribute: "dev-test",
+						NumberAttribute: big.NewFloat(1),
+						BoolAttribute:   true, // defaulted
 					}),
 				},
 				c.Response{
@@ -377,9 +391,11 @@ func TestRancherDevResource(t *testing.T) {
 					}),
 				},
 				RancherDevModel{ // expected state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
 				},
 				"failure", // expected outcome
 			},
@@ -400,22 +416,22 @@ func TestRancherDevResource(t *testing.T) {
 				var buf bytes.Buffer
 				defer h.PrintLog(t, &buf, "ERROR") // this enables tflog.Debug, change to DEBUG when troubleshooting
 
-        ctx := h.GenerateTestContext(t, &buf, nil)
+				ctx := h.GenerateTestContext(t, &buf, nil)
 				ts := &c.TokenStore{}
 				ts.SetToken(testUserToken)
 				client := c.NewTestClient(ctx, apiUrl, "", false, false, 30, 10, ts)
 
-        apiRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testUserToken)
+				apiRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testUserToken)
 				client.SetResponse(ctx, apiRequestId, tc.apiResponse)
 
-        err = h.GetConfiguredResource(ctx, t, &tc.fit, client)
+				err = h.GetConfiguredResource(ctx, t, &tc.fit, client)
 				if err != nil {
 					t.Fatalf("error configuring resource: %+v", err)
 				}
 
-        t.Logf("Fit after configure: %#v", tc.fit)
+				t.Logf("Fit after configure: %#v", tc.fit)
 
-        dgs := diag.Diagnostics{}
+				dgs := diag.Diagnostics{}
 				plan := tc.plan.ToResourceModel(ctx, &dgs).ToPlan(ctx, &dgs)
 				if dgs.HasError() {
 					t.Fatalf("error generating plan: %s", pp.PrettyPrint(dgs))
@@ -454,41 +470,7 @@ func TestRancherDevResource(t *testing.T) {
 				if (tc.outcome == "success") && res.Diagnostics.HasError() {
 					t.Errorf("%#v.Configure() returned unexpected error diagnostics: %s", tc.fit, pp.PrettyPrint(res.Diagnostics))
 				}
-
-				if diff := cmp.Diff(expectedApiRequest, actualApiRequest,
-					cmpopts.IgnoreUnexported(big.Float{}),
-					cmp.Comparer(func(x, y c.Request) bool {
-						if x.Method != y.Method || x.Endpoint != y.Endpoint {
-							return false
-						}
-						xBody, xOk := x.Body.([]byte)
-						if !xOk {
-							t.Logf("failed to assert x.Body to []byte")
-							return false
-						}
-						yBody, yOk := y.Body.([]byte)
-						if !yOk {
-							t.Logf("failed to assert y.Body to []byte")
-							return false
-						}
-						if len(xBody) == 0 && len(yBody) == 0 {
-							return true
-						}
-						if len(xBody) == 0 || len(yBody) == 0 {
-							return false
-						}
-						var want, got RancherDevModel
-						if err := json.Unmarshal(xBody, &want); err != nil {
-							t.Logf("failed to unmarshal want body: %v", err)
-							return false
-						}
-						if err := json.Unmarshal(yBody, &got); err != nil {
-							t.Logf("failed to unmarshal got body: %v", err)
-							return false
-						}
-						return cmp.Equal(want, got, cmpopts.IgnoreUnexported(big.Float{}))
-					}),
-				); diff != "" {
+				if diff := cmp.Diff(expectedApiRequest, actualApiRequest); diff != "" {
 					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
 				}
 				if diff := cmp.Diff(expectedState, actualState, cmpopts.IgnoreUnexported(big.Float{})); diff != "" {
@@ -503,120 +485,106 @@ func TestRancherDevResource(t *testing.T) {
 			fit           RancherDevResource
 			env           map[string]string // a k/v map of environment variables to set
 			existingState RancherDevModel   // this will get injected in the read request
+			apiRequest    c.Request         // the API request expected to be reported from the client
+			apiResponse   c.Response        // this will be injected into the client
 			expectedState RancherDevModel
-			apiRequest    c.Request  // the API request expected to be reported from the client
-			apiResponse   c.Response // this will be injected into the client
-			outcome       string     // expected outcome, one of: "success","failure"
+			outcome       string // expected outcome, one of: "success","failure"
 		}{
 			{
-				"Basic",
+				"Basic", // read
 				RancherDevResource{},
-				// env
 				map[string]string{},
-				// existing state set in read request
-				RancherDevModel{
-					Id:              defaultId,
+				RancherDevModel{ // existing state
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
 				},
-				// resulting state expected to match this
-				RancherDevModel{
-					Id:              defaultId,
-					StringAttribute: "dev-test",
-					NumberAttribute: big.NewFloat(1),
-				},
-				// the API request expected to be reported
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "GET",
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
 					},
-					Body: rBodyMarshal(nil),
 				},
-				// the response to inject into the client
 				c.Response{
 					StatusCode: http.StatusOK,
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
 					Body: rBodyMarshal(RancherDevModel{
-						Id:              defaultId,
+						Identifier:      defaultId,
 						StringAttribute: "dev-test",
 						NumberAttribute: big.NewFloat(1),
+						BoolAttribute:   true, // defaulted
 					}),
 				},
-				// expected outcome
+				RancherDevModel{ // expected state
+					ID:              defaultId,
+					Identifier:      defaultId,
+					StringAttribute: "dev-test",
+					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
+				},
 				"success",
 			},
 			{
-				"Update object",
+				"Update object", // read
 				RancherDevResource{},
-				// env
 				map[string]string{},
-				// existing state set in read request
-				RancherDevModel{
-					Id:              defaultId,
+				RancherDevModel{ // existing state
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
 				},
-				// resulting state expected to match this
-				RancherDevModel{
-					Id:              defaultId,
-					StringAttribute: "dev-test",
-					NumberAttribute: big.NewFloat(1),
-				},
-				// the API request expected to be reported
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "GET",
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
 					},
-					Body: rBodyMarshal(nil),
 				},
-				// the response to inject into the client
 				c.Response{
 					StatusCode: http.StatusOK,
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
 					Body: rBodyMarshal(RancherDevModel{
-						Id:              defaultId,
+						Identifier:      defaultId,
 						StringAttribute: "dev-test",
 						NumberAttribute: big.NewFloat(1),
+						BoolAttribute:   true, // defaulted
 					}),
 				},
-				// expected outcome
+				RancherDevModel{ // expected state
+					ID:              defaultId,
+					Identifier:      defaultId,
+					StringAttribute: "dev-test",
+					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
+				},
 				"success",
 			},
 			{
-				"Failed Response",
+				"Failed Response", // read
 				RancherDevResource{},
-				// env
 				map[string]string{},
-				// existing state set in read request
-				RancherDevModel{
-					Id:              defaultId,
+				RancherDevModel{ // existing
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
 				},
-				// resulting state expected to match this
-				RancherDevModel{
-					Id:              defaultId,
-					StringAttribute: "dev-test",
-					NumberAttribute: big.NewFloat(1),
-				},
-				// the API request expected to be reported
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "GET",
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
 					},
-					Body: rBodyMarshal(nil),
 				},
-				// the response to inject into the client
 				c.Response{
 					StatusCode: http.StatusInternalServerError,
 					Headers: map[string][]string{
@@ -627,54 +595,59 @@ func TestRancherDevResource(t *testing.T) {
 						Message: "something went wrong",
 					}),
 				},
-				// expected outcome
+				RancherDevModel{ // expected
+					ID:              defaultId,
+					Identifier:      defaultId,
+					StringAttribute: "dev-test",
+					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
+				},
 				"failure",
 			},
 			{
-				"Unmanaged API data",
+				"Unmanaged API data", // read
 				RancherDevResource{},
-				// env
 				map[string]string{},
-				// existing state set in read request
-				RancherDevModel{
-					Id:              defaultId,
+				RancherDevModel{ // existing state
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
 				},
-				// resulting state expected to match this
-				RancherDevModel{
-					Id:              defaultId,
-					StringAttribute: "dev-test",
-					NumberAttribute: big.NewFloat(1),
-				},
-				// the API request expected to be reported
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "GET",
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
 					},
-					Body: rBodyMarshal(nil),
 				},
-				// the response to inject into the client
 				c.Response{
 					StatusCode: http.StatusOK,
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
 					Body: rBodyMarshal(struct {
-						Id                 string     `json:"id"`
-						StringAttribute    string     `json:"string_attribute,omitempty"`
-						NumberAttribute    *big.Float `json:"number_attribute,omitempty"`
-						UntrackedAttribute string     `json:"untracked_attribute,omitempty"`
+						Identifier         string     `json:"identifier"`
+						StringAttribute    string     `json:"string_attribute"`
+						NumberAttribute    *big.Float `json:"number_attribute"`
+						BoolAttribute      bool       `json:"bool_attribute"`
+						UntrackedAttribute string     `json:"untracked_attribute"`
 					}{
-						Id:                 defaultId,
+						Identifier:         defaultId,
 						StringAttribute:    "dev-test",
 						NumberAttribute:    big.NewFloat(1),
+						BoolAttribute:      true, // defaulted
 						UntrackedAttribute: "untracked",
 					}),
 				},
-				// expected outcome
+				RancherDevModel{ // expected state
+					ID:              defaultId,
+					Identifier:      defaultId,
+					StringAttribute: "dev-test",
+					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true, // defaulted
+				},
 				"success",
 			},
 		}
@@ -749,41 +722,8 @@ func TestRancherDevResource(t *testing.T) {
 				if diff := cmp.Diff(expectedState, actualState); diff != "" {
 					t.Errorf("Create() mismatch (-want +got): %s", diff)
 				}
-				if diff := cmp.Diff(expectedApiRequest, actualApiRequest,
-					cmpopts.IgnoreUnexported(big.Float{}),
-					cmp.Comparer(func(x, y c.Request) bool {
-						if x.Method != y.Method || x.Endpoint != y.Endpoint {
-							return false
-						}
-						xBody, xOk := x.Body.([]byte)
-						if !xOk {
-							t.Logf("failed to assert x.Body to []byte")
-							return false
-						}
-						yBody, yOk := y.Body.([]byte)
-						if !yOk {
-							t.Logf("failed to assert y.Body to []byte")
-							return false
-						}
-						if len(xBody) == 0 && len(yBody) == 0 {
-							return true
-						}
-						if len(xBody) == 0 || len(yBody) == 0 {
-							return false
-						}
-						var want, got RancherDevModel
-						if err := json.Unmarshal(xBody, &want); err != nil {
-							t.Logf("failed to unmarshal want body: %v", err)
-							return false
-						}
-						if err := json.Unmarshal(yBody, &got); err != nil {
-							t.Logf("failed to unmarshal got body: %v", err)
-							return false
-						}
-						return cmp.Equal(want, got, cmpopts.IgnoreUnexported(big.Float{}))
-					}),
-				); diff != "" {
-					t.Errorf("Create() mismatch (-want +got): %s", diff)
+				if diff := cmp.Diff(expectedApiRequest, actualApiRequest); diff != "" {
+					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
 				}
 			})
 		}
@@ -798,35 +738,39 @@ func TestRancherDevResource(t *testing.T) {
 			apiRequest    c.Request  // the API request expected to be reported from the client
 			apiResponse   c.Response // this will be injected into the client
 			expectedState RancherDevModel
-			outcome       string     // expected outcome, one of: "success","failure"
+			outcome       string // expected outcome, one of: "success","failure"
 		}{
 			{
-				"Basic",
+				"Basic", // update
 				RancherDevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
-					Id:              defaultId,
-					StringAttribute: "dev-test",
-					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted, (defaulted attributes need to be included in the plan's model)
-        },
+					// ID is read only in the schema, but we allow it in the plan in order to test with predictable values.
+					ID:              defaultId,       // stringplanmodifier.UseStateForUnknown() allows this to be in the plan on update only
+					Identifier:      defaultId,       // stringplanmodifier.UseStateForUnknown() allows this to be in the plan on update only
+					StringAttribute: "dev-test",      // required
+					NumberAttribute: big.NewFloat(1), // required
+					BoolAttribute:   true,            // defaulted, (defaulted attributes need to be included in the plan's model)
+				},
 				RancherDevModel{ // existing state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					BoolAttribute:   true,     // defaulted
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
 					Method:   "PUT",
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
+						"Content-Type":  {"application/json"},
 					},
 					Body: rBodyMarshal(RancherDevModel{
-						Id:              defaultId,
-						StringAttribute: "dev-test",
-						NumberAttribute: big.NewFloat(1),
-						BoolAttribute:   true,
+						StringAttribute: "dev-test",      // required
+						NumberAttribute: big.NewFloat(1), // required
+						BoolAttribute:   true,            // defaulted
 					}),
 				},
 				c.Response{
@@ -834,43 +778,55 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Content-Type": {"application/json"},
 					},
-					Body: rBodyMarshal(map[string]any{
-						"Id":              defaultId,
-						"StringAttribute": "dev-test",
-						"NumberAttribute": big.NewFloat(1),
+					Body: rBodyMarshal(RancherDevModel{
+						StringAttribute: "dev-test",      // required
+						NumberAttribute: big.NewFloat(1), // required
+						BoolAttribute:   true,            // defaulted
+						Int32Attribute:  int32(1),        // read only, and always set by the API
+						Identifier:      defaultId,       // read only, and always set by the API
 					}),
 				},
 				RancherDevModel{ // expected state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					BoolAttribute:   true,
+					Int32Attribute:  int32(1),
 				},
 				"success",
 			},
 			{
-				"Update on Deleted Resource",
+				"Update on Deleted Resource", // update
 				RancherDevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
-					Id:              defaultId,
-					StringAttribute: "dev-test",
-					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					ID:              defaultId,       // stringplanmodifier.UseStateForUnknown() allows this to be in the plan on update only
+					Identifier:      defaultId,       // stringplanmodifier.UseStateForUnknown() allows this to be in the plan on update only
+					StringAttribute: "dev-test",      // required
+					NumberAttribute: big.NewFloat(1), // required
+					BoolAttribute:   true,            // defaulted
 				},
 				RancherDevModel{ // existing state
-					Id:              defaultId,
-					StringAttribute: "dev-test",
-					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					ID:              defaultId,       // read only, and always set by the provider
+					Identifier:      defaultId,       // read only, and always set by the API
+					StringAttribute: "dev-test",      // required
+					NumberAttribute: big.NewFloat(1), // required
+					BoolAttribute:   true,            // defaulted
+					Int32Attribute:  int32(1),        // read only, and always set by the API
 				},
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
 					Method:   "PUT",
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
+						"Content-Type":  {"application/json"},
 					},
-					Body: rBodyMarshal(RancherDevModel{Id: defaultId}),
+					Body: rBodyMarshal(RancherDevModel{
+						StringAttribute: "dev-test",      // required
+						NumberAttribute: big.NewFloat(1), // required
+						BoolAttribute:   true,            // defaulted
+					}),
 				},
 				c.Response{
 					StatusCode: http.StatusNotFound,
@@ -883,36 +839,48 @@ func TestRancherDevResource(t *testing.T) {
 					}),
 				},
 				RancherDevModel{ // expected state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					BoolAttribute:   true,     // defaulted
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
-        "failure",
+				"failure",
 			},
 			{
-				"Server Error on Update",
+				"Server Error on Update", // update
 				RancherDevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
-					Id:              defaultId,
+					// ID is read only in the schema, but we allow it in the plan in order to test with predictable values.
+					ID:              defaultId, // stringplanmodifier.UseStateForUnknown() allows this to be in the plan on update only
+					Identifier:      defaultId, // stringplanmodifier.UseStateForUnknown() allows this to be in the plan on update only
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					BoolAttribute:   true,     // defaulted
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
 				RancherDevModel{ // existing state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted attributes end up looking like required ones on the other side of the plan phase
+					BoolAttribute:   true,     // defaulted attributes end up looking like required ones on the other side of the plan phase
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
 					Method:   "PUT",
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
+						"Content-Type":  {"application/json"},
 					},
-					Body: rBodyMarshal(RancherDevModel{Id: defaultId}),
+					Body: rBodyMarshal(RancherDevModel{
+						StringAttribute: "dev-test",      // required
+						NumberAttribute: big.NewFloat(1), // required
+						BoolAttribute:   true,            // defaulted
+					}),
 				},
 				c.Response{
 					StatusCode: http.StatusInternalServerError,
@@ -925,40 +893,46 @@ func TestRancherDevResource(t *testing.T) {
 					}),
 				},
 				RancherDevModel{ // expected state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					BoolAttribute:   true,     // defaulted
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
 				"failure",
 			},
 			{
-				"Partial Attribute Update",
+				"Partial Attribute Update", // update
 				RancherDevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
-					Id:              defaultId,
-					StringAttribute: "dev-test",
-					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					// ID is read only in the schema, but we allow it in the plan in order to test with predictable values.
+					ID:              defaultId,       // stringplanmodifier.UseStateForUnknown() allows this to be in the plan on update only
+					Identifier:      defaultId,       // stringplanmodifier.UseStateForUnknown() allows this to be in the plan on update only
+					StringAttribute: "dev-test",      // required
+					NumberAttribute: big.NewFloat(1), // required
+					BoolAttribute:   true,            // defaulted
 				},
 				RancherDevModel{ // existing state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					BoolAttribute:   true,     // defaulted
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
 					Method:   "PUT",
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
+						"Content-Type":  {"application/json"},
 					},
 					Body: rBodyMarshal(RancherDevModel{
-						Id:              defaultId,
-						StringAttribute: "dev-test",
-						NumberAttribute: big.NewFloat(1),
-						BoolAttribute:   true, // default
+						StringAttribute: "dev-test",      // required
+						NumberAttribute: big.NewFloat(1), // required
+						BoolAttribute:   true,            // default
 					}),
 				},
 				c.Response{
@@ -967,17 +941,20 @@ func TestRancherDevResource(t *testing.T) {
 						"Content-Type": {"application/json"},
 					},
 					Body: rBodyMarshal(RancherDevModel{
-						Id:              defaultId,
+						Identifier:      defaultId,
 						StringAttribute: "dev-test",
 						NumberAttribute: big.NewFloat(1),
-            BoolAttribute:   true, // defaulted
+						BoolAttribute:   true,     // defaulted
+						Int32Attribute:  int32(1), // read only, and always set by the API
 					}),
 				},
 				RancherDevModel{ // expected state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					BoolAttribute:   true,     // defaulted
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
 				"success",
 			},
@@ -1056,10 +1033,10 @@ func TestRancherDevResource(t *testing.T) {
 				if (tc.outcome == "success") && res.Diagnostics.HasError() {
 					t.Errorf("%#v.Configure() returned unexpected error diagnostics: %s", tc.fit, pp.PrettyPrint(res.Diagnostics))
 				}
-				if diff := cmp.Diff(expectedState, actualState); diff != "" {
+				if diff := cmp.Diff(expectedApiRequest, actualApiRequest); diff != "" {
 					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
 				}
-				if diff := cmp.Diff(expectedApiRequest, actualApiRequest); diff != "" {
+				if diff := cmp.Diff(expectedState, actualState); diff != "" {
 					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
 				}
 			})
@@ -1076,14 +1053,16 @@ func TestRancherDevResource(t *testing.T) {
 			outcome       string     // expected outcome, one of: "success","failure"
 		}{
 			{
-				"Basic",
+				"Basic", // delete
 				RancherDevResource{},
 				map[string]string{},
 				RancherDevModel{ // existing state
-					Id:              defaultId,
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
-          BoolAttribute:   true, // defaulted
+					BoolAttribute:   true,     // defaulted
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId, // add the id to the path
@@ -1091,7 +1070,6 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
 					},
-					Body: rBodyMarshal(nil),
 				},
 				c.Response{
 					StatusCode: http.StatusNoContent,
@@ -1101,13 +1079,16 @@ func TestRancherDevResource(t *testing.T) {
 				"success",
 			},
 			{
-				"Resource Already Deleted",
+				"Resource Already Deleted", // delete
 				RancherDevResource{},
 				map[string]string{},
-				RancherDevModel{
-					Id:              defaultId,
+				RancherDevModel{ // existing state
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true,     // defaulted
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
@@ -1115,7 +1096,6 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
 					},
-					Body: rBodyMarshal(nil),
 				},
 				c.Response{
 					StatusCode: http.StatusNotFound,
@@ -1130,13 +1110,16 @@ func TestRancherDevResource(t *testing.T) {
 				"success",
 			},
 			{
-				"Server Error on Delete",
+				"Server Error on Delete", // delete
 				RancherDevResource{},
 				map[string]string{},
-				RancherDevModel{
-					Id:              defaultId,
+				RancherDevModel{ // existing state
+					ID:              defaultId,
+					Identifier:      defaultId,
 					StringAttribute: "dev-test",
 					NumberAttribute: big.NewFloat(1),
+					BoolAttribute:   true,     // defaulted
+					Int32Attribute:  int32(1), // read only, and always set by the API
 				},
 				c.Request{
 					Endpoint: apiEndpoint + "/" + defaultId,
@@ -1144,7 +1127,6 @@ func TestRancherDevResource(t *testing.T) {
 					Headers: map[string][]string{
 						"Authorization": {"Bearer " + testUserToken},
 					},
-					Body: rBodyMarshal(nil),
 				},
 				c.Response{
 					StatusCode: http.StatusInternalServerError,
@@ -1220,40 +1202,7 @@ func TestRancherDevResource(t *testing.T) {
 				if (tc.outcome == "success") && res.Diagnostics.HasError() {
 					t.Errorf("%#v.Configure() returned unexpected error diagnostics: %s", tc.fit, pp.PrettyPrint(res.Diagnostics))
 				}
-				if diff := cmp.Diff(expectedApiRequest, actualApiRequest,
-					cmpopts.IgnoreUnexported(big.Float{}),
-					cmp.Comparer(func(x, y c.Request) bool {
-						if x.Method != y.Method || x.Endpoint != y.Endpoint {
-							return false
-						}
-						xBody, xOk := x.Body.([]byte)
-						if !xOk {
-							t.Logf("failed to assert x.Body to []byte")
-							return false
-						}
-						yBody, yOk := y.Body.([]byte)
-						if !yOk {
-							t.Logf("failed to assert y.Body to []byte")
-							return false
-						}
-						if len(xBody) == 0 && len(yBody) == 0 {
-							return true
-						}
-						if len(xBody) == 0 || len(yBody) == 0 {
-							return false
-						}
-						var want, got RancherDevModel
-						if err := json.Unmarshal(xBody, &want); err != nil {
-							t.Logf("failed to unmarshal want body: %v", err)
-							return false
-						}
-						if err := json.Unmarshal(yBody, &got); err != nil {
-							t.Logf("failed to unmarshal got body: %v", err)
-							return false
-						}
-						return cmp.Equal(want, got, cmpopts.IgnoreUnexported(big.Float{}))
-					}),
-				); diff != "" {
+				if diff := cmp.Diff(expectedApiRequest, actualApiRequest); diff != "" {
 					t.Errorf("Create() mismatch (-want +got):\n%+v", diff)
 				}
 			})

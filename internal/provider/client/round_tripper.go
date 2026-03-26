@@ -93,12 +93,17 @@ func (t *AuthTransport) logRequest(ctx context.Context, req *http.Request) {
 
 // Inspect and log the response.
 func (t *AuthTransport) logResponse(ctx context.Context, url string, resp *http.Response) {
+	if resp == nil {
+		tflog.Debug(ctx, fmt.Sprintf("HTTP Response (No Response): %s", pp.PrettyPrint(url)))
+		return
+	}
+
 	logFields := map[string]any{
 		"url":         url,
 		"status_code": resp.StatusCode,
 	}
 
-	if resp == nil || resp.Body == nil {
+	if resp.Body == nil {
 		tflog.Debug(ctx, fmt.Sprintf("HTTP Response (No Body): %s", pp.PrettyPrint(logFields)))
 		return
 	}

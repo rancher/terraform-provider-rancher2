@@ -217,7 +217,7 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 		tokenStore,
 	)
 
-  tflog.Debug(ctx, fmt.Sprintf("Provider Configure Client: %+v", pp.PrettyPrint(client)))
+	tflog.Debug(ctx, fmt.Sprintf("Provider Configure Client: %+v", pp.PrettyPrint(client)))
 
 	resp.ResourceData = client
 	resp.DataSourceData = client

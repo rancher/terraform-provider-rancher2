@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -36,7 +37,7 @@ func NewRancherDevResource() resource.Resource {
 }
 
 type RancherDevResource struct {
-	client     c.Client // client is an interface holding a pointer to a struct
+	client c.Client // client is an interface holding a pointer to a struct
 }
 
 // RancherDevResourceModel is in rancher2_dev_resource_model.go
@@ -50,45 +51,25 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 		MarkdownDescription: "Rancher Development resource. \n" +
 			"This resource is used as a dummy for development purposes.",
 		Attributes: map[string]schema.Attribute{
+			// "id" is a special attribute in Terraform, it must be Computed (read only).
+			// It must be represented as 'ID' in the model.
+			// Terraform uses this attribute as a reference for other resources, it must be universally unique.
+			// It is possible for this to be an attribute returned from the remote API, but it must be universally unique.
+			// In most cases I recommend automatically setting this with a UUID in the provider (as done here).
+			// If you have an id in your API that needs to be addressed, maybe call it "identifier" or "name".
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique identifier for the resource.",
-				Required:            true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
+				Computed:            true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.UseStateForUnknown(), // when an attribute is set on creation and shouldn't change use this (UseStateForUnknown)
 				},
 			},
-			"bool_attribute": schema.BoolAttribute{
-				MarkdownDescription: "A boolean attribute.",
-				Optional:            true,
+			"identifier": schema.StringAttribute{
+				MarkdownDescription: "The id field returned from the API, used in GET, PUT, and DELETE requests.",
 				Computed:            true,
-				Default:             booldefault.StaticBool(true),
-			},
-			"number_attribute": schema.NumberAttribute{
-				MarkdownDescription: "A number attribute. Behind the scenes this is a big.Float.",
-				Required:            true,
-			},
-			"int64_attribute": schema.Int64Attribute{
-				MarkdownDescription: "A big int attribute.",
-				Optional:            true,
-				Computed:            true,
-			},
-			"int32_attribute": schema.Int32Attribute{
-				MarkdownDescription: "A small int attribute.",
-				Optional:            true,
-				Computed:            true,
-			},
-			"float64_attribute": schema.Float64Attribute{
-				MarkdownDescription: "A float attribute.",
-				Optional:            true,
-				Computed:            true,
-			},
-			"float32_attribute": schema.Float32Attribute{
-				MarkdownDescription: "A small float attribute.",
-				Optional:            true,
-				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(), // when an attribute is set on creation and shouldn't change use this (UseStateForUnknown)
+				},
 			},
 			"string_attribute": schema.StringAttribute{
 				MarkdownDescription: "A string attribute with validation.",
@@ -100,77 +81,100 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 					),
 				},
 			},
+			"number_attribute": schema.NumberAttribute{
+				MarkdownDescription: "A number attribute. Behind the scenes this is a big.Float.",
+				Required:            true,
+			},
+			"bool_attribute": schema.BoolAttribute{
+				MarkdownDescription: "A boolean attribute.",
+				// Computed tells Terraform that this attribute shouldn't be empty in the state.
+				// WARNING! If the function doesn't set this attribute in state there will be perpetual diffs.
+				// Optional with Computed tells Terraform that the API or the provider always set this, even if it isn't in the config.
+				// All attributes with a Default should be Optional and Computed.
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
+			"int64_attribute": schema.Int64Attribute{
+				MarkdownDescription: "A big int attribute.",
+				// Optional without Computed means that this attribute may not exist in state, and that is OK
+				Optional: true,
+			},
+			"int32_attribute": schema.Int32Attribute{
+				MarkdownDescription: "A small int attribute.",
+				Computed:            true, // This attribute is read only
+			},
+			"float64_attribute": schema.Float64Attribute{
+				MarkdownDescription: "A float attribute.",
+				Optional:            true,
+			},
+			"float32_attribute": schema.Float32Attribute{
+				MarkdownDescription: "A small float attribute.",
+				Optional:            true,
+			},
 			"map_attribute": schema.MapAttribute{
 				MarkdownDescription: "A map of strings.",
 				Optional:            true,
-				Computed:            true,
 				ElementType:         types.StringType,
 			},
 			"list_attribute": schema.ListAttribute{
 				MarkdownDescription: "A list of strings.",
 				Optional:            true,
-				Computed:            true,
 				ElementType:         types.StringType,
 			},
 			"set_attribute": schema.SetAttribute{
 				MarkdownDescription: "A set of strings.",
 				Optional:            true,
-				Computed:            true,
 				ElementType:         types.StringType,
 			},
-			// Don't use "object" type, use "single nested attribute" type instead
-			"object": schema.SingleNestedAttribute{
+			// Don't use "object" type, use "single nested attribute" type instead,
+			// see https://pkg.go.dev/github.com/hashicorp/terraform-plugin-framework@v1.19.0/resource/schema#SingleNestedAttribute
+			// Nested Blocks are deprecated, use nested object attributes instead
+			"nested_object": schema.SingleNestedAttribute{
 				MarkdownDescription: "A single nested object." +
 					"This represents a single object, not a list or set of objects.",
 				Optional: true,
-				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"string_attribute": schema.StringAttribute{
 						MarkdownDescription: "A string attribute.",
-						Required:            true, // nested_object is optional, but within it string_attribute is required
+						Required:            true,
 					},
 					"nested_nested_object": schema.SingleNestedAttribute{
-						MarkdownDescription: "A nested object within a nested object.",
-						Optional:            true,
-						Computed:            true,
+						Optional: true,
 						Attributes: map[string]schema.Attribute{
 							"string_attribute": schema.StringAttribute{
-								MarkdownDescription: "A string attribute.",
+								MarkdownDescription: "A string attribute of an object within an object within a list of objects.",
 								Required:            true,
 							},
 							"bool_attribute": schema.BoolAttribute{
-								MarkdownDescription: "A boolean attribute.",
-								Optional:            true,
+								MarkdownDescription: "A read only boolean attribute of an object within an object within a list of objects.",
 								Computed:            true,
 							},
 						},
 					},
 				},
 			},
+			// Don't use SetNestedAttribute, this isn't representable in json,
+			// make the schema as close to the API representation as possible.
+			// If possible avoid lists since it can be the source of dependency chain issues for users.
 			"nested_object_list": schema.ListNestedAttribute{
 				MarkdownDescription: "A list of nested objects.",
 				Optional:            true,
-				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"string_attribute": schema.StringAttribute{
-							MarkdownDescription: "A string attribute.",
-							Optional:            true,
-							Computed:            true,
+							Required:            true,
+							MarkdownDescription: "A string attribute of an object within a list of objects.",
 						},
 						"nested_nested_object": schema.SingleNestedAttribute{
-							MarkdownDescription: "A nested object within a nested object.",
-							Optional:            true,
-							Computed:            true,
+							Optional: true,
 							Attributes: map[string]schema.Attribute{
 								"string_attribute": schema.StringAttribute{
-									MarkdownDescription: "A string attribute.",
-									Optional:            true,
-									Computed:            true,
+									MarkdownDescription: "A string attribute of an object within an object within a list of objects.",
+									Required:            true,
 								},
 								"bool_attribute": schema.BoolAttribute{
-									MarkdownDescription: "A boolean attribute.",
-									Optional:            true,
+									MarkdownDescription: "A read only boolean attribute of an object within an object within a list of objects.",
 									Computed:            true,
 								},
 							},
@@ -178,32 +182,24 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 					},
 				},
 			},
-			// Don't use nested object sets, use a map instead
-			// You can generate an ordered map to use as a set with map[string]any{"1": any, "2": any}
 			"nested_object_map": schema.MapNestedAttribute{
 				MarkdownDescription: "A map of nested objects.",
 				Optional:            true,
-				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"string_attribute": schema.StringAttribute{
-							MarkdownDescription: "A string attribute.",
-							Optional:            true,
-							Computed:            true,
+							Required:            true,
+							MarkdownDescription: "A string attribute of an object within a set of objects.",
 						},
 						"nested_nested_object": schema.SingleNestedAttribute{
-							MarkdownDescription: "A nested object within a nested object.",
-							Optional:            true,
-							Computed:            true,
+							Optional: true,
 							Attributes: map[string]schema.Attribute{
 								"string_attribute": schema.StringAttribute{
-									MarkdownDescription: "A string attribute.",
-									Optional:            true,
-									Computed:            true,
+									MarkdownDescription: "A string attribute of an object within an object within a list of objects.",
+									Required:            true,
 								},
 								"bool_attribute": schema.BoolAttribute{
-									MarkdownDescription: "A boolean attribute.",
-									Optional:            true,
+									MarkdownDescription: "A read only boolean attribute of an object within an object within a list of objects.",
 									Computed:            true,
 								},
 							},
@@ -215,11 +211,10 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-
 // configure runs at compile time, don't overload the context.
 func (r *RancherDevResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-  tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure request: %#v", req))
-  tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure object: %#v", r))
+	tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure request: %+v\n", pp.PrettyPrint(req)))
+	tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure object: %+v\n", pp.PrettyPrint(r)))
 	if req.ProviderData == nil {
 		return // Prevent panic if the provider has not been configured.
 	}
@@ -234,14 +229,14 @@ func (r *RancherDevResource) Configure(ctx context.Context, req resource.Configu
 		return
 	}
 	r.client = client
-  tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure object after config: %#v", r))
-  tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure response: %#v", resp))
+	tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure object after config: %+v\n", pp.PrettyPrint(r)))
+	tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure response: %+v\n", pp.PrettyPrint(resp)))
 }
 
 // Create generates reality and state to match plan.
 func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("Create Config: %+v", pp.PrettyPrint(req.Config.Raw)))
-	tflog.Debug(ctx, fmt.Sprintf("Create Plan: %+v", pp.PrettyPrint(req.Plan.Raw)))
+	tflog.Debug(ctx, fmt.Sprintf("Create Config: %+v\n", pp.PrettyPrint(req.Config.Raw)))
+	tflog.Debug(ctx, fmt.Sprintf("Create Plan: %+v\n", pp.PrettyPrint(req.Plan.Raw)))
 	var err error
 	plan := RancherDevResourceModel{}
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -255,7 +250,7 @@ func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-  var client c.Client
+	var client c.Client
 	if r.client != nil {
 		client = r.client
 	} else {
@@ -263,44 +258,59 @@ func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequ
 		resp.Diagnostics.AddError("client not found, please configure the provider", "")
 		return
 	}
+	endpoint := fmt.Sprintf("%s/%s", client.GetApiUrl(), endpointPath)
 
-  // DEV ONLY
-  //
-  // This is special to the dev resource and
-  // is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
-  // When using the dev resource as a template for other resources, remove this.
-  //
-  var clnt c.TestClient
-  rc, ok := client.(*c.HttpClient)
-  if ok {
-    // found a real client, need to inject a test client
-    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
-    requestId := fmt.Sprintf("%s/%s:%s:%s", client.GetApiUrl(), endpointPath, "POST", "")
-    tflog.Debug(ctx, fmt.Sprintf("create requestId: %s", requestId))
-    rbp := plan // copy the plan so it can still be used to generate the request
-    rgm := rbp.ToGoModel(ctx)
-    rgm.Int32Attribute = int32(1) // simulating the API returning an attribute that isn't set by the provider
-    responseBody, err := json.Marshal(rgm)
-  	if err != nil {
-  		resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
-  		return
-  	}
-    clnt.SetResponse(ctx, requestId,c.Response{
-      StatusCode: 200,
-      Headers: map[string][]string{
-        "Content-Type": {"application/json"},
-      },
-      Body: responseBody,
-    })
-    client = &clnt
-  }
-  //
-  // END DEV ONLY
+	// DEV ONLY
+	//
+	// This is special to the dev resource and
+	// is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
+	// When using the dev resource as a template for other resources, remove this.
+	//
+	var clnt c.TestClient
+	rc, ok := client.(*c.HttpClient)
+	if ok {
+		// found a real client, need to inject a test client
+		clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
+		requestId := fmt.Sprintf("%s:%s:%s", endpoint, "POST", "")
+		tflog.Debug(ctx, fmt.Sprintf("create requestId: %s", requestId))
+		rbp := plan // copy the plan so it can still be used to generate the request
+		rgm := rbp.ToGoModel(ctx)
+		rgm.Int32Attribute = int32(1)        // simulating the API returning an attribute that isn't set by the provider
+		rgm.Identifier = uuid.New().String() // simulating the API setting the id field
+		responseBody, err := json.Marshal(rgm)
+		if err != nil {
+			resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
+			return
+		}
+		clnt.SetResponse(ctx, requestId, c.Response{
+			StatusCode: 200,
+			Headers: map[string][]string{
+				"Content-Type": {"application/json"},
+			},
+			Body: responseBody,
+		})
+		client = &clnt
+	}
+	//
+	// END DEV ONLY
 
-  tflog.Debug(ctx, fmt.Sprintf("Create Client: %+v", pp.PrettyPrint(client)))
+	var id types.String
+	if plan.ID.IsNull() || plan.ID.IsUnknown() || plan.ID.ValueString() == "" {
+		// don't blindly set uuid so that unit tests can set to a known id
+		id = types.StringValue(uuid.New().String())
+	} else {
+		id = plan.ID
+	}
+
+	// All read only attributes should be set to their null value before sending the request.
+	plan.ID = types.StringNull()
+	plan.Identifier = types.StringNull()
+	plan.Int32Attribute = types.Int32Null()
+
+	tflog.Debug(ctx, fmt.Sprintf("Create Client: %+v", pp.PrettyPrint(client)))
 
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s", client.GetApiUrl(), endpointPath),
+		Endpoint: endpoint,
 		Method:   "POST",
 		Body:     plan.ToGoModel(ctx),
 	}
@@ -325,6 +335,10 @@ func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Insert provider generated values before the state is saved.
+	state.ID = id
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("Create State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
 }
@@ -341,7 +355,7 @@ func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-  var client c.Client
+	var client c.Client
 
 	if r.client != nil {
 		client = r.client
@@ -351,39 +365,52 @@ func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-  // DEV ONLY
-  //
-  // This is special to the dev resource and
-  // is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
-  // When using the dev resource as a template for other resources, remove this.
-  //
-  var clnt c.TestClient
-  rc, ok := client.(*c.HttpClient)
-  if ok {
-    // found a real client, need to inject a test client
-    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
-    ep := fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString())
-    requestId := fmt.Sprintf("%s:%s:%s", ep, "GET", "")
-    tflog.Debug(ctx, fmt.Sprintf("read requestId: %s", requestId))
-    responseBody, err := json.Marshal(state)
-  	if err != nil {
-  		resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
-  		return
-  	}
-    clnt.SetResponse(ctx, requestId,c.Response{
-      StatusCode: 200,
-      Headers: map[string][]string{
-        "Content-Type": {"application/json"},
-      },
-      Body: responseBody,
-    })
-    client = &clnt
-  }
-  //
-  // END DEV ONLY
+	var id types.String
+	if state.ID.IsNull() || state.ID.IsUnknown() || state.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"State Corruption",
+			"The ID field in the state for this resource is null or unknown, "+
+				"this shouldn't be possible, and is an indicator that there is a problem with your state file.",
+		)
+		return
+	} else {
+		id = state.ID
+	}
+
+	endpoint := fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Identifier.ValueString())
+
+	// DEV ONLY
+	//
+	// This is special to the dev resource and
+	// is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
+	// When using the dev resource as a template for other resources, remove this.
+	//
+	var clnt c.TestClient
+	rc, ok := client.(*c.HttpClient)
+	if ok {
+		// found a real client, need to inject a test client
+		clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
+		requestId := fmt.Sprintf("%s:%s:%s", endpoint, "GET", "")
+		tflog.Debug(ctx, fmt.Sprintf("read requestId: %s", requestId))
+		responseBody, err := json.Marshal(state)
+		if err != nil {
+			resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
+			return
+		}
+		clnt.SetResponse(ctx, requestId, c.Response{
+			StatusCode: 200,
+			Headers: map[string][]string{
+				"Content-Type": {"application/json"},
+			},
+			Body: responseBody,
+		})
+		client = &clnt
+	}
+	//
+	// END DEV ONLY
 
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString()),
+		Endpoint: endpoint,
 		Method:   "GET",
 	}
 	response := c.Response{}
@@ -411,6 +438,9 @@ func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+	// Inject provider only (non-API) attributes into the state before saving
+	state.ID = id
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("Read State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
 }
@@ -427,14 +457,32 @@ func (r *RancherDevResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	var state RancherDevResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var id types.String
+	if state.ID.IsNull() || state.ID.IsUnknown() || state.ID.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"State Corruption",
+			"The ID field in the state for this resource is null or unknown, "+
+				"this shouldn't be possible, and is an indicator that there is a problem with your state file.",
+		)
+		return
+	} else {
+		id = state.ID
+	}
+
 	err = validateData(&plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error validating plan: ", err.Error())
 		return
 	}
-  tflog.Debug(ctx, fmt.Sprintf("Update Plan after validate: %+v", pp.PrettyPrint(plan)))
+	tflog.Debug(ctx, fmt.Sprintf("Update Plan after validate: %+v", pp.PrettyPrint(plan)))
 
-  var client c.Client
+	var client c.Client
 	if r.client != nil {
 		client = r.client
 	} else {
@@ -443,55 +491,75 @@ func (r *RancherDevResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-  // DEV ONLY
-  //
-  // This is special to the dev resource and
-  // is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
-  // When using the dev resource as a template for other resources, remove this.
-  //
-  var clnt c.TestClient
-  rc, ok := client.(*c.HttpClient)
-  if ok {
-    // found a real client, need to inject a test client
-    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
-    ep := fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, plan.Id.ValueString())
-    requestId := fmt.Sprintf("%s:%s:%s", ep, "PUT", "")
-    tflog.Debug(ctx, fmt.Sprintf("update requestId: %s", requestId))
-    rbp := plan // copy the plan so it can still be used to generate the request
-    rgm := rbp.ToGoModel(ctx)
-    rgm.Int32Attribute = int32(1) // simulating the API returning an attribute that isn't set by the provider
-    responseBody, err := json.Marshal(rgm)
-  	if err != nil {
-  		resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
-  		return
-  	}
-    clnt.SetResponse(ctx, requestId,c.Response{
-      StatusCode: 200,
-      Headers: map[string][]string{
-        "Content-Type": {"application/json"},
-      },
-      Body: responseBody,
-    })
-    client = &clnt
-  }
-  //
-  // END DEV ONLY
+	endpoint := fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, plan.ID.ValueString())
+
+	// DEV ONLY
+	//
+	// This is special to the dev resource and
+	// is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
+	// When using the dev resource as a template for other resources, remove this.
+	//
+	var clnt c.TestClient
+	rc, ok := client.(*c.HttpClient)
+	if ok {
+		// found a real client, need to inject a test client
+		clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
+		requestId := fmt.Sprintf("%s:%s:%s", endpoint, "PUT", "")
+		tflog.Debug(ctx, fmt.Sprintf("update requestId: %s", requestId))
+		rbp := plan // copy the plan so it can still be used to generate the request
+		rgm := rbp.ToGoModel(ctx)
+		rgm.Int32Attribute = int32(1) // simulating the API returning an attribute that isn't set by the provider
+		responseBody, err := json.Marshal(rgm)
+		if err != nil {
+			resp.Diagnostics.AddError("Error marshalling dev plan for create response: ", err.Error())
+			return
+		}
+		clnt.SetResponse(ctx, requestId, c.Response{
+			StatusCode: 200,
+			Headers: map[string][]string{
+				"Content-Type": {"application/json"},
+			},
+			Body: responseBody,
+		})
+		client = &clnt
+	}
+	//
+	// END DEV ONLY
+
+	// Remove any attributes that shouldn't be sent in the request body (usually all read only attributes)
+	plan.ID = types.StringNull()            // already pulled this from state
+	plan.Identifier = types.StringNull()    // use the response object's value
+	plan.Int32Attribute = types.Int32Null() // use the response object's value
 
 	request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, plan.Id.ValueString()),
+		Endpoint: endpoint,
 		Method:   "PUT",
 		Body:     plan.ToGoModel(ctx),
 	}
 
 	response := c.Response{}
-
 	err = client.Do(ctx, &request, &response)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating dev resource: ", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	var respBody RancherDevModel
+	err = json.Unmarshal(response.Body, &respBody)
+	if err != nil {
+		resp.Diagnostics.AddError("Error unmarshalling dev resource: ", err.Error())
+		return
+	}
+
+	state = *respBody.ToResourceModel(ctx, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Inject any provider only (non-API) attributes into the state before saving.
+	state.ID = id
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("Update Response State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
 }
 
@@ -505,7 +573,7 @@ func (r *RancherDevResource) Delete(ctx context.Context, req resource.DeleteRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-  var client c.Client
+	var client c.Client
 	if r.client != nil {
 		client = r.client
 	} else {
@@ -514,28 +582,29 @@ func (r *RancherDevResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-  // DEV ONLY
-  //
-  // This is special to the dev resource and
-  // is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
-  // When using the dev resource as a template for other resources, remove this.
-  //
-  var clnt c.TestClient
-  rc, ok := client.(*c.HttpClient)
-  if ok {
-    // found a real client, need to inject a test client
-    clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
-    ep := fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString())
-    requestId := fmt.Sprintf("%s:%s:%s", ep, "DELETE", "")
-    tflog.Debug(ctx, fmt.Sprintf("delete requestId: %s", requestId))
-    clnt.SetResponse(ctx, requestId,c.Response{StatusCode: 200})
-    client = &clnt
-  }
-  //
-  // END DEV ONLY
+	endpoint := fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.ID.ValueString())
 
-  request := c.Request{
-		Endpoint: fmt.Sprintf("%s/%s/%s", client.GetApiUrl(), endpointPath, state.Id.ValueString()),
+	// DEV ONLY
+	//
+	// This is special to the dev resource and
+	// is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
+	// When using the dev resource as a template for other resources, remove this.
+	//
+	var clnt c.TestClient
+	rc, ok := client.(*c.HttpClient)
+	if ok {
+		// found a real client, need to inject a test client
+		clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
+		requestId := fmt.Sprintf("%s:%s:%s", endpoint, "DELETE", "")
+		tflog.Debug(ctx, fmt.Sprintf("delete requestId: %s", requestId))
+		clnt.SetResponse(ctx, requestId, c.Response{StatusCode: 200})
+		client = &clnt
+	}
+	//
+	// END DEV ONLY
+
+	request := c.Request{
+		Endpoint: endpoint,
 		Method:   "DELETE",
 	}
 
@@ -558,16 +627,13 @@ func (r *RancherDevResource) ImportState(ctx context.Context, req resource.Impor
 
 // This function also enforces default values.
 func validateData(data *RancherDevResourceModel) error {
-	if data.Id.ValueString() == "" {
-		return fmt.Errorf("id cannot be empty")
-	}
-  if data.StringAttribute.IsNull() || data.StringAttribute.IsUnknown() || data.StringAttribute.ValueString() == "" {
+	if data.StringAttribute.IsNull() || data.StringAttribute.IsUnknown() || data.StringAttribute.ValueString() == "" {
 		return fmt.Errorf("string_attribute cannot be empty")
 	}
 	if !regexp.MustCompile(`^dev-.*`).MatchString(data.StringAttribute.ValueString()) {
 		return fmt.Errorf("string must start with 'dev-'")
 	}
-  if data.NumberAttribute.IsNull() || data.NumberAttribute.IsUnknown() {
+	if data.NumberAttribute.IsNull() || data.NumberAttribute.IsUnknown() {
 		return fmt.Errorf("number_attribute cannot be empty")
 	}
 	if data.BoolAttribute.IsNull() || data.BoolAttribute.IsUnknown() {

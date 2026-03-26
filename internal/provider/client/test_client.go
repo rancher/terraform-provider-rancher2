@@ -60,22 +60,30 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 	// if c.token != "" {
 	//   req.Token = c.token
 	// }
-  if req.Body == nil {
-    req.Body = []byte("{}")
-  }
-	reqBody, err := json.Marshal(req.Body)
-	if err != nil {
-		return err
+	var err error
+	var reqBody []byte
+	if req.Body == nil {
+		if req.Method == "PUT" || req.Method == "PATCH" || req.Method == "POST" {
+			req.Body = json.RawMessage("{}")
+		}
+	} else {
+		reqBody, err = json.Marshal(req.Body)
+		if err != nil {
+			return err
+		}
 	}
 
 	newReq := Request{
 		Method:   req.Method,
 		Headers:  req.Headers,
 		Endpoint: req.Endpoint,
-		Body:     reqBody,
 	}
 
-	if req.Method == "POST" {
+	if len(reqBody) > 0 {
+		newReq.Body = reqBody
+	}
+
+	if req.Method == "POST" || req.Method == "PUT" {
 		if newReq.Headers == nil {
 			newReq.Headers = map[string][]string{}
 		}
@@ -123,15 +131,8 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 		Headers: req.Headers,
 		Body:    req.Body,
 	}
-	tflog.Debug(ctx, fmt.Sprintf("HTTP Request: %+v", pp.PrettyPrint(logFields)))
 
-	// This is necessary because the test already marshals the data.
-  if resp.Body == nil {
-    resp.Body = []byte("{}")
-  }
-	marshalledResponse := MarshalledData{
-		Data: resp.Body,
-	}
+	tflog.Debug(ctx, fmt.Sprintf("HTTP Request: %+v", pp.PrettyPrint(logFields)))
 
 	logFields = LogFields{
 		ID:         requestId,
@@ -140,8 +141,11 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 		Method:     req.Method,
 		StatusCode: resp.StatusCode,
 		Headers:    resp.Headers,
-		Body:       marshalledResponse,
 	}
+	if len(resp.Body) > 0 {
+		logFields.Body = json.RawMessage(resp.Body)
+	}
+
 	tflog.Debug(ctx, fmt.Sprintf("HTTP Response: %s", pp.PrettyPrint(logFields)))
 
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {

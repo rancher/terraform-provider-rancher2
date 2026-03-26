@@ -381,7 +381,7 @@ func TestRancherLoginResource(t *testing.T) {
 			outcome            string     // expected outcome, one of: "success","failure"
 		}{
 			{
-				"Basic",
+				"Basic", // read
 				RancherLoginResource{},
 				map[string]string{},
 				RancherLoginModel{
@@ -416,7 +416,6 @@ func TestRancherLoginResource(t *testing.T) {
 					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
 					Method:   "GET",
 					Headers:  map[string][]string{"Authorization": {"Bearer " + testUserToken}}, // read will use the token in state
-					Body:     rBodyMarshal(nil),
 				},
 				c.Response{
 					StatusCode: http.StatusOK,
@@ -472,7 +471,6 @@ func TestRancherLoginResource(t *testing.T) {
 					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
 					Method:   "GET",
 					Headers:  map[string][]string{"Authorization": {"Bearer " + testUserToken}}, // read will use the token in state
-					Body:     rBodyMarshal(nil),
 				},
 				c.Response{
 					StatusCode: http.StatusNotFound,
@@ -573,7 +571,7 @@ func TestRancherLoginResource(t *testing.T) {
 			outcome              string
 		}{
 			{
-				"Basic",
+				"Basic", // update
 				RancherLoginResource{},
 				map[string]string{},
 				RancherLoginModel{ //plan
@@ -597,7 +595,6 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Request{ //initial token request
 					Endpoint: fmt.Sprintf("%s/%s", apiUrl, tokenEndpoint),
 					Method:   "GET",
-					Body:     rBodyMarshal(nil),
 				},
 				c.Response{ // initial token response
 					StatusCode: http.StatusOK,
@@ -645,7 +642,7 @@ func TestRancherLoginResource(t *testing.T) {
 				c.Response{}, // no login response
 				c.Request{},  // no token create should be made
 				c.Response{}, // no token create response
-				RancherLoginModel{ // expected state should match inital state
+				RancherLoginModel{ // expected state should match initial state
 					Id:                          testTokenId,
 					Username:                    "user",
 					Password:                    "password",
@@ -662,7 +659,7 @@ func TestRancherLoginResource(t *testing.T) {
 				"success",
 			},
 			{
-				"Update Token",
+				"Update Token", // update
 				RancherLoginResource{},
 				map[string]string{
 					"RANCHER_USERNAME": "user",
@@ -903,14 +900,13 @@ func TestRancherLoginResource(t *testing.T) {
 			outcome            string
 		}{
 			{
-				"Basic",
+				"Basic", // delete
 				RancherLoginResource{},
 				RancherLoginModel{Id: testTokenId},
 				c.Request{
 					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
 					Method:   "DELETE",
 					Headers:  map[string][]string{"Authorization": {fmt.Sprintf("Bearer %s", testUserToken)}},
-					Body:     rBodyMarshal(nil),
 				},
 				c.Response{
 					StatusCode: http.StatusNoContent,
@@ -918,14 +914,13 @@ func TestRancherLoginResource(t *testing.T) {
 				"success",
 			},
 			{
-				"Resource Already Deleted",
+				"Resource Already Deleted", // delete
 				RancherLoginResource{},
 				RancherLoginModel{Id: testTokenId},
 				c.Request{
 					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
 					Method:   "DELETE",
 					Headers:  map[string][]string{"Authorization": {fmt.Sprintf("Bearer %s", testUserToken)}},
-					Body:     rBodyMarshal(nil),
 				},
 				c.Response{
 					StatusCode: http.StatusNotFound,

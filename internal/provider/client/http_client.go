@@ -28,7 +28,7 @@ type HttpClient struct {
 	client         *retryablehttp.Client
 }
 
-// Pass the initialized TokenStore into the client constructor
+// Pass the initialized TokenStore into the client constructor.
 func NewHttpClient(ctx context.Context, apiURL, caCert string, insecure, ignoreSystemCA bool, timeout time.Duration, maxRedirects int64, tokenStore *TokenStore) *HttpClient {
 	var rootCAs *x509.CertPool
 	if ignoreSystemCA {

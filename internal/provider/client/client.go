@@ -1,6 +1,9 @@
 package client
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 // Client is the interface for a client that can make requests to the Rancher API.
 type Client interface {
@@ -57,5 +60,8 @@ type MarshalledData struct {
 }
 
 func (d MarshalledData) MarshalJSON() ([]byte, error) {
-	return d.Data.([]byte), nil
+	if data, ok := d.Data.([]byte); ok {
+		return data, nil
+	}
+	return nil, fmt.Errorf("data is not in byte format")
 }

@@ -80,6 +80,7 @@ func toPrintable(data any) any {
 	// Handle special Terraform types that need conversion.
 	switch v := data.(type) {
 	case tftypes.Value:
+		// object, map, set, and list are handled here
 		return toPrintableTftypesValue(v)
 	case types.String:
 		return toPrintableFramework(v, v.ValueString)
@@ -103,7 +104,7 @@ func toPrintable(data any) any {
 		out := make(map[string]any)
 		for i := 0; i < val.NumField(); i++ {
 			field := val.Type().Field(i)
-			// Skip unexported fields.
+			// Skip unexported fields to prevent panics.
 			if field.PkgPath != "" {
 				continue
 			}
@@ -136,6 +137,7 @@ func toPrintable(data any) any {
 
 // toPrintableTftypesValue handles the conversion of tftypes.Value to a JSON-marshalable format.
 func toPrintableTftypesValue(v tftypes.Value) any {
+	// fmt.Printf("\nhandling tftypes value: \n%+v\n", v)
 	if !v.IsKnown() {
 		return "<unknown>"
 	}
@@ -157,6 +159,7 @@ func toPrintableTftypesValue(v tftypes.Value) any {
 			result[k] = toPrintable(v)
 		}
 		return result
+		// Handle collection types by recursively calling this function.
 	case tftypes.List, tftypes.Set: // Sets can be treated as lists for printing
 		elems := make([]tftypes.Value, 0)
 		if err := v.As(&elems); err != nil {

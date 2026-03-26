@@ -14,25 +14,26 @@ import (
 )
 
 type RancherDevModel struct {
-  Id               string                  `json:"id"`
+	ID               string                  `json:"id,omitempty"`
+	Identifier       string                  `json:"identifier,omitempty"`
 	StringAttribute  string                  `json:"string_attribute,omitempty"`
-  NumberAttribute  *big.Float              `json:"number_attribute,omitempty"`
+	NumberAttribute  *big.Float              `json:"number_attribute,omitempty"`
 	Int32Attribute   int32                   `json:"int32_attribute,omitempty"`
-  BoolAttribute    bool                    `json:"bool_attribute,omitempty"`
+	BoolAttribute    bool                    `json:"bool_attribute,omitempty"`
 	Int64Attribute   int64                   `json:"int64_attribute,omitempty"`
 	Float64Attribute float64                 `json:"float64_attribute,omitempty"`
 	Float32Attribute float32                 `json:"float32_attribute,omitempty"`
 	ListAttribute    []string                `json:"list_attribute,omitempty"`
 	SetAttribute     map[string]bool         `json:"set_attribute,omitempty"`
 	MapAttribute     map[string]string       `json:"map_attribute,omitempty"`
-	NestedObject     NestedObject            `json:"nested_object,omitempty"`
+	NestedObject     NestedObject            `json:"nested_object,omitzero"`
 	NestedObjectList []NestedObject          `json:"nested_object_list,omitempty"`
 	NestedObjectMap  map[string]NestedObject `json:"nested_object_map,omitempty"`
 }
 
 type NestedObject struct {
 	StringAttribute    string             `json:"string_attribute,omitempty"`
-	NestedNestedObject NestedNestedObject `json:"nested_nested_object,omitempty"`
+	NestedNestedObject NestedNestedObject `json:"nested_nested_object,omitzero"`
 }
 
 type NestedNestedObject struct {
@@ -44,7 +45,7 @@ type NestedNestedObject struct {
 //
 // This is useful for processing json marshalled response bodies.
 func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Diagnostics) *RancherDevResourceModel {
-  tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel to RancherDevResourceModel: %+v", pp.PrettyPrint(obj)))
+	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel to RancherDevResourceModel: \n%+v", pp.PrettyPrint(obj)))
 	if diags.HasError() {
 		return nil
 	}
@@ -52,34 +53,48 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 	// var err error
 	var data RancherDevResourceModel
 
-	// primitive types (string, bool, int, etc)
-	data.Id = types.StringValue(obj.Id)
-	data.StringAttribute = types.StringValue(obj.StringAttribute)
-  data.NumberAttribute = types.NumberValue(obj.NumberAttribute)
-
-	data.BoolAttribute = types.BoolValue(obj.BoolAttribute)
-	data.Int32Attribute = types.Int32Value(obj.Int32Attribute)
-	data.Int64Attribute = types.Int64Value(obj.Int64Attribute)
-	data.Float64Attribute = types.Float64Value(obj.Float64Attribute)
-	data.Float32Attribute = types.Float32Value(obj.Float32Attribute)
-	if diags.HasError() {
-		return &data
+	if obj.ID != "" {
+		data.ID = types.StringValue(obj.ID)
+	}
+	if obj.Identifier != "" {
+		data.Identifier = types.StringValue(obj.Identifier)
+	}
+	if obj.StringAttribute != "" {
+		data.StringAttribute = types.StringValue(obj.StringAttribute)
+	}
+	if obj.NumberAttribute != nil {
+		data.NumberAttribute = types.NumberValue(obj.NumberAttribute)
+	}
+	if obj.BoolAttribute {
+		data.BoolAttribute = types.BoolValue(obj.BoolAttribute)
+	}
+	if obj.Int32Attribute != 0 {
+		data.Int32Attribute = types.Int32Value(obj.Int32Attribute)
+	}
+	if obj.Int64Attribute != 0 {
+		data.Int64Attribute = types.Int64Value(obj.Int64Attribute)
+	}
+	if obj.Float64Attribute != 0 {
+		data.Float64Attribute = types.Float64Value(obj.Float64Attribute)
+	}
+	if obj.Float32Attribute != 0 {
+		data.Float32Attribute = types.Float32Value(obj.Float32Attribute)
 	}
 
-  // map
-  mapElems := make(map[string]attr.Value)
+	// map
+	mapElems := make(map[string]attr.Value)
 	for k, v := range obj.MapAttribute {
 		mapElems[k] = basetypes.NewStringValue(v)
 	}
-  mapVal, d := basetypes.NewMapValue(types.StringType, mapElems)
-  diags.Append(d...)
-  if mapVal.IsNull() {
-    diags.AddError("Map Creation Error", "basetypes.NewMapValue returned null")
-  }
-  if diags.HasError() {
-    return &data
-  }
-  data.MapAttribute = mapVal
+	mapVal, d := basetypes.NewMapValue(types.StringType, mapElems)
+	diags.Append(d...)
+	if mapVal.IsNull() {
+		diags.AddError("Map Creation Error", "basetypes.NewMapValue returned null")
+	}
+	if diags.HasError() {
+		return &data
+	}
+	data.MapAttribute = mapVal
 
 	// list
 	var listElems []attr.Value
@@ -96,7 +111,7 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 	}
 	data.ListAttribute = listVal
 
-  // set
+	// set
 	var setAttributeElems []attr.Value
 	for k := range obj.SetAttribute {
 		setAttributeElems = append(setAttributeElems, basetypes.NewStringValue(k))
@@ -111,17 +126,17 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 	}
 	data.SetAttribute = setVal
 
-  // complex types (nested objects)
-  var nestedNestedObjectAttrTypes = map[string]attr.Type{
-  	"string_attribute": types.StringType,
-  	"bool_attribute":   types.BoolType,
-  }
-  var nestedObjectAttrTypes = map[string]attr.Type{
-  	"string_attribute":     types.StringType,
-  	"nested_nested_object": types.ObjectType{
-  		AttrTypes: nestedNestedObjectAttrTypes,
-  	},
-  }
+	// complex types (nested objects)
+	var nestedNestedObjectAttrTypes = map[string]attr.Type{
+		"string_attribute": types.StringType,
+		"bool_attribute":   types.BoolType,
+	}
+	var nestedObjectAttrTypes = map[string]attr.Type{
+		"string_attribute": types.StringType,
+		"nested_nested_object": types.ObjectType{
+			AttrTypes: nestedNestedObjectAttrTypes,
+		},
+	}
 
 	rm := NestedResourceModel{}
 	d = obj.NestedObject.ToResourceModel(ctx, &rm)
@@ -163,7 +178,7 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 	}
 	data.NestedObjectList = nestl
 
-  // map of nested objects
+	// map of nested objects
 	nestedObjectMap := make(map[string]NestedResourceModel, len(obj.NestedObjectMap))
 	for k, v := range obj.NestedObjectMap {
 		r := NestedResourceModel{}
@@ -185,33 +200,33 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 	}
 	data.NestedObjectMap = nestm
 
-  err := validateData(&data)
+	err := validateData(&data)
 	if err != nil {
 		diags.AddError("Error validating data: ", err.Error())
 	}
 
-  tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel to RancherDevResourceModel: %+v", pp.PrettyPrint(data)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel to RancherDevResourceModel: \n%+v", pp.PrettyPrint(data)))
 	return &data
 }
 
 // Fills the target with types appropriate for a resource model.
 func (m *NestedObject) ToResourceModel(ctx context.Context, target *NestedResourceModel) diag.Diagnostics {
-  tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel NestedObject to RancherDevResourceModel NestedResourceModel: %+v", pp.PrettyPrint(m)))
+	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel NestedObject to RancherDevResourceModel NestedResourceModel: \n%+v", pp.PrettyPrint(m)))
 	dgs := diag.Diagnostics{}
 
-  // string attribute required
-  if target == nil {
+	// string attribute required
+	if target == nil {
 		dgs.AddError("target cannot be nil", "")
 		return dgs
 	}
 	target.StringAttribute = types.StringValue(m.StringAttribute)
 
-  var nestedNestedObjectAttrTypes = map[string]attr.Type{
-  	"string_attribute": types.StringType,
-  	"bool_attribute":   types.BoolType,
-  }
+	var nestedNestedObjectAttrTypes = map[string]attr.Type{
+		"string_attribute": types.StringType,
+		"bool_attribute":   types.BoolType,
+	}
 
-  nrm := NestedNestedResourceModel{}
+	nrm := NestedNestedResourceModel{}
 	diags := m.NestedNestedObject.ToResourceModel(ctx, &nrm)
 	dgs.Append(diags...)
 	if dgs.HasError() {
@@ -223,22 +238,22 @@ func (m *NestedObject) ToResourceModel(ctx context.Context, target *NestedResour
 	if dgs.HasError() {
 		return dgs
 	}
-	target.NestedNestedResourceModel = objValue
+	target.NestedNestedObject = objValue
 
-  tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel NestedObject to RancherDevResourceModel NestedResourceModel: %+v", pp.PrettyPrint(target)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel NestedObject to RancherDevResourceModel NestedResourceModel: \n%+v", pp.PrettyPrint(target)))
 	return dgs
 }
 
 // Fills the target with types appropriate for a resource model.
 func (m *NestedNestedObject) ToResourceModel(ctx context.Context, target *NestedNestedResourceModel) diag.Diagnostics {
-  tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel NestedNestedObject to RancherDevResourceModel NestedNestedResourceModel: %+v", pp.PrettyPrint(m)))
-  dgs := diag.Diagnostics{}
-  if target == nil {
+	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel NestedNestedObject to RancherDevResourceModel NestedNestedResourceModel: \n%+v", pp.PrettyPrint(m)))
+	dgs := diag.Diagnostics{}
+	if target == nil {
 		dgs.AddError("target cannot be nil", "")
 		return dgs
 	}
-  target.StringAttribute = types.StringValue(m.StringAttribute)
+	target.StringAttribute = types.StringValue(m.StringAttribute)
 	target.BoolAttribute = types.BoolValue(m.BoolAttribute)
-  tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel NestedNestedObject to RancherDevResourceModel NestedNestedResourceModel: %+v", pp.PrettyPrint(target)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel NestedNestedObject to RancherDevResourceModel NestedNestedResourceModel: \n%+v", pp.PrettyPrint(target)))
 	return dgs
 }
