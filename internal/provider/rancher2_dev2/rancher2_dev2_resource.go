@@ -135,7 +135,14 @@ func (r *Rancher2Dev2Resource) Schema(ctx context.Context, req resource.SchemaRe
 }
 
 func (r *Rancher2Dev2Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	client, dgs := client(req.ProviderData)
+
+  // Terraform may call this method before the provider has been configured (to make sure the resource is valid),
+  //  so we need to gracefully return an empty resource.
+  if req.ProviderData == nil {
+		return
+	}
+
+  client, dgs := client(req.ProviderData)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(*dgs...)
 		return
@@ -145,17 +152,12 @@ func (r *Rancher2Dev2Resource) Configure(ctx context.Context, req resource.Confi
 
 // Create changes reality and state to match plan.
 func (r *Rancher2Dev2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	config, dgs := config(ctx, req.Config)
-	if dgs.HasError() {
-		resp.Diagnostics.Append(*dgs...)
-		return
-	}
+	// req.Config shouldn't be used in this function, req.Plan should convey user intent, if there is any confusion use Plan Modifiers.
 	plan, dgs := plan(ctx, req.Plan)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(*dgs...)
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("Create Request Config: %+v\n", pp.PrettyPrint(config)))
 	tflog.Debug(ctx, fmt.Sprintf("Create Request Plan: %+v\n", pp.PrettyPrint(plan)))
 	tflog.Debug(ctx, fmt.Sprintf("Create Request Provider Config: %+v\n", pp.PrettyPrint(client)))
 
@@ -175,11 +177,7 @@ func (r *Rancher2Dev2Resource) Read(ctx context.Context, req resource.ReadReques
 // Update changes reality and state to match plan.
 // Best practice is not to compare, just overwrite.
 func (r *Rancher2Dev2Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	config, dgs := config(ctx, req.Config)
-	if dgs.HasError() {
-		resp.Diagnostics.Append(*dgs...)
-		return
-	}
+	// req.Config shouldn't be used in this function, req.Plan should convey user intent, if there is any confusion use Plan Modifiers.
 	plan, dgs := plan(ctx, req.Plan)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(*dgs...)
@@ -190,7 +188,6 @@ func (r *Rancher2Dev2Resource) Update(ctx context.Context, req resource.UpdateRe
 		resp.Diagnostics.Append(*dgs...)
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("Update Request Config: %+v\n", pp.PrettyPrint(config)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Plan: %+v\n", pp.PrettyPrint(plan)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request State: %+v\n", pp.PrettyPrint(state)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Provider Config: %+v\n", pp.PrettyPrint(client)))
@@ -233,26 +230,6 @@ func state(ctx context.Context, state tfsdk.State) (Rancher2Dev2ResourceModel, *
 	}
 
 	dgs.Append(state.Get(ctx, &model)...)
-	if dgs.HasError() {
-		return model, &dgs
-	}
-
-	return model, &dgs
-}
-func config(ctx context.Context, config tfsdk.Config) (Rancher2Dev2ResourceModel, *diag.Diagnostics) {
-	var dgs diag.Diagnostics
-	var model Rancher2Dev2ResourceModel
-
-	emptyConfig := tfsdk.Config{}
-	if config == emptyConfig {
-		dgs.AddError(
-			"Config not found",
-			"The config is missing from the request.",
-		)
-		return model, &dgs
-	}
-
-	dgs.Append(config.Get(ctx, &model)...)
 	if dgs.HasError() {
 		return model, &dgs
 	}

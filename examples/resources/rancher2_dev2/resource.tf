@@ -1,12 +1,13 @@
+# provider "rancher2" {}
 
 resource "rancher2_dev2" "full" {
   # id                  = "string" # this is read only, computed by the provider, and filtered from the API
   api_version = "string" # required
   kind        = "string" # required
   metadata = {
-    namespace     = "string" # optional, defaults to "default"
-    name          = "string" # optional, mutually exclusive with generate_name, either name or generate_name must be set
-    generate_name = "string" # optional, mutually exclusive with name, either name or generate_name must be set
+    namespace = "string" # optional, defaults to "default"
+    name      = "string" # optional, mutually exclusive with generate_name, either name or generate_name must be set
+    # generate_name = "string" # optional, mutually exclusive with name, either name or generate_name must be set
     # Annotations, labels, finalizers, and owner_references have special provider logic
     # The provider will enforce anything set by the user, but won't delete anything set by the API.
     # For instance if the user sets the label string = "string", and Kubernetes removes it, then Terraform will attempt to add it back.
@@ -60,20 +61,20 @@ resource "rancher2_dev2" "full" {
       }
     }
   }
-  status = "json blob" # computed, read only
+  # status = "json blob" # computed, read only
 }
 
-resource "rancher2_dev2" "minimal" {
-  api_version = "string"
-  kind        = "string"
-  metadata = {
-    name      = "string"
-    namespace = "string"
-  }
-  spec = {
-    string = "test"
-  }
-}
+# resource "rancher2_dev2" "minimal" {
+#   api_version = "string"
+#   kind        = "string"
+#   metadata = {
+#     name      = "string"
+#     namespace = "string"
+#   }
+#   spec = {
+#     string = "test"
+#   }
+# }
 
 # read only attributes
 output "rancher2_dev2_internal_id" {
@@ -110,11 +111,11 @@ output "rancher2_dev2_status" {
 }
 
 # special attributes (writable attributes added by kubernetes, not user, read only)
-output "rancher2_dev2_ingress_annotation" {
-  value = rancher2_dev2.full.metadata.annotations.ingress
+output "rancher2_dev2_string_annotation" {
+  value = rancher2_dev2.full.metadata.annotations.string
 }
-output "rancher2_dev2_node_label" {
-  value = rancher2_dev2.full.metadata.labels.node
+output "rancher2_dev2_string_label" {
+  value = rancher2_dev2.full.metadata.labels.string
 }
 output "rancher2_dev2_finalizers" {
   value = rancher2_dev2.full.metadata.finalizers

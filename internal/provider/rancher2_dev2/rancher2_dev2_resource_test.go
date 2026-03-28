@@ -1,8 +1,6 @@
 package rancher2_dev2
 
 import (
-	"bytes"
-	"context"
 	"slices"
 	"testing"
 
@@ -10,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 
 	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
+	mta "github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_metadata"
 	h "github.com/rancher/terraform-provider-rancher2/internal/provider/test_helpers"
 )
 
@@ -28,8 +27,10 @@ func TestRancher2Dev2Resource(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				res := resource.MetadataResponse{}
-				tc.fit.Metadata(context.Background(), resource.MetadataRequest{ProviderTypeName: "rancher2"}, &res)
+				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
+				defer log()
+        res := resource.MetadataResponse{}
+				tc.fit.Metadata(ctx, resource.MetadataRequest{ProviderTypeName: "rancher2"}, &res)
 				got := res
 				if got.TypeName != tc.want.TypeName {
 					t.Errorf("%+v.Metadata() TypeName is %s; want %s", tc.fit, got.TypeName, tc.want.TypeName)
@@ -60,7 +61,8 @@ func TestRancher2Dev2Resource(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				ctx := context.Background()
+				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
+				defer log()
 				req := resource.SchemaRequest{}
 				res := resource.SchemaResponse{}
 				tc.fit.Schema(ctx, req, &res)
@@ -98,7 +100,7 @@ func TestRancher2Dev2Resource(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				ctx, log := cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
+				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
 				defer log()
 				req := resource.ConfigureRequest{
 					ProviderData: h.GetTestClient(t, ctx),
@@ -130,14 +132,14 @@ func TestRancher2Dev2Resource(t *testing.T) {
 				Rancher2Dev2Model{ // Go model to convert to tfsdk.Plan
 					APIVersion: "v1",
 					Kind:       "test",
-					Metadata: Metadata{
+					Metadata: mta.Metadata{
 						Name: "test",
 					},
 				},
 				Rancher2Dev2Model{ // Go model to convert to tfsdk.State for comparing against the resulting state
 					APIVersion: "v1",
 					Kind:       "test",
-					Metadata: Metadata{
+					Metadata: mta.Metadata{
 						Name: "test",
 					},
 				},
@@ -146,7 +148,7 @@ func TestRancher2Dev2Resource(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				ctx, log := cntxt(t, "DEBUG") // Change the log level to "DEBUG" here for more logging.
+				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
 				defer log()
 				clnt := h.GetTestClient(t, ctx)
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, clnt)
@@ -188,7 +190,8 @@ func TestRancher2Dev2Resource(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				ctx := context.Background()
+				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
+				defer log()
 				req := resource.ReadRequest{}
 				res := resource.ReadResponse{}
 				tc.fit.Read(ctx, req, &res)
@@ -212,7 +215,8 @@ func TestRancher2Dev2Resource(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				ctx := context.Background()
+				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
+				defer log()
 				req := resource.UpdateRequest{}
 				res := resource.UpdateResponse{}
 				tc.fit.Update(ctx, req, &res)
@@ -236,7 +240,8 @@ func TestRancher2Dev2Resource(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				ctx := context.Background()
+				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
+				defer log()
 				req := resource.DeleteRequest{}
 				res := resource.DeleteResponse{}
 				tc.fit.Delete(ctx, req, &res)
@@ -260,7 +265,8 @@ func TestRancher2Dev2Resource(t *testing.T) {
 		}
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				ctx := context.Background()
+				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
+				defer log()
 				req := resource.ImportStateRequest{}
 				res := resource.ImportStateResponse{}
 				tc.fit.ImportState(ctx, req, &res)
@@ -270,10 +276,4 @@ func TestRancher2Dev2Resource(t *testing.T) {
 			})
 		}
 	})
-}
-
-// Helpers.
-func cntxt(t *testing.T, logLevel string) (context.Context, func()) {
-	var buf bytes.Buffer
-	return h.GenerateTestContext(t, &buf, nil), func() { h.PrintLog(t, &buf, logLevel) }
 }

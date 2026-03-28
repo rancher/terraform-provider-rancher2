@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
 )
@@ -92,4 +94,41 @@ func GetConfiguredResource(ctx context.Context, t *testing.T, rsc resource.Resou
 
 func GetTestClient(t *testing.T, ctx context.Context) *c.TestClient {
 	return c.NewTestClient(ctx, "https://rancher.example.com", "", false, false, 30, 10, &c.TokenStore{})
+}
+
+//nolint:unparam
+func Cntxt(t *testing.T, logLevel string) (context.Context, func()) {
+	var buf bytes.Buffer
+	return GenerateTestContext(t, &buf, nil), func() { PrintLog(t, &buf, logLevel) }
+}
+
+// rsc must be an empty resource with the schema function implemented.
+func Schema(ctx context.Context, rsc resource.Resource) schema.Schema {
+	schemaResponseContainer := &resource.SchemaResponse{}
+	rsc.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
+	return schemaResponseContainer.Schema
+}
+
+// rsc must be an empty resource with the schema function implemented.
+func State(ctx context.Context, rsc resource.Resource, model any) (tfsdk.State, error) {
+	state := tfsdk.State{
+		Schema: Schema(ctx, rsc),
+	}
+	dgs := state.Set(ctx, model)
+	if dgs.HasError() {
+		return state, fmt.Errorf("error setting state: %s", dgs.Errors())
+	}
+	return state, nil
+}
+
+// rsc must be an empty resource with the schema function implemented.
+func Plan(ctx context.Context, rsc resource.Resource, model any) (tfsdk.Plan, error) {
+	plan := tfsdk.Plan{
+		Schema: Schema(ctx, rsc),
+	}
+	dgs := plan.Set(ctx, model)
+	if dgs.HasError() {
+		return plan, fmt.Errorf("error setting plan: %s", dgs.Errors())
+	}
+	return plan, nil
 }

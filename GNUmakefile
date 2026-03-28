@@ -3,10 +3,10 @@ default: fmt lint build install generate test
 fmt:
 	gofmt -s -w -e .
 
-lint:
+lint: fmt
 	golangci-lint run
 
-build:
+build: fmt
 	rm -f ./bin/terraform-provider-rancher2; \
 	go build -o ./bin/ -v ./...
 

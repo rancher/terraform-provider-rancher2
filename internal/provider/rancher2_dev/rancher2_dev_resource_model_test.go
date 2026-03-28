@@ -19,11 +19,11 @@ import (
 	h "github.com/rancher/terraform-provider-rancher2/internal/provider/test_helpers"
 )
 
-func TestRancherDevResourceModel(t *testing.T) {
+func TestRancher2DevResourceModel(t *testing.T) {
 	t.Run("ToGoModel", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherDevResourceModel
+			fit  Rancher2DevResourceModel
 			want RancherDevModel
 		}{
 			{
@@ -47,7 +47,7 @@ func TestRancherDevResourceModel(t *testing.T) {
 	t.Run("ToPlan", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherDevResourceModel
+			fit  Rancher2DevResourceModel
 			want tfsdk.Plan
 		}{
 			{
@@ -74,7 +74,7 @@ func TestRancherDevResourceModel(t *testing.T) {
 	t.Run("ToState", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherDevResourceModel
+			fit  Rancher2DevResourceModel
 			want tfsdk.State
 		}{
 			{
@@ -192,7 +192,7 @@ var nestedObjectAttrTypes = map[string]attr.Type{
 	},
 }
 
-func getDefaultResourceModel() RancherDevResourceModel {
+func getDefaultResourceModel() Rancher2DevResourceModel {
 	nestedNestedObjectValue := types.ObjectValueMust(
 		nestedNestedObjectAttrTypes,
 		map[string]attr.Value{
@@ -209,7 +209,7 @@ func getDefaultResourceModel() RancherDevResourceModel {
 		},
 	)
 
-	return RancherDevResourceModel{
+	return Rancher2DevResourceModel{
 		NumberAttribute:  types.NumberValue(big.NewFloat(1.23)), // required
 		StringAttribute:  types.StringValue("test"),             // required
 		BoolAttribute:    types.BoolValue(true),                 // default value
@@ -276,7 +276,7 @@ func getDefaultGoModel() RancherDevModel {
 	}
 }
 
-func getPlan(ctx context.Context, m RancherDevResourceModel, diags *diag.Diagnostics) tfsdk.Plan {
+func getPlan(ctx context.Context, m Rancher2DevResourceModel, diags *diag.Diagnostics) tfsdk.Plan {
 	plan := tfsdk.Plan{
 		Schema: getSchema(ctx),
 	}
@@ -291,7 +291,7 @@ func getPlan(ctx context.Context, m RancherDevResourceModel, diags *diag.Diagnos
 	return plan
 }
 
-func getState(ctx context.Context, m RancherDevResourceModel, diags *diag.Diagnostics) tfsdk.State {
+func getState(ctx context.Context, m Rancher2DevResourceModel, diags *diag.Diagnostics) tfsdk.State {
 	state := tfsdk.State{
 		Schema: getSchema(ctx),
 	}
@@ -307,7 +307,7 @@ func getState(ctx context.Context, m RancherDevResourceModel, diags *diag.Diagno
 }
 
 func getSchema(ctx context.Context) schema.Schema {
-	emptyResource := NewRancherDevResource()
+	emptyResource := NewRancher2DevResource()
 	schemaResponseContainer := &resource.SchemaResponse{}
 	emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 	return schemaResponseContainer.Schema

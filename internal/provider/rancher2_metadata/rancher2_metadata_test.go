@@ -1,0 +1,1 @@
+package rancher2_metadata

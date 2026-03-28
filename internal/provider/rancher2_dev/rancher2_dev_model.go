@@ -41,17 +41,17 @@ type NestedNestedObject struct {
 	BoolAttribute   bool   `json:"bool_attribute,omitempty"`
 }
 
-// ToResource converts a RancherDevModel to a RancherDevResourceModel
+// ToResource converts a RancherDevModel to a Rancher2DevResourceModel
 //
 // This is useful for processing json marshalled response bodies.
-func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Diagnostics) *RancherDevResourceModel {
-	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel to RancherDevResourceModel: \n%+v", pp.PrettyPrint(obj)))
+func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Diagnostics) *Rancher2DevResourceModel {
+	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel to Rancher2DevResourceModel: \n%+v", pp.PrettyPrint(obj)))
 	if diags.HasError() {
 		return nil
 	}
 
 	// var err error
-	var data RancherDevResourceModel
+	var data Rancher2DevResourceModel
 
 	if obj.ID != "" {
 		data.ID = types.StringValue(obj.ID)
@@ -205,13 +205,13 @@ func (obj *RancherDevModel) ToResourceModel(ctx context.Context, diags *diag.Dia
 		diags.AddError("Error validating data: ", err.Error())
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel to RancherDevResourceModel: \n%+v", pp.PrettyPrint(data)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel to Rancher2DevResourceModel: \n%+v", pp.PrettyPrint(data)))
 	return &data
 }
 
 // Fills the target with types appropriate for a resource model.
 func (m *NestedObject) ToResourceModel(ctx context.Context, target *NestedResourceModel) diag.Diagnostics {
-	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel NestedObject to RancherDevResourceModel NestedResourceModel: \n%+v", pp.PrettyPrint(m)))
+	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel NestedObject to Rancher2DevResourceModel NestedResourceModel: \n%+v", pp.PrettyPrint(m)))
 	dgs := diag.Diagnostics{}
 
 	// string attribute required
@@ -240,13 +240,13 @@ func (m *NestedObject) ToResourceModel(ctx context.Context, target *NestedResour
 	}
 	target.NestedNestedObject = objValue
 
-	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel NestedObject to RancherDevResourceModel NestedResourceModel: \n%+v", pp.PrettyPrint(target)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel NestedObject to Rancher2DevResourceModel NestedResourceModel: \n%+v", pp.PrettyPrint(target)))
 	return dgs
 }
 
 // Fills the target with types appropriate for a resource model.
 func (m *NestedNestedObject) ToResourceModel(ctx context.Context, target *NestedNestedResourceModel) diag.Diagnostics {
-	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel NestedNestedObject to RancherDevResourceModel NestedNestedResourceModel: \n%+v", pp.PrettyPrint(m)))
+	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevModel NestedNestedObject to Rancher2DevResourceModel NestedNestedResourceModel: \n%+v", pp.PrettyPrint(m)))
 	dgs := diag.Diagnostics{}
 	if target == nil {
 		dgs.AddError("target cannot be nil", "")
@@ -254,6 +254,6 @@ func (m *NestedNestedObject) ToResourceModel(ctx context.Context, target *Nested
 	}
 	target.StringAttribute = types.StringValue(m.StringAttribute)
 	target.BoolAttribute = types.BoolValue(m.BoolAttribute)
-	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel NestedNestedObject to RancherDevResourceModel NestedNestedResourceModel: \n%+v", pp.PrettyPrint(target)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevModel NestedNestedObject to Rancher2DevResourceModel NestedNestedResourceModel: \n%+v", pp.PrettyPrint(target)))
 	return dgs
 }

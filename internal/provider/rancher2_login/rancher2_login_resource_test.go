@@ -29,16 +29,16 @@ const (
 	testInitialToken = "ext/test-token:this1is2the3initial4test5token6it7is8fake"
 )
 
-func TestRancherLoginResource(t *testing.T) {
+func TestRancher2LoginResource(t *testing.T) {
 	t.Run("Metadata", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherLoginResource
+			fit  Rancher2LoginResource
 			want resource.MetadataResponse
 		}{
 			{
 				"Basic",
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				resource.MetadataResponse{TypeName: "rancher2_login"},
 			},
 		}
@@ -56,12 +56,12 @@ func TestRancherLoginResource(t *testing.T) {
 	t.Run("Schema", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherLoginResource
+			fit  Rancher2LoginResource
 			want []string
 		}{
 			{
 				"Basic",
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				[]string{
 					"id",
 					"username",
@@ -100,13 +100,13 @@ func TestRancherLoginResource(t *testing.T) {
 	t.Run("Config", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherLoginResource
-			want RancherLoginResource
+			fit  Rancher2LoginResource
+			want Rancher2LoginResource
 		}{
 			{
 				"Basic",
-				RancherLoginResource{},
-				RancherLoginResource{},
+				Rancher2LoginResource{},
+				Rancher2LoginResource{},
 			},
 		}
 		for _, tc := range testCases {
@@ -121,7 +121,7 @@ func TestRancherLoginResource(t *testing.T) {
 	t.Run("Create", func(t *testing.T) {
 		testCases := []struct {
 			name          string
-			fit           RancherLoginResource
+			fit           Rancher2LoginResource
 			env           map[string]string
 			plan          RancherLoginModel
 			loginRequest  c.Request
@@ -133,7 +133,7 @@ func TestRancherLoginResource(t *testing.T) {
 		}{
 			{
 				"Basic",
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				map[string]string{},
 				RancherLoginModel{ // plan
 					Username: "user",
@@ -240,7 +240,7 @@ func TestRancherLoginResource(t *testing.T) {
 			},
 			{
 				"API Conflict",
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				map[string]string{},
 				RancherLoginModel{ // plan
 					Username: "user",
@@ -330,7 +330,7 @@ func TestRancherLoginResource(t *testing.T) {
 				}
 				req := resource.CreateRequest{Plan: plan}
 
-				emptyResource := NewRancherLoginResource()
+				emptyResource := NewRancher2LoginResource()
 				schemaResponseContainer := &resource.SchemaResponse{}
 				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 				state := tfsdk.State{
@@ -372,7 +372,7 @@ func TestRancherLoginResource(t *testing.T) {
 	t.Run("Read", func(t *testing.T) {
 		testCases := []struct {
 			name               string
-			fit                RancherLoginResource
+			fit                Rancher2LoginResource
 			env                map[string]string // a k/v map of environment variables to set
 			existingState      RancherLoginModel // this will get injected in the read request
 			expectedState      RancherLoginModel
@@ -382,7 +382,7 @@ func TestRancherLoginResource(t *testing.T) {
 		}{
 			{
 				"Basic", // read
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				map[string]string{},
 				RancherLoginModel{
 					Id:                          testTokenId,
@@ -463,7 +463,7 @@ func TestRancherLoginResource(t *testing.T) {
 			},
 			{
 				"Resource Not Found",
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				map[string]string{},
 				RancherLoginModel{Id: testTokenId},
 				RancherLoginModel{},
@@ -510,7 +510,7 @@ func TestRancherLoginResource(t *testing.T) {
 				}
 				req := resource.ReadRequest{State: state}
 
-				emptyResource := NewRancherLoginResource()
+				emptyResource := NewRancher2LoginResource()
 				schemaResponseContainer := &resource.SchemaResponse{}
 				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 				resState := tfsdk.State{
@@ -557,7 +557,7 @@ func TestRancherLoginResource(t *testing.T) {
 	t.Run("Update", func(t *testing.T) {
 		testCases := []struct {
 			name                 string
-			fit                  RancherLoginResource
+			fit                  Rancher2LoginResource
 			env                  map[string]string
 			plan                 RancherLoginModel
 			existingState        RancherLoginModel
@@ -572,7 +572,7 @@ func TestRancherLoginResource(t *testing.T) {
 		}{
 			{
 				"Basic", // update
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				map[string]string{},
 				RancherLoginModel{ //plan
 					Username: "user",
@@ -660,7 +660,7 @@ func TestRancherLoginResource(t *testing.T) {
 			},
 			{
 				"Update Token", // update
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				map[string]string{
 					"RANCHER_USERNAME": "user",
 					"RANCHER_PASSWORD": "password",
@@ -853,7 +853,7 @@ func TestRancherLoginResource(t *testing.T) {
 					Plan:  plan,
 					State: state,
 				}
-				emptyResource := NewRancherLoginResource()
+				emptyResource := NewRancher2LoginResource()
 				schemaResponseContainer := &resource.SchemaResponse{}
 				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 				resState := tfsdk.State{
@@ -893,7 +893,7 @@ func TestRancherLoginResource(t *testing.T) {
 	t.Run("Delete", func(t *testing.T) {
 		testCases := []struct {
 			name               string
-			fit                RancherLoginResource
+			fit                Rancher2LoginResource
 			existingState      RancherLoginModel
 			expectedApiRequest c.Request
 			apiResponse        c.Response
@@ -901,7 +901,7 @@ func TestRancherLoginResource(t *testing.T) {
 		}{
 			{
 				"Basic", // delete
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				RancherLoginModel{Id: testTokenId},
 				c.Request{
 					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
@@ -915,7 +915,7 @@ func TestRancherLoginResource(t *testing.T) {
 			},
 			{
 				"Resource Already Deleted", // delete
-				RancherLoginResource{},
+				Rancher2LoginResource{},
 				RancherLoginModel{Id: testTokenId},
 				c.Request{
 					Endpoint: fmt.Sprintf("%s/%s/%s", apiUrl, tokenEndpoint, testTokenId),
@@ -953,7 +953,7 @@ func TestRancherLoginResource(t *testing.T) {
 				req := resource.DeleteRequest{
 					State: state,
 				}
-				emptyResource := NewRancherLoginResource()
+				emptyResource := NewRancher2LoginResource()
 				schemaResponseContainer := &resource.SchemaResponse{}
 				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 				resState := tfsdk.State{

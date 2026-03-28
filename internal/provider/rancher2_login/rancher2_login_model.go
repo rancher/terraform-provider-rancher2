@@ -22,11 +22,11 @@ type RancherLoginModel struct {
 	UserTokenRefreshDate        string `json:"user_token_refresh_date,omitempty"`
 }
 
-func (obj *RancherLoginModel) ToResourceModel(ctx context.Context, diags *diag.Diagnostics) *RancherLoginResourceModel {
+func (obj *RancherLoginModel) ToResourceModel(ctx context.Context, diags *diag.Diagnostics) *Rancher2LoginResourceModel {
 	if diags.HasError() {
 		return nil
 	}
-	data := RancherLoginResourceModel{
+	data := Rancher2LoginResourceModel{
 		Id:                          types.StringValue(obj.Id),
 		Username:                    types.StringValue(obj.Username),
 		Password:                    types.StringValue(obj.Password),

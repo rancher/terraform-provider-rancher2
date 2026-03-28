@@ -33,16 +33,16 @@ const (
 	testUserToken = "ext/" + testToken
 )
 
-func TestRancherDevResource(t *testing.T) {
+func TestRancher2DevResource(t *testing.T) {
 	t.Run("Metadata", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherDevResource
+			fit  Rancher2DevResource
 			want resource.MetadataResponse
 		}{
 			{
 				"Basic",
-				RancherDevResource{},
+				Rancher2DevResource{},
 				resource.MetadataResponse{TypeName: "rancher2_dev"},
 			},
 		}
@@ -60,12 +60,12 @@ func TestRancherDevResource(t *testing.T) {
 	t.Run("Schema", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherDevResource
+			fit  Rancher2DevResource
 			want []string
 		}{
 			{
 				"Basic",
-				RancherDevResource{},
+				Rancher2DevResource{},
 				[]string{
 					"id",
 					"identifier",
@@ -107,13 +107,13 @@ func TestRancherDevResource(t *testing.T) {
 	t.Run("Config", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherDevResource
-			want RancherDevResource
+			fit  Rancher2DevResource
+			want Rancher2DevResource
 		}{
 			{
 				"Basic",
-				RancherDevResource{},
-				RancherDevResource{},
+				Rancher2DevResource{},
+				Rancher2DevResource{},
 			},
 		}
 		for _, tc := range testCases {
@@ -128,7 +128,7 @@ func TestRancherDevResource(t *testing.T) {
 	t.Run("Create", func(t *testing.T) {
 		testCases := []struct {
 			name          string
-			fit           RancherDevResource
+			fit           Rancher2DevResource
 			env           map[string]string // a k/v map of environment variables to set
 			plan          RancherDevModel   // what is in the plan, translated to struct
 			apiRequest    c.Request         // what the request should look like as reported by the client
@@ -138,7 +138,7 @@ func TestRancherDevResource(t *testing.T) {
 		}{
 			{
 				"Basic", // create
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
 					// The ID attribute is set by the provider and is read only, but for testing we add it to validate against known states
@@ -315,7 +315,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"API Conflict", // create
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan MUST include required attributes
 					// The ID attribute is set by the provider and is read only, but for testing we add it to validate against known states
@@ -358,7 +358,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"Server Error", // create
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
 					// The ID attribute is set by the provider and is read only, but for testing we add it to validate against known states
@@ -439,7 +439,7 @@ func TestRancherDevResource(t *testing.T) {
 				req := resource.CreateRequest{Plan: plan}
 
 				// get empty state
-				emptyResource := NewRancherDevResource()
+				emptyResource := NewRancher2DevResource()
 				schemaResponseContainer := &resource.SchemaResponse{}
 				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 				state := tfsdk.State{
@@ -482,7 +482,7 @@ func TestRancherDevResource(t *testing.T) {
 	t.Run("Read", func(t *testing.T) {
 		testCases := []struct {
 			name          string
-			fit           RancherDevResource
+			fit           Rancher2DevResource
 			env           map[string]string // a k/v map of environment variables to set
 			existingState RancherDevModel   // this will get injected in the read request
 			apiRequest    c.Request         // the API request expected to be reported from the client
@@ -492,7 +492,7 @@ func TestRancherDevResource(t *testing.T) {
 		}{
 			{
 				"Basic", // read
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // existing state
 					ID:              defaultId,
@@ -531,7 +531,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"Update object", // read
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // existing state
 					ID:              defaultId,
@@ -570,7 +570,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"Failed Response", // read
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // existing
 					ID:              defaultId,
@@ -606,7 +606,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"Unmanaged API data", // read
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // existing state
 					ID:              defaultId,
@@ -695,7 +695,7 @@ func TestRancherDevResource(t *testing.T) {
 				expectedState := resource.ReadResponse{State: state}
 
 				// get empty state
-				emptyResource := NewRancherDevResource()
+				emptyResource := NewRancher2DevResource()
 				schemaResponseContainer := &resource.SchemaResponse{}
 				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 				state = tfsdk.State{
@@ -731,7 +731,7 @@ func TestRancherDevResource(t *testing.T) {
 	t.Run("Update", func(t *testing.T) {
 		testCases := []struct {
 			name          string
-			fit           RancherDevResource
+			fit           Rancher2DevResource
 			env           map[string]string // a k/v map of environment variables to set
 			plan          RancherDevModel
 			existingState RancherDevModel
@@ -742,7 +742,7 @@ func TestRancherDevResource(t *testing.T) {
 		}{
 			{
 				"Basic", // update
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
 					// ID is read only in the schema, but we allow it in the plan in order to test with predictable values.
@@ -798,7 +798,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"Update on Deleted Resource", // update
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
 					ID:              defaultId,       // stringplanmodifier.UseStateForUnknown() allows this to be in the plan on update only
@@ -850,7 +850,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"Server Error on Update", // update
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
 					// ID is read only in the schema, but we allow it in the plan in order to test with predictable values.
@@ -904,7 +904,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"Partial Attribute Update", // update
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // plan
 					// ID is read only in the schema, but we allow it in the plan in order to test with predictable values.
@@ -999,7 +999,7 @@ func TestRancherDevResource(t *testing.T) {
 					State: state,
 				}
 				// get empty state
-				emptyResource := NewRancherDevResource()
+				emptyResource := NewRancher2DevResource()
 				schemaResponseContainer := &resource.SchemaResponse{}
 				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 				state = tfsdk.State{
@@ -1045,7 +1045,7 @@ func TestRancherDevResource(t *testing.T) {
 	t.Run("Delete", func(t *testing.T) {
 		testCases := []struct {
 			name          string
-			fit           RancherDevResource
+			fit           Rancher2DevResource
 			env           map[string]string // a k/v map of environment variables to set
 			existingState RancherDevModel
 			apiRequest    c.Request  // the API request expected to be reported from the client
@@ -1054,7 +1054,7 @@ func TestRancherDevResource(t *testing.T) {
 		}{
 			{
 				"Basic", // delete
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // existing state
 					ID:              defaultId,
@@ -1080,7 +1080,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"Resource Already Deleted", // delete
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // existing state
 					ID:              defaultId,
@@ -1111,7 +1111,7 @@ func TestRancherDevResource(t *testing.T) {
 			},
 			{
 				"Server Error on Delete", // delete
-				RancherDevResource{},
+				Rancher2DevResource{},
 				map[string]string{},
 				RancherDevModel{ // existing state
 					ID:              defaultId,
@@ -1177,7 +1177,7 @@ func TestRancherDevResource(t *testing.T) {
 					State: state,
 				}
 				// get empty state
-				emptyResource := NewRancherDevResource()
+				emptyResource := NewRancher2DevResource()
 				schemaResponseContainer := &resource.SchemaResponse{}
 				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 				state = tfsdk.State{

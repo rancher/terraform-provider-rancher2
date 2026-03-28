@@ -2,7 +2,6 @@ package rancher2_metadata
 
 import (
 	"context"
-	// "maps".
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -11,6 +10,86 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+// MetadataAttribute defines the generic Kubernetes metadata schema as a Terraform schema.
+func MetadataAttribute() schema.SingleNestedAttribute {
+	return schema.SingleNestedAttribute{
+		MarkdownDescription: "The metadata of the resource.",
+		Required:            true,
+		Validators: []validator.Object{
+			nameAndGenerateNameValidator{},
+		},
+		Attributes: map[string]schema.Attribute{
+			"name": schema.StringAttribute{
+				MarkdownDescription: "The name of the resource.",
+				Optional:            true,
+			},
+			"namespace": schema.StringAttribute{
+				MarkdownDescription: "The namespace of the resource.",
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("default"),
+			},
+			"generate_name": schema.StringAttribute{
+				MarkdownDescription: "The generate name of the resource.",
+				Optional:            true,
+			},
+			"annotations": schema.MapAttribute{
+				MarkdownDescription: "The annotations of the resource.",
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.StringType,
+				PlanModifiers: []planmodifier.Map{
+					metadataMergeModifier{},
+				},
+			},
+			"labels": schema.MapAttribute{
+				MarkdownDescription: "The labels of the resource.",
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.StringType,
+				PlanModifiers: []planmodifier.Map{
+					metadataMergeModifier{},
+				},
+			},
+			"finalizers": schema.ListAttribute{
+				MarkdownDescription: "Advanced use cases only. The finalizers of the resource.",
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.StringType,
+				PlanModifiers: []planmodifier.List{
+					finalizerModifier{},
+				},
+			},
+			"owner_references": schema.ListNestedAttribute{
+				MarkdownDescription: "Advanced use cases only. The owner references of the resource.",
+				Optional:            true,
+				Computed:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"api_version":          schema.StringAttribute{Optional: true},
+						"kind":                 schema.StringAttribute{Optional: true},
+						"name":                 schema.StringAttribute{Optional: true},
+						"uid":                  schema.StringAttribute{Optional: true},
+						"controller":           schema.BoolAttribute{Optional: true},
+						"block_owner_deletion": schema.BoolAttribute{Optional: true},
+					},
+				},
+				PlanModifiers: []planmodifier.List{
+					ownerReferenceModifier{},
+				},
+			},
+			"uid":                           schema.StringAttribute{Computed: true},
+			"generation":                    schema.Int64Attribute{Computed: true},
+			"creation_timestamp":            schema.StringAttribute{Computed: true},
+			"deletion_grace_period_seconds": schema.Int64Attribute{Computed: true},
+			"deletion_timestamp":            schema.StringAttribute{Computed: true},
+			"managed_fields":                schema.StringAttribute{Computed: true},
+			"resource_version":              schema.StringAttribute{Computed: true},
+			"self_link":                     schema.StringAttribute{Computed: true},
+		},
+	}
+}
 
 // metadataMergeModifier implements the "Sticky" map modifier to ensure Terraform
 // only reconciles what it "owns", and adopts cluster state for API-only keys.
@@ -172,12 +251,12 @@ func (v nameAndGenerateNameValidator) MarkdownDescription(ctx context.Context) s
 
 func (v nameAndGenerateNameValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
 	var name, generateName types.String
-	dgs := req.Config.GetAttribute(ctx, path.Root("name"), &name)
+	dgs := req.Config.GetAttribute(ctx, path.Root("metadata").AtName("name"), &name)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(dgs...)
 		return
 	}
-	dgs = req.Config.GetAttribute(ctx, path.Root("generate_name"), &generateName)
+	dgs = req.Config.GetAttribute(ctx, path.Root("metadata").AtName("generate_name"), &generateName)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(dgs...)
 		return
@@ -198,85 +277,5 @@ func (v nameAndGenerateNameValidator) ValidateObject(ctx context.Context, req va
 			"one_of_required",
 			"one of name or generate_name must be set, but neither were.",
 		)
-	}
-}
-
-// MetadataAttribute defines the generic Kubernetes metadata schema.
-func MetadataAttribute() schema.SingleNestedAttribute {
-	return schema.SingleNestedAttribute{
-		MarkdownDescription: "The metadata of the resource.",
-		Required:            true,
-		Validators: []validator.Object{
-			nameAndGenerateNameValidator{},
-		},
-		Attributes: map[string]schema.Attribute{
-			"name": schema.StringAttribute{
-				MarkdownDescription: "The name of the resource.",
-				Optional:            true,
-			},
-			"namespace": schema.StringAttribute{
-				MarkdownDescription: "The namespace of the resource.",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("default"),
-			},
-			"generate_name": schema.StringAttribute{
-				MarkdownDescription: "The generate name of the resource.",
-				Optional:            true,
-			},
-			"annotations": schema.MapAttribute{
-				MarkdownDescription: "The annotations of the resource.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-				PlanModifiers: []planmodifier.Map{
-					metadataMergeModifier{},
-				},
-			},
-			"labels": schema.MapAttribute{
-				MarkdownDescription: "The labels of the resource.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-				PlanModifiers: []planmodifier.Map{
-					metadataMergeModifier{},
-				},
-			},
-			"finalizers": schema.ListAttribute{
-				MarkdownDescription: "Advanced use cases only. The finalizers of the resource.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-				PlanModifiers: []planmodifier.List{
-					finalizerModifier{},
-				},
-			},
-			"owner_references": schema.ListNestedAttribute{
-				MarkdownDescription: "Advanced use cases only. The owner references of the resource.",
-				Optional:            true,
-				Computed:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"api_version":          schema.StringAttribute{Optional: true},
-						"kind":                 schema.StringAttribute{Optional: true},
-						"name":                 schema.StringAttribute{Optional: true},
-						"uid":                  schema.StringAttribute{Optional: true},
-						"controller":           schema.BoolAttribute{Optional: true},
-						"block_owner_deletion": schema.BoolAttribute{Optional: true},
-					},
-				},
-				PlanModifiers: []planmodifier.List{
-					ownerReferenceModifier{},
-				},
-			},
-			"uid":                           schema.StringAttribute{Computed: true},
-			"generation":                    schema.Int64Attribute{Computed: true},
-			"creation_timestamp":            schema.StringAttribute{Computed: true},
-			"deletion_grace_period_seconds": schema.Int64Attribute{Computed: true},
-			"deletion_timestamp":            schema.StringAttribute{Computed: true},
-			"managed_fields":                schema.StringAttribute{Computed: true},
-			"resource_version":              schema.StringAttribute{Computed: true},
-			"self_link":                     schema.StringAttribute{Computed: true},
-		},
 	}
 }

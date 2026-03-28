@@ -22,6 +22,7 @@ import (
 	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
 	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
 	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_dev"
+	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_dev2"
 	"github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_login"
 	"github.com/rancher/terraform-provider-rancher2/internal/provider/validators"
 )
@@ -227,8 +228,9 @@ func (p *RancherProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 func (p *RancherProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		rancher2_dev.NewRancherDevResource,
-		rancher2_login.NewRancherLoginResource,
+		rancher2_dev.NewRancher2DevResource,
+		rancher2_dev2.NewRancher2Dev2Resource,
+		rancher2_login.NewRancher2LoginResource,
 	}
 }
 

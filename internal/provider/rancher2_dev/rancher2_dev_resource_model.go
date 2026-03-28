@@ -13,7 +13,7 @@ import (
 	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
 )
 
-type RancherDevResourceModel struct {
+type Rancher2DevResourceModel struct {
 	ID               types.String  `tfsdk:"id"`
 	Identifier       types.String  `tfsdk:"identifier"`
 	NumberAttribute  types.Number  `tfsdk:"number_attribute"`
@@ -40,12 +40,12 @@ type NestedNestedResourceModel struct {
 }
 
 // ToPlan returns a tfsdk.Plan with the data from the model.
-func (m *RancherDevResourceModel) ToPlan(ctx context.Context, diags *diag.Diagnostics) tfsdk.Plan {
-	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevResourceModel to tfsdk.Plan: \n%+v", pp.PrettyPrint(m)))
+func (m *Rancher2DevResourceModel) ToPlan(ctx context.Context, diags *diag.Diagnostics) tfsdk.Plan {
+	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2DevResourceModel to tfsdk.Plan: \n%+v", pp.PrettyPrint(m)))
 	if diags.HasError() {
 		return tfsdk.Plan{}
 	}
-	r := NewRancherDevResource()
+	r := NewRancher2DevResource()
 	s := &resource.SchemaResponse{}
 	r.Schema(ctx, resource.SchemaRequest{}, s)
 
@@ -59,17 +59,17 @@ func (m *RancherDevResourceModel) ToPlan(ctx context.Context, diags *diag.Diagno
 	if dgs.HasError() {
 		diags.Append(dgs...)
 	}
-	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevResourceModel to tfsdk.Plan: \n%+v", pp.PrettyPrint(plan)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2DevResourceModel to tfsdk.Plan: \n%+v", pp.PrettyPrint(plan)))
 	return plan
 }
 
 // ToState returns a tfsdk.State with the data from the model.
-func (m *RancherDevResourceModel) ToState(ctx context.Context, diags *diag.Diagnostics) tfsdk.State {
-	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevResourceModel to tfsdk.State: \n%+v", pp.PrettyPrint(m)))
+func (m *Rancher2DevResourceModel) ToState(ctx context.Context, diags *diag.Diagnostics) tfsdk.State {
+	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2DevResourceModel to tfsdk.State: \n%+v", pp.PrettyPrint(m)))
 	if diags.HasError() {
 		return tfsdk.State{}
 	}
-	r := NewRancherDevResource()
+	r := NewRancher2DevResource()
 	s := &resource.SchemaResponse{}
 	r.Schema(ctx, resource.SchemaRequest{}, s)
 
@@ -80,15 +80,15 @@ func (m *RancherDevResourceModel) ToState(ctx context.Context, diags *diag.Diagn
 	if dgs.HasError() {
 		diags.Append(dgs...)
 	}
-	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevResourceModel to tfsdk.State: \n%+v", pp.PrettyPrint(state)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2DevResourceModel to tfsdk.State: \n%+v", pp.PrettyPrint(state)))
 	return state
 }
 
-// ToGoModel converts a RancherDevResourceModel to a RancherDevModel
+// ToGoModel converts a Rancher2DevResourceModel to a RancherDevModel
 //
 // This is helpful when building a json representation of the model for API requests.
-func (data *RancherDevResourceModel) ToGoModel(ctx context.Context) RancherDevModel {
-	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevResourceModel to RancherDevModel: \n%+v", pp.PrettyPrint(data)))
+func (data *Rancher2DevResourceModel) ToGoModel(ctx context.Context) RancherDevModel {
+	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2DevResourceModel to RancherDevModel: \n%+v", pp.PrettyPrint(data)))
 	obj := RancherDevModel{}
 
 	// NOTE: there is no point trying to leave out null/unknowns here, they will just be translated to Go zero values.
@@ -146,13 +146,13 @@ func (data *RancherDevResourceModel) ToGoModel(ctx context.Context) RancherDevMo
 	}
 	obj.NestedObjectMap = nestedMap
 
-	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevResourceModel to RancherDevModel: \n%+v", pp.PrettyPrint(obj)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2DevResourceModel to RancherDevModel: \n%+v", pp.PrettyPrint(obj)))
 	return obj
 }
 
 // Fills the target with the values set in the current NestedResourceModel.
 func (r *NestedResourceModel) ToGoModel(ctx context.Context, target *NestedObject) diag.Diagnostics {
-	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevResourceModel NestedResourceModel to RancherDevModel NestedObject: \n%+v", pp.PrettyPrint(r)))
+	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2DevResourceModel NestedResourceModel to RancherDevModel NestedObject: \n%+v", pp.PrettyPrint(r)))
 	dgs := diag.Diagnostics{}
 
 	if target == nil {
@@ -174,13 +174,13 @@ func (r *NestedResourceModel) ToGoModel(ctx context.Context, target *NestedObjec
 		diags := rm.ToGoModel(ctx, &target.NestedNestedObject)
 		dgs.Append(diags...)
 	}
-	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevResourceModel NestedResourceModel to RancherDevModel NestedObject: \n%+v", pp.PrettyPrint(target)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2DevResourceModel NestedResourceModel to RancherDevModel NestedObject: \n%+v", pp.PrettyPrint(target)))
 	return dgs
 }
 
 // Fills the target with the values set in the current NestedNestedResourceModel.
 func (r *NestedNestedResourceModel) ToGoModel(ctx context.Context, target *NestedNestedObject) diag.Diagnostics {
-	tflog.Debug(ctx, fmt.Sprintf("Converting RancherDevResourceModel NestedNestedResourceModel to RancherDevModel NestedNestedObject: \n%+v", pp.PrettyPrint(r)))
+	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2DevResourceModel NestedNestedResourceModel to RancherDevModel NestedNestedObject: \n%+v", pp.PrettyPrint(r)))
 	dgs := diag.Diagnostics{}
 
 	if target == nil {
@@ -195,6 +195,6 @@ func (r *NestedNestedResourceModel) ToGoModel(ctx context.Context, target *Neste
 	if !r.BoolAttribute.IsNull() && !r.BoolAttribute.IsUnknown() {
 		target.BoolAttribute = r.BoolAttribute.ValueBool()
 	}
-	tflog.Debug(ctx, fmt.Sprintf("Converted RancherDevResourceModel NestedNestedResourceModel to RancherDevModel NestedNestedObject: \n%+v", pp.PrettyPrint(target)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2DevResourceModel NestedNestedResourceModel to RancherDevModel NestedNestedObject: \n%+v", pp.PrettyPrint(target)))
 	return dgs
 }

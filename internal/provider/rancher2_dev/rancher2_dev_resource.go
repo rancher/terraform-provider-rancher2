@@ -25,28 +25,28 @@ import (
 // The "var _" is a special Go construct that results in an unusable variable.
 // The purpose of these lines is to make sure our LocalFileResource correctly implements the "resource.Resource“ interface.
 // These will fail at compilation time if the implementation is not satisfied.
-var _ resource.Resource = &RancherDevResource{}
-var _ resource.ResourceWithImportState = &RancherDevResource{}
+var _ resource.Resource = &Rancher2DevResource{}
+var _ resource.ResourceWithImportState = &Rancher2DevResource{}
 
 const (
 	endpointPath = "dev"
 )
 
-func NewRancherDevResource() resource.Resource {
-	return &RancherDevResource{}
+func NewRancher2DevResource() resource.Resource {
+	return &Rancher2DevResource{}
 }
 
-type RancherDevResource struct {
+type Rancher2DevResource struct {
 	client c.Client // client is an interface holding a pointer to a struct
 }
 
-// RancherDevResourceModel is in rancher2_dev_resource_model.go
+// Rancher2DevResourceModel is in rancher2_dev_resource_model.go
 
-func (r *RancherDevResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *Rancher2DevResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_dev" // rancher2_dev
 }
 
-func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *Rancher2DevResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Rancher Development resource. \n" +
 			"This resource is used as a dummy for development purposes.",
@@ -212,7 +212,7 @@ func (r *RancherDevResource) Schema(ctx context.Context, req resource.SchemaRequ
 }
 
 // configure runs at compile time, don't overload the context.
-func (r *RancherDevResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *Rancher2DevResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure request: %+v\n", pp.PrettyPrint(req)))
 	tflog.Debug(ctx, fmt.Sprintf("Rancher2_Dev_Resource Configure object: %+v\n", pp.PrettyPrint(r)))
 	if req.ProviderData == nil {
@@ -234,11 +234,11 @@ func (r *RancherDevResource) Configure(ctx context.Context, req resource.Configu
 }
 
 // Create generates reality and state to match plan.
-func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *Rancher2DevResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Create Config: %+v\n", pp.PrettyPrint(req.Config.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Create Plan: %+v\n", pp.PrettyPrint(req.Plan.Raw)))
 	var err error
-	plan := RancherDevResourceModel{}
+	plan := Rancher2DevResourceModel{}
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -346,10 +346,10 @@ func (r *RancherDevResource) Create(ctx context.Context, req resource.CreateRequ
 // Read updates state to match reality.
 // Read runs at refresh time which happens before all other functions and every time another function would be called.
 // Don't call this function from one of the other functions (eg. don't call the Read function from within the Create function).
-func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *Rancher2DevResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Read Request: %+v", pp.PrettyPrint(req.State.Raw)))
 
-	var state RancherDevResourceModel
+	var state Rancher2DevResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -446,18 +446,18 @@ func (r *RancherDevResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 // Update changes reality and state to match plan (best practice is don't compare old state, just override).
-func (r *RancherDevResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *Rancher2DevResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Config: %+v", pp.PrettyPrint(req.Config.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Plan: %+v", pp.PrettyPrint(req.Plan.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request State: %+v", pp.PrettyPrint(req.State.Raw)))
 	var err error
-	var plan RancherDevResourceModel
+	var plan Rancher2DevResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var state RancherDevResourceModel
+	var state Rancher2DevResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -564,11 +564,11 @@ func (r *RancherDevResource) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 // Destroy destroys reality (state is handled automatically).
-func (r *RancherDevResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *Rancher2DevResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Delete Request State: %+v", pp.PrettyPrint(req.State.Raw)))
 	var err error
 
-	var state RancherDevResourceModel
+	var state Rancher2DevResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -621,12 +621,12 @@ func (r *RancherDevResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *RancherDevResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *Rancher2DevResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // This function also enforces default values.
-func validateData(data *RancherDevResourceModel) error {
+func validateData(data *Rancher2DevResourceModel) error {
 	if data.StringAttribute.IsNull() || data.StringAttribute.IsUnknown() || data.StringAttribute.ValueString() == "" {
 		return fmt.Errorf("string_attribute cannot be empty")
 	}

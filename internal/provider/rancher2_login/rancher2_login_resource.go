@@ -28,8 +28,8 @@ import (
 // The "var _" is a special Go construct that results in an unusable variable.
 // The purpose of these lines is to make sure our LocalFileResource correctly implements the "resource.Resource“ interface.
 // These will fail at compilation time if the implementation is not satisfied.
-var _ resource.Resource = &RancherLoginResource{}
-var _ resource.ResourceWithImportState = &RancherLoginResource{}
+var _ resource.Resource = &Rancher2LoginResource{}
+var _ resource.ResourceWithImportState = &Rancher2LoginResource{}
 
 const (
 	apiVersion    = "ext.cattle.io/v1"
@@ -37,21 +37,21 @@ const (
 	tokenEndpoint = "apis/" + apiVersion + "/tokens"
 )
 
-func NewRancherLoginResource() resource.Resource {
-	return &RancherLoginResource{}
+func NewRancher2LoginResource() resource.Resource {
+	return &Rancher2LoginResource{}
 }
 
-type RancherLoginResource struct {
+type Rancher2LoginResource struct {
 	client c.Client // client is an interface holding a pointer to a struct
 }
 
-// RancherLoginResourceModel is in rancher2_login_resource_model.go
+// Rancher2LoginResourceModel is in rancher2_login_resource_model.go
 
-func (r *RancherLoginResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *Rancher2LoginResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_login" // rancher2_login
 }
 
-func (r *RancherLoginResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *Rancher2LoginResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Rancher Login resource. \n" +
 			"This resource manages how the provider logs into Rancher. \n" +
@@ -156,7 +156,7 @@ func (r *RancherLoginResource) Schema(ctx context.Context, req resource.SchemaRe
 }
 
 // configure runs at compile time, don't overload the context.
-func (r *RancherLoginResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *Rancher2LoginResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return // Prevent panic if the provider has not been configured.
 	}
@@ -174,7 +174,7 @@ func (r *RancherLoginResource) Configure(ctx context.Context, req resource.Confi
 }
 
 // Create generates reality and state to match plan.
-func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *Rancher2LoginResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Create Config: %+v", pp.PrettyPrint(req.Config.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Create Plan: %+v", pp.PrettyPrint(req.Plan.Raw)))
 	var err error
@@ -188,7 +188,7 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	plan := RancherLoginResourceModel{}
+	plan := Rancher2LoginResourceModel{}
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -253,7 +253,7 @@ func (r *RancherLoginResource) Create(ctx context.Context, req resource.CreateRe
 // Read updates state to match reality.
 // Read runs at refresh time which happens before all other functions and every time another function would be called.
 // Don't call this function from one of the other functions (eg. don't call the Read function from within the Create function).
-func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *Rancher2LoginResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Read Request: %+v", pp.PrettyPrint(req.State.Raw)))
 
 	var client c.Client
@@ -264,7 +264,7 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	var state RancherLoginResourceModel
+	var state Rancher2LoginResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -325,7 +325,7 @@ func (r *RancherLoginResource) Read(ctx context.Context, req resource.ReadReques
 // Recreate != Update
 // Update should refresh the current token in state along with refresh, recreate, and create dates
 // Update should attempt to do this with the current token, then fall back to the username/password.
-func (r *RancherLoginResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *Rancher2LoginResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Config: %+v", pp.PrettyPrint(req.Config.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request Plan: %+v", pp.PrettyPrint(req.Plan.Raw)))
 	tflog.Debug(ctx, fmt.Sprintf("Update Request State: %+v", pp.PrettyPrint(req.State.Raw)))
@@ -340,13 +340,13 @@ func (r *RancherLoginResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	var plan RancherLoginResourceModel
+	var plan Rancher2LoginResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var state RancherLoginResourceModel
+	var state Rancher2LoginResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -429,7 +429,7 @@ func (r *RancherLoginResource) Update(ctx context.Context, req resource.UpdateRe
 }
 
 // Destroy destroys reality (state is handled automatically).
-func (r *RancherLoginResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *Rancher2LoginResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("Delete Request State: %+v", pp.PrettyPrint(req.State.Raw)))
 	var err error
 
@@ -442,7 +442,7 @@ func (r *RancherLoginResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	var state RancherLoginResourceModel
+	var state Rancher2LoginResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -464,7 +464,7 @@ func (r *RancherLoginResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 }
 
-func (r *RancherLoginResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *Rancher2LoginResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	//resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 	resp.Diagnostics.AddError("Import not available", "This resource is not able to be imported.")
 }
@@ -478,7 +478,7 @@ func getValueFromEnv(ctx context.Context, env string) (bool, string) {
 }
 
 // note this function also enforces default values.
-func validateData(ctx context.Context, data *RancherLoginResourceModel) error {
+func validateData(ctx context.Context, data *Rancher2LoginResourceModel) error {
 	if data.UsernameEnvironmentVariable.ValueString() == "" {
 		data.UsernameEnvironmentVariable = types.StringValue("RANCHER_USERNAME")
 	}
@@ -552,7 +552,7 @@ func parseCustomDuration(durationStr string) (time.Duration, error) {
 	return totalDuration, nil
 }
 
-func createToken(ctx context.Context, client c.Client, data *RancherLoginResourceModel) (status int, diagnostics diag.Diagnostics) {
+func createToken(ctx context.Context, client c.Client, data *Rancher2LoginResourceModel) (status int, diagnostics diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	ttlDuration, err := parseCustomDuration(data.TokenTtl.ValueString())
@@ -590,7 +590,7 @@ func createToken(ctx context.Context, client c.Client, data *RancherLoginResourc
 	return tokenResponse.StatusCode, diags
 }
 
-func processTokenResponse(ctx context.Context, data *RancherLoginResourceModel, tokenResponse c.Response, statusCode int) diag.Diagnostics {
+func processTokenResponse(ctx context.Context, data *Rancher2LoginResourceModel, tokenResponse c.Response, statusCode int) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var err error
 
