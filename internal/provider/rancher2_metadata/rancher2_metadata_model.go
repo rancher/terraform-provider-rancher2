@@ -2,6 +2,7 @@ package rancher2_metadata
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -40,7 +41,7 @@ type Metadata struct {
 	CreationTimestamp         string            `tfsdk:"creation_timestamp" json:"creation_timestamp"`
 	DeletionGracePeriodSecond int64             `tfsdk:"deletion_grace_period_seconds" json:"deletion_grace_period_seconds"`
 	DeletionTimestamp         string            `tfsdk:"deletion_timestamp" json:"deletion_timestamp"`
-	ManagedFields             string            `tfsdk:"managed_fields" json:"managed_fields"`
+	ManagedFields             json.RawMessage   `tfsdk:"managed_fields" json:"managed_fields"`
 	ResourceVersion           string            `tfsdk:"resource_version" json:"resource_version"`
 	SelfLink                  string            `tfsdk:"self_link" json:"self_link"`
 }
@@ -129,13 +130,92 @@ func (m *Metadata) ToTypesObject(ctx context.Context, diags *diag.Diagnostics) t
 		"creation_timestamp":            basetypes.NewStringValue(m.CreationTimestamp),
 		"deletion_grace_period_seconds": basetypes.NewInt64Value(m.DeletionGracePeriodSecond),
 		"deletion_timestamp":            basetypes.NewStringValue(m.DeletionTimestamp),
-		"managed_fields":                basetypes.NewStringValue(m.ManagedFields),
+		"managed_fields":                basetypes.NewStringValue(string(m.ManagedFields)),
 		"resource_version":              basetypes.NewStringValue(m.ResourceVersion),
 		"self_link":                     basetypes.NewStringValue(m.SelfLink),
 	}
 	var d diag.Diagnostics
 	obj, d := basetypes.NewObjectValue(MetadataAttrTypes, attributes)
 	diags.Append(d...)
+	return obj
+}
+
+// ToGoModel converts a types.Object to a Metadata struct.
+func ToGoModel(ctx context.Context, diags *diag.Diagnostics, metadataObj types.Object) *Metadata {
+	if metadataObj.IsNull() || metadataObj.IsUnknown() {
+		return &Metadata{}
+	}
+
+	// Need a temporary struct to use with As
+	type TmpMetadata struct {
+		Name                      types.String `tfsdk:"name"`
+		Namespace                 types.String `tfsdk:"namespace"`
+		GenerateName              types.String `tfsdk:"generate_name"`
+		Annotations               types.Map    `tfsdk:"annotations"`
+		Labels                    types.Map    `tfsdk:"labels"`
+		Finalizers                types.List   `tfsdk:"finalizers"`
+		OwnerReferences           types.List   `tfsdk:"owner_references"`
+		UID                       types.String `tfsdk:"uid"`
+		Generation                types.Int64  `tfsdk:"generation"`
+		CreationTimestamp         types.String `tfsdk:"creation_timestamp"`
+		DeletionGracePeriodSecond types.Int64  `tfsdk:"deletion_grace_period_seconds"`
+		DeletionTimestamp         types.String `tfsdk:"deletion_timestamp"`
+		ManagedFields             types.String `tfsdk:"managed_fields"`
+		ResourceVersion           types.String `tfsdk:"resource_version"`
+		SelfLink                  types.String `tfsdk:"self_link"`
+	}
+	var tmpMetadata TmpMetadata
+	diags.Append(metadataObj.As(ctx, &tmpMetadata, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil
+	}
+
+	obj := &Metadata{}
+
+	obj.Name = tmpMetadata.Name.ValueString()
+	obj.Namespace = tmpMetadata.Namespace.ValueString()
+	obj.GenerateName = tmpMetadata.GenerateName.ValueString()
+	diags.Append(tmpMetadata.Annotations.ElementsAs(ctx, &obj.Annotations, false)...)
+	diags.Append(tmpMetadata.Labels.ElementsAs(ctx, &obj.Labels, false)...)
+	diags.Append(tmpMetadata.Finalizers.ElementsAs(ctx, &obj.Finalizers, false)...)
+
+	// OwnerReferences
+	if !tmpMetadata.OwnerReferences.IsNull() && !tmpMetadata.OwnerReferences.IsUnknown() {
+		type TmpOwnerReference struct {
+			APIVersion         types.String `tfsdk:"api_version"`
+			Kind               types.String `tfsdk:"kind"`
+			Name               types.String `tfsdk:"name"`
+			UID                types.String `tfsdk:"uid"`
+			Controller         types.Bool   `tfsdk:"controller"`
+			BlockOwnerDeletion types.Bool   `tfsdk:"block_owner_deletion"`
+		}
+		var tmpOwnerReferences []TmpOwnerReference
+		diags.Append(tmpMetadata.OwnerReferences.ElementsAs(ctx, &tmpOwnerReferences, false)...)
+		if diags.HasError() {
+			return nil
+		}
+		for _, tmpOR := range tmpOwnerReferences {
+			or := OwnerReference{
+				APIVersion:         tmpOR.APIVersion.ValueString(),
+				Kind:               tmpOR.Kind.ValueString(),
+				Name:               tmpOR.Name.ValueString(),
+				UID:                tmpOR.UID.ValueString(),
+				Controller:         tmpOR.Controller.ValueBool(),
+				BlockOwnerDeletion: tmpOR.BlockOwnerDeletion.ValueBool(),
+			}
+			obj.OwnerReferences = append(obj.OwnerReferences, or)
+		}
+	}
+
+	obj.UID = tmpMetadata.UID.ValueString()
+	obj.Generation = tmpMetadata.Generation.ValueInt64()
+	obj.CreationTimestamp = tmpMetadata.CreationTimestamp.ValueString()
+	obj.DeletionGracePeriodSecond = tmpMetadata.DeletionGracePeriodSecond.ValueInt64()
+	obj.DeletionTimestamp = tmpMetadata.DeletionTimestamp.ValueString()
+	obj.ManagedFields = json.RawMessage(tmpMetadata.ManagedFields.ValueString())
+	obj.ResourceVersion = tmpMetadata.ResourceVersion.ValueString()
+	obj.SelfLink = tmpMetadata.SelfLink.ValueString()
+
 	return obj
 }
 
@@ -188,7 +268,7 @@ func SampleMetadataTypesObject() types.Object {
 			"creation_timestamp":            types.StringValue("2023-01-01T00:00:00Z"),
 			"deletion_grace_period_seconds": types.Int64Value(30),
 			"deletion_timestamp":            types.StringValue("2023-01-01T01:00:00Z"),
-			"managed_fields":                types.StringValue("test_managed_fields"),
+			"managed_fields":                types.StringValue("{\"field\": \"test_managed_fields\"}"),
 			"resource_version":              types.StringValue("test_resource_version"),
 			"self_link":                     types.StringValue("/api/v1/namespaces/default/rancher2_dev2s/test"),
 		},
@@ -218,7 +298,7 @@ func SampleMetadataGoModel() Metadata {
 		CreationTimestamp:         "2023-01-01T00:00:00Z",
 		DeletionGracePeriodSecond: 30,
 		DeletionTimestamp:         "2023-01-01T01:00:00Z",
-		ManagedFields:             "test_managed_fields",
+		ManagedFields:             json.RawMessage("{\"field\": \"test_managed_fields\"}"),
 		ResourceVersion:           "test_resource_version",
 		SelfLink:                  "/api/v1/namespaces/default/rancher2_dev2s/test",
 	}

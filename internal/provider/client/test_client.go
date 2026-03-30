@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	// "encoding/base64"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -119,8 +120,8 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 		return fmt.Errorf("no response found for request %s", requestId)
 	}
 
-	resp.Body = response.Body
-	resp.Headers = response.Headers
+  resp.Body = json.RawMessage(response.Body)
+  resp.Headers = response.Headers
 	resp.StatusCode = response.StatusCode
 
 	logFields := LogFields{
@@ -129,7 +130,7 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 		Url:     req.Endpoint,
 		Method:  req.Method,
 		Headers: req.Headers,
-		Body:    req.Body,
+		Body:    json.RawMessage(req.Body.([]byte)),
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("HTTP Request: %+v", pp.PrettyPrint(logFields)))

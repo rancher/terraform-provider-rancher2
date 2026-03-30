@@ -16,12 +16,64 @@ import (
 )
 
 type Rancher2Dev2Model struct {
-	ID         string       `tfsdk:"id" json:"id"`
-	APIVersion string       `tfsdk:"api_version" json:"api_version"`
-	Kind       string       `tfsdk:"kind" json:"kind"`
-	Metadata   mta.Metadata `tfsdk:"metadata" json:"metadata"`
-	Spec       Spec         `tfsdk:"spec" json:"spec"`
-	Status     string       `tfsdk:"status" json:"status"`
+	ID           string       `tfsdk:"id" json:"id"`
+	APIVersion   string       `tfsdk:"api_version" json:"api_version"`
+	Kind         string       `tfsdk:"kind" json:"kind"`
+	Metadata     mta.Metadata `tfsdk:"metadata" json:"metadata"`
+	Spec         Spec         `tfsdk:"spec" json:"spec"`
+	Status       string       `tfsdk:"status" json:"status"`
+	ApiResponses ApiResponses `tfsdk:"api_responses" json:"api_responses"`
+}
+
+// ApiResponses is a map of function to response, eg. create, read, update, delete.
+// Dev Only, remove this when using this resource as a template
+type ApiResponses struct {
+	Create ApiResponse `tfsdk:"create" json:"create"`
+	Read   ApiResponse `tfsdk:"read" json:"read"`
+	Update ApiResponse `tfsdk:"update" json:"update"`
+	Delete ApiResponse `tfsdk:"delete" json:"delete"`
+}
+
+// Dev Only, remove this when using this resource as a template
+type ApiResponse struct {
+	Headers    map[string][]string `tfsdk:"headers" json:"headers"`
+	Body       string              `tfsdk:"body" json:"body"`
+	StatusCode int64               `tfsdk:"status_code" json:"status_code"`
+}
+
+// IsEmpty checks if the ApiResponse is empty (has all zero values).
+func (ar ApiResponse) IsEmpty() bool {
+	return len(ar.Headers) == 0 && ar.Body == "" && ar.StatusCode == 0
+}
+
+// FromApiResponseBody converts the raw body response from the API to the Rancher2Dev2Model object.
+func (m *Rancher2Dev2Model) FromApiResponseBody(ctx context.Context, response []byte, diags *diag.Diagnostics) {
+  var tmpModel struct {
+    ApiVersion  string          `json:"api_version"`
+    Kind        string          `json:"kind"`
+    Spec        Spec            `json:"spec"`
+    Status      json.RawMessage `json:"status"`
+  }
+  err := json.Unmarshal(response, &tmpModel)
+  if err != nil {
+    diags.AddError("Error unmarshaling response body:", err.Error())
+    return
+  }
+  m.APIVersion = tmpModel.ApiVersion
+  m.Kind = tmpModel.Kind
+  m.Spec = tmpModel.Spec
+  m.Status = string(tmpModel.Status)
+
+  // Metadata
+  var tmpMetadata struct {
+    Metadata mta.Metadata `json:"metadata"`
+  }
+  err = json.Unmarshal(response, &mta.Metadata{})
+  if err != nil {
+    diags.AddError("Error unmarshaling response body metadata:", err.Error())
+    return
+  }
+  m.Metadata = tmpMetadata.Metadata
 }
 
 // ToApiRequestBody converts the model to its JSON representation for use as an API request body.
@@ -39,7 +91,7 @@ func (m *Rancher2Dev2Model) ToApiRequestBody() ([]byte, error) {
 	requestBody := apiRequestBody{
 		APIVersion: m.APIVersion,
 		Kind:       m.Kind,
-		Metadata: mta.ApiRequestMetadata{
+		Metadata:   mta.ApiRequestMetadata{
 			Name:            m.Metadata.Name,
 			Namespace:       m.Metadata.Namespace,
 			GenerateName:    m.Metadata.GenerateName,
@@ -84,6 +136,16 @@ var specAttrTypes = map[string]attr.Type{
 	"object_map":  types.MapType{ElemType: types.ObjectType{AttrTypes: objectAttrTypes}},
 }
 
+var apiResponseAttrTypes = map[string]attr.Type{
+	"headers": types.MapType{
+		ElemType: types.ListType{
+			ElemType: types.StringType,
+		},
+	},
+	"body":        types.StringType,
+	"status_code": types.Int64Type,
+}
+
 type Object struct {
 	StringAttribute string `tfsdk:"string_attribute"`
 }
@@ -119,6 +181,32 @@ func (obj *Rancher2Dev2Model) ToResourceModel(ctx context.Context, diags *diag.D
 		return &Rancher2Dev2ResourceModel{}
 	}
 	data.Spec = spec
+
+	apiResponsesMap := make(map[string]attr.Value)
+	if !obj.ApiResponses.Create.IsEmpty() {
+		apiResponsesMap["create"] = obj.ApiResponses.Create.ToTypesObject(ctx, diags)
+	}
+	if !obj.ApiResponses.Read.IsEmpty() {
+		apiResponsesMap["read"] = obj.ApiResponses.Read.ToTypesObject(ctx, diags)
+	}
+	if !obj.ApiResponses.Update.IsEmpty() {
+		apiResponsesMap["update"] = obj.ApiResponses.Update.ToTypesObject(ctx, diags)
+	}
+	if !obj.ApiResponses.Delete.IsEmpty() {
+		apiResponsesMap["delete"] = obj.ApiResponses.Delete.ToTypesObject(ctx, diags)
+	}
+
+	if diags.HasError() {
+		return &Rancher2Dev2ResourceModel{}
+	}
+
+	var apiResponseValue attr.Value = types.MapNull(types.ObjectType{AttrTypes: apiResponseAttrTypes})
+	if len(apiResponsesMap) > 0 {
+		var d diag.Diagnostics
+		apiResponseValue, d = types.MapValue(types.ObjectType{AttrTypes: apiResponseAttrTypes}, apiResponsesMap)
+		diags.Append(d...)
+	}
+	data.ApiResponses = apiResponseValue.(types.Map)
 
 	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2Dev2Model to Rancher2Dev2ResourceModel: %+v", pp.PrettyPrint(data)))
 	return &data
@@ -198,6 +286,41 @@ func (m *Spec) ToTypesObject(ctx context.Context, diags *diag.Diagnostics) types
 		"object_map":  objectMapValue,
 	}
 	obj, d := basetypes.NewObjectValue(specAttrTypes, attributes)
+	diags.Append(d...)
+	return obj
+}
+
+func (m *ApiResponse) ToTypesObject(ctx context.Context, diags *diag.Diagnostics) types.Object {
+	if m == nil {
+		return types.ObjectNull(apiResponseAttrTypes)
+	}
+
+	var headersValue attr.Value = types.MapNull(types.ListType{ElemType: types.StringType})
+	if len(m.Headers) > 0 {
+		headersMap := make(map[string]attr.Value)
+		for k, v := range m.Headers {
+			list, d := types.ListValueFrom(ctx, types.StringType, v)
+			diags.Append(d...)
+			if diags.HasError() {
+				return types.ObjectNull(apiResponseAttrTypes)
+			}
+			headersMap[k] = list
+		}
+		var d diag.Diagnostics
+		headersValue, d = types.MapValue(types.ListType{ElemType: types.StringType}, headersMap)
+		diags.Append(d...)
+	}
+
+	if diags.HasError() {
+		return types.ObjectNull(apiResponseAttrTypes)
+	}
+
+	attributes := map[string]attr.Value{
+		"headers":     headersValue,
+		"body":        types.StringValue(m.Body),
+		"status_code": types.Int64Value(m.StatusCode),
+	}
+	obj, d := types.ObjectValue(apiResponseAttrTypes, attributes)
 	diags.Append(d...)
 	return obj
 }

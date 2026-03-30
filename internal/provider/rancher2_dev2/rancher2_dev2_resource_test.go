@@ -135,12 +135,21 @@ func TestRancher2Dev2Resource(t *testing.T) {
 					Metadata: mta.Metadata{
 						Name: "test",
 					},
+					ApiResponses: ApiResponses{
+						Create: ApiResponse{
+							StatusCode: 200,
+							Body:       `{"api_version":"v1","kind":"test","metadata":{"name":"test"},"spec":{},"status":"active"}`,
+						},
+					},
 				},
 				Rancher2Dev2Model{ // Go model to convert to tfsdk.State for comparing against the resulting state
 					APIVersion: "v1",
 					Kind:       "test",
 					Metadata: mta.Metadata{
 						Name: "test",
+					},
+					ApiResponses: ApiResponses{
+						Create: ApiResponse{},
 					},
 				},
 				"success",

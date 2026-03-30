@@ -6,8 +6,10 @@ package rancher2_dev2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -27,6 +29,10 @@ import (
 // These will fail at compilation time if the implementation is not satisfied.
 var _ resource.Resource = &Rancher2Dev2Resource{}
 var _ resource.ResourceWithImportState = &Rancher2Dev2Resource{}
+
+const (
+  endpointPath = "dev2"
+)
 
 func NewRancher2Dev2Resource() resource.Resource {
 	return &Rancher2Dev2Resource{}
@@ -130,12 +136,32 @@ func (r *Rancher2Dev2Resource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "The status of the resource (JSON blob).",
 				Computed:            true,
 			},
+      // Ignore this attribute when using this resource as a template.
+      "api_responses": schema.MapNestedAttribute{
+        MarkdownDescription: "Map of function to response, eg. create, read, update, delete.",
+        Optional: true,
+        NestedObject: schema.NestedAttributeObject{
+          Attributes: map[string]schema.Attribute{
+            "headers": schema.MapAttribute{ // map[string][]string
+              Optional: true,
+              ElementType: types.ListType{
+                ElemType: types.StringType,
+              },
+            },
+            "body": schema.StringAttribute{
+              Optional: true,
+            },
+            "status_code": schema.Int64Attribute{
+              Optional: true,
+            },
+          },
+        },
+      },
 		},
 	}
 }
 
 func (r *Rancher2Dev2Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-
   // Terraform may call this method before the provider has been configured (to make sure the resource is valid),
   //  so we need to gracefully return an empty resource.
   if req.ProviderData == nil {
@@ -152,15 +178,93 @@ func (r *Rancher2Dev2Resource) Configure(ctx context.Context, req resource.Confi
 
 // Create changes reality and state to match plan.
 func (r *Rancher2Dev2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+  // Plan modifiers are the mechanism the provider uses to convert the config to the plan.
 	// req.Config shouldn't be used in this function, req.Plan should convey user intent, if there is any confusion use Plan Modifiers.
 	plan, dgs := plan(ctx, req.Plan)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(*dgs...)
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("Create Request Plan: %+v\n", pp.PrettyPrint(plan)))
-	tflog.Debug(ctx, fmt.Sprintf("Create Request Provider Config: %+v\n", pp.PrettyPrint(client)))
+  client, dgs := client(r.client)
+	if dgs.HasError() {
+		resp.Diagnostics.Append(*dgs...)
+		return
+	}
 
+  endpoint := fmt.Sprintf("%s/%s", client.GetApiUrl(), endpointPath)
+
+  // DEV ONLY
+	//
+	// This is special to the dev resource and
+	// is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
+	// When using the dev resource as a template for other resources, remove this.
+	//
+	var clnt c.TestClient
+	rc, ok := client.(*c.HttpClient)
+	if ok {
+		// found a real client, need to inject a test client
+		clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
+		requestId := fmt.Sprintf("%s:%s:%s", endpoint, "POST", "")
+		tflog.Debug(ctx, fmt.Sprintf("create requestId: %s", requestId))
+    planGoModel := plan.ToGoModel(ctx, &resp.Diagnostics)
+    if resp.Diagnostics.HasError() {
+      return
+    }
+		clnt.SetResponse(ctx, requestId, c.Response{
+			StatusCode: int(planGoModel.ApiResponses.Create.StatusCode),
+			Headers: planGoModel.ApiResponses.Create.Headers,
+			Body: json.RawMessage(planGoModel.ApiResponses.Create.Body),
+		})
+		client = &clnt
+	}
+	//
+	// END DEV ONLY
+
+  var id types.String
+	if plan.ID.IsNull() || plan.ID.IsUnknown() || plan.ID.ValueString() == "" {
+		// don't blindly set uuid so that unit tests can set to a known id
+		id = types.StringValue(uuid.New().String())
+	} else {
+		id = plan.ID
+	}
+
+  rb, err := plan.ToGoModel(ctx, &resp.Diagnostics).ToApiRequestBody()
+  if err != nil {
+    resp.Diagnostics.AddError("Error marshalling dev plan for create request: ", err.Error())
+    return
+  }
+  request := c.Request{
+		Endpoint: endpoint,
+		Method:   "POST",
+		Body:     rb,
+	}
+
+	response := c.Response{}
+
+	err = client.Do(ctx, &request, &response)
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating dev resource: ", err.Error())
+		return
+	}
+
+	// process the response here
+	var model Rancher2Dev2Model
+	model.FromApiResponseBody(ctx, response.Body, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	state := model.ToResourceModel(ctx, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Insert provider generated values before the state is saved.
+	state.ID = id
+	state.ApiResponses = plan.ApiResponses
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+  tflog.Debug(ctx, fmt.Sprintf("Create State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
 }
 
 // Read updates the state to match reality.
@@ -233,9 +337,10 @@ func state(ctx context.Context, state tfsdk.State) (Rancher2Dev2ResourceModel, *
 	if dgs.HasError() {
 		return model, &dgs
 	}
-
+  tflog.Debug(ctx, fmt.Sprintf("State: %+v\n", pp.PrettyPrint(model)))
 	return model, &dgs
 }
+
 func plan(ctx context.Context, plan tfsdk.Plan) (Rancher2Dev2ResourceModel, *diag.Diagnostics) {
 	var dgs diag.Diagnostics
 	var model Rancher2Dev2ResourceModel
@@ -254,27 +359,29 @@ func plan(ctx context.Context, plan tfsdk.Plan) (Rancher2Dev2ResourceModel, *dia
 		return model, &dgs
 	}
 
+  tflog.Debug(ctx, fmt.Sprintf("Plan: %+v\n", pp.PrettyPrint(model)))
 	return model, &dgs
 }
-func client(providerMeta any) (c.Client, *diag.Diagnostics) {
+
+func client(client any) (c.Client, *diag.Diagnostics) {
 	var dgs diag.Diagnostics
-	var client c.Client
-	if providerMeta == nil {
+	var clnt c.Client
+	if client == nil {
 		dgs.AddError(
-			"Meta not found",
-			"The provider metadata is missing from the request, please configure the provider.",
+			"Client not found",
+			"The client is missing from the request, please configure the provider.",
 		)
-		return client, &dgs
+		return clnt, &dgs
 	}
 
-	client, ok := providerMeta.(c.Client)
+	clnt, ok := client.(c.Client)
 	if !ok {
 		dgs.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected c.Client, got: %T. Please report this issue to the provider developers.", client),
+			fmt.Sprintf("Expected c.Client, got: %T. Please report this issue to the provider developers.", clnt),
 		)
-		return client, &dgs
+		return clnt, &dgs
 	}
-
-	return client, &dgs
+  tflog.Debug(context.Background(), fmt.Sprintf("Client: %+v\n", pp.PrettyPrint(clnt)))
+	return clnt, &dgs
 }

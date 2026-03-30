@@ -48,6 +48,37 @@ var specTypesObject = types.ObjectValueMust(
 	},
 )
 
+var sampleApiResponse = ApiResponse{
+	Headers:    map[string][]string{"Content-Type": {"application/json"}},
+	Body:       `{"id":"test","type":"dev2"}`,
+	StatusCode: 200,
+}
+
+var sampleApiResponses = ApiResponses{
+	Create: sampleApiResponse,
+}
+
+var sampleApiResponseObject = types.ObjectValueMust(
+	apiResponseAttrTypes,
+	map[string]attr.Value{
+		"headers": types.MapValueMust(
+			types.ListType{ElemType: types.StringType},
+			map[string]attr.Value{
+				"Content-Type": types.ListValueMust(types.StringType, []attr.Value{types.StringValue("application/json")}),
+			},
+		),
+		"body":        types.StringValue(`{"id":"test","type":"dev2"}`),
+		"status_code": types.Int64Value(200),
+	},
+)
+
+var sampleApiResponsesMap = types.MapValueMust(
+	types.ObjectType{AttrTypes: apiResponseAttrTypes},
+	map[string]attr.Value{
+		"create": sampleApiResponseObject,
+	},
+)
+
 var fullDevModel = Rancher2Dev2Model{ // native Go model which we will convert to a Terraform resource model
 	ID:         "test_id",
 	APIVersion: "v1",
@@ -74,15 +105,17 @@ var fullDevModel = Rancher2Dev2Model{ // native Go model which we will convert t
 			"obj_map_key": {StringAttribute: "test_object_string"},
 		},
 	},
+	ApiResponses: sampleApiResponses,
 }
 
 var fullDevResourceModel = Rancher2Dev2ResourceModel{ // Terraform resource model
-	ID:         types.StringValue("test_id"),
-	APIVersion: types.StringValue("v1"),
-	Kind:       types.StringValue("Rancher2Dev2"),
-	Status:     types.StringValue("active"),
-	Metadata:   mta.SampleMetadataTypesObject(),
-	Spec:       specTypesObject,
+	ID:           types.StringValue("test_id"),
+	APIVersion:   types.StringValue("v1"),
+	Kind:         types.StringValue("Rancher2Dev2"),
+	Status:       types.StringValue("active"),
+	Metadata:     mta.SampleMetadataTypesObject(),
+	Spec:         specTypesObject,
+	ApiResponses: sampleApiResponsesMap,
 }
 
 func TestRancher2Dev2ModelToResourceModel(t *testing.T) {

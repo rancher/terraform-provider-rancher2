@@ -20,7 +20,7 @@ func TestAccDev2Resource(t *testing.T) {
 		"TF_ACC":           "1",
 		"RANCHER_INSECURE": "true",                     // using local rancher instance
 		"RANCHER_API_URL":  "https://127.0.0.1.nip.io", // using local rancher instance
-		"TF_LOG":           "ERROR",                    // change to DEBUG for more data
+		"TF_LOG":           "DEBUG",                    // change to DEBUG for more data
 	}
 	defer func() {
 		for k := range env {

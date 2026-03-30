@@ -2,23 +2,27 @@ package rancher2_dev2
 
 import (
 	"context"
+	// "encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
+	mta "github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_metadata"
 )
 
 type Rancher2Dev2ResourceModel struct {
-	ID         types.String `tfsdk:"id"`
-	APIVersion types.String `tfsdk:"api_version"`
-	Kind       types.String `tfsdk:"kind"`
-	Metadata   types.Object `tfsdk:"metadata"`
-	Spec       types.Object `tfsdk:"spec"`
-	Status     types.String `tfsdk:"status"`
+	ID           types.String `tfsdk:"id"`
+	APIVersion   types.String `tfsdk:"api_version"`
+	Kind         types.String `tfsdk:"kind"`
+	Metadata     types.Object `tfsdk:"metadata"`
+	Spec         types.Object `tfsdk:"spec"`
+	Status       types.String `tfsdk:"status"`
+	ApiResponses types.Map   `tfsdk:"api_responses"`
 }
 
 
@@ -59,3 +63,201 @@ func (m *Rancher2Dev2ResourceModel) ToState(ctx context.Context, diags *diag.Dia
 	return state
 }
 
+// ToGoModel converts a Rancher2Dev2ResourceModel to a Rancher2Dev2Model.
+func (m *Rancher2Dev2ResourceModel) ToGoModel(ctx context.Context, diags *diag.Diagnostics) *Rancher2Dev2Model {
+	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2Dev2ResourceModel to Rancher2Dev2Model: \n%+v", pp.PrettyPrint(m)))
+	if diags.HasError() {
+		return nil
+	}
+
+	obj := &Rancher2Dev2Model{}
+
+	obj.ID = m.ID.ValueString()
+	obj.APIVersion = m.APIVersion.ValueString()
+	obj.Kind = m.Kind.ValueString()
+	obj.Status = m.Status.ValueString()
+
+	// Metadata
+	metadata := mta.ToGoModel(ctx, diags, m.Metadata)
+	if diags.HasError() {
+		return nil
+	}
+	obj.Metadata = *metadata
+
+	// Spec
+	spec := specToGoModel(ctx, diags, m.Spec)
+	if diags.HasError() {
+		return nil
+	}
+	obj.Spec = *spec
+
+	// ApiResponse
+	if !m.ApiResponses.IsNull() && !m.ApiResponses.IsUnknown() {
+		var tmpApiResponses map[string]types.Object
+		diags.Append(m.ApiResponses.ElementsAs(ctx, &tmpApiResponses, false)...)
+		if diags.HasError() {
+			return nil
+		}
+
+		if apiRespObj, ok := tmpApiResponses["create"]; ok {
+			if resp := apiResponseToGoModel(ctx, diags, apiRespObj); resp != nil {
+				obj.ApiResponses.Create = *resp
+			}
+		}
+		if apiRespObj, ok := tmpApiResponses["read"]; ok {
+			if resp := apiResponseToGoModel(ctx, diags, apiRespObj); resp != nil {
+				obj.ApiResponses.Read = *resp
+			}
+		}
+		if apiRespObj, ok := tmpApiResponses["update"]; ok {
+			if resp := apiResponseToGoModel(ctx, diags, apiRespObj); resp != nil {
+				obj.ApiResponses.Update = *resp
+			}
+		}
+		if apiRespObj, ok := tmpApiResponses["delete"]; ok {
+			if resp := apiResponseToGoModel(ctx, diags, apiRespObj); resp != nil {
+				obj.ApiResponses.Delete = *resp
+			}
+		}
+	}
+
+	if diags.HasError() {
+		return nil
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2Dev2ResourceModel to Rancher2Dev2Model: \n%+v", pp.PrettyPrint(obj)))
+	return obj
+}
+
+// specToGoModel converts a types.Object to a Spec struct.
+func specToGoModel(ctx context.Context, diags *diag.Diagnostics, specObj types.Object) *Spec {
+	if specObj.IsNull() || specObj.IsUnknown() {
+		return &Spec{}
+	}
+
+	type TmpObject struct {
+		StringAttribute types.String `tfsdk:"string_attribute"`
+	}
+	type TmpSpec struct {
+		String     types.String   `tfsdk:"string"`
+		Bool       types.Bool     `tfsdk:"bool"`
+		Number     types.Number   `tfsdk:"number"`
+		Int32      types.Int32    `tfsdk:"int32"`
+		Int64      types.Int64    `tfsdk:"int64"`
+		Float32    types.Float32  `tfsdk:"float32"`
+		Float64    types.Float64  `tfsdk:"float64"`
+		Map        types.Map      `tfsdk:"map"`
+		List       types.List     `tfsdk:"list"`
+		Object     types.Object   `tfsdk:"object"`
+		ObjectList types.List     `tfsdk:"object_list"`
+		ObjectMap  types.Map      `tfsdk:"object_map"`
+	}
+	var tmpSpec TmpSpec
+	diags.Append(specObj.As(ctx, &tmpSpec, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil
+	}
+
+	obj := &Spec{}
+
+	obj.String = tmpSpec.String.ValueString()
+	obj.Bool = tmpSpec.Bool.ValueBool()
+	f64, _ := tmpSpec.Number.ValueBigFloat().Float64()
+	obj.Number = f64
+	obj.Int32 = int32(tmpSpec.Int32.ValueInt32())
+	obj.Int64 = tmpSpec.Int64.ValueInt64()
+	obj.Float32 = tmpSpec.Float32.ValueFloat32()
+	obj.Float64 = tmpSpec.Float64.ValueFloat64()
+	diags.Append(tmpSpec.Map.ElementsAs(ctx, &obj.Map, false)...)
+	diags.Append(tmpSpec.List.ElementsAs(ctx, &obj.List, false)...)
+
+	// Object
+	if !tmpSpec.Object.IsNull() && !tmpSpec.Object.IsUnknown() {
+		var tmpObject TmpObject
+		diags.Append(tmpSpec.Object.As(ctx, &tmpObject, basetypes.ObjectAsOptions{})...)
+		if diags.HasError() {
+			return nil
+		}
+		obj.Object.StringAttribute = tmpObject.StringAttribute.ValueString()
+	}
+
+	// ObjectList
+	if !tmpSpec.ObjectList.IsNull() && !tmpSpec.ObjectList.IsUnknown() {
+		var tmpObjectList []TmpObject
+		diags.Append(tmpSpec.ObjectList.ElementsAs(ctx, &tmpObjectList, false)...)
+		if diags.HasError() {
+			return nil
+		}
+		for _, tmpObj := range tmpObjectList {
+			obj.ObjectList = append(obj.ObjectList, Object{StringAttribute: tmpObj.StringAttribute.ValueString()})
+		}
+	}
+
+	// ObjectMap
+	if !tmpSpec.ObjectMap.IsNull() && !tmpSpec.ObjectMap.IsUnknown() {
+		var tmpObjectMap map[string]TmpObject
+		diags.Append(tmpSpec.ObjectMap.ElementsAs(ctx, &tmpObjectMap, false)...)
+		if diags.HasError() {
+			return nil
+		}
+		obj.ObjectMap = make(map[string]Object)
+		for k, tmpObj := range tmpObjectMap {
+			obj.ObjectMap[k] = Object{StringAttribute: tmpObj.StringAttribute.ValueString()}
+		}
+	}
+
+	if diags.HasError() {
+		return nil
+	}
+
+	return obj
+}
+
+// apiResponseToGoModel converts a types.Object to an ApiResponse struct.
+func apiResponseToGoModel(ctx context.Context, diags *diag.Diagnostics, apiRespObj types.Object) *ApiResponse {
+	if apiRespObj.IsNull() || apiRespObj.IsUnknown() {
+		return &ApiResponse{}
+	}
+
+	type TmpApiResponse struct {
+		Headers    types.Map    `tfsdk:"headers"`
+		Body       types.String `tfsdk:"body"`
+		StatusCode types.Int64  `tfsdk:"status_code"`
+	}
+	var tmpApiResponse TmpApiResponse
+	diags.Append(apiRespObj.As(ctx, &tmpApiResponse, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil
+	}
+
+	resp := &ApiResponse{}
+	resp.Body = tmpApiResponse.Body.ValueString()
+	resp.StatusCode = tmpApiResponse.StatusCode.ValueInt64()
+
+	if !tmpApiResponse.Headers.IsNull() && !tmpApiResponse.Headers.IsUnknown() {
+		var headers map[string]types.List
+		diags.Append(tmpApiResponse.Headers.ElementsAs(ctx, &headers, false)...)
+		if diags.HasError() {
+			return nil
+		}
+
+		goHeaders := make(map[string][]string)
+		if len(headers) != 0 {
+			for k, v := range headers {
+				var goList []string
+				diags.Append(v.ElementsAs(ctx, &goList, false)...)
+				if diags.HasError() {
+					return nil
+				}
+				goHeaders[k] = goList
+			}
+		}
+		resp.Headers = goHeaders
+	}
+
+	if diags.HasError() {
+		return nil
+	}
+
+	return resp
+}

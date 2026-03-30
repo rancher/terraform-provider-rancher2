@@ -81,3 +81,33 @@ func TestOwnerReferenceToTypesObject(t *testing.T) {
 		})
 	}
 }
+
+func TestToGoModel(t *testing.T) {
+	testCases := []struct {
+		name string
+		fit  types.Object
+		want *Metadata
+	}{
+		{
+			"Basic",
+			SampleMetadataTypesObject(),
+			func() *Metadata {
+				m := SampleMetadataGoModel()
+				return &m
+			}(),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			diags := &diag.Diagnostics{}
+			got := ToGoModel(ctx, diags, tc.fit)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("unexpected diff (-want, +got) = %s", diff)
+			}
+		})
+	}
+}

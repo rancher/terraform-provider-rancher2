@@ -47,13 +47,35 @@ var testSpecTypesObject = types.ObjectValueMust(
 	},
 )
 
+var testApiResponseObject = types.ObjectValueMust(
+	apiResponseAttrTypes,
+	map[string]attr.Value{
+		"headers": types.MapValueMust(
+			types.ListType{ElemType: types.StringType},
+			map[string]attr.Value{
+				"Content-Type": types.ListValueMust(types.StringType, []attr.Value{types.StringValue("application/json")}),
+			},
+		),
+		"body":        types.StringValue(`{"id":"test","type":"dev2"}`),
+		"status_code": types.Int64Value(200),
+	},
+)
+
+var testApiResponsesMap = types.MapValueMust(
+	types.ObjectType{AttrTypes: apiResponseAttrTypes},
+	map[string]attr.Value{
+		"create": testApiResponseObject,
+	},
+)
+
 var testFullDevResourceModel = Rancher2Dev2ResourceModel{ // Terraform resource model
-	ID:         types.StringValue("test_id"),
-	APIVersion: types.StringValue("v1"),
-	Kind:       types.StringValue("Rancher2Dev2"),
-	Status:     types.StringValue("active"),
-	Metadata:   mta.SampleMetadataTypesObject(),
-	Spec:       testSpecTypesObject,
+	ID:           types.StringValue("test_id"),
+	APIVersion:   types.StringValue("v1"),
+	Kind:         types.StringValue("Rancher2Dev2"),
+	Status:       types.StringValue("active"),
+	Metadata:     mta.SampleMetadataTypesObject(),
+	Spec:         testSpecTypesObject,
+	ApiResponses: testApiResponsesMap,
 }
 
 func TestRancher2Dev2ResourceModel(t *testing.T) {
@@ -114,4 +136,3 @@ func TestRancher2Dev2ResourceModel(t *testing.T) {
     }
   })
 }
-

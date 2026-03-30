@@ -62,6 +62,30 @@ resource "rancher2_dev2" "full" {
     }
   }
   # status = "json blob" # computed, read only
+
+  ## IGNORE api_response when using this as a template to generate a new resource, this is DEV resource only.
+  api_responses = {
+    "create" = {
+      headers = {
+        "Content-Type" = ["application/json"]
+      }
+      body        = jsonencode(local.createResponseBody)
+      status_code = 200
+    }
+    "read" = {
+      headers = {
+        "Content-Type" = ["application/json"]
+      }
+      body        = jsonencode(local.createResponseBody)
+      status_code = 200
+    }
+    "update" = {
+      status_code = 200
+    }
+    "delete" = {
+      status_code = 200
+    }
+  }
 }
 
 # resource "rancher2_dev2" "minimal" {
@@ -154,4 +178,66 @@ output "rancher2_dev2_finalizer_string" {
 }
 output "rancher2_dev2_owner_reference_api_version" {
   value = try(rancher2_dev2.full.metadata.owner_references[index(rancher2_dev2.full.metadata.owner_references.*.uid, "string")], "")
+}
+
+locals {
+  createResponseBody = {
+    api_version = "string"
+    kind        = "string"
+    metadata = {
+      uid       = "string"
+      name      = "string"
+      namespace = "string"
+      annotations = {
+        string = "string"
+      }
+      labels = {
+        string = "string"
+      }
+      finalizers = ["string"]
+      owner_references = [
+        {
+          api_version = "string"
+          kind        = "string"
+          name        = "string"
+        }
+      ]
+      generation         = 1
+      creation_timestamp = "test"
+      deletion_timestamp = "test"
+      managed_fields = {
+        "field" = "test_managed_fields"
+      }
+      resource_version = "test"
+      self_link        = "test"
+      # deletion_grace_period_seconds = 1 # this will always be null in the API
+    }
+    spec = {
+      string  = "test"
+      bool    = false
+      number  = 1
+      int32   = 1
+      int64   = 1
+      float32 = 1.0
+      float64 = 1.0
+      map     = { "test" = "test" }
+      list    = ["test"]
+      object = {
+        string_attribute = "test"
+      }
+      object_list = [
+        {
+          string_attribute = "test"
+        }
+      ]
+      object_map = {
+        "test" = {
+          string_attribute = "test"
+        }
+      }
+    }
+    status = {
+      string = "test"
+    }
+  }
 }
