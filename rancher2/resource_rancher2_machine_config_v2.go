@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -18,6 +19,45 @@ func resourceRancher2MachineConfigV2() *schema.Resource {
 		Update: resourceRancher2MachineConfigV2Update,
 		Delete: resourceRancher2MachineConfigV2Delete,
 		Schema: machineConfigV2Fields(),
+		CustomizeDiff: func(d *schema.ResourceDiff, i interface{}) error {
+			v := d.Get("linode_config")
+			configs, ok := v.([]interface{})
+			if !ok || len(configs) == 0 || configs[0] == nil {
+				return nil
+			}
+
+			cfg, ok := configs[0].(map[string]interface{})
+			if !ok {
+				return nil
+			}
+
+			useInterfaces, _ := cfg["use_interfaces"].(bool)
+
+			if useInterfaces {
+				subnetID, ok := cfg["vpc_subnet_id"].(string)
+				if !ok {
+					// Value is unknown; skip validation to avoid false positives.
+					return nil
+				}
+				if strings.TrimSpace(subnetID) == "" {
+					return fmt.Errorf("linode_config.0.vpc_subnet_id must be set when linode_config.0.use_interfaces is true")
+				}
+			} else {
+				if subnetID, ok := cfg["vpc_subnet_id"].(string); ok && strings.TrimSpace(subnetID) != "" {
+					return fmt.Errorf("linode_config.0.use_interfaces must be true when linode_config.0.vpc_subnet_id is set")
+				}
+				if vpcIP, ok := cfg["vpc_private_ip"].(string); ok && strings.TrimSpace(vpcIP) != "" {
+					return fmt.Errorf("linode_config.0.use_interfaces must be true when linode_config.0.vpc_private_ip is set")
+				}
+				if publicFirewallID, ok := cfg["public_interface_firewall_id"].(string); ok && strings.TrimSpace(publicFirewallID) != "" {
+					return fmt.Errorf("linode_config.0.use_interfaces must be true when linode_config.0.public_interface_firewall_id is set")
+				}
+				if vpcFirewallID, ok := cfg["vpc_interface_firewall_id"].(string); ok && strings.TrimSpace(vpcFirewallID) != "" {
+					return fmt.Errorf("linode_config.0.use_interfaces must be true when linode_config.0.vpc_interface_firewall_id is set")
+				}
+			}
+			return nil
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(3 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
