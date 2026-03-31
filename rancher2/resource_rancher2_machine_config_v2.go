@@ -35,11 +35,8 @@ func resourceRancher2MachineConfigV2() *schema.Resource {
 
 			if useInterfaces {
 				subnetID, ok := cfg["vpc_subnet_id"].(string)
-				if !ok {
-					// Value is unknown; skip validation to avoid false positives.
-					return nil
-				}
-				if strings.TrimSpace(subnetID) == "" {
+				// Treat missing or non-string values as empty to ensure validation
+				if !ok || strings.TrimSpace(subnetID) == "" {
 					return fmt.Errorf("linode_config.0.vpc_subnet_id must be set when linode_config.0.use_interfaces is true")
 				}
 			} else {
