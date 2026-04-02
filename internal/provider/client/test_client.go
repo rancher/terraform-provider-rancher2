@@ -120,8 +120,8 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 		return fmt.Errorf("no response found for request %s", requestId)
 	}
 
-  resp.Body = json.RawMessage(response.Body)
-  resp.Headers = response.Headers
+	resp.Body = json.RawMessage(response.Body)
+	resp.Headers = response.Headers
 	resp.StatusCode = response.StatusCode
 
 	logFields := LogFields{
@@ -130,7 +130,7 @@ func (c *TestClient) Do(ctx context.Context, req *Request, resp *Response) error
 		Url:     req.Endpoint,
 		Method:  req.Method,
 		Headers: req.Headers,
-		Body:    json.RawMessage(req.Body.([]byte)),
+		Body:    json.RawMessage(reqBody),
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("HTTP Request: %+v", pp.PrettyPrint(logFields)))

@@ -21,16 +21,17 @@ type Rancher2Dev2ResourceModel struct {
 	Kind         types.String `tfsdk:"kind"`
 	Metadata     types.Object `tfsdk:"metadata"`
 	Spec         types.Object `tfsdk:"spec"`
-	Status       types.String `tfsdk:"status"`
-	ApiResponses types.Map   `tfsdk:"api_responses"`
+	Status       types.String `tfsdk:"status"` // json string
+	APIResponses types.Map    `tfsdk:"api_responses"`
 }
 
-
 func (m *Rancher2Dev2ResourceModel) ToPlan(ctx context.Context, diags *diag.Diagnostics) tfsdk.Plan {
-	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2Dev2ResourceModel to tfsdk.Plan: \n%+v", pp.PrettyPrint(m)))
+	// when chaining commands there won't be time to validate diags
+	// so each conversion function should check for diag errors and short circuit
 	if diags.HasError() {
 		return tfsdk.Plan{}
 	}
+	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2Dev2ResourceModel to tfsdk.Plan: \n%+v", pp.PrettyPrint(m)))
 	r := NewRancher2Dev2Resource()
 	s := &resource.SchemaResponse{}
 	r.Schema(ctx, resource.SchemaRequest{}, s)
@@ -42,15 +43,17 @@ func (m *Rancher2Dev2ResourceModel) ToPlan(ctx context.Context, diags *diag.Diag
 		return plan
 	}
 	diags.Append(plan.Set(ctx, m)...)
-	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2Dev2ResourceModel to tfsdk.Plan: \n%+v", pp.PrettyPrint(plan)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2Dev2ResourceModel to tfsdk.Plan: \n%+v", pp.PrettyPrint(plan.Raw)))
 	return plan
 }
 
 func (m *Rancher2Dev2ResourceModel) ToState(ctx context.Context, diags *diag.Diagnostics) tfsdk.State {
-	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2Dev2ResourceModel to tfsdk.State: \n%+v", pp.PrettyPrint(m)))
+	// when chaining commands there won't be time to validate diags
+	// so each conversion function should check for diag errors and short circuit
 	if diags.HasError() {
 		return tfsdk.State{}
 	}
+	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2Dev2ResourceModel to tfsdk.State: \n%+v", pp.PrettyPrint(m)))
 	r := NewRancher2Dev2Resource()
 	s := &resource.SchemaResponse{}
 	r.Schema(ctx, resource.SchemaRequest{}, s)
@@ -59,16 +62,18 @@ func (m *Rancher2Dev2ResourceModel) ToState(ctx context.Context, diags *diag.Dia
 		Schema: s.Schema,
 	}
 	diags.Append(state.Set(ctx, m)...)
-	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2Dev2ResourceModel to tfsdk.State: \n%+v", pp.PrettyPrint(state)))
+	tflog.Debug(ctx, fmt.Sprintf("Converted Rancher2Dev2ResourceModel to tfsdk.State: \n%+v", pp.PrettyPrint(state.Raw)))
 	return state
 }
 
 // ToGoModel converts a Rancher2Dev2ResourceModel to a Rancher2Dev2Model.
 func (m *Rancher2Dev2ResourceModel) ToGoModel(ctx context.Context, diags *diag.Diagnostics) *Rancher2Dev2Model {
-	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2Dev2ResourceModel to Rancher2Dev2Model: \n%+v", pp.PrettyPrint(m)))
+	// when chaining commands there won't be time to validate diags
+	// so each conversion function should check for diag errors and short circuit
 	if diags.HasError() {
 		return nil
 	}
+	tflog.Debug(ctx, fmt.Sprintf("Converting Rancher2Dev2ResourceModel to Rancher2Dev2Model: \n%+v", pp.PrettyPrint(m)))
 
 	obj := &Rancher2Dev2Model{}
 
@@ -91,32 +96,18 @@ func (m *Rancher2Dev2ResourceModel) ToGoModel(ctx context.Context, diags *diag.D
 	}
 	obj.Spec = *spec
 
-	// ApiResponse
-	if !m.ApiResponses.IsNull() && !m.ApiResponses.IsUnknown() {
-		var tmpApiResponses map[string]types.Object
-		diags.Append(m.ApiResponses.ElementsAs(ctx, &tmpApiResponses, false)...)
+	// APIResponse
+	if !m.APIResponses.IsNull() && !m.APIResponses.IsUnknown() {
+		obj.APIResponses = make(map[string]APIResponse)
+		var tmpAPIResponses map[string]types.Object
+		diags.Append(m.APIResponses.ElementsAs(ctx, &tmpAPIResponses, false)...)
 		if diags.HasError() {
 			return nil
 		}
 
-		if apiRespObj, ok := tmpApiResponses["create"]; ok {
-			if resp := apiResponseToGoModel(ctx, diags, apiRespObj); resp != nil {
-				obj.ApiResponses.Create = *resp
-			}
-		}
-		if apiRespObj, ok := tmpApiResponses["read"]; ok {
-			if resp := apiResponseToGoModel(ctx, diags, apiRespObj); resp != nil {
-				obj.ApiResponses.Read = *resp
-			}
-		}
-		if apiRespObj, ok := tmpApiResponses["update"]; ok {
-			if resp := apiResponseToGoModel(ctx, diags, apiRespObj); resp != nil {
-				obj.ApiResponses.Update = *resp
-			}
-		}
-		if apiRespObj, ok := tmpApiResponses["delete"]; ok {
-			if resp := apiResponseToGoModel(ctx, diags, apiRespObj); resp != nil {
-				obj.ApiResponses.Delete = *resp
+		for k, v := range tmpAPIResponses {
+			if resp := apiResponseToGoModel(ctx, diags, v); resp != nil {
+				obj.APIResponses[k] = *resp
 			}
 		}
 	}
@@ -131,6 +122,11 @@ func (m *Rancher2Dev2ResourceModel) ToGoModel(ctx context.Context, diags *diag.D
 
 // specToGoModel converts a types.Object to a Spec struct.
 func specToGoModel(ctx context.Context, diags *diag.Diagnostics, specObj types.Object) *Spec {
+	// when chaining commands there won't be time to validate diags
+	// so each conversion function should check for diag errors and short circuit
+	if diags.HasError() {
+		return nil
+	}
 	if specObj.IsNull() || specObj.IsUnknown() {
 		return &Spec{}
 	}
@@ -139,18 +135,18 @@ func specToGoModel(ctx context.Context, diags *diag.Diagnostics, specObj types.O
 		StringAttribute types.String `tfsdk:"string_attribute"`
 	}
 	type TmpSpec struct {
-		String     types.String   `tfsdk:"string"`
-		Bool       types.Bool     `tfsdk:"bool"`
-		Number     types.Number   `tfsdk:"number"`
-		Int32      types.Int32    `tfsdk:"int32"`
-		Int64      types.Int64    `tfsdk:"int64"`
-		Float32    types.Float32  `tfsdk:"float32"`
-		Float64    types.Float64  `tfsdk:"float64"`
-		Map        types.Map      `tfsdk:"map"`
-		List       types.List     `tfsdk:"list"`
-		Object     types.Object   `tfsdk:"object"`
-		ObjectList types.List     `tfsdk:"object_list"`
-		ObjectMap  types.Map      `tfsdk:"object_map"`
+		String     types.String  `tfsdk:"string"`
+		Bool       types.Bool    `tfsdk:"bool"`
+		Number     types.Number  `tfsdk:"number"`
+		Int32      types.Int32   `tfsdk:"int32"`
+		Int64      types.Int64   `tfsdk:"int64"`
+		Float32    types.Float32 `tfsdk:"float32"`
+		Float64    types.Float64 `tfsdk:"float64"`
+		Map        types.Map     `tfsdk:"map"`
+		List       types.List    `tfsdk:"list"`
+		Object     types.Object  `tfsdk:"object"`
+		ObjectList types.List    `tfsdk:"object_list"`
+		ObjectMap  types.Map     `tfsdk:"object_map"`
 	}
 	var tmpSpec TmpSpec
 	diags.Append(specObj.As(ctx, &tmpSpec, basetypes.ObjectAsOptions{})...)
@@ -164,7 +160,7 @@ func specToGoModel(ctx context.Context, diags *diag.Diagnostics, specObj types.O
 	obj.Bool = tmpSpec.Bool.ValueBool()
 	f64, _ := tmpSpec.Number.ValueBigFloat().Float64()
 	obj.Number = f64
-	obj.Int32 = int32(tmpSpec.Int32.ValueInt32())
+	obj.Int32 = tmpSpec.Int32.ValueInt32()
 	obj.Int64 = tmpSpec.Int64.ValueInt64()
 	obj.Float32 = tmpSpec.Float32.ValueFloat32()
 	obj.Float64 = tmpSpec.Float64.ValueFloat64()
@@ -213,30 +209,35 @@ func specToGoModel(ctx context.Context, diags *diag.Diagnostics, specObj types.O
 	return obj
 }
 
-// apiResponseToGoModel converts a types.Object to an ApiResponse struct.
-func apiResponseToGoModel(ctx context.Context, diags *diag.Diagnostics, apiRespObj types.Object) *ApiResponse {
+// apiResponseToGoModel converts a types.Object to an APIResponse struct.
+func apiResponseToGoModel(ctx context.Context, diags *diag.Diagnostics, apiRespObj types.Object) *APIResponse {
+	// when chaining commands there won't be time to validate diags
+	// so each conversion function should check for diag errors and short circuit
+	if diags.HasError() {
+		return nil
+	}
 	if apiRespObj.IsNull() || apiRespObj.IsUnknown() {
-		return &ApiResponse{}
+		return &APIResponse{}
 	}
 
-	type TmpApiResponse struct {
+	type TmpAPIResponse struct {
 		Headers    types.Map    `tfsdk:"headers"`
 		Body       types.String `tfsdk:"body"`
 		StatusCode types.Int64  `tfsdk:"status_code"`
 	}
-	var tmpApiResponse TmpApiResponse
-	diags.Append(apiRespObj.As(ctx, &tmpApiResponse, basetypes.ObjectAsOptions{})...)
+	var tmpAPIResponse TmpAPIResponse
+	diags.Append(apiRespObj.As(ctx, &tmpAPIResponse, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil
 	}
 
-	resp := &ApiResponse{}
-	resp.Body = tmpApiResponse.Body.ValueString()
-	resp.StatusCode = tmpApiResponse.StatusCode.ValueInt64()
+	resp := &APIResponse{}
+	resp.Body = tmpAPIResponse.Body.ValueString()
+	resp.StatusCode = tmpAPIResponse.StatusCode.ValueInt64()
 
-	if !tmpApiResponse.Headers.IsNull() && !tmpApiResponse.Headers.IsUnknown() {
+	if !tmpAPIResponse.Headers.IsNull() && !tmpAPIResponse.Headers.IsUnknown() {
 		var headers map[string]types.List
-		diags.Append(tmpApiResponse.Headers.ElementsAs(ctx, &headers, false)...)
+		diags.Append(tmpAPIResponse.Headers.ElementsAs(ctx, &headers, false)...)
 		if diags.HasError() {
 			return nil
 		}

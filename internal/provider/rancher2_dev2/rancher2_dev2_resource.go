@@ -31,7 +31,7 @@ var _ resource.Resource = &Rancher2Dev2Resource{}
 var _ resource.ResourceWithImportState = &Rancher2Dev2Resource{}
 
 const (
-  endpointPath = "dev2"
+	endpointPath = "dev2"
 )
 
 func NewRancher2Dev2Resource() resource.Resource {
@@ -136,39 +136,39 @@ func (r *Rancher2Dev2Resource) Schema(ctx context.Context, req resource.SchemaRe
 				MarkdownDescription: "The status of the resource (JSON blob).",
 				Computed:            true,
 			},
-      // Ignore this attribute when using this resource as a template.
-      "api_responses": schema.MapNestedAttribute{
-        MarkdownDescription: "Map of function to response, eg. create, read, update, delete.",
-        Optional: true,
-        NestedObject: schema.NestedAttributeObject{
-          Attributes: map[string]schema.Attribute{
-            "headers": schema.MapAttribute{ // map[string][]string
-              Optional: true,
-              ElementType: types.ListType{
-                ElemType: types.StringType,
-              },
-            },
-            "body": schema.StringAttribute{
-              Optional: true,
-            },
-            "status_code": schema.Int64Attribute{
-              Optional: true,
-            },
-          },
-        },
-      },
+			// Ignore this attribute when using this resource as a template.
+			"api_responses": schema.MapNestedAttribute{
+				MarkdownDescription: "Map of function to response, eg. create, read, update, delete.",
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"headers": schema.MapAttribute{ // map[string][]string
+							Optional: true,
+							ElementType: types.ListType{
+								ElemType: types.StringType,
+							},
+						},
+						"body": schema.StringAttribute{
+							Optional: true,
+						},
+						"status_code": schema.Int64Attribute{
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 func (r *Rancher2Dev2Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-  // Terraform may call this method before the provider has been configured (to make sure the resource is valid),
-  //  so we need to gracefully return an empty resource.
-  if req.ProviderData == nil {
+	// Terraform may call this method before the provider has been configured (to make sure the resource is valid),
+	//  so we need to gracefully return an empty resource.
+	if req.ProviderData == nil {
 		return
 	}
 
-  client, dgs := client(req.ProviderData)
+	client, dgs := client(req.ProviderData)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(*dgs...)
 		return
@@ -178,6 +178,13 @@ func (r *Rancher2Dev2Resource) Configure(ctx context.Context, req resource.Confi
 
 // Create changes reality and state to match plan.
 func (r *Rancher2Dev2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	if resp.State.Schema == nil {
+		resp.Diagnostics.AddError(
+			"State Schema Not Found",
+			"The state schema is missing from the response container.",
+		)
+		return
+	}
   // Plan modifiers are the mechanism the provider uses to convert the config to the plan.
 	// req.Config shouldn't be used in this function, req.Plan should convey user intent, if there is any confusion use Plan Modifiers.
 	plan, dgs := plan(ctx, req.Plan)
@@ -185,15 +192,16 @@ func (r *Rancher2Dev2Resource) Create(ctx context.Context, req resource.CreateRe
 		resp.Diagnostics.Append(*dgs...)
 		return
 	}
-  client, dgs := client(r.client)
+	client, dgs := client(r.client)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(*dgs...)
 		return
 	}
+	tflog.Debug(ctx, fmt.Sprintf("Create Request Plan: %+v\n", req.Plan))
 
-  endpoint := fmt.Sprintf("%s/%s", client.GetApiUrl(), endpointPath)
+	endpoint := fmt.Sprintf("%s/%s", client.GetApiUrl(), endpointPath)
 
-  // DEV ONLY
+	// DEV ONLY
 	//
 	// This is special to the dev resource and
 	// is only necessary due to the nature of the dev resource being a dummy resource for dev purposes.
@@ -206,21 +214,21 @@ func (r *Rancher2Dev2Resource) Create(ctx context.Context, req resource.CreateRe
 		clnt = *c.NewTestClient(ctx, r.client.GetApiUrl(), "", false, false, 30, 10, rc.TokenStore)
 		requestId := fmt.Sprintf("%s:%s:%s", endpoint, "POST", "")
 		tflog.Debug(ctx, fmt.Sprintf("create requestId: %s", requestId))
-    planGoModel := plan.ToGoModel(ctx, &resp.Diagnostics)
-    if resp.Diagnostics.HasError() {
-      return
-    }
+		planGoModel := plan.ToGoModel(ctx, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 		clnt.SetResponse(ctx, requestId, c.Response{
-			StatusCode: int(planGoModel.ApiResponses.Create.StatusCode),
-			Headers: planGoModel.ApiResponses.Create.Headers,
-			Body: json.RawMessage(planGoModel.ApiResponses.Create.Body),
+			StatusCode: int(planGoModel.APIResponses["create"].StatusCode),
+			Headers:    planGoModel.APIResponses["create"].Headers,
+			Body:       json.RawMessage(planGoModel.APIResponses["create"].Body),
 		})
 		client = &clnt
 	}
 	//
 	// END DEV ONLY
 
-  var id types.String
+	var id types.String
 	if plan.ID.IsNull() || plan.ID.IsUnknown() || plan.ID.ValueString() == "" {
 		// don't blindly set uuid so that unit tests can set to a known id
 		id = types.StringValue(uuid.New().String())
@@ -228,12 +236,12 @@ func (r *Rancher2Dev2Resource) Create(ctx context.Context, req resource.CreateRe
 		id = plan.ID
 	}
 
-  rb, err := plan.ToGoModel(ctx, &resp.Diagnostics).ToApiRequestBody()
-  if err != nil {
-    resp.Diagnostics.AddError("Error marshalling dev plan for create request: ", err.Error())
-    return
-  }
-  request := c.Request{
+	rb := plan.ToGoModel(ctx, &resp.Diagnostics).ToApiRequestBody(&resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	request := c.Request{
 		Endpoint: endpoint,
 		Method:   "POST",
 		Body:     rb,
@@ -241,15 +249,14 @@ func (r *Rancher2Dev2Resource) Create(ctx context.Context, req resource.CreateRe
 
 	response := c.Response{}
 
-	err = client.Do(ctx, &request, &response)
+	err := client.Do(ctx, &request, &response)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating dev resource: ", err.Error())
 		return
 	}
-
 	// process the response here
 	var model Rancher2Dev2Model
-	model.FromApiResponseBody(ctx, response.Body, &resp.Diagnostics)
+	model.FromAPIResponseBody(ctx, response.Body, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -261,15 +268,27 @@ func (r *Rancher2Dev2Resource) Create(ctx context.Context, req resource.CreateRe
 
 	// Insert provider generated values before the state is saved.
 	state.ID = id
-	state.ApiResponses = plan.ApiResponses
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-  tflog.Debug(ctx, fmt.Sprintf("Create State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
+	// Insert user generated values that only exist in state before the state is saved.
+	state.APIResponses = plan.APIResponses // API responses isn't something that exists in a remote API, it is only saved in the state.
+
+	d := resp.State.Set(ctx, state)
+	if d.HasError() {
+		resp.Diagnostics.Append(d...)
+	}
+	tflog.Debug(ctx, fmt.Sprintf("Create State After Set: %+v", pp.PrettyPrint(resp.State.Raw)))
 }
 
 // Read updates the state to match reality.
 func (r *Rancher2Dev2Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	state, dgs := state(ctx, req.State)
+	if resp.State.Schema == nil {
+		resp.Diagnostics.AddError(
+			"State Schema Not Found",
+			"The state schema is missing from the response container.",
+		)
+		return
+	}
+  state, dgs := state(ctx, req.State)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(*dgs...)
 		return
@@ -281,7 +300,14 @@ func (r *Rancher2Dev2Resource) Read(ctx context.Context, req resource.ReadReques
 // Update changes reality and state to match plan.
 // Best practice is not to compare, just overwrite.
 func (r *Rancher2Dev2Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// req.Config shouldn't be used in this function, req.Plan should convey user intent, if there is any confusion use Plan Modifiers.
+	if resp.State.Schema == nil {
+		resp.Diagnostics.AddError(
+			"State Schema Not Found",
+			"The state schema is missing from the response container.",
+		)
+		return
+	}
+  // req.Config shouldn't be used in this function, req.Plan should convey user intent, if there is any confusion use Plan Modifiers.
 	plan, dgs := plan(ctx, req.Plan)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(*dgs...)
@@ -299,7 +325,7 @@ func (r *Rancher2Dev2Resource) Update(ctx context.Context, req resource.UpdateRe
 
 // Delete removes reality, the framework automatically handles the state.
 func (r *Rancher2Dev2Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	state, dgs := state(ctx, req.State)
+  state, dgs := state(ctx, req.State)
 	if dgs.HasError() {
 		resp.Diagnostics.Append(*dgs...)
 		return
@@ -337,7 +363,7 @@ func state(ctx context.Context, state tfsdk.State) (Rancher2Dev2ResourceModel, *
 	if dgs.HasError() {
 		return model, &dgs
 	}
-  tflog.Debug(ctx, fmt.Sprintf("State: %+v\n", pp.PrettyPrint(model)))
+	tflog.Debug(ctx, fmt.Sprintf("State: %+v\n", pp.PrettyPrint(model)))
 	return model, &dgs
 }
 
@@ -359,7 +385,7 @@ func plan(ctx context.Context, plan tfsdk.Plan) (Rancher2Dev2ResourceModel, *dia
 		return model, &dgs
 	}
 
-  tflog.Debug(ctx, fmt.Sprintf("Plan: %+v\n", pp.PrettyPrint(model)))
+	tflog.Debug(ctx, fmt.Sprintf("Plan: %+v\n", pp.PrettyPrint(model)))
 	return model, &dgs
 }
 
@@ -382,6 +408,6 @@ func client(client any) (c.Client, *diag.Diagnostics) {
 		)
 		return clnt, &dgs
 	}
-  tflog.Debug(context.Background(), fmt.Sprintf("Client: %+v\n", pp.PrettyPrint(clnt)))
+	tflog.Debug(context.Background(), fmt.Sprintf("Client: %+v\n", pp.PrettyPrint(clnt)))
 	return clnt, &dgs
 }

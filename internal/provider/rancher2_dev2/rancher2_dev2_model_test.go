@@ -48,17 +48,17 @@ var specTypesObject = types.ObjectValueMust(
 	},
 )
 
-var sampleApiResponse = ApiResponse{
+var sampleAPIResponse = APIResponse{
 	Headers:    map[string][]string{"Content-Type": {"application/json"}},
 	Body:       `{"id":"test","type":"dev2"}`,
 	StatusCode: 200,
 }
 
-var sampleApiResponses = ApiResponses{
-	Create: sampleApiResponse,
+var sampleAPIResponses = map[string]APIResponse{
+	"create": sampleAPIResponse,
 }
 
-var sampleApiResponseObject = types.ObjectValueMust(
+var sampleAPIResponseObject = types.ObjectValueMust(
 	apiResponseAttrTypes,
 	map[string]attr.Value{
 		"headers": types.MapValueMust(
@@ -72,10 +72,10 @@ var sampleApiResponseObject = types.ObjectValueMust(
 	},
 )
 
-var sampleApiResponsesMap = types.MapValueMust(
+var sampleAPIResponsesMap = types.MapValueMust(
 	types.ObjectType{AttrTypes: apiResponseAttrTypes},
 	map[string]attr.Value{
-		"create": sampleApiResponseObject,
+		"create": sampleAPIResponseObject,
 	},
 )
 
@@ -105,7 +105,7 @@ var fullDevModel = Rancher2Dev2Model{ // native Go model which we will convert t
 			"obj_map_key": {StringAttribute: "test_object_string"},
 		},
 	},
-	ApiResponses: sampleApiResponses,
+	APIResponses: sampleAPIResponses,
 }
 
 var fullDevResourceModel = Rancher2Dev2ResourceModel{ // Terraform resource model
@@ -115,7 +115,81 @@ var fullDevResourceModel = Rancher2Dev2ResourceModel{ // Terraform resource mode
 	Status:       types.StringValue("active"),
 	Metadata:     mta.SampleMetadataTypesObject(),
 	Spec:         specTypesObject,
-	ApiResponses: sampleApiResponsesMap,
+	APIResponses: sampleAPIResponsesMap,
+}
+
+var correctedFullDevResourceModel = Rancher2Dev2ResourceModel{ // Terraform resource model
+	ID:         types.StringValue("test_id"),
+	APIVersion: types.StringValue("v1"),
+	Kind:       types.StringValue("Rancher2Dev2"),
+	Status:     types.StringValue("active"),
+	Metadata: types.ObjectValueMust(
+		mta.MetadataAttrTypes,
+		map[string]attr.Value{
+			"name":          types.StringValue("test_metadata"),
+			"namespace":     types.StringValue("test_namespace"),
+			"generate_name": types.StringValue(""), // mutually exclusive to the name attribute
+			"annotations": types.MapValueMust(types.StringType, map[string]attr.Value{
+				"ann_key": types.StringValue("ann_value"),
+			}),
+			"labels": types.MapValueMust(types.StringType, map[string]attr.Value{
+				"label_key": types.StringValue("label_value"),
+			}),
+			"finalizers": types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("finalizer_a"),
+			}),
+			"owner_references": types.ListValueMust(types.ObjectType{AttrTypes: mta.OwnerReferenceAttrTypes}, []attr.Value{
+				types.ObjectValueMust(mta.OwnerReferenceAttrTypes, map[string]attr.Value{
+					"api_version":          types.StringValue("v1"),
+					"kind":                 types.StringValue("some_kind"),
+					"name":                 types.StringValue("owner"),
+					"uid":                  types.StringValue("some_uid"),
+					"controller":           types.BoolValue(true),
+					"block_owner_deletion": types.BoolValue(true),
+				}),
+			}),
+			"uid":                           types.StringValue("test_uid"),
+			"generation":                    types.Int64Value(1),
+			"creation_timestamp":            types.StringValue("2023-01-01T00:00:00Z"),
+			"deletion_grace_period_seconds": types.Int64Value(30),
+			"deletion_timestamp":            types.StringValue("2023-01-01T01:00:00Z"),
+			"managed_fields":                types.StringValue("{\"field\": \"test_managed_fields\"}"),
+			"resource_version":              types.StringValue("test_resource_version"),
+			"self_link":                     types.StringValue("/api/v1/namespaces/default/rancher2_dev2s/test"),
+		},
+	),
+	Spec: types.ObjectValueMust(
+		specAttrTypes,
+		map[string]attr.Value{
+			"string":  types.StringValue("test_spec_string"),
+			"bool":    types.BoolValue(true),
+			"number":  types.NumberValue(big.NewFloat(1.25)),
+			"int32":   types.Int64Value(123),
+			"int64":   types.Int64Value(456),
+			"float32": types.Float64Value(1.25),
+			"float64": types.Float64Value(4.50),
+			"map": types.MapValueMust(types.StringType, map[string]attr.Value{
+				"map_key": types.StringValue("map_value"),
+			}),
+			"list": types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("list_value"),
+			}),
+			"object": types.ObjectValueMust(objectAttrTypes, map[string]attr.Value{
+				"string_attribute": types.StringValue("test_object_string"),
+			}),
+			"object_list": types.ListValueMust(types.ObjectType{AttrTypes: objectAttrTypes}, []attr.Value{
+				types.ObjectValueMust(objectAttrTypes, map[string]attr.Value{
+					"string_attribute": types.StringValue("test_object_string"),
+				}),
+			}),
+			"object_map": types.MapValueMust(types.ObjectType{AttrTypes: objectAttrTypes}, map[string]attr.Value{
+				"obj_map_key": types.ObjectValueMust(objectAttrTypes, map[string]attr.Value{
+					"string_attribute": types.StringValue("test_object_string"),
+				}),
+			}),
+		},
+	),
+	APIResponses: sampleAPIResponsesMap,
 }
 
 func TestRancher2Dev2ModelToResourceModel(t *testing.T) {
@@ -128,6 +202,11 @@ func TestRancher2Dev2ModelToResourceModel(t *testing.T) {
 			"Basic",
 			fullDevModel,
 			&fullDevResourceModel,
+		},
+		{
+			"CorrectedNestedObjects",
+			fullDevModel,
+			&correctedFullDevResourceModel,
 		},
 	}
 	for _, tc := range testCases {
@@ -271,7 +350,11 @@ func TestModelToApiRequestBody(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// compact both sides to avoid diffs in spacing
-			g, err := tc.fit.ToApiRequestBody()
+			diags := &diag.Diagnostics{}
+			g, err := json.Marshal(tc.fit.ToApiRequestBody(diags))
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

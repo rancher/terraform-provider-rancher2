@@ -80,9 +80,15 @@ resource "rancher2_dev2" "full" {
       status_code = 200
     }
     "update" = {
+      headers = {
+        "Content-Type" = ["application/json"]
+      }
+      body        = jsonencode(local.createResponseBody)
       status_code = 200
     }
     "delete" = {
+      headers     = {}
+      body        = ""
       status_code = 200
     }
   }
@@ -185,9 +191,10 @@ locals {
     api_version = "string"
     kind        = "string"
     metadata = {
-      uid       = "string"
-      name      = "string"
-      namespace = "string"
+      uid           = "string"
+      name          = "string"
+      generate_name = ""
+      namespace     = "string"
       annotations = {
         string = "string"
       }
@@ -197,17 +204,20 @@ locals {
       finalizers = ["string"]
       owner_references = [
         {
-          api_version = "string"
-          kind        = "string"
-          name        = "string"
+          api_version          = "string"
+          kind                 = "string"
+          name                 = "string"
+          uid                  = "string"
+          controller           = true
+          block_owner_deletion = true
         }
       ]
       generation         = 1
       creation_timestamp = "test"
       deletion_timestamp = "test"
-      managed_fields = {
+      managed_fields = jsonencode({
         "field" = "test_managed_fields"
-      }
+      })
       resource_version = "test"
       self_link        = "test"
       # deletion_grace_period_seconds = 1 # this will always be null in the API

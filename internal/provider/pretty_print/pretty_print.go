@@ -8,14 +8,16 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 // PrettyPrint doesn't redact any data, use judiciously.
 func PrettyPrint(data any) string {
-	printable := toPrintable(data)
+	printable := ToPrintable(data)
 	s, err := json.MarshalIndent(printable, "", "  ")
 	if err != nil {
+		fmt.Printf("%+v", printable)
 		return fmt.Sprintf("failed to pretty-print object: %v", err)
 	}
 	return string(s)
@@ -26,7 +28,7 @@ type unknownAndNullable interface {
 	IsNull() bool
 }
 
-func toPrintableFramework[T any](v unknownAndNullable, valuer func() T) any {
+func ToPrintableFramework[T any](v unknownAndNullable, valuer func() T) any {
 	if v.IsUnknown() {
 		return "<unknown>"
 	}
@@ -36,10 +38,10 @@ func toPrintableFramework[T any](v unknownAndNullable, valuer func() T) any {
 	return valuer()
 }
 
-// toPrintable is a helper that recursively converts data structures,
+// ToPrintable is a helper that recursively converts data structures,
 // especially those containing terraform-plugin-framework types and tftypes.Value,
 // into a representation that is friendly for JSON marshaling.
-func toPrintable(data any) any {
+func ToPrintable(data any) any {
 	if data == nil {
 		return nil
 	}
@@ -58,13 +60,19 @@ func toPrintable(data any) any {
 			"Detail":   d.Detail(),
 		}
 		if dp, ok := d.(diag.DiagnosticWithPath); ok {
-			printable["AttributePath"] = toPrintable(dp.Path())
+			printable["AttributePath"] = ToPrintable(dp.Path())
 		}
 		return printable
 	}
 
-	if marshaller, ok := data.(json.Marshaler); ok {
-		return marshaller
+	if raw, ok := data.(json.RawMessage); ok {
+		var parsed any
+		if err := json.Unmarshal(raw, &parsed); err == nil {
+			return ToPrintable(parsed)
+		}
+		// Fallback to basic string conversion if Unmarshal fails (e.g., invalid JSON)
+		// The goal is for these logs not to fail even if the data is the wrong type
+		return string(raw)
 	}
 
 	val := reflect.ValueOf(data)
@@ -74,33 +82,82 @@ func toPrintable(data any) any {
 		if val.IsNil() {
 			return nil
 		}
-		return toPrintable(val.Elem().Interface())
+		return ToPrintable(val.Elem().Interface())
 	}
 
 	// Handle special Terraform types that need conversion.
 	switch v := data.(type) {
 	case tftypes.Value:
 		// object, map, set, and list are handled here
-		return toPrintableTftypesValue(v)
+		return ToPrintableTftypesValue(v)
 	case types.String:
-		return toPrintableFramework(v, v.ValueString)
+		return ToPrintableFramework(v, v.ValueString)
 	case types.Bool:
-		return toPrintableFramework(v, v.ValueBool)
+		return ToPrintableFramework(v, v.ValueBool)
 	case types.Int64:
-		return toPrintableFramework(v, v.ValueInt64)
+		return ToPrintableFramework(v, v.ValueInt64)
 	case types.Int32:
-		return toPrintableFramework(v, v.ValueInt32)
+		return ToPrintableFramework(v, v.ValueInt32)
 	case types.Float64:
-		return toPrintableFramework(v, v.ValueFloat64)
+		return ToPrintableFramework(v, v.ValueFloat64)
 	case types.Float32:
-		return toPrintableFramework(v, v.ValueFloat32)
+		return ToPrintableFramework(v, v.ValueFloat32)
 	case types.Number:
-		return toPrintableFramework(v, v.ValueBigFloat)
+		return ToPrintableFramework(v, v.ValueBigFloat)
+	case basetypes.ObjectValue:
+		if v.IsUnknown() {
+			return "<unknown>"
+		}
+		if v.IsNull() {
+			return nil
+		}
+		out := make(map[string]any)
+		for k, val := range v.Attributes() {
+			out[k] = ToPrintable(val)
+		}
+		return out
+	case basetypes.MapValue:
+		if v.IsUnknown() {
+			return "<unknown>"
+		}
+		if v.IsNull() {
+			return nil
+		}
+		out := make(map[string]any)
+		for k, val := range v.Elements() {
+			out[k] = ToPrintable(val)
+		}
+		return out
+	case basetypes.ListValue:
+		if v.IsUnknown() {
+			return "<unknown>"
+		}
+		if v.IsNull() {
+			return nil
+		}
+		out := make([]any, 0, len(v.Elements()))
+		for _, val := range v.Elements() {
+			out = append(out, ToPrintable(val))
+		}
+		return out
+	case basetypes.SetValue:
+		if v.IsUnknown() {
+			return "<unknown>"
+		}
+		if v.IsNull() {
+			return nil
+		}
+		out := make([]any, 0, len(v.Elements()))
+		for _, val := range v.Elements() {
+			out = append(out, ToPrintable(val))
+		}
+		return out
 	}
 
 	// Handle native Go kinds.
 	switch val.Kind() {
 	case reflect.Struct:
+		// fmt.Printf("pretty printing Go native struct: \n%+v\n", val)
 		out := make(map[string]any)
 		for i := 0; i < val.NumField(); i++ {
 			field := val.Type().Field(i)
@@ -109,7 +166,7 @@ func toPrintable(data any) any {
 				continue
 			}
 			value := val.Field(i)
-			out[field.Name] = toPrintable(value.Interface())
+			out[field.Name] = ToPrintable(value.Interface())
 		}
 		return out
 
@@ -119,24 +176,23 @@ func toPrintable(data any) any {
 		}
 		out := make([]any, val.Len())
 		for i := 0; i < val.Len(); i++ {
-			out[i] = toPrintable(val.Index(i).Interface())
+			out[i] = ToPrintable(val.Index(i).Interface())
 		}
 		return out
 
 	case reflect.Map:
 		out := make(map[string]any)
 		for _, key := range val.MapKeys() {
-			out[fmt.Sprintf("%v", key.Interface())] = toPrintable(val.MapIndex(key).Interface())
+			out[fmt.Sprintf("%v", key.Interface())] = ToPrintable(val.MapIndex(key).Interface())
 		}
 		return out
 	}
-
 	// For primitive types, return as is.
 	return data
 }
 
-// toPrintableTftypesValue handles the conversion of tftypes.Value to a JSON-marshalable format.
-func toPrintableTftypesValue(v tftypes.Value) any {
+// ToPrintableTftypesValue handles the conversion of tftypes.Value to a JSON-marshalable format.
+func ToPrintableTftypesValue(v tftypes.Value) any {
 	// fmt.Printf("\nhandling tftypes value: \n%+v\n", v)
 	if !v.IsKnown() {
 		return "<unknown>"
@@ -156,7 +212,7 @@ func toPrintableTftypesValue(v tftypes.Value) any {
 		}
 		result := make(map[string]any)
 		for k, v := range attrs {
-			result[k] = toPrintable(v)
+			result[k] = ToPrintable(v)
 		}
 		return result
 		// Handle collection types by recursively calling this function.
@@ -167,7 +223,7 @@ func toPrintableTftypesValue(v tftypes.Value) any {
 		}
 		result := make([]any, len(elems))
 		for i, v := range elems {
-			result[i] = toPrintable(v)
+			result[i] = ToPrintable(v)
 		}
 		return result
 	case tftypes.Map:
@@ -177,7 +233,7 @@ func toPrintableTftypesValue(v tftypes.Value) any {
 		}
 		result := make(map[string]any)
 		for k, v := range elems {
-			result[k] = toPrintable(v)
+			result[k] = ToPrintable(v)
 		}
 		return result
 	}
@@ -212,5 +268,5 @@ func toPrintableTftypesValue(v tftypes.Value) any {
 	if err := v.As(&goValue); err != nil {
 		return fmt.Sprintf("<unmarshallable tftypes.Value: %s>", v.Type().String())
 	}
-	return toPrintable(goValue)
+	return ToPrintable(goValue)
 }

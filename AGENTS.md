@@ -1,6 +1,6 @@
 ## Environment-Specific Instructions
 
-Dependencies for this project are provided by Nix, use this command to run scripts with the dependencies installed: `nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}`
+Dependencies for this project are provided by Nix, use this command to run scripts with the dependencies installed: `nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -c '{0}'`
 
 The GNUmakefile present in this repository gives a few convienience methods for common necessities:
 - use `make build` to build the project and check for compilation errors
@@ -8,7 +8,9 @@ The GNUmakefile present in this repository gives a few convienience methods for 
 - use `make st` to run acceptance tests
 - use `make lint` to run static code analysis and linting
 
-You may read files and folders in this repository without asking.
+You MUST be in the repository's root directory to run the `make` commands successfully.
+Use ReadFile tool without asking.
+
 
 ## Repository Coding Standards & Instructions
 

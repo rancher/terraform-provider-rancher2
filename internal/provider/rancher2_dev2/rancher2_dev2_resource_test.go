@@ -1,16 +1,28 @@
 package rancher2_dev2
 
 import (
+	"encoding/json"
+	"fmt"
+
+	// "reflect"
 	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 
+	// "github.com/hashicorp/terraform-plugin-framework/tfsdk"
+
+	c "github.com/rancher/terraform-provider-rancher2/internal/provider/client"
 	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
 	mta "github.com/rancher/terraform-provider-rancher2/internal/provider/rancher2_metadata"
 	h "github.com/rancher/terraform-provider-rancher2/internal/provider/test_helpers"
 )
+
+var testToken = "test-token"
+var baseEndpoint = "https://rancher.example.com/dev2"
+var testID = "test-id"
 
 func TestRancher2Dev2Resource(t *testing.T) {
 	t.Run("Metadata", func(t *testing.T) {
@@ -29,7 +41,7 @@ func TestRancher2Dev2Resource(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
 				defer log()
-        res := resource.MetadataResponse{}
+				res := resource.MetadataResponse{}
 				tc.fit.Metadata(ctx, resource.MetadataRequest{ProviderTypeName: "rancher2"}, &res)
 				got := res
 				if got.TypeName != tc.want.TypeName {
@@ -122,6 +134,8 @@ func TestRancher2Dev2Resource(t *testing.T) {
 			env           map[string]string
 			fit           Rancher2Dev2Resource
 			plan          Rancher2Dev2Model
+			apiRequest    c.Request
+			apiResponse   c.Response
 			expectedState Rancher2Dev2Model
 			outcome       string
 		}{
@@ -129,27 +143,139 @@ func TestRancher2Dev2Resource(t *testing.T) {
 				"Basic",                // create
 				map[string]string{},    // env
 				Rancher2Dev2Resource{}, // fit
-				Rancher2Dev2Model{ // Go model to convert to tfsdk.Plan
-					APIVersion: "v1",
-					Kind:       "test",
-					Metadata: mta.Metadata{
-						Name: "test",
-					},
-					ApiResponses: ApiResponses{
-						Create: ApiResponse{
-							StatusCode: 200,
-							Body:       `{"api_version":"v1","kind":"test","metadata":{"name":"test"},"spec":{},"status":"active"}`,
+				Rancher2Dev2Model{ // Go model to convert to tfsdk.Plan to send to create function
+					ID:         testID, // this won't normally be in the plan, but adding it for test consistency
+					APIVersion: "string",
+					Kind:       "string",
+					Metadata:   mta.SampleMetadataGoModel(),
+					Spec: Spec{
+						String:  "test",
+						Bool:    false,
+						Number:  1,
+						Int32:   1,
+						Int64:   1,
+						Float32: 1.0,
+						Float64: 1.0,
+						Map:     map[string]string{"test": "test"},
+						List:    []string{"test"},
+						Object: Object{
+							StringAttribute: "test",
+						},
+						ObjectList: []Object{
+							{
+								StringAttribute: "test",
+							},
+						},
+						ObjectMap: map[string]Object{
+							"test": {
+								StringAttribute: "test",
+							},
 						},
 					},
 				},
-				Rancher2Dev2Model{ // Go model to convert to tfsdk.State for comparing against the resulting state
-					APIVersion: "v1",
-					Kind:       "test",
-					Metadata: mta.Metadata{
-						Name: "test",
+				c.Request{ // expected API request
+					Endpoint: baseEndpoint,
+					Method:   "POST",
+					Headers: map[string][]string{
+						"Content-Type":  {"application/json"},
+						"Authorization": {"Bearer " + testToken},
 					},
-					ApiResponses: ApiResponses{
-						Create: ApiResponse{},
+					Body: apiBody(&Rancher2Dev2Model{
+						APIVersion: testID,
+						Kind:       "string",
+						Metadata:   mta.SampleMetadataGoModel(),
+						Spec: Spec{
+							String:  "test",
+							Bool:    false,
+							Number:  1,
+							Int32:   1,
+							Int64:   1,
+							Float32: 1.0,
+							Float64: 1.0,
+							Map:     map[string]string{"test": "test"},
+							List:    []string{"test"},
+							Object: Object{
+								StringAttribute: "test",
+							},
+							ObjectList: []Object{
+								{
+									StringAttribute: "test",
+								},
+							},
+							ObjectMap: map[string]Object{
+								"test": {
+									StringAttribute: "test",
+								},
+							},
+						},
+					}),
+				},
+				c.Response{ // Injected into the client and "served" to the code.
+					StatusCode: 201,
+					Headers: map[string][]string{
+						"Content-Type": {"application/json"},
+					},
+					Body: apiResponse(&Rancher2Dev2Model{
+						APIVersion: testID,
+						Kind:       "string",
+						Metadata:   mta.SampleMetadataGoModel(),
+						Spec: Spec{
+							String:  "test",
+							Bool:    false,
+							Number:  1,
+							Int32:   1,
+							Int64:   1,
+							Float32: 1.0,
+							Float64: 1.0,
+							Map:     map[string]string{"test": "test"},
+							List:    []string{"test"},
+							Object: Object{
+								StringAttribute: "test",
+							},
+							ObjectList: []Object{
+								{
+									StringAttribute: "test",
+								},
+							},
+							ObjectMap: map[string]Object{
+								"test": {
+									StringAttribute: "test",
+								},
+							},
+						},
+						Status: map[string]any{
+							"status": "active",
+						},
+					}),
+				},
+				Rancher2Dev2Model{ // Go model to convert to tfsdk.State for comparing against the resulting state
+					ID:         testID,
+					APIVersion: "string",
+					Kind:       "string",
+					Metadata:   mta.SampleMetadataGoModel(),
+					Spec: Spec{
+						String:  "test",
+						Bool:    false,
+						Number:  1,
+						Int32:   1,
+						Int64:   1,
+						Float32: 1.0,
+						Float64: 1.0,
+						Map:     map[string]string{"test": "test"},
+						List:    []string{"test"},
+						Object: Object{
+							StringAttribute: "test",
+						},
+						ObjectList: []Object{
+							{
+								StringAttribute: "test",
+							},
+						},
+						ObjectMap: map[string]Object{
+							"test": {
+								StringAttribute: "test",
+							},
+						},
 					},
 				},
 				"success",
@@ -160,22 +286,38 @@ func TestRancher2Dev2Resource(t *testing.T) {
 				ctx, log := h.Cntxt(t, "ERROR") // Change the log level to "DEBUG" here for more logging.
 				defer log()
 				clnt := h.GetTestClient(t, ctx)
+				clnt.SetToken(testToken)
+
+				if tc.apiRequest.Endpoint != "" {
+					apiRequestId := fmt.Sprintf("%s:%s:%s", tc.apiRequest.Endpoint, tc.apiRequest.Method, testToken)
+					clnt.SetResponse(ctx, apiRequestId, tc.apiResponse)
+				}
+
 				err := h.GetConfiguredResource(ctx, t, &tc.fit, clnt)
 				if err != nil {
-					t.Errorf("Error getting configured resource: %s", err.Error())
+					t.Fatalf("Error getting configured resource: %s", err.Error())
 				}
 				var dgs diag.Diagnostics
 
 				plan := tc.plan.ToResourceModel(ctx, &dgs).ToPlan(ctx, &dgs)
 				if dgs.HasError() {
-					t.Fatalf("Error creating plan from map: %s", pp.PrettyPrint(dgs))
+					t.Fatalf("Error creating plan: %s", pp.PrettyPrint(dgs))
 				}
 
 				req := resource.CreateRequest{
 					Plan: plan,
 				}
-				res := resource.CreateResponse{}
-				tc.fit.Create(ctx, req, &res)
+				// get empty state
+				emptyResource := NewRancher2Dev2Resource()
+				schemaResponseContainer := &resource.SchemaResponse{}
+				emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
+				state := tfsdk.State{
+					Schema: schemaResponseContainer.Schema,
+				}
+				res := resource.CreateResponse{State: state}
+        // res = resource.CreateResponse{} // This causes a panic!
+
+        tc.fit.Create(ctx, req, &res)
 				if tc.outcome == "failure" && !res.Diagnostics.HasError() {
 					t.Errorf("Create() expected error diagnostics, got none")
 				}
@@ -285,4 +427,24 @@ func TestRancher2Dev2Resource(t *testing.T) {
 			})
 		}
 	})
+}
+
+// Helpers.
+// apiBody turns a native Go model to a format that can easily be marshaled into json
+func apiBody(data *Rancher2Dev2Model) any {
+	dgs := diag.Diagnostics{}
+	body := data.ToApiRequestBody(&dgs)
+	if dgs.HasError() {
+		return nil
+	}
+	return body
+}
+
+// apiResponse turns a native Go model to a marshaled byte representation
+func apiResponse(data *Rancher2Dev2Model) []byte {
+	body, err := json.Marshal(data)
+	if err != nil {
+		return nil
+	}
+	return body
 }
