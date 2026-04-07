@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 0
       - name: install-nix
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh
@@ -48,7 +48,7 @@ jobs:
           fetch-depth: 0
       - name: install-nix
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh
@@ -70,7 +70,7 @@ jobs:
           fetch-depth: 0
       - name: install-nix
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh
@@ -90,7 +90,7 @@ jobs:
           fetch-depth: 0
       - name: install-nix
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh
@@ -114,7 +114,7 @@ jobs:
           fetch-depth: 0
       - name: install-nix
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh
@@ -135,7 +135,7 @@ jobs:
           fetch-depth: 0
       - name: install-nix
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh
@@ -158,7 +158,7 @@ jobs:
           fetch-depth: 0
       - name: install-nix
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh
@@ -247,7 +247,7 @@ jobs:
           fetch-depth: 0
       - name: install-nix
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh

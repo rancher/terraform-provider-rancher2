@@ -98,7 +98,13 @@ jobs:
             await script({ core });
       - name: Get IP
         id: get-ip
-        run: echo "ip=$(curl -s https://ipinfo.io/ip)" >> "$GITHUB_OUTPUT"
+        run: |
+          IP=$(curl -s https://ipinfo.io/ip)
+          if ! [[ "$IP" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+            echo "Error: Invalid IP address format: $IP" >&2
+            exit 1
+          fi
+          echo "IP=$IP" >> "$GITHUB_OUTPUT"
       # artifacts are available to other jobs as soon as the step completes
       # unlike job outputs which are only available after the job completes
       # this artifact is a placeholder only, it has no content
@@ -165,7 +171,7 @@ jobs:
       - name: install-nix
         if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh
@@ -261,7 +267,7 @@ jobs:
           output-credentials: true
       - name: install-nix
         run: |
-          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
           echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
           chmod +x install.sh
           ./install.sh
