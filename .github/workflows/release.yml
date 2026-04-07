@@ -10,6 +10,8 @@ env:
   AWS_ROLE: arn:aws:iam::270074865685:role/terraform-module-ci-test
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   ALL_TESTS_JSON: '["TestOneBasic","TestThreeBasic","TestProductionBasic"]'
+  NIX_INSTALL_SHA: de490f61fcbaf9a5cabf2fa621ddb9ef93ad35d9a23a04e7d51b26e092b63691
+  NIX_INSTALL_VERSION: 2.34.4
 
 permissions:
   contents: write
@@ -163,7 +165,10 @@ jobs:
       - name: install-nix
         if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
         run: |
-          curl -L https://nixos.org/nix/install | sh
+          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
+          chmod +x install.sh
+          ./install.sh
           source /home/runner/.nix-profile/etc/profile.d/nix.sh
           nix --version
           which nix
@@ -256,7 +261,10 @@ jobs:
           output-credentials: true
       - name: install-nix
         run: |
-          curl -L https://nixos.org/nix/install | sh
+          curl -L -o install.sh https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install
+          echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
+          chmod +x install.sh
+          ./install.sh
           source /home/runner/.nix-profile/etc/profile.d/nix.sh
           nix --version
           which nix
