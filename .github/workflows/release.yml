@@ -104,7 +104,7 @@ jobs:
             echo "Error: Invalid IP address format: $IP" >&2
             exit 1
           fi
-          echo "IP=$IP" >> "$GITHUB_OUTPUT"
+          echo "ip=$IP" >> "$GITHUB_OUTPUT"
       # artifacts are available to other jobs as soon as the step completes
       # unlike job outputs which are only available after the job completes
       # this artifact is a placeholder only, it has no content

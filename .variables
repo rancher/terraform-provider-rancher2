@@ -1,7 +1,7 @@
 #!/bin/env bash
 export TF_IN_AUTOMATION=1
 TF_VAR_ip="$(curl -s 'https://api.ipify.org')"
-if ! [[ "$IP" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+if ! [[ "$TF_VAR_ip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
   echo "Error: Invalid IP address format: $IP" >&2
   exit 1
 fi
