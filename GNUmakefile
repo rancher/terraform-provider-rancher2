@@ -1,4 +1,4 @@
-default: fmt lint build install generate test testacc
+default: fmt lint build generate test testacc
 
 fmt:
 	gofmt -s -w -e .
@@ -9,9 +9,6 @@ lint:
 build:
 	rm -f ./bin/terraform-provider-rancher2
 	go build -o ./bin/ -v ./...
-
-install:
-	go install -v ./...
 
 generate:
 	cd tools; go generate ./...

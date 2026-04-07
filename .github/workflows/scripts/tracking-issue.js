@@ -41,7 +41,7 @@ export default async ({ github, core, process }) => {
     let pulls;
     try {
       pulls = await github.paginate(github.rest.search.issuesAndPullRequests, {
-        q: `repo:${owner}/${repo} is:pr state:open base:main -draft:true -label:internal/pr-tracked -label:internal/pr-backport -label:"autorelease: pending" -label:"autorelease: tagged"`
+        q: `repo:${owner}/${repo} is:pr state:open base:main -draft:true -label:internal/ignore -label:internal/pr-backport -label:"autorelease: pending" -label:"autorelease: tagged"`
       });
     } catch (error) {
       throw new Error(`Failed to retrieve pull requests for tracking issue: ${error.message}`);
@@ -76,12 +76,7 @@ export default async ({ github, core, process }) => {
         });
 
         if (existingIssues.length > 0) {
-          await github.rest.issues.addLabels({
-            owner: owner,
-            repo: repo,
-            issue_number: pr.number,
-            labels: ["internal/pr-tracked"]
-          });
+          // Note: You can't add labels to PRs submitted from forks.
           core.info(`Tracking issue already exists for PR #${pr.number}. Skipping.`);
           continue;
         }
@@ -132,12 +127,7 @@ export default async ({ github, core, process }) => {
           }
         });
 
-        await github.rest.issues.addLabels({
-          owner: owner,
-          repo: repo,
-          issue_number: pr.number,
-          labels: ["internal/pr-tracked"]
-        });
+        // Note: Labels can't be added to PRs from forks
       } catch (error) {
         errors.push(`Failed to process PR [${pr.number}](${pr.html_url}): ${error.message}`);
       }
