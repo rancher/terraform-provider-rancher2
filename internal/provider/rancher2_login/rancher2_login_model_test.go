@@ -15,7 +15,7 @@ func TestRancherLoginModel(t *testing.T) {
 		testCases := []struct {
 			name string
 			fit  RancherLoginModel
-			want RancherLoginResourceModel
+			want Rancher2LoginResourceModel
 		}{
 			{
 				"Basic",
@@ -33,7 +33,7 @@ func TestRancherLoginModel(t *testing.T) {
 					UserTokenEndDate:            "end",
 					UserTokenRefreshDate:        "refresh",
 				},
-				RancherLoginResourceModel{
+				Rancher2LoginResourceModel{
 					Id:                          types.StringValue("test"),
 					Username:                    types.StringValue("user"),
 					Password:                    types.StringValue("pass"),

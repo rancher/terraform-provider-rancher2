@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-func TestRancherLoginResourceModel(t *testing.T) {
+func TestRancher2LoginResourceModel(t *testing.T) {
 	t.Run("ToGoModel", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherLoginResourceModel
+			fit  Rancher2LoginResourceModel
 			want RancherLoginModel
 		}{
 			{
@@ -38,7 +38,7 @@ func TestRancherLoginResourceModel(t *testing.T) {
 	t.Run("ToPlan", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherLoginResourceModel
+			fit  Rancher2LoginResourceModel
 			want tfsdk.Plan
 		}{
 			{
@@ -61,7 +61,7 @@ func TestRancherLoginResourceModel(t *testing.T) {
 	t.Run("ToState", func(t *testing.T) {
 		testCases := []struct {
 			name string
-			fit  RancherLoginResourceModel
+			fit  Rancher2LoginResourceModel
 			want tfsdk.State
 		}{
 			{
@@ -85,8 +85,8 @@ func TestRancherLoginResourceModel(t *testing.T) {
 }
 
 // helpers.
-func getDefaultResourceModel() RancherLoginResourceModel {
-	return RancherLoginResourceModel{
+func getDefaultResourceModel() Rancher2LoginResourceModel {
+	return Rancher2LoginResourceModel{
 		Id:                          types.StringValue("test"),
 		Username:                    types.StringValue("user"),
 		Password:                    types.StringValue("pass"),
@@ -119,7 +119,7 @@ func getDefaultGoModel() RancherLoginModel {
 	}
 }
 
-func getPlan(ctx context.Context, m RancherLoginResourceModel, diags *diag.Diagnostics) tfsdk.Plan {
+func getPlan(ctx context.Context, m Rancher2LoginResourceModel, diags *diag.Diagnostics) tfsdk.Plan {
 	plan := tfsdk.Plan{
 		Schema: getSchema(ctx),
 	}
@@ -134,7 +134,7 @@ func getPlan(ctx context.Context, m RancherLoginResourceModel, diags *diag.Diagn
 	return plan
 }
 
-func getState(ctx context.Context, m RancherLoginResourceModel, diags *diag.Diagnostics) tfsdk.State {
+func getState(ctx context.Context, m Rancher2LoginResourceModel, diags *diag.Diagnostics) tfsdk.State {
 	state := tfsdk.State{
 		Schema: getSchema(ctx),
 	}
@@ -150,7 +150,7 @@ func getState(ctx context.Context, m RancherLoginResourceModel, diags *diag.Diag
 }
 
 func getSchema(ctx context.Context) schema.Schema {
-	emptyResource := NewRancherLoginResource()
+	emptyResource := NewRancher2LoginResource()
 	schemaResponseContainer := &resource.SchemaResponse{}
 	emptyResource.Schema(ctx, resource.SchemaRequest{}, schemaResponseContainer)
 	return schemaResponseContainer.Schema

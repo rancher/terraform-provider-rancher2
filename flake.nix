@@ -15,7 +15,7 @@
             inherit system;
             config = {
               allowUnfreePredicate = pkg: unconfiguredPkgs.lib.elem (unconfiguredPkgs.lib.getName pkg) [
-                "ngrok"
+                # add unfree packages here
               ];
             };
           };
@@ -102,7 +102,8 @@
           devShells.default = pkgs.mkShell {
             buildInputs = [ devShellPackage ];
             shellHook = ''
-              while read word; do echo -e "*$word\n#" | aspell -a --dont-validate-words >/dev/null; done < aspell_custom.txt
+              export LANG="C"
+              while read word; do echo -e "*$word\n#" | aspell -a --dont-validate-words &>/dev/null; done < aspell_custom.txt
               homebin=$HOME/bin;
               install -d $homebin;
               tfswitch -b $homebin/terraform 1.5.7 &>/dev/null;

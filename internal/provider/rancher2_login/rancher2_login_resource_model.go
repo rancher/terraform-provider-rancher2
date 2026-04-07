@@ -10,7 +10,7 @@ import (
 	pp "github.com/rancher/terraform-provider-rancher2/internal/provider/pretty_print"
 )
 
-type RancherLoginResourceModel struct {
+type Rancher2LoginResourceModel struct {
 	Id                          types.String `tfsdk:"id"`
 	Username                    types.String `tfsdk:"username"`
 	Password                    types.String `tfsdk:"password"`
@@ -26,11 +26,11 @@ type RancherLoginResourceModel struct {
 }
 
 // ToPlan returns a tfsdk.Plan with the data from the model.
-func (m *RancherLoginResourceModel) ToPlan(ctx context.Context, diags *diag.Diagnostics) tfsdk.Plan {
+func (m *Rancher2LoginResourceModel) ToPlan(ctx context.Context, diags *diag.Diagnostics) tfsdk.Plan {
 	if diags.HasError() {
 		return tfsdk.Plan{}
 	}
-	r := NewRancherLoginResource()
+	r := NewRancher2LoginResource()
 	s := &resource.SchemaResponse{}
 	r.Schema(ctx, resource.SchemaRequest{}, s)
 
@@ -49,12 +49,12 @@ func (m *RancherLoginResourceModel) ToPlan(ctx context.Context, diags *diag.Diag
 }
 
 // ToState returns a tfsdk.State with the data from the model.
-func (m *RancherLoginResourceModel) ToState(ctx context.Context, diags *diag.Diagnostics) tfsdk.State {
+func (m *Rancher2LoginResourceModel) ToState(ctx context.Context, diags *diag.Diagnostics) tfsdk.State {
 	if diags.HasError() {
 		return tfsdk.State{}
 	}
 	diags.AddWarning("Model given ToState:", pp.PrettyPrint(m))
-	r := NewRancherLoginResource()
+	r := NewRancher2LoginResource()
 	s := &resource.SchemaResponse{}
 	r.Schema(ctx, resource.SchemaRequest{}, s)
 
@@ -68,8 +68,8 @@ func (m *RancherLoginResourceModel) ToState(ctx context.Context, diags *diag.Dia
 	return state
 }
 
-// ToGoModel converts a RancherLoginResourceModel to a RancherLoginModel.
-func (data *RancherLoginResourceModel) ToGoModel(ctx context.Context) RancherLoginModel {
+// ToGoModel converts a Rancher2LoginResourceModel to a RancherLoginModel.
+func (data *Rancher2LoginResourceModel) ToGoModel(ctx context.Context) RancherLoginModel {
 	return RancherLoginModel{
 		Id:                          data.Id.ValueString(),
 		Username:                    data.Username.ValueString(),
