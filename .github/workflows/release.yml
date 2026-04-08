@@ -507,40 +507,6 @@ jobs:
 
           echo "Importing gpg key"
           echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
-      - name: Setup goreleaser
-        shell: bash
-        run: |-
-          OS="Linux"
-          if [[ ${RUNNER_OS} != "Linux" ]]; then
-          	echo "Unsupported OS: ${RUNNER_OS}"
-          	exit 1
-          fi
-
-          # renovate-local: goreleaser-x86_64
-          GORELEASER_VERSION="v2.15.2"
-          # renovate-local: goreleaser-x86_64=v2.15.2
-          GORELEASER_CHECKSUM_x86_64="0ebdbf0353aba566b969dde746cc4e4806f96c27aa2f3971b229a9df7611fedc"
-
-          ARCH=$(uname -m)
-          CHECKSUM="${GORELEASER_CHECKSUM_x86_64}"
-          if [[ "${ARCH}" != "x86_64" ]]; then
-          	echo "Unsupported architecture: ${ARCH}"
-          	exit 1
-          fi
-
-          FILE="goreleaser_${OS}_${ARCH}.tar.gz"
-
-          echo "Installing ${FILE}"
-          curl -LO "https://github.com/goreleaser/goreleaser/releases/download/${GORELEASER_VERSION}/${FILE}"
-          echo "${CHECKSUM} ${FILE}" | sha256sum -c
-          tar -xf "${FILE}" goreleaser
-
-          if sudo -n true &> /dev/null; then
-          	sudo install -m 755 goreleaser /usr/local/bin/goreleaser
-          else
-          	install -m 755 goreleaser /usr/local/bin/goreleaser
-          fi
-          rm -f "${FILE}" goreleaser
       - name: Run GoReleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
