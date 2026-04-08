@@ -1,10 +1,8 @@
 name: release
-
 on:
   push:
     branches:
       - release/v*
-
 env:
   AWS_REGION: us-west-2
   AWS_ROLE: arn:aws:iam::270074865685:role/terraform-module-ci-test
@@ -12,14 +10,12 @@ env:
   ALL_TESTS_JSON: '["TestOneBasic","TestThreeBasic","TestProductionBasic"]'
   NIX_INSTALL_SHA: de490f61fcbaf9a5cabf2fa621ddb9ef93ad35d9a23a04e7d51b26e092b63691
   NIX_INSTALL_VERSION: 2.34.4
-
 permissions:
   contents: write
   id-token: write
   issues: write
   pull-requests: write
   actions: read
-
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -30,7 +26,6 @@ jobs:
         run: |
           JSON_LIST='${{env.ALL_TESTS_JSON}}'
           echo "tests=$JSON_LIST" >> "$GITHUB_OUTPUT"
-
   release:
     runs-on: ubuntu-latest
     outputs:
@@ -64,7 +59,6 @@ jobs:
             } catch (error) {
               core.setFailed(`Failed to create comment on release PR: ${error.message}`);
             }
-
   # this creates a loop using workflow logic,
   #   each iteration of the loop is in its own job
   #   this is important because we want each iteration to be a separate VM
@@ -81,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        attempts: [1,2,3] # I want to have jobs specifically in place to retry or cancel a test based on IP collisions
+        attempts: [1, 2, 3] # I want to have jobs specifically in place to retry or cancel a test based on IP collisions
         test_name: ${{ fromJSON(needs.setup.outputs.tests) }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
@@ -234,7 +228,6 @@ jobs:
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/check-run.js`;
             const { default: script } = await import(scriptPath);
             await script({ process, github, core });
-
   cleanup:
     needs:
       - setup
@@ -285,7 +278,6 @@ jobs:
           export AWS_MAX_ATTEMPTS="100"
           export AWS_RETRY_MODE="adaptive"
           ./run_tests.sh -c $IDENTIFIER
-
   report:
     needs:
       - setup
@@ -326,7 +318,6 @@ jobs:
             } catch (error) {
               core.setFailed(`Failed to create comment failure on release PR: ${error.message}`);
             }
-
   rc-release:
     needs:
       - setup
@@ -408,14 +399,58 @@ jobs:
 
           echo "Importing gpg key"
           echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
+      - name: Setup goreleaser
+        shell: bash
+        run: |-
+          OS="Linux"
+          if [[ ${RUNNER_OS} != "Linux" ]]; then
+          	echo "Unsupported OS: ${RUNNER_OS}"
+          	exit 1
+          fi
+
+          # renovate-local: goreleaser-x86_64
+          GORELEASER_VERSION="v2.15.2"
+          # renovate-local: goreleaser-x86_64=v2.15.2
+          GORELEASER_CHECKSUM_x86_64="0ebdbf0353aba566b969dde746cc4e4806f96c27aa2f3971b229a9df7611fedc"
+
+          ARCH=$(uname -m)
+          CHECKSUM="${GORELEASER_CHECKSUM_x86_64}"
+          if [[ "${ARCH}" != "x86_64" ]]; then
+          	echo "Unsupported architecture: ${ARCH}"
+          	exit 1
+          fi
+
+          FILE="goreleaser_${OS}_${ARCH}.tar.gz"
+
+          echo "Installing ${FILE}"
+          curl -LO "https://github.com/goreleaser/goreleaser/releases/download/${GORELEASER_VERSION}/${FILE}"
+          echo "${CHECKSUM} ${FILE}" | sha256sum -c
+          tar -xf "${FILE}" goreleaser
+
+          if sudo -n true &> /dev/null; then
+          	sudo install -m 755 goreleaser /usr/local/bin/goreleaser
+          else
+          	install -m 755 goreleaser /usr/local/bin/goreleaser
+          fi
+          rm -f "${FILE}" goreleaser
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
-        with:
-          args: release --clean --config .goreleaser_rc.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+        shell: bash
+        run: |-
+          goreleaser release --clean --config .goreleaser_rc.yml
+          if [[ ! -f dist/metadata.json ]] || [[ ! -s dist/metadata.json ]]; then
+            echo "Missing required file: dist/metadata.json"
+            exit 1
+          fi
+          if [[ ! -f dist/artifacts.json ]] || [[ ! -s dist/artifacts.json ]]; then
+            echo "Missing required file: dist/artifacts.json"
+            exit 1
+          fi
+          echo "metadata=$(tr -d '\n\r' < dist/metadata.json)" >> "${GITHUB_OUTPUT}"
+          echo "artifacts=$(tr -d '\n\r' < dist/artifacts.json)" >> "${GITHUB_OUTPUT}"
       - name: 'Find Issues and Create Comments'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
         env:
@@ -426,7 +461,6 @@ jobs:
             const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/rc-notify.js`;
             const { default: script } = await import(scriptPath);
             await script({github, context, core, process});
-
   # This runs after release-please generates a release, so when the release PR is merged
   publish:
     needs:
@@ -473,11 +507,55 @@ jobs:
 
           echo "Importing gpg key"
           echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
+      - name: Setup goreleaser
+        shell: bash
+        run: |-
+          OS="Linux"
+          if [[ ${RUNNER_OS} != "Linux" ]]; then
+          	echo "Unsupported OS: ${RUNNER_OS}"
+          	exit 1
+          fi
+
+          # renovate-local: goreleaser-x86_64
+          GORELEASER_VERSION="v2.15.2"
+          # renovate-local: goreleaser-x86_64=v2.15.2
+          GORELEASER_CHECKSUM_x86_64="0ebdbf0353aba566b969dde746cc4e4806f96c27aa2f3971b229a9df7611fedc"
+
+          ARCH=$(uname -m)
+          CHECKSUM="${GORELEASER_CHECKSUM_x86_64}"
+          if [[ "${ARCH}" != "x86_64" ]]; then
+          	echo "Unsupported architecture: ${ARCH}"
+          	exit 1
+          fi
+
+          FILE="goreleaser_${OS}_${ARCH}.tar.gz"
+
+          echo "Installing ${FILE}"
+          curl -LO "https://github.com/goreleaser/goreleaser/releases/download/${GORELEASER_VERSION}/${FILE}"
+          echo "${CHECKSUM} ${FILE}" | sha256sum -c
+          tar -xf "${FILE}" goreleaser
+
+          if sudo -n true &> /dev/null; then
+          	sudo install -m 755 goreleaser /usr/local/bin/goreleaser
+          else
+          	install -m 755 goreleaser /usr/local/bin/goreleaser
+          fi
+          rm -f "${FILE}" goreleaser
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
-        with:
-          args: release --clean --config .goreleaser.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+        shell: bash
+        run: |-
+          goreleaser release --clean --config .goreleaser.yml
+          if [[ ! -f dist/metadata.json ]] || [[ ! -s dist/metadata.json ]]; then
+            echo "Missing required file: dist/metadata.json"
+            exit 1
+          fi
+          if [[ ! -f dist/artifacts.json ]] || [[ ! -s dist/artifacts.json ]]; then
+            echo "Missing required file: dist/artifacts.json"
+            exit 1
+          fi
+          echo "metadata=$(tr -d '\n\r' < dist/metadata.json)" >> "${GITHUB_OUTPUT}"
+          echo "artifacts=$(tr -d '\n\r' < dist/artifacts.json)" >> "${GITHUB_OUTPUT}"
