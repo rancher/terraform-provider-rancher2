@@ -6,7 +6,7 @@ import (
 
 const (
 	tokenDefaultSessionDesc = "Terraform token temp token"
-	tokenDefaultTTL         = "60000"
+	tokenDefaultTTL         = "7776000"
 )
 
 //Schemas
@@ -68,8 +68,8 @@ func tokenFields() map[string]*schema.Schema {
 			Type:        schema.TypeInt,
 			Optional:    true,
 			ForceNew:    true,
-			Default:     0,
-			Description: "Token time to live in seconds",
+			Default:     tokenDefaultTTL,
+			Description: "Token time to live in seconds. Default is 7776000 (90 days).",
 		},
 		"user_id": {
 			Type:        schema.TypeString,
