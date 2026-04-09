@@ -6,7 +6,7 @@ import (
 
 const (
 	tokenDefaultSessionDesc = "Terraform token temp token"
-	tokenDefaultTTL         = "7776000"
+	tokenDefaultTTL         = 7776000
 )
 
 //Schemas
