@@ -1,6 +1,7 @@
 {
   "bootstrap-sha": "ab77bd4030512387b04480079c38aa54f8590eb9",
-  "release-as": "v13.1.5",
+  "last-release-sha": "0c86ddc98930d96d5a7a6ed1a830f6b95089d30c",
+  "release-as": "v13.2.0",
   "always-update": true,
   "commit-search-depth": 100,
   "prerelease": true,
