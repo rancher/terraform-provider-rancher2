@@ -91,6 +91,8 @@ func flattenOIDCConfig(d *schema.ResourceData, in any) error {
 		d.Set("end_session_endpoint", v)
 	}
 
+	d.Set("pkce_method", oidcData["PKCEMethod"])
+
 	return nil
 }
 
@@ -198,6 +200,12 @@ func expandOIDCConfig[T *Q, Q any](in *schema.ResourceData, obj T) (T, error) {
 
 	if v, ok := in.Get("end_session_endpoint").(string); ok && v != "" {
 		objData["EndSessionEndpoint"] = v
+	}
+
+	if v, ok := in.GetOkExists("pkce_method"); ok {
+		if pkceMethod, ok := v.(string); ok {
+			objData["PKCEMethod"] = pkceMethod
+		}
 	}
 
 	if err := mapstructure.Decode(objData, obj); err != nil {
