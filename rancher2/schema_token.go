@@ -66,10 +66,10 @@ func tokenFields() map[string]*schema.Schema {
 		},
 		"ttl": {
 			Type:        schema.TypeInt,
+			Computed:	   true,
 			Optional:    true,
 			ForceNew:    true,
-			Default:     tokenDefaultTTL,
-			Description: "Token time to live in seconds. Default is 7776000 (90 days).",
+			Description: "Token time to live in seconds. If not specified, Rancher servers' auth-token-max-ttl-minutes is applied.",
 		},
 		"user_id": {
 			Type:        schema.TypeString,
