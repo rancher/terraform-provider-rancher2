@@ -39,7 +39,7 @@ The following arguments are supported:
 
 From Rancher v2.4.6 `ttl` is read in minutes at Rancher API. To avoid breaking change on the provider, we still read in seconds but rounding up division if required.
 
-From Rancher v2.8.0 Rancher API tokens default/expire at 90days (7776000 seconds). For long-live tokens, please refer to the Rancher setting `auth-token-max-ttl-minutes` and adjust accordingly. Tokens created before v2.8.0 are not affected.
+From Rancher v2.8.0 Rancher API tokens default/expire at 90days (7776000 seconds). For long-lived tokens, please refer to the Rancher setting `auth-token-max-ttl-minutes` and adjust accordingly. Tokens created before v2.8.0 are not affected.
 
 ## Attributes Reference
 
