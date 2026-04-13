@@ -1,6 +1,10 @@
-#!/bin/env sh
+#!/usr/bin/env bash
 export TF_IN_AUTOMATION=1
 TF_VAR_ip="$(curl -s 'https://api.ipify.org')"
+if ! [[ "$TF_VAR_ip" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+  echo "Error: Invalid IP address format: $IP" >&2
+  exit 1
+fi
 export TF_VAR_ip
 export ACME_SERVER_URL="https://acme-v02.api.letsencrypt.org/directory"
 # shellcheck disable=SC2140
