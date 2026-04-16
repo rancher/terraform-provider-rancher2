@@ -40,3 +40,4 @@ oidc
 eslint
 destructuring
 yaml
+oidcclients
