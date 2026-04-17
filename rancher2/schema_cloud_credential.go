@@ -30,7 +30,9 @@ var allCloudCredentialDriverConfigFields = []string{
 	"nutanix_credential_config",
 	"openstack_credential_config",
 	"s3_credential_config",
-	"vsphere_credential_config"}
+	"vsphere_credential_config",
+	"pve_credential_config",
+}
 
 //Schemas
 
@@ -136,6 +138,15 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "vsphere_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialVsphereFields(),
+			},
+		},
+		"pve_credential_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: getConflicts(allCloudCredentialConfigFields, "pve_credential_config"),
+			Elem: &schema.Resource{
+				Schema: cloudCredentialFieldsPve(),
 			},
 		},
 	}
