@@ -7,20 +7,22 @@ import (
 )
 
 var (
-	testMachineConfigV2PveConf = map[string]interface{}{
-		"pveUrl":              "https://pve.example.com:8006",
-		"pveTokenId":          "root@pam!rancher",
-		"pveTokenSecret":      "secret-uuid",
-		"pveInsecureTls":      false,
-		"pveResourcePool":     "rancher",
-		"pveTemplateId":       float64(100),
-		"pveIsoDevice":        "scsi1",
-		"pveNetworkInterface": "net0",
-		"pveSshUser":          "ubuntu",
-		"pveSshPort":          float64(22),
-		"pveProcessorSockets": "2",
-		"pveProcessorCores":   "4",
-		"pveMemory":           "4096",
+	testMachineConfigV2PveConf = &MachineConfigV2Pve{
+		machineConfigV2Pve: machineConfigV2Pve{
+			PveUrl:            "https://pve.example.com:8006",
+			PveTokenId:        "root@pam!rancher",
+			PveTokenSecret:    "secret-uuid",
+			PveInsecureTls:    false,
+			PveResourcePool:   "rancher",
+			PveTemplateId:     100,
+			PveIsoDevice:      "scsi1",
+			PveNetworkIface:   "net0",
+			PveSshUser:        "ubuntu",
+			PveSshPort:        22,
+			PveProcessorSocks: "2",
+			PveProcessorCores: "4",
+			PveMemory:         "4096",
+		},
 	}
 	testMachineConfigV2PveInterface = []interface{}{
 		map[string]interface{}{
@@ -42,11 +44,24 @@ var (
 )
 
 func TestFlattenMachineConfigV2Pve(t *testing.T) {
-	result := flattenMachineConfigV2Pve(testMachineConfigV2PveConf, []interface{}{})
+	result := flattenMachineConfigV2Pve(testMachineConfigV2PveConf)
 	assert.Equal(t, testMachineConfigV2PveInterface, result)
 }
 
 func TestExpandMachineConfigV2Pve(t *testing.T) {
-	result := expandMachineConfigV2Pve(testMachineConfigV2PveInterface)
-	assert.Equal(t, testMachineConfigV2PveConf, result)
+	source := &MachineConfigV2{}
+	result := expandMachineConfigV2Pve(testMachineConfigV2PveInterface, source)
+	assert.Equal(t, testMachineConfigV2PveConf.PveUrl, result.PveUrl)
+	assert.Equal(t, testMachineConfigV2PveConf.PveTokenId, result.PveTokenId)
+	assert.Equal(t, testMachineConfigV2PveConf.PveTokenSecret, result.PveTokenSecret)
+	assert.Equal(t, testMachineConfigV2PveConf.PveInsecureTls, result.PveInsecureTls)
+	assert.Equal(t, testMachineConfigV2PveConf.PveResourcePool, result.PveResourcePool)
+	assert.Equal(t, testMachineConfigV2PveConf.PveTemplateId, result.PveTemplateId)
+	assert.Equal(t, testMachineConfigV2PveConf.PveIsoDevice, result.PveIsoDevice)
+	assert.Equal(t, testMachineConfigV2PveConf.PveNetworkIface, result.PveNetworkIface)
+	assert.Equal(t, testMachineConfigV2PveConf.PveSshUser, result.PveSshUser)
+	assert.Equal(t, testMachineConfigV2PveConf.PveSshPort, result.PveSshPort)
+	assert.Equal(t, testMachineConfigV2PveConf.PveProcessorSocks, result.PveProcessorSocks)
+	assert.Equal(t, testMachineConfigV2PveConf.PveProcessorCores, result.PveProcessorCores)
+	assert.Equal(t, testMachineConfigV2PveConf.PveMemory, result.PveMemory)
 }
