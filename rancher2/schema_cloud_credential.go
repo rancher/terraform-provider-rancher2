@@ -144,9 +144,9 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: getConflicts(allCloudCredentialConfigFields, "pve_credential_config"),
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "pve_credential_config"),
 			Elem: &schema.Resource{
-				Schema: cloudCredentialFieldsPve(),
+				Schema: cloudCredentialPveFields(),
 			},
 		},
 	}
