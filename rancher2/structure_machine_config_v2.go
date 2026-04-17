@@ -89,6 +89,11 @@ func flattenMachineConfigV2(d *schema.ResourceData, in *MachineConfigV2) error {
 		if err != nil {
 			return err
 		}
+	case machineConfigV2PveKind:
+		err := d.Set("pve_config", flattenMachineConfigV2Pve(in.GoogleGCEConfig))
+		if err != nil {
+			return err
+		}
 
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
@@ -161,6 +166,9 @@ func expandMachineConfigV2(in *schema.ResourceData) *MachineConfigV2 {
 	}
 	if v, ok := in.Get("nutanix_config").([]interface{}); ok && len(v) > 0 {
 		obj.NutanixConfig = expandMachineConfigV2Nutanix(v, obj)
+	}
+	if v, ok := d["pve_config"].([]interface{}); ok && len(v) > 0 {
+		obj.pveconfig = expandMachineConfigV2Pve(v, obj)
 	}
 
 	return obj
