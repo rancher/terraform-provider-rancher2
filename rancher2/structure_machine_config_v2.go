@@ -90,7 +90,7 @@ func flattenMachineConfigV2(d *schema.ResourceData, in *MachineConfigV2) error {
 			return err
 		}
 	case machineConfigV2PveKind:
-		err := d.Set("pve_config", flattenMachineConfigV2Pve(in.GoogleGCEConfig))
+		err := d.Set("pve_config", flattenMachineConfigV2Pve(in.PveConfig))
 		if err != nil {
 			return err
 		}
@@ -167,8 +167,8 @@ func expandMachineConfigV2(in *schema.ResourceData) *MachineConfigV2 {
 	if v, ok := in.Get("nutanix_config").([]interface{}); ok && len(v) > 0 {
 		obj.NutanixConfig = expandMachineConfigV2Nutanix(v, obj)
 	}
-	if v, ok := d["pve_config"].([]interface{}); ok && len(v) > 0 {
-		obj.pveconfig = expandMachineConfigV2Pve(v, obj)
+	if v, ok := in.Get("pve_config").([]interface{}); ok && len(v) > 0 {
+		obj.PveConfig = expandMachineConfigV2Pve(v)
 	}
 
 	return obj
