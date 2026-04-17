@@ -89,6 +89,7 @@ func flattenMachineConfigV2(d *schema.ResourceData, in *MachineConfigV2) error {
 		if err != nil {
 			return err
 		}
+
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
 	}
