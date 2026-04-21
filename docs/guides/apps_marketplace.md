@@ -29,6 +29,7 @@ This resource has the following arguments definition:
 * `git_branch` - (Optional) Git Repository branch containing Helm chart definitions. Default `master` (string)
 * `git_repo` - (Optional) The url of the catalog v2 repo (string)
 * `insecure` - (Optional) Use insecure HTTPS to download the repo's index. Default: `false` (bool)
+* `refresh_interval` - (Optional/Computed) Interval in seconds at which the Helm repository should be refreshed (int)
 * `secret_name` - (Optional) K8s secret name to be used to connect to the repo (string)
 * `secret_namespace` - (Optional) K8s secret namespace (string)
 * `service_account` - (Optional) K8s service account used to deploy charts instead of the end users credentials (string)
