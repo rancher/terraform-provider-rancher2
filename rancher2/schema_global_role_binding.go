@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-// Shemas
+// Schemas
 
 func globalRoleBindingFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
@@ -14,6 +14,12 @@ func globalRoleBindingFields() map[string]*schema.Schema {
 			ForceNew: true,
 		},
 		"user_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+			ForceNew: true,
+		},
+		"user_principal_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
