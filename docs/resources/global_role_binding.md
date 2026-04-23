@@ -19,7 +19,7 @@ resource "rancher2_global_role_binding" "foo" {
 resource "rancher2_global_role_binding" "foo2" {
   name = "foo2"
   global_role_id = "admin"
-  user_principal_id = "local://local:user-XXXXX"
+  user_principal_id = "local://user-XXXXX"
 }
 # Create a new rancher2 Global Role Binding using group_principal_id
 resource "rancher2_global_role_binding" "foo3" {
