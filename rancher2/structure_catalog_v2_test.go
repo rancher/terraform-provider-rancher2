@@ -46,6 +46,7 @@ func init() {
 	testCatalogV2Conf.Spec.ServiceAccount = "service_account"
 	testCatalogV2Conf.Spec.ServiceAccountNamespace = "service_account_namespace"
 	testCatalogV2Conf.Spec.URL = "url"
+	testCatalogV2Conf.Spec.RefreshInterval = 300
 
 	testCatalogV2Interface = map[string]interface{}{
 		"name":                            "name",
@@ -63,6 +64,7 @@ func init() {
 		"service_account":                 "service_account",
 		"service_account_namespace":       "service_account_namespace",
 		"url":                             "url",
+		"refresh_interval":                300,
 		"annotations": map[string]interface{}{
 			"value1": "one",
 			"value2": "two",
