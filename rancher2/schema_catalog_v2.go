@@ -99,6 +99,12 @@ func catalogV2Fields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"refresh_interval": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Computed:    true,
+			Description: "Interval in seconds at which the Helm repository should be refreshed",
+		},
 		"secret_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
