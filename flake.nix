@@ -164,6 +164,7 @@
               kubectl
               leftovers
               less
+              nodejs_24
               openssh
               openssl
               shellcheck
