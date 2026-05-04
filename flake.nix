@@ -139,7 +139,7 @@
 
           devShellPackage = pkgs.symlinkJoin {
             name = "dev-shell-package";
-            paths = with pkgs; [
+            paths = (with pkgs; [
               actionlint
               age
               aspellWithDicts
@@ -157,17 +157,14 @@
               golangci-lint
               gotestfmt
               gotestsum
-              goreleaser
               kubernetes-helm
               jq
               kubectl
-              leftovers
               less
               nodejs_24
               openssh
               openssl
               shellcheck
-              terraform
               tflint
               tfsec
               trivy
@@ -175,7 +172,11 @@
               vim
               which
               yq
-            ];
+            ] ++ [ # manually downloaded packages here
+              terraform
+              goreleaser
+              leftovers
+            ]);
           };
         in
         {
