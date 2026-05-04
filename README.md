@@ -1,110 +1,145 @@
-<p align="center">
-  <img alt="GoReleaser Logo" src="https://avatars2.githubusercontent.com/u/24697112?v=3&s=200" height="200" />
-  <h3 align="center">GoReleaser</h3>
-  <p align="center">Release engineering, simplified.</p>
-  <p align="center">
-    <img height="30" src="https://cdn.simpleicons.org/go/555555/ffffff" alt="Go" />
-    <img height="30" src="https://cdn.simpleicons.org/rust/555555/ffffff" alt="Rust" />
-    <img height="30" src="https://cdn.simpleicons.org/zig/555555/ffffff" alt="Zig" />
-    <img height="30" src="https://cdn.simpleicons.org/typescript/555555/ffffff" alt="TypeScript" />
-    <img height="30" src="https://cdn.simpleicons.org/python/555555/ffffff" alt="Python" />
-  </p>
-</p>
+Terraform Provider for Rancher v2
+==================================
 
----
+[![Go Report Card](https://goreportcard.com/badge/github.com/terraform-providers/terraform-provider-rancher2)](https://goreportcard.com/report/github.com/terraform-providers/terraform-provider-rancher2)
 
-We handle the complexities of releasing so you can focus in building what really
-matters: **your software**.
+Requirements
+------------
 
-![](https://goreleaser.com/static/goreleaser.svg)
+- [Terraform](https://www.terraform.io/downloads.html) >= 1.5.0
+- [Go](https://golang.org/doc/install) 1.23 to build the provider plugin
 
----
+Building The Provider
+---------------------
 
-## Get GoReleaser
+Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-rancher2`
 
-- [On your machine](https://goreleaser.com/install/);
-- [On CI/CD systems](https://goreleaser.com/ci/).
+```sh
+$ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
+$ git clone git@github.com:terraform-providers/terraform-provider-rancher2
+```
 
-## Documentation
+Enter the provider directory and build the provider
 
-Documentation is hosted live at https://goreleaser.com
+```sh
+$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-rancher2
+$ make build
+```
 
-## Community
+Using the Provider
+----------------------
 
-You have questions, need support and or just want to talk about GoReleaser?
+If you're building the provider, follow the instructions to [install it as a plugin.](https://www.terraform.io/docs/plugins/basics.html#installing-a-plugin) After placing it into your plugins directory,  run `terraform init` to initialize it. Documentation about the provider specific configuration options can be found on the [provider's website](https://www.terraform.io/docs/providers/rancher2/index.html).
 
-Here are ways to get in touch with the GoReleaser community:
+Developing the Provider
+---------------------------
 
-[![Join Discord](https://img.shields.io/badge/Discuss_on_Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/RGEBtg8vQ6)
-[![Follow on 𝕏](https://img.shields.io/badge/Follow_on_𝕏-000000?style=for-the-badge&logo=x&logoColor=white)](https://twitter.com/goreleaser)
-[![Follow Telegram Channel](https://img.shields.io/badge/Follow_on_Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=%23FFFFFF)](https://t.me/goreleasernews)
-[![GitHub Discussions](https://img.shields.io/badge/Discuss_on_GITHUB-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/goreleaser/goreleaser/discussions)
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.20+ is *required*). A Nix flake is also available in the repo which is used to generate an environment for build and test.
 
-You can find the links above and all others [here](https://goreleaser.com/links/).
+To compile the provider, run `make build`. This will build the provider and put the provider binary in a bin directory where the repo was cloned.
 
-### Code of Conduct
+```sh
+$ make build
+...
+$ $GOPATH/bin/terraform-provider-rancher2
+...
+```
 
-This project adheres to the Contributor Covenant [code of conduct](https://github.com/goreleaser/.github/blob/main/CODE_OF_CONDUCT.md).
-By participating, you are expected to uphold this code.
-We appreciate your contribution.
-Please refer to our [contributing guidelines](CONTRIBUTING.md) for further information.
+There are a few full implementation examples in the "examples" directory, these are run by the CI using the "run_tests.sh" script.
+The run_tests script will build and run the examples to test.
+WARNING! These are real implementations, you will need AWS credentials in your environment and there will be a cost associated.
+The following example runs a single implementation, the most basic one:
 
-## Badges
+```sh
+./run_tests.sh -t TestOneBasic
+```
 
-[![Release](https://img.shields.io/github/release/goreleaser/goreleaser.svg?style=for-the-badge)](https://github.com/goreleaser/goreleaser/releases/latest)
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge)](/LICENSE.md)
-[![Build status](https://img.shields.io/github/actions/workflow/status/goreleaser/goreleaser/build.yml?style=for-the-badge&branch=main)](https://github.com/goreleaser/goreleaser/actions?workflow=build)
-[![Codecov branch](https://img.shields.io/codecov/c/github/goreleaser/goreleaser/main.svg?style=for-the-badge)](https://codecov.io/gh/goreleaser/goreleaser)
-[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/goreleaser&style=for-the-badge)](https://artifacthub.io/packages/search?repo=goreleaser)
-[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=for-the-badge)](http://godoc.org/github.com/goreleaser/goreleaser)
-[![Powered By: GoReleaser](https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=for-the-badge)](https://github.com/goreleaser)
-[![Backers on Open Collective](https://opencollective.com/goreleaser/backers/badge.svg?style=for-the-badge)](https://opencollective.com/goreleaser/backers/)
-[![Sponsors on Open Collective](https://opencollective.com/goreleaser/sponsors/badge.svg?style=for-the-badge)](https://opencollective.com/goreleaser/sponsors/)
-[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=for-the-badge)](https://conventionalcommits.org)
-[![CII Best Practices](https://img.shields.io/cii/summary/5420?label=openssf%20best%20practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/5420)
-[![GoReportCard](https://goreportcard.com/badge/github.com/goreleaser/goreleaser?style=for-the-badge)](https://goreportcard.com/report/github.com/goreleaser/goreleaser)
+See [development process](docs/development-process.md) for more details.
 
-## Contributing
+Testing the Provider
+---------------------------
 
-This project exists thanks to all the people who contribute.
-[Contribution guide](CONTRIBUTING.md).
+To run unit tests run `make test`, the unit tests are currently non-functional.
 
-## Sponsoring
+```sh
+$ make test
+```
 
-Does you or your company use GoReleaser?
+To run acceptance tests, use the `run_tests.sh` script.
+WARNING! These are real implementations, you will need AWS credentials in your environment and there will be a cost associated.
+The following example runs a every acceptance test, one at a time.
 
-You can help keep the project bug-free and feature rich by sponsoring the
-project and its maintainers.
+```sh
+./run_tests.sh -s
+```
 
-You can sponsor GoReleaser via:
+See [test process](docs/test-process.md) for details on release testing (_Terraform Maintainers Only_).
 
-- **[GitHub Sponsors](https://github.com/sponsors/caarlos0)**
-- **[OpenCollective](https://opencollective.com/goreleaser)**
+Branching the Provider
+---------------------------
 
-A big **thank you** to all current, past, and future sponsors!
+This provider is branched in correlation with minor versions of Rancher:
+* the `release/v7` branch with v7.0.0+ is aligned with Rancher 2.11
+* the `release/v8` branch with v8.0.0+ is aligned with Rancher 2.12
+* the `release/v13` branch with v13.0.0+ is aligned with Rancher 2.13
 
----
+We no longer release from the main branch, this allows us to test integration early and often.
 
-<!-- sponsors:begin -->
-<!-- this list is auto-generated by https://github.com/goreleaser/sponsors -->
-<div align="center">
-  <h2>Our Sponsors</h2>
-  <h3>Diamond</h3>
-  <a href="https://serpapi.com/?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=github" target="_blank" rel="noopener sponsored" ><img src="https://github.com/serpapi.png" alt="SerpApi" width="128" height="128"/></a>
-  <h3>Gold</h3>
-  <a href="https://opensource.mercedes-benz.com/?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=github" target="_blank" rel="noopener sponsored" ><img src="https://avatars.githubusercontent.com/u/34240465?s=96&v=4" alt="Mercedes-Benz Group" width="96" height="96"/></a>
-  <a href="https://nitric.io?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=github" target="_blank" rel="noopener sponsored" ><img src="https://avatars.githubusercontent.com/u/72055470?s=96&v=4" alt="nitric" width="96" height="96"/></a>
-  <h3>Silver</h3>
-  <a href="https://depot.dev?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=opencollective" target="_blank" rel="noopener sponsored" ><img src="https://images.opencollective.com/depot/39125a1/logo.png?height=80" alt="Depot" width="80" height="80"/></a>
-  <a href="https://www.n-ix.com/?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=opencollective" target="_blank" rel="noopener sponsored" ><img src="https://images.opencollective.com/n-ix-ltd/575a7a5/logo.png?height=80" alt="N-iX Ltd" width="80" height="80"/></a>
-  <h3>Bronze</h3>
-  <a href="https://www.conet.de?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=github" target="_blank" rel="noopener sponsored" ><img src="https://avatars.githubusercontent.com/u/35725664?s=64&v=4" alt="conet cloud" width="64" height="64"/></a>
-  <a href="https://encore.dev?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=github" target="_blank" rel="noopener sponsored" ><img src="https://avatars.githubusercontent.com/u/50438175?s=64&v=4" alt="Encore" width="64" height="64"/></a>
-  <a href="https://www.comet.com/site/?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=github" target="_blank" rel="noopener sponsored" ><img src="https://avatars.githubusercontent.com/u/31487821?s=64&v=4" alt="Comet" width="64" height="64"/></a>
-  <a href="https://about.gitea.com/?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=opencollective" target="_blank" rel="noopener sponsored" ><img src="https://images.opencollective.com/gitea/bf35c2f/logo.png?height=64" alt="Gitea" width="64" height="64"/></a>
-  <a href="https://www.interviewpal.com?utm_source=goreleaser&utm_medium=sponsor&utm_campaign=homepage&utm_content=github" target="_blank" rel="noopener sponsored" ><img src="https://avatars.githubusercontent.com/u/268665632?s=64&v=4" alt="InterviewPal.com" width="64" height="64"/></a>
-  <h3>And many more!</h3>
-  <p>See the full list <a href="https://goreleaser.com/sponsors" target="_blank" rel="noopener sponsored">here</a>.</p>
-</div>
+The lifecycle of each major provider version is aligned with the lifecycle of each Rancher minor version.
+For example, provider versions 4.x are aligned with Rancher 2.8.x will only be actively maintained until the EOM for Rancher 2.8.x and supported until EOL for Rancher 2.8.x.
 
-<!-- sponsors:end -->
+See the [Rancher support matrix](https://www.suse.com/lifecycle/#rancher) for details.
+
+Aligning major provider releases with minor Rancher releases means:
+
+* We can follow semver
+* We can cut patch/minor versions on an as-needed basis to fix bugs or add new resources
+* We have 'out of band' flexibility and are only tied to releasing a new version of the provider when we get a new 2.x Rancher minor version.
+
+See the [compatibility matrix](docs/compatibility-matrix.md) for details.
+
+Releasing the Provider
+---------------------------
+
+As of v2.0.0 and v3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version.
+As of v13.0.0, the provider's major number aligns with Rancher's minor number.
+For example, v13.0.0 will be released 1-2 weeks after Rancher 2.13.x and fixes and features in the v13.0.0 release will be supported for clusters provisioned via Terraform on Rancher 2.13.x.
+A critical bug fix can be released immediately as a patch release. For instance, as v13.0.1
+
+
+To release the provider:
+
+Version 13+
+
+* Make sure that all backport issues are approved by QA teams and closed, they should be assigned to the related milestone.
+* Find the release PR generated by release-please.
+* Make sure the e2e tests pass, the link should be in the PR.
+* Approve the PR and merge the changelog.
+
+Version 7 & 8
+
+* Make sure that all backport issues are approved by QA teams and closed, they should be assigned to the related milestone.
+* Run e2e tests manually and verify that they work properly.
+* Use the `Manually Create RC Release` workflow to manually trigger the release process.
+
+Making sure the release automation works:
+
+1. Create a PR with the proper release branches specified by the labels, add the labels before creating the PR.
+2. When a PR is created a tracking issue will be generated automatically for it, if the PR has the proper labels they will be automatically added to the tracking issue.
+3. If the PR was created without the proper labels, add them to the tracking issue.
+4. Adding the labels to the tracking issue will generate "backport" issues used to track the PR's release.
+5. The labels should be added before the PR is merged to main.
+6. If the labels and issues are generated properly, when the PR merges to main, backport PRs will be generated automatically.
+7. If the backport PRs weren't generated, you can generate them manually using the `Manually Cherry-Pick to Release Branches` workflow.
+8. When the backport PRs merge into their respective release branch an RC release should be generated automatically.
+9. If an RC wasn't generated you can create one manually using the `Manually Create RC Release` workflow.
+10. When a release is generated all open backport PRs should get a comment with a link to the new release.
+11. For version 13+ there should be a "release PR" generated by release-please, review and merge this to finalize the release.
+12. The release workflow will generate a release when the "release PR" merges.
+
+Updating Release Version
+
+* Each new release version will require a change to the release-please config's "release-as:" attribute.
+* Make sure to update the 'release-please-config.json' file at the root of the repository when adding a new version.
+* Once release/v14 is created this will mean that PRs will need to be made directly to the release/v13 branch to update the version there.
+* Main should have the version from the last created release branch.
