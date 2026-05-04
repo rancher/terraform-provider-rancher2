@@ -75,7 +75,7 @@
             nativeBuildInputs = [ pkgs.unzip ];
             phases = [ "installPhase" ];
             installPhase = ''
-              echo "Verifying age checksum..."
+              echo "Verifying checksum..."
               SUM="$(sha256sum $src | awk '{print $1}')"
               if [ "$SUM" = "$checksum" ]; then 
                 echo "Valid!";
@@ -118,10 +118,9 @@
               sha256 = goreleaser-prep."${system}".sha;
             };
             checksum = goreleaser-prep."${system}".checksum;
-            nativeBuildInputs = [ pkgs.unzip ];
             phases = [ "installPhase" ];
             installPhase = ''
-              echo "Verifying age checksum..."
+              echo "Verifying checksum..."
               SUM="$(sha256sum $src | awk '{print $1}')"
               if [ "$SUM" = "$checksum" ]; then 
                 echo "Valid!";
