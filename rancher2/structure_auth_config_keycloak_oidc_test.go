@@ -47,6 +47,7 @@ func init() {
 		LogoutAllEnabled:    true,
 		LogoutAllForced:     true,
 		EndSessionEndpoint:  "https://example.com/end-session",
+		PKCEMethod:          "S256",
 	}
 
 	// Terraform representation.
@@ -80,6 +81,7 @@ func init() {
 		"logout_all_enabled":    true,
 		"logout_all_forced":     true,
 		"end_session_endpoint":  "https://example.com/end-session",
+		"pkce_method":           "S256",
 	}
 }
 

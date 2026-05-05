@@ -35,9 +35,11 @@ The following arguments are supported:
 * `cluster_id` - (Optional/ForceNew) Cluster ID for scoped token (string)
 * `description` - (Optional/ForceNew) Token description (string)
 * `renew` - (Optional/ForceNew) Renew token if expired or disabled. If `true`, a terraform diff would be generated to renew the token if it's disabled or expired. If `false`, the token will not be renewed. Default `true` (bool)
-* `ttl` - (Optional/ForceNew) Token time to live in seconds. Default `0` (int) 
+* `ttl` - (Optional/ForceNew) Defaults to the `auth-token-max-ttl-minutes` Rancher setting.
 
-From Rancher v2.4.6 `ttl` is readed in minutes at Rancher API. To avoid breaking change on the provider, we still read in seconds but rounding up division if required.
+From Rancher v2.4.6 `ttl` is read in minutes at Rancher API. To avoid breaking change on the provider, we still read in seconds but rounding up division if required.
+
+From Rancher v2.8.0 the Rancher API and kubeconfig tokens `ttl` is managed by Rancher setting `auth-token-max-ttl-minutes`. Tokens created before v2.8.0 are not affected.
 
 ## Attributes Reference
 
