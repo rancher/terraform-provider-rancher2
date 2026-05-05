@@ -36,7 +36,7 @@ You can see the list on lines 143-174, but a more specific list is below (with e
 - vim -> helpful when editing files
 - which -> helpful when troubleshooting nix issues
 - yq -> used in dependent modules to parse kubectl outputs
-- terraform -> necesary to run tests
+- terraform -> necessary to run tests
 - goreleaser -> necessary for releases
 - leftovers -> necessary for cleaning up broken tests
 
