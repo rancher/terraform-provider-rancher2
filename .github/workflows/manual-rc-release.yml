@@ -11,15 +11,22 @@ on:
       tag:
         description: 'The rc tag to create, e.g. v1.2.3-rc.1'
         required: true
-permissions:
-  contents: write
-  id-token: write
-  issues: write
-  pull-requests: write
-  actions: read
+
+env:
+  NIX_INSTALL_SHA: de490f61fcbaf9a5cabf2fa621ddb9ef93ad35d9a23a04e7d51b26e092b63691
+  NIX_INSTALL_VERSION: 2.34.4
+
+permissions: {}
+
 jobs:
   rc-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      issues: write
+      pull-requests: write
+      actions: read
     steps:
       - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/commits/main
         id: check-user-in-maintainers
@@ -110,47 +117,24 @@ jobs:
           go-version-file: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.mod
           cache-dependency-path: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.sum
           cache: true
-      - name: Setup goreleaser
-        shell: bash
-        run: |-
-          OS="Linux"
-          if [[ ${RUNNER_OS} != "Linux" ]]; then
-          	echo "Unsupported OS: ${RUNNER_OS}"
-          	exit 1
-          fi
-
-          # renovate-local: goreleaser-x86_64
-          GORELEASER_VERSION="v2.15.2"
-          # renovate-local: goreleaser-x86_64=v2.15.2
-          GORELEASER_CHECKSUM_x86_64="0ebdbf0353aba566b969dde746cc4e4806f96c27aa2f3971b229a9df7611fedc"
-
-          ARCH=$(uname -m)
-          CHECKSUM="${GORELEASER_CHECKSUM_x86_64}"
-          if [[ "${ARCH}" != "x86_64" ]]; then
-          	echo "Unsupported architecture: ${ARCH}"
-          	exit 1
-          fi
-
-          FILE="goreleaser_${OS}_${ARCH}.tar.gz"
-
-          echo "Installing ${FILE}"
-          curl -LO "https://github.com/goreleaser/goreleaser/releases/download/${GORELEASER_VERSION}/${FILE}"
-          echo "${CHECKSUM} ${FILE}" | sha256sum -c
-          tar -xf "${FILE}" goreleaser
-
-          if sudo -n true &> /dev/null; then
-          	sudo install -m 755 goreleaser /usr/local/bin/goreleaser
-          else
-          	install -m 755 goreleaser /usr/local/bin/goreleaser
-          fi
-          rm -f "${FILE}" goreleaser
+      - name: install-nix
+        run: |
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
+          echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
+          chmod +x install.sh
+          ./install.sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          which nix
       - name: Run GoReleaser
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep TAG --keep GPG_KEY_ID --keep GPG_PASSPHRASE --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
-        shell: bash
+          TAG: ${{ inputs.tag }}
         run: |-
+          cd ${{ github.workspace }}/tags/$TAG
           goreleaser release --clean --skip=validate --config ../../.goreleaser_rc.yml
           if [[ ! -f dist/metadata.json ]] || [[ ! -s dist/metadata.json ]]; then
             echo "Missing required file: dist/metadata.json"
