@@ -19,6 +19,7 @@ pre-release
 prerelease
 rancher
 rc
+readme
 rke
 rke2
 sha
