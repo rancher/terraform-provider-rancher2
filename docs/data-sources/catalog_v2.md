@@ -29,6 +29,7 @@ data "rancher2_catalog_v2" "foo" {
 * `git_branch` - (Computed) Git Repository branch containing Helm chart definitions. Default `master` (string)
 * `git_repo` - (Computed) The url of the catalog v2 repo (string)
 * `insecure` - (Computed) Use insecure HTTPS to download the repo's index. Default: `false` (bool)
+* `refresh_interval` - (Computed) Interval in seconds at which the Helm repository should be refreshed (int)
 * `secret_name` - (Computed) K8s secret name to be used to connect to the repo (string)
 * `secret_namespace` - (Computed) K8s secret namespace (string)
 * `service_account` - (Computed) K8s service account used to deploy charts instead of the end users credentials (string)
