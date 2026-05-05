@@ -1,10 +1,15 @@
 async ({ github, context, core, process }) => {
-  const labelName = context.payload.label.name;
+  // Context for this script
+  // https://github.com/actions/github-script?tab=readme-ov-file#this-action
+  // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
+
+  const owner = "rancher";
+  const repo =  "terraform-provider-rancher2";
+  const releaseLabel = context.payload.label.name;
   const parentIssue = context.payload.issue;
   const parentIssueTitle = parentIssue.title;
   const parentIssueNumber = parentIssue.number;
-  const repo = context.repo.repo;
-  const owner = context.repo.owner;
+  // Note: unable to dynamically retrieve team members and unable to assign a team to an issue
   const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
   const extractedPrNumber = JSON.parse(process.env.PR);
   let response; // used to hold all github responses
@@ -17,29 +22,29 @@ async ({ github, context, core, process }) => {
       issue_number: extractedPrNumber
     });
   } catch (error) {
-    core.setFailed(`Failed to retrieve PR #${extractedPrNumber}: ${error.message}`);
+    throw new Error(`Failed to retrieve PR #${extractedPrNumber}: ${error.message}`);
   }
   const pr = response.data;
   core.info(`PR data: ${JSON.stringify(pr)}`);
   const prNumber = pr.number;
 
-  // Note: can't get terraform-maintainers team, the default token can't access org level objects
   // Create the sub-issue
   try {
     response = await github.rest.issues.create({
       owner: owner,
       repo: repo,
-      title: `[${labelName}] ${parentIssueTitle}`,
+      title: `[${releaseLabel}] ${parentIssueTitle}`,
       body:  [
-        `Backport #${prNumber} to ${labelName} for #${parentIssueNumber}`,
+        `Backport #${prNumber} to ${releaseLabel} for #${parentIssueNumber}`,
+        `Please add this issue to the proper milestone.`,
         `Copied from PR:`,
         `${pr.body}`
       ].join("\n\n"),
-      labels: [labelName],
+      labels: [releaseLabel, "internal/backport"],
       assignees: assignees
     });
   } catch (error) {
-    core.setFailed(`Failed to create backport issue: ${error.message}`);
+    throw new Error(`Failed to create backport issue: ${error.message}`);
   }
   const newIssue = response.data;
   core.info(`New backport issue data: ${JSON.stringify(newIssue)}`);
@@ -57,6 +62,6 @@ async ({ github, context, core, process }) => {
       }
     });
   } catch (error) {
-    core.setFailed(`Failed to link backport issue to tracking issue: ${error.message}`);
+    throw new Error(`Failed to link backport issue to tracking issue: ${error.message}`);
   }
 };
