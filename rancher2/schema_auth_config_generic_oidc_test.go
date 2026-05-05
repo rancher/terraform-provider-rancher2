@@ -37,3 +37,33 @@ func TestAuthConfigGenericOIDCResourceEndSessionEndpointValidation(t *testing.T)
 	assert.Empty(t, warns)
 	assert.ErrorContains(t, errors.Join(errs...), `expected "end_session_endpoint" to have a host`)
 }
+
+func TestAuthConfigGenericOIDCResourcePKCEMethodValidation(t *testing.T) {
+	r := resourceRancher2AuthConfigGenericOIDC()
+	d := terraform.NewResourceConfigRaw(map[string]any{
+		"client_id":     "client-id",
+		"client_secret": "client-secret",
+		"issuer":        "https://issuer.example.com",
+		"rancher_url":   "https://rancher.example.com/verify-auth",
+		"pkce_method":   "invalid",
+	})
+	warns, errs := r.Validate(d)
+
+	assert.Empty(t, warns)
+	assert.ErrorContains(t, errors.Join(errs...), `"pkce_method": only supported value is "S256", got "invalid"`)
+}
+
+func TestAuthConfigGenericOIDCResourcePKCEMethodEmpty(t *testing.T) {
+	r := resourceRancher2AuthConfigGenericOIDC()
+	d := terraform.NewResourceConfigRaw(map[string]any{
+		"client_id":     "client-id",
+		"client_secret": "client-secret",
+		"issuer":        "https://issuer.example.com",
+		"rancher_url":   "https://rancher.example.com/verify-auth",
+		"pkce_method":   "",
+	})
+	warns, errs := r.Validate(d)
+
+	assert.Empty(t, warns)
+	assert.Empty(t, errs)
+}
