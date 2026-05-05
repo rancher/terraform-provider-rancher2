@@ -1,5 +1,4 @@
 name: Manually Create Full Release
-
 on:
   workflow_dispatch:
     inputs:
@@ -10,14 +9,19 @@ on:
         description: 'The commit SHA to create the tag from, defaults to HEAD of the selected branch.'
         required: false
 
-permissions:
-  contents: write
-  id-token: write
-  actions: read
+env:
+  NIX_INSTALL_SHA: de490f61fcbaf9a5cabf2fa621ddb9ef93ad35d9a23a04e7d51b26e092b63691
+  NIX_INSTALL_VERSION: 2.34.4
+
+permissions: {}
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      actions: read
     steps:
       - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/commits/main
         id: check-user-in-maintainers
@@ -33,7 +37,7 @@ jobs:
             echo "Tag contains 'rc', please use the manual-rc-release workflow"
             exit 1
           fi
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
         with:
           fetch-depth: 0
       - name: Create and Push Tag with Git
@@ -51,7 +55,7 @@ jobs:
           fi
           git push origin "$TAG"
       - name: Check out new tag into a new directory
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
         with:
           ref: ${{ inputs.tag }}
           path: ${{ github.workspace }}/tags/${{ inputs.tag }}
@@ -101,17 +105,37 @@ jobs:
 
           echo "Importing gpg key"
           echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
-      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0 https://github.com/actions/setup-go
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0 https://github.com/actions/setup-go
         with:
           go-version-file: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.mod
           cache-dependency-path: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.sum
           cache: true
+      - name: install-nix
+        run: |
+          curl -L -o install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
+          echo "${NIX_INSTALL_SHA} install.sh" | sha256sum -c -
+          chmod +x install.sh
+          ./install.sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          which nix
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
-        with:
-          args: release --clean --skip=validate --config ../../.goreleaser.yml
-          workdir: ${{ github.workspace }}/tags/${{ inputs.tag }}
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep TAG --keep GPG_KEY_ID --keep GPG_PASSPHRASE --keep GITHUB_TOKEN --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          TAG: ${{ inputs.tag }}
+        run: |-
+          cd ${{ github.workspace }}/tags/$TAG
+          goreleaser release --clean --skip=validate --config ../../.goreleaser.yml
+          if [[ ! -f dist/metadata.json ]] || [[ ! -s dist/metadata.json ]]; then
+            echo "Missing required file: dist/metadata.json"
+            exit 1
+          fi
+          if [[ ! -f dist/artifacts.json ]] || [[ ! -s dist/artifacts.json ]]; then
+            echo "Missing required file: dist/artifacts.json"
+            exit 1
+          fi
+          echo "metadata=$(tr -d '\n\r' < dist/metadata.json)" >> "${GITHUB_OUTPUT}"
+          echo "artifacts=$(tr -d '\n\r' < dist/artifacts.json)" >> "${GITHUB_OUTPUT}"
