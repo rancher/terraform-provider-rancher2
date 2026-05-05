@@ -1,6 +1,7 @@
 package rancher2
 
 import (
+	"fmt"
 	"maps"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -124,9 +125,31 @@ func oidcSchemaFields() map[string]*schema.Schema {
 			ValidateFunc: validation.IsURLWithHTTPS,
 			Description:  "The provider specific URL used for logging a user out of their session.",
 		},
+		"pkce_method": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validatePKCEMethod,
+			Description:  "PKCE verification method. Set to \"S256\" to enable PKCE verification; set to empty to disable it. Omit to use the API default or returned value.",
+			Computed:     true,
+		},
 	}
 
 	maps.Copy(s, authConfigFields())
 
 	return s
+}
+
+func validatePKCEMethod(val any, k string) (warnings []string, errors []error) {
+	valString, ok := val.(string)
+	if !ok {
+		// This should not happen because the schema is TypeString
+		errors = append(errors, fmt.Errorf("%q: must be a string, got %T", k, val))
+		return warnings, errors
+	}
+
+	if valString != "" && valString != "S256" {
+		errors = append(errors, fmt.Errorf("%q: only supported value is \"S256\", got %q", k, valString))
+	}
+
+	return warnings, errors
 }
