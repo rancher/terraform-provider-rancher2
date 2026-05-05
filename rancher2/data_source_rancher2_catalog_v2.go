@@ -67,6 +67,11 @@ func dataSourceRancher2CatalogV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"refresh_interval": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Interval in seconds at which the Helm repository should be refreshed",
+			},
 			"secret_name": {
 				Type:     schema.TypeString,
 				Computed: true,

@@ -49,6 +49,7 @@ func flattenCatalogV2(d *schema.ResourceData, in *ClusterRepo) error {
 	}
 
 	d.Set("insecure_plain_http", in.Spec.InsecurePlainHTTP)
+	d.Set("refresh_interval", in.Spec.RefreshInterval)
 
 	d.Set("service_account", in.Spec.ServiceAccount)
 	d.Set("service_account_namespace", in.Spec.ServiceAccountNamespace)
@@ -154,6 +155,9 @@ func expandCatalogV2(in *schema.ResourceData) (*ClusterRepo, error) {
 	}
 	if v, ok := in.Get("url").(string); ok {
 		obj.Spec.URL = v
+	}
+	if v, ok := in.Get("refresh_interval").(int); ok && v > 0 {
+		obj.Spec.RefreshInterval = v
 	}
 
 	return obj, nil
