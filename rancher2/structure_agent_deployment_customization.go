@@ -44,7 +44,7 @@ func expandAgentDeploymentCustomization(p []interface{}) (*managementClient.Agen
 
 	in := p[0].(map[string]interface{})
 
-	if v, ok := in["append_tolerations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := in["append_tolerations"].([]interface{}); ok {
 		obj.AppendTolerations = expandTolerations(v)
 	}
 
