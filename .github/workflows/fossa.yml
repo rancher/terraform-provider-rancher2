@@ -26,7 +26,7 @@ jobs:
             secret/data/github/org/rancher/fossa/push token | FOSSA_API_KEY_PUSH_ONLY
 
       - name: FOSSA scan
-        uses: fossas/fossa-action@main
+        uses: fossas/fossa-action@edcc58279d396837acb02a1317ffa24dabfb7cc9 # v1.8.0+ https://github.com/fossas/fossa-action
         with:
           api-key: ${{ env.FOSSA_API_KEY_PUSH_ONLY }}
           # Only run the scan and don't provide/return any results back to the pipeline.

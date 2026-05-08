@@ -19,6 +19,7 @@ pre-release
 prerelease
 rancher
 rc
+readme
 rke
 rke2
 sha
@@ -39,3 +40,6 @@ keycloak
 oidc
 eslint
 destructuring
+yaml
+ttl
+pkce

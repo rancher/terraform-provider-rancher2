@@ -1,5 +1,4 @@
 name: release
-
 on:
   push:
     branches:
@@ -10,6 +9,8 @@ env:
   AWS_ROLE: arn:aws:iam::270074865685:role/terraform-module-ci-test
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   ALL_TESTS_JSON: '["TestOneBasic","TestThreeBasic","TestProductionBasic"]'
+  NIX_INSTALL_SHA: de490f61fcbaf9a5cabf2fa621ddb9ef93ad35d9a23a04e7d51b26e092b63691
+  NIX_INSTALL_VERSION: 2.34.4
 
 permissions:
   contents: write
@@ -28,7 +29,6 @@ jobs:
         run: |
           JSON_LIST='${{env.ALL_TESTS_JSON}}'
           echo "tests=$JSON_LIST" >> "$GITHUB_OUTPUT"
-
   release:
     runs-on: ubuntu-latest
     outputs:
@@ -62,7 +62,6 @@ jobs:
             } catch (error) {
               core.setFailed(`Failed to create comment on release PR: ${error.message}`);
             }
-
   # this creates a loop using workflow logic,
   #   each iteration of the loop is in its own job
   #   this is important because we want each iteration to be a separate VM
@@ -79,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        attempts: [1,2,3] # I want to have jobs specifically in place to retry or cancel a test based on IP collisions
+        attempts: [1, 2, 3] # I want to have jobs specifically in place to retry or cancel a test based on IP collisions
         test_name: ${{ fromJSON(needs.setup.outputs.tests) }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
@@ -96,7 +95,13 @@ jobs:
             await script({ core });
       - name: Get IP
         id: get-ip
-        run: echo "ip=$(curl -s https://ipinfo.io/ip)" >> "$GITHUB_OUTPUT"
+        run: |
+          IP=$(curl -s https://ipinfo.io/ip)
+          if ! [[ "$IP" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+            echo "Error: Invalid IP address format: $IP" >&2
+            exit 1
+          fi
+          echo "ip=$IP" >> "$GITHUB_OUTPUT"
       # artifacts are available to other jobs as soon as the step completes
       # unlike job outputs which are only available after the job completes
       # this artifact is a placeholder only, it has no content
@@ -163,10 +168,13 @@ jobs:
       - name: install-nix
         if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
         run: |
-          curl -L https://nixos.org/nix/install | sh
+          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
+          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
+          chmod +x nix_install.sh
+          ./nix_install.sh
           source /home/runner/.nix-profile/etc/profile.d/nix.sh
           nix --version
-          which nix
+          rm -f ./nix_install.sh
       - name: run-unit-tests
         id: run-unit-tests
         if: (steps.check-lock.outputs.status == 'clean' && steps.check-ip.outputs.status == 'clean') || strategy.job-index == 0
@@ -223,7 +231,6 @@ jobs:
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/check-run.js`;
             const { default: script } = await import(scriptPath);
             await script({ process, github, core });
-
   cleanup:
     needs:
       - setup
@@ -256,10 +263,13 @@ jobs:
           output-credentials: true
       - name: install-nix
         run: |
-          curl -L https://nixos.org/nix/install | sh
+          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
+          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
+          chmod +x nix_install.sh
+          ./nix_install.sh
           source /home/runner/.nix-profile/etc/profile.d/nix.sh
           nix --version
-          which nix
+          rm -f ./nix_install.sh
       - name: cleanup
         shell: '/home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep IDENTIFIER --keep GITHUB_TOKEN --keep GITHUB_OWNER --keep ZONE --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}'
         env:
@@ -271,7 +281,6 @@ jobs:
           export AWS_MAX_ATTEMPTS="100"
           export AWS_RETRY_MODE="adaptive"
           ./run_tests.sh -c $IDENTIFIER
-
   report:
     needs:
       - setup
@@ -312,7 +321,6 @@ jobs:
             } catch (error) {
               core.setFailed(`Failed to create comment failure on release PR: ${error.message}`);
             }
-
   rc-release:
     needs:
       - setup
@@ -394,14 +402,23 @@ jobs:
 
           echo "Importing gpg key"
           echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
+      - name: install-nix
+        run: |
+          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
+          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
+          chmod +x nix_install.sh
+          ./nix_install.sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          rm -f ./nix_install.sh
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
-        with:
-          args: release --clean --config .goreleaser_rc.yml
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GPG_KEY_ID --keep GPG_PASSPHRASE --keep GITHUB_TOKEN --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+        run: |-
+          goreleaser release --clean --config .goreleaser_rc.yml
       - name: 'Find Issues and Create Comments'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
         env:
@@ -412,7 +429,6 @@ jobs:
             const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/rc-notify.js`;
             const { default: script } = await import(scriptPath);
             await script({github, context, core, process});
-
   # This runs after release-please generates a release, so when the release PR is merged
   publish:
     needs:
@@ -459,11 +475,20 @@ jobs:
 
           echo "Importing gpg key"
           echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
+      - name: install-nix
+        run: |
+          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
+          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
+          chmod +x nix_install.sh
+          ./nix_install.sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          rm -f ./nix_install.sh
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0 https://github.com/goreleaser/goreleaser-action
-        with:
-          args: release --clean --config .goreleaser.yml
+        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GPG_KEY_ID --keep GPG_PASSPHRASE --keep GITHUB_TOKEN --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+        run: |-
+          goreleaser release --clean --config .goreleaser.yml
