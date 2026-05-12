@@ -25,5 +25,6 @@ data "rancher2_global_role_binding" "foo" {
 * `id` - (Computed) The ID of the resource (string)
 * `group_principal_id` - (Computed) The group principal ID to assign global role binding. Rancher v2.4.0 or higher is required (string)
 * `user_id` - (Computed) The user ID to assign global role binding (string)
+* `user_principal_id` - (Computed) The user principal ID to assign global role binding (string)
 * `annotations` - (Computed) Annotations of the resource (map)
 * `labels` - (Computed) Labels of the resource (map)
