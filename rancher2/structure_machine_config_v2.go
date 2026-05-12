@@ -166,6 +166,7 @@ func expandMachineConfigV2(in *schema.ResourceData) *MachineConfigV2 {
 	}
 	if v, ok := in.Get("nutanix_config").([]interface{}); ok && len(v) > 0 {
 		obj.NutanixConfig = expandMachineConfigV2Nutanix(v, obj)
+	}
 	if v, ok := in.Get("ionoscloud_config").([]interface{}); ok && len(v) > 0 {
 		obj.IonoscloudConfig = expandMachineConfigV2Ionoscloud(v, obj)
 	}
