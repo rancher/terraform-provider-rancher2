@@ -15,6 +15,7 @@ func flattenGlobalRoleBinding(d *schema.ResourceData, in *managementClient.Globa
 	d.SetId(in.ID)
 	d.Set("global_role_id", in.GlobalRoleID)
 	d.Set("user_id", in.UserID)
+	d.Set("user_principal_id", in.UserPrincipalID)
 	d.Set("name", in.Name)
 
 	if len(in.GroupPrincipalID) > 0 {
@@ -49,6 +50,7 @@ func expandGlobalRoleBinding(in *schema.ResourceData) *managementClient.GlobalRo
 
 	obj.GlobalRoleID = in.Get("global_role_id").(string)
 	obj.UserID = in.Get("user_id").(string)
+	obj.UserPrincipalID = in.Get("user_principal_id").(string)
 	obj.Name = in.Get("name").(string)
 
 	if v, ok := in.Get("group_principal_id").(string); ok && len(v) > 0 {
