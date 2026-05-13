@@ -1,5 +1,24 @@
 # Changelog
 
+## [14.1.1](https://github.com/rancher/terraform-provider-rancher2/compare/v14.1.0...v14.1.1) (2026-05-13)
+
+
+### Features
+
+* add refresh_interval support to catalog_v2 ([#2204](https://github.com/rancher/terraform-provider-rancher2/issues/2204)) ([77fb715](https://github.com/rancher/terraform-provider-rancher2/commit/77fb7154d42ffed748f801cd3d922be7036ffb1e))
+* Support Openstack Server Groups affinity ([#2221](https://github.com/rancher/terraform-provider-rancher2/issues/2221)) ([a635e54](https://github.com/rancher/terraform-provider-rancher2/commit/a635e5466082a21a4957b29edd61f21c133822a4))
+
+
+### Bug Fixes
+
+* clean up nix install script ([#2230](https://github.com/rancher/terraform-provider-rancher2/issues/2230)) ([#2236](https://github.com/rancher/terraform-provider-rancher2/issues/2236)) ([34b717e](https://github.com/rancher/terraform-provider-rancher2/commit/34b717efed041206cad9e9344f7b0aa8b223b2ad))
+* Docs add name space variable to kubeconfig command ([#2225](https://github.com/rancher/terraform-provider-rancher2/issues/2225)) ([7248cd7](https://github.com/rancher/terraform-provider-rancher2/commit/7248cd7a7d254b71fb58cb48b632c4122b3d2f57))
+* Fix typo in rancher2_cluster public_access_sources docs ([#2228](https://github.com/rancher/terraform-provider-rancher2/issues/2228)) ([9fe7548](https://github.com/rancher/terraform-provider-rancher2/commit/9fe75485712354e32d1bf036e6dfe11bdacc814c))
+* remove extra lines from release ([#2238](https://github.com/rancher/terraform-provider-rancher2/issues/2238)) ([#2250](https://github.com/rancher/terraform-provider-rancher2/issues/2250)) ([e1f7a91](https://github.com/rancher/terraform-provider-rancher2/commit/e1f7a91bccf5cf0cda006efd149955fcbcf09218))
+* resolve CI dependencies ([#2208](https://github.com/rancher/terraform-provider-rancher2/issues/2208)) ([#2214](https://github.com/rancher/terraform-provider-rancher2/issues/2214)) ([c4febbd](https://github.com/rancher/terraform-provider-rancher2/commit/c4febbd7628b17f634b6368c38bce3d91c05991a))
+* set release version ([#2239](https://github.com/rancher/terraform-provider-rancher2/issues/2239)) ([05a13f3](https://github.com/rancher/terraform-provider-rancher2/commit/05a13f3c953235186570d1055e77fb743cbd5105))
+* update default token TTL to match Rancher ([#2219](https://github.com/rancher/terraform-provider-rancher2/issues/2219)) ([765fe84](https://github.com/rancher/terraform-provider-rancher2/commit/765fe84d364be7095fffa07ce6abf7cca90f3798))
+
 ## [14.1.0](https://github.com/rancher/terraform-provider-rancher2/compare/v14.0.0...v14.1.0) (2026-04-09)
 
 
