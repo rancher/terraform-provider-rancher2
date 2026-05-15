@@ -1,5 +1,21 @@
 # Changelog
 
+## [13.5.0](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.5.0) (2026-05-08)
+
+
+### Features
+
+* add refresh interval support to catalog ([#2203](https://github.com/rancher/terraform-provider-rancher2/issues/2203)) ([da188ed](https://github.com/rancher/terraform-provider-rancher2/commit/da188edcccd633d890f954c805d9af2acd754b66))
+* Support Openstack Server Groups affinity ([#2222](https://github.com/rancher/terraform-provider-rancher2/issues/2222)) ([4e0eff5](https://github.com/rancher/terraform-provider-rancher2/commit/4e0eff53e9f30c77f9859094a74d774d3cd17ee2))
+
+
+### Bug Fixes
+
+* clean up nix install script ([#2230](https://github.com/rancher/terraform-provider-rancher2/issues/2230)) ([#2237](https://github.com/rancher/terraform-provider-rancher2/issues/2237)) ([803e16b](https://github.com/rancher/terraform-provider-rancher2/commit/803e16bcbf715953237e3cd75a5e81dcba1c877a))
+* remove extra lines from release ([#2238](https://github.com/rancher/terraform-provider-rancher2/issues/2238)) ([#2251](https://github.com/rancher/terraform-provider-rancher2/issues/2251)) ([9412a32](https://github.com/rancher/terraform-provider-rancher2/commit/9412a3288f956fe64063c350cb939099255b2f70))
+* resolve CI dependencies ([#2208](https://github.com/rancher/terraform-provider-rancher2/issues/2208)) ([#2215](https://github.com/rancher/terraform-provider-rancher2/issues/2215)) ([b9273a0](https://github.com/rancher/terraform-provider-rancher2/commit/b9273a073df506ee1131ce0a88180c367c20ad32))
+* set the next release version ([#2240](https://github.com/rancher/terraform-provider-rancher2/issues/2240)) ([e19a817](https://github.com/rancher/terraform-provider-rancher2/commit/e19a817d9f60b3918d3291ebe0592d1925a1430a))
+
 ## [13.2.0](https://github.com/rancher/terraform-provider-rancher2/compare/v13.3.0...v13.2.0) (2026-04-09)
 
 
