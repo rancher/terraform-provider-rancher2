@@ -15,9 +15,9 @@ require (
 	golang.org/x/crypto v0.49.0
 	golang.org/x/sync v0.20.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.35.1
-	k8s.io/apimachinery v0.35.1
-	k8s.io/apiserver v0.35.1
+	k8s.io/api v0.35.3
+	k8s.io/apimachinery v0.35.3
+	k8s.io/apiserver v0.35.3
 	k8s.io/client-go v12.0.0+incompatible
 )
 
@@ -88,8 +88,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.12 // indirect
 	github.com/googleapis/gax-go/v2 v2.17.0 // indirect
-	github.com/gorilla/handlers v1.5.2 // indirect
-	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
@@ -138,8 +136,8 @@ require (
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/rancher/aks-operator v1.14.0-rc.2 // indirect
 	github.com/rancher/ali-operator v1.14.0-rc.1 // indirect
-	github.com/rancher/apiserver v0.9.0 // indirect
-	github.com/rancher/channelserver v0.9.1-0.20260116181358-8dcd92dec745 // indirect
+	github.com/rancher/apiserver v0.9.2 // indirect
+	github.com/rancher/channelserver v0.10.0 // indirect
 	github.com/rancher/eks-operator v1.14.0-rc.5 // indirect
 	github.com/rancher/fleet/pkg/apis v0.15.0-beta.4 // indirect
 	github.com/rancher/gke-operator v1.14.0-rc.3 // indirect
@@ -185,11 +183,11 @@ require (
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.35.1 // indirect
-	k8s.io/component-base v0.35.1 // indirect
+	k8s.io/apiextensions-apiserver v0.35.3 // indirect
+	k8s.io/component-base v0.35.3 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20251125145642-4e65d59e963e // indirect
-	k8s.io/kubernetes v1.35.1 // indirect
+	k8s.io/kubernetes v1.35.3 // indirect
 	k8s.io/utils v0.0.0-20260108192941-914a6e750570 // indirect
 	sigs.k8s.io/cli-utils v0.37.2 // indirect
 	sigs.k8s.io/cluster-api v1.12.2 // indirect
@@ -205,15 +203,11 @@ replace (
 	github.com/docker/distribution => github.com/docker/distribution v2.8.2+incompatible
 
 	github.com/docker/docker => github.com/docker/docker v20.10.17+incompatible
-	github.com/knative/pkg => github.com/rancher/pkg v0.0.0-20190514055449-b30ab9de040e
-	github.com/matryer/moq => github.com/rancher/moq v0.0.0-20200712062324-13d1f37d2d77
-	github.com/rancher/rancher => github.com/rancher/rancher v0.0.0-20260408223142-1bd18926fe71
-	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20260408223142-1bd18926fe71
-	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20260408223142-1bd18926fe71
+	github.com/rancher/rancher => github.com/rancher/rancher v0.0.0-20260415193004-3558c3274e7f
+	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20260415193004-3558c3274e7f
+	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20260415193004-3558c3274e7f
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2
 	github.com/stretchr/testify => github.com/stretchr/testify v1.10.0
-	go.qase.io/client => github.com/rancher/qase-go/client v0.0.0-20231114201952-65195ec001fa
-	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.20.0-rancher1
 
 	k8s.io/api => k8s.io/api v0.35.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.35.1
@@ -247,6 +241,4 @@ replace (
 	k8s.io/mount-utils => k8s.io/mount-utils v0.35.1
 	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.35.1
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.35.1
-	launchpad.net/gocheck => github.com/go-check/check v0.0.0-20200227125254-8fa46927fb4f
-	oras.land/oras-go => oras.land/oras-go v1.2.2
 )
