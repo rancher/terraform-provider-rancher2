@@ -55,7 +55,7 @@ type machineConfigV2Ionoscloud struct {
 	PrivateLan             bool     `json:"privateLan,omitempty" yaml:"privateLan,omitempty"`
 	AdditionalLans         []string `json:"additionalLans,omitempty" yaml:"additionalLans,omitempty"`
 	CreateNat              bool     `json:"createNat,omitempty" yaml:"createNat,omitempty"`
-	AppendRkeUserdata      bool     `json:"appendRkeUserdata,omitempty" yaml:"appendRkeUserdata,omitempty"`
+	AppendRkeCloudInit     bool     `json:"appendRkeCloudInit,omitempty" yaml:"appendRkeCloudInit,omitempty"`
 }
 
 type MachineConfigV2Ionoscloud struct {
@@ -201,7 +201,7 @@ func flattenMachineConfigV2Ionoscloud(in *MachineConfigV2Ionoscloud) []interface
 	}
 
 	obj["create_nat"] = in.CreateNat
-	obj["append_rke_userdata"] = in.AppendRkeUserdata
+	obj["append_rke_cloud_init"] = in.AppendRkeCloudInit
 
 	return []interface{}{obj}
 }
@@ -394,8 +394,8 @@ func expandMachineConfigV2Ionoscloud(p []interface{}, source *MachineConfigV2) *
 		obj.CreateNat = v
 	}
 
-	if v, ok := in["append_rke_userdata"].(bool); ok {
-		obj.AppendRkeUserdata = v
+	if v, ok := in["append_rke_cloud_init"].(bool); ok {
+		obj.AppendRkeCloudInit = v
 	}
 
 	return obj

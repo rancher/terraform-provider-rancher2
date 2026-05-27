@@ -401,7 +401,7 @@ The following attributes are exported:
 #### Arguments
 
 * `additional_lans` - (Optional) Names of existing IONOS LANs to connect the machine to. Names that are not found are ignored (list of strings)
-* `append_rke_userdata` - (Optional) Should the driver append the RKE user-data to the user-data sent to the Ionos server. (bool)
+* `append_rke_cloud_init` - (Optional) Should the driver append the RKE cloud-init to the cloud-init sent to the Ionos server. (bool)
 * `cloud_init_b64` - (Optional) The cloud-init configuration for the volume as a base64 encoded string (string)
 * `cloud_init` - (Optional) The cloud-init configuration for the volume as a multi-line string (string)
 * `create_nat` - (Optional) If set, will create a default NAT. Requires private LAN (bool)

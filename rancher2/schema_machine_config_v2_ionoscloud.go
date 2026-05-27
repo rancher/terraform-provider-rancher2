@@ -228,7 +228,7 @@ func machineConfigV2IonoscloudFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "The cloud-init configuration for the volume as a base64 encoded string",
 		},
-		"append_rke_userdata": {
+		"append_rke_cloud_init": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Description: "Should the driver append the rke user-data to the user-data sent to the ionos server",
