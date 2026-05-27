@@ -47,5 +47,5 @@ The following attributes are exported:
 OIDC Clients can be imported using the Client name in the format `<client_name>`
 
 ```
-$ terraform import rancher2_oidc_client.foo &lt;CLIENT_NAME&gt;
+$ terraform import rancher2_oidc_client.foo <client_name>
 ```
