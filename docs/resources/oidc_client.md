@@ -5,7 +5,7 @@ page_title: "rancher2_oidc_client Resource"
 # rancher2\_oidc_client Resource
 
 Provides a Rancher OIDC Client. This can be used to configure the OIDC Clients
-available for the Rancher OIDC Provider.
+Provides a Rancher OIDC Client. This can be used to configure the OIDC Clients available for the Rancher OIDC Provider.
 
 ## Example Usage
 
