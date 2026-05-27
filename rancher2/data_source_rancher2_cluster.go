@@ -2,8 +2,11 @@ package rancher2
 
 import (
 	"fmt"
+	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
 
 func dataSourceRancher2Cluster() *schema.Resource {
@@ -30,6 +33,12 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			"kube_config": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"generate_kube_config": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Generate a kubeconfig for the cluster. Warning: this creates a new API token on each plan/apply.",
 			},
 			"ca_cert": {
 				Type:      schema.TypeString,
@@ -209,5 +218,49 @@ func dataSourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(clusters.Data[0].ID)
 
-	return resourceRancher2ClusterRead(d, meta)
+	return resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+		cluster := &Cluster{}
+		err = client.APIBaseClient.ByID(managementClient.ClusterType, d.Id(), cluster)
+		if err != nil {
+			if IsNotFound(err) || IsForbidden(err) {
+				log.Printf("[INFO] Cluster ID %s not found.", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return resource.NonRetryableError(err)
+		}
+
+		clusterRegistrationToken, err := findClusterRegistrationToken(client, cluster.ID)
+		if err != nil && !IsForbidden(err) {
+			return resource.NonRetryableError(err)
+		}
+
+		defaultProjectID, systemProjectID, err := meta.(*Config).GetClusterSpecialProjectsID(cluster.ID)
+		if err != nil && !IsForbidden(err) {
+			return resource.NonRetryableError(err)
+		}
+
+		var kubeConfig *managementClient.GenerateKubeConfigOutput
+		if d.Get("generate_kube_config").(bool) {
+			kubeConfig, err = getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
+			if err != nil && !IsForbidden(err) {
+				return resource.NonRetryableError(err)
+			}
+		}
+		if kubeConfig == nil {
+			kubeConfig = &managementClient.GenerateKubeConfigOutput{}
+		}
+
+		if err = flattenCluster(
+			d,
+			cluster,
+			clusterRegistrationToken,
+			kubeConfig,
+			defaultProjectID,
+			systemProjectID); err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
