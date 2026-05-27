@@ -9,11 +9,10 @@ available for the Rancher OIDC Provider.
 
 ## Example Usage
 
-### Creating a Rancher OIDC Client.
-
 ```hcl
-resource "rancher2_oidc_client" "oidc-test-client" {
-  description = "Access for Test Client"
+# Create a new rancher2 OIDC Client
+resource "rancher2_oidc_client" "foo" {
+  description = "Foo OIDC Client"
   token_expiration_seconds = 600 # expiration of the id_token and access_token
   refresh_token_expiration_seconds = 7200 # expiration of the refresh_token
   redirect_uris = [
