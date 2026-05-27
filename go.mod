@@ -205,15 +205,11 @@ replace (
 	github.com/docker/distribution => github.com/docker/distribution v2.8.2+incompatible
 
 	github.com/docker/docker => github.com/docker/docker v20.10.17+incompatible
-	github.com/knative/pkg => github.com/rancher/pkg v0.0.0-20190514055449-b30ab9de040e
-	github.com/matryer/moq => github.com/rancher/moq v0.0.0-20200712062324-13d1f37d2d77
 	github.com/rancher/rancher => github.com/rancher/rancher v0.0.0-20260408223142-1bd18926fe71
 	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20260408223142-1bd18926fe71
 	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20260408223142-1bd18926fe71
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2
 	github.com/stretchr/testify => github.com/stretchr/testify v1.10.0
-	go.qase.io/client => github.com/rancher/qase-go/client v0.0.0-20231114201952-65195ec001fa
-	helm.sh/helm/v3 => github.com/rancher/helm/v3 v3.20.0-rancher1
 
 	k8s.io/api => k8s.io/api v0.35.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.35.1
@@ -247,6 +243,4 @@ replace (
 	k8s.io/mount-utils => k8s.io/mount-utils v0.35.1
 	k8s.io/pod-security-admission => k8s.io/pod-security-admission v0.35.1
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.35.1
-	launchpad.net/gocheck => github.com/go-check/check v0.0.0-20200227125254-8fa46927fb4f
-	oras.land/oras-go => oras.land/oras-go v1.2.2
 )
