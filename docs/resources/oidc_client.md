@@ -28,10 +28,10 @@ resource "rancher2_oidc_client" "oidc-test-client" {
 
 The following arguments are supported:
 
-* `description` - A human-readable description for the OIDC Client.
-* `token_expiration_seconds` - ID Token and Access Token will only be valid for this many seconds.
-* `refresh_token_expiration_seconds` - How long can the refresh token be used for?
-* `redirect_uris` - Provides a list of allowed redirect URIs for this OIDC Client.
+* `redirect_uris` - (Required) List of allowed redirect URIs for this OIDC Client (list)
+* `description` - (Optional) A human-readable description for the OIDC Client (string)
+* `token_expiration_seconds` - (Optional/Computed) ID Token and Access Token will only be valid for this many seconds (int)
+* `refresh_token_expiration_seconds` - (Optional/Computed) How long can the refresh token be used for (int)
 * `annotations` - (Optional/Computed) Annotations for OIDC Client object (map)
 * `labels` - (Optional/Computed) Labels for OIDC Client object (map)
 
