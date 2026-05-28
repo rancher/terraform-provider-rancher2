@@ -43,4 +43,5 @@ destructuring
 yaml
 ttl
 pkce
+tolerations
 oidcclients
