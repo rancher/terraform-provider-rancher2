@@ -136,16 +136,6 @@ jobs:
         run: |-
           cd ${{ github.workspace }}/tags/$TAG
           goreleaser release --clean --skip=validate --config ../../.goreleaser_rc.yml
-          if [[ ! -f dist/metadata.json ]] || [[ ! -s dist/metadata.json ]]; then
-            echo "Missing required file: dist/metadata.json"
-            exit 1
-          fi
-          if [[ ! -f dist/artifacts.json ]] || [[ ! -s dist/artifacts.json ]]; then
-            echo "Missing required file: dist/artifacts.json"
-            exit 1
-          fi
-          echo "metadata=$(tr -d '\n\r' < dist/metadata.json)" >> "${GITHUB_OUTPUT}"
-          echo "artifacts=$(tr -d '\n\r' < dist/artifacts.json)" >> "${GITHUB_OUTPUT}"
       - name: 'Find Issues and Create Comments'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
         env:
