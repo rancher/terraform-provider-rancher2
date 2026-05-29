@@ -251,10 +251,10 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	t.Log("Creating keypair...")
 	// Create an EC2 KeyPair that we can use for SSH access
 	keyPairName := fmt.Sprintf("terraform-ci-%s", id)
-	keyPair := aws.CreateAndImportEC2KeyPair(t, region, keyPairName)
+	keyPair := aws.CreateAndImportEC2KeyPairContext(t, t.Context(), region, keyPairName)
 
 	// tag the key pair so we can find in the access module
-	client, err := aws.NewEc2ClientE(t, region)
+	client, err := aws.NewEc2ClientContextE(t, t.Context(), region)
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +272,7 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 		return nil, err
 	}
 
-	err = aws.AddTagsToResourceE(t, region, *result.KeyPairs[0].KeyPairId, map[string]string{"Name": keyPairName, "Owner": owner})
+	err = aws.AddTagsToResourceContextE(t, t.Context(), region, *result.KeyPairs[0].KeyPairId, map[string]string{"Name": keyPairName, "Owner": owner})
 	if err != nil {
 		return nil, err
 	}
@@ -363,14 +363,14 @@ func GetAwsSessionToken() string {
 func GetId() string {
 	id := os.Getenv("IDENTIFIER")
 	if id == "" {
-		id = random.UniqueId()
+		id = random.UniqueID()
 	}
-	id += "-" + random.UniqueId()
+	id += "-" + random.UniqueID()
 	return id
 }
 
 func CreateTestDirectories(t *testing.T, id string) error {
-	gwd := g.GetRepoRoot(t)
+	gwd := g.GetRepoRootContext(t, t.Context(), "")
 	fwd, err := filepath.Abs(gwd)
 	if err != nil {
 		return err
@@ -390,7 +390,7 @@ func CreateTestDirectories(t *testing.T, id string) error {
 	return nil
 }
 
-func Teardown(t *testing.T, dataDir string, exampleDir string, options []*terraform.Options, keyPair *aws.Ec2Keypair, agent *ssh.SshAgent) {
+func Teardown(t *testing.T, dataDir string, exampleDir string, options []*terraform.Options, keyPair *aws.Ec2Keypair, agent *ssh.SSHAgent) {
 	directoryExists := true
 	_, err := os.Stat(dataDir)
 	if err != nil {
@@ -406,11 +406,11 @@ func Teardown(t *testing.T, dataDir string, exampleDir string, options []*terraf
 				t.Logf("Failed to marshal options for destroy log: %v", err)
 			}
 			fmt.Println(string(jsonOptions))
-			_, err = terraform.InitE(t, option)
+			_, err = terraform.InitContextE(t, t.Context(), option)
 			if err != nil {
 				t.Logf("Failed to init for destroy: %v", err)
 			}
-			_, err = terraform.DestroyE(t, option)
+			_, err = terraform.DestroyContextE(t, t.Context(), option)
 			if err != nil {
 				t.Logf("Failed to destroy: %v", err)
 			}
@@ -421,7 +421,7 @@ func Teardown(t *testing.T, dataDir string, exampleDir string, options []*terraf
 		}
 	}
 	agent.Stop()
-	err = aws.DeleteEC2KeyPairE(t, keyPair)
+	err = aws.DeleteEC2KeyPairContextE(t, t.Context(), keyPair)
 	if err != nil {
 		t.Logf("Failed to destroy key pair: %v", err)
 	}
@@ -429,7 +429,7 @@ func Teardown(t *testing.T, dataDir string, exampleDir string, options []*terraf
 }
 
 func GetErrorLogs(t *testing.T, kubeconfigPath string) {
-	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
+	repoRoot, err := filepath.Abs(g.GetRepoRootContext(t, t.Context(), ""))
 	if err != nil {
 		t.Logf("Error getting git root directory: %v", err)
 	}
@@ -444,7 +444,7 @@ func GetErrorLogs(t *testing.T, kubeconfigPath string) {
 			"KUBECONFIG": kubeconfigPath,
 		},
 	}
-	out, err := shell.RunCommandAndGetOutputE(t, errorLogsScript)
+	out, err := shell.RunCommandContextAndGetOutputE(t, t.Context(), &errorLogsScript)
 	if err != nil {
 		t.Logf("Error running script: %s", err)
 	}
@@ -452,7 +452,7 @@ func GetErrorLogs(t *testing.T, kubeconfigPath string) {
 }
 
 func CheckReady(t *testing.T, kubeconfigPath string) {
-	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
+	repoRoot, err := filepath.Abs(g.GetRepoRootContext(t, t.Context(), ""))
 	if err != nil {
 		t.Logf("Error getting git root directory: %v", err)
 		t.Fail()
@@ -469,7 +469,7 @@ func CheckReady(t *testing.T, kubeconfigPath string) {
 			"KUBECONFIG": kubeconfigPath,
 		},
 	}
-	out, err := shell.RunCommandAndGetOutputE(t, readyScript)
+	out, err := shell.RunCommandContextAndGetOutputE(t, t.Context(), &readyScript)
 	if err != nil {
 		t.Logf("Error running script: %s", err)
 		t.Fail()
@@ -478,7 +478,7 @@ func CheckReady(t *testing.T, kubeconfigPath string) {
 }
 
 func CheckRunning(t *testing.T, kubeconfigPath string) {
-	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
+	repoRoot, err := filepath.Abs(g.GetRepoRootContext(t, t.Context(), ""))
 	if err != nil {
 		t.Logf("Error getting git root directory: %v", err)
 		t.Fail()
@@ -495,7 +495,7 @@ func CheckRunning(t *testing.T, kubeconfigPath string) {
 			"KUBECONFIG": kubeconfigPath,
 		},
 	}
-	out, err := shell.RunCommandAndGetOutputE(t, readyScript)
+	out, err := shell.RunCommandContextAndGetOutputE(t, t.Context(), &readyScript)
 	if err != nil {
 		t.Logf("Error running script: %s", err)
 		t.Fail()
@@ -504,7 +504,7 @@ func CheckRunning(t *testing.T, kubeconfigPath string) {
 }
 
 func CreateObjectStorageBackend(t *testing.T, id string, owner string, region string) (*terraform.Options, error) {
-	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
+	repoRoot, err := filepath.Abs(g.GetRepoRootContext(t, t.Context(), ""))
 	if err != nil {
 		t.Fatalf("Error getting git root directory: %v", err)
 	}
@@ -535,12 +535,12 @@ func CreateObjectStorageBackend(t *testing.T, id string, owner string, region st
 		Upgrade:     true,
 	})
 
-	_, err = terraform.InitAndApplyE(t, terraformOptions)
+	_, err = terraform.InitAndApplyContextE(t, t.Context(), terraformOptions)
 	return terraformOptions, err
 }
 
 func WriteTerraformRc(t *testing.T, path string) error {
-	repoRoot, err := filepath.Abs(g.GetRepoRoot(t))
+	repoRoot, err := filepath.Abs(g.GetRepoRootContext(t, t.Context(), ""))
 	if err != nil {
 		t.Fatalf("Error getting git root directory: %v", err)
 	}

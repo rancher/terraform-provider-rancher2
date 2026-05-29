@@ -7,7 +7,7 @@ Requirements
 ------------
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 1.5.0
-- [Go](https://golang.org/doc/install) 1.23 to build the provider plugin
+- [Go](https://golang.org/doc/install) 1.26.3 to build the provider plugin
 
 Building The Provider
 ---------------------
@@ -34,7 +34,7 @@ If you're building the provider, follow the instructions to [install it as a plu
 Developing the Provider
 ---------------------------
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.20+ is *required*). A Nix flake is also available in the repo which is used to generate an environment for build and test.
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.26+ is *required*). A Nix flake is also available in the repo which is used to generate an environment for build and test.
 
 To compile the provider, run `make build`. This will build the provider and put the provider binary in a bin directory where the repo was cloned.
 

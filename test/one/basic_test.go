@@ -16,7 +16,7 @@ func TestOneBasic(t *testing.T) {
 
 	defer config.Teardown(t)
 	defer config.GetErrorLogs(t)
-	_, err := terraform.InitAndApplyE(t, config.TerraformOptions)
+	_, err := terraform.InitAndApplyContextE(t, t.Context(), config.TerraformOptions)
 	if err != nil {
 		t.Log("Test failed, tearing down...")
 		t.Fatalf("Error creating cluster: %s", err)
@@ -45,7 +45,7 @@ func TestOneBasic(t *testing.T) {
 		t.Fatalf("Error writing Terraform RC file: %s", err)
 	}
 
-	_, err = terraform.InitAndApplyE(t, config.TerraformOptions)
+	_, err = terraform.InitAndApplyContextE(t, t.Context(), config.TerraformOptions)
 	if err != nil {
 		t.Log("Test failed, tearing down...")
 		t.Fatalf("Error creating cluster: %s", err)
@@ -54,7 +54,7 @@ func TestOneBasic(t *testing.T) {
 	config.CheckRunning(t)
 
 	// Running the apply again should not change anything
-	_, err = terraform.InitAndApplyE(t, config.TerraformOptions)
+	_, err = terraform.InitAndApplyContextE(t, t.Context(), config.TerraformOptions)
 	if err != nil {
 		t.Log("Test failed, tearing down...")
 		t.Fatalf("Error creating cluster: %s", err)

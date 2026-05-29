@@ -7,8 +7,8 @@ applyTo: ".github/workflows/**/*.{yml,yaml}"
 As a strict DevSecOps CI/CD reviewer, enforce these standards on all workflow changes. Flag violations with a concise explanation and provide the refactored YAML.
 
 ## 1. Security (Critical)
-* **Least Privilege:** All workflows and jobs must define explicit `permissions:`. Default to `read-all` or `permissions: {}` at the top level. Set scopes to `none` as needed.
-* **Pin Actions by SHA:** Pin all actions (including `actions/*`, `github/*`, `rancher/*`) to a full 40-character commit SHA, not a tag. The `uses:` line MUST include the version and a repository link in a comment (e.g., `# v6.0.2 https://github.com/actions/checkout`). Exception: `rancher-eio/read-vault-secrets`.
+* **Least Privilege:** All jobs must define explicit `permissions:`. All workflows should have `permissions: {}` at the top level. Set scopes to `none` as needed. Permissions should implement least priviledge necessary access.
+* **Pin Actions by SHA:** Pin all actions (including `actions/*`, `github/*`, `rancher/*`) to a full 40-character commit SHA, not a tag. The `uses:` line MUST include the version (e.g., `# v6.0.2`). On the line before the `uses:` there should be a comment with a link to the releases page for the action (e.g. `# https://github.com/actions/github-script/releases`).
 * **Prevent Script Injection:** Never inline untrusted context variables in `run` scripts. Use environment variables (e.g., `env: VAR: ${{...}}`).
 * **No `pull_request_target`:** This trigger is banned.
 

@@ -21,7 +21,7 @@ type TestConfig struct {
 	TestDir                 string
 	KeyPair                 *aws.Ec2Keypair
 	KP                      *ssh.KeyPair
-	SshAgent                ssh.SshAgent
+	SshAgent                ssh.SSHAgent
 	Rke2Version             string
 	RancherVersion          string
 	TerraformRcPath         string
@@ -41,13 +41,14 @@ func NewTestConfig(t *testing.T, directory string) *TestConfig {
 
 	util.SetAcmeServer()
 
-	repoRoot, err := filepath.Abs(git.GetRepoRoot(t))
+	repoRoot, err := filepath.Abs(git.GetRepoRootContext(t, t.Context(), ""))
 	if err != nil {
 		t.Fatalf("Error getting git root directory: %v", err)
 	}
 	exampleDir := filepath.Join(repoRoot, "examples", directory)
 	testDir := filepath.Join(repoRoot, "test", "data", id)
 	kubeconfigPath := filepath.Join(testDir, "kubeconfig")
+	pluginsDir := filepath.Join(repoRoot, "test/data", id, "plugins")
 
 	err = util.CreateTestDirectories(t, id)
 	if err != nil {
@@ -64,7 +65,7 @@ func NewTestConfig(t *testing.T, directory string) *TestConfig {
 
 	err = os.WriteFile(filepath.Join(testDir, "id_rsa"), []byte(kp.PrivateKey), 0600)
 	if err != nil {
-		err = aws.DeleteEC2KeyPairE(t, keyPair)
+		err = aws.DeleteEC2KeyPairContextE(t, t.Context(), keyPair)
 		if err != nil {
 			t.Logf("Failed to destroy key pair: %v", err)
 		}
@@ -72,7 +73,7 @@ func NewTestConfig(t *testing.T, directory string) *TestConfig {
 		t.Fatalf("Error creating test key pair: %s", err)
 	}
 
-	sshAgent := ssh.SshAgentWithKeyPair(t, kp)
+	sshAgent := ssh.SSHAgentWithKeyPair(t, t.Context(), kp)
 	t.Logf("Key %s created and added to agent", keyPair.Name)
 
 	backendTerraformOptions, err := util.CreateObjectStorageBackend(t, id, owner, region)
@@ -112,7 +113,7 @@ func NewTestConfig(t *testing.T, directory string) *TestConfig {
 		// https://pkg.go.dev/github.com/gruntwork-io/terratest/modules/terraform#Options
 		TerraformDir: exampleDir,
 		// Variables to pass to our Terraform code using -var options
-		Vars: map[string]interface{}{
+		Vars: map[string]any{
 			"identifier":      id,
 			"owner":           owner,
 			"key_name":        keyPair.Name,
@@ -124,16 +125,17 @@ func NewTestConfig(t *testing.T, directory string) *TestConfig {
 		},
 		// Environment variables to set when running Terraform
 		EnvVars: map[string]string{
-			"AWS_DEFAULT_REGION": region,
-			"AWS_REGION":         region,
-			"TF_DATA_DIR":        testDir,
-			"TF_IN_AUTOMATION":   "1",
-			"TF_CLI_CONFIG_FILE": terraformRcPath,
+			"AWS_DEFAULT_REGION":  region,
+			"AWS_REGION":          region,
+			"TF_DATA_DIR":         testDir,
+			"TF_PLUGIN_CACHE_DIR": pluginsDir,
+			"TF_IN_AUTOMATION":    "1",
+			"TF_CLI_CONFIG_FILE":  terraformRcPath,
 		},
 		RetryableTerraformErrors: util.GetRetryableTerraformErrors(),
 		NoColor:                  true,
 		SshAgent:                 sshAgent,
-		BackendConfig: map[string]interface{}{
+		BackendConfig: map[string]any{
 			"bucket": strings.ToLower(id),
 		},
 		Reconfigure: true,

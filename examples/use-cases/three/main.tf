@@ -31,7 +31,7 @@ locals {
   example              = "three"
   project_name         = "tf-${substr(md5(join("-", [local.example, local.identifier])), 0, 5)}"
   username             = local.project_name
-  domain               = local.project_name
+  domain               = lower("${local.project_name}-${local.identifier}")
   zone                 = var.zone
   key_name             = var.key_name
   key                  = var.key
@@ -45,7 +45,7 @@ locals {
   # WARNING! "hostname" must be an fqdn
   helm_chart_values = {
     "hostname"               = "${local.domain}.${local.zone}"
-    "replicas"               = "1"
+    "replicas"               = "3"
     "bootstrapPassword"      = "admin"
     "tls"                    = "ingress"
     "ingress.enabled"        = "true"
@@ -82,7 +82,7 @@ locals {
   local_file_path      = var.file_path
   runner_ip            = chomp(data.http.myip.response_body) # "runner" is the server running Terraform
   rancher_version      = var.rancher_version
-  cert_manager_version = "1.18.3"
+  cert_manager_version = "1.20.2"
   os                   = "sle-micro-61"
 }
 
@@ -102,7 +102,7 @@ module "rancher" {
     module.tls,
   ]
   source  = "rancher/aws/rancher2"
-  version = "3.1.1"
+  version = "3.1.4"
   # project
   identifier   = local.identifier
   owner        = local.owner
@@ -115,9 +115,10 @@ module "rancher" {
   username = local.username
   admin_ip = local.runner_ip
   # rke2
-  rke2_version       = local.rke2_version
-  local_file_path    = local.local_file_path
-  install_method     = "rpm" # rpm only for now, need to figure out local helm chart installs otherwise
+  rke2_version    = local.rke2_version
+  local_file_path = local.local_file_path
+  # use tar install method for RKE2 if you want Rancher to manage upgrades
+  install_method     = "tar" # this installs RKE using the tar method, but it isn't an air-gapped install, Rancher install still uses public helm chart
   cni                = "canal"
   node_configuration = local.node_configuration
   # rancher
