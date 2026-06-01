@@ -1,6 +1,11 @@
 export default async ({ github, context, core, process }) => {
   try {
-    const prNumber = parseInt(process.env.PR_NUMBER, 10);
+    const prNumberRaw = process.env.PR_NUMBER;
+    const prNumber = Number.parseInt(prNumberRaw, 10);
+    if (!Number.isFinite(prNumber)) {
+      core.setFailed(`Invalid PR_NUMBER: ${prNumberRaw}`);
+      return;
+    }
     const status = process.env.TEST_STATUS;
     const msg = status === 'success' ? 'End to End Tests Passed!' : 'End to End Tests Failed!';
     await github.rest.issues.createComment({
