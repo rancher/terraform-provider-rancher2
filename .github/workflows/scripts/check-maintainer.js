@@ -1,7 +1,7 @@
 /**
  * Checks if the user triggering the workflow is an authorized maintainer.
  */
-module.exports = async ({ context, process }) => {
+export default async ({ context, process }) => {
   // Hardcoded to "matttrach" for now as requested.
   let maintainers = ["matttrach"];
   

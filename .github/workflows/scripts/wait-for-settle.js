@@ -1,7 +1,7 @@
 /**
  * Allows GitHub's API slightly more time to index merge commits and retrieve the PR list.
  */
-module.exports = async ({ github, context, core, process }) => {
+export default async ({ github, context, core, process }) => {
   const owner = context.repo.owner;
   const repo = context.repo.repo;
   

@@ -20,5 +20,4 @@ tf-*
 main.tf
 terraform-provider-rancher2
 node_modules
-GEMINI.md
 .vscode
