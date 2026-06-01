@@ -41,7 +41,7 @@ run_cleanup() {
   # Check if cleanup script exists
   if [ -f "$REPO_ROOT/cleanup.sh" ]; then
     echo "Running cleanup script..."
-    sh "$REPO_ROOT/cleanup.sh" "$IDENTIFIER"
+    bash "$REPO_ROOT/cleanup.sh" "$IDENTIFIER"
     cleanup_exit=$?
 
     if [ $cleanup_exit -ne 0 ]; then
