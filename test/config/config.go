@@ -48,7 +48,7 @@ func NewTestConfig(t *testing.T, directory string) *TestConfig {
 	exampleDir := filepath.Join(repoRoot, "examples", directory)
 	testDir := filepath.Join(repoRoot, "test", "data", id)
 	kubeconfigPath := filepath.Join(testDir, "kubeconfig")
-	pluginsDir := filepath.Join(repoRoot, "test/data", id, "plugins")
+	pluginsDir := filepath.Join(repoRoot, "test", "data", id, "plugins")
 
 	err = util.CreateTestDirectories(t, id)
 	if err != nil {
