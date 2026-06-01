@@ -43,4 +43,4 @@ lint-workflows:
 	cd .github/workflows/scripts && \
 	while read -r file; do node --check "$$file"; done <<<"$$(find . -type f \( -name "*.js" \))"
 
-.PHONY: fmt lint build install generate test testacc dt et clean lint-workflows
+.PHONY: fmt lint lint-tests build install generate test testacc dt et clean lint-workflows
