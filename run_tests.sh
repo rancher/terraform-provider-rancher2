@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
-
 # Configuration flags
 rerun_failed=false
 specific_test=""
