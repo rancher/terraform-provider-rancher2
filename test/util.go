@@ -267,7 +267,7 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	input := &ec2.DescribeKeyPairsInput{
 		Filters: []ec2types.Filter{keyNameFilter},
 	}
-	result, err := client.DescribeKeyPairs(context.Background(), input)
+	result, err := client.DescribeKeyPairs(t.Context(), input)
 	if err != nil {
 		return nil, err
 	}
@@ -286,7 +286,7 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	input = &ec2.DescribeKeyPairsInput{
 		Filters: []ec2types.Filter{keyNameFilter},
 	}
-	_, err = client.DescribeKeyPairs(context.Background(), input)
+	_, err = client.DescribeKeyPairs(t.Context(), input)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	input = &ec2.DescribeKeyPairsInput{
 		Filters: []ec2types.Filter{keyNameFilter},
 	}
-	_, err = client.DescribeKeyPairs(context.Background(), input)
+	_, err = client.DescribeKeyPairs(t.Context(), input)
 	if err != nil {
 		return nil, err
 	}
