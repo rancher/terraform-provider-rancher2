@@ -76,7 +76,7 @@ Invalid option: -$OPTARG
 Usage: $0 [OPTIONS]
 
 Options:
-  -r              Re-run failed tests
+  -r              Re-run failed tests, requires dirty mode.
   -s              Run tests in slow mode (sequential, one at a time)
   -d              Skip cleanup (dirty mode)
   -t TEST         Run specific test (eg. TestMatrix)
@@ -105,6 +105,11 @@ exclusive_count=0
 
 if [ $exclusive_count -gt 1 ]; then
   echo "Error: Only one of -c, -t, -p, -f, or -g can be used at a time." >&2
+  exit 1
+fi
+
+if [ "$erun_failed" = true ] && [ "$dirty_mode" = false ]; then
+  echo "Error: Rerun failed tests requires dirty mode." >&2
   exit 1
 fi
 
