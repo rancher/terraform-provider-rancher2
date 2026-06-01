@@ -10,7 +10,7 @@ env:
   NIX_INSTALL_SHA: de490f61fcbaf9a5cabf2fa621ddb9ef93ad35d9a23a04e7d51b26e092b63691
   NIX_INSTALL_VERSION: 2.34.4
 
-permissions: read-all
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
