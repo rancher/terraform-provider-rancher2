@@ -69,5 +69,5 @@ jobs:
             const path = require('path');
             const tempPath = path.join(process.env.RUNNER_TEMP, 'backport-issues.js');
             fs.writeFileSync(tempPath, scriptContent);
-            const script = require(tempPath);
+            const { default: script } = require(tempPath);
             await script({github, context, core, process});
