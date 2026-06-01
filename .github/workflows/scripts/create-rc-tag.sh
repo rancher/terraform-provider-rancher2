@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 BASE_VERSION=$(echo "$GITHUB_REF" | sed 's/refs\/heads\/release\///')
 echo "Base version is: $BASE_VERSION"
 git fetch --tags
