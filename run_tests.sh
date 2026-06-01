@@ -108,7 +108,7 @@ if [ $exclusive_count -gt 1 ]; then
   exit 1
 fi
 
-if [ "$erun_failed" = true ] && [ "$dirty_mode" = false ]; then
+if [ "$rerun_failed" = true ] && [ "$dirty_mode" = false ]; then
   echo "Error: Rerun failed tests requires dirty mode." >&2
   exit 1
 fi
