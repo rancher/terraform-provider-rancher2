@@ -1,7 +1,7 @@
 /**
  * Checks if the user triggering the workflow is an authorized maintainer.
  */
-export default async ({ context, process }) => {
+export default async ({ context, core, process }) => {
   // Hardcoded to "matttrach" for now as requested.
   let maintainers = ["matttrach"];
   
@@ -15,7 +15,7 @@ export default async ({ context, process }) => {
   }
 
   const isMaintainer = maintainers.includes(context.actor);
-  console.log(`Checking if '${context.actor}' is an authorized maintainer: ${isMaintainer}`);
+  core.info(`Checking if '${context.actor}' is an authorized maintainer: ${isMaintainer}`);
   
   return isMaintainer;
 };

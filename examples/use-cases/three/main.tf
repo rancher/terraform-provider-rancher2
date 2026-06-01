@@ -46,7 +46,7 @@ locals {
   helm_chart_values = {
     "hostname"               = "${local.domain}.${local.zone}"
     "replicas"               = "3"
-    "bootstrapPassword"      = "admin"
+    "bootstrapPassword"      = random_password.admin_password.result
     "tls"                    = "ingress"
     "ingress.enabled"        = "true"
     "ingress.tls.source"     = "secret"
@@ -95,6 +95,12 @@ data "http" "myip" {
 module "tls" {
   source = "./modules/tls"
   domain = "${local.domain}.${local.zone}"
+}
+
+resource "random_password" "admin_password" {
+  length           = 16
+  special          = true
+  override_special = "!#$%-_=+"
 }
 
 module "rancher" {

@@ -46,7 +46,7 @@ locals {
   helm_chart_values = {
     "hostname"                                            = "${local.domain}.${local.zone}"
     "replicas"                                            = "3"
-    "bootstrapPassword"                                   = "admin"
+    "bootstrapPassword"                                   = random_password.admin_password.result
     "ingress.enabled"                                     = "true"
     "ingress.tls.source"                                  = "letsEncrypt"
     "tls"                                                 = "ingress"
@@ -141,6 +141,12 @@ locals {
 
 data "http" "myip" {
   url = "https://ipinfo.io/ip"
+}
+
+resource "random_password" "admin_password" {
+  length           = 16
+  special          = true
+  override_special = "!#$%-_=+"
 }
 
 module "rancher" {

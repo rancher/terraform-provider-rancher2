@@ -32,10 +32,15 @@ jobs:
         id: check-user-in-maintainers
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }}
         with:
           script: |
-            const isMaintainer = ${{ vars.TERRAFORM_MAINTAINERS }}.includes(context.actor);
-            return isMaintainer;
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/check-maintainer.js`;
+            const { default: script } = await import(scriptPath);
+            const isMaintainer = await script({context, core, process});
+            if (!isMaintainer) {
+              core.setFailed(`User ${context.actor} is not authorized to trigger this workflow.`);
+            }
       - env:
           TAG: ${{ inputs.tag }}
         run: |
