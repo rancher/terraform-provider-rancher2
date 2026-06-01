@@ -17,10 +17,10 @@ export default async ({ github, context, core, process }) => {
   await new Promise(resolve => setTimeout(resolve, 10000));
 
   try {
-      await github.rest.repos.listPullRequestsAssociatedWithCommit({
-      owner,
-      repo,
-      commit_sha: mergeCommitSha
+      await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+       owner,
+       repo,
+       commit_sha: mergeCommitSha
       });
   } catch (error) {
       core.setFailed(`Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`);
