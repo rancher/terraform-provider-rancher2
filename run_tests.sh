@@ -358,15 +358,10 @@ else
   echo "✓ Formatting complete"
 
   echo "Checking for compile errors..."
-  while IFS= read -r file; do
-    if [ -n "$file" ]; then
-      if ! go test -c "$file" -o "${file}.test" 2>&1; then
-        echo "ERROR: Failed to compile $file"
-        exit 1
-      fi
-      rm -f "${file}.test"
-    fi
-  done <<< "$(find "$REPO_ROOT/$TEST_DIR" -not \( -path "$REPO_ROOT/$TEST_DIR/data" -prune \) -name '*.go')"
+  if ! go list ./... | grep -v '/data' | xargs go test -run='^$'; then
+    echo "ERROR: Compile checks failed"
+    exit 1
+  fi
   echo "✓ Compile checks passed"
 
   echo "Running go lint..."

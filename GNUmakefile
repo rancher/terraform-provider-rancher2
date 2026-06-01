@@ -7,14 +7,8 @@ lint:
 	golangci-lint run
 
 lint-tests:
-	cd test; \
-	while read -r file; do \
-		echo "found file $$file"; \
-		if ! go test -c "$$file" -o "$$file.test"; then C=$$?; echo "failed to compile $$file, exit code $$C"; exit $$C; fi; \
-		echo "compile passed"; \
-		rm -rf "$$file.test"; \
-	done <<< "$$(find "." -not \( -path "./data" -prune \) -name '*.go')"; \
-	cd ..;
+	@echo "Checking for compile errors in tests..."
+	cd test && go list ./... | grep -v '/data' | xargs go test -run='^$$'
 
 build:
 	rm -f ./bin/terraform-provider-rancher2
