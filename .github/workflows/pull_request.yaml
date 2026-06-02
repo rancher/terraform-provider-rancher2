@@ -27,6 +27,15 @@ jobs:
     steps:
       # https://github.com/actions/checkout/releases
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: install-nix
+        run: |
+          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
+          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
+          chmod +x nix_install.sh
+          ./nix_install.sh
+          source /home/runner/.nix-profile/etc/profile.d/nix.sh
+          nix --version
+          rm -f ./nix_install.sh
       - name: build binaries
         env:
           CROSS: 1
