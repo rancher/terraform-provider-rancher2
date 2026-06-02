@@ -234,6 +234,8 @@ jobs:
           # This steps enforces https://www.conventionalcommits.org/en/v1.0.0/
           # This format enables automatic generation of changelogs and versioning
           git version
+          pwd
+          git status
           filter() {
             COMMIT="$1"
             output="$(echo "$COMMIT" | grep -v -e '^fix: ' -e '^feature: ' -e '^feat: ' -e '^refactor!: ' -e '^feature!: ' -e '^feat!: ' -e '^chore(main): ' -e '^Merge branch ')"
@@ -243,10 +245,10 @@ jobs:
             message="$1"
             if [ "" != "$(filter "$message")" ]; then
               cat <<EOF
-                ...Commit message does not start with the required prefix.
-                Please use one of the following prefixes: "fix:", "feature:", "feat:", "refactor!:", "feature!:", or "feat!:".
-                This enables release-please to automatically format release notes based on the commit message.
-                $message
+          ...Commit message does not start with the required prefix.
+          Please use one of the following prefixes: "fix:", "feature:", "feat:", "refactor!:", "feature!:", or "feat!:".
+          This enables release-please to automatically format release notes based on the commit message.
+          $message
               EOF
               exit 1
             else
