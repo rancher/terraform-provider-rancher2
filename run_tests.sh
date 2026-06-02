@@ -245,6 +245,7 @@ EOF
     # shellcheck disable=SC2002
     rerun_flag="-run=$(cat "/tmp/${IDENTIFIER}_failed_tests.txt" | tr '\n' '|' | sed 's/|$//')"
     echo "Rerunning failed tests: $rerun_flag"
+    rm -f "/tmp/${IDENTIFIER}_failed_tests.txt"
   fi
 
   # Build specific test flag
