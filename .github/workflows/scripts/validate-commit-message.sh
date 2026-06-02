@@ -4,14 +4,6 @@ set -o pipefail
 # Check commit messages
 # This steps enforces https://www.conventionalcommits.org/en/v1.0.0/
 # This format enables automatic generation of changelogs and versioning
-git version
-pwd
-git status
-
-if [ -z "${PR_NUMBER:-}" ]; then
-  echo "Error: PR_NUMBER environment variable is not set. Please provide it (e.g., PR_NUMBER=123 ./validate-commit-message.sh)"
-  exit 1
-fi
 
 filter() {
   COMMIT="$1"
@@ -66,7 +58,14 @@ spell_check() {
 
 # Fetch the commit messages
 
-COMMIT_MESSAGES="$(gh pr view "$PR_NUMBER" --json commits | jq -r '.commits[].messageHeadline')"
+if [ -z "${PR_NUMBER:-}" ]; then
+  echo "Notice: PR_NUMBER environment variable is not set."
+  echo "Falling back to checking local commits against origin/main..."
+  COMMIT_MESSAGES="$(git log origin/main..HEAD --format=%s || true)"
+else
+  COMMIT_MESSAGES="$(gh pr view "$PR_NUMBER" --json commits | jq -r '.commits[].messageHeadline')"
+fi
+
 echo "Commit messages found: "
 echo "$COMMIT_MESSAGES"
 
