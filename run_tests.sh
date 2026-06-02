@@ -152,6 +152,10 @@ if [ -n "$cleanup_id" ]; then
 fi
 
 if [ -n "$wait_time" ]; then
+  if ! [[ "$wait_time" =~ ^[0-9]+$ ]]; then
+    echo "Error: -w must be an integer number of seconds, got: $wait_time" >&2
+    exit 1
+  fi
   echo "Wait time on failure: $wait_time seconds"
 fi
 
