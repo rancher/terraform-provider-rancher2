@@ -86,6 +86,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      issues: write
       pull-requests: write
     steps:
       - name: Checkout Code
