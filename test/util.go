@@ -269,16 +269,16 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	}
 	result, err := client.DescribeKeyPairs(t.Context(), input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("describe key pairs %q in %q: %w", keyPairName, region, err)
 	}
-  if len(result.KeyPairs) == 0 {
-    return nil, errors.New("new key pair not found")
-  }
+	if len(result.KeyPairs) == 0 {
+		return nil, errors.New("new key pair not found")
+	}
 	keyPairId := result.KeyPairs[0].KeyPairId
 
 	err = aws.AddTagsToResourceContextE(t, t.Context(), region, *keyPairId, map[string]string{"Name": keyPairName, "Owner": owner})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("add tags to key pair %q in %q: %w", keyPairName, region, err)
 	}
 
 	// Verify that the name and owner tags were placed properly
@@ -292,7 +292,7 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	}
 	_, err = client.DescribeKeyPairs(t.Context(), input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate key pair name tag %q in %q: %w", keyPairName, region, err)
 	}
 
 	k = "tag:Owner"
@@ -305,7 +305,7 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	}
 	_, err = client.DescribeKeyPairs(t.Context(), input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate key pair owner tag %q in %q: %w", keyPairName, region, err)
 	}
 	return keyPair, nil
 }
@@ -377,7 +377,7 @@ func CreateTestDirectories(t *testing.T, id string) error {
 	gwd := g.GetRepoRootContext(t, t.Context(), "")
 	fwd, err := filepath.Abs(gwd)
 	if err != nil {
-		return err
+		return fmt.Errorf("absolute filepath: %w", err)
 	}
 	paths := []string{
 		filepath.Join(fwd, "test", "data"),
@@ -389,7 +389,7 @@ func CreateTestDirectories(t *testing.T, id string) error {
 	for _, path := range paths {
 		err = os.Mkdir(path, 0755)
 		if err != nil && !os.IsExist(err) {
-			return err
+			return fmt.Errorf("create directory: %w", err)
 		}
 	}
 	return nil
