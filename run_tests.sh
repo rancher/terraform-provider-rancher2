@@ -362,7 +362,7 @@ else
   echo "Formatting complete"
 
   echo "Checking for compile errors..."
-  if ! go list ./... | grep -v '/data' | xargs go test -run='^$'; then
+  if ! go list ./... | grep -v '/data' | xargs -r go test -run='^$'; then
     echo "ERROR: Compile checks failed"
     exit 1
   fi
