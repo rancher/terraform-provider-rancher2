@@ -67,7 +67,8 @@ jobs:
             // Write the script to a temporary file and require it to avoid eval()
             const fs = require('fs');
             const path = require('path');
+            const { pathToFileURL } = require('url');
             const tempPath = path.join(process.env.RUNNER_TEMP, 'backport-issues.js');
             fs.writeFileSync(tempPath, scriptContent);
-            const { default: script } = require(tempPath);
+            const { default: script } = await import(pathToFileURL(tempPath).href);
             await script({github, context, core, process});
