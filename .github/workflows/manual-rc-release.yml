@@ -28,6 +28,7 @@ jobs:
       pull-requests: write
       actions: read
     steps:
+        # https://github.com/actions/github-script/releases
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: check-user-in-maintainers
         env:
@@ -51,6 +52,7 @@ jobs:
             echo "Tag doesn't contain 'rc', please use the manual-release workflow"
             exit 1
           fi
+        # https://github.com/actions/checkout/releases
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
@@ -70,6 +72,7 @@ jobs:
           fi
           git push origin "$TAG"
       - name: Check out new tag into a new directory
+        # https://github.com/actions/checkout/releases
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.tag }}
@@ -100,6 +103,7 @@ jobs:
           cd "$DIR"
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
+        # https://github.com/rancher-eio/read-vault-secrets/commits
         uses: rancher-eio/read-vault-secrets@7282bf97898cd1c16c89f837e0bb442e6d384c89 # main
         with:
           secrets: |
@@ -146,6 +150,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/tags/$TAG"
           goreleaser release --clean --skip=validate --config ../../.goreleaser_rc.yml
       - name: 'Find Issues and Create Comments'
+        # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TAG: ${{ inputs.tag }}

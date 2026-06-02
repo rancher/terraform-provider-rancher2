@@ -91,8 +91,8 @@ jobs:
       - name: Checkout Code
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      # These run only if a release PR was opened or modified, so not when the PR is merged
-      # https://github.com/actions/github-script/releases
+        # These run only if a release PR was opened or modified, so not when the PR is merged
+        # https://github.com/actions/github-script/releases
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         name: wait-for-e2e
         if: needs.release-please-pr.outputs.prs_created == 'true'
