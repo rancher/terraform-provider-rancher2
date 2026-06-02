@@ -35,7 +35,7 @@ locals {
   zone                 = var.zone
   key_name             = var.key_name
   key                  = var.key
-  acme_server_url      = "https://acme-staging-v02.api.letsencrypt.org/directory"
+  acme_server_url      = "https://acme-v02.api.letsencrypt.org/directory"
   owner                = var.owner
   rke2_version         = var.rke2_version
   rancher_helm_repo    = "https://releases.rancher.com/server-charts"
