@@ -383,8 +383,8 @@ else
     echo "ERROR: tflint failed"
     exit 1
   fi
-  echo "✓ Terraform configs valid"
-
+  echo "Terraform configs valid"
+  make build
   echo "============================"
   echo ""
 
