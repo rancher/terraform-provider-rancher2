@@ -45,5 +45,6 @@ rke2
 sha
 terraform
 ttl
+url
 variablize
 yaml
