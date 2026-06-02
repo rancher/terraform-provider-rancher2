@@ -256,7 +256,7 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	// tag the key pair so we can find in the access module
 	client, err := aws.NewEc2ClientContextE(t, t.Context(), region)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create EC2 client: %w", err)
 	}
 
 	k := "key-name"
