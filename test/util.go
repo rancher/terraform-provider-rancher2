@@ -271,8 +271,12 @@ func CreateKeypair(t *testing.T, region string, owner string, id string) (*aws.E
 	if err != nil {
 		return nil, err
 	}
+  if len(result.KeyPairs) == 0 {
+    return nil, errors.New("new key pair not found")
+  }
+	keyPairId := result.KeyPairs[0].KeyPairId
 
-	err = aws.AddTagsToResourceContextE(t, t.Context(), region, *result.KeyPairs[0].KeyPairId, map[string]string{"Name": keyPairName, "Owner": owner})
+	err = aws.AddTagsToResourceContextE(t, t.Context(), region, *keyPairId, map[string]string{"Name": keyPairName, "Owner": owner})
 	if err != nil {
 		return nil, err
 	}
