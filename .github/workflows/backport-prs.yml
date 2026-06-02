@@ -22,6 +22,12 @@ jobs:
       actions: write
 
     steps:
+      - name: 'Checkout Repository'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          ref: 'main'
       - name: 'Wait for merge to settle'
         id: wait_for_settle
         # https://github.com/actions/github-script/releases
@@ -33,12 +39,6 @@ jobs:
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/wait-for-settle.js`;
             const { default: script } = await import(scriptPath);
             await script({github, context, core, process});
-      - name: 'Checkout Repository'
-        # https://github.com/actions/checkout/releases
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          ref: 'main'
       - name: 'Find Issues and Create Cherry-Pick PRs'
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
