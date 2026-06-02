@@ -56,7 +56,7 @@ run_cleanup() {
 }
 
 # Set trap to run cleanup on exit, error, interrupt, or termination
-trap run_cleanup EXIT ERR INT TERM
+trap run_cleanup EXIT INT TERM
 
 # Parse command line options
 while getopts ":rsdt:p:f:g:c:w:" opt; do
