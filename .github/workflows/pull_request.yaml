@@ -215,8 +215,6 @@ jobs:
     steps:
       # https://github.com/actions/checkout/releases
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
       - name: install-nix
         run: |
           curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
@@ -235,6 +233,7 @@ jobs:
           # Check commit messages
           # This steps enforces https://www.conventionalcommits.org/en/v1.0.0/
           # This format enables automatic generation of changelogs and versioning
+          git version
           filter() {
             COMMIT="$1"
             output="$(echo "$COMMIT" | grep -v -e '^fix: ' -e '^feature: ' -e '^feat: ' -e '^refactor!: ' -e '^feature!: ' -e '^feat!: ' -e '^chore(main): ' -e '^Merge branch ')"
@@ -244,11 +243,11 @@ jobs:
             message="$1"
             if [ "" != "$(filter "$message")" ]; then
               cat <<EOF
-          ...Commit message does not start with the required prefix.
-          Please use one of the following prefixes: "fix:", "feature:", "feat:", "refactor!:", "feature!:", or "feat!:".
-          This enables release-please to automatically format release notes based on the commit message.
-          $message
-          EOF
+                ...Commit message does not start with the required prefix.
+                Please use one of the following prefixes: "fix:", "feature:", "feat:", "refactor!:", "feature!:", or "feat!:".
+                This enables release-please to automatically format release notes based on the commit message.
+                $message
+              EOF
               exit 1
             else
               echo "...Commit message starts with the required prefix."
