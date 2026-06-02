@@ -68,7 +68,7 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             const { pathToFileURL } = require('url');
-            const tempPath = path.join(process.env.RUNNER_TEMP, 'backport-issues.js');
-            fs.writeFileSync(tempPath, scriptContent);
+            const tempPath = path.join(process.env.RUNNER_TEMP, 'backport-issues.mjs');
+            fs.writeFileSync(tempPath, scriptContent, 'utf8');
             const { default: script } = await import(pathToFileURL(tempPath).href);
             await script({github, context, core, process});
