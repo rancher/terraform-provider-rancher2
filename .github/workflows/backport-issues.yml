@@ -26,6 +26,10 @@ jobs:
         with:
           script: |
             const body = context.payload.issue.body;
+            if (!body) {
+              core.setFailed('Issue body is empty.');
+              return;
+            }
             const regex = /#(\d+)/g;
             const matches = body.matchAll(regex);
             const potentialNumbers = Array.from(matches, m => m[1]);
