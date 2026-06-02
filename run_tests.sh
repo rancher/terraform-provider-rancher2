@@ -307,7 +307,7 @@ EOF
 
 # Generate and export identifier
 if [ -z "$IDENTIFIER" ]; then
-  IDENTIFIER="$(echo "a-$RANDOM-d" | base64 | tr -d '=')"
+  IDENTIFIER="tfci-$(printf "%04x%04x" $RANDOM $RANDOM)"
   export IDENTIFIER
 fi
 
@@ -355,18 +355,18 @@ else
     echo "ERROR: go mod tidy failed"
     exit 1
   fi
-  echo "✓ go mod tidy passed"
+  echo "go mod tidy passed"
 
   echo "Formatting tests..."
   gofmt -s -w -e .
-  echo "✓ Formatting complete"
+  echo "Formatting complete"
 
   echo "Checking for compile errors..."
   if ! go list ./... | grep -v '/data' | xargs go test -run='^$'; then
     echo "ERROR: Compile checks failed"
     exit 1
   fi
-  echo "✓ Compile checks passed"
+  echo "Compile checks passed"
 
   echo "Running go lint..."
   if ! golangci-lint run; then
