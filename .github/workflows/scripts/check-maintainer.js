@@ -10,6 +10,7 @@ export default async ({ context, core, process }) => {
     try {
       maintainers = JSON.parse(process.env.MAINTAINERS);
     } catch (e) {
+      core.info(`problem parsing maintainers, trying again: ${e.message}`);
       maintainers = process.env.MAINTAINERS.split(',').map(m => m.trim());
     }
   }
