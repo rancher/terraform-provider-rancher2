@@ -19,7 +19,11 @@ if [ -n "$LATEST_FULL_RELEASE" ]; then
   LATEST_PATCH_NUM=0
   NEXT_RC_NUM=0
 else
-  NEXT_RC_NUM=$((LATEST_RC_NUM + 1))
+  if [ -z "$LATEST_RC_NUM" ]; then
+    NEXT_RC_NUM=0
+  else
+    NEXT_RC_NUM=$((LATEST_RC_NUM + 1))
+  fi
 fi
 NEXT_RC_TAG="${BASE_VERSION}.${LATEST_MINOR_NUM}.${LATEST_PATCH_NUM}-rc.${NEXT_RC_NUM}"
 echo "Calculated next RC tag: $NEXT_RC_TAG"
