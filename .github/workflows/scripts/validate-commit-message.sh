@@ -63,7 +63,7 @@ if [ -z "${PR_NUMBER:-}" ]; then
   echo "Falling back to checking local commits against origin/main..."
   COMMIT_MESSAGES="$(git log origin/main..HEAD --format=%s || true)"
 else
-  COMMIT_MESSAGES="$(gh pr view "$PR_NUMBER" --json commits | jq -r '.commits[].messageHeadline')"
+  COMMIT_MESSAGES="$(gh api --paginate "repos/{owner}/{repo}/pulls/$PR_NUMBER/commits" --jq '.[].commit.message | split("\n")[0]')"
 fi
 
 echo "Commit messages found: "
