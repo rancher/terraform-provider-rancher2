@@ -23,9 +23,10 @@ func init() {
 
 	testClusterV2LocalAuthEndpointInterface = []interface{}{
 		map[string]interface{}{
-			"ca_certs": "ca_certs",
-			"enabled":  true,
-			"fqdn":     "fqdn",
+			"ca_certs":              "ca_certs",
+			"enabled":               true,
+			"fqdn":                  "fqdn",
+			"use_internal_ca_certs": false,
 		},
 	}
 	testClusterV2LocalAuthEndpointInterfaceUseInternal = []interface{}{

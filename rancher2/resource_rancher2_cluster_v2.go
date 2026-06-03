@@ -496,7 +496,7 @@ func getClusterCACert(c *Config, clusterV1ID string) (string, error) {
 	cluster := &Cluster{}
 	err = client.APIBaseClient.ByID(managementClient.ClusterType, clusterV1ID, cluster)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get cluster by ID %s: %w", clusterV1ID, err)
 	}
 	return decodeCACertIfBase64(cluster.CACert), nil
 }
@@ -510,7 +510,7 @@ func setClusterV2LocalAuthEndpointInternalFlag(d *schema.ResourceData, c *Config
 	if cluster.Status.ClusterName != "" && lae.CACerts != "" {
 		caCert, err := getClusterCACert(c, cluster.Status.ClusterName)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get cluster CA cert for cluster %s: %w", cluster.Status.ClusterName, err)
 		}
 		if lae.CACerts == caCert {
 			useInternal = true
