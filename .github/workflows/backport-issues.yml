@@ -7,17 +7,29 @@ on:
 env :
   TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }} # eg. ["matttrach"]
 
+permissions: {}
+
 jobs:
   create-issue:
+    name: 'Create Backport Issue'
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.event.label.name, 'release/v') }}
+    if: startsWith(github.event.label.name, 'release/v')
+    timeout-minutes: 10
+    permissions:
+      issues: write
+      contents: read
     steps:
       - name: Find and Verify PR Number
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: extract_pr
         with:
           script: |
             const body = context.payload.issue.body;
+            if (!body) {
+              core.setFailed('Issue body is empty.');
+              return;
+            }
             const regex = /#(\d+)/g;
             const matches = body.matchAll(regex);
             const potentialNumbers = Array.from(matches, m => m[1]);
@@ -38,7 +50,8 @@ jobs:
             }
             core.setFailed('No valid PR found.');
       - name: Create GitHub Issue
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env :
           TERRAFORM_MAINTAINERS: ${{env.TERRAFORM_MAINTAINERS}}
           PR: ${{ steps.extract_pr.outputs.result }}
@@ -55,6 +68,11 @@ jobs:
             });
             const scriptContent = Buffer.from(response.data.content, "base64").toString();
 
-            // The script will be executed in an async context
-            const script = eval(scriptContent);
+            // Write the script to a temporary file and require it to avoid eval()
+            const fs = require('fs');
+            const path = require('path');
+            const { pathToFileURL } = require('url');
+            const tempPath = path.join(process.env.RUNNER_TEMP, 'backport-issues.mjs');
+            fs.writeFileSync(tempPath, scriptContent, 'utf8');
+            const { default: script } = await import(pathToFileURL(tempPath).href);
             await script({github, context, core, process});

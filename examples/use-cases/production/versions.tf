@@ -3,7 +3,7 @@ terraform {
   required_providers {
     file = {
       source  = "rancher/file"
-      version = ">= 2.2"
+      version = ">= 2.4"
     }
     random = {
       source  = "hashicorp/random"
@@ -39,7 +39,7 @@ terraform {
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "2.14"
+      version = ">= 3.1.1"
     }
     rancher2 = {
       source  = "rancher/rancher2"

@@ -1,4 +1,4 @@
-async ({ github, context, core, process }) => {
+export default async ({ github, context, core, process }) => {
   // Context for this script
   // https://github.com/actions/github-script?tab=readme-ov-file#this-action
   // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
