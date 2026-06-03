@@ -6,6 +6,10 @@ fmt:
 lint:
 	golangci-lint run
 
+lint-tests:
+	@echo "Checking for compile errors in tests..."
+	cd test && go list ./... | grep -v '/data' | xargs go test -run='^$$'
+
 build:
 	rm -f ./bin/terraform-provider-rancher2
 	go build -o ./bin/ -v ./...
@@ -28,4 +32,9 @@ et: build # run specific acceptance test eg. `make et -- t=<testname>`
 clean: # clean up test leftovers eg. `make clean -- i=<identifier>`
 	./run_tests.sh -c $(i)
 
-.PHONY: fmt lint build install generate test testacc dt et clean
+lint-workflows:
+	actionlint && \
+	cd .github/workflows/scripts && \
+	while read -r file; do node --check "$$file"; done <<<"$$(find . -type f \( -name "*.js" \))"
+
+.PHONY: fmt lint lint-tests build install generate test testacc dt et clean lint-workflows

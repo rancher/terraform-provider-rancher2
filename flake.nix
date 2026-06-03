@@ -139,9 +139,15 @@
 
           devShellPackage = pkgs.symlinkJoin {
             name = "dev-shell-package";
-            paths = (with pkgs; [
-              actionlint
+            paths = [
+              # place our downloaded packages here
               aspellWithDicts
+              goreleaser
+              leftovers
+              terraform
+            ] ++ (with pkgs; [
+              # here are the packages from the nix repository
+              actionlint
               awscli2
               bashInteractive
               cmctl
@@ -155,9 +161,9 @@
               golangci-lint
               gotestfmt
               gotestsum
-              kubernetes-helm
               jq
               kubectl
+              kubernetes-helm
               less
               nodejs_24
               openssh
@@ -166,11 +172,7 @@
               tflint
               vim
               which
-              yq
-            ] ++ [ # manually downloaded packages here
-              terraform
-              goreleaser
-              leftovers
+              yq-go
             ]);
           };
         in
@@ -180,7 +182,9 @@
           devShells.default = pkgs.mkShell {
             buildInputs = [ devShellPackage ];
             shellHook = ''
-              while read word; do echo -e "*$word\n#" | aspell -a --dont-validate-words >/dev/null; done < aspell_custom.txt
+              while read word; do echo -e "*$word\n#" | aspell -a --dont-validate-words >/dev/null 2>&1; done < aspell_custom.txt
+              export GOROOT="${pkgs.go}/share/go"
+              export PATH="${pkgs.go}/share/go/bin:$PATH"
               export PS1="nix:# ";
             '';
           };

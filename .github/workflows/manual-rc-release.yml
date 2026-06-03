@@ -28,33 +28,43 @@ jobs:
       pull-requests: write
       actions: read
     steps:
-      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/commits/main
+        # https://github.com/actions/checkout/releases
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+        # https://github.com/actions/github-script/releases
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         id: check-user-in-maintainers
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }}
         with:
           script: |
-            const isMaintainer = ${{ vars.TERRAFORM_MAINTAINERS }}.includes(context.actor);
-            return isMaintainer;
-      - run: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/check-maintainer.js`;
+            const { default: script } = await import(scriptPath);
+            const isMaintainer = await script({context, core, process});
+            if (!isMaintainer) {
+              core.setFailed(`User ${context.actor} is not authorized to trigger this workflow.`);
+            }
+      - env:
+          TAG: ${{ inputs.tag }}
+        run: |
           # if the tag doesn't contain "rc" we should not be in this workflow
-          if grep -q "rc" <<< "${{ inputs.tag }}"; then
+          if grep -q "rc" <<< "$TAG"; then
             echo "Tag contains 'rc', continuing with RC release"
           else
             echo "Tag doesn't contain 'rc', please use the manual-release workflow"
             exit 1
           fi
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
-        with:
-          fetch-depth: 0
       - name: Create and Push RC Tag with Git
         id: create-push-rc-tag
         env:
+          GITHUB_ACTOR: ${{ github.actor }}
           TAG: ${{ inputs.tag }}
           SHA: ${{ inputs.sha }}
         run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
           if [ -n "$SHA" ]; then
             git tag "$TAG" -m "Release Candidate $TAG" "$SHA"
           else
@@ -62,15 +72,22 @@ jobs:
           fi
           git push origin "$TAG"
       - name: Check out new tag into a new directory
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ inputs.tag }}
           path: ${{ github.workspace }}/tags/${{ inputs.tag }}
-      - run: |
+      - env:
+          WORKSPACE: ${{ github.workspace }}
+          TAG: ${{ inputs.tag }}
+        run: |
           # remove any tags that are not the one specified (to avoid goreleaser confusion)
           DIR="$(pwd)"
-          cd "${{ github.workspace }}/tags/${{ inputs.tag }}"
-          git tag | grep -v -e "^${{ inputs.tag }}$" | xargs git tag -d
+          cd "$WORKSPACE/tags/$TAG"
+          tags_to_delete=$(git tag | grep -v -e "^$TAG$")
+          if [ -n "$tags_to_delete" ]; then
+            echo "$tags_to_delete" | xargs git tag -d
+          fi
           # check for terraform-registry-manifest.json presence and create if missing
           if [ ! -f "terraform-registry-manifest.json" ]; then
             echo "terraform-registry-manifest.json not found, creating a default one."
@@ -86,7 +103,8 @@ jobs:
           cd "$DIR"
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
-        uses: rancher-eio/read-vault-secrets@main
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@7282bf97898cd1c16c89f837e0bb442e6d384c89 # main
         with:
           secrets: |
             secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
@@ -112,11 +130,6 @@ jobs:
 
           echo "Importing gpg key"
           echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0 https://github.com/actions/setup-go
-        with:
-          go-version-file: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.mod
-          cache-dependency-path: ${{ github.workspace }}/tags/${{ inputs.tag }}/go.sum
-          cache: true
       - name: install-nix
         run: |
           curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
@@ -134,15 +147,16 @@ jobs:
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
           TAG: ${{ inputs.tag }}
         run: |-
-          cd ${{ github.workspace }}/tags/$TAG
+          cd "$GITHUB_WORKSPACE/tags/$TAG"
           goreleaser release --clean --skip=validate --config ../../.goreleaser_rc.yml
       - name: 'Find Issues and Create Comments'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TAG: ${{ inputs.tag }}
           BRANCH: ${{ inputs.branch }}
         with:
           script: |
-            const scriptPath = `${{ github.workspace }}/.github/workflows/scripts/rc-notify.js`;
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/rc-notify.js`;
             const { default: script } = await import(scriptPath);
             await script({github, context, core, process});
