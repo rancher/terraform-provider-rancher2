@@ -438,6 +438,16 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+      - name: 'Clear out GitHub Runner'
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            // requires checkout before step
+            // each job runs in its own ephemeral VM, so each job needs its own clear out step
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/clear-runner.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ core });
       - name: Create and Push RC Tag with Git
         id: create-push-rc-tag
         env:
@@ -521,6 +531,16 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+      - name: 'Clear out GitHub Runner'
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            // requires checkout before step
+            // each job runs in its own ephemeral VM, so each job needs its own clear out step
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/clear-runner.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ core });
       - name: retrieve GPG Credentials
         # https://github.com/rancher-eio/read-vault-secrets/commits
         uses: rancher-eio/read-vault-secrets@7282bf97898cd1c16c89f837e0bb442e6d384c89 # main
