@@ -37,8 +37,8 @@ func dataSourceRancher2Cluster() *schema.Resource {
 			"generate_kube_config": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
-				Description: "Generate a kubeconfig for the cluster. Warning: this creates a new API token on each plan/apply.",
+				Default:     true,
+				Description: "Generate a kubeconfig for the cluster. Set to false to avoid creating a new API token on each plan/apply. Default will change to false in a future version.",
 			},
 			"ca_cert": {
 				Type:      schema.TypeString,
@@ -241,7 +241,9 @@ func dataSourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		var kubeConfig *managementClient.GenerateKubeConfigOutput
-		if d.Get("generate_kube_config").(bool) {
+		generateKubeConfig := d.Get("generate_kube_config").(bool)
+		if generateKubeConfig {
+			log.Printf("[WARN] Generating kubeconfig for cluster %s creates a new API token. Set generate_kube_config = false if you don't need kube_config. The default will change to false in a future version.", cluster.ID)
 			kubeConfig, err = getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
 			if err != nil && !IsForbidden(err) {
 				return resource.NonRetryableError(err)

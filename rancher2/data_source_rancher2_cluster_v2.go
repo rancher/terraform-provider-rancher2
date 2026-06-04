@@ -80,8 +80,8 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 			"generate_kube_config": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
-				Description: "Generate a kubeconfig for the cluster. Warning: this creates a new API token on each plan/apply.",
+				Default:     true,
+				Description: "Generate a kubeconfig for the cluster. Set to false to avoid creating a new API token on each plan/apply. Default will change to false in a future version.",
 			},
 			"cluster_v1_id": {
 				Type:     schema.TypeString,
@@ -120,7 +120,11 @@ func dataSourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 	d.Set("cluster_v1_id", cluster.Status.ClusterName)
-	err = setClusterV2LegacyData(d, meta.(*Config), d.Get("generate_kube_config").(bool))
+	generateKubeConfig := d.Get("generate_kube_config").(bool)
+	if generateKubeConfig {
+		log.Printf("[WARN] Generating kubeconfig for cluster %s creates a new API token. Set generate_kube_config = false if you don't need kube_config. The default will change to false in a future version.", d.Id())
+	}
+	err = setClusterV2LegacyData(d, meta.(*Config), generateKubeConfig)
 	if err != nil {
 		return err
 	}
