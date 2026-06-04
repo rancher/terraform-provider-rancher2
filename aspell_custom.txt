@@ -8,6 +8,7 @@ azure
 backport
 cognito
 config
+datasource
 destructuring
 eks
 eslint

@@ -146,7 +146,7 @@ func resourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 	d.Set("cluster_v1_id", cluster.Status.ClusterName)
-	err = setClusterV2LegacyData(d, meta.(*Config))
+	err = setClusterV2LegacyData(d, meta.(*Config), true)
 	if err != nil {
 		return err
 	}
@@ -376,7 +376,7 @@ func waitForClusterV2State(c *Config, id, state string, interval time.Duration) 
 	}
 }
 
-func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
+func setClusterV2LegacyData(d *schema.ResourceData, c *Config, generateKubeConfig bool) error {
 	format := "Setting cluster V2 legacy data: %w"
 
 	if c == nil {
@@ -412,11 +412,13 @@ func setClusterV2LegacyData(d *schema.ResourceData, c *Config) error {
 		return fmt.Errorf(format, err)
 	}
 
-	kubeConfig, err := getClusterKubeconfig(c, cluster.ID, d.Get("kube_config").(string))
-	if err != nil {
-		return fmt.Errorf(format, err)
+	if generateKubeConfig {
+		kubeConfig, err := getClusterKubeconfig(c, cluster.ID, d.Get("kube_config").(string))
+		if err != nil {
+			return fmt.Errorf(format, err)
+		}
+		d.Set("kube_config", kubeConfig.Config)
 	}
-	d.Set("kube_config", kubeConfig.Config)
 
 	return nil
 }
