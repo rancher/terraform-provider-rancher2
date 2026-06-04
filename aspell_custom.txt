@@ -4,6 +4,8 @@ auth
 aws
 azure
 config
+datasource
+destructuring
 eks
 globbing
 git
