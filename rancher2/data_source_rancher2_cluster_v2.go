@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -75,6 +77,12 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"generate_kube_config": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Generate a kubeconfig for the cluster. Set to false to avoid creating a new API token on each plan/apply. Default will change to false in a future version.",
+			},
 			"cluster_v1_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -100,5 +108,25 @@ func dataSourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) e
 	namespace := d.Get("fleet_namespace").(string)
 	d.SetId(namespace + clusterV2ClusterIDsep + name)
 
-	return resourceRancher2ClusterV2Read(d, meta)
+	log.Printf("[INFO] Refreshing Cluster V2 %s", d.Id())
+
+	cluster, err := getClusterV2ByID(meta.(*Config), d.Id())
+	if err != nil {
+		if IsNotFound(err) || IsForbidden(err) || IsNotAccessibleByID(err) {
+			log.Printf("[INFO] Cluster V2 %s not found", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+	d.Set("cluster_v1_id", cluster.Status.ClusterName)
+	generateKubeConfig := d.Get("generate_kube_config").(bool)
+	if generateKubeConfig {
+		log.Printf("[WARN] Generating kubeconfig for cluster %s creates a new API token. Set generate_kube_config = false if you don't need kube_config. The default will change to false in a future version.", d.Id())
+	}
+	err = setClusterV2LegacyData(d, meta.(*Config), generateKubeConfig)
+	if err != nil {
+		return err
+	}
+	return flattenClusterV2(d, cluster)
 }
