@@ -12,6 +12,8 @@ var (
 	testClusterV2LocalAuthEndpointInterface            []interface{}
 	testClusterV2LocalAuthEndpointInterfaceUseInternal []interface{}
 	testClusterV2LocalAuthEndpointInterfaceWithFlag    []interface{}
+	testClusterV2LocalAuthEndpointInterfaceUseInternalNoCA  []interface{}
+	testClusterV2LocalAuthEndpointConfNoCA                 rkev1.LocalClusterAuthEndpoint
 )
 
 func init() {
@@ -45,6 +47,17 @@ func init() {
 			"use_internal_ca_certs": false,
 		},
 	}
+	testClusterV2LocalAuthEndpointInterfaceUseInternalNoCA = []interface{}{
+		map[string]interface{}{
+			"enabled":               true,
+			"fqdn":                  "fqdn",
+			"use_internal_ca_certs": true,
+		},
+	}
+	testClusterV2LocalAuthEndpointConfNoCA = rkev1.LocalClusterAuthEndpoint{
+		Enabled: true,
+		FQDN:    "fqdn",
+	}
 }
 
 func TestFlattenClusterV2LocalAuthEndpoint(t *testing.T) {
@@ -72,8 +85,8 @@ func TestExpandClusterV2LocalAuthEndpoint(t *testing.T) {
 		ExpectedOutput rkev1.LocalClusterAuthEndpoint
 	}{
 		{
-			testClusterV2LocalAuthEndpointInterfaceUseInternal,
-			testClusterV2LocalAuthEndpointConf,
+			testClusterV2LocalAuthEndpointInterfaceUseInternalNoCA,
+			testClusterV2LocalAuthEndpointConfNoCA,
 		},
 	}
 
