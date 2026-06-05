@@ -50,7 +50,7 @@ func resourceRancher2Cluster() *schema.Resource {
 
 			// Allow the configuration of the imported_config field only if the
 			// cluster is an imported generic cluster or an imported hosted cluster (e.g. AKS, GKE, EKS).
-			// Previously defined 'conflictsWith' entries already handle other cluster types (rke, rke2, k3s)
+			// Previously defined 'conflictsWith' entries already handle other cluster types (rke2, k3s)
 			// so they do not need to be reconsidered here.
 			importCnf, ok := d.Get("imported_config").([]interface{})
 			if ok && len(importCnf) > 0 && !isImportedCluster(d) {
@@ -59,15 +59,7 @@ func resourceRancher2Cluster() *schema.Resource {
 
 			return nil
 		},
-		Schema:        clusterFields(),
-		SchemaVersion: 2,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Type:    resourceRancher2ClusterResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceRancher2ClusterStateUpgradeV0,
-				Version: 1,
-			},
-		},
+		Schema: clusterFields(),
 		// Setting default timeouts to be liberal in order to accommodate managed Kubernetes providers like EKS, GKE, and AKS
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -81,66 +73,6 @@ func resourceRancher2ClusterResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: clusterFieldsV0(),
 	}
-}
-
-func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	if rkeConfigs, ok := rawState["rke_config"].([]interface{}); ok && len(rkeConfigs) > 0 {
-		log.Printf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
-		for i1 := range rkeConfigs {
-			if rkeConfig, ok := rkeConfigs[i1].(map[string]interface{}); ok && len(rkeConfig) > 0 {
-				if services, ok := rkeConfig["services"].([]interface{}); ok && len(services) > 0 {
-					for i2 := range services {
-						if service, ok := services[i2].(map[string]interface{}); ok && len(service) > 0 {
-							if kubeApis, ok := service["kube_api"].([]interface{}); ok && len(kubeApis) > 0 {
-								for i3 := range kubeApis {
-									if kubeAPI, ok := kubeApis[i3].(map[string]interface{}); ok && len(kubeAPI) > 0 {
-										if eventRates, ok := kubeAPI["event_rate_limit"].([]interface{}); ok && len(eventRates) > 0 {
-											for i4 := range eventRates {
-												if eventRate, ok := eventRates[i4].(map[string]interface{}); ok && len(eventRate) > 0 {
-													if config, ok := eventRate["configuration"].(map[string]interface{}); ok {
-														newValue := ""
-														if len(config) > 0 {
-															conf, err := mapInterfaceToYAML(config)
-															if err == nil {
-																newValue = conf
-															}
-														}
-														rawState["rke_config"].([]interface{})[i1].(map[string]interface{})["services"].([]interface{})[i2].(map[string]interface{})["kube_api"].([]interface{})[i3].(map[string]interface{})["event_rate_limit"].([]interface{})[i4].(map[string]interface{})["configuration"] = newValue
-													}
-												}
-											}
-										}
-										if secretEncs, ok := kubeAPI["secrets_encryption_config"].([]interface{}); ok && len(secretEncs) > 0 {
-											for i4 := range secretEncs {
-												if secretEnc, ok := secretEncs[i4].(map[string]interface{}); ok && len(secretEnc) > 0 {
-													if config, ok := secretEnc["custom_config"].(map[string]interface{}); ok {
-														newValue := ""
-														if len(config) > 0 {
-															conf, err := mapInterfaceToYAML(config)
-															if err == nil {
-																newValue = conf
-															}
-														}
-														rawState["rke_config"].([]interface{})[i1].(map[string]interface{})["services"].([]interface{})[i2].(map[string]interface{})["kube_api"].([]interface{})[i3].(map[string]interface{})["secrets_encryption_config"].([]interface{})[i4].(map[string]interface{})["custom_config"] = newValue
-													}
-												}
-											}
-										}
-										if admissionConfig, ok := kubeAPI["admission_configuration"].(map[string]interface{}); ok {
-											newValue := []map[string]interface{}{}
-											newValue = append(newValue, admissionConfig)
-											rawState["rke_config"].([]interface{})[i1].(map[string]interface{})["services"].([]interface{})[i2].(map[string]interface{})["kube_api"].([]interface{})[i3].(map[string]interface{})["admission_configuration"] = newValue
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return rawState, nil
 }
 
 func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) error {
@@ -162,7 +94,7 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		expectedState = append(expectedState, "pending")
 	}
 
-	if cluster.Driver == clusterDriverRKE || cluster.Driver == clusterDriverK3S || cluster.Driver == clusterDriverRKE2 {
+	if cluster.Driver == clusterDriverK3S || cluster.Driver == clusterDriverRKE2 {
 		expectedState = append(expectedState, "provisioning")
 	}
 
@@ -189,8 +121,6 @@ func resourceRancher2ClusterCreate(d *schema.ResourceData, meta interface{}) err
 		clusterMap, _ := jsonToMapInterface(clusterStr)
 		clusterMap["gkeConfig"] = fixClusterGKEConfigV2(structToMap(cluster.GKEConfig))
 		err = client.APIBaseClient.Create(managementClient.ClusterType, clusterMap, newCluster)
-	} else if cluster.Driver == clusterDriverRKE {
-		return fmt.Errorf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 	} else {
 		err = client.APIBaseClient.Create(managementClient.ClusterType, cluster, newCluster)
 	}
@@ -308,19 +238,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
 	}
 
-	if clusterTemplateID, ok := d.Get("cluster_template_id").(string); ok && len(clusterTemplateID) > 0 {
-		update["clusterTemplateId"] = clusterTemplateID
-		if clusterTemplateRevisionID, ok := d.Get("cluster_template_revision_id").(string); ok && len(clusterTemplateRevisionID) > 0 {
-			update["clusterTemplateRevisionId"] = clusterTemplateRevisionID
-		}
-		if answers, ok := d.Get("cluster_template_answers").([]interface{}); ok && len(answers) > 0 {
-			update["answers"] = expandAnswer(answers)
-		}
-		if questions, ok := d.Get("cluster_template_questions").([]interface{}); ok && len(questions) > 0 {
-			update["questions"] = expandQuestions(questions)
-		}
-	}
-
 	// imported_config is special because it applies to *any imported cluster*,
 	// including hosted providers (AKS, EKS, GKE) where `imported = true` is set.
 	// If we keep it inside the driver-specific switch, it only gets processed
@@ -350,8 +267,6 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			return err
 		}
 		update["okeEngineConfig"] = okeConfig
-	case ToLower(clusterDriverRKE):
-		return fmt.Errorf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 	case clusterDriverK3S:
 		update["k3sConfig"] = expandClusterK3SConfig(d.Get("k3s_config").([]interface{}))
 		replace = d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
@@ -719,7 +634,7 @@ func isImportedCluster(d *schema.ResourceDiff) bool {
 
 	// if this is a generic imported cluster,
 	// we should always allow for the field to be used.
-	// Other non-imported cluster types (rke, rke2, k3s, etc.)
+	// Other non-imported cluster types (rke2, k3s, etc.)
 	// are already being blocked via the static ConflictsWith field.
 	return true
 }

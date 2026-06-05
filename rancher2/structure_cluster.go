@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 )
@@ -75,28 +76,6 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 
 	if in.FleetAgentDeploymentCustomization != nil {
 		d.Set("fleet_agent_deployment_customization", flattenAgentDeploymentCustomization(in.FleetAgentDeploymentCustomization))
-	}
-
-	if len(in.ClusterTemplateID) > 0 {
-		d.Set("cluster_template_id", in.ClusterTemplateID)
-		if len(in.ClusterTemplateRevisionID) > 0 {
-			d.Set("cluster_template_revision_id", in.ClusterTemplateRevisionID)
-		}
-		if len(in.ClusterTemplateQuestions) > 0 {
-			d.Set("cluster_template_questions", flattenQuestions(in.ClusterTemplateQuestions))
-		}
-		if in.ClusterTemplateAnswers != nil {
-			for k, v := range readPreservedClusterTemplateAnswers(d) {
-				if _, ok := in.ClusterTemplateAnswers.Values[k]; !ok {
-					in.ClusterTemplateAnswers.Values[k] = v
-				}
-			}
-			err = d.Set("cluster_template_answers", flattenAnswer(in.ClusterTemplateAnswers))
-			if err != nil {
-				return err
-			}
-		}
-
 	}
 
 	if len(in.DefaultPodSecurityAdmissionConfigurationTemplateName) > 0 {
@@ -209,7 +188,7 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 		}
 	}
 
-	// Setting k3s_config, rke2_config and rke_config always as computed
+	// Setting k3s_config and rke2_config always as computed
 	err = d.Set("k3s_config", flattenClusterK3SConfig(in.K3sConfig))
 	if err != nil {
 		return err
@@ -218,47 +197,10 @@ func flattenCluster(d *schema.ResourceData, in *Cluster, clusterRegToken *manage
 	if err != nil {
 		return err
 	}
-	v, ok := d.Get("rke_config").([]interface{})
-	if !ok {
-		v = []interface{}{}
-	}
-	rkeConfig, err := flattenClusterRKEConfig(in.RancherKubernetesEngineConfig, v)
-	if err != nil {
-		return err
-	}
-	err = d.Set("rke_config", rkeConfig)
-	if err != nil {
-		return err
-	}
 
 	d.Set("windows_prefered_cluster", in.WindowsPreferedCluster)
 
 	return nil
-}
-
-func readPreservedClusterTemplateAnswers(d *schema.ResourceData) map[string]string {
-	var questions []managementClient.Question
-	if q, ok := d.Get("cluster_template_questions").([]interface{}); ok && len(q) > 0 {
-		questions = expandQuestions(q)
-	}
-
-	var answers *managementClient.Answer
-	if a, ok := d.Get("cluster_template_answers").([]interface{}); ok && len(a) > 0 {
-		answers = expandAnswer(a)
-	}
-
-	preservedAnswers := map[string]string{}
-	if questions != nil && answers != nil {
-		for _, question := range questions {
-			if question.Type == questionTypePassword {
-				if answer, ok := answers.Values[question.Variable]; ok {
-					preservedAnswers[question.Variable] = answer
-				}
-			}
-		}
-	}
-
-	return preservedAnswers
 }
 
 func flattenClusterNodes(in []managementClient.Node) []interface{} {
@@ -278,11 +220,8 @@ func flattenClusterNodes(in []managementClient.Node) []interface{} {
 		obj["ip_address"] = in.IPAddress
 		obj["labels"] = toMapInterface(in.Labels)
 		obj["name"] = in.NodeName
-		obj["node_pool_id"] = in.NodePoolID
-		obj["node_template_id"] = in.NodeTemplateID
 		obj["provider_id"] = in.ProviderId
 		obj["requested_hostname"] = in.RequestedHostname
-		obj["ssh_user"] = in.SshUser
 		obj["system_info"] = flattenNodeInfo(in.Info)
 
 		var roles []string
@@ -408,22 +347,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		}
 		obj.FleetAgentDeploymentCustomization = fleetAgentDeploymentCustomization
 	}
-
-	if v, ok := in.Get("cluster_template_id").(string); ok && len(v) > 0 {
-		obj.ClusterTemplateID = v
-		obj.Driver = clusterDriverRKE
-		if v, ok := in.Get("cluster_template_revision_id").(string); ok && len(v) > 0 {
-			obj.ClusterTemplateRevisionID = v
-			obj.Driver = clusterDriverRKE
-		}
-		if v, ok := in.Get("cluster_template_answers").([]interface{}); ok && len(v) > 0 {
-			obj.ClusterTemplateAnswers = expandAnswer(v)
-		}
-		if v, ok := in.Get("cluster_template_questions").([]interface{}); ok && len(v) > 0 {
-			obj.ClusterTemplateQuestions = expandQuestions(v)
-		}
-	}
-
 	if v, ok := in.Get("default_pod_security_admission_configuration_template_name").(string); ok && len(v) > 0 {
 		obj.DefaultPodSecurityAdmissionConfigurationTemplateName = v
 	}
@@ -491,16 +414,6 @@ func expandCluster(in *schema.ResourceData) (*Cluster, error) {
 		obj.K3sConfig = expandClusterK3SConfig(v)
 		obj.Driver = clusterDriverK3S
 	}
-
-	if v, ok := in.Get("rke_config").([]interface{}); ok && len(v) > 0 {
-		rkeConfig, err := expandClusterRKEConfig(v, obj.Name)
-		if err != nil {
-			return nil, err
-		}
-		obj.RancherKubernetesEngineConfig = rkeConfig
-		obj.Driver = clusterDriverRKE
-	}
-
 	if v, ok := in.Get("rke2_config").([]interface{}); ok && len(v) > 0 {
 		obj.Rke2Config = expandClusterRKE2Config(v)
 		obj.Driver = clusterDriverRKE2
