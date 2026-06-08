@@ -3,7 +3,6 @@ package rancher2
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -16,21 +15,19 @@ import (
 )
 
 const (
-	rancher2ClientAPIVersion          = "/v3"
-	rancher2CatalogAPIVersion         = "/v1"
-	rancher2CatalogTypePrefix         = "catalog.cattle.io"
-	rancher2ManagementV2TypePrefix    = "management.cattle.io"
-	rancher2ReadyAnswer               = "pong"
-	rancher2RetriesWait               = 5
-	rancher2WaitFalseCond             = 120
-	rancher2RKEK8sSystemImageVersion  = "2.3.0"
-	rancher2NodeTemplateChangeVersion = "2.3.3" // Change node template id format
-	rancher2TokeTTLMinutesVersion     = "2.4.6" // ttl token is readed in minutes
-	rancher2TokeTTLMilisVersion       = "2.4.7" // ttl token is readed in miliseconds
-	rancher2UILandingVersion          = "2.5.0" // ui landing option
-	rancher2NodeTemplateNewPrefix     = "cattle-global-nt:nt-"
-	rancher2DefaultTimeout            = "120s"
-	rancher2DefaultLocalClusterID     = "local"
+	rancher2ClientAPIVersion         = "/v3"
+	rancher2CatalogAPIVersion        = "/v1"
+	rancher2CatalogTypePrefix        = "catalog.cattle.io"
+	rancher2ManagementV2TypePrefix   = "management.cattle.io"
+	rancher2ReadyAnswer              = "pong"
+	rancher2RetriesWait              = 5
+	rancher2WaitFalseCond            = 120
+	rancher2RKEK8sSystemImageVersion = "2.3.0"
+	rancher2TokeTTLMinutesVersion    = "2.4.6" // ttl token is readed in minutes
+	rancher2TokeTTLMilisVersion      = "2.4.7" // ttl token is readed in miliseconds
+	rancher2UILandingVersion         = "2.5.0" // ui landing option
+	rancher2DefaultTimeout           = "120s"
+	rancher2DefaultLocalClusterID    = "local"
 )
 
 // Client are the client kind for a Rancher v3 API
@@ -144,17 +141,6 @@ func (c *Config) getK8SDefaultVersion() (string, error) {
 			return "", err
 		}
 	}
-}
-
-// Fix breaking API change https://github.com/rancher/rancher/pull/23718
-func (c *Config) fixNodeTemplateID(id string) string {
-	if ok, _ := c.IsRancherVersionGreaterThanOrEqual(rancher2NodeTemplateChangeVersion); ok && len(id) > 0 {
-		if !strings.HasPrefix(id, rancher2NodeTemplateNewPrefix) {
-			id = strings.Replace(id, ":", "-", -1)
-			id = rancher2NodeTemplateNewPrefix + id
-		}
-	}
-	return id
 }
 
 func (c *Config) IsRancherVersionGreaterThanOrEqualAndLessThan(ver1, ver2 string) (bool, error) {
