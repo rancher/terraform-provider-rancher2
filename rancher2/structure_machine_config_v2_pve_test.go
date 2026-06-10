@@ -17,11 +17,14 @@ var (
 			PveTemplateId:     100,
 			PveIsoDevice:      "scsi1",
 			PveNetworkIface:   "net0",
-			PveSshUser:        "ubuntu",
+			PveSshUser:        "service",
 			PveSshPort:        22,
 			PveProcessorSocks: "2",
 			PveProcessorCores: "4",
 			PveMemory:         "4096",
+			PveMemoryBalloon:  "2048",
+			PveFullClone:      true,
+			PveTags:           []string{"foo", "bar"},
 		},
 	}
 	testMachineConfigV2PveInterface = []interface{}{
@@ -34,11 +37,14 @@ var (
 			"pve_template_id":       100,
 			"pve_iso_device":        "scsi1",
 			"pve_network_interface": "net0",
-			"pve_ssh_user":          "ubuntu",
+			"pve_ssh_user":          "service",
 			"pve_ssh_port":          22,
 			"pve_processor_sockets": "2",
 			"pve_processor_cores":   "4",
 			"pve_memory":            "4096",
+			"pve_memory_balloon":    "2048",
+			"pve_full_clone":        true,
+			"pve_tags":              "foo,bar",
 		},
 	}
 )
@@ -64,4 +70,7 @@ func TestExpandMachineConfigV2Pve(t *testing.T) {
 	assert.Equal(t, testMachineConfigV2PveConf.PveProcessorSocks, result.PveProcessorSocks)
 	assert.Equal(t, testMachineConfigV2PveConf.PveProcessorCores, result.PveProcessorCores)
 	assert.Equal(t, testMachineConfigV2PveConf.PveMemory, result.PveMemory)
+	assert.Equal(t, testMachineConfigV2PveConf.PveMemoryBalloon, result.PveMemoryBalloon)
+	assert.Equal(t, testMachineConfigV2PveConf.PveFullClone, result.PveFullClone)
+	assert.Equal(t, testMachineConfigV2PveConf.PveTags, result.PveTags)
 }
