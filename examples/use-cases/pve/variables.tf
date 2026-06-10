@@ -23,11 +23,6 @@ variable "kubernetes_version" {
   type        = string
 }
 
-variable "registry_mirror" {
-  description = "Internal registry mirror used for docker.io, ghcr.io and quay.io."
-  type        = string
-}
-
 variable "rancher_insecure" {
   description = "Skip TLS verification for Rancher (use when CA cert is not in system trust store)."
   type        = bool
@@ -68,7 +63,7 @@ variable "pve_ssh_user" {
 variable "pve_full_clone" {
   description = "Forces a full copy of all disks, even if the storage supports linked clones."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "pve_tags" {
