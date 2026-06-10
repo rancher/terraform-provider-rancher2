@@ -9,7 +9,6 @@ locals {
   cluster_name       = var.cluster_name
   rancher_url        = var.rancher_url
   kubernetes_version = var.kubernetes_version
-  registry_mirror = var.registry_mirror
 
   pve_cloud_credential_name = var.pve_cloud_credential_name
 
@@ -101,7 +100,6 @@ resource "rancher2_cluster_v2" "cluster" {
         kube-proxy-arg:
           - proxy-mode=nftables
         protect-kernel-defaults: false
-        system-default-registry: ${local.registry_mirror}
       EOT
     }
 
@@ -132,21 +130,6 @@ resource "rancher2_cluster_v2" "cluster" {
       machine_config {
         kind = rancher2_machine_config_v2.worker.kind
         name = rancher2_machine_config_v2.worker.name
-      }
-    }
-
-    registries {
-      mirrors {
-        hostname  = "docker.io"
-        endpoints = [local.registry_mirror]
-      }
-      mirrors {
-        hostname  = "ghcr.io"
-        endpoints = [local.registry_mirror]
-      }
-      mirrors {
-        hostname  = "quay.io"
-        endpoints = [local.registry_mirror]
       }
     }
 
