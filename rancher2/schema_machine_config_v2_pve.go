@@ -49,7 +49,7 @@ func machineConfigV2PveFields() map[string]*schema.Schema {
 		"pve_ssh_user": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     "ubuntu",
+			Default:     "service",
 			Description: "Username for the SSH user created via cloud-init",
 		},
 		"pve_ssh_port": {
@@ -72,6 +72,22 @@ func machineConfigV2PveFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Amount of memory in MiB to configure for the machine",
+		},
+		"pve_memory_balloon": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Minimum amount of memory in MiB for the machine (set to '0' to disable ballooning)",
+		},
+		"pve_full_clone": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Forces full copy of all disks, even if underlying storage supports linked clones",
+		},
+		"pve_tags": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Comma-separated list of tags to assign to the VM (e.g. 'foo,bar')",
 		},
 	}
 }

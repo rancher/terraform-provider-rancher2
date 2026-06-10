@@ -19,6 +19,7 @@ const (
 	linodeConfigDriver        = "linode"
 	nutanixConfigDriver       = "nutanix"
 	openstackConfigDriver     = "openstack"
+	pveConfigDriver           = "pve"
 	vmwarevsphereConfigDriver = "vmwarevsphere"
 )
 
@@ -156,6 +157,8 @@ func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interfac
 		update["s3credentialConfig"] = expandCloudCredentialS3(d.Get("s3_credential_config").([]interface{}))
 	case vmwarevsphereConfigDriver:
 		update["vmwarevspherecredentialConfig"] = expandCloudCredentialVsphere(d.Get("vsphere_credential_config").([]interface{}))
+	case pveConfigDriver:
+		update["pvecredentialConfig"] = expandCloudCredentialPve(d.Get("pve_credential_config").([]interface{}))
 	default:
 		return fmt.Errorf("[ERROR] updating cloud credential: Unsupported driver \"%s\"", driver)
 	}
