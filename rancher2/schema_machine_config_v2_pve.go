@@ -6,17 +6,17 @@ func machineConfigV2PveFields() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"pve_url": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Proxmox VE URL (e.g. 'https://<PROXMOX VE ADDRESS>:8006')",
 		},
 		"pve_token_id": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Proxmox VE API Token ID (including username and realm, e.g. 'root@pam!rancher')",
 		},
 		"pve_token_secret": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Sensitive:   true,
 			Description: "Proxmox VE API Token secret",
 		},
@@ -32,18 +32,18 @@ func machineConfigV2PveFields() map[string]*schema.Schema {
 			Description: "Proxmox VE Resource Pool name",
 		},
 		"pve_template_id": {
-			Type:        schema.TypeInt,
+			Type:        schema.TypeString,
 			Required:    true,
 			Description: "ID of the Proxmox VE template",
 		},
 		"pve_iso_device": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			Description: "Bus/Device of the CD/DVD Drive to mount cloud-init ISO to (e.g. 'scsi1')",
 		},
 		"pve_network_interface": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			Description: "Bus/Device of the network interface to read machine's IP address from (e.g. 'net0')",
 		},
 		"pve_ssh_user": {
@@ -53,9 +53,9 @@ func machineConfigV2PveFields() map[string]*schema.Schema {
 			Description: "Username for the SSH user created via cloud-init",
 		},
 		"pve_ssh_port": {
-			Type:        schema.TypeInt,
+			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     22,
+			Default:     "22",
 			Description: "Port to use when connecting to the machine via SSH",
 		},
 		"pve_processor_sockets": {
