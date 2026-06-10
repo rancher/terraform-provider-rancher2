@@ -8,12 +8,11 @@ import (
 )
 
 var (
-	testClusterV2LocalAuthEndpointConf                 rkev1.LocalClusterAuthEndpoint
-	testClusterV2LocalAuthEndpointInterface            []interface{}
-	testClusterV2LocalAuthEndpointInterfaceUseInternal []interface{}
-	testClusterV2LocalAuthEndpointInterfaceWithFlag    []interface{}
+	testClusterV2LocalAuthEndpointConf                      rkev1.LocalClusterAuthEndpoint
+	testClusterV2LocalAuthEndpointInterface                 []interface{}
+	testClusterV2LocalAuthEndpointInterfaceWithFlag         []interface{}
 	testClusterV2LocalAuthEndpointInterfaceUseInternalNoCA  []interface{}
-	testClusterV2LocalAuthEndpointConfNoCA                 rkev1.LocalClusterAuthEndpoint
+	testClusterV2LocalAuthEndpointConfNoCA                  rkev1.LocalClusterAuthEndpoint
 )
 
 func init() {
@@ -28,14 +27,6 @@ func init() {
 			"ca_certs": "ca_certs",
 			"enabled":  true,
 			"fqdn":     "fqdn",
-		},
-	}
-	testClusterV2LocalAuthEndpointInterfaceUseInternal = []interface{}{
-		map[string]interface{}{
-			"ca_certs":              "ca_certs",
-			"enabled":               true,
-			"fqdn":                  "fqdn",
-			"use_internal_ca_certs": true,
 		},
 	}
 	testClusterV2LocalAuthEndpointInterfaceWithFlag = []interface{}{
