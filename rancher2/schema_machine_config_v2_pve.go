@@ -81,7 +81,7 @@ func machineConfigV2PveFields() map[string]*schema.Schema {
 		"pve_full_clone": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
+			Default:     true,
 			Description: "Forces full copy of all disks, even if underlying storage supports linked clones",
 		},
 		"pve_tags": {
