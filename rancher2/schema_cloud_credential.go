@@ -18,6 +18,7 @@ type CloudCredential struct {
 	NutanixCredentialConfig       *nutanixCredentialConfig       `json:"nutanixcredentialConfig,omitempty" yaml:"nutanixcredentialConfig,omitempty"`
 	OpenstackCredentialConfig     *openstackCredentialConfig     `json:"openstackcredentialConfig,omitempty" yaml:"openstackcredentialConfig,omitempty"`
 	VmwarevsphereCredentialConfig *vmwarevsphereCredentialConfig `json:"vmwarevspherecredentialConfig,omitempty" yaml:"vmwarevspherecredentialConfig,omitempty"`
+	PveCredentialConfig           map[string]interface{}         `json:"pvecredentialConfig,omitempty" yaml:"pvecredentialConfig,omitempty"`
 }
 
 var allCloudCredentialDriverConfigFields = []string{
