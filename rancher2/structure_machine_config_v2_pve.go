@@ -1,8 +1,6 @@
 package rancher2
 
 import (
-	"strings"
-
 	norman "github.com/rancher/norman/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -16,22 +14,22 @@ const (
 type machineConfigV2Pve struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	PveUrl            string   `json:"pveUrl,omitempty" yaml:"pveUrl,omitempty"`
-	PveTokenId        string   `json:"pveTokenId,omitempty" yaml:"pveTokenId,omitempty"`
-	PveTokenSecret    string   `json:"pveTokenSecret,omitempty" yaml:"pveTokenSecret,omitempty"`
-	PveInsecureTls    bool     `json:"pveInsecureTls,omitempty" yaml:"pveInsecureTls,omitempty"`
-	PveResourcePool   string   `json:"pveResourcePool,omitempty" yaml:"pveResourcePool,omitempty"`
-	PveTemplateId     int      `json:"pveTemplate,omitempty" yaml:"pveTemplate,omitempty"`
-	PveIsoDevice      string   `json:"pveIsoDevice,omitempty" yaml:"pveIsoDevice,omitempty"`
-	PveNetworkIface   string   `json:"pveNetworkInterface,omitempty" yaml:"pveNetworkInterface,omitempty"`
-	PveSshUser        string   `json:"pveSshUser,omitempty" yaml:"pveSshUser,omitempty"`
-	PveSshPort        int      `json:"pveSshPort,omitempty" yaml:"pveSshPort,omitempty"`
-	PveProcessorSocks string   `json:"pveProcessorSockets,omitempty" yaml:"pveProcessorSockets,omitempty"`
-	PveProcessorCores string   `json:"pveProcessorCores,omitempty" yaml:"pveProcessorCores,omitempty"`
-	PveMemory         string   `json:"pveMemory,omitempty" yaml:"pveMemory,omitempty"`
-	PveMemoryBalloon  string   `json:"pveMemoryBalloon,omitempty" yaml:"pveMemoryBalloon,omitempty"`
-	PveFullClone      bool     `json:"pveFullClone,omitempty" yaml:"pveFullClone,omitempty"`
-	PveTags           []string `json:"pveTags,omitempty" yaml:"pveTags,omitempty"`
+	PveUrl            string `json:"url,omitempty" yaml:"url,omitempty"`
+	PveTokenId        string `json:"tokenId,omitempty" yaml:"tokenId,omitempty"`
+	PveTokenSecret    string `json:"tokenSecret,omitempty" yaml:"tokenSecret,omitempty"`
+	PveInsecureTls    bool   `json:"insecureTls,omitempty" yaml:"insecureTls,omitempty"`
+	PveResourcePool   string `json:"resourcePool,omitempty" yaml:"resourcePool,omitempty"`
+	PveTemplateId     string `json:"template,omitempty" yaml:"template,omitempty"`
+	PveIsoDevice      string `json:"isoDevice" yaml:"isoDevice"`
+	PveNetworkIface   string `json:"networkInterface" yaml:"networkInterface"`
+	PveSshUser        string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	PveSshPort        string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
+	PveProcessorSocks string `json:"processorSockets,omitempty" yaml:"processorSockets,omitempty"`
+	PveProcessorCores string `json:"processorCores,omitempty" yaml:"processorCores,omitempty"`
+	PveMemory         string `json:"memory,omitempty" yaml:"memory,omitempty"`
+	PveMemoryBalloon  string `json:"memoryBalloon,omitempty" yaml:"memoryBalloon,omitempty"`
+	PveFullClone      bool   `json:"fullClone,omitempty" yaml:"fullClone,omitempty"`
+	PveTags           string `json:"tags,omitempty" yaml:"tags,omitempty"`
 }
 
 type MachineConfigV2Pve struct {
@@ -57,10 +55,8 @@ func flattenMachineConfigV2Pve(in *MachineConfigV2Pve) []interface{} {
 		obj["pve_token_secret"] = in.PveTokenSecret
 	}
 	obj["pve_insecure_tls"] = in.PveInsecureTls
-	if len(in.PveResourcePool) > 0 {
-		obj["pve_resource_pool"] = in.PveResourcePool
-	}
-	if in.PveTemplateId > 0 {
+	obj["pve_resource_pool"] = in.PveResourcePool
+	if len(in.PveTemplateId) > 0 {
 		obj["pve_template_id"] = in.PveTemplateId
 	}
 	if len(in.PveIsoDevice) > 0 {
@@ -72,7 +68,7 @@ func flattenMachineConfigV2Pve(in *MachineConfigV2Pve) []interface{} {
 	if len(in.PveSshUser) > 0 {
 		obj["pve_ssh_user"] = in.PveSshUser
 	}
-	if in.PveSshPort > 0 {
+	if len(in.PveSshPort) > 0 {
 		obj["pve_ssh_port"] = in.PveSshPort
 	}
 	if len(in.PveProcessorSocks) > 0 {
@@ -89,7 +85,7 @@ func flattenMachineConfigV2Pve(in *MachineConfigV2Pve) []interface{} {
 	}
 	obj["pve_full_clone"] = in.PveFullClone
 	if len(in.PveTags) > 0 {
-		obj["pve_tags"] = strings.Join(in.PveTags, ",")
+		obj["pve_tags"] = in.PveTags
 	}
 
 	return []interface{}{obj}
@@ -124,22 +120,22 @@ func expandMachineConfigV2Pve(p []interface{}, source *MachineConfigV2) *Machine
 	if v, ok := in["pve_insecure_tls"].(bool); ok {
 		obj.PveInsecureTls = v
 	}
-	if v, ok := in["pve_resource_pool"].(string); ok && len(v) > 0 {
+	if v, ok := in["pve_resource_pool"].(string); ok {
 		obj.PveResourcePool = v
 	}
-	if v, ok := in["pve_template_id"].(int); ok && v > 0 {
+	if v, ok := in["pve_template_id"].(string); ok && len(v) > 0 {
 		obj.PveTemplateId = v
 	}
-	if v, ok := in["pve_iso_device"].(string); ok && len(v) > 0 {
+	if v, ok := in["pve_iso_device"].(string); ok {
 		obj.PveIsoDevice = v
 	}
-	if v, ok := in["pve_network_interface"].(string); ok && len(v) > 0 {
+	if v, ok := in["pve_network_interface"].(string); ok {
 		obj.PveNetworkIface = v
 	}
 	if v, ok := in["pve_ssh_user"].(string); ok && len(v) > 0 {
 		obj.PveSshUser = v
 	}
-	if v, ok := in["pve_ssh_port"].(int); ok && v > 0 {
+	if v, ok := in["pve_ssh_port"].(string); ok && len(v) > 0 {
 		obj.PveSshPort = v
 	}
 	if v, ok := in["pve_processor_sockets"].(string); ok && len(v) > 0 {
@@ -158,7 +154,7 @@ func expandMachineConfigV2Pve(p []interface{}, source *MachineConfigV2) *Machine
 		obj.PveFullClone = v
 	}
 	if v, ok := in["pve_tags"].(string); ok && len(v) > 0 {
-		obj.PveTags = strings.Split(v, ",")
+		obj.PveTags = v
 	}
 
 	return obj
