@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	clusterDrivers                = []string{clusterDriverImported, clusterDriverGKEV2, clusterDriverK3S, clusterDriverOKE, clusterDriverRKE, clusterDriverRKE2}
+	clusterDrivers                = []string{clusterDriverImported, clusterDriverGKEV2, clusterDriverK3S, clusterDriverOKE, clusterDriverRKE2}
 	clusterRegistrationTokenNames = []string{clusterRegistrationTokenName, "system"}
 )
 
@@ -123,22 +123,12 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Computed:  true,
 			Sensitive: true,
 		},
-		"rke_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
-			Optional:      true,
-			Computed:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "k3s_config"},
-			Elem: &schema.Resource{
-				Schema: clusterRKEConfigFieldsV0(),
-			},
-		},
 		"k3s_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "rke_config"},
+			ConflictsWith: []string{"aks_config", "eks_config", "gke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterK3SConfigFields(),
 			},
@@ -171,34 +161,6 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterRegistrationTokenFields(),
 			},
-		},
-		"cluster_template_answers": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
-			Computed:    true,
-			Description: "Cluster template answers",
-			Elem: &schema.Resource{
-				Schema: answerFields(),
-			},
-		},
-		"cluster_template_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Cluster template ID",
-		},
-		"cluster_template_questions": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "Cluster template questions",
-			Elem: &schema.Resource{
-				Schema: questionFields(),
-			},
-		},
-		"cluster_template_revision_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Cluster template revision ID",
 		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
@@ -300,22 +262,12 @@ func clusterFields() map[string]*schema.Schema {
 			Computed:  true,
 			Sensitive: true,
 		},
-		"rke_config": {
-			Type:          schema.TypeList,
-			MaxItems:      1,
-			Optional:      true,
-			Computed:      true,
-			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "k3s_config", "oke_config", "rke2_config", "imported_config"},
-			Elem: &schema.Resource{
-				Schema: clusterRKEConfigFields(),
-			},
-		},
 		"rke2_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "k3s_config", "oke_config", "rke_config", "imported_config"},
+			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "k3s_config", "oke_config", "imported_config"},
 			Elem: &schema.Resource{
 				Schema: clusterRKE2ConfigFields(),
 			},
@@ -325,7 +277,7 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "rke_config", "oke_config", "rke2_config", "imported_config"},
+			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "oke_config", "rke2_config", "imported_config"},
 			Elem: &schema.Resource{
 				Schema: clusterK3SConfigFields(),
 			},
@@ -335,7 +287,7 @@ func clusterFields() map[string]*schema.Schema {
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config_v2", "gke_config_v2", "k3s_config", "rke_config", "oke_config", "rke2_config"},
+			ConflictsWith: []string{"aks_config_v2", "gke_config_v2", "k3s_config", "oke_config", "rke2_config"},
 			Elem: &schema.Resource{
 				Schema: clusterEKSConfigV2Fields(),
 			},
@@ -344,7 +296,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"eks_config_v2", "gke_config_v2", "k3s_config", "rke_config", "oke_config", "rke2_config"},
+			ConflictsWith: []string{"eks_config_v2", "gke_config_v2", "k3s_config", "oke_config", "rke2_config"},
 			Elem: &schema.Resource{
 				Schema: clusterAKSConfigV2Fields(),
 			},
@@ -353,7 +305,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "k3s_config", "rke_config", "oke_config", "rke2_config"},
+			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "k3s_config", "oke_config", "rke2_config"},
 			Elem: &schema.Resource{
 				Schema: clusterGKEConfigV2Fields(),
 			},
@@ -362,7 +314,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "k3s_config", "rke_config", "rke2_config", "imported_config"},
+			ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "k3s_config", "rke2_config", "imported_config"},
 			Elem: &schema.Resource{
 				Schema: clusterOKEConfigFields(),
 			},
@@ -371,7 +323,7 @@ func clusterFields() map[string]*schema.Schema {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
-			ConflictsWith: []string{"k3s_config", "rke_config", "oke_config", "rke2_config"},
+			ConflictsWith: []string{"k3s_config", "oke_config", "rke2_config"},
 			Elem: &schema.Resource{
 				Schema: clusterImportedConfigFields(),
 			},
@@ -404,35 +356,6 @@ func clusterFields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterRegistrationTokenFields(),
 			},
-		},
-		"cluster_template_answers": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			MaxItems:    1,
-			Computed:    true,
-			Description: "Cluster template answers",
-			Elem: &schema.Resource{
-				Schema: answerFields(),
-			},
-		},
-		"cluster_template_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Cluster template ID",
-		},
-		"cluster_template_questions": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Computed:    true,
-			Description: "Cluster template questions",
-			Elem: &schema.Resource{
-				Schema: questionFields(),
-			},
-		},
-		"cluster_template_revision_id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Cluster template revision ID",
 		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,

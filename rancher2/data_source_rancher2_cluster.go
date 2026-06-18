@@ -45,14 +45,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"rke_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: clusterRKEConfigFieldsData(),
-				},
-			},
 			"rke2_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -128,33 +120,6 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: clusterRegistrationTokenFields(),
 				},
-			},
-			"cluster_template_answers": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				MaxItems:    1,
-				Description: "Cluster template answers",
-				Elem: &schema.Resource{
-					Schema: answerFields(),
-				},
-			},
-			"cluster_template_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Cluster template ID",
-			},
-			"cluster_template_questions": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "Cluster template questions",
-				Elem: &schema.Resource{
-					Schema: questionFields(),
-				},
-			},
-			"cluster_template_revision_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Cluster template revision ID",
 			},
 			"default_pod_security_admission_configuration_template_name": {
 				Type:        schema.TypeString,
