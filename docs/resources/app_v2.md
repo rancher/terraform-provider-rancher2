@@ -53,6 +53,7 @@ The following arguments are supported:
 * `cleanup_on_fail` - (Optional) Cleanup app v2 on failed chart upgrade. Default: `false` (bool)
 * `disable_hooks` - (Optional) Disable app v2 chart hooks. Default: `false` (bool)
 * `disable_open_api_validation` - (Optional) Disable app V2 Open API Validation. Default: `false` (bool)
+* `skip_schema_validation` - (Optional) Skip app V2 chart schema validation. Default: `false` (bool)
 * `force_upgrade` - (Optional) Force app V2 chart upgrade. Default: `false` (bool)
 * `wait` - (Optional) Wait until app is deployed. Default: `true` (bool)
 * `annotations` - (Optional/Computed) Annotations for the app v2 (map)
