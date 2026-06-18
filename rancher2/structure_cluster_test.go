@@ -16,10 +16,6 @@ var (
 	testClusterAgentDeploymentCustomizationInterface []interface{}
 	testFleetAgentDeploymentCustomizationConf        *managementClient.AgentDeploymentCustomization
 	testFleetAgentDeploymentCustomizationInterface   []interface{}
-	testClusterAnswersConf                           *managementClient.Answer
-	testClusterAnswersInterface                      []interface{}
-	testClusterQuestionsConf                         []managementClient.Question
-	testClusterQuestionsInterface                    []interface{}
 	testLocalClusterAuthEndpointConf                 *managementClient.LocalClusterAuthEndpoint
 	testLocalClusterAuthEndpointInterface            []interface{}
 	testClusterRegistrationTokenConf                 *managementClient.ClusterRegistrationToken
@@ -40,12 +36,8 @@ var (
 	testClusterInterfaceGKEV2                        map[string]interface{}
 	testClusterConfOKE                               *Cluster
 	testClusterInterfaceOKE                          map[string]interface{}
-	testClusterConfRKE                               *Cluster
-	testClusterInterfaceRKE                          map[string]interface{}
 	testClusterConfRKE2                              *Cluster
 	testClusterInterfaceRKE2                         map[string]interface{}
-	testClusterConfTemplate                          *Cluster
-	testClusterInterfaceTemplate                     map[string]interface{}
 )
 
 func testCluster() {
@@ -192,65 +184,6 @@ func testCluster() {
 					"memory_request": "500",
 				},
 			},
-		},
-	}
-
-	testClusterAnswersConf = &managementClient.Answer{
-		ClusterID: "cluster_id",
-		ProjectID: "project_id",
-		Values: map[string]string{
-			"string.value1": "one",
-			"string.value2": "two",
-		},
-	}
-	testClusterAnswersInterface = []interface{}{
-		map[string]interface{}{
-			"cluster_id": "cluster_id",
-			"project_id": "project_id",
-			"values": map[string]interface{}{
-				"string.value1": "one",
-				"string.value2": "two",
-			},
-		},
-	}
-	testClusterQuestionsConf = []managementClient.Question{
-		{
-			Default:  "default",
-			Required: true,
-			Type:     "string",
-			Variable: "string.value1",
-		},
-		{
-			Default:  "default",
-			Required: true,
-			Type:     "string",
-			Variable: "string.value2",
-		},
-		{
-			Default:  "default",
-			Required: true,
-			Type:     "password",
-			Variable: "password.var",
-		},
-	}
-	testClusterQuestionsInterface = []interface{}{
-		map[string]interface{}{
-			"default":  "default",
-			"required": true,
-			"type":     "string",
-			"variable": "string.value1",
-		},
-		map[string]interface{}{
-			"default":  "default",
-			"required": true,
-			"type":     "string",
-			"variable": "string.value2",
-		},
-		map[string]interface{}{
-			"default":  "default",
-			"required": true,
-			"type":     "password",
-			"variable": "password.var",
 		},
 	}
 	testLocalClusterAuthEndpointConf = &managementClient.LocalClusterAuthEndpoint{
@@ -425,37 +358,6 @@ func testCluster() {
 		"oke_config":            testClusterOKEConfigInterface,
 		"system_project_id":     "system_project_id",
 	}
-	testClusterConfRKE = &Cluster{}
-	testClusterConfRKE.Name = "test"
-	testClusterConfRKE.Description = "description"
-	testClusterConfRKE.RancherKubernetesEngineConfig = testClusterRKEConfigConf
-	testClusterConfRKE.Driver = clusterDriverRKE
-	testClusterConfRKE.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfRKE.ClusterAgentDeploymentCustomization = testClusterAgentDeploymentCustomizationConf
-	testClusterConfRKE.FleetAgentDeploymentCustomization = testFleetAgentDeploymentCustomizationConf
-	testClusterConfRKE.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
-	testClusterConfRKE.FleetWorkspaceName = "fleet-test"
-	testClusterConfRKE.EnableNetworkPolicy = newTrue()
-	testClusterConfRKE.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterInterfaceRKE = map[string]interface{}{
-		"id":                                     "id",
-		"name":                                   "test",
-		"agent_env_vars":                         testClusterEnvVarsInterface,
-		"cluster_agent_deployment_customization": testClusterAgentDeploymentCustomizationInterface,
-		"fleet_agent_deployment_customization":   testFleetAgentDeploymentCustomizationInterface,
-		"default_project_id":                     "default_project_id",
-		"description":                            "description",
-		"cluster_auth_endpoint":                  testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token":             testClusterRegistrationTokenInterface,
-		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy":    true,
-		"fleet_workspace_name":     "fleet-test",
-		"kube_config":              "kube_config",
-		"driver":                   clusterDriverRKE,
-		"rke_config":               testClusterRKEConfigInterface,
-		"system_project_id":        "system_project_id",
-		"windows_prefered_cluster": false,
-	}
 	testClusterConfRKE2 = &Cluster{}
 	testClusterConfRKE2.Name = "test"
 	testClusterConfRKE2.Description = "description"
@@ -484,38 +386,6 @@ func testCluster() {
 		"rke2_config":              testClusterRKE2ConfigInterface,
 		"system_project_id":        "system_project_id",
 		"windows_prefered_cluster": false,
-	}
-	testClusterConfTemplate = &Cluster{}
-	testClusterConfTemplate.Name = "test"
-	testClusterConfTemplate.Description = "description"
-	testClusterConfTemplate.ClusterTemplateAnswers = testClusterAnswersConf
-	testClusterConfTemplate.ClusterTemplateID = "cluster_template_id"
-	testClusterConfTemplate.ClusterTemplateQuestions = testClusterQuestionsConf
-	testClusterConfTemplate.ClusterTemplateRevisionID = "cluster_template_revision_id"
-	testClusterConfTemplate.Driver = clusterDriverRKE
-	testClusterConfTemplate.AgentEnvVars = testClusterEnvVarsConf
-	testClusterConfTemplate.DefaultPodSecurityAdmissionConfigurationTemplateName = "default_pod_security_admission_configuration_template_name"
-	testClusterConfTemplate.EnableNetworkPolicy = newTrue()
-	testClusterConfTemplate.LocalClusterAuthEndpoint = testLocalClusterAuthEndpointConf
-	testClusterInterfaceTemplate = map[string]interface{}{
-		"id":                         "id",
-		"name":                       "test",
-		"agent_env_vars":             testClusterEnvVarsInterface,
-		"default_project_id":         "default_project_id",
-		"description":                "description",
-		"cluster_auth_endpoint":      testLocalClusterAuthEndpointInterface,
-		"cluster_registration_token": testClusterRegistrationTokenInterface,
-		"default_pod_security_admission_configuration_template_name": "default_pod_security_admission_configuration_template_name",
-		"enable_network_policy":        true,
-		"kube_config":                  "kube_config",
-		"driver":                       clusterDriverRKE,
-		"cluster_template_answers":     testClusterAnswersInterface,
-		"cluster_template_id":          "cluster_template_id",
-		"cluster_template_questions":   testClusterQuestionsInterface,
-		"cluster_template_revision_id": "cluster_template_revision_id",
-		"rke_config":                   []interface{}{},
-		"system_project_id":            "system_project_id",
-		"windows_prefered_cluster":     false,
 	}
 }
 
@@ -567,22 +437,10 @@ func TestFlattenCluster(t *testing.T) {
 			testClusterInterfaceOKE,
 		},
 		{
-			testClusterConfRKE,
-			testClusterRegistrationTokenConf,
-			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceRKE,
-		},
-		{
 			testClusterConfRKE2,
 			testClusterRegistrationTokenConf,
 			testClusterGenerateKubeConfigOutput,
 			testClusterInterfaceRKE2,
-		},
-		{
-			testClusterConfTemplate,
-			testClusterRegistrationTokenConf,
-			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceTemplate,
 		},
 	}
 
@@ -597,9 +455,6 @@ func TestFlattenCluster(t *testing.T) {
 		for k := range tc.ExpectedOutput {
 			expectedOutput[k] = output.Get(k)
 
-		}
-		if tc.ExpectedOutput["driver"] == clusterDriverRKE {
-			expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig, []interface{}{})
 		}
 		if tc.ExpectedOutput["cluster_agent_deployment_customization"] != nil {
 			expectedOutput["cluster_agent_deployment_customization"] = flattenAgentDeploymentCustomization(tc.Input.ClusterAgentDeploymentCustomization)
@@ -658,16 +513,8 @@ func TestExpandCluster(t *testing.T) {
 			testClusterConfOKE,
 		},
 		{
-			testClusterInterfaceRKE,
-			testClusterConfRKE,
-		},
-		{
 			testClusterInterfaceRKE2,
 			testClusterConfRKE2,
-		},
-		{
-			testClusterInterfaceTemplate,
-			testClusterConfTemplate,
 		},
 	}
 
@@ -679,103 +526,6 @@ func TestExpandCluster(t *testing.T) {
 		}
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
-}
-
-func TestFlattenClusterWithPreservedClusterTemplateAnswers(t *testing.T) {
-	testCluster()
-	testClusterInterfaceTemplate["cluster_template_answers"] = []interface{}{
-		map[string]interface{}{
-			"cluster_id": "cluster_id",
-			"project_id": "project_id",
-			"values": map[string]interface{}{
-				"string.value1": "one",
-				"string.value2": "two",
-				"password.var":  "password",
-			},
-		},
-	}
-
-	cases := []struct {
-		Input          *Cluster
-		InputToken     *managementClient.ClusterRegistrationToken
-		InputKube      *managementClient.GenerateKubeConfigOutput
-		ExpectedOutput map[string]interface{}
-	}{
-		{
-
-			testClusterConfTemplate,
-			testClusterRegistrationTokenConf,
-			testClusterGenerateKubeConfigOutput,
-			testClusterInterfaceTemplate,
-		},
-	}
-
-	for _, tc := range cases {
-		output := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{
-			"cluster_template_answers": []interface{}{
-				map[string]interface{}{
-					"cluster_id": "cluster_id",
-					"project_id": "project_id",
-					"values": map[string]interface{}{
-						"password.var": "password",
-					},
-				},
-			},
-		})
-		tc.InputToken.ID = "id"
-		err := flattenCluster(output, tc.Input, tc.InputToken, tc.InputKube, tc.ExpectedOutput["default_project_id"].(string), tc.ExpectedOutput["system_project_id"].(string))
-		if err != nil {
-			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
-		}
-		expectedOutput := map[string]interface{}{}
-		for k := range tc.ExpectedOutput {
-			expectedOutput[k] = output.Get(k)
-
-		}
-		if tc.ExpectedOutput["driver"] == clusterDriverRKE {
-			expectedOutput["rke_config"], _ = flattenClusterRKEConfig(tc.Input.RancherKubernetesEngineConfig, []interface{}{})
-		}
-		expectedOutput["id"] = "id"
-
-		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
-	}
-}
-
-func TestReadPreservedClusterTemplateAnswers(t *testing.T) {
-
-	inputResourceData := schema.TestResourceDataRaw(t, clusterFields(), map[string]interface{}{
-		"cluster_template_answers": []interface{}{
-			map[string]interface{}{
-				"cluster_id": "cluster_id",
-				"project_id": "project_id",
-				"values": map[string]interface{}{
-					"password.var":  "password",
-					"string.value1": "one",
-				},
-			},
-		},
-		"cluster_template_questions": []interface{}{
-			map[string]interface{}{
-				"default":  "default",
-				"required": true,
-				"type":     "string",
-				"variable": "string.value1",
-			},
-			map[string]interface{}{
-				"default":  "default",
-				"required": true,
-				"type":     "password",
-				"variable": "password.var",
-			},
-		},
-	})
-
-	expectedOutput := map[string]string{
-		"password.var": "password",
-	}
-
-	result := readPreservedClusterTemplateAnswers(inputResourceData)
-	assert.Equal(t, expectedOutput, result, "Unexpected result from preserved answers.")
 }
 
 func TestFlattenClusterNodes(t *testing.T) {
@@ -823,11 +573,8 @@ func TestFlattenClusterNodes(t *testing.T) {
 			},
 			Name:              "name",
 			NodeName:          "node_name",
-			NodePoolID:        "node_pool_id",
-			NodeTemplateID:    "node_template_id",
 			ProviderId:        "provider_id",
 			RequestedHostname: "requested_hostname",
-			SshUser:           "ssh_user",
 			Worker:            true,
 		},
 	}
@@ -860,12 +607,9 @@ func TestFlattenClusterNodes(t *testing.T) {
 				"option2": "value2",
 			},
 			"name":               "node_name",
-			"node_pool_id":       "node_pool_id",
-			"node_template_id":   "node_template_id",
 			"provider_id":        "provider_id",
 			"roles":              []string{"control_plane", "etcd", "worker"},
 			"requested_hostname": "requested_hostname",
-			"ssh_user":           "ssh_user",
 		},
 	}
 

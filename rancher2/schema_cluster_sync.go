@@ -28,14 +28,6 @@ func clusterSyncFields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Wait until all catalogs are downloaded and active",
 		},
-		"node_pool_ids": {
-			Type:        schema.TypeList,
-			Optional:    true,
-			Description: "Cluster node pool ids",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
 		"nodes": {
 			Type:     schema.TypeList,
 			Computed: true,
@@ -97,14 +89,6 @@ func clusterNodeFields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"node_pool_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"node_template_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
 		"provider_id": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -119,11 +103,6 @@ func clusterNodeFields() map[string]*schema.Schema {
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
-		},
-		"ssh_user": {
-			Type:      schema.TypeString,
-			Computed:  true,
-			Sensitive: true,
 		},
 		"system_info": {
 			Type:     schema.TypeMap,
