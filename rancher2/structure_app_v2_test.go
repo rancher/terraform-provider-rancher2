@@ -84,6 +84,7 @@ func init() {
 		Wait:                     true,
 		DisableHooks:             true,
 		DisableOpenAPIValidation: true,
+		SkipSchemaValidation:     true,
 		Namespace:                "namespace",
 		Charts:                   testAppV2ChartInstallConf,
 		ProjectID:                "project_id",
@@ -108,6 +109,7 @@ func init() {
 		Wait:                     true,
 		DisableHooks:             true,
 		DisableOpenAPIValidation: true,
+		SkipSchemaValidation:     true,
 		Force:                    true,
 		CleanupOnFail:            true,
 		Namespace:                "namespace",
@@ -129,6 +131,7 @@ func init() {
 		"cleanup_on_fail":             true,
 		"disable_hooks":               true,
 		"disable_open_api_validation": true,
+		"skip_schema_validation":      true,
 		"force_upgrade":               true,
 		"annotations": map[string]interface{}{
 			"annotation1": "one",
