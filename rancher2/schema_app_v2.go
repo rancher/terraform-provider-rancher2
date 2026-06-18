@@ -118,6 +118,12 @@ func appV2Fields() map[string]*schema.Schema {
 			Default:     false,
 			Description: "Disable app V2 Open API Validation",
 		},
+		"skip_schema_validation": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Skip app V2 chart schema validation",
+		},
 		"force_upgrade": {
 			Type:        schema.TypeBool,
 			Optional:    true,
