@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.1.1](https://github.com/rancher/terraform-provider-rancher2/compare/v14.1.1...v14.1.1) (2026-06-18)
+
+
+### Features
+
+* add use internal certs option for local auth endpoint in cluster v2 ([#1626](https://github.com/rancher/terraform-provider-rancher2/issues/1626)) ([#2293](https://github.com/rancher/terraform-provider-rancher2/issues/2293)) ([28e9051](https://github.com/rancher/terraform-provider-rancher2/commit/28e90514e2dc1b91db17689c1d2a802a20dc2327))
+
 ## [14.1.1](https://github.com/rancher/terraform-provider-rancher2/compare/v14.1.0...v14.1.1) (2026-05-13)
 
 
