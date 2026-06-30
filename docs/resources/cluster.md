@@ -53,9 +53,9 @@ resource "rancher2_cluster" "foo-imported" {
 }
 ```
 
-### Creating Rancher v2 imported cluster with custom configuration. For Rancher v2.11.0 and above.
+### Creating Rancher v2 imported cluster with custom unauthenticated private registry configuration. For Rancher v2.11.0 and above.
 
-This configuration can be used to indicate that system images (such as the rancher-agent) should be pulled from an unauthenticated private registry. This can be used for all imported cluster types, including imported hosted clusters (AKS, EKS, GKE).
+This configuration can be used to indicate that system images (such as the cattle-cluster-agent) should be pulled from an unauthenticated private registry. This can be used for all imported cluster types, including imported hosted clusters (AKS, EKS, GKE).
 
 ```hcl
 # Create a new rancher2 imported Cluster with custom configuration 
@@ -63,6 +63,21 @@ resource "rancher2_cluster" "foo-imported" {
   name        = "foo-imported"
   imported_config {
     private_registry_url = "test.io"
+  }
+}
+```
+
+### Creating Rancher v2 imported cluster with custom authenticated private registry configuration. For Rancher v2.15.0 and above.
+
+This configuration can be used to indicate that system images (such as the cattle-cluster-agent) should be pulled from an authenticated private registry. This can be used for all imported cluster types, including imported hosted clusters (AKS, EKS, GKE). Each entry within the `private_registry_pull_secrets` should be the name of a secret within the `fleet-default` namespace containing the registry credentials. Secrets of type `basic-auth`, `rke-auth`, and `.dockerconfigjson` are supported.
+
+```hcl
+# Create a new rancher2 imported Cluster with custom configuration 
+resource "rancher2_cluster" "foo-imported" {
+  name        = "foo-imported"
+  imported_config {
+    private_registry_url = "test.io"
+    private_registry_pull_secrets = ["regcred"]
   }
 }
 ```
@@ -397,7 +412,7 @@ The following arguments are supported:
 * `eks_config_v2` - (Optional/Computed) The Amazon EKS V2 configuration to create or import `eks` Clusters. Conflicts with `gke_config_v2`, `k3s_config`, `oke_config` and `rke_config`. For Rancher v2.5.x and above (list maxitems:1)
 * `gke_config_v2` - (Optional) The Google GKE V2 configuration for `gke` Clusters. Conflicts with `aks_config_v2`, `eks_config_v2`, `k3s_config`, `oke_config` and `rke_config`. For Rancher v2.5.8 and above (list maxitems:1)
 * `oke_config` - (Optional) The Oracle OKE configuration for `oke` Clusters. Conflicts with `aks_config_v2`, `eks_config_v2`, `gke_config_v2`, `k3s_config` and `rke_config` (list maxitems:1)
-* `imported_config` - (Optional) The imported configuration for generic imported Clusters. Conflicts with `aks_config_v2`, `eks_config_v2`, `gke_config_v2`, `rke_config`, `rke2_config` and `k3s_config` (list maxitems:1)
+* `imported_config` - (Optional) The imported configuration for generic imported Clusters. Conflicts with `rke_config`, `rke2_config` and `k3s_config` (list maxitems:1)
 * `description` - (Optional) The description for Cluster (string)
 * `cluster_auth_endpoint` - (Optional/Computed) Enabling the [local cluster authorized endpoint](https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/#local-cluster-auth-endpoint) allows direct communication with the cluster, bypassing the Rancher API proxy. (list maxitems:1)
 * `cluster_template_answers` - (Optional/Computed) Cluster template answers. For Rancher v2.3.x and above (list maxitems:1)
@@ -1610,6 +1625,7 @@ The following arguments are supported:
 #### Arguments
 
 * `private_registry_url` - (Optional) The URL for a cluster-level private registry (string)
+* `private_registry_pull_secrets` - (Optional) A list of image pull secret names to propagate from the local cluster to the downstream cluster. These are used when deploying system components to pull from the `private_registry_url` (list) 
 
 ### `cluster_registration_token`
 
