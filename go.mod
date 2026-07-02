@@ -95,7 +95,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.3.0 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
-	github.com/hashicorp/go-uuid v1.0.2 // indirect
+	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.17.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
@@ -108,7 +108,7 @@ require (
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/cli v1.1.5 // indirect
@@ -137,10 +137,10 @@ require (
 	github.com/rancher/apiserver v0.9.7 // indirect
 	github.com/rancher/channelserver v0.11.0 // indirect
 	github.com/rancher/eks-operator v1.15.0-rc.2 // indirect
-	github.com/rancher/fleet/pkg/apis v0.16.0-alpha.11 // indirect
+	github.com/rancher/fleet/pkg/apis v0.16.0-beta.1 // indirect
 	github.com/rancher/gke-operator v1.15.0-rc.2 // indirect
 	github.com/rancher/lasso v0.2.9 // indirect
-	github.com/rancher/rancher/pkg/plan v0.0.0-20260606011257-0932e0f2e111 // indirect
+	github.com/rancher/rancher/pkg/plan v0.0.0-20260630160008-bcfacbd81af0 // indirect
 	github.com/rancher/wrangler/v3 v3.7.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
@@ -159,6 +159,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.67.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.68.0 // indirect
 	go.opentelemetry.io/otel v1.43.0 // indirect
+	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.42.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.43.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.43.0 // indirect
@@ -201,7 +202,7 @@ replace (
 	github.com/docker/distribution => github.com/docker/distribution v2.8.2+incompatible
 
 	github.com/docker/docker => github.com/docker/docker v20.10.17+incompatible
-	github.com/rancher/rancher => github.com/rancher/rancher v0.0.0-20260618060217-0f5391d2f720
+	github.com/rancher/rancher => github.com/rancher/rancher v0.0.0-20260630160008-bcfacbd81af0
 	github.com/rancher/rancher/pkg/apis => github.com/rancher/rancher/pkg/apis v0.0.0-20260618060217-0f5391d2f720
 	github.com/rancher/rancher/pkg/client => github.com/rancher/rancher/pkg/client v0.0.0-20260618060217-0f5391d2f720
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2
