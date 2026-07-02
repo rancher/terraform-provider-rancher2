@@ -13,7 +13,7 @@ func expandClusterImportedConfig(p []interface{}) *managementClient.ImportedConf
 		obj.PrivateRegistryURL = v
 	}
 
-	if v, ok := in["private_registry_pull_secrets"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := in["private_registry_pull_secrets"].([]interface{}); ok {
 		obj.PrivateRegistryPullSecrets = toArrayStringSorted(v)
 	}
 
@@ -37,7 +37,7 @@ func flattenClusterImportedConfig(in *managementClient.ImportedConfig, p []inter
 	}
 
 	if len(in.PrivateRegistryPullSecrets) > 0 {
-		obj["private_registry_pull_secrets"] = in.PrivateRegistryPullSecrets
+		obj["private_registry_pull_secrets"] = toArrayInterfaceSorted(in.PrivateRegistryPullSecrets)
 	}
 
 	return []interface{}{obj}, nil
