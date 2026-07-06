@@ -40,7 +40,7 @@ func TestFlattenCloudCredentialPve(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := flattenCloudCredentialPve(tc.Input, tc.ExpectedOutput)
+		output := flattenCloudCredentialPve(tc.Input, []interface{}{})
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from flattener.")
 	}
 }
