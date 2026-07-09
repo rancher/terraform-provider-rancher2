@@ -57,6 +57,10 @@ func TestFlattenMachineConfigV2Pve(t *testing.T) {
 func TestExpandMachineConfigV2Pve(t *testing.T) {
 	source := &MachineConfigV2{}
 	result := expandMachineConfigV2Pve(testMachineConfigV2PveInterface, source)
+	assert.Equal(t, machineConfigV2PveKind, result.TypeMeta.Kind)
+	assert.Equal(t, machineConfigV2PveAPIVersion, result.TypeMeta.APIVersion)
+	assert.Equal(t, machineConfigV2PveKind, source.TypeMeta.Kind)
+	assert.Equal(t, machineConfigV2PveAPIVersion, source.TypeMeta.APIVersion)
 	assert.Equal(t, testMachineConfigV2PveConf.PveURL, result.PveURL)
 	assert.Equal(t, testMachineConfigV2PveConf.PveTokenID, result.PveTokenID)
 	assert.Equal(t, testMachineConfigV2PveConf.PveTokenSecret, result.PveTokenSecret)
