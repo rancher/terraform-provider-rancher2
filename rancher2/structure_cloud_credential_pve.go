@@ -14,16 +14,16 @@ func flattenCloudCredentialPve(in map[string]interface{}, p []interface{}) []int
 		return []interface{}{}
 	}
 
-	if v, ok := in["pveUrl"].(string); ok && len(v) > 0 {
+	if v, ok := in["url"].(string); ok && len(v) > 0 {
 		obj["pve_url"] = v
 	}
-	if v, ok := in["pveTokenId"].(string); ok && len(v) > 0 {
+	if v, ok := in["tokenId"].(string); ok && len(v) > 0 {
 		obj["pve_token_id"] = v
 	}
-	if v, ok := in["pveTokenSecret"].(string); ok && len(v) > 0 {
+	if v, ok := in["tokenSecret"].(string); ok && len(v) > 0 {
 		obj["pve_token_secret"] = v
 	}
-	if v, ok := in["pveInsecureTls"].(bool); ok {
+	if v, ok := in["insecureTls"].(bool); ok {
 		obj["pve_insecure_tls"] = v
 	}
 
@@ -40,16 +40,16 @@ func expandCloudCredentialPve(p []interface{}) map[string]interface{} {
 	in := p[0].(map[string]interface{})
 
 	if v, ok := in["pve_url"].(string); ok && len(v) > 0 {
-		obj["pveUrl"] = v
+		obj["url"] = v
 	}
 	if v, ok := in["pve_token_id"].(string); ok && len(v) > 0 {
-		obj["pveTokenId"] = v
+		obj["tokenId"] = v
 	}
 	if v, ok := in["pve_token_secret"].(string); ok && len(v) > 0 {
-		obj["pveTokenSecret"] = v
+		obj["tokenSecret"] = v
 	}
 	if v, ok := in["pve_insecure_tls"].(bool); ok {
-		obj["pveInsecureTls"] = v
+		obj["insecureTls"] = v
 	}
 
 	return obj

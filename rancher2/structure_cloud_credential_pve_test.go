@@ -13,10 +13,10 @@ var (
 
 func init() {
 	testCloudCredentialPveConf = map[string]interface{}{
-		"pveUrl":         "https://pve.example.com:8006",
-		"pveTokenId":     "root@pam!rancher",
-		"pveTokenSecret": "secret-uuid",
-		"pveInsecureTls": false,
+		"url":         "https://pve.example.com:8006",
+		"tokenId":     "root@pam!rancher",
+		"tokenSecret": "secret-uuid",
+		"insecureTls": false,
 	}
 	testCloudCredentialPveInterface = []interface{}{
 		map[string]interface{}{
