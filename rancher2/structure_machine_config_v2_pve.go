@@ -28,7 +28,7 @@ type machineConfigV2Pve struct {
 	PveProcessorCores   string `json:"processorCores,omitempty" yaml:"processorCores,omitempty"`
 	PveMemory           string `json:"memory,omitempty" yaml:"memory,omitempty"`
 	PveMemoryBalloon    string `json:"memoryBalloon,omitempty" yaml:"memoryBalloon,omitempty"`
-	PveFullClone        bool   `json:"fullClone,omitempty" yaml:"fullClone,omitempty"`
+	PveFullClone        bool   `json:"fullClone" yaml:"fullClone"`
 	PveTags             string `json:"tags,omitempty" yaml:"tags,omitempty"`
 }
 

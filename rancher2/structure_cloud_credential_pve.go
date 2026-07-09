@@ -10,6 +10,10 @@ func flattenCloudCredentialPve(in map[string]interface{}, p []interface{}) []int
 		obj = p[0].(map[string]interface{})
 	}
 
+	if in == nil {
+		return []interface{}{}
+	}
+
 	if v, ok := in["pveUrl"].(string); ok && len(v) > 0 {
 		obj["pve_url"] = v
 	}
