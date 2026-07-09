@@ -25,15 +25,15 @@ It assumes you already have:
 | `kubernetes_version` | RKE2 version (e.g. `v1.34.3+rke2r1`) | yes |
 | `pve_cloud_credential_name` | Name of the existing PVE cloud credential in Rancher | yes |
 | `pve_resource_pool` | Proxmox VE resource pool name | no |
-| `pve_network_interface` | Network interface bus/device (e.g. `net0`) | yes |
-| `pve_iso_device` | CD/DVD drive bus/device for cloud-init ISO (e.g. `ide2`) | yes |
+| `pve_network_interface` | Network interface bus/device (e.g. `net0`) | no (default: `net0`) |
+| `pve_iso_device` | CD/DVD drive bus/device for cloud-init ISO (e.g. `ide2`) | no (default: `scsi1`) |
 | `pve_ssh_user` | SSH user created by cloud-init | no (default: `service`) |
 | `pve_full_clone` | Force full disk clone instead of linked clone | no (default: `true`) |
 | `pve_tags` | Comma-separated VM tags | no |
 | `pve_server_template_id` | Proxmox VM template ID for server nodes | yes |
 | `pve_worker_template_id` | Proxmox VM template ID for worker nodes | yes |
-| `server_quantity` | Number of server (control-plane + etcd) nodes | yes |
-| `worker_quantity` | Number of worker nodes | yes |
+| `server_quantity` | Number of server (control-plane + etcd) nodes | no (default: `1`) |
+| `worker_quantity` | Number of worker nodes | no (default: `1`) |
 
 ### terraform.tfvars example
 
