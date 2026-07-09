@@ -12,24 +12,24 @@ const (
 )
 
 type machineConfigV2Pve struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	PveUrl            string `json:"url,omitempty" yaml:"url,omitempty"`
-	PveTokenId        string `json:"tokenId,omitempty" yaml:"tokenId,omitempty"`
-	PveTokenSecret    string `json:"tokenSecret,omitempty" yaml:"tokenSecret,omitempty"`
-	PveInsecureTls    bool   `json:"insecureTls,omitempty" yaml:"insecureTls,omitempty"`
-	PveResourcePool   string `json:"resourcePool,omitempty" yaml:"resourcePool,omitempty"`
-	PveTemplateId     string `json:"template,omitempty" yaml:"template,omitempty"`
-	PveIsoDevice      string `json:"isoDevice" yaml:"isoDevice"`
-	PveNetworkIface   string `json:"networkInterface" yaml:"networkInterface"`
-	PveSshUser        string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	PveSshPort        string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
-	PveProcessorSocks string `json:"processorSockets,omitempty" yaml:"processorSockets,omitempty"`
-	PveProcessorCores string `json:"processorCores,omitempty" yaml:"processorCores,omitempty"`
-	PveMemory         string `json:"memory,omitempty" yaml:"memory,omitempty"`
-	PveMemoryBalloon  string `json:"memoryBalloon,omitempty" yaml:"memoryBalloon,omitempty"`
-	PveFullClone      bool   `json:"fullClone,omitempty" yaml:"fullClone,omitempty"`
-	PveTags           string `json:"tags,omitempty" yaml:"tags,omitempty"`
+	metav1.TypeMeta     `json:",inline"`
+	metav1.ObjectMeta   `json:"metadata,omitempty"`
+	PveURL              string `json:"url,omitempty" yaml:"url,omitempty"`
+	PveTokenID          string `json:"tokenId,omitempty" yaml:"tokenId,omitempty"`
+	PveTokenSecret      string `json:"tokenSecret,omitempty" yaml:"tokenSecret,omitempty"`
+	PveInsecureTLS      bool   `json:"insecureTls,omitempty" yaml:"insecureTls,omitempty"`
+	PveResourcePool     string `json:"resourcePool,omitempty" yaml:"resourcePool,omitempty"`
+	PveTemplateID       string `json:"template,omitempty" yaml:"template,omitempty"`
+	PveIsoDevice        string `json:"isoDevice,omitempty" yaml:"isoDevice,omitempty"`
+	PveNetworkIface     string `json:"networkInterface,omitempty" yaml:"networkInterface,omitempty"`
+	PveSshUser          string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	PveSshPort          string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
+	PveProcessorSockets string `json:"processorSockets,omitempty" yaml:"processorSockets,omitempty"`
+	PveProcessorCores   string `json:"processorCores,omitempty" yaml:"processorCores,omitempty"`
+	PveMemory           string `json:"memory,omitempty" yaml:"memory,omitempty"`
+	PveMemoryBalloon    string `json:"memoryBalloon,omitempty" yaml:"memoryBalloon,omitempty"`
+	PveFullClone        bool   `json:"fullClone,omitempty" yaml:"fullClone,omitempty"`
+	PveTags             string `json:"tags,omitempty" yaml:"tags,omitempty"`
 }
 
 type MachineConfigV2Pve struct {
@@ -45,19 +45,21 @@ func flattenMachineConfigV2Pve(in *MachineConfigV2Pve) []interface{} {
 	}
 	obj := make(map[string]interface{})
 
-	if len(in.PveUrl) > 0 {
-		obj["pve_url"] = in.PveUrl
+	if len(in.PveURL) > 0 {
+		obj["pve_url"] = in.PveURL
 	}
-	if len(in.PveTokenId) > 0 {
-		obj["pve_token_id"] = in.PveTokenId
+	if len(in.PveTokenID) > 0 {
+		obj["pve_token_id"] = in.PveTokenID
 	}
 	if len(in.PveTokenSecret) > 0 {
 		obj["pve_token_secret"] = in.PveTokenSecret
 	}
-	obj["pve_insecure_tls"] = in.PveInsecureTls
-	obj["pve_resource_pool"] = in.PveResourcePool
-	if len(in.PveTemplateId) > 0 {
-		obj["pve_template_id"] = in.PveTemplateId
+	obj["pve_insecure_tls"] = in.PveInsecureTLS
+	if len(in.PveResourcePool) > 0 {
+		obj["pve_resource_pool"] = in.PveResourcePool
+	}
+	if len(in.PveTemplateID) > 0 {
+		obj["pve_template_id"] = in.PveTemplateID
 	}
 	if len(in.PveIsoDevice) > 0 {
 		obj["pve_iso_device"] = in.PveIsoDevice
@@ -71,8 +73,8 @@ func flattenMachineConfigV2Pve(in *MachineConfigV2Pve) []interface{} {
 	if len(in.PveSshPort) > 0 {
 		obj["pve_ssh_port"] = in.PveSshPort
 	}
-	if len(in.PveProcessorSocks) > 0 {
-		obj["pve_processor_sockets"] = in.PveProcessorSocks
+	if len(in.PveProcessorSockets) > 0 {
+		obj["pve_processor_sockets"] = in.PveProcessorSockets
 	}
 	if len(in.PveProcessorCores) > 0 {
 		obj["pve_processor_cores"] = in.PveProcessorCores
@@ -109,27 +111,27 @@ func expandMachineConfigV2Pve(p []interface{}, source *MachineConfigV2) *Machine
 	obj.ObjectMeta = source.ObjectMeta
 
 	if v, ok := in["pve_url"].(string); ok && len(v) > 0 {
-		obj.PveUrl = v
+		obj.PveURL = v
 	}
 	if v, ok := in["pve_token_id"].(string); ok && len(v) > 0 {
-		obj.PveTokenId = v
+		obj.PveTokenID = v
 	}
 	if v, ok := in["pve_token_secret"].(string); ok && len(v) > 0 {
 		obj.PveTokenSecret = v
 	}
 	if v, ok := in["pve_insecure_tls"].(bool); ok {
-		obj.PveInsecureTls = v
+		obj.PveInsecureTLS = v
 	}
-	if v, ok := in["pve_resource_pool"].(string); ok {
+	if v, ok := in["pve_resource_pool"].(string); ok && len(v) > 0 {
 		obj.PveResourcePool = v
 	}
 	if v, ok := in["pve_template_id"].(string); ok && len(v) > 0 {
-		obj.PveTemplateId = v
+		obj.PveTemplateID = v
 	}
-	if v, ok := in["pve_iso_device"].(string); ok {
+	if v, ok := in["pve_iso_device"].(string); ok && len(v) > 0 {
 		obj.PveIsoDevice = v
 	}
-	if v, ok := in["pve_network_interface"].(string); ok {
+	if v, ok := in["pve_network_interface"].(string); ok && len(v) > 0 {
 		obj.PveNetworkIface = v
 	}
 	if v, ok := in["pve_ssh_user"].(string); ok && len(v) > 0 {
@@ -139,7 +141,7 @@ func expandMachineConfigV2Pve(p []interface{}, source *MachineConfigV2) *Machine
 		obj.PveSshPort = v
 	}
 	if v, ok := in["pve_processor_sockets"].(string); ok && len(v) > 0 {
-		obj.PveProcessorSocks = v
+		obj.PveProcessorSockets = v
 	}
 	if v, ok := in["pve_processor_cores"].(string); ok && len(v) > 0 {
 		obj.PveProcessorCores = v
