@@ -38,6 +38,7 @@ pc
 pdb
 pkce
 pr
+pve
 pre
 pre-release
 prerelease
