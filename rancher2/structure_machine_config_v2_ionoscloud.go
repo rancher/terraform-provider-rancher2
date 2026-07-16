@@ -6,10 +6,9 @@ import (
 )
 
 const (
-	machineConfigV2IonoscloudKind         = "IonoscloudConfig"
-	machineConfigV2IonoscloudAPIVersion   = "rke-machine-config.cattle.io/v1"
-	machineConfigV2IonoscloudAPIType      = "rke-machine-config.cattle.io.ionoscloudconfig"
-	machineConfigV2IonoscloudClusterIDsep = "."
+	machineConfigV2IonoscloudKind       = "IonoscloudConfig"
+	machineConfigV2IonoscloudAPIVersion = "rke-machine-config.cattle.io/v1"
+	machineConfigV2IonoscloudAPIType    = "rke-machine-config.cattle.io.ionoscloudconfig"
 )
 
 // Types
@@ -272,8 +271,6 @@ func expandMachineConfigV2Ionoscloud(p []interface{}, source *MachineConfigV2) *
 
 	if v, ok := in["disk_size"].(int); ok {
 		obj.DiskSize = v
-	} else if isServerTypeCube {
-		obj.DiskSize = 0
 	}
 
 	if v, ok := in["disk_type"].(string); ok && len(v) > 0 {
