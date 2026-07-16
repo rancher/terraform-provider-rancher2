@@ -153,10 +153,10 @@ The following attributes are exported:
 
 #### Arguments
 
-* `token` - (Optional/Sensitive) Ionoscloud token. Either token or username/password is required (string)
-* `password` - (Optional/Sensitive) Ionoscloud passwor. Either token or username/password is required (string)
-* `username` - (Optional) Ionoscloud username (string)
-* `endpoint` - (Optional) Ionoscloud endpoint. Default `https://api.ionos.com/cloudapi/v6` (string)
+* `token` - (Optional/Sensitive) Ionos Cloud API token. Mutually exclusive with username/password (string)
+* `username` - (Optional/Sensitive) Ionos Cloud username. Requires password; mutually exclusive with token (string)
+* `password` - (Optional/Sensitive) Ionos Cloud password. Requires username; mutually exclusive with token (string)
+* `endpoint` - (Optional) Ionos Cloud endpoint. Default `https://api.ionos.com/cloudapi/v6` (string)
 
 ## Timeouts
 

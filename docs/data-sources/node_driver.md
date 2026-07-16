@@ -23,7 +23,7 @@ data "rancher2_node_driver" "foo" {
 
 * `id` - (Computed) The ID of the resource (string)
 * `active` - (Computed) Specify if the node driver state (bool)
-* `add_cluster_credential` - (Computed) Specify if the node driver should add cluster credential (bool)
+* `add_cloud_credential` - (Computed) Specify if the node driver should add cloud credential on install (bool)
 * `builtin` - (Computed) Specify wheter the node driver is an internal cluster driver or not (bool)
 * `checksum` - (Computed) Verify that the downloaded driver matches the expected checksum (string)
 * `description` - (Computed) Description of the node driver (string)

@@ -1,12 +1,24 @@
 package rancher2
 
 import (
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
 	ionoscloudConfigDriver = "ionoscloud"
 )
+
+// suppressCubeSizingDiff ignores server_cores/server_ram diffs when server_type
+// is CUBE. CUBE sizing is fixed by the template and stored as 0 by Rancher, which
+// would otherwise permadiff forever against the non-zero schema defaults.
+// ponytail: CUBE-only; non-CUBE keeps its normal default/diff behavior.
+func suppressCubeSizingDiff(k, old, new string, d *schema.ResourceData) bool {
+	prefix := k[:strings.LastIndex(k, ".")+1] // e.g. "ionoscloud_config.0."
+	st, _ := d.Get(prefix + "server_type").(string)
+	return st == "CUBE"
+}
 
 //Schemas
 
@@ -124,16 +136,18 @@ func machineConfigV2IonoscloudFields() map[string]*schema.Schema {
 			Description: "Ionos Cloud Token",
 		},
 		"server_cores": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     2,
-			Description: "Ionos Cloud Server Cores (2, 3, 4, 5, 6, etc.)",
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2,
+			DiffSuppressFunc: suppressCubeSizingDiff,
+			Description:      "Ionos Cloud Server Cores (2, 3, 4, 5, 6, etc.). Ignored for CUBE server types (sized by template)",
 		},
 		"server_ram": {
-			Type:        schema.TypeInt,
-			Optional:    true,
-			Default:     2048,
-			Description: "Ionos Cloud Server Ram in MB(1024, 2048, 3072, 4096, etc.)",
+			Type:             schema.TypeInt,
+			Optional:         true,
+			Default:          2048,
+			DiffSuppressFunc: suppressCubeSizingDiff,
+			Description:      "Ionos Cloud Server Ram in MB(1024, 2048, 3072, 4096, etc.). Ignored for CUBE server types (sized by template)",
 		},
 		"disk_size": {
 			Type:        schema.TypeInt,
@@ -190,7 +204,6 @@ func machineConfigV2IonoscloudFields() map[string]*schema.Schema {
 		"datacenter_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     nil,
 			Description: "Ionos Cloud Virtual Data Center Name",
 			Computed:    true,
 		},
@@ -202,7 +215,6 @@ func machineConfigV2IonoscloudFields() map[string]*schema.Schema {
 		"lan_name": {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Default:     nil,
 			Description: "Ionos Cloud LAN Name",
 			Computed:    true,
 		},
