@@ -12,11 +12,16 @@ const (
 
 // suppressCubeSizingDiff ignores server_cores/server_ram diffs when server_type
 // is CUBE. CUBE sizing is fixed by the template and stored as 0 by Rancher, which
-// would otherwise permadiff forever against the non-zero schema defaults.
-// ponytail: CUBE-only; non-CUBE keeps its normal default/diff behavior.
+// would otherwise permadiff against the non-zero schema defaults. Non-CUBE server
+// types keep their normal default/diff behavior.
 func suppressCubeSizingDiff(k, old, new string, d *schema.ResourceData) bool {
-	prefix := k[:strings.LastIndex(k, ".")+1] // e.g. "ionoscloud_config.0."
-	st, _ := d.Get(prefix + "server_type").(string)
+	// k is a nested-block field key, e.g. "ionoscloud_config.0.server_cores";
+	// resolve its sibling server_type. Bail out safely on any unexpected key.
+	i := strings.LastIndex(k, ".")
+	if i < 0 {
+		return false
+	}
+	st, _ := d.Get(k[:i+1] + "server_type").(string)
 	return st == "CUBE"
 }
 
