@@ -28,6 +28,7 @@ type machineConfigV2 struct {
 	VmwarevsphereConfig *MachineConfigV2Vmwarevsphere `json:"vmwarevsphereConfig,omitempty" yaml:"vmwarevsphereConfig,omitempty"`
 	GoogleGCEConfig     *MachineConfigV2GoogleGCE     `json:"googleConfig,omitempty" yaml:"googleConfig,omitempty"`
 	NutanixConfig       *MachineConfigV2Nutanix       `json:"nutanixConfig,omitempty" yaml:"nutanixConfig,omitempty"`
+	PveConfig           *MachineConfigV2Pve           `json:"pveConfig,omitempty" yaml:"pveConfig,omitempty"`
 }
 
 type MachineConfigV2 struct {
@@ -89,6 +90,12 @@ func flattenMachineConfigV2(d *schema.ResourceData, in *MachineConfigV2) error {
 		if err != nil {
 			return err
 		}
+	case machineConfigV2PveKind:
+		err := d.Set("pve_config", flattenMachineConfigV2Pve(in.PveConfig))
+		if err != nil {
+			return err
+		}
+
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
 	}
@@ -160,6 +167,9 @@ func expandMachineConfigV2(in *schema.ResourceData) *MachineConfigV2 {
 	}
 	if v, ok := in.Get("nutanix_config").([]interface{}); ok && len(v) > 0 {
 		obj.NutanixConfig = expandMachineConfigV2Nutanix(v, obj)
+	}
+	if v, ok := in.Get("pve_config").([]interface{}); ok && len(v) > 0 {
+		obj.PveConfig = expandMachineConfigV2Pve(v, obj)
 	}
 
 	return obj

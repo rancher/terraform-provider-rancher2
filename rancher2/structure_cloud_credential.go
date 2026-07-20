@@ -117,6 +117,15 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		if err != nil {
 			return err
 		}
+	case pveConfigDriver:
+		v, ok := d.Get("pve_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		err := d.Set("pve_credential_config", flattenCloudCredentialPve(in.PveCredentialConfig, v))
+		if err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("[ERROR] Unsupported driver on cloud credential: %s", driver)
 	}
@@ -203,6 +212,11 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	if v, ok := in.Get("vsphere_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.VmwarevsphereCredentialConfig = expandCloudCredentialVsphere(v)
 		in.Set("driver", vmwarevsphereConfigDriver)
+	}
+
+	if v, ok := in.Get("pve_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.PveCredentialConfig = expandCloudCredentialPve(v)
+		in.Set("driver", pveConfigDriver)
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
