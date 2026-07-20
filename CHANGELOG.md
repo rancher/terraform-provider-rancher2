@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.5.0](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.5.0) (2026-07-20)
+
+
+### Bug Fixes
+
+* update docs on app_v2 import ([#2317](https://github.com/rancher/terraform-provider-rancher2/issues/2317)) ([#2331](https://github.com/rancher/terraform-provider-rancher2/issues/2331)) ([0bbfeaf](https://github.com/rancher/terraform-provider-rancher2/commit/0bbfeafeb248d1fa6d25bdcff2771ceac3a8ab00))
+
 ## [13.5.0](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.5.0) (2026-05-08)
 
 
