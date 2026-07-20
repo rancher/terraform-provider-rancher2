@@ -57,9 +57,10 @@ provider "rancher2" {
 }
 
 # Create a new rancher2 resource using admin provider config
-resource "rancher2_catalog" "foo" {
+resource "rancher2_catalog_v2" "foo" {
   provider = "rancher2.admin"
 
+  cluster_id = "<CLUSTER_ID>"
   name = "test"
   url = "http://foo.com:8080"
 }
