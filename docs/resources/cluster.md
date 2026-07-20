@@ -1435,6 +1435,7 @@ The following arguments are supported:
 * `node_pools` - (Optional/Computed) The GKE cluster node pools. Required for create new cluster (List)
 * `private_cluster_config` - (Optional/Computed/ForceNew) The GKE private cluster config (List maxitems:1)
 * `region` - (Optional/Computed/ForceNew) The GKE cluster region. Required if `zone` not set (string)
+* `release_channel` - (Optional) The GKE release channel to enroll the cluster in. One of `Stable`, `Regular`, `Rapid` or `Extended`. 
 * `subnetwork` - (Optional/Computed/ForceNew) The GKE cluster subnetwork. Required for create new cluster (string)
 * `zone` - (Optional/Computed/ForceNew) The GKE cluster zone. Required if `region` not set (string)
 

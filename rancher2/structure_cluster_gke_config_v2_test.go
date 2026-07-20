@@ -3,6 +3,7 @@ package rancher2
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	"github.com/stretchr/testify/assert"
 )
@@ -222,6 +223,7 @@ func init() {
 		PrivateClusterConfig:           testClusterGKEConfigV2PrivateClusterConfigConf,
 		ProjectID:                      "project_id",
 		Region:                         "region",
+		ReleaseChannel:                 newString("Stable"),
 		Subnetwork:                     newString("subnetwork"),
 		Zone:                           "zone",
 	}
@@ -251,6 +253,7 @@ func init() {
 			"private_cluster_config":            testClusterGKEConfigV2PrivateClusterConfigInterface,
 			"project_id":                        "project_id",
 			"region":                            "region",
+			"release_channel":                   "Stable",
 			"subnetwork":                        "subnetwork",
 			"zone":                              "zone",
 		},
@@ -469,4 +472,114 @@ func TestExpandClusterGKEConfigV2(t *testing.T) {
 		output := expandClusterGKEConfigV2(tc.Input)
 		assert.Equal(t, tc.ExpectedOutput, output, "Unexpected output from expander.")
 	}
+}
+
+func TestExpandClusterGKEConfigV2ReleaseChannelOmitted(t *testing.T) {
+	input := []interface{}{
+		map[string]interface{}{
+			"name":                     "name",
+			"google_credential_secret": "google_credential_secret",
+			"project_id":               "project_id",
+			"region":                   "region",
+			"imported":                 false,
+		},
+	}
+
+	output := expandClusterGKEConfigV2(input)
+
+	assert.Nil(t, output.ReleaseChannel, "release_channel should remain nil when omitted")
+}
+
+func TestFlattenClusterGKEConfigV2ReleaseChannelUsesAPIValue(t *testing.T) {
+	priorState := []interface{}{
+		map[string]interface{}{
+			"release_channel": "Rapid",
+		},
+	}
+	input := &managementClient.GKEClusterConfigSpec{
+		ReleaseChannel: newString("Stable"),
+	}
+
+	output := flattenClusterGKEConfigV2(input, priorState)
+	config := output[0].(map[string]interface{})
+
+	assert.Equal(t, "Stable", config["release_channel"], "release_channel should be populated from the API value")
+}
+
+func TestFlattenClusterGKEConfigV2ReleaseChannelClearsStaleState(t *testing.T) {
+	priorState := []interface{}{
+		map[string]interface{}{
+			"release_channel": "Stable",
+		},
+	}
+	input := &managementClient.GKEClusterConfigSpec{}
+
+	output := flattenClusterGKEConfigV2(input, priorState)
+	config := output[0].(map[string]interface{})
+
+	_, ok := config["release_channel"]
+	assert.False(t, ok, "release_channel should be removed when the API omits it")
+}
+
+func TestFixClusterGKEConfigV2ReleaseChannel(t *testing.T) {
+	values := map[string]interface{}{
+		"clusterName":    "test-cluster",
+		"releaseChannel": "Stable",
+	}
+
+	output := fixClusterGKEConfigV2(values)
+
+	assert.Equal(t, "Stable", output["releaseChannel"], "releaseChannel should be preserved on the outgoing map")
+}
+
+func TestFixClusterGKEConfigV2ReleaseChannelOmitted(t *testing.T) {
+	values := map[string]interface{}{
+		"clusterName": "test-cluster",
+	}
+
+	output := fixClusterGKEConfigV2(values)
+
+	_, ok := output["releaseChannel"]
+	assert.False(t, ok, "releaseChannel shouldn't be set on the outgoing map when release_channel isn't configured")
+}
+
+func TestExpandAndFixClusterGKEConfigV2ReleaseChannel(t *testing.T) {
+	input := []interface{}{
+		map[string]interface{}{
+			"name":                     "test-cluster",
+			"google_credential_secret": "google_credential_secret",
+			"project_id":               "project_id",
+			"region":                   "region",
+			"release_channel":          "Extended",
+		},
+	}
+
+	gkeConfig := expandClusterGKEConfigV2(input)
+	output := fixClusterGKEConfigV2(structToMap(gkeConfig))
+
+	releaseChannel, ok := output["releaseChannel"].(*string)
+	if assert.True(t, ok, "releaseChannel should be included in the outgoing Rancher API map") {
+		assert.Equal(t, "Extended", *releaseChannel)
+	}
+}
+
+func TestClusterGKEConfigV2ReleaseChannelValidation(t *testing.T) {
+	field := clusterGKEConfigV2Fields()["release_channel"]
+	if assert.NotNil(t, field) && assert.NotNil(t, field.ValidateFunc) {
+		for _, value := range []string{"Rapid", "Regular", "Stable", "Extended"} {
+			_, errs := field.ValidateFunc(value, "release_channel")
+			assert.Empty(t, errs, "expected value %q to pass validation", value)
+		}
+
+		_, errs := field.ValidateFunc("Preview", "release_channel")
+		assert.NotEmpty(t, errs, "expected invalid release_channel value to be rejected")
+	}
+}
+
+func TestClusterGKEConfigV2ReleaseChannelSchemaRoundTrip(t *testing.T) {
+	resourceData := schema.TestResourceDataRaw(t, clusterGKEConfigV2Fields(), map[string]interface{}{
+		"release_channel": "Regular",
+	})
+
+	assert.Equal(t, "Regular", resourceData.Get("release_channel"))
 }

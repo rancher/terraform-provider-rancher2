@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const (
@@ -12,6 +13,10 @@ const (
 	clusterGKEV2LoggingScheduler         = "scheduler"
 	clusterGKEV2LoggingcontrollerManager = "controllerManager"
 	clusterGKEV2LoggingAuthenticator     = "authenticator"
+)
+
+var (
+	clusterGKEReleaseChannels = []string{"Rapid", "Regular", "Stable", "Extended"}
 )
 
 //Types
@@ -67,6 +72,7 @@ type GoogleKubernetesEngineConfig struct {
 	Preemptible                        bool              `json:"preemptible,omitempty" yaml:"preemptible,omitempty"`
 	ProjectID                          string            `json:"projectId,omitempty" yaml:"projectId,omitempty"`
 	Region                             string            `json:"region,omitempty" yaml:"region,omitempty"`
+	ReleaseChannel                     *string           `json:"releaseChannel,omitempty" yaml:"releaseChannel,omitempty"`
 	ResourceLabels                     map[string]string `json:"resourceLabels,omitempty" yaml:"resourceLabels,omitempty"`
 	ServiceAccount                     string            `json:"serviceAccount,omitempty" yaml:"serviceAccount,omitempty"`
 	SubNetwork                         string            `json:"subNetwork,omitempty" yaml:"subNetwork,omitempty"`
@@ -562,6 +568,12 @@ func clusterGKEConfigV2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 			Description: "The GKE cluster region. Required if `zone` is empty",
+		},
+		"release_channel": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringInSlice(clusterGKEReleaseChannels, false),
+			Description:  "The GKE release channel to enroll the cluster in. One of Rapid, Regular, Stable or Extended.",
 		},
 		"subnetwork": {
 			Type:        schema.TypeString,
