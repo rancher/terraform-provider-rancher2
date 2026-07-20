@@ -12,6 +12,10 @@ func nodeDriverFields() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Required: true,
 		},
+		"add_cloud_credential": {
+			Type:     schema.TypeBool,
+			Optional: true,
+		},
 		"builtin": {
 			Type:     schema.TypeBool,
 			Required: true,
