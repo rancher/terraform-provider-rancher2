@@ -9,12 +9,14 @@ import (
 )
 
 var (
-	testGlobalRolePolicyRulesConf                    []managementClient.PolicyRule
-	testGlobalRolePolicyRulesInterface               []interface{}
-	testGlobalRoleConf                               *managementClient.GlobalRole
-	testGlobalRoleInterface                          map[string]interface{}
-	testGlobalRoleWithInheritedClusterRolesConf      *managementClient.GlobalRole
-	testGlobalRoleWithInheritedClusterRolesInterface map[string]interface{}
+	testGlobalRolePolicyRulesConf                       []managementClient.PolicyRule
+	testGlobalRolePolicyRulesInterface                  []interface{}
+	testGlobalRoleConf                                  *managementClient.GlobalRole
+	testGlobalRoleInterface                             map[string]interface{}
+	testGlobalRoleWithInheritedClusterRolesConf         *managementClient.GlobalRole
+	testGlobalRoleWithInheritedClusterRolesInterface    map[string]interface{}
+	testGlobalRoleWithInheritedNamespacedRulesConf      *managementClient.GlobalRole
+	testGlobalRoleWithInheritedNamespacedRulesInterface map[string]interface{}
 )
 
 func init() {
@@ -130,6 +132,49 @@ func init() {
 			"cluster-owner",
 		},
 	}
+
+	testGlobalRoleWithInheritedNamespacedRulesConf = &managementClient.GlobalRole{
+		Description:    "description",
+		Name:           "name",
+		NewUserDefault: true,
+		Rules:          testGlobalRolePolicyRulesConf,
+		Annotations: map[string]string{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		Labels: map[string]string{
+			"option1": "value1",
+			"option2": "value2",
+		},
+		InheritedNamespacedRules: map[string][]managementClient.PolicyRule{
+			"namespace-one": testGlobalRolePolicyRulesConf,
+			"namespace-two": {},
+		},
+	}
+	testGlobalRoleWithInheritedNamespacedRulesInterface = map[string]interface{}{
+		"new_user_default": true,
+		"description":      "description",
+		"name":             "name",
+		"rules":            testGlobalRolePolicyRulesInterface,
+		"annotations": map[string]interface{}{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		"labels": map[string]interface{}{
+			"option1": "value1",
+			"option2": "value2",
+		},
+		"inherited_namespaced_rules": []interface{}{
+			map[string]interface{}{
+				"namespace": "namespace-one",
+				"rules":     testGlobalRolePolicyRulesInterface,
+			},
+			map[string]interface{}{
+				"namespace": "namespace-two",
+				"rules":     []interface{}{},
+			},
+		},
+	}
 }
 
 func TestFlattenGlobalRole(t *testing.T) {
@@ -145,6 +190,10 @@ func TestFlattenGlobalRole(t *testing.T) {
 			testGlobalRoleWithInheritedClusterRolesConf,
 			testGlobalRoleWithInheritedClusterRolesInterface,
 		},
+		{
+			testGlobalRoleWithInheritedNamespacedRulesConf,
+			testGlobalRoleWithInheritedNamespacedRulesInterface,
+		},
 	}
 
 	for _, tc := range cases {
@@ -154,10 +203,16 @@ func TestFlattenGlobalRole(t *testing.T) {
 			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
 		expectedOutput := map[string]interface{}{}
+		expectedValues := map[string]interface{}{}
 		for k := range tc.ExpectedOutput {
+			if k == "inherited_namespaced_rules" {
+				assert.ElementsMatch(t, tc.ExpectedOutput[k].([]interface{}), output.Get(k).(*schema.Set).List())
+				continue
+			}
 			expectedOutput[k] = output.Get(k)
+			expectedValues[k] = tc.ExpectedOutput[k]
 		}
-		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
+		assert.Equal(t, expectedValues, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
@@ -173,6 +228,10 @@ func TestExpandGlobalRole(t *testing.T) {
 		{
 			testGlobalRoleWithInheritedClusterRolesInterface,
 			testGlobalRoleWithInheritedClusterRolesConf,
+		},
+		{
+			testGlobalRoleWithInheritedNamespacedRulesInterface,
+			testGlobalRoleWithInheritedNamespacedRulesConf,
 		},
 	}
 
