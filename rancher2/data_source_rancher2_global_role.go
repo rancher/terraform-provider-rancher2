@@ -61,6 +61,26 @@ func dataSourceRancher2GlobalRole() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"inherited_namespaced_rules": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "Policy rules granted in matching namespaces of every cluster besides the local cluster",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"namespace": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"rules": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: policyRuleFields(),
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
