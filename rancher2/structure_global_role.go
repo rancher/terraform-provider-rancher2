@@ -47,6 +47,11 @@ func flattenGlobalRole(d *schema.ResourceData, in *managementClient.GlobalRole) 
 		}
 	}
 
+	err = d.Set("inherited_namespaced_rules", flattenInheritedNamespacedRules(in.InheritedNamespacedRules))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -85,7 +90,42 @@ func expandGlobalRole(in *schema.ResourceData) *managementClient.GlobalRole {
 		obj.InheritedClusterRoles = toArrayString(v)
 	}
 
+	if v, ok := in.Get("inherited_namespaced_rules").(*schema.Set); ok && v.Len() > 0 {
+		obj.InheritedNamespacedRules = expandInheritedNamespacedRules(v.List())
+	}
+
 	obj.UUID = in.Get("uuid").(string)
 
 	return obj
+}
+
+func flattenInheritedNamespacedRules(in map[string][]managementClient.PolicyRule) []interface{} {
+	if len(in) == 0 {
+		return []interface{}{}
+	}
+
+	out := make([]interface{}, 0, len(in))
+	for namespace, rules := range in {
+		out = append(out, map[string]interface{}{
+			"namespace": namespace,
+			"rules":     flattenPolicyRules(rules),
+		})
+	}
+
+	return out
+}
+
+func expandInheritedNamespacedRules(in []interface{}) map[string][]managementClient.PolicyRule {
+	if len(in) == 0 {
+		return map[string][]managementClient.PolicyRule{}
+	}
+
+	out := make(map[string][]managementClient.PolicyRule, len(in))
+	for _, ruleSet := range in {
+		ruleSetMap := ruleSet.(map[string]interface{})
+		policyRules, _ := ruleSetMap["rules"].([]interface{})
+		out[ruleSetMap["namespace"].(string)] = expandPolicyRules(policyRules)
+	}
+
+	return out
 }

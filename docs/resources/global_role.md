@@ -21,6 +21,16 @@ resource "rancher2_global_role" "foo" {
     resources = ["secrets"]
     verbs = ["create"]
   }
+
+  inherited_namespaced_rules {
+    namespace = "cattle-monitoring-system"
+
+    rules {
+      api_groups = [""]
+      resources  = ["configmaps"]
+      verbs      = ["get", "list"]
+    }
+  }
 }
 ```
 
@@ -35,6 +45,7 @@ The following arguments are supported:
 * `annotations` - (Optional/Computed) Annotations for global role object (map)
 * `labels` - (Optional/Computed) Labels for global role object (map)
 * `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
+* `inherited_namespaced_rules` - (Optional) Policy rules granted in matching namespaces of every cluster besides the local cluster (set)
 
 ## Attributes Reference
 
@@ -54,6 +65,13 @@ The following attributes are exported:
 * `resource_names` - (Optional) Policy rule resource names (list)
 * `resources` - (Optional) Policy rule resources (list)
 * `verbs` - (Optional) Policy rule verbs. `bind`, `create`, `delete`, `deletecollection`, `escalate`, `get`, `impersonate`, `list`, `manage-namespaces`, `patch`, `update`, `updatepsa`, `use`, `view`, `watch`, `own` and `*` values are supported (list)
+
+### `inherited_namespaced_rules`
+
+#### Arguments
+
+* `namespace` - (Required) Namespace in each downstream cluster where these rules apply (string)
+* `rules` - (Optional) Policy rules granted in the namespace (list)
 
 ## Timeouts
 

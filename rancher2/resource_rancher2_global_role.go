@@ -95,13 +95,14 @@ func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		update := map[string]interface{}{
-			"description":           d.Get("description").(string),
-			"name":                  d.Get("name").(string),
-			"newUserDefault":        d.Get("new_user_default").(bool),
-			"rules":                 expandPolicyRules(d.Get("rules").([]interface{})),
-			"annotations":           toMapString(d.Get("annotations").(map[string]interface{})),
-			"labels":                toMapString(d.Get("labels").(map[string]interface{})),
-			"inheritedClusterRoles": toArrayString(d.Get("inherited_cluster_roles").([]interface{})),
+			"description":              d.Get("description").(string),
+			"name":                     d.Get("name").(string),
+			"newUserDefault":           d.Get("new_user_default").(bool),
+			"rules":                    expandPolicyRules(d.Get("rules").([]interface{})),
+			"annotations":              toMapString(d.Get("annotations").(map[string]interface{})),
+			"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
+			"inheritedClusterRoles":    toArrayString(d.Get("inherited_cluster_roles").([]interface{})),
+			"inheritedNamespacedRules": expandInheritedNamespacedRules(d.Get("inherited_namespaced_rules").(*schema.Set).List()),
 		}
 
 		if _, err = client.GlobalRole.Update(globalRole, update); err != nil {
