@@ -371,6 +371,7 @@ func (c *Config) CreateClientOpts() *clientbase.ClientOpts {
 		TokenKey: c.TokenKey,
 		CACerts:  c.CACerts,
 		Insecure: c.Insecure,
+		Timeout:  c.Timeout,
 	}
 	return options
 }
