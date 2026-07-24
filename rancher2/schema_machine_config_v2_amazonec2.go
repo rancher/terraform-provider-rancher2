@@ -79,6 +79,11 @@ func machineConfigV2Amazonec2Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "The state of token usage for your instance metadata requests",
 		},
+		"http_put_response_hop_limit": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "The desired HTTP PUT response hop limit for instance metadata requests (valid values: 1-64)",
+		},
 		"iam_instance_profile": {
 			Type:        schema.TypeString,
 			Optional:    true,
