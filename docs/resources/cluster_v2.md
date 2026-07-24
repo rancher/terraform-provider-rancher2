@@ -1273,6 +1273,7 @@ This argument is available in Rancher v2.7.2 and later.
 * `endpoint_ca` - (Optional, string) ETCD snapshot S3 endpoint CA.
 * `folder` - (Optional, string) ETCD snapshot S3 folder.
 * `region` - (Optional, string) ETCD snapshot S3 region.
+* `retention` - (Optional, int) Number of snapshots in S3 to retain. If not set, the `snapshot_retention` value is used.
 * `skip_ssl_verify` - (Optional, bool, default: false) Disable ETCD skip ssl verify.
 
 ##### `rotate_certificates`
