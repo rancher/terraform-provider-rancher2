@@ -109,7 +109,6 @@
           age
           awscli2
           bashInteractive
-          colima
           cspell
           curl
           dig
