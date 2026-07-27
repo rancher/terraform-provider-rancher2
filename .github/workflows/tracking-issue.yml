@@ -21,18 +21,21 @@ jobs:
       contents: read # To checkout the repo and get branch names
     steps:
       - name: Checkout Code
+        id: checkout-code
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
           ref: 'main'
       - name: Create Tracking Issue
+        id: create-tracking-issue
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+          SCRIPT_MODE: tracking-issue
         with:
           script: |
-            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/tracking-issue.js`;
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
             const { default: script } = await import(scriptPath);
             await script({github, core, process});
