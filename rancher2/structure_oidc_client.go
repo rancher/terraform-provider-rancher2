@@ -2,9 +2,12 @@ package rancher2
 
 import (
 	"errors"
+	"maps"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func expandOIDCClient(in *schema.ResourceData) (*managementClient.OIDCClient, error) {
@@ -53,7 +56,7 @@ func expandOIDCClient(in *schema.ResourceData) (*managementClient.OIDCClient, er
 	return obj, nil
 }
 
-func flattenOIDCClient(d *schema.ResourceData, in *managementClient.OIDCClient) error {
+func flattenOIDCClient(d *schema.ResourceData, in *managementClient.OIDCClient, secret *corev1.Secret) error {
 	if in == nil {
 		return errors.New("flattening OIDC Client: Input config is nil")
 	}
@@ -62,7 +65,19 @@ func flattenOIDCClient(d *schema.ResourceData, in *managementClient.OIDCClient) 
 		d.SetId(in.ID)
 	}
 
+	var clientSecret string
+	if secret != nil {
+		// Find the first secret
+		for _, secretName := range slices.Sorted(maps.Keys(in.Status.ClientSecrets)) {
+			if secretValue, ok := secret.Data[secretName]; ok {
+				clientSecret = string(secretValue)
+				break
+			}
+		}
+	}
+
 	return errors.Join(
+		d.Set("client_secret", clientSecret),
 		d.Set("description", in.Description),
 		d.Set("redirect_uris", in.RedirectURIs),
 		d.Set("token_expiration_seconds", int(in.TokenExpirationSeconds)),
