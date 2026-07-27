@@ -100,10 +100,8 @@
           # place our downloaded packages here
           leftovers
           terraform
-          macVscode
-          swVers
           claude-code
-        ] ++ (with pkgs; [
+        ] ++ (if pkgs.stdenv.isDarwin then [ macVscode swVers ] else []) ++ (with pkgs; [
           # here are the packages from the nix repository
           actionlint
           age
