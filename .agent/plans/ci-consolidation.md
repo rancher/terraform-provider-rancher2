@@ -102,6 +102,20 @@ Rewrite the workflow steps to call the unified `.js` files using the `actions/gi
 ### Step 6: Clean up Obsolete Files
 Once the consolidated files are tested and verified, completely remove the 14 individual Javascript files to leave a beautifully clean `.github/workflows/scripts/` directory.
 
+### Step 7: Address Copilot Review Comments
+To resolve issues raised in pull request review comments by the Copilot bot, we will perform the following targeted refactorings:
+
+1. **Argument boundary preservation in `nix-run.sh`:**
+   Instead of writing commands using `printf "%s\n" "$*"`, which merges arguments into a single space-separated string and loses quoting, we will write them utilizing `printf "%q "` to shell-escape and preserve original argument boundaries and quoting when executing multi-argument CLI payloads (e.g. `nix-run.sh bash -c "..."`).
+2. **Conditional Lock Artifact Upload in `release.yml`:**
+   We will gate the `Create Lock Artifact` step inside the `test` job in `.github/workflows/release.yml` on the `if: steps.proceed.outputs.run == 'true'` condition to ensure locks are only uploaded/created when the test attempt actually claims execution.
+3. **Enforce Strict Parameter Contracts (Fail-Fast):**
+   Instead of using soft fallback defaults (such as `globalThis.process` or empty fallback objects) that mask configuration bugs, we will maintain strict parameter destructuring (`{ github, context, core, process }`) in `.github/workflows/scripts/e2e.js`, `backports.js`, and `releases.js` so that any missing parameters fail fast and loud.
+4. **Comprehensive Workflow Call Audit:**
+   We will audit all workflow files (`release.yml`, `backport-merge-label.yml`, etc.) and ensure they always pass all required context parameters (specifically `process`, `github`, `context`, and `core`) when invoking the consolidated JavaScript scripts (e.g., `await script({ github, context, core, process });`).
+5. **Verify Conflict Markers:**
+   Confirm that all temporary conflict markers are completely resolved in `.github/workflows/scripts/validate-commit-message.sh`.
+
 ---
 
 ## Verification and Safety Strategy

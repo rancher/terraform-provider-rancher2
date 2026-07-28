@@ -58,3 +58,11 @@ This is a progress-tracking temporary plan to guide the iterative execution phas
   - [x] Run `shellcheck` on `nix-run.sh` and `lint.sh` locally.
   - [x] Run `actionlint` locally on all updated workflows to verify their schema validity.
   - [x] Verify that there are no remaining instances of manual Nix install steps (`install-nix`) in the codebase.
+
+- [x] **Step 8: Address Copilot Review Comments**
+  - [x] Fix argument boundaries and quoting in `nix-run.sh` using shell-escaped `printf '%q '`
+  - [x] Add conditional execution check `if: steps.proceed.outputs.run == 'true'` to `Create Lock Artifact` in `release.yml`
+  - [x] Enforce strict parameter contracts (fail-fast on missing parameters) in `e2e.js`, `backports.js`, and `releases.js`
+  - [x] Audit and update all workflow calls in `release.yml` (lines 144, 336, 451, 537) to ensure all required parameters (`process`, `github`, `context`, `core`) are explicitly forwarded
+  - [x] Audit and update `backport-merge-label.yml` (line 38) to explicitly forward all required parameters (`process`, `github`, `context`, `core`)
+  - [x] Verify that no merge conflict markers exist in `validate-commit-message.sh` (already verified clean)

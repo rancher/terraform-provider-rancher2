@@ -19,7 +19,9 @@ export CURL_CA_BUNDLE="${NIX_SSL_CERT_FILE:-}"
 
 {
   echo "git config --global --add safe.directory \"$PWD\""
-  printf "%s\n" "$*"
+  printf "exec "
+  printf "%q " "$@"
+  printf "\n"
 } > .nix-script.sh
 
 trap 'rm -f .nix-script.sh' EXIT

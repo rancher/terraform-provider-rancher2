@@ -53,4 +53,4 @@ jobs:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
             const { default: script } = await import(scriptPath);
-            await script({github, core, process});
+            await script({github, context, core, process});

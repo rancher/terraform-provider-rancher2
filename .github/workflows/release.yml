@@ -141,7 +141,7 @@ jobs:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
             const { default: script } = await import(scriptPath);
-            await script({ core });
+            await script({ github, context, core, process });
       - name: Get IP
         id: get-ip
         run: |
@@ -223,6 +223,7 @@ jobs:
           fi
       - name: Create Lock Artifact
         id: upload-lock-artifact
+        if: steps.proceed.outputs.run == 'true'
         # https://github.com/actions/upload-artifact/releases
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -333,7 +334,7 @@ jobs:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
             const { default: script } = await import(scriptPath);
-            await script({ core });
+            await script({ github, context, core, process });
       - name: Configure AWS Credentials
         id: aws-creds
         # https://github.com/aws-actions/configure-aws-credentials/releases
@@ -448,7 +449,7 @@ jobs:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
             const { default: script } = await import(scriptPath);
-            await script({ core });
+            await script({ github, context, core, process });
       - name: Create and Push RC Tag with Git
         id: create-push-rc-tag
         env:
@@ -534,7 +535,7 @@ jobs:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
             const { default: script } = await import(scriptPath);
-            await script({ core });
+            await script({ github, context, core, process });
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
         # https://github.com/rancher-eio/read-vault-secrets/commits
