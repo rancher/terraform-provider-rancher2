@@ -1,13 +1,146 @@
-export default async ({ github, core, process }) => {
-  // Context for this script
-  // https://github.com/actions/github-script?tab=readme-ov-file#this-action
-  // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
-  // https://github.com/actions/toolkit/tree/main/packages/core
-  // https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
+export default async ({ github, context, core, process }) => {
+  const mode = process.env.SCRIPT_MODE;
+  switch (mode) {
+  case 'check-maintainer':
+    return await runCheckMaintainer({ github, context, core, process });
+  case 'rc-notify':
+    return await runRcNotify({ github, context, core, process });
+  case 'publish-release':
+    return await runPublishRelease({ github, context, core, process });
+  case 'tracking-issue':
+    return await runTrackingIssue({ github, context, core, process });
+  default:
+    throw new Error(`Unknown release script mode: ${mode}`);
+  }
+};
+
+/**
+ * check-maintainer: Checks if the user triggering the workflow is an authorized maintainer.
+ */
+async function runCheckMaintainer({ context, core, process }) {
+  let maintainers = ["matttrach"];
+  
+  if (process.env.MAINTAINERS && process.env.MAINTAINERS !== "undefined") {
+    try {
+      maintainers = JSON.parse(process.env.MAINTAINERS);
+    } catch (e) {
+      core.info(`problem parsing maintainers, trying again: ${e.message}`);
+      maintainers = process.env.MAINTAINERS.split(',').map(m => m.trim());
+    }
+  }
+
+  const isMaintainer = maintainers.includes(context.actor);
+  core.info(`Checking if '${context.actor}' is an authorized maintainer: ${isMaintainer}`);
+  
+  return isMaintainer;
+}
+
+/**
+ * rc-notify: Sends notifications about release candidates.
+ */
+async function runRcNotify({ github, context, core, process }) {
+  let tagName =
+    process.env.TAG ||
+    process.env.TAG_NAME ||
+    context.payload.release?.tag_name;
+  let branchLabel =
+    process.env.BRANCH ||
+    process.env.BRANCH_LABEL ||
+    context.payload.release?.target_commitish;
+
+  if (!tagName || !branchLabel) {
+    core.setFailed('tagName and branchLabel must be provided via env (TAG/BRANCH) or release payload.');
+    return;
+  }
+
+  const owner = "rancher";
+  const repo = "terraform-provider-rancher2";
+
+  if (!tagName.toLowerCase().includes('rc')) {
+    core.info(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);
+    return;
+  }
+
+  const isValidBranch = /^release\/v\d{1,2}$/.test(branchLabel);
+  if (!isValidBranch) {
+    throw new Error(`Target branch label "${branchLabel}" is invalid. It must start with "release/v" and end with exactly one or two digits.`);
+  }
+
+  core.info(`RC Detected: ${tagName}`);
+  core.info(`Searching for open issues with labels: "${branchLabel}", "internal/backport", and "internal/merged"`);
+
+  const issues = await github.paginate(github.rest.search.issuesAndPullRequests, {
+    q: `repo:${owner}/${repo} is:issue is:open label:${branchLabel} label:internal/backport label:internal/merged`
+  });
+
+  if (issues.length === 0) {
+    core.info('No matching issues found. Exiting.');
+    return;
+  }
+
+  const releaseUrl = `https://github.com/${owner}/${repo}/releases/tag/${tagName}`;
+  const commentBody = `New Release Candidate Available for Validation: [${tagName}](${releaseUrl})\n\n`;
+
+  let commentedCount = 0;
+  for (const issue of issues) {
+    try {
+      await github.rest.issues.createComment({
+        owner: owner,
+        repo: repo,
+        issue_number: issue.number,
+        body: commentBody
+      });
+      core.info(`Commented on issue #${issue.number}`);
+      commentedCount++;
+    } catch (error) {
+      core.setFailed(`Failed to comment on issue #${issue.number}: ${error.message}`);
+    }
+  }
+  
+  core.info(`Success! Notified ${commentedCount} issues.`);
+}
+
+/**
+ * publish-release: Publishes draft GitHub releases.
+ */
+async function runPublishRelease({ github, context, core, process }) {
+  try {
+    const version = process.env.VERSION;
+    const tag = version.startsWith('v') ? version : `v${version}`;
+
+    const releases = await github.paginate(github.rest.repos.listReleases, {
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+    });
+
+    const release = releases.find(r => r.tag_name === tag);
+    if (!release) {
+      return core.setFailed(`Could not find release for tag ${tag}`);
+    }
+
+    if (release.draft) {
+      core.info(`Publishing release ID ${release.id} for tag ${tag}`);
+      await github.rest.repos.updateRelease({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        release_id: release.id,
+        draft: false
+      });
+    } else {
+      core.info(`Release for tag ${tag} is already published.`);
+    }
+  } catch (error) {
+    core.setFailed(`Failed to publish release: ${error.message}`);
+  }
+}
+
+/**
+ * tracking-issue: Automatically creates tracking and backport issues for open pull requests.
+ */
+async function runTrackingIssue({ github, core, process }) {
   try {
     const repo = "terraform-provider-rancher2";
     const owner = "rancher";
-    // Note: unable to dynamically retrieve team members and unable to assign a team to an issue
     const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
 
     let latestReleaseBranch = "";
@@ -76,13 +209,10 @@ export default async ({ github, core, process }) => {
         });
 
         if (existingIssues.length > 0) {
-          // Note: You can't add labels to PRs submitted from forks.
           core.info(`Tracking issue already exists for PR #${pr.number}. Skipping.`);
           continue;
         }
 
-        // Create the tracking issue
-        // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
         response = await github.rest.issues.create({
           owner: owner,
           repo:  repo,
@@ -98,11 +228,10 @@ export default async ({ github, core, process }) => {
         const newIssue = response.data;
         core.info(`Created tracking issue #${newIssue.number}: ${newIssue.html_url}`);
 
-        // add appropriate sub-issues for either release label or latest release branch
         const parentIssue = newIssue;
         const parentIssueTitle = parentIssue.title;
         const parentIssueNumber = parentIssue.number;
-        // Create the sub-issue
+        
         response = await github.rest.issues.create({
           owner: owner,
           repo: repo,
@@ -116,7 +245,7 @@ export default async ({ github, core, process }) => {
         const newSubIssue = response.data;
         core.info(`Created backport issue #${newSubIssue.number}: ${newSubIssue.html_url}`);
         const subIssueId = newSubIssue.id;
-        // Attach the sub-issue to the parent using API request
+        
         await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
           owner: owner,
           repo: repo,
@@ -126,8 +255,6 @@ export default async ({ github, core, process }) => {
             'X-GitHub-Api-Version': '2022-11-28'
           }
         });
-
-        // Note: Labels can't be added to PRs from forks
       } catch (error) {
         errors.push(`Failed to process PR [${pr.number}](${pr.html_url}): ${error.message}`);
       }
@@ -139,4 +266,4 @@ export default async ({ github, core, process }) => {
   } catch (error) {
     core.setFailed(`Script failed with error: ${error.message}`);
   }
-};
+}

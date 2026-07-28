@@ -23,6 +23,7 @@ jobs:
 
     steps:
       - name: 'Checkout Repository'
+        id: checkout-repository
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -34,19 +35,22 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+          SCRIPT_MODE: wait-for-settle
         with:
           script: |
-            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/wait-for-settle.js`;
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
             const { default: script } = await import(scriptPath);
             await script({github, context, core, process});
       - name: 'Find Issues and Create Cherry-Pick PRs'
+        id: find-issues-create-prs
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
           MERGE_COMMIT_SHA: ${{ steps.wait_for_settle.outputs.merge_commit_sha }}
+          SCRIPT_MODE: backport-pr
         with:
           script: |
-            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backport-pr.js`;
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
             const { default: script } = await import(scriptPath);
             await script({github, core, process});
