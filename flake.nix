@@ -100,10 +100,15 @@
           # place our downloaded packages here
           leftovers
           terraform
+<<<<<<< HEAD
           macVscode
           swVers
           claude-code
         ] ++ (with pkgs; [
+=======
+          claude-code
+        ] ++ (if pkgs.stdenv.isDarwin then [ macVscode swVers ] else []) ++ (with pkgs; [
+>>>>>>> d34e011a (fix: add skills and prompts for agent planning (#2358))
           # here are the packages from the nix repository
           actionlint
           age

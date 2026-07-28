@@ -45,10 +45,14 @@ length_check() {
 }
 spell_check() {
   message="$1"
+<<<<<<< HEAD
   if grep -q -e '^Merge ' <<<"$message" || grep -q -e '^Merge branch ' <<<"$message"; then
     return 0
   fi
   WORDS="$(cspell stdin <<<"$message")"
+=======
+  WORDS="$(cspell list --dont-validate-words <<<"$message")"
+>>>>>>> d34e011a (fix: add skills and prompts for agent planning (#2358))
   if [ "" != "$WORDS" ]; then
     echo "...Commit message contains spelling errors on: ^$WORDS\$"
     echo "...Also try updating the PR title."
