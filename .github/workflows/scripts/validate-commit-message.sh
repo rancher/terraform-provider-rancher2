@@ -45,7 +45,7 @@ length_check() {
 }
 spell_check() {
   message="$1"
-  WORDS="$(aspell list --dont-validate-words <<<"$message")"
+  WORDS="$(cspell list --dont-validate-words <<<"$message")"
   if [ "" != "$WORDS" ]; then
     echo "...Commit message contains spelling errors on: ^$WORDS\$"
     echo "...Also try updating the PR title."

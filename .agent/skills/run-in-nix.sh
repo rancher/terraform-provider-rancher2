@@ -3,6 +3,7 @@
 # Skill: run-in-nix.sh
 # Description: Executes a given command inside the standardized Nix development environment.
 # Usage: ./run-in-nix.sh "<command>"
+# - quotes around the command are critical
 
 set -euo pipefail
 
@@ -16,8 +17,7 @@ COMMAND="$1"
 
 echo "Running command in Nix environment: ${COMMAND}"
 
-nix develop --ignore-environment \
+nix develop \
   --extra-experimental-features nix-command \
   --extra-experimental-features flakes \
-  --keep HOME --keep SSH_AUTH_SOCK --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM \
   --command bash -c "${COMMAND}"

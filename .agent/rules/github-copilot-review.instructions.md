@@ -2,7 +2,7 @@
 
 When performing a code review or suggesting changes, adhere to the following guidelines to avoid "bikeshedding" and ensure feedback remains high-impact:
 
-## Focus on Critical and Highly Important Issues
+## Focus on Critical and High Impact Problems
 - **Security:** Highlight potential vulnerabilities, exposed secrets, or unsafe data handling.
 - **Bugs & Logic Errors:** Point out broken logic, unhandled edge cases, nil pointer dereferences, or potential race conditions.
 - **Performance:** Identify significant bottlenecks, severe memory leaks, or highly inefficient resource usage.
