@@ -241,6 +241,13 @@ func createMachineConfigV2(c *Config, obj *MachineConfigV2) (*MachineConfigV2, e
 		out.ID = resp.ID
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2PveKind:
+		resp := &MachineConfigV2Pve{}
+		err = c.createObjectV2(rancher2DefaultLocalClusterID, machineConfigV2PveAPIType, obj.PveConfig, resp)
+		out.PveConfig = resp
+		out.ID = resp.ID
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
 	default:
 		return nil, fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
 	}
@@ -366,6 +373,16 @@ func getMachineConfigV2ByID(c *Config, id, kind string) (*MachineConfigV2, error
 		out.Type = resp.Type
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2PveKind:
+		resp := &MachineConfigV2Pve{}
+		err = c.getObjectV2ByID(rancher2DefaultLocalClusterID, id, machineConfigV2PveAPIType, resp)
+		out.PveConfig = resp
+		out.ID = resp.ID
+		out.Links = resp.Links
+		out.Actions = resp.Actions
+		out.Type = resp.Type
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
 	default:
 		return nil, fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
 	}
@@ -449,6 +466,13 @@ func updateMachineConfigV2(c *Config, obj *MachineConfigV2) (*MachineConfigV2, e
 		resp := &MachineConfigV2Nutanix{}
 		err = c.updateObjectV2(rancher2DefaultLocalClusterID, obj.ID, machineConfigV2NutanixAPIType, obj.NutanixConfig, resp)
 		out.NutanixConfig = resp
+		out.ID = resp.ID
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2PveKind:
+		resp := &MachineConfigV2Pve{}
+		err = c.updateObjectV2(rancher2DefaultLocalClusterID, obj.ID, machineConfigV2PveAPIType, obj.PveConfig, resp)
+		out.PveConfig = resp
 		out.ID = resp.ID
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta

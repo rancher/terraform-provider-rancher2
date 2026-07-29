@@ -14,7 +14,7 @@ terraform.tfstate
 *.tfstate.*
 tf-*
 *.env
-*/*.tfvars
+**/*.tfvars
 */*.pem
 *.tgz
 main.tf
