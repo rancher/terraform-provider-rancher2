@@ -32,6 +32,17 @@ func resourceRancher2GlobalRoleBinding() *schema.Resource {
 func resourceRancher2GlobalRoleBindingCreate(d *schema.ResourceData, meta interface{}) error {
 	globalRole := expandGlobalRoleBinding(d)
 
+	// The Rancher API requires either userId or groupPrincipalId to be set when
+	// creating a global role binding. If only user_principal_id is configured,
+	// resolve the matching user ID before sending the request.
+	if len(globalRole.UserID) == 0 && len(globalRole.UserPrincipalID) > 0 {
+		userID, err := meta.(*Config).GetUserIDByPrincipalID(globalRole.UserPrincipalID)
+		if err != nil {
+			return err
+		}
+		globalRole.UserID = userID
+	}
+
 	err := meta.(*Config).GlobalRoleExist(globalRole.GlobalRoleID)
 	if err != nil {
 		return err
