@@ -1,16 +1,63 @@
 import { execSync } from 'child_process';
-export default async ({ github, core, process }) => {
-  // Context for this script
-  // https://github.com/actions/github-script?tab=readme-ov-file#this-action
-  // https://octokit.github.io/rest.js/v22/#custom-requests replace octokit with github in the examples
 
+export default async ({ github, context, core, process }) => {
+  const mode = process.env.SCRIPT_MODE;
+  switch (mode) {
+  case 'wait-for-settle':
+    return await runWaitForSettle({ github, context, core, process });
+  case 'backport-pr':
+    return await runBackportPr({ github, context, core, process });
+  case 'backport-issues':
+    return await runBackportIssues({ github, context, core, process });
+  case 'merge-label':
+    return await runMergeLabel({ github, context, core, process });
+  default:
+    throw new Error(`Unknown backport script mode: ${mode}`);
+  }
+};
+
+/**
+ * wait-for-settle: Allows GitHub's API slightly more time to index merge commits and retrieve the PR list.
+ */
+async function runWaitForSettle({ github, context, core, process }) {
+  const owner = context.repo.owner;
+  const repo = context.repo.repo;
+  
+  // Handle input from either manual dispatch or push
+  const mergeCommitSha = process.env.MERGE_COMMIT_SHA || context.payload.head_commit?.id;
+  
+  if (!mergeCommitSha) {
+    core.setFailed("No merge commit SHA found in environment or context payload.");
+    return;
+  }
+
+  // wait 10 seconds to allow GitHub to index the commit and associated PRs
+  await new Promise(resolve => setTimeout(resolve, 10000));
+
+  try {
+    await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+      owner,
+      repo,
+      commit_sha: mergeCommitSha
+    });
+  } catch (error) {
+    core.setFailed(`Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`);
+  }
+  
+  // Set output for next steps
+  core.setOutput('merge_commit_sha', mergeCommitSha);
+}
+
+/**
+ * backport-pr: Cherry-picks a commit to the appropriate backport branches and creates PRs.
+ */
+async function runBackportPr({ github, core, process }) {
   const owner = "rancher";
   const repo = "terraform-provider-rancher2";
   const mergeCommitSha = process.env.MERGE_COMMIT_SHA;
   const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
-  let response; // used to hold all github responses
+  let response;
 
-  // https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#list-pull-requests-associated-with-a-commit
   try {
     response = await github.rest.repos.listPullRequestsAssociatedWithCommit({
       owner,
@@ -33,7 +80,6 @@ export default async ({ github, core, process }) => {
   }
   core.info(`Found associated PR: #${pr.number}`);
 
-  // https://docs.github.com/en/rest/search/search?apiVersion=2022-11-28#search-issues-and-pull-requests
   core.info(`Searching for 'internal/tracking' issue linked to PR #${pr.number}`);
   try {
     response = await github.request('GET /search/issues', {
@@ -54,7 +100,6 @@ export default async ({ github, core, process }) => {
   const trackingIssue = searchResults.items[0];
   core.info(`Found tracking issue: #${trackingIssue.number}`);
 
-  // https://docs.github.com/en/rest/issues/sub-issues?apiVersion=2022-11-28#add-sub-issue
   core.info(`Fetching sub-issues for tracking issue #${trackingIssue.number}`);
   try {
     response = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
@@ -84,7 +129,6 @@ export default async ({ github, core, process }) => {
     const subIssueNumber = subIssue.number;
     core.info(`Processing sub-issue #${subIssueNumber}...`);
 
-    // Find the release label directly on the sub-issue object
     const releaseLabel = subIssue.labels.find(label => label.name.startsWith('release/v'));
 
     if (!releaseLabel) {
@@ -156,4 +200,105 @@ export default async ({ github, core, process }) => {
       throw new Error(`Failed to add backport label to PR #${prNumber}: ${error.message}`);
     }
   }
-};
+}
+
+/**
+ * backport-issues: Creates sub-issues for tracking backports.
+ */
+async function runBackportIssues({ github, context, core, process }) {
+  const owner = "rancher";
+  const repo = "terraform-provider-rancher2";
+  const releaseLabel = context.payload.label.name;
+  const parentIssue = context.payload.issue;
+  const parentIssueTitle = parentIssue.title;
+  const parentIssueNumber = parentIssue.number;
+  const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
+  const extractedPrNumber = JSON.parse(process.env.PR);
+  let response;
+
+  try {
+    response = await github.rest.issues.get({
+      owner: owner,
+      repo: repo,
+      issue_number: extractedPrNumber
+    });
+  } catch (error) {
+    throw new Error(`Failed to retrieve PR #${extractedPrNumber}: ${error.message}`);
+  }
+  const pr = response.data;
+  core.info(`PR data: ${JSON.stringify(pr)}`);
+  const prNumber = pr.number;
+
+  try {
+    response = await github.rest.issues.create({
+      owner: owner,
+      repo: repo,
+      title: `[${releaseLabel}] ${parentIssueTitle}`,
+      body: [
+        `Backport #${prNumber} to ${releaseLabel} for #${parentIssueNumber}`,
+        `Please add this issue to the proper milestone.`,
+        `Copied from PR:`,
+        `${pr.body}`
+      ].join("\n\n"),
+      labels: [releaseLabel, "internal/backport"],
+      assignees: assignees
+    });
+  } catch (error) {
+    throw new Error(`Failed to create backport issue: ${error.message}`);
+  }
+  const newIssue = response.data;
+  core.info(`New backport issue data: ${JSON.stringify(newIssue)}`);
+  const subIssueId = newIssue.id;
+
+  try {
+    await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
+      owner: owner,
+      repo: repo,
+      issue_number: parentIssueNumber,
+      sub_issue_id: subIssueId,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    });
+  } catch (error) {
+    throw new Error(`Failed to link backport issue to tracking issue: ${error.message}`);
+  }
+}
+
+/**
+ * merge-label: Adds internal/merged label to issues referenced in a merged PR body.
+ */
+async function runMergeLabel({ github, context, core }) {
+  const owner = "rancher";
+  const repo = "terraform-provider-rancher2";
+  const pr = context.payload.pull_request;
+
+  const issueRegex = /#(\d+)/g;
+  const prBody = pr.body ?? "";
+  const matches = prBody.matchAll(issueRegex);
+  const issueNumbers = Array.from(matches, m => parseInt(m[1]));
+
+  core.info(`Found issue numbers in PR body: ${issueNumbers}`);
+
+  for (const issueNumber of issueNumbers) {
+    try {
+      const { data: issueData } = await github.rest.issues.get({
+        owner,
+        repo,
+        issue_number: issueNumber,
+      });
+
+      if (!issueData.pull_request && issueData.labels.some(l => l.name === 'internal/backport')) {
+        core.info(`Adding 'internal/merged' label to issue #${issueNumber}`);
+        await github.rest.issues.addLabels({
+          owner,
+          repo,
+          issue_number: issueNumber,
+          labels: ["internal/merged"]
+        });
+      }
+    } catch (error) {
+      core.setFailed(`Could not process issue #${issueNumber}: ${error.message}`);
+    }
+  }
+}

@@ -18,7 +18,7 @@ As a strict DevSecOps CI/CD reviewer, enforce these standards on all workflow ch
 * **Caching:** Suggest `actions/cache` or action-specific caching to speed up dependency downloads.
 
 ## 3. Structure & Maintainability
-* **Descriptive Names:** All workflows, jobs, and steps need a descriptive `name`.
+* **Descriptive Names:** All workflows, jobs, and steps need a descriptive `name` and an `id`. The name field must be the first attribute for a step.
 * **Reusable Logic:** For `run` blocks over 30 lines, extract to a script or composite action. Exception: `pull_request.yaml` (runs on user fork).
 * **Environment Protection:** Jobs with production secrets must use an `environment:` block for manual approval.
 * **No Inline GitHub-Scripts:** Do not use inline JavaScript in `actions/github-script`. Import scripts from `.github/workflows/scripts/`. Exceptions: `pull_request.yaml` and `backport-issues.yml`.

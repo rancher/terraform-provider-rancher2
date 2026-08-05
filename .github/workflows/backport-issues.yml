@@ -20,9 +20,9 @@ jobs:
       contents: read
     steps:
       - name: Find and Verify PR Number
+        id: extract-pr
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        id: extract_pr
         with:
           script: |
             const body = context.payload.issue.body;
@@ -50,11 +50,13 @@ jobs:
             }
             core.setFailed('No valid PR found.');
       - name: Create GitHub Issue
+        id: create-github-issue
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env :
           TERRAFORM_MAINTAINERS: ${{env.TERRAFORM_MAINTAINERS}}
-          PR: ${{ steps.extract_pr.outputs.result }}
+          PR: ${{ steps.extract-pr.outputs.result }}
+          SCRIPT_MODE: backport-issues
         with:
           script: |
             // Checking out the repository is a security risk, so we instead fetch the script content directly
@@ -62,7 +64,7 @@ jobs:
             const response = await github.rest.repos.getContent({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              path: ".github/workflows/scripts/backport-issues.js",
+              path: ".github/workflows/scripts/backports.js",
               // 'context.sha' is the SHA of the last commit on the default branch for this trigger
               ref: context.sha,
             });
@@ -72,7 +74,7 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             const { pathToFileURL } = require('url');
-            const tempPath = path.join(process.env.RUNNER_TEMP, 'backport-issues.mjs');
+            const tempPath = path.join(process.env.RUNNER_TEMP, 'backports.mjs');
             fs.writeFileSync(tempPath, scriptContent, 'utf8');
             const { default: script } = await import(pathToFileURL(tempPath).href);
             await script({github, context, core, process});
