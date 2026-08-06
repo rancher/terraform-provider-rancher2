@@ -74,19 +74,19 @@ func expandGlobalRole(in *schema.ResourceData) *managementClient.GlobalRole {
 		obj.Description = v
 	}
 
-	if v, ok := in.Get("rules").([]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("rules").([]any); ok && len(v) > 0 {
 		obj.Rules = expandPolicyRules(v)
 	}
 
-	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("annotations").(map[string]any); ok && len(v) > 0 {
 		obj.Annotations = toMapString(v)
 	}
 
-	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := in.Get("labels").(map[string]any); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
 	}
 
-	if v, k := in.Get("inherited_cluster_roles").([]interface{}); k && len(v) > 0 {
+	if v, k := in.Get("inherited_cluster_roles").([]any); k && len(v) > 0 {
 		obj.InheritedClusterRoles = toArrayString(v)
 	}
 
@@ -99,14 +99,14 @@ func expandGlobalRole(in *schema.ResourceData) *managementClient.GlobalRole {
 	return obj
 }
 
-func flattenInheritedNamespacedRules(in map[string][]managementClient.PolicyRule) []interface{} {
+func flattenInheritedNamespacedRules(in map[string][]managementClient.PolicyRule) []any {
 	if len(in) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	out := make([]interface{}, 0, len(in))
+	out := make([]any, 0, len(in))
 	for namespace, rules := range in {
-		out = append(out, map[string]interface{}{
+		out = append(out, map[string]any{
 			"namespace": namespace,
 			"rules":     flattenPolicyRules(rules),
 		})
@@ -115,15 +115,15 @@ func flattenInheritedNamespacedRules(in map[string][]managementClient.PolicyRule
 	return out
 }
 
-func expandInheritedNamespacedRules(in []interface{}) map[string][]managementClient.PolicyRule {
+func expandInheritedNamespacedRules(in []any) map[string][]managementClient.PolicyRule {
 	if len(in) == 0 {
 		return map[string][]managementClient.PolicyRule{}
 	}
 
 	out := make(map[string][]managementClient.PolicyRule, len(in))
 	for _, ruleSet := range in {
-		ruleSetMap := ruleSet.(map[string]interface{})
-		policyRules, _ := ruleSetMap["rules"].([]interface{})
+		ruleSetMap := ruleSet.(map[string]any)
+		policyRules, _ := ruleSetMap["rules"].([]any)
 		out[ruleSetMap["namespace"].(string)] = expandPolicyRules(policyRules)
 	}
 

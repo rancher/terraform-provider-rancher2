@@ -18,6 +18,18 @@ func resourceRancher2GlobalRole() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceRancher2GlobalRoleImport,
 		},
+		CustomizeDiff: func(d *schema.ResourceDiff, i any) error {
+			seen := map[string]bool{}
+			for _, ruleSet := range d.Get("inherited_namespaced_rules").(*schema.Set).List() {
+				namespace := ruleSet.(map[string]any)["namespace"].(string)
+				if seen[namespace] {
+					return fmt.Errorf("inherited_namespaced_rules cannot contain duplicate entries for namespace %q", namespace)
+				}
+				seen[namespace] = true
+			}
+
+			return nil
+		},
 
 		Schema: globalRoleFields(),
 		Timeouts: &schema.ResourceTimeout{
