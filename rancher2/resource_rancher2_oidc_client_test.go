@@ -11,6 +11,7 @@ import (
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestResourceRancher2OIDCClientRead(t *testing.T) {
@@ -39,6 +40,11 @@ func TestResourceRancher2OIDCClientRead(t *testing.T) {
 			RedirectURIs:                  []string{"http://127.0.0.1:5556/auth/rancher/callback"},
 			Status: managementClient.OIDCClientStatus{
 				ClientID: "my-client-id",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {
+						LastFiveCharacters: "ecret",
+					},
+				},
 			},
 		}
 
@@ -93,6 +99,13 @@ func TestResourceRancher2OIDCClientCreate(t *testing.T) {
 	newGetter := func(ops managementClient.OIDCClientOperations) *fakeManagementClientGetter {
 		return &fakeManagementClientGetter{
 			client: &managementClient.Client{OIDCClient: ops},
+			secrets: map[string]*corev1.Secret{
+				"local/cattle-oidc-client-secrets/my-client-id": {
+					Data: map[string][]byte{
+						"client-secret-1": []byte("my-secret"),
+					},
+				},
+			},
 		}
 	}
 
@@ -116,6 +129,14 @@ func TestResourceRancher2OIDCClientCreate(t *testing.T) {
 			TokenExpirationSeconds:        3600,
 			RefreshTokenExpirationSeconds: 7200,
 			RedirectURIs:                  []string{"http://127.0.0.1:5556/auth/rancher/callback"},
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "my-client-id",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {
+						LastFiveCharacters: "ecret",
+					},
+				},
+			},
 		}
 
 		// ByID is called by the Read that follows Create.
@@ -151,11 +172,22 @@ func TestResourceRancher2OIDCClientCreate(t *testing.T) {
 			Resource: types.Resource{
 				ID: "oidc-client-new",
 			},
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "my-client-id",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {
+						LastFiveCharacters: "ecret",
+					},
+				},
+			},
 		}
 
 		ops := &fakeOIDCClientOperations{
 			createResult: created,
-			err:          &clientbase.APIError{StatusCode: http.StatusNotFound},
+			byIDQueue: byIDQueue{
+				{client: created}, // initial read
+				{err: &clientbase.APIError{StatusCode: http.StatusNotFound, Msg: "not found"}},
+			},
 		}
 
 		d := newResourceData()
@@ -272,7 +304,9 @@ func TestResourceRancher2OIDCClientDelete(t *testing.T) {
 func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 	newGetter := func(ops managementClient.OIDCClientOperations) *fakeManagementClientGetter {
 		return &fakeManagementClientGetter{
-			client: &managementClient.Client{OIDCClient: ops},
+			client: &managementClient.Client{
+				OIDCClient: ops,
+			},
 		}
 	}
 
@@ -293,6 +327,14 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 		existing := &managementClient.OIDCClient{
 			Resource: types.Resource{
 				ID: "oidc-client-1",
+			},
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "oidc-client-1",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {
+						LastFiveCharacters: "ecret",
+					},
+				},
 			},
 		}
 
@@ -323,6 +365,14 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 		existing := &managementClient.OIDCClient{
 			Resource: types.Resource{
 				ID: "oidc-client-1",
+			},
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "oidc-client-1",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {
+						LastFiveCharacters: "ecret",
+					},
+				},
 			},
 		}
 
@@ -373,6 +423,14 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 			Resource: types.Resource{
 				ID: "oidc-client-1",
 			},
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "oidc-client-1",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {
+						LastFiveCharacters: "ecret",
+					},
+				},
+			},
 		}
 
 		updated := &managementClient.OIDCClient{
@@ -380,6 +438,14 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 			TokenExpirationSeconds:        3600,
 			RefreshTokenExpirationSeconds: 7200,
 			RedirectURIs:                  []string{"http://127.0.0.1:5556/auth/rancher/callback"},
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "oidc-client-1",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {
+						LastFiveCharacters: "ecret",
+					},
+				},
+			},
 		}
 		updated.ID = "oidc-client-1"
 
@@ -428,7 +494,16 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 	})
 
 	t.Run("clears ID when Read after Update returns not found", func(t *testing.T) {
-		existing := &managementClient.OIDCClient{}
+		existing := &managementClient.OIDCClient{
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "my-client-id",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {
+						LastFiveCharacters: "ecret",
+					},
+				},
+			},
+		}
 		existing.ID = "oidc-client-1"
 
 		ops := &fakeOIDCClientOperations{
@@ -437,7 +512,8 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 			// Second ByID (inside trailing Read): not found → ID cleared, no error.
 			byIDQueue: byIDQueue{
 				{client: existing},
-				{err: &clientbase.APIError{StatusCode: http.StatusNotFound}},
+				{client: existing},
+				{err: &clientbase.APIError{StatusCode: http.StatusNotFound, Msg: "not found"}},
 			},
 		}
 
@@ -574,9 +650,24 @@ func (f *fakeOIDCClientOperations) Delete(_ *managementClient.OIDCClient) error 
 // fakeManagementClientGetter satisfies the managementClientGetter interface using
 // a pre-built *managementClient.Client with stubbed operations.
 type fakeManagementClientGetter struct {
-	client *managementClient.Client
+	client  *managementClient.Client
+	secrets map[string]*corev1.Secret
 }
 
 func (f *fakeManagementClientGetter) ManagementClient() (*managementClient.Client, error) {
 	return f.client, nil
+}
+
+func (f *fakeManagementClientGetter) SecretByName(clusterName, namespace, secretName string) (*corev1.Secret, error) {
+	if f.secrets != nil {
+		key := clusterName + "/" + namespace + "/" + secretName
+		if secret, ok := f.secrets[key]; ok {
+			return secret, nil
+		}
+	}
+
+	return nil, &clientbase.APIError{
+		StatusCode: http.StatusNotFound,
+		Msg:        "secret not found",
+	}
 }
