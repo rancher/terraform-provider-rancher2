@@ -3,6 +3,9 @@ api
 auth
 aws
 azure
+backport
+client
+cognito
 config
 datasource
 destructuring
@@ -14,6 +17,9 @@ goreleaser
 kubeconfig
 kubernetes
 oci
+oidc
+oidcclient
+oidcclients
 oke
 pr
 pre
