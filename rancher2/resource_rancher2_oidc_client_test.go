@@ -525,6 +525,53 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 	})
 }
 
+func TestValidateRedirectURI(t *testing.T) {
+	tests := map[string]struct {
+		value   string
+		wantErr string
+	}{
+		"valid http URL":      {value: "http://127.0.0.1:5556/auth/rancher/callback"},
+		"valid https URL":     {value: "https://example.com/callback"},
+		"valid https no path": {value: "https://example.com"},
+		"no scheme": {
+			value:   "example.com/callback",
+			wantErr: `"redirect_uris" must be a valid absolute URL with scheme and host, got: "example.com/callback"`,
+		},
+		"no host": {
+			value:   "http:///callback",
+			wantErr: `"redirect_uris" must be a valid absolute URL with scheme and host, got: "http:///callback"`,
+		},
+		"empty string": {
+			value:   "",
+			wantErr: `"redirect_uris" must be a valid absolute URL with scheme and host, got: ""`,
+		},
+		"relative path": {
+			value:   "/just/a/path",
+			wantErr: `"redirect_uris" must be a valid absolute URL with scheme and host, got: "/just/a/path"`,
+		},
+		"not a URL": {
+			value:   "not-a-url",
+			wantErr: `"redirect_uris" must be a valid absolute URL with scheme and host, got: "not-a-url"`,
+		},
+		"URL with fragment": {
+			value:   "https://example.com/callback#section",
+			wantErr: `"redirect_uris" must not contain a fragment, got: "https://example.com/callback#section"`,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, errs := validateRedirectURI(tc.value, "redirect_uris")
+			if tc.wantErr != "" {
+				require.Len(t, errs, 1)
+				assert.EqualError(t, errs[0], tc.wantErr)
+			} else {
+				assert.Empty(t, errs)
+			}
+		})
+	}
+}
+
 // byIDResponse holds a single canned response for a ByID call.
 type byIDResponse struct {
 	client *managementClient.OIDCClient

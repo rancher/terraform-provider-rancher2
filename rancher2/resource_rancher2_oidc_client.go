@@ -5,6 +5,7 @@ import (
 	"log"
 	"maps"
 	"time"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -51,8 +52,10 @@ func oidcClientFields() map[string]*schema.Schema {
 			Description: "List of allowed redirect_uris for this client.",
 			Required:    true,
 			Type:        schema.TypeList,
+			MinItems:    1,
 			Elem: &schema.Schema{
-				Type: schema.TypeString,
+				Type:         schema.TypeString,
+				ValidateFunc: validateRedirectURI,
 			},
 		},
 		"description": {
@@ -248,4 +251,22 @@ type managementClientGetter interface {
 
 type secretFetcher interface {
 	SecretByName(cluster, namespace, secretName string) (*corev1.Secret, error)
+}
+
+func validateRedirectURI(val any, key string) (warnings []string, errs []error) {
+	v, ok := val.(string)
+	if !ok {
+		// This should not happen because the schema is TypeString.
+		errs = append(errs, fmt.Errorf("%q must be a string", key))
+		return
+	}
+	u, err := url.Parse(v)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		errs = append(errs, fmt.Errorf("%q must be a valid absolute URL with scheme and host, got: %q", key, v))
+		return
+	}
+	if u.Fragment != "" {
+		errs = append(errs, fmt.Errorf("%q must not contain a fragment, got: %q", key, v))
+	}
+	return
 }
