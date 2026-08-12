@@ -17,6 +17,7 @@ esm
 git
 github
 gke
+globalroles
 globbing
 goreleaser
 ipv
