@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 //Schemas
@@ -59,12 +60,15 @@ func globalRoleFields() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"namespace": {
-						Type:     schema.TypeString,
-						Required: true,
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
+						Description:  "Namespace for the inherited namespaced rules",
+						Required:     true,
 					},
 					"rules": {
-						Type:     schema.TypeList,
-						Optional: true,
+						Type:        schema.TypeList,
+						Optional:    true,
+						Description: "Policy rules granted in the namespace",
 						Elem: &schema.Resource{
 							Schema: policyRuleFields(),
 						},

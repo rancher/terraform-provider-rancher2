@@ -122,9 +122,18 @@ func expandInheritedNamespacedRules(in []any) map[string][]managementClient.Poli
 
 	out := make(map[string][]managementClient.PolicyRule, len(in))
 	for _, ruleSet := range in {
-		ruleSetMap := ruleSet.(map[string]any)
+		ruleSetMap, ok := ruleSet.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		namespace, ok := ruleSetMap["namespace"].(string)
+		if !ok {
+			continue
+		}
+
 		policyRules, _ := ruleSetMap["rules"].([]any)
-		out[ruleSetMap["namespace"].(string)] = expandPolicyRules(policyRules)
+		out[namespace] = expandPolicyRules(policyRules)
 	}
 
 	return out

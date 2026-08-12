@@ -70,7 +70,7 @@ The following attributes are exported:
 
 #### Arguments
 
-* `namespace` - (Required) Namespace in each downstream cluster where these rules apply (string)
+* `namespace` - (Required) Namespace in each downstream cluster where these rules apply. Each namespace may be specified only once (string)
 * `rules` - (Optional) Policy rules granted in the namespace (list)
 
 ## Timeouts

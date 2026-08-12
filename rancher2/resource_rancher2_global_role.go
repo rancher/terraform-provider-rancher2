@@ -19,16 +19,7 @@ func resourceRancher2GlobalRole() *schema.Resource {
 			State: resourceRancher2GlobalRoleImport,
 		},
 		CustomizeDiff: func(d *schema.ResourceDiff, i any) error {
-			seen := map[string]bool{}
-			for _, ruleSet := range d.Get("inherited_namespaced_rules").(*schema.Set).List() {
-				namespace := ruleSet.(map[string]any)["namespace"].(string)
-				if seen[namespace] {
-					return fmt.Errorf("inherited_namespaced_rules cannot contain duplicate entries for namespace %q", namespace)
-				}
-				seen[namespace] = true
-			}
-
-			return nil
+			return validateInheritedNamespacedRules(d.Get("inherited_namespaced_rules"))
 		},
 
 		Schema: globalRoleFields(),
@@ -38,6 +29,42 @@ func resourceRancher2GlobalRole() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 	}
+}
+
+func validateInheritedNamespacedRules(value any) error {
+	ruleSets, ok := value.(*schema.Set)
+	if !ok || ruleSets == nil {
+		return nil
+	}
+
+	seen := map[string]bool{}
+	for _, ruleSet := range ruleSets.List() {
+		ruleSetMap, ok := ruleSet.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		namespace, ok := ruleSetMap["namespace"].(string)
+		if !ok {
+			continue
+		}
+
+		if seen[namespace] {
+			return fmt.Errorf("inherited_namespaced_rules cannot contain duplicate entries for namespace %q", namespace)
+		}
+		seen[namespace] = true
+	}
+
+	return nil
+}
+
+func inheritedNamespacedRuleSetList(value any) []any {
+	ruleSets, ok := value.(*schema.Set)
+	if !ok || ruleSets == nil {
+		return nil
+	}
+
+	return ruleSets.List()
 }
 
 func resourceRancher2GlobalRoleCreate(d *schema.ResourceData, meta interface{}) error {
@@ -114,7 +141,7 @@ func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) 
 			"annotations":              toMapString(d.Get("annotations").(map[string]interface{})),
 			"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
 			"inheritedClusterRoles":    toArrayString(d.Get("inherited_cluster_roles").([]interface{})),
-			"inheritedNamespacedRules": expandInheritedNamespacedRules(d.Get("inherited_namespaced_rules").(*schema.Set).List()),
+			"inheritedNamespacedRules": expandInheritedNamespacedRules(inheritedNamespacedRuleSetList(d.Get("inherited_namespaced_rules"))),
 		}
 
 		if _, err = client.GlobalRole.Update(globalRole, update); err != nil {
