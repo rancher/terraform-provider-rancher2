@@ -64,4 +64,7 @@ sudo -E -u suse /home/suse/.nix-profile/bin/nix develop \
   --keep GPG_PASSPHRASE \
   --keep GPG_KEY_ID \
   --keep GPG_KEY \
+  --keep WORKING_DIR \
+  --keep GORELEASER_CONFIG \
+  --keep SKIP_VALIDATE \
   --command bash -e .nix-script.sh
