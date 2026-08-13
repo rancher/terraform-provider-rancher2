@@ -49,6 +49,7 @@ sudo -E -u suse /home/suse/.nix-profile/bin/nix develop \
   --keep SSH_AUTH_SOCK \
   --keep GITHUB_TOKEN \
   --keep GITHUB_OWNER \
+  --keep GITHUB_WORKSPACE \
   --keep AWS_ACCESS_KEY_ID \
   --keep AWS_SECRET_ACCESS_KEY \
   --keep AWS_SESSION_TOKEN \
@@ -59,6 +60,7 @@ sudo -E -u suse /home/suse/.nix-profile/bin/nix develop \
   --keep ZONE \
   --keep ACME_SERVER_URL \
   --keep PR_NUMBER \
+  --keep TAG \
   --keep GPG_PASSPHRASE \
   --keep GPG_KEY_ID \
   --keep GPG_KEY \
