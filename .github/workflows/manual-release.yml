@@ -112,35 +112,19 @@ jobs:
             secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
-      - name: import_gpg_key
-        id: import-gpg-key
-        env:
-          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
-          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
-          GPG_KEY: ${{ env.GPG_KEY }}
-        run: |
-          cleanup() {
-            # clear history just in case
-            history -c
-          }
-          trap cleanup EXIT TERM
-
-          # sanitize variables
-          if [ -z "${GPG_PASSPHRASE}" ]; then echo "gpg passphrase empty"; exit 1; fi
-          if [ -z "${GPG_KEY_ID}" ]; then echo "key id empty"; exit 1; fi
-          if [ -z "${GPG_KEY}" ]; then echo "key contents empty"; exit 1; fi
-
-          echo "Importing gpg key"
-          echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
       - name: Run GoReleaser
         id: run-goreleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          GPG_KEY: ${{ env.GPG_KEY }}
           TAG: ${{ inputs.tag }}
-        # Expansion is deliberately deferred to the inner Nix shell: GITHUB_WORKSPACE and
-        # TAG are on the --keep allowlist in nix-run.sh, which starts that shell with
-        # --ignore-environment. Deferring also keeps the step injection-safe, because the
-        # inner shell expands $TAG rather than re-parsing it as source.
-        run: .github/workflows/scripts/nix-run.sh bash -c "cd \"\$GITHUB_WORKSPACE/tags/\$TAG\" && goreleaser release --clean --skip=validate --config ../../.goreleaser.yml"
+          # Relative to the repository root, which is where nix-run.sh starts. Avoids
+          # having to name the workspace, whose path differs inside the container.
+          WORKING_DIR: tags/${{ inputs.tag }}
+          GORELEASER_CONFIG: ../../.goreleaser.yml
+          SKIP_VALIDATE: 'true'
+        # The key must be imported by the same 'suse' user that nix-run.sh drops to,
+        # so goreleaser.sh does the import itself rather than a separate step as root.
+        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/goreleaser.sh

@@ -467,30 +467,18 @@ jobs:
             secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
-      - name: import_gpg_key
-        id: import-gpg-key
-        env:
-          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
-          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
-          GPG_KEY: ${{ env.GPG_KEY }}
-        run: |
-          cleanup() {
-            history -c
-          }
-          trap cleanup EXIT TERM
-          if [ -z "${GPG_PASSPHRASE}" ]; then echo "gpg passphrase empty"; exit 1; fi
-          if [ -z "${GPG_KEY_ID}" ]; then echo "key id empty"; exit 1; fi
-          if [ -z "${GPG_KEY}" ]; then echo "key contents empty"; exit 1; fi
-          echo "Importing gpg key"
-          echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
       - name: Run GoReleaser
         id: run-goreleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          GPG_KEY: ${{ env.GPG_KEY }}
+          GORELEASER_CONFIG: .goreleaser_rc.yml
+        # The key must be imported by the same 'suse' user that nix-run.sh drops to,
+        # so goreleaser.sh does the import itself rather than a separate step as root.
         run: |-
-          .github/workflows/scripts/nix-run.sh goreleaser release --clean --config .goreleaser_rc.yml
+          .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/goreleaser.sh
       - name: 'Find Issues and Create Comments'
         id: find-issues-create-comments
         # https://github.com/actions/github-script/releases
@@ -545,30 +533,18 @@ jobs:
             secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
-      - name: import_gpg_key
-        id: import-gpg-key
-        env:
-          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
-          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
-          GPG_KEY: ${{ env.GPG_KEY }}
-        run: |
-          cleanup() {
-            history -c
-          }
-          trap cleanup EXIT TERM
-          if [ -z "${GPG_PASSPHRASE}" ]; then echo "gpg passphrase empty"; exit 1; fi
-          if [ -z "${GPG_KEY_ID}" ]; then echo "key id empty"; exit 1; fi
-          if [ -z "${GPG_KEY}" ]; then echo "key contents empty"; exit 1; fi
-          echo "Importing gpg key"
-          echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
       - name: Run GoReleaser
         id: run-goreleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          GPG_KEY: ${{ env.GPG_KEY }}
+          GORELEASER_CONFIG: .goreleaser.yml
+        # The key must be imported by the same 'suse' user that nix-run.sh drops to,
+        # so goreleaser.sh does the import itself rather than a separate step as root.
         run: |-
-          .github/workflows/scripts/nix-run.sh goreleaser release --clean --config .goreleaser.yml
+          .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/goreleaser.sh
       - name: Publish Release
         id: publish-release
         # https://github.com/actions/github-script/releases
