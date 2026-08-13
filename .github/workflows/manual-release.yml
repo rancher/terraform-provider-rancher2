@@ -14,8 +14,10 @@ permissions: {}
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
+    environment: release
     permissions:
       contents: write
       id-token: write
@@ -75,17 +77,16 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ inputs.tag }}
-          path: ${{ github.workspace }}/tags/${{ inputs.tag }}
+          path: tags/${{ inputs.tag }}
       - name: Prepare Registry Manifest
         id: prepare-registry-manifest
         env:
-          WORKSPACE: ${{ github.workspace }}
           TAG: ${{ inputs.tag }}
         run: |
           # remove any tags that are not the one specified (to avoid goreleaser confusion)
           DIR="$(pwd)"
-          cd "$WORKSPACE/tags/$TAG"
-          tags_to_delete=$(git tag | grep -v -e "^$TAG$")
+          cd "$GITHUB_WORKSPACE/tags/$TAG"
+          tags_to_delete=$(git tag | grep -v -x -F -e "$TAG" || true)
           if [ -n "$tags_to_delete" ]; then
             echo "$tags_to_delete" | xargs git tag -d
           fi
@@ -138,4 +139,8 @@ jobs:
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
           TAG: ${{ inputs.tag }}
+        # Expansion is deliberately deferred to the inner Nix shell: GITHUB_WORKSPACE and
+        # TAG are on the --keep allowlist in nix-run.sh, which starts that shell with
+        # --ignore-environment. Deferring also keeps the step injection-safe, because the
+        # inner shell expands $TAG rather than re-parsing it as source.
         run: .github/workflows/scripts/nix-run.sh bash -c "cd \"\$GITHUB_WORKSPACE/tags/\$TAG\" && goreleaser release --clean --skip=validate --config ../../.goreleaser.yml"
