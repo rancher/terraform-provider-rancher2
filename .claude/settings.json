@@ -25,6 +25,13 @@
           { "type": "command", "command": "node .agent/hooks/block-rancher-git.js" }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash .agent/hooks/notice-inefficiency.sh" }
+        ]
+      }
     ]
   }
 }
