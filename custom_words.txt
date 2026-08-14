@@ -6,6 +6,7 @@ authconfig
 aws
 azure
 backport
+client
 cognito
 config
 datasource
@@ -29,6 +30,7 @@ kubernetes
 nutanix
 oci
 oidc
+oidcclient
 oidcclients
 oke
 pc
