@@ -10,7 +10,9 @@ config
 datasource
 destructuring
 eks
-globbing
+eslint
+esm
+etcd
 git
 github
 goreleaser
