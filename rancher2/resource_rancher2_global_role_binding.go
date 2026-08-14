@@ -36,7 +36,7 @@ func resourceRancher2GlobalRoleBindingCreate(d *schema.ResourceData, meta interf
 	// creating a global role binding, but rejects the request when both are set.
 	// If only user_principal_id is configured, resolve the matching user ID
 	// before sending the request.
-	if len(globalRole.UserID) == 0 && len(globalRole.GroupPrincipalID) == 0 && len(globalRole.UserPrincipalID) > 0 {
+	if globalRole.UserID == "" && globalRole.GroupPrincipalID == "" && globalRole.UserPrincipalID != "" {
 		userID, err := meta.(*Config).GetUserIDByPrincipalID(globalRole.UserPrincipalID)
 		if err != nil {
 			return err
