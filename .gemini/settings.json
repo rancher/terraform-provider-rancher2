@@ -1,0 +1,32 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          { "type": "command", "command": "bash .agent/hooks/startup-context.sh" }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          { "type": "command", "command": "bash .agent/hooks/check-context.sh" }
+        ]
+      },
+      {
+        "matcher": "write_file|replace",
+        "hooks": [
+          { "type": "command", "command": "node .agent/hooks/enforce-planning.js" }
+        ]
+      },
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          { "type": "command", "command": "node .agent/hooks/block-rancher-git.js" }
+        ]
+      }
+    ]
+  }
+}

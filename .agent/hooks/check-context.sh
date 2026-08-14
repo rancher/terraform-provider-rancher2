@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Claude Context Limiter Hook
-# Reads JSON from stdin, outputs hookSpecificOutput JSON on deny, exits 0 on allow.
+# Context Limiter Hook (PreToolUse on Claude Code, BeforeTool on Gemini).
+# Reads JSON from stdin, exits 0 on allow. On deny, emits a JSON object with both
+# top-level decision/reason (Gemini) and hookSpecificOutput.permissionDecision
+# (Claude Code) — each host reads only the fields it recognizes.
 
 # Read standard input into a variable
 payload=$(cat)
@@ -25,9 +27,10 @@ fi
 
 if [[ "$token_usage" -gt "$MAX_TOKENS" ]]; then
   reason="Context limit of $MAX_TOKENS tokens reached. You must halt operations, update plans, and prompt the user for a new session."
-  
-  # Return deny decision via JSON for Claude's PreToolUse event
+
   jq -n --arg reason "$reason" '{
+    decision: "deny",
+    reason: $reason,
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       permissionDecision: "deny",
