@@ -24,6 +24,7 @@ func init() {
 		EndpointCA:          "endpoint_ca",
 		Folder:              "folder",
 		Region:              "region",
+		Retention:           5,
 		SkipSSLVerify:       true,
 	}
 
@@ -35,6 +36,7 @@ func init() {
 			"endpoint_ca":           "endpoint_ca",
 			"folder":                "folder",
 			"region":                "region",
+			"retention":             5,
 			"skip_ssl_verify":       true,
 		},
 	}
