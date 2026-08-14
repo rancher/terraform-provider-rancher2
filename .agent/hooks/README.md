@@ -17,8 +17,6 @@ for Claude Code) — each host reads only the fields it recognizes.
 
 - **`startup-context.sh`** (`SessionStart`, both hosts) — injects `AGENTS.md` and
   `development-process.md` as additional context at the start of a session.
-- **`check-context.sh`** (`PreToolUse`/`BeforeTool`, both hosts) — denies tool calls once
-  the session transcript grows past a token-count estimate, prompting a fresh session.
 - **`enforce-planning.js`** (`PreToolUse`/`BeforeTool`, both hosts) — denies file writes
   outside `.agent/`, `.gemini/`, `.claude/`, `AGENTS.md`, and `GEMINI.md` unless an active
   plan exists in `.agent/plans/` per `git status`. Also unconditionally denies any write

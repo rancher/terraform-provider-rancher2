@@ -10,12 +10,6 @@
     ],
     "BeforeTool": [
       {
-        "matcher": ".*",
-        "hooks": [
-          { "type": "command", "command": "bash .agent/hooks/check-context.sh" }
-        ]
-      },
-      {
         "matcher": "write_file|replace",
         "hooks": [
           { "type": "command", "command": "node .agent/hooks/enforce-planning.js" }

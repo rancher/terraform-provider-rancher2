@@ -9,11 +9,6 @@
     ],
     "PreToolUse": [
       {
-        "hooks": [
-          { "type": "command", "command": "bash .agent/hooks/check-context.sh" }
-        ]
-      },
-      {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           { "type": "command", "command": "node .agent/hooks/enforce-planning.js" }
