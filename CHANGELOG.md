@@ -1,5 +1,18 @@
 # Changelog
 
+## [14.1.1](https://github.com/rancher/terraform-provider-rancher2/compare/v14.1.1...v14.1.1) (2026-08-14)
+
+
+### Features
+
+* add s3 retention config for etcd snapshots ([#2403](https://github.com/rancher/terraform-provider-rancher2/issues/2403)) ([578b9a0](https://github.com/rancher/terraform-provider-rancher2/commit/578b9a03da6de9956ea5f17343e00f929009fcfa))
+* add use internal certs option for local auth endpoint in cluster v2 ([#1626](https://github.com/rancher/terraform-provider-rancher2/issues/1626)) ([#2293](https://github.com/rancher/terraform-provider-rancher2/issues/2293)) ([28e9051](https://github.com/rancher/terraform-provider-rancher2/commit/28e90514e2dc1b91db17689c1d2a802a20dc2327))
+
+
+### Bug Fixes
+
+* update docs on app_v2 import ([#2317](https://github.com/rancher/terraform-provider-rancher2/issues/2317)) ([#2330](https://github.com/rancher/terraform-provider-rancher2/issues/2330)) ([3eca3dd](https://github.com/rancher/terraform-provider-rancher2/commit/3eca3dd701fcfc18c8b1746ee77c245f06c9abfe))
+
 ## [14.1.1](https://github.com/rancher/terraform-provider-rancher2/compare/v14.1.0...v14.1.1) (2026-05-13)
 
 
