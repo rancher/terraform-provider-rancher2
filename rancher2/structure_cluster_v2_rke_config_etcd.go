@@ -31,6 +31,9 @@ func flattenClusterV2RKEConfigETCDSnapshotS3(in *rkev1.ETCDSnapshotS3) []interfa
 	if len(in.Region) > 0 {
 		obj["region"] = in.Region
 	}
+	if in.Retention > 0 {
+		obj["retention"] = in.Retention
+	}
 	obj["skip_ssl_verify"] = in.SkipSSLVerify
 
 	return []interface{}{obj}
@@ -86,6 +89,9 @@ func expandClusterV2RKEConfigETCDSnapshotS3(p []interface{}) *rkev1.ETCDSnapshot
 	}
 	if v, ok := in["region"].(string); ok && len(v) > 0 {
 		obj.Region = v
+	}
+	if v, ok := in["retention"].(int); ok && v > 0 {
+		obj.Retention = v
 	}
 	obj.SkipSSLVerify = in["skip_ssl_verify"].(bool)
 

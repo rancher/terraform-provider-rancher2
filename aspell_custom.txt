@@ -5,7 +5,9 @@ aws
 azure
 config
 eks
-globbing
+eslint
+esm
+etcd
 git
 github
 goreleaser
