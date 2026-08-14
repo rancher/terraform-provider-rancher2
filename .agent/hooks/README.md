@@ -33,6 +33,15 @@ for Claude Code) — each host reads only the fields it recognizes.
   yet — its closest equivalent event (`AfterAgent`) hasn't been verified against a live
   session.
 
+## Supported hosts
+
+These hooks are written and tested against Gemini Code Assist and Claude Code only —
+the tool-name vocabularies, decision schemas, and payload shapes referenced above are
+whatever those two hosts actually send today, not a spec. PRs adding support for another
+host are welcome, as long as they don't break the existing Gemini or Claude Code behavior
+(verify both directly against a live payload, per the rule below, rather than assuming
+your change is additive).
+
 ## Adding a new hook
 
 1. Write the script to read the host's stdin JSON and emit the decision schema(s) it

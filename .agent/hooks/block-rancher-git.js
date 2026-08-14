@@ -12,22 +12,26 @@ import path from 'path';
 // Claude Code's shell tool vs Gemini's
 const SHELL_TOOL_NAMES = new Set(['run_shell_command', 'Bash']);
 
-function allow() {
-  console.log(JSON.stringify({ decision: "allow" }));
+// Claude Code validates the whole hook output against a schema where top-level
+// `decision` only accepts "approve"|"block" — "allow"/"deny" (Gemini's values) fail
+// that validation and silently drop the entire payload, including hookSpecificOutput.
+// So the top-level decision/reason pair is only emitted for Gemini; Claude Code reads
+// hookSpecificOutput.permissionDecision instead, which is present either way.
+function allow(isClaudeCode) {
+  console.log(JSON.stringify(isClaudeCode ? {} : { decision: "allow" }));
   process.exit(0);
 }
 
-function deny(reason, systemMessage) {
-  console.log(JSON.stringify({
-    decision: "deny",
-    reason,
-    systemMessage,
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: reason
-    }
-  }));
+function deny(reason, systemMessage, isClaudeCode) {
+  const hookSpecificOutput = {
+    hookEventName: "PreToolUse",
+    permissionDecision: "deny",
+    permissionDecisionReason: reason
+  };
+  const payload = isClaudeCode
+    ? { reason, systemMessage, hookSpecificOutput }
+    : { decision: "deny", reason, systemMessage, hookSpecificOutput };
+  console.log(JSON.stringify(payload));
   process.exit(0);
 }
 
@@ -37,14 +41,15 @@ function main() {
     inputData = JSON.parse(fs.readFileSync(0, 'utf-8'));
   } catch (err) {
     console.error("Failed to parse stdin JSON:", err);
-    allow();
+    allow(false);
   }
 
   const { tool_name, tool_input, cwd } = inputData;
+  const isClaudeCode = tool_name === 'Bash';
 
   // We only inspect shell-command tool calls
   if (!SHELL_TOOL_NAMES.has(tool_name) || !tool_input || !tool_input.command) {
-    allow();
+    allow(isClaudeCode);
   }
 
   const command = tool_input.command.trim();
@@ -67,7 +72,8 @@ function main() {
       "1. In the chat, invoke the review agent: @review_agent Please review my current staged changes.\n" +
       "2. The review agent will run static checks, analyze the diff, and programmatically write the secure approval file with correct checksums.\n" +
       "3. Never attempt to manually create, edit, or spoof the review-approval.json file.",
-      "🔒 Security Block: Direct manipulation of review-approval.json is prohibited."
+      "🔒 Security Block: Direct manipulation of review-approval.json is prohibited.",
+      isClaudeCode
     );
   }
 
@@ -141,7 +147,8 @@ function main() {
               `1. Complete all iteration reviews and obtain local sign-off.\n` +
               `2. Convert the draft PR to Ready-for-Review (Phase 6, Step 18) using: \`gh pr ready ${prInfo.number}\` (or the create-pr.sh skill).\n` +
               `3. Once the PR is marked as ready for review on GitHub, you will be authorized to switch branches (Phase 7, Step 20).`,
-              `🔒 Security Block: Current PR #${prInfo.number} is in Draft mode. Please comply with Phase 6, Step 18 of development-process.md.`
+              `🔒 Security Block: Current PR #${prInfo.number} is in Draft mode. Please comply with Phase 6, Step 18 of development-process.md.`,
+              isClaudeCode
             );
           }
         }
@@ -150,7 +157,8 @@ function main() {
       console.error("Failed to verify branch PR status:", err);
       deny(
         "Security Policy Violation: Failed to verify draft PR status on GitHub. To prevent branch state divergence, operations are blocked until status can be verified.",
-        "🔒 Security Block: Branch PR verification failed."
+        "🔒 Security Block: Branch PR verification failed.",
+        isClaudeCode
       );
     }
   }
@@ -166,16 +174,45 @@ function main() {
       `1. Stage your changes cleanly: \`git add <files>...\`\n` +
       `2. Execute the commit-push skill in the chat: \`.agent/skills/commit-push.sh -m "your commit message"\`\n` +
       `3. Provide manual confirmation and allow the skill to execute fully.`,
-      "🔒 Security Block: Direct git commit/push is blocked. Please run '.agent/skills/commit-push.sh -m \"...\"' to commit."
+      "🔒 Security Block: Direct git commit/push is blocked. Please run '.agent/skills/commit-push.sh -m \"...\"' to commit.",
+      isClaudeCode
     );
   }
 
-  // Check if it is a git command and performs a remote-interacting operation
+  // Check if it is a git command and performs a remote-interacting operation. Matched
+  // unanchored (not "immediately after git") so a leading global flag like `git -C /tmp
+  // fetch ...` can't slip past this gate entirely — it only needs to appear somewhere in
+  // the command, same as the original (pre-narrowing) check did.
   const isGitCmd = /^(?:sudo\s+)?git\b/.test(commandClean);
   const isRemoteOp = /\b(push|pull|fetch|clone|remote)\b/.test(commandClean);
 
   if (isGitCmd && isRemoteOp) {
     const targetDir = tool_input.dir_path || cwd || process.cwd();
+
+    // Identify the subcommand by exact whole-token match, not by searching for the keyword
+    // as a substring anywhere in the command — a `\b`-bounded substring search would still
+    // match "remote"/"clone"/etc. inside an unrelated argument like a `-C /tmp/remote-mirror`
+    // path segment appearing before the real subcommand, misclassifying it and skipping the
+    // actual safety check below entirely.
+    const commandTokens = commandClean.split(/\s+/).filter(Boolean);
+    const subcommandIndex = commandTokens.findIndex((t, i) => i > 0 && /^(push|pull|fetch|clone|remote)$/.test(t));
+    const subcommand = subcommandIndex !== -1 ? commandTokens[subcommandIndex] : null;
+    const remainingArgs = subcommandIndex !== -1 ? commandTokens.slice(subcommandIndex + 1) : [];
+    const nonFlagArgs = remainingArgs.filter(a => !a.startsWith('-'));
+    const remoteAction = nonFlagArgs[0];
+
+    // `git remote` read-only forms (bare, -v, show, get-url) and mutations that don't
+    // introduce a URL (remove/rm/rename) can't leak or introduce anything, so they must stay
+    // usable no matter what — including when the remote being removed/renamed is merely
+    // NAMED with "rancher" in it. This runs before the literal-text scan below specifically
+    // so that case doesn't get caught by it; denying it is exactly what traps a repo with a
+    // rancher-pointing remote in an unrecoverable blocked state.
+    const NON_URL_REMOTE_ACTIONS = new Set(['remove', 'rm', 'rename', 'show', 'get-url']);
+    const isSafeRemoteAction = subcommand === 'remote' &&
+      (!remoteAction || NON_URL_REMOTE_ACTIONS.has(remoteAction) || remainingArgs.includes('-v'));
+    if (isSafeRemoteAction) {
+      allow(isClaudeCode);
+    }
 
     // Check command string directly to catch inline URL references or remote additions
     // Ignore false positives from the filename "block-rancher-git.js"
@@ -183,35 +220,76 @@ function main() {
     if (hasRancherRef) {
       deny(
         "Security Policy Violation: Git command contains references to Rancher remote/URLs, which is strictly blocked.",
-        "🔒 Security Block: Prohibited remote/URL reference detected."
+        "🔒 Security Block: Prohibited remote/URL reference detected.",
+        isClaudeCode
       );
     }
 
-    try {
-      // Fetch remote URLs configured in this repo
-      const remotesOutput = execSync('git remote -v', {
-        cwd: path.resolve(targetDir),
-        stdio: ['ignore', 'pipe', 'ignore']
-      }).toString();
+    // `git clone <url>` targets a brand-new location, not this repo's configured remotes —
+    // hasRancherRef above already covers a literal rancher URL in the command.
+    if (subcommand === 'clone') {
+      allow(isClaudeCode);
+    }
 
-      // Check if any remote URL contains "rancher" (case-insensitive)
-      if (/rancher/i.test(remotesOutput)) {
-        deny(
-          "Security Policy Violation: Operations (push, pull, fetch, remote) targeting Rancher-owned remotes are strictly blocked.",
-          "🔒 Security Block: Git remote operation against a Rancher remote is prohibited."
-        );
+    // Only a URL-introducing `remote` action (add/set-url) reaches here; hasRancherRef above
+    // already denies if the new name/URL mentions "rancher", and no pre-existing remote needs
+    // consulting for those actions.
+    if (subcommand === 'remote') {
+      allow(isClaudeCode);
+    }
+
+    // push/pull/fetch: only deny when the SPECIFIC remote this command targets points at
+    // rancher — not just because some other configured remote (e.g. a temporary `upstream`
+    // added by a sync script) happens to. Falls back to checking every configured remote
+    // whenever we can't confidently resolve a single target — either no remote was named
+    // explicitly, or the first non-flag token isn't actually a saved remote (e.g. a flag's
+    // separate-token value like the `1` in `--depth 1` was mistaken for one) — safety over
+    // precision in the ambiguous case.
+    try {
+      let targetRemoteUrl = null;
+      if (remoteAction) {
+        try {
+          targetRemoteUrl = execFileSync('git', ['remote', 'get-url', remoteAction], {
+            cwd: path.resolve(targetDir),
+            stdio: ['ignore', 'pipe', 'ignore']
+          }).toString();
+        } catch {
+          targetRemoteUrl = null;
+        }
+      }
+      if (targetRemoteUrl !== null) {
+        if (/rancher/i.test(targetRemoteUrl)) {
+          deny(
+            "Security Policy Violation: Operations (push, pull, fetch) targeting Rancher-owned remotes are strictly blocked.",
+            "🔒 Security Block: Git remote operation against a Rancher remote is prohibited.",
+            isClaudeCode
+          );
+        }
+      } else {
+        const remotesOutput = execSync('git remote -v', {
+          cwd: path.resolve(targetDir),
+          stdio: ['ignore', 'pipe', 'ignore']
+        }).toString();
+        if (/rancher/i.test(remotesOutput)) {
+          deny(
+            "Security Policy Violation: Operations (push, pull, fetch) targeting Rancher-owned remotes are strictly blocked.",
+            "🔒 Security Block: Git remote operation against a Rancher remote is prohibited.",
+            isClaudeCode
+          );
+        }
       }
     } catch (err) {
       console.error("Failed to check git remote safety:", err);
       deny(
         "Security Policy Violation: Failed to check git remote safety configuration.",
-        "🔒 Security Block: Remote safety verification failed."
+        "🔒 Security Block: Remote safety verification failed.",
+        isClaudeCode
       );
     }
   }
 
   // Allow all other commands to proceed
-  allow();
+  allow(isClaudeCode);
 }
 
 main();
