@@ -133,15 +133,19 @@ func resourceRancher2GlobalRoleUpdate(d *schema.ResourceData, meta interface{}) 
 			return resource.NonRetryableError(err)
 		}
 
-		update := map[string]interface{}{
-			"description":              d.Get("description").(string),
-			"name":                     d.Get("name").(string),
-			"newUserDefault":           d.Get("new_user_default").(bool),
-			"rules":                    expandPolicyRules(d.Get("rules").([]interface{})),
-			"annotations":              toMapString(d.Get("annotations").(map[string]interface{})),
-			"labels":                   toMapString(d.Get("labels").(map[string]interface{})),
-			"inheritedClusterRoles":    toArrayString(d.Get("inherited_cluster_roles").([]interface{})),
-			"inheritedNamespacedRules": expandInheritedNamespacedRules(inheritedNamespacedRuleSetList(d.Get("inherited_namespaced_rules"))),
+		update := map[string]any{
+			"description":           d.Get("description").(string),
+			"name":                  d.Get("name").(string),
+			"newUserDefault":        d.Get("new_user_default").(bool),
+			"rules":                 expandPolicyRules(d.Get("rules").([]any)),
+			"annotations":           toMapString(d.Get("annotations").(map[string]any)),
+			"labels":                toMapString(d.Get("labels").(map[string]any)),
+			"inheritedClusterRoles": toArrayString(d.Get("inherited_cluster_roles").([]any)),
+		}
+
+		// Computed field: only send when the user changed it, to avoid clearing server-managed values
+		if d.HasChange("inherited_namespaced_rules") {
+			update["inheritedNamespacedRules"] = expandInheritedNamespacedRules(inheritedNamespacedRuleSetList(d.Get("inherited_namespaced_rules")))
 		}
 
 		if _, err = client.GlobalRole.Update(globalRole, update); err != nil {

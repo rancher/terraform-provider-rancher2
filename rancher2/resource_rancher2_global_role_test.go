@@ -10,27 +10,27 @@ import (
 func TestValidateInheritedNamespacedRules(t *testing.T) {
 	cases := []struct {
 		name     string
-		ruleSets []interface{}
+		ruleSets []any
 		wantErr  string
 	}{
 		{
 			name: "duplicate namespaces",
-			ruleSets: []interface{}{
-				map[string]interface{}{
+			ruleSets: []any{
+				map[string]any{
 					"namespace": "default",
-					"rules": []interface{}{
-						map[string]interface{}{
-							"resources": []interface{}{"configmaps"},
-							"verbs":     []interface{}{"get"},
+					"rules": []any{
+						map[string]any{
+							"resources": []any{"configmaps"},
+							"verbs":     []any{"get"},
 						},
 					},
 				},
-				map[string]interface{}{
+				map[string]any{
 					"namespace": "default",
-					"rules": []interface{}{
-						map[string]interface{}{
-							"resources": []interface{}{"secrets"},
-							"verbs":     []interface{}{"list"},
+					"rules": []any{
+						map[string]any{
+							"resources": []any{"secrets"},
+							"verbs":     []any{"list"},
 						},
 					},
 				},
@@ -39,14 +39,14 @@ func TestValidateInheritedNamespacedRules(t *testing.T) {
 		},
 		{
 			name: "unique namespaces",
-			ruleSets: []interface{}{
-				map[string]interface{}{
+			ruleSets: []any{
+				map[string]any{
 					"namespace": "default",
-					"rules":     []interface{}{},
+					"rules":     []any{},
 				},
-				map[string]interface{}{
+				map[string]any{
 					"namespace": "kube-system",
-					"rules":     []interface{}{},
+					"rules":     []any{},
 				},
 			},
 		},
@@ -54,7 +54,7 @@ func TestValidateInheritedNamespacedRules(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			data := schema.TestResourceDataRaw(t, globalRoleFields(), map[string]interface{}{
+			data := schema.TestResourceDataRaw(t, globalRoleFields(), map[string]any{
 				"name":                       "test-role",
 				"inherited_namespaced_rules": tc.ruleSets,
 			})
@@ -73,8 +73,8 @@ func TestValidateInheritedNamespacedRules(t *testing.T) {
 func TestValidateInheritedNamespacedRulesAllowsUnknownValues(t *testing.T) {
 	assert.NoError(t, validateInheritedNamespacedRules(nil))
 
-	ruleSets := schema.NewSet(func(interface{}) int { return 0 }, []interface{}{
-		map[string]interface{}{
+	ruleSets := schema.NewSet(func(any) int { return 0 }, []any{
+		map[string]any{
 			"namespace": nil,
 		},
 	})
