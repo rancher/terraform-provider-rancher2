@@ -45,7 +45,7 @@ The following arguments are supported:
 * `annotations` - (Optional/Computed) Annotations for global role object (map)
 * `labels` - (Optional/Computed) Labels for global role object (map)
 * `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
-* `inherited_namespaced_rules` - (Optional) Policy rules granted in matching namespaces of every cluster besides the local cluster (set)
+* `inherited_namespaced_rules` - (Optional/Computed) Policy rules granted in matching namespaces of every cluster besides the local cluster (set)
 
 ## Attributes Reference
 
@@ -71,7 +71,7 @@ The following attributes are exported:
 #### Arguments
 
 * `namespace` - (Required) Namespace in each downstream cluster where these rules apply. Each namespace may be specified only once (string)
-* `rules` - (Optional) Policy rules granted in the namespace (list)
+* `rules` - (Optional/Computed) Policy rules granted in the namespace (list)
 
 ## Timeouts
 
