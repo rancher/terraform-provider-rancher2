@@ -23,8 +23,9 @@ As a strict CI/CD and automation reviewer, enforce these standards on all shell 
 ## 3. Naming Conventions & Structure
 * **Variable Scoping:** Always use `local` for variables inside functions to prevent global scope leakage.
 * **Naming:** Use `UPPER_CASE` for global/environment variables and `lower_case` for internal/local variables.
-* **Modularity:** For scripts longer than 50 lines, organize logic into discrete functions (e.g., `cleanup() { ... }`) rather than a single monolithic block.
-* **Main Execution:** If using functions, invoke the main logic at the very bottom of the script (e.g., `main "$@"`).
+* **Mandatory Modularity:** ALL scripts MUST organize logic into cohesive, single-responsibility functions (e.g., `cleanup()`, `validate()`, etc.) instead of a single monolithic script block, regardless of script length.
+* **Mandatory Help/Usage Standard:** ALL scripts MUST implement help/usage functionality. They must parse `-h` and `--help` options and call a `show_help()` or `show_usage()` function that prints a beautifully formatted help manual, exiting cleanly with status 0.
+* **Mandatory Main Execution:** ALL scripts MUST have a `main()` function at the very bottom of the script that orchestrates the entire execution flow. The main function must be invoked as `main "$@"` to pass all command-line arguments.
 
 ## 4. Test Scripts & Makefiles
 * **Makefiles:** The repository must include a `Makefile` that runs outside of the development environment context.

@@ -1,22 +1,23 @@
 #!/usr/bin/env node
 //
-// Runs as a PreToolUse (Claude Code) / BeforeTool (Gemini) hook. Both hosts send the
-// same stdin shape (tool_name, tool_input, cwd) but use different tool-name vocabularies
-// and different decision fields, so allow()/deny() below emit a JSON object that satisfies
-// both: top-level decision/reason (Gemini) plus hookSpecificOutput.permissionDecision
-// (Claude Code). Each host reads only the fields it recognizes and ignores the rest.
-import { execSync, execFileSync } from 'child_process';
+// Hook for Claude Code & Gemini. Both share stdin shape but use different output schemas.
+// Emits a unified JSON payload with Gemini's top-level decision/reason and Claude's
+// hookSpecificOutput; each host reads only the fields it recognizes and ignores the rest.
+import { execFileSync, execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
 // Claude Code's shell tool vs Gemini's
 const SHELL_TOOL_NAMES = new Set(['run_shell_command', 'Bash']);
 
-// Claude Code validates the whole hook output against a schema where top-level
-// `decision` only accepts "approve"|"block" — "allow"/"deny" (Gemini's values) fail
-// that validation and silently drop the entire payload, including hookSpecificOutput.
-// So the top-level decision/reason pair is only emitted for Gemini; Claude Code reads
-// hookSpecificOutput.permissionDecision instead, which is present either way.
+// Match the URL owner segment exactly (`/:/`) to prevent false
+// positives on safe forks. A blanket `/rancher/i` substring test would match the repo
+// name ("terraform-provider-rancher2") on all remotes, breaking the check.
+const RANCHER_OWNER_RE = /[/:](rancher|rancherlabs)\//i;
+
+// Gemini reads top-level "allow"/"deny", while Claude Code requires "hookSpecificOutput".
+// Emitting "allow"/"deny" at the top level for Claude Code causes schema validation 
+// failures that drop the entire payload, so it's only included when responding to Gemini.
 function allow(isClaudeCode) {
   console.log(JSON.stringify(isClaudeCode ? {} : { decision: "allow" }));
   process.exit(0);
@@ -83,9 +84,8 @@ function main() {
     isBranchSwitch = true;
   } else if (/\bgit\s+checkout\b/.test(commandClean)) {
     // Check if it is a file-only checkout.
-    // A file checkout is characterized by:
-    // 1. It contains " -- " followed by a file path, e.g. "git checkout -- file.js".
-    // 2. Or the arguments (excluding flags like -f, -q) correspond to existing files/folders on disk.
+    // 1. The presence of " -- " before a file path.
+    // 2. Or non-flag arguments matching existing files/folders on disk.
     const hasDoubleDash = commandClean.includes(' -- ');
     if (hasDoubleDash) {
       isBranchSwitch = false;
@@ -179,34 +179,29 @@ function main() {
     );
   }
 
-  // Check if it is a git command and performs a remote-interacting operation. Matched
-  // unanchored (not "immediately after git") so a leading global flag like `git -C /tmp
-  // fetch ...` can't slip past this gate entirely — it only needs to appear somewhere in
-  // the command, same as the original (pre-narrowing) check did.
-  const isGitCmd = /^(?:sudo\s+)?git\b/.test(commandClean);
-  const isRemoteOp = /\b(push|pull|fetch|clone|remote)\b/.test(commandClean);
+  // Check for remote-interacting git commands, preventing bypasses and text false positives.
+  // "git" must be at a command boundary, and its subcommand separator must stay on the same line.
+  // Normalizes line continuations to spaces and supports `sudo` with optional flags.
+  const remoteOpCheckTarget = commandClean.replace(/\\\r?\n[ \t]*/g, ' ');
+  const isRemoteOp = /(?:^|[;&|`(){]|\$\(|\n)[ \t]*(?:sudo[ \t]+(?:[^\s;&|`(){]+[ \t]+)*?)?git[ \t]+(?:[^\s;&|`(){]+[ \t]+)*?(push|pull|fetch|clone|remote)\b/.test(remoteOpCheckTarget);
 
-  if (isGitCmd && isRemoteOp) {
+  if (isRemoteOp) {
     const targetDir = tool_input.dir_path || cwd || process.cwd();
 
-    // Identify the subcommand by exact whole-token match, not by searching for the keyword
-    // as a substring anywhere in the command — a `\b`-bounded substring search would still
-    // match "remote"/"clone"/etc. inside an unrelated argument like a `-C /tmp/remote-mirror`
-    // path segment appearing before the real subcommand, misclassifying it and skipping the
-    // actual safety check below entirely.
-    const commandTokens = commandClean.split(/\s+/).filter(Boolean);
+    // Match the subcommand exactly to prevent false positives (e.g., `-C /tmp/remote-mirror`).
+    // Strip shell grouping punctuation from tokens so wrapped commands like `(git fetch origin)`
+    // don't leave trailing parenthesis attached, which would break remote name lookups.
+    const stripGroupingPunct = (t) => t.replace(/^[(){}]+/, '').replace(/[(){};]+$/, '');
+    const commandTokens = commandClean.split(/\s+/).filter(Boolean).map(stripGroupingPunct).filter(Boolean);
     const subcommandIndex = commandTokens.findIndex((t, i) => i > 0 && /^(push|pull|fetch|clone|remote)$/.test(t));
     const subcommand = subcommandIndex !== -1 ? commandTokens[subcommandIndex] : null;
     const remainingArgs = subcommandIndex !== -1 ? commandTokens.slice(subcommandIndex + 1) : [];
     const nonFlagArgs = remainingArgs.filter(a => !a.startsWith('-'));
     const remoteAction = nonFlagArgs[0];
 
-    // `git remote` read-only forms (bare, -v, show, get-url) and mutations that don't
-    // introduce a URL (remove/rm/rename) can't leak or introduce anything, so they must stay
-    // usable no matter what — including when the remote being removed/renamed is merely
-    // NAMED with "rancher" in it. This runs before the literal-text scan below specifically
-    // so that case doesn't get caught by it; denying it is exactly what traps a repo with a
-    // rancher-pointing remote in an unrecoverable blocked state.
+    // Allow read-only/non-URL `git remote` actions (e.g., rm, rename, show, -v).
+    // This runs before the Rancher literal-text scan so users can remove/rename existing
+    // rancher-pointing remotes without getting permanently blocked by the safety hook.
     const NON_URL_REMOTE_ACTIONS = new Set(['remove', 'rm', 'rename', 'show', 'get-url']);
     const isSafeRemoteAction = subcommand === 'remote' &&
       (!remoteAction || NON_URL_REMOTE_ACTIONS.has(remoteAction) || remainingArgs.includes('-v'));
@@ -214,10 +209,16 @@ function main() {
       allow(isClaudeCode);
     }
 
-    // Check command string directly to catch inline URL references or remote additions
-    // Ignore false positives from the filename "block-rancher-git.js"
-    const hasRancherRef = /rancher/i.test(command.replace(/block-rancher-git\.js/g, ''));
-    if (hasRancherRef) {
+    // Check command tokens directly to catch inline URL/SSH references or remote additions,
+    // while ignoring false positives from local filesystem paths containing "rancher" (e.g. git -C /home/me/rancher/repo).
+    const isUrlOrSshRef = (token) => {
+      return /^[a-z0-9+.-]+:\/\//i.test(token) || /^([^@:\s]+@)?[a-z0-9.-]+\.[a-z]{2,}:[^\s]+$/i.test(token);
+    };
+    const hasInlineRancherRef = commandTokens.some(token => {
+      if (token.includes('block-rancher-git.js')) return false;
+      return RANCHER_OWNER_RE.test(token) && isUrlOrSshRef(token);
+    });
+    if (hasInlineRancherRef) {
       deny(
         "Security Policy Violation: Git command contains references to Rancher remote/URLs, which is strictly blocked.",
         "🔒 Security Block: Prohibited remote/URL reference detected.",
@@ -226,51 +227,109 @@ function main() {
     }
 
     // `git clone <url>` targets a brand-new location, not this repo's configured remotes —
-    // hasRancherRef above already covers a literal rancher URL in the command.
+    // hasInlineRancherRef above already covers a literal rancher URL in the command.
     if (subcommand === 'clone') {
       allow(isClaudeCode);
     }
 
-    // Only a URL-introducing `remote` action (add/set-url) reaches here; hasRancherRef above
+    // Only a URL-introducing `remote` action (add/set-url) reaches here; hasInlineRancherRef above
     // already denies if the new name/URL mentions "rancher", and no pre-existing remote needs
-    // consulting for those actions.
-    if (subcommand === 'remote') {
+    // consulting for those actions. Exclude 'git remote update' as it triggers network fetches.
+    if (subcommand === 'remote' && remoteAction !== 'update') {
       allow(isClaudeCode);
     }
 
-    // push/pull/fetch: only deny when the SPECIFIC remote this command targets points at
-    // rancher — not just because some other configured remote (e.g. a temporary `upstream`
-    // added by a sync script) happens to. Falls back to checking every configured remote
-    // whenever we can't confidently resolve a single target — either no remote was named
-    // explicitly, or the first non-flag token isn't actually a saved remote (e.g. a flag's
-    // separate-token value like the `1` in `--depth 1` was mistaken for one) — safety over
-    // precision in the ambiguous case.
+    // For push/pull/fetch: only block if the SPECIFIC targeted remote points to Rancher.
+    // If we cannot confidently resolve the target remotes (e.g., --all or --multiple flags used,
+    // or ambiguous arguments), fall back to checking all configured remotes for maximum safety.
     try {
-      let targetRemoteUrl = null;
-      if (remoteAction) {
+      let targetRemotes = [];
+      let checkAllRemotes = false;
+
+      try {
+        const remotesOutput = execFileSync('git', ['remote'], {
+          cwd: path.resolve(targetDir),
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'ignore']
+        });
+        const configuredRemotes = remotesOutput.split(/\r?\n/).map(r => r.trim()).filter(Boolean);
+        
+        const hasAllOrMultipleFlag = remainingArgs.some(arg => arg === '--all' || arg === '--multiple');
+        const isRemoteUpdate = subcommand === 'remote' && remoteAction === 'update';
+
+        if (hasAllOrMultipleFlag || isRemoteUpdate) {
+          checkAllRemotes = true;
+        } else {
+          // Collect all explicit remote names targeted in the command arguments
+          targetRemotes = remainingArgs.filter(arg => configuredRemotes.includes(arg));
+
+          // If no explicit remote arguments are found, try to resolve the current branch's tracking remote
+          if (targetRemotes.length === 0) {
+            const currentBranch = execFileSync('git', ['branch', '--show-current'], {
+              cwd: path.resolve(targetDir),
+              encoding: 'utf8',
+              stdio: ['ignore', 'pipe', 'ignore']
+            }).trim();
+            if (currentBranch) {
+              try {
+                const trackingRemote = execFileSync('git', ['config', '--get', `branch.${currentBranch}.remote`], {
+                  cwd: path.resolve(targetDir),
+                  encoding: 'utf8',
+                  stdio: ['ignore', 'pipe', 'ignore']
+                }).trim();
+                if (trackingRemote && configuredRemotes.includes(trackingRemote)) {
+                  targetRemotes = [trackingRemote];
+                }
+              } catch {}
+            }
+          }
+
+          // If we still have no remotes, fall back to checking all configured remotes for maximum safety
+          if (targetRemotes.length === 0) {
+            checkAllRemotes = true;
+          }
+        }
+
+        if (checkAllRemotes) {
+          targetRemotes = configuredRemotes;
+        }
+      } catch {
+        checkAllRemotes = true;
+      }
+
+      // Verify all targeted remotes
+      for (const remote of targetRemotes) {
+        let targetRemoteUrl = null;
         try {
-          targetRemoteUrl = execFileSync('git', ['remote', 'get-url', remoteAction], {
+          // Use standard '--' options terminator to defend against flag injection in remote names
+          targetRemoteUrl = execFileSync('git', ['remote', 'get-url', '--', remote], {
             cwd: path.resolve(targetDir),
             stdio: ['ignore', 'pipe', 'ignore']
           }).toString();
         } catch {
           targetRemoteUrl = null;
         }
-      }
-      if (targetRemoteUrl !== null) {
-        if (/rancher/i.test(targetRemoteUrl)) {
-          deny(
-            "Security Policy Violation: Operations (push, pull, fetch) targeting Rancher-owned remotes are strictly blocked.",
-            "🔒 Security Block: Git remote operation against a Rancher remote is prohibited.",
-            isClaudeCode
-          );
+
+        if (targetRemoteUrl !== null) {
+          if (RANCHER_OWNER_RE.test(targetRemoteUrl)) {
+            deny(
+              `Security Policy Violation: Operations targeting Rancher-owned remotes are strictly blocked.\n` +
+              `Targeted Remote: '${remote}' -> '${targetRemoteUrl.trim()}'`,
+              "🔒 Security Block: Git remote operation against a Rancher remote is prohibited.",
+              isClaudeCode
+            );
+          }
         }
-      } else {
+      }
+
+      // If we checked a subset and they were all safe, or if targetRemotes resolution failed completely,
+      // fallback to scanning all remotes with 'git remote -v' (safety over precision)
+      if (targetRemotes.length === 0 || checkAllRemotes) {
         const remotesOutput = execSync('git remote -v', {
           cwd: path.resolve(targetDir),
           stdio: ['ignore', 'pipe', 'ignore']
         }).toString();
-        if (/rancher/i.test(remotesOutput)) {
+        if (RANCHER_OWNER_RE.test(remotesOutput)) {
           deny(
             "Security Policy Violation: Operations (push, pull, fetch) targeting Rancher-owned remotes are strictly blocked.",
             "🔒 Security Block: Git remote operation against a Rancher remote is prohibited.",
