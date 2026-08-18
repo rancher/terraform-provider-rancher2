@@ -7,8 +7,6 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_OWNER: ${{ github.repository_owner }}
-  NIX_INSTALL_SHA: de490f61fcbaf9a5cabf2fa621ddb9ef93ad35d9a23a04e7d51b26e092b63691
-  NIX_INSTALL_VERSION: 2.34.4
 
 permissions: {}
 
@@ -20,241 +18,175 @@ jobs:
   build:
     name: 'Build'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 15
     permissions:
-      # read contents necessary for checkout
       contents: read
     steps:
-      # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
-      - name: build binaries
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Build Binaries
+        id: build-binaries
         env:
           CROSS: 1
           VERSION: ${{ github.ref_name }}
-        run: |
-          make build
+        run: .github/workflows/scripts/nix-run.sh make build
+
   test:
     name: 'Test'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 30
     permissions:
-      # read contents necessary for checkout
       contents: read
     steps:
-      # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
       - name: Run make test
-        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
-        run: |
-          make test
+        id: run-make-test
+        run: .github/workflows/scripts/nix-run.sh make test
+
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 15
     permissions:
-      # read contents necessary for checkout
       contents: read
     steps:
-      # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
-      - name: lint terraform
-        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
-        run: |
-          terraform fmt -check -recursive -diff || { echo "terraform format error, please run 'terraform fmt -recursive'"; exit 1; }
-          tflint --recursive
+      - name: Lint Terraform
+        id: lint-terraform
+        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh terraform
 
   actionlint:
     name: 'Lint Workflows'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 10
     permissions:
-      # read contents necessary for checkout
       contents: read
     steps:
-      # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
-      - name: action lint
-        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
-        run: actionlint
+      - name: Action Lint
+        id: action-lint
+        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh actionlint
 
   node-check:
     name: 'Node Check'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 10
     permissions:
-      # read contents necessary for checkout
       contents: read
     steps:
-      # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
-      - name: check
-        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
-        run: |
-          while read -r file; do
-            echo "Checking $file";
-            node --check "$file";
-          done <<<"$(find . -type f \( -name "*.js" \))"
+      - name: Node Syntax Check
+        id: node-syntax-check
+        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh node-check
 
   eslint:
     name: 'ESLint'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 10
     permissions:
-      # read contents necessary for checkout
       contents: read
     steps:
-      # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
-      - name: check
-        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
-        run: |
-          npm install --save-dev eslint @eslint/js
-          eslint .
+      - name: ESLint Check
+        id: eslint-check
+        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh eslint
 
   shellcheck:
     name: 'Shellcheck'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 10
     permissions:
-      # read contents necessary for checkout
       contents: read
     steps:
-      # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
-      - name: shell check
-        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
-        run: |
-          while read -r file; do
-            echo "checking $file..."
-            shellcheck -x "$file"
-          done <<<"$(grep -Rl -e '^#!' | grep -v '.terraform'| grep -v '.git')"
+      - name: Shell Check
+        id: shell-check
+        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh shellcheck
 
   validate-commit-message:
     name: 'Validate Commit Message'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 10
     permissions:
-      # read contents necessary for checkout
       contents: read
       pull-requests: read
     steps:
-      # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
-      - name: Check commit message
-        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --keep PR_NUMBER --command bash -e {0}
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Check Commit Message
+        id: check-commit-message
         env:
           PR_NUMBER: ${{ github.event.number }}
-        run: |
-          bash .github/workflows/scripts/validate-commit-message.sh
+        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/validate-commit-message.sh
 
   gitleaks:
     name: 'Scan for Secrets'
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 10
     permissions:
-      # read contents necessary for checkout
       contents: read
     steps:
-      # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
-      - name: Check for secrets
-        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GITHUB_TOKEN --keep AWS_ROLE --keep AWS_REGION --keep AWS_DEFAULT_REGION --keep AWS_ACCESS_KEY_ID --keep AWS_SECRET_ACCESS_KEY --keep AWS_SESSION_TOKEN --keep UPDATECLI_GPGTOKEN --keep UPDATECLI_GITHUB_TOKEN --keep UPDATECLI_GITHUB_ACTOR --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
-        run: |
-          gitleaks detect --no-banner -v --no-git
-          gitleaks detect --no-banner -v
+      - name: Check for Secrets
+        id: check-for-secrets
+        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh gitleaks
         continue-on-error: true

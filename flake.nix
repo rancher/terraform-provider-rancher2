@@ -1,5 +1,5 @@
 {
-  description = "A reliable testing environment";
+  description = "A reliable testing and development environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -89,20 +89,26 @@
           exec /usr/bin/sw_vers "$@"
         '';
 
-        claude-code = (import nixpkgs {
+        unfreePkgs = import nixpkgs {
           inherit system;
           config = {
             allowUnfree = true;
           };
-        }).claude-code;
+        };
+
+        claude-code = unfreePkgs.claude-code;
+        github-copilot-cli = unfreePkgs.github-copilot-cli;
 
         devPackages = [
-          # place our downloaded packages here
+          # downloaded packages here
           leftovers
           terraform
+        ] ++ ([
+          # unfree packages from the nix repository
           claude-code
-        ] ++ (if pkgs.stdenv.isDarwin then [ macVscode swVers ] else []) ++ (with pkgs; [
-          # here are the packages from the nix repository
+          github-copilot-cli
+        ]) ++ (with pkgs; [
+          # free packages from the nix repository
           actionlint
           age
           awscli2
@@ -143,7 +149,12 @@
           which
           xz
           yq-go
-        ]) ++ (if pkgs.stdenv.isDarwin then [ pkgs.colima ] else []);
+        ]) ++ ( if pkgs.stdenv.isDarwin then [
+          # mac only packages
+          macVscode
+          swVers
+          pkgs.colima
+        ] else []);
 
         devShellPackage = pkgs.symlinkJoin {
           name = "dev-shell-package";
