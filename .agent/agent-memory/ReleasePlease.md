@@ -1,7 +1,7 @@
 # Release Please
 
-Everything you need to know about Google-Api's Release-please tool.
-This document has functional information about both the release-please-action and the release-please cli.
+Everything you need to know about Google's release-please tool.
+This document has functional information about both the release-please-action and the release-please CLI.
 This is a reference document used by agents to make educated decisions about our release process.
 
 ## Release Please Action

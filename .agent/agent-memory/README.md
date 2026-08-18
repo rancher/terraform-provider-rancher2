@@ -15,14 +15,14 @@ A file in this directory named "WorkflowStandards-TemporaryPlan.md" which tracks
 
 ## Global / Scripts Setup
 - [x] Create `.github/workflows/scripts` directory.
-- [x] Ensure `.github/workflows/validate.yaml`'s `shellcheck` job includes validation for scripts in `.github/workflows/scripts/`.
+- [x] Ensure `.github/workflows/pull_request.yaml`'s `shellcheck` job includes validation for scripts in `.github/workflows/scripts/`.
 
 ## `fossa.yml`
 - [x] Change top-level `permissions` to `permissions: {}`.
 - [x] Move `contents: read` and `id-token: write` to the `fossa-scanning` job's explicit permissions block.
 - [x] Ensure all steps contain both a `name` and an `id`.
 
-## `release.yaml`
+## `release.yml`
 - [x] Change top-level `permissions: write-all` to `permissions: {}`.
 - [x] Assign explicit, granular `permissions:` at the job level for `release`, `test`, `cleanup`, and `report`.
 - [x] Ensure all steps contain both a `name` and an `id`.
@@ -31,7 +31,7 @@ A file in this directory named "WorkflowStandards-TemporaryPlan.md" which tracks
 - [x] Extract inline `run` block in the `cleanup` job to `.github/workflows/scripts/cleanup-tests.sh`.
 - [x] Extract inline `github-script` block in the `report` job to `.github/workflows/scripts/report-success.js`.
 
-## `validate.yaml`
+## `pull_request.yaml`
 - [x] Add a `concurrency:` block to cancel redundant PR runs.
 - [x] Ensure all steps contain both a `name` and an `id`.
 - [x] Fix context injection in `validate-commit-message`: use an environment variable for `${{github.event.number}}` rather than inlining it into the script.
