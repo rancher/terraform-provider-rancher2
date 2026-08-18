@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+# Skill: generate-plan-log.sh
+# Description: Extracts the Purpose and executed dates of plans in .agent/plans and compiles a Plan Log.
+# Usage: .agent/skills/generate-plan-log.sh
+
 set -euo pipefail
 
 # This skill script extracts the "Purpose" and execution dates of all plans
@@ -10,7 +15,7 @@ extract_date() {
     local file="$1"
     local date_val
     
-    date_val=$(awk 'tolower($0) ~ /^\**executed date:\**/ { sub(/^\**[Ee]xecuted [Dd]ate:\**[ \t]*/, ""); print; exit }' "${file}")
+    date_val=$(awk 'tolower($0) ~ /executed date/ { sub(/^[^:]*:[ \t]*/, ""); gsub(/^[ \t*`_]+|[ \t*`_]+$/, ""); print; exit }' "${file}")
     
     if [[ -z "${date_val}" ]]; then
         echo "Not specified"
@@ -23,13 +28,54 @@ extract_purpose() {
     local file="$1"
     local purpose_val
     
-    purpose_val=$(awk 'tolower($0) ~ /^\**purpose:\**/ { sub(/^\**[Pp]urpose:\**[ \t]*/, ""); print; exit }' "${file}")
+    purpose_val=$(awk 'tolower($0) ~ /purpose/ { sub(/^[^:]*:[ \t]*/, ""); gsub(/^[ \t*`_]+|[ \t*`_]+$/, ""); print; exit }' "${file}")
     
     if [[ -z "${purpose_val}" ]]; then
         echo "Not specified"
     else
         echo "${purpose_val}"
     fi
+}
+
+resolve_executed_date() {
+    local file="$1"
+    local date_val
+    date_val=$(extract_date "${file}")
+    
+    local lower_date
+    lower_date=$(echo "${date_val}" | tr '[:upper:]' '[:lower:]')
+
+    if [[ -z "${date_val}" || "${date_val}" == "Not specified" || "${lower_date}" == *"pending"* ]]; then
+        # Try to extract the creation date from git history (oldest commit first)
+        local git_date
+        git_date=$(git log --follow --format="%ad" --date=short -- "${file}" | tail -n 1 || true)
+        
+        # Fallback to latest commit if tail is empty
+        if [[ -z "${git_date}" ]]; then
+            git_date=$(git log -1 --format="%ad" --date=short -- "${file}" || true)
+        fi
+        
+        if [[ -n "${git_date}" ]]; then
+            # Update the plan file in-place using a single sed execution with multiple expressions
+            # This prevents overwriting the original .bak file and breaking the subsequent cmp check.
+            sed -i.bak -E \
+                -e "s/(([Ee]xecuted [Dd]ate[ \t]*\**:[ \t]*\**)[ \t]*)[Pp]ending/\1${git_date}/g" \
+                -e "s/(([Ee]xecuted [Dd]ate[ \t]*\**:[ \t]*\**)[ \t]*)[Nn]ot [Ss]pecified/\1${git_date}/g" \
+                "${file}"
+            
+            # Check if file was actually modified
+            if ! cmp -s "${file}" "${file}.bak"; then
+                echo "Self-Healed: Updated '${file}' execution date to '${git_date}' using Git history." >&2
+                # Re-extract the date now that it's updated
+                date_val=$(extract_date "${file}")
+            else
+                # Fallback to git_date for the log even if replacement didn't modify file (e.g. read-only fallback)
+                date_val="${git_date}"
+            fi
+            rm -f "${file}.bak"
+        fi
+    fi
+    echo "${date_val}"
 }
 
 get_sort_key() {
@@ -109,7 +155,7 @@ generate_plan_log() {
             local purpose_val
             local sort_key
             
-            date_val=$(extract_date "${file}")
+            date_val=$(resolve_executed_date "${file}")
             purpose_val=$(extract_purpose "${file}")
             sort_key=$(get_sort_key "${date_val}")
             
@@ -134,7 +180,41 @@ generate_plan_log() {
     rm -rf "${tmp_dir}"
 }
 
+show_help() {
+    cat <<EOF
+Usage: generate-plan-log.sh [options]
+
+Extracts the "Purpose" and execution dates of all plans in the .agent/plans directory
+(excluding README.md) and outputs them as a sorted, combined Plan Log.
+
+Options:
+  -h, --help           Show this help message and exit.
+
+Examples:
+  .agent/skills/generate-plan-log.sh
+EOF
+}
+
 main() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -*)
+                echo "Error: Unknown option: $1" >&2
+                show_help
+                exit 1
+                ;;
+            *)
+                echo "Error: Unexpected argument: $1" >&2
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+
     if [[ ! -d "${PLANS_DIR}" ]]; then
         echo "Error: Directory ${PLANS_DIR} does not exist." >&2
         exit 1
