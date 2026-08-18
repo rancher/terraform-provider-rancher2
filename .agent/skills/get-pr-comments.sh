@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Skill: get-pr-comments.sh
+# Description: Retrieves and sorts general and inline PR review comments chronologically for an open PR.
+# Usage: .agent/skills/get-pr-comments.sh [PR_ID] [FORMAT]
 
 # Fail fast on any errors, unbound variables, or pipe failures
 set -euo pipefail
@@ -55,6 +59,34 @@ check_dependencies() {
     fi
 }
 
+# Safely executes a command with retry and exponential backoff
+# Usage: run_with_retry cmd args...
+run_with_retry() {
+    local max_attempts=5
+    local base_delay=2
+    local attempt=1
+    local exit_code=0
+
+    while true; do
+        if "$@"; then
+            return 0
+        else
+            exit_code=$?
+        fi
+
+        if [[ ${attempt} -ge ${max_attempts} ]]; then
+            echo "Error: Command '$*' failed after ${max_attempts} attempts." >&2
+            return ${exit_code}
+        fi
+
+        local delay
+        delay=$(( base_delay * (2 ** (attempt - 1)) ))
+        echo "Warning: Command failed (exit code ${exit_code}). Retrying in ${delay} seconds (attempt ${attempt}/${max_attempts})..." >&2
+        sleep "${delay}"
+        attempt=$((attempt + 1))
+    done
+}
+
 # Parse the owner/repo from the git remote url, defaulting to canonical upstream
 get_repo_context() {
     # Allow overriding via environment variable
@@ -69,8 +101,8 @@ get_repo_context() {
 
     # If no upstream, default to canonical rancher repository
     if [[ -z "${url}" ]]; then
-        echo "rancher/terraform-provider-rancher2"
-        return
+      echo "rancher/terraform-provider-rancher2"
+      return
     fi
 
     local clean_url="${url}"
@@ -110,12 +142,12 @@ get_current_branch_pr_id() {
     local fork_owner
     fork_owner=$(get_fork_owner)
     if [[ -n "${fork_owner}" && "${fork_owner}" != "rancher" ]]; then
-        pr_id=$(gh pr list --repo "${target_repo}" --state open --head "${fork_owner}:${branch}" --json number --jq '.[0].number' 2>/dev/null || echo "")
+        pr_id=$(run_with_retry gh pr list --repo "${target_repo}" --state open --head "${fork_owner}:${branch}" --json number --jq '.[0].number' 2>/dev/null || echo "")
     fi
 
     # 2. Try querying as a same-repository PR (branch) if cross-repo query yielded nothing
     if [[ -z "${pr_id}" ]]; then
-        pr_id=$(gh pr list --repo "${target_repo}" --state open --head "${branch}" --json number --jq '.[0].number' 2>/dev/null || echo "")
+        pr_id=$(run_with_retry gh pr list --repo "${target_repo}" --state open --head "${branch}" --json number --jq '.[0].number' 2>/dev/null || echo "")
     fi
     
     if [[ -z "${pr_id}" ]]; then
@@ -133,7 +165,7 @@ fetch_comments() {
     local format="${3:-markdown}"
 
     # Verify that the PR exists in the repository
-    if ! gh pr view "${pr_id}" --repo "${repo_context}" &> /dev/null; then
+    if ! run_with_retry gh pr view "${pr_id}" --repo "${repo_context}" &> /dev/null; then
         echo "Error: Pull Request #${pr_id} was not found in repo '${repo_context}'." >&2
         exit 1
     fi
@@ -142,12 +174,12 @@ fetch_comments() {
     local general_comments
     local review_comments
 
-    if ! general_comments=$(gh api "repos/${repo_context}/issues/${pr_id}/comments" --paginate 2>/dev/null); then
+    if ! general_comments=$(run_with_retry gh api "repos/${repo_context}/issues/${pr_id}/comments" --paginate 2>/dev/null); then
         echo "Error: Failed to fetch general comments from the GitHub API." >&2
         exit 1
     fi
 
-    if ! review_comments=$(gh api "repos/${repo_context}/pulls/${pr_id}/comments" --paginate 2>/dev/null); then
+    if ! review_comments=$(run_with_retry gh api "repos/${repo_context}/pulls/${pr_id}/comments" --paginate 2>/dev/null); then
         echo "Error: Failed to fetch review comments from the GitHub API." >&2
         exit 1
     fi
@@ -161,31 +193,49 @@ fetch_comments() {
 
     # Format the combined comments based on user preference
     if [[ "${format}" == "json" ]]; then
+        # Combine general and review comments, tag each with its type, and sort them chronologically
         jq -n \
             --argjson gen "${general_comments}" \
             --argjson rev "${review_comments}" \
             '
+                # 1. Map general comments and append type: "general"
                 ($gen | map(. + {type: "general"})) + 
+                # 2. Map review comments and append type: "review"
                 ($rev | map(. + {type: "review"})) | 
+                # 3. Combine both lists and sort by creation timestamp
                 sort_by(.created_at)
             '
     else
         local markdown_output
+        # Compile and format comments chronologically as a beautiful, aligned Markdown document
         markdown_output=$(jq -n -r \
             --argjson gen "${general_comments}" \
             --argjson rev "${review_comments}" \
             '
+                # 1. Combine and tag both comment streams
                 (($gen | map(. + {type: "general"})) + 
                  ($rev | map(. + {type: "review"}))) | 
+                # 2. Sort the combined list chronologically
                 sort_by(.created_at) |
+                # 3. Check if the list is empty
                 if length == 0 then
                     "No comments found."
                 else
+                    # 4. Iterate over each comment and generate its Markdown block
                     .[] | (
+                        # A. Header line with type icon (💬 for general, 📝 for review) and username
                         "### " + (if .type == "general" then "💬" else "📝" end) + " @" + .user.login + 
+                        
+                        # B. Context details (such as file path and line number for inline reviews)
                         " (" + (if .type == "general" then "General Comment" else "Inline Review on `" + .path + ":" + (.line // .original_line // "unknown" | tostring) + "`" end) + ") - " + 
+                        
+                        # C. Timestamp parsed to readable UTC format
                         (.created_at | sub("T"; " ") | sub("Z"; " UTC")) + "\n\n" + 
+                        
+                        # D. The markdown body of the comment itself
                         .body + "\n\n" + 
+                        
+                        # E. Standard separator line
                         "---"
                     )
                 end
