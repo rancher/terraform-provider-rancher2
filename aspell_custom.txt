@@ -15,6 +15,9 @@ esm
 etcd
 git
 github
+gke
+globalroles
+globbing
 goreleaser
 kubeconfig
 kubernetes
