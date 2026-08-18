@@ -1,18 +1,19 @@
 # AI Agent Workflows
 
-This directory contains defined processes for executing multi-step tasks.
+This directory contains defined, step-by-step procedures that AI agents must follow when executing complex, multi-step tasks in this repository. 
 
-These workflows provide step-by-step procedures for AI agents to follow when tackling complex tasks such as releasing the provider, running full test suites, or scaffolding new Terraform resources.
+Using these workflows ensures maximum consistency, rigorous quality control, and clean engineering practices.
 
-Here is a generic script to use a workflow:
-```
-Please execute our PR Review Comment Resolution workflow to address the latest reviews on my PR.
-The step-by-step procedure is defined in: `.agent/workflows/resolve-pr-reviews.md`
+## Available Workflows
 
-Our active project plans for this branch are:
-- Persistent Plan: `.agent/plans/<YOUR_FEATURE_NAME>.md`
-- Temporary Plan: `.agent/agent-memory/<YOUR_FEATURE_NAME>-temporary.md`
+### 1. [Standard Development Process](development-process.md)
+* **Purpose:** Outlines the lifecycle for developing new features, applying bug fixes, and performing refactoring.
+* **Key Steps:** Exploration, bug reproduction, plan-creation, surgical edits, format/compiles, unit testing, schema documentation updates, and lint validations.
 
-Please run the comments-retrieval skill, separate the core concerns from any sub-optimal recommendations, design custom idiomatic solutions, and update our plans first.
-  Show me the updated plans for approval before writing any code.
-```
+### 2. [Troubleshooting CI/CD Workflows](troubleshoot-workflows.md)
+* **Purpose:** Explains how to diagnose, triage, and repair broken GitHub Actions or release workflows.
+* **Key Steps:** Log retrieval, error isolation, script/YAML auditing, secret token sanitization, and verification with `actionlint` and `shellcheck`.
+
+### 3. [PR Review Comment Resolution](resolve-pr-reviews.md)
+* **Purpose:** Defines the repeatable, high-standard process for analyzing, planning, and executing resolutions for Pull Request review comments.
+* **Key Steps:** Review retrieval, separation of concerns (discernment phase), plan updating, responding on GitHub, surgical refactoring, and programmatic thread resolution.
