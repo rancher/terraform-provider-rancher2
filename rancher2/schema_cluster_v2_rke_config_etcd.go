@@ -38,6 +38,11 @@ func clusterV2RKEConfigETCDSnapshotS3Fields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "ETCD snapshot S3 region",
 		},
+		"retention": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "Number of snapshots in S3 to retain",
+		},
 		"skip_ssl_verify": {
 			Type:        schema.TypeBool,
 			Optional:    true,
@@ -65,7 +70,7 @@ func clusterV2RKEConfigETCDFields() map[string]*schema.Schema {
 		"snapshot_retention": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Description: "ETCD snapshot retention",
+			Description: "Number of snapshots to retain",
 		},
 		"s3_config": {
 			Type:        schema.TypeList,

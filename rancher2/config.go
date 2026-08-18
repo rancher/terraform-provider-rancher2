@@ -990,6 +990,42 @@ func (c *Config) GetUserIDByName(name string) (string, error) {
 	return user.ID, nil
 }
 
+// GetUserIDByPrincipalID looks up a user by its principal ID and returns the user ID
+func (c *Config) GetUserIDByPrincipalID(principalID string) (string, error) {
+	if principalID == "" {
+		return "", fmt.Errorf("[ERROR] Principal ID is nil")
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return "", err
+	}
+
+	collection, err := client.User.ListAll(nil)
+	if err != nil {
+		return "", err
+	}
+
+	user := findUserByPrincipalID(collection.Data, principalID)
+	if user == nil {
+		return "", fmt.Errorf("[ERROR] User with principal ID %s not found", principalID)
+	}
+
+	return user.ID, nil
+}
+
+// findUserByPrincipalID returns the user whose PrincipalIDs contain the given principal ID
+func findUserByPrincipalID(users []managementClient.User, principalID string) *managementClient.User {
+	for i := range users {
+		for _, pid := range users[i].PrincipalIDs {
+			if pid == principalID {
+				return &users[i]
+			}
+		}
+	}
+	return nil
+}
+
 func (c *Config) activateNodeDriver(id string, interval time.Duration) error {
 	if id == "" {
 		return fmt.Errorf("[ERROR] Node Driver id is nil")
