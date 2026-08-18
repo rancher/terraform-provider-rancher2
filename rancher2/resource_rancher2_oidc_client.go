@@ -4,10 +4,16 @@ import (
 	"fmt"
 	"log"
 	"maps"
+	"time"
+	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	corev1 "k8s.io/api/core/v1"
 )
+
+const oidcSecretsNamespace = "cattle-oidc-client-secrets"
 
 func resourceRancher2OIDCClient() *schema.Resource {
 	return &schema.Resource{
@@ -17,6 +23,11 @@ func resourceRancher2OIDCClient() *schema.Resource {
 		Delete: resourceRancher2OIDCClientDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRancher2OIDCClientImport,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: oidcClientFields(),
@@ -41,8 +52,10 @@ func oidcClientFields() map[string]*schema.Schema {
 			Description: "List of allowed redirect_uris for this client.",
 			Required:    true,
 			Type:        schema.TypeList,
+			MinItems:    1,
 			Elem: &schema.Schema{
-				Type: schema.TypeString,
+				Type:         schema.TypeString,
+				ValidateFunc: validateRedirectURI,
 			},
 		},
 		"description": {
@@ -54,6 +67,12 @@ func oidcClientFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "The Client ID for OIDC Access.",
+		},
+		"client_secret": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Sensitive:   true,
+			Description: "The Client Secret for OIDC Access.",
 		},
 	}
 
@@ -79,9 +98,42 @@ func resourceRancher2OIDCClientCreate(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("creating OIDCClient: %w", err)
 	}
 
+	log.Printf("[INFO] Created OIDCClient ID %s", createdClient.ID)
+
 	d.SetId(createdClient.ID)
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending"},
+		Target:     []string{"secret created"},
+		Refresh:    oidcClientStateRefreshFunc(client, createdClient.ID),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("[ERROR] waiting for OIDCClient (%s) to be ready: %w", createdClient.ID, err)
+	}
+
 	return resourceRancher2OIDCClientRead(d, meta)
+}
+
+func oidcClientStateRefreshFunc(client *managementClient.Client, clientID string) resource.StateRefreshFunc {
+	return func() (any, string, error) {
+		oidcClient, err := client.OIDCClient.ByID(clientID)
+		if err != nil {
+			if IsNotFound(err) {
+				return nil, "", fmt.Errorf("reading OIDC Client %s: %w", clientID, err)
+			}
+			return nil, "reading client", fmt.Errorf("reading OIDC Client %s: %w", clientID, err)
+		}
+
+		if oidcClient.Status.ClientSecrets == nil || len(oidcClient.Status.ClientSecrets) == 0 {
+			return oidcClient, "pending", nil
+		}
+
+		return oidcClient, "secret created", nil
+	}
 }
 
 func resourceRancher2OIDCClientRead(d *schema.ResourceData, meta any) error {
@@ -91,6 +143,7 @@ func resourceRancher2OIDCClientRead(d *schema.ResourceData, meta any) error {
 	if err != nil {
 		return fmt.Errorf("getting a client when reading OIDC Client: %w", err)
 	}
+
 	oidcClient, err := client.OIDCClient.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) || IsForbidden(err) || IsNotAccessibleByID(err) {
@@ -100,7 +153,15 @@ func resourceRancher2OIDCClientRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("reading OIDC Client %s: %w", d.Id(), err)
 	}
 
-	return flattenOIDCClient(d, oidcClient)
+	var clientSecret *corev1.Secret
+	if oidcClient.Status.ClientID != "" {
+		clientSecret, err = meta.(secretFetcher).SecretByName(rancher2DefaultLocalClusterID, oidcSecretsNamespace, oidcClient.Status.ClientID)
+		if err != nil && !IsNotFound(err) && !IsForbidden(err) {
+			return fmt.Errorf("[ERROR] getting OIDC Client Secret: %s: %w", oidcClient.Status.ClientID, err)
+		}
+	}
+
+	return flattenOIDCClient(d, oidcClient, clientSecret)
 }
 
 func resourceRancher2OIDCClientUpdate(d *schema.ResourceData, meta any) error {
@@ -128,6 +189,19 @@ func resourceRancher2OIDCClientUpdate(d *schema.ResourceData, meta any) error {
 	_, err = client.OIDCClient.Update(oidcClient, update)
 	if err != nil {
 		return fmt.Errorf("updating OIDC Client %s: %w", d.Id(), err)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending"},
+		Target:     []string{"secret created"},
+		Refresh:    oidcClientStateRefreshFunc(client, oidcClient.ID),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Delay:      1 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("[ERROR] waiting for OIDCClient (%s) to be ready: %w", oidcClient.ID, err)
 	}
 
 	return resourceRancher2OIDCClientRead(d, meta)
@@ -158,6 +232,7 @@ func resourceRancher2OIDCClientDelete(d *schema.ResourceData, meta any) error {
 	}
 
 	d.SetId("")
+
 	return nil
 }
 
@@ -172,4 +247,26 @@ func resourceRancher2OIDCClientImport(d *schema.ResourceData, meta interface{}) 
 
 type managementClientGetter interface {
 	ManagementClient() (*managementClient.Client, error)
+}
+
+type secretFetcher interface {
+	SecretByName(cluster, namespace, secretName string) (*corev1.Secret, error)
+}
+
+func validateRedirectURI(val any, key string) (warnings []string, errs []error) {
+	v, ok := val.(string)
+	if !ok {
+		// This should not happen because the schema is TypeString.
+		errs = append(errs, fmt.Errorf("%q must be a string", key))
+		return
+	}
+	u, err := url.Parse(v)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		errs = append(errs, fmt.Errorf("%q must be a valid absolute URL with scheme and host, got: %q", key, v))
+		return
+	}
+	if u.Fragment != "" {
+		errs = append(errs, fmt.Errorf("%q must not contain a fragment, got: %q", key, v))
+	}
+	return
 }

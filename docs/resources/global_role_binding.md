@@ -36,7 +36,7 @@ The following arguments are supported:
 * `global_role_id` - (Required/ForceNew) The role id from create global role binding (string)
 * `group_principal_id` - (Optional/Computed/ForceNew) The group principal ID to assign global role binding (only works with external auth providers that support groups). Rancher v2.4.0 or higher is required (string)
 * `user_id` - (Optional/Computed/ForceNew) The user ID to assign global role binding (string)
-* `user_principal_id` - (Optional/Computed/ForceNew) The user principal ID to assign global role binding (string)
+* `user_principal_id` - (Optional/Computed/ForceNew) The user principal ID to assign global role binding (string). When set, the provider looks up the matching Rancher user by principal ID and sets the `user_id` accordingly before creating the binding
 * `name` - (Optional/Computed/ForceNew) The name of the global role binding (string)
 * `annotations` - (Optional/Computed) Annotations for global role binding (map)
 * `labels` - (Optional/Computed) Labels for global role binding (map)
