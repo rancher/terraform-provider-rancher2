@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 //Schemas
@@ -50,6 +51,31 @@ func globalRoleFields() map[string]*schema.Schema {
 			Description: "Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
+			},
+		},
+		"inherited_namespaced_rules": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			Description: "Policy rules granted in matching namespaces of every cluster besides the local cluster",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"namespace": {
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringIsNotEmpty,
+						Description:  "Namespace for the inherited namespaced rules",
+						Required:     true,
+					},
+					"rules": {
+						Type:        schema.TypeList,
+						Optional:    true,
+						Computed:    true,
+						Description: "Policy rules granted in the namespace",
+						Elem: &schema.Resource{
+							Schema: policyRuleFields(),
+						},
+					},
+				},
 			},
 		},
 	}

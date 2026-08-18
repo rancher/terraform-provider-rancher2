@@ -18,6 +18,7 @@ etcd
 git
 github
 gke
+globalroles
 globbing
 goreleaser
 ipv
