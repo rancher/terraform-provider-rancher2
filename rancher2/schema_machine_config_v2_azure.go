@@ -75,8 +75,8 @@ func machineConfigV2AzureFields() map[string]*schema.Schema {
 		"managed_disks": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default:     false,
-			Description: "Configures VM and availability set for managed disks",
+			Default:     true,
+			Description: "Configures VM and availability set for managed disks (unmanaged disks will be retired by Azure on March 31, 2026)",
 		},
 		"no_public_ip": {
 			Type:        schema.TypeBool,
