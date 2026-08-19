@@ -9,12 +9,14 @@ import (
 )
 
 var (
-	testGlobalRolePolicyRulesConf                    []managementClient.PolicyRule
-	testGlobalRolePolicyRulesInterface               []interface{}
-	testGlobalRoleConf                               *managementClient.GlobalRole
-	testGlobalRoleInterface                          map[string]interface{}
-	testGlobalRoleWithInheritedClusterRolesConf      *managementClient.GlobalRole
-	testGlobalRoleWithInheritedClusterRolesInterface map[string]interface{}
+	testGlobalRolePolicyRulesConf                       []managementClient.PolicyRule
+	testGlobalRolePolicyRulesInterface                  []any
+	testGlobalRoleConf                                  *managementClient.GlobalRole
+	testGlobalRoleInterface                             map[string]any
+	testGlobalRoleWithInheritedClusterRolesConf         *managementClient.GlobalRole
+	testGlobalRoleWithInheritedClusterRolesInterface    map[string]any
+	testGlobalRoleWithInheritedNamespacedRulesConf      *managementClient.GlobalRole
+	testGlobalRoleWithInheritedNamespacedRulesInterface map[string]any
 )
 
 func init() {
@@ -42,25 +44,25 @@ func init() {
 			},
 		},
 	}
-	testGlobalRolePolicyRulesInterface = []interface{}{
-		map[string]interface{}{
-			"api_groups": []interface{}{
+	testGlobalRolePolicyRulesInterface = []any{
+		map[string]any{
+			"api_groups": []any{
 				"api_group1",
 				"api_group2",
 			},
-			"non_resource_urls": []interface{}{
+			"non_resource_urls": []any{
 				"non_resource_urls1",
 				"non_resource_urls2",
 			},
-			"resource_names": []interface{}{
+			"resource_names": []any{
 				"resource_names1",
 				"resource_names2",
 			},
-			"resources": []interface{}{
+			"resources": []any{
 				"resources1",
 				"resources2",
 			},
-			"verbs": []interface{}{
+			"verbs": []any{
 				"verbs1",
 				"verbs2",
 			},
@@ -81,16 +83,16 @@ func init() {
 			"option2": "value2",
 		},
 	}
-	testGlobalRoleInterface = map[string]interface{}{
+	testGlobalRoleInterface = map[string]any{
 		"new_user_default": true,
 		"description":      "description",
 		"name":             "name",
 		"rules":            testGlobalRolePolicyRulesInterface,
-		"annotations": map[string]interface{}{
+		"annotations": map[string]any{
 			"node_one": "one",
 			"node_two": "two",
 		},
-		"labels": map[string]interface{}{
+		"labels": map[string]any{
 			"option1": "value1",
 			"option2": "value2",
 		},
@@ -113,21 +115,64 @@ func init() {
 			"cluster-owner",
 		},
 	}
-	testGlobalRoleWithInheritedClusterRolesInterface = map[string]interface{}{
+	testGlobalRoleWithInheritedClusterRolesInterface = map[string]any{
 		"new_user_default": true,
 		"description":      "description",
 		"name":             "name",
 		"rules":            testGlobalRolePolicyRulesInterface,
-		"annotations": map[string]interface{}{
+		"annotations": map[string]any{
 			"node_one": "one",
 			"node_two": "two",
 		},
-		"labels": map[string]interface{}{
+		"labels": map[string]any{
 			"option1": "value1",
 			"option2": "value2",
 		},
-		"inherited_cluster_roles": []interface{}{
+		"inherited_cluster_roles": []any{
 			"cluster-owner",
+		},
+	}
+
+	testGlobalRoleWithInheritedNamespacedRulesConf = &managementClient.GlobalRole{
+		Description:    "description",
+		Name:           "name",
+		NewUserDefault: true,
+		Rules:          testGlobalRolePolicyRulesConf,
+		Annotations: map[string]string{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		Labels: map[string]string{
+			"option1": "value1",
+			"option2": "value2",
+		},
+		InheritedNamespacedRules: map[string][]managementClient.PolicyRule{
+			"namespace-one": testGlobalRolePolicyRulesConf,
+			"namespace-two": {},
+		},
+	}
+	testGlobalRoleWithInheritedNamespacedRulesInterface = map[string]any{
+		"new_user_default": true,
+		"description":      "description",
+		"name":             "name",
+		"rules":            testGlobalRolePolicyRulesInterface,
+		"annotations": map[string]any{
+			"node_one": "one",
+			"node_two": "two",
+		},
+		"labels": map[string]any{
+			"option1": "value1",
+			"option2": "value2",
+		},
+		"inherited_namespaced_rules": []any{
+			map[string]any{
+				"namespace": "namespace-one",
+				"rules":     testGlobalRolePolicyRulesInterface,
+			},
+			map[string]any{
+				"namespace": "namespace-two",
+				"rules":     []any{},
+			},
 		},
 	}
 }
@@ -135,7 +180,7 @@ func init() {
 func TestFlattenGlobalRole(t *testing.T) {
 	cases := []struct {
 		Input          *managementClient.GlobalRole
-		ExpectedOutput map[string]interface{}
+		ExpectedOutput map[string]any
 	}{
 		{
 			testGlobalRoleConf,
@@ -144,6 +189,10 @@ func TestFlattenGlobalRole(t *testing.T) {
 		{
 			testGlobalRoleWithInheritedClusterRolesConf,
 			testGlobalRoleWithInheritedClusterRolesInterface,
+		},
+		{
+			testGlobalRoleWithInheritedNamespacedRulesConf,
+			testGlobalRoleWithInheritedNamespacedRulesInterface,
 		},
 	}
 
@@ -153,17 +202,23 @@ func TestFlattenGlobalRole(t *testing.T) {
 		if err != nil {
 			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
 		}
-		expectedOutput := map[string]interface{}{}
+		expectedOutput := map[string]any{}
+		expectedValues := map[string]any{}
 		for k := range tc.ExpectedOutput {
+			if k == "inherited_namespaced_rules" {
+				assert.ElementsMatch(t, tc.ExpectedOutput[k].([]any), output.Get(k).(*schema.Set).List())
+				continue
+			}
 			expectedOutput[k] = output.Get(k)
+			expectedValues[k] = tc.ExpectedOutput[k]
 		}
-		assert.Equal(t, tc.ExpectedOutput, expectedOutput, "Unexpected output from flattener.")
+		assert.Equal(t, expectedValues, expectedOutput, "Unexpected output from flattener.")
 	}
 }
 
 func TestExpandGlobalRole(t *testing.T) {
 	cases := []struct {
-		Input          map[string]interface{}
+		Input          map[string]any
 		ExpectedOutput *managementClient.GlobalRole
 	}{
 		{
@@ -173,6 +228,10 @@ func TestExpandGlobalRole(t *testing.T) {
 		{
 			testGlobalRoleWithInheritedClusterRolesInterface,
 			testGlobalRoleWithInheritedClusterRolesConf,
+		},
+		{
+			testGlobalRoleWithInheritedNamespacedRulesInterface,
+			testGlobalRoleWithInheritedNamespacedRulesConf,
 		},
 	}
 

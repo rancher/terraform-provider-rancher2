@@ -45,14 +45,17 @@ length_check() {
 }
 spell_check() {
   message="$1"
-  WORDS="$(aspell list --dont-validate-words <<<"$message")"
+  if grep -q -e '^Merge ' <<<"$message" || grep -q -e '^Merge branch ' <<<"$message"; then
+    return 0
+  fi
+  WORDS="$(cspell stdin <<<"$message")"
   if [ "" != "$WORDS" ]; then
     echo "...Commit message contains spelling errors on: ^$WORDS\$"
     echo "...Also try updating the PR title."
-    echo "...If this is a mistake, add your word to the aspell_custom.txt file, it is case insensitive."
+    echo "...If this is a mistake, add your word to the custom_words.txt file, it is case insensitive."
     exit 1
   else
-    echo "...Commit message doesnt contain spelling errors."
+    echo "...Commit message doesn't contain spelling errors."
   fi
 }
 

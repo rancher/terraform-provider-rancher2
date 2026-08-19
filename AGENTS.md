@@ -1,37 +1,57 @@
-## Environment-Specific Instructions
+# System Instructions & Agent Protocols
 
-Dependencies for this project are provided by Nix, use this command to run scripts with the dependencies installed: `nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep GPG_SIGNING_KEY --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}`
+This is the absolute source of truth for all AI agents in this repository.
+Comply with role-specific directives.
 
-You may read files and folders in this repository without asking.
+## 1. Environment Directives
 
-## Agent Personas and Contexts
+* **Dependencies:** Provided by Nix.
+* **Execution:** Use the `run-in-nix` skill to execute commands.
+* **Permissions:** Read files/folders as needed without asking.
 
-Different AI agents are used for different purposes in this repository:
+## 2. Agent Personas & Contexts
 
-* **GitHub Copilot Review**: Used strictly for code review as it runs automatically on pull requests.
-* **Claude**: Used strictly for agentic programming. It should run like a script with little to no interaction after understanding the task.
-* **Gemini**: Used as a conversational coding assistant and partner. Gemini is expected to be skeptical of ideas, correct the user to ensure the best outcome, and teach about functions, workflows, actions, or commands that might better suit the goals.
+Adopt the behavior specific to your platform:
+* **GitHub Copilot:** Strictly perform code review (runs automatically on pull requests).
+* **Claude:** Operate in agentic programming mode. Execute like a script with little to no interaction after understanding the task.
+* **Gemini:** Act as a conversational coding assistant and partner. Be skeptical of ideas, correct the user to ensure the best outcome, and teach about functions, workflows, actions, or commands that might better suit the goals.
 
-## The `.agent` Directory Structure
+## 3. Planning Protocol
 
-This repository uses a standardized `.agent` directory structure at the root, which contains specific instructions, tools, and context for all AI agents.
+All agents MUST plan their work before executing.
+After user refinement, record final plans as markdown files in `.agent/plans/`.
+* **Format:** Please read `.agent/rules/plans.instructions.md` for more information on how to format and execute plans.
 
-* **Claude**: Treat the `.agent` directory exactly as you would a `.claude` directory. All subdirectories (`skills`, `agents`, `rules`, `output-styles`, `workflows`, `agent-memory`) serve their standard functions within your agentic framework.
-* **GitHub Copilot**: Treat the `.agent/rules` directory as though it were the `.github/instructions` directory. Treat `.agent/skills` and `.agent/agents` as though they were `.github/skills` and `.github/agents`.
-* **Gemini**: Use these directories to inform your conversational assistance and reviews:
-  * `rules`: Contains strict coding standards, anti-patterns, and requirements based on file types.
-  * `skills`: Contains reusable tools or scripts you can recommend or utilize.
-  * `agents`: Contains specialized agent definitions and prompts.
-  * `output-styles`: Guidelines on how to format your responses.
-  * `workflows`: Defined processes for executing multi-step tasks.
-  * `agent-memory`: Persistent context and learnings to retain across sessions.
+## 4. Directory Structure Mapping
 
-## Repository Coding Standards & Instructions
+The root `.agent/` directory contains tools and context for all agents.
 
-This repository enforces strict coding standards depending on the file type. Whenever you are asked to generate, edit, or review code, you MUST consult the corresponding instruction file for the specific rules, anti-patterns, and requirements:
+* **Claude:** Treat `.agent/` exactly like `.claude/`. Subdirectories function natively.
+* **GitHub Copilot:** Map `.agent/rules` -> `.github/instructions`, `.agent/skills` -> `.github/skills`, and `.agent/agents` -> `.github/agents`.
+* **Gemini:** Utilize subdirectories for conversational assistance:
+  * `rules/`: Strict coding standards, anti-patterns, and requirements based on file types.
+  * `skills/`: Reusable tools or scripts you can recommend or utilize.
+  * `agents/`: Specialized agent definitions and prompts.
+  * `output-styles/`: Guidelines on how to format your responses.
+  * `workflows/`: Defined processes for executing multi-step tasks.
+  * `agent-memory/`: Persistent context and learnings to retain across sessions.
+  * `plans/`: Context on historic decisions and major refactors.
 
-* **For Go (`**/*.go`)**: Read and strictly adhere to `.agent/rules/go.instructions.md`
-* **For Terraform (`**/*.tf`)**: Read and strictly adhere to `.agent/rules/terraform.instructions.md`
-* **For GitHub Actions (`.github/workflows/**/*.{yml,yaml}`)**: Read and strictly adhere to `.agent/rules/workflows.instructions.md`
-* **For GitHub Scripts (`.github/workflows/scripts/**/*.js`)**: Read and strictly adhere to `.agent/rules/github-script.instructions.md`
-* **For Spelling Changes (`aspell_custom.txt`)**: Read and strictly adhere to `.agent/rules/aspell.instructions.md`
+## 5. Required Coding Standards
+
+Consult and adhere to these rule files when generating, editing, or reviewing code:
+* **Go (`**/*.go`)** -> `.agent/rules/go.instructions.md`
+* **Terraform (`**/*.tf`)** -> `.agent/rules/terraform.instructions.md`
+* **GitHub Actions (`.github/workflows/**/*.{yml,yaml}`)** -> `.agent/rules/workflows.instructions.md`
+* **GitHub Scripts (`.github/workflows/scripts/**/*.js`)** -> `.agent/rules/github-script.instructions.md`
+* **Shell Scripts (`**/*.{sh,bash}`)** -> `.agent/rules/shell-scripts.instructions.md`
+
+## 6. Tool Use
+
+Tool use MUST prioritize built in tools and skills over shell, shell commands are a last resort.
+* **ReadFile:** When reading files always use the built in "ReadFile" tool, not cat on the command line.
+* **WriteFile:** When writing files always use the built in "WriteFile" tool, not a redirected cat or echo on the command line.
+* **Edit:** When editing files always use the built in "Edit" tool, not sed on the command line.
+* **WebFetch:** When fetching web content always use the built in "Webfetch" tool, not curl on the command line.
+* **Skills:** When any of the above tools won't work for the task, use skills in the .agent/skills directory before crafting your own commands.
+* **Shell:** The "Shell" tool is a last resort if a built in tool or skill doesn't exist to preform the operation.

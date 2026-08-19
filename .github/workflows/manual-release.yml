@@ -9,39 +9,45 @@ on:
         description: 'The commit SHA to create the tag from, defaults to HEAD of the selected branch.'
         required: false
 
-env:
-  NIX_INSTALL_SHA: de490f61fcbaf9a5cabf2fa621ddb9ef93ad35d9a23a04e7d51b26e092b63691
-  NIX_INSTALL_VERSION: 2.34.4
-
 permissions: {}
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
+    environment: release
     permissions:
       contents: write
       id-token: write
       actions: read
     steps:
+      - name: Checkout Repository
+        id: checkout-repository
         # https://github.com/actions/checkout/releases
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-        # https://github.com/actions/github-script/releases
-      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      - name: Check Author
         id: check-user-in-maintainers
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }}
+          SCRIPT_MODE: check-maintainer
         with:
           script: |
-            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/check-maintainer.js`;
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
             const { default: script } = await import(scriptPath);
-            const isMaintainer = await script({context, core, process});
+            const isMaintainer = await script({github, context, core, process});
             if (!isMaintainer) {
               core.setFailed(`User ${context.actor} is not authorized to trigger this workflow.`);
             }
-      - env:
+      - name: Verify Tag
+        id: verify-tag
+        env:
           TAG: ${{ inputs.tag }}
         run: |
           # if the tag contains "rc" we should not be in this workflow
@@ -56,6 +62,7 @@ jobs:
           TAG: ${{ inputs.tag }}
           SHA: ${{ inputs.sha }}
         run: |
+          git config --global --add safe.directory "$PWD"
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
           if [ -n "$SHA" ]; then
@@ -65,19 +72,21 @@ jobs:
           fi
           git push origin "$TAG"
       - name: Check out new tag into a new directory
+        id: checkout-new-tag
         # https://github.com/actions/checkout/releases
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ inputs.tag }}
-          path: ${{ github.workspace }}/tags/${{ inputs.tag }}
-      - env:
-          WORKSPACE: ${{ github.workspace }}
+          path: tags/${{ inputs.tag }}
+      - name: Prepare Registry Manifest
+        id: prepare-registry-manifest
+        env:
           TAG: ${{ inputs.tag }}
         run: |
           # remove any tags that are not the one specified (to avoid goreleaser confusion)
           DIR="$(pwd)"
-          cd "$WORKSPACE/tags/$TAG"
-          tags_to_delete=$(git tag | grep -v -e "^$TAG$")
+          cd "$GITHUB_WORKSPACE/tags/$TAG"
+          tags_to_delete=$(git tag | grep -v -x -F -e "$TAG" || true)
           if [ -n "$tags_to_delete" ]; then
             echo "$tags_to_delete" | xargs git tag -d
           fi
@@ -103,42 +112,19 @@ jobs:
             secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
-      - name: import_gpg_key
-        id: import-gpg-key
-        env:
-          GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
-          GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
-          GPG_KEY: ${{ env.GPG_KEY }}
-        run: |
-          cleanup() {
-            # clear history just in case
-            history -c
-          }
-          trap cleanup EXIT TERM
-
-          # sanitize variables
-          if [ -z "${GPG_PASSPHRASE}" ]; then echo "gpg passphrase empty"; exit 1; fi
-          if [ -z "${GPG_KEY_ID}" ]; then echo "key id empty"; exit 1; fi
-          if [ -z "${GPG_KEY}" ]; then echo "key contents empty"; exit 1; fi
-
-          echo "Importing gpg key"
-          echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Failed to import GPG key"; exit 1; }
-      - name: install-nix
-        run: |
-          curl -L -o nix_install.sh "https://releases.nixos.org/nix/nix-${NIX_INSTALL_VERSION}/install"
-          echo "${NIX_INSTALL_SHA} nix_install.sh" | sha256sum -c -
-          chmod +x nix_install.sh
-          ./nix_install.sh
-          source /home/runner/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-          rm -f ./nix_install.sh
       - name: Run GoReleaser
-        shell: /home/runner/.nix-profile/bin/nix develop --ignore-environment --extra-experimental-features nix-command --extra-experimental-features flakes --keep HOME --keep SSH_AUTH_SOCK --keep TAG --keep GPG_KEY_ID --keep GPG_PASSPHRASE --keep GITHUB_TOKEN --keep NIX_SSL_CERT_FILE --keep NIX_ENV_LOADED --keep TERM --command bash -e {0}
+        id: run-goreleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_KEY_ID: ${{ env.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
+          GPG_KEY: ${{ env.GPG_KEY }}
           TAG: ${{ inputs.tag }}
-        run: |-
-          cd "$GITHUB_WORKSPACE/tags/$TAG"
-          goreleaser release --clean --skip=validate --config ../../.goreleaser.yml
+          # Relative to the repository root, which is where nix-run.sh starts. Avoids
+          # having to name the workspace, whose path differs inside the container.
+          WORKING_DIR: tags/${{ inputs.tag }}
+          GORELEASER_CONFIG: ../../.goreleaser.yml
+          SKIP_VALIDATE: 'true'
+        # The key must be imported by the same 'suse' user that nix-run.sh drops to,
+        # so goreleaser.sh does the import itself rather than a separate step as root.
+        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/goreleaser.sh

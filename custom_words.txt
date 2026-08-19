@@ -6,6 +6,7 @@ authconfig
 aws
 azure
 backport
+client
 cognito
 config
 datasource
@@ -13,9 +14,11 @@ destructuring
 eks
 eslint
 esm
+etcd
 git
 github
 gke
+globalroles
 globbing
 goreleaser
 ipv
@@ -28,6 +31,7 @@ kubernetes
 nutanix
 oci
 oidc
+oidcclient
 oidcclients
 oke
 pc

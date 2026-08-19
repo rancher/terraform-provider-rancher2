@@ -250,7 +250,7 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	replace := false
+	replace := d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
 	switch driver := ToLower(d.Get("driver").(string)); driver {
 	case ToLower(clusterDriverAKSV2):
 		aksConfigV2 := expandClusterAKSConfigV2(d.Get("aks_config_v2").([]interface{}))
@@ -269,10 +269,8 @@ func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) err
 		update["okeEngineConfig"] = okeConfig
 	case clusterDriverK3S:
 		update["k3sConfig"] = expandClusterK3SConfig(d.Get("k3s_config").([]interface{}))
-		replace = d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
 	case clusterDriverRKE2:
 		update["rke2Config"] = expandClusterRKE2Config(d.Get("rke2_config").([]interface{}))
-		replace = d.HasChange("cluster_agent_deployment_customization") || d.HasChange("fleet_agent_deployment_customization")
 	}
 
 	// update the cluster; retry til timeout or non retryable error is returned. If api 500 error is received,
