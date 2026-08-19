@@ -6,6 +6,30 @@ import (
 
 //Schemas
 
+func machineConfigV2HarvesterCPUFields() map[string]*schema.Schema {
+	s := map[string]*schema.Schema{
+		"count": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "2",
+			Description: "vCPU count",
+		},
+		"pinning": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "pin vCPUs to physical cores",
+		},
+		"isolate_emulator_thread": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "isolate emulator thread from VM vCPUs on separate CPU core",
+		},
+	}
+	return s
+}
+
 func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"vm_namespace": {
@@ -18,11 +42,14 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "VM affinity, base64 is supported",
 		},
-		"cpu_count": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "2",
-			Description: "CPU count",
+		"cpu": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Required:    true,
+			Description: "CPU settings",
+			Elem: &schema.Resource{
+				Schema: machineConfigV2HarvesterCPUFields(),
+			},
 		},
 		"memory_size": {
 			Type:        schema.TypeString,
