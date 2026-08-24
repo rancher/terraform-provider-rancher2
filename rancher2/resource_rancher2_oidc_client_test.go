@@ -557,6 +557,20 @@ func TestValidateRedirectURI(t *testing.T) {
 			value:   "https://example.com/callback#section",
 			wantErr: `"redirect_uris" must not contain a fragment, got: "https://example.com/callback#section"`,
 		},
+		"valid RFC 8252 private-use URI scheme": {
+			value: "com.example.app:/oauth2redirect/example-provider",
+		},
+		"valid RFC 8252 private-use URI scheme minimal path": {
+			value: "com.example.app:/callback",
+		},
+		"private-use URI scheme without period is rejected (RFC 8252 §8.4)": {
+			value:   "myapp:/callback",
+			wantErr: `"redirect_uris" must be a valid absolute URL with scheme and host, got: "myapp:/callback"`,
+		},
+		"private-use URI scheme with fragment": {
+			value:   "com.example.app:/callback#section",
+			wantErr: `"redirect_uris" must not contain a fragment, got: "com.example.app:/callback#section"`,
+		},
 	}
 
 	for name, tc := range tests {
