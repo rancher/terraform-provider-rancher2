@@ -87,7 +87,13 @@ function main() {
     inputData = JSON.parse(fs.readFileSync(0, 'utf-8'));
   } catch (err) {
     console.error('Failed to parse stdin JSON in block-restricted-commands:', err.message || err);
-    console.log(JSON.stringify({ decision: 'allow', systemMessage: '🔒 Hook Notification: Failed to parse input, allowing execution by default.' }));
+    console.log(
+      JSON.stringify({
+        decision: 'deny',
+        reason: '🔒 Security Policy Violation: Failed to parse input payload in block-restricted-commands hook.',
+        systemMessage: '🔒 Security Block: Hook input parsing failed, execution denied.',
+      }),
+    );
     process.exit(0);
   }
 
