@@ -19,7 +19,7 @@ run_shellcheck() {
   local files
   files=$(grep -Rl -e '^#!' . \
     | grep -v -E "^\./(\.git|\.terraform|\.agent|bin|node_modules)/" \
-    | grep -v -E "\.md$" || true)
+    | grep -v -E "\.(md|js)$" || true)
 
   if [[ -z "${files}" ]]; then
     echo "No shell scripts found to check."
