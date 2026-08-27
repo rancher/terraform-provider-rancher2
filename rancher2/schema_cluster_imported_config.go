@@ -14,5 +14,14 @@ func clusterImportedConfigFields() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Private registry URL",
 		},
+		"private_registry_pull_secrets": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "Private registry image pull secrets",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 	}
 }
