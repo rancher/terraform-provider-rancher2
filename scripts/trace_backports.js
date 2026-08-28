@@ -32,7 +32,9 @@ console.log(`📌 [1/4] Comparing starting reference '${baseCompare}' with head 
 console.log(`📋 [2/4] Fetching unique commits on '${branch}' since '${baseCompare}' from GitHub API...`);
 let commits = [];
 try {
-  const apiPath = `repos/rancher/terraform-provider-rancher2/compare/${baseCompare}...${branch}`;
+  const baseRef = encodeURIComponent(baseCompare);
+  const headRef = encodeURIComponent(branch);
+  const apiPath = `repos/rancher/terraform-provider-rancher2/compare/${baseRef}...${headRef}`;
   const responseJson = execFileSync('gh', ['api', apiPath], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   const response = JSON.parse(responseJson);
   
