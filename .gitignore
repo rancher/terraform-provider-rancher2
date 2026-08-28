@@ -21,3 +21,4 @@ main.tf
 terraform-provider-rancher2
 node_modules
 .vscode
+backport_qa_report.md
