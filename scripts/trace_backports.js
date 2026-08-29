@@ -25,43 +25,35 @@ console.log(`Target Branch: ${branch}`);
 console.log(`=========================================\n`);
 
 // 1. Determine starting compare reference
-const baseCompare = startRef || 'main';
+let baseCompare = startRef;
+if (!baseCompare) {
+  try {
+    // Automatically find the most recent tag reachable from the target branch
+    baseCompare = execFileSync('git', ['describe', '--tags', '--abbrev=0', branch], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  } catch (err) {
+    baseCompare = 'main'; // Fallback if no tags exist
+  }
+}
 console.log(`📌 [1/4] Comparing starting reference '${baseCompare}' with head branch '${branch}'...`);
 
-// 2. Fetch all commits using GitHub Compare API
-console.log(`📋 [2/4] Fetching all commits on '${branch}' since '${baseCompare}' from GitHub API...`);
+// 2. Fetch all commits using local git
+console.log(`📋 [2/4] Fetching all commits on '${branch}' since '${baseCompare}' using local Git...`);
 let commits = [];
 try {
-  const baseRef = encodeURIComponent(baseCompare);
-  const headRef = encodeURIComponent(branch);
-  const apiPath = `repos/rancher/terraform-provider-rancher2/compare/${baseRef}...${headRef}`;
-  const responseJson = execFileSync('gh', ['api', apiPath], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-  const response = JSON.parse(responseJson);
+  // Using two-dot syntax for strict reachability (avoids merge-base shift)
+  const logArgs = ['log', `${baseCompare}..${branch}`, '--format=%H%x00%s'];
+  const logOutput = execFileSync('git', logArgs, { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
   
-  if (response && response.commits) {
-    // Fix 1: Check and warn if GitHub Compare API truncated the returned commits array
-    if (response.total_commits > response.commits.length) {
-      console.warn(`⚠️ \x1b[33m[Warning] GitHub API compare endpoint truncated the commits list (returned ${response.commits.length} of ${response.total_commits} commits). The audit report may be incomplete.\x1b[0m`);
-    }
-
-    commits = response.commits.map(c => {
-      const sha = c.sha;
-      const fullMessage = (c.commit && c.commit.message) || 'No message';
-      const subject = fullMessage.split('\n')[0];
-      return { sha, subject };
+  if (logOutput) {
+    commits = logOutput.split('\n').map(line => {
+      const [sha, ...subjectParts] = line.split('\0');
+      return { sha, subject: subjectParts.join('\0') };
     });
   }
 } catch (err) {
-  // Fix 2: Explicitly detect when GitHub CLI is not installed (ENOENT)
-  if (err.code === 'ENOENT') {
-    console.error(`❌ [Error] The GitHub CLI ('gh') was not found on your system. Please ensure 'gh' is installed and authenticated to run this script.`);
-    process.exit(1);
-  }
-  
-  // Fix 3: Log standard error stream from the CLI for rich debugging
   const errMsg = err.stderr ? err.stderr.toString().trim() : err.message;
-  console.error(`❌ [Error] Failed to fetch compare logs from GitHub REST API: ${errMsg}`);
-  console.error(`Please verify that you have internet access and that the gh CLI is authenticated.`);
+  console.error(`❌ [Error] Failed to fetch commits using local git: ${errMsg}`);
+  console.error(`Please verify your branch names and ensure your local repository is up to date (run 'git fetch').`);
   process.exit(1);
 }
 
@@ -72,8 +64,6 @@ if (commits.length === 0) {
   process.exit(0);
 }
 
-// 3. Trace each commit back to its PR and QA tracking issue
-console.log(`🛰️ [3/4] Auditing commits against GitHub API (this may take a moment)...`);
 const results = [];
 
 for (const commit of commits) {
@@ -146,7 +136,7 @@ for (const commit of commits) {
   results.push({
     sha: commit.sha,
     subject: commit.subject,
-    pr: pr ? { number: pr.number, title: pr.title, url: pr.html_url } : null,
+    pr: pr ? { number: pr.number, title: pr.title, url: pr.html_url, createdAt: pr.created_at } : null,
     qaIssue: qaIssue ? { number: qaIssue.number, title: qaIssue.title, state: qaIssue.state, url: qaIssue.url } : null,
   });
 }
@@ -155,9 +145,9 @@ for (const commit of commits) {
 console.log(`\n📝 [4/4] Generating reports...`);
 
 // Render beautiful console table
-console.log(`\n=============================================================================================================`);
-console.log(`| SHA      | Backport PR  | QA Issue   | Status   | Title                                                     |`);
-console.log(`=============================================================================================================`);
+console.log(`\n============================================================================================================================`);
+console.log(`| SHA      | Backport PR  | QA Issue   | Status   | Created    | Title                                                     |`);
+console.log(`============================================================================================================================`);
 for (const r of results) {
   const shortSha = r.sha.substring(0, 8);
   const prCol = r.pr ? `#${r.pr.number}`.padEnd(12) : 'N/A'.padEnd(12);
@@ -168,12 +158,14 @@ for (const r of results) {
     statusCol = r.qaIssue.state === 'OPEN' ? '🟢 OPEN   ' : '🔵 CLOSED ';
   }
   
+  const createdCol = (r.pr && r.pr.createdAt ? r.pr.createdAt.substring(0, 10) : 'N/A').padEnd(10);
+  
   const title = (r.pr ? r.pr.title : r.subject).substring(0, 56);
   const titleCol = title.padEnd(57);
   
-  console.log(`| ${shortSha} | ${prCol} | ${issueCol} | ${statusCol} | ${titleCol} |`);
+  console.log(`| ${shortSha} | ${prCol} | ${issueCol} | ${statusCol} | ${createdCol} | ${titleCol} |`);
 }
-console.log(`=============================================================================================================\n`);
+console.log(`============================================================================================================================\n`);
 
 // Generate Markdown report
 const reportPath = path.resolve('backport_qa_report.md');
@@ -195,18 +187,19 @@ for (const r of results) {
   const commitLink = `[\`${r.sha.substring(0, 8)}\`](https://github.com/rancher/terraform-provider-rancher2/commit/${r.sha})`;
   const prLink = r.pr ? `[#${r.pr.number}](${r.pr.url})` : '`N/A`';
   const qaLink = r.qaIssue ? `[#${r.qaIssue.number}](${r.qaIssue.url})` : '`N/A`';
-  
+  const createdDate = r.pr && r.pr.createdAt ? r.pr.createdAt.substring(0, 10) : '`N/A`';
+
   let statusBadge = '🔴 **Missing**';
   if (r.qaIssue) {
     statusBadge = r.qaIssue.state === 'OPEN' ? '🟢 **Open**' : '🔵 **Closed**';
   }
-  
+
   // Fix 5: Sanitize PR title/subject for Markdown table safety (escaping pipes and removing newlines)
   const title = (r.pr ? r.pr.title : r.subject)
     .replace(/\|/g, '\\|')
     .replace(/\r?\n|\r/g, ' ');
     
-  mdContent += `| ${commitLink} | ${prLink} | ${qaLink} | ${statusBadge} | ${title} |\n`;
+  mdContent += `| ${commitLink} | ${prLink} | ${qaLink} | ${statusBadge} | ${createdDate} | ${title} |\n`;
 }
 
 mdContent += `
