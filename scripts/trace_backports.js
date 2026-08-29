@@ -28,19 +28,14 @@ console.log(`=========================================\n`);
 const baseCompare = startRef || 'main';
 console.log(`📌 [1/4] Comparing starting reference '${baseCompare}' with head branch '${branch}'...`);
 
-// 2. Fetch unique commits using GitHub Compare API
-console.log(`📋 [2/4] Fetching unique commits on '${branch}' since '${baseCompare}' from GitHub API...`);
+// 2. Fetch all commits using GitHub Compare API
+console.log(`📋 [2/4] Fetching all commits on '${branch}' since '${baseCompare}' from GitHub API...`);
 let commits = [];
 try {
-<<<<<<< Updated upstream
   const baseRef = encodeURIComponent(baseCompare);
   const headRef = encodeURIComponent(branch);
   const apiPath = `repos/rancher/terraform-provider-rancher2/compare/${baseRef}...${headRef}`;
   const responseJson = execFileSync('gh', ['api', apiPath], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-=======
-  const apiPath = `repos/rancher/terraform-provider-rancher2/compare/${baseCompare}...${branch}`;
-  const responseJson = execFileSync('gh', ['api', apiPath], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
->>>>>>> Stashed changes
   const response = JSON.parse(responseJson);
   
   if (response && response.commits) {
