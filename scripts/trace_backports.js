@@ -133,6 +133,13 @@ for (const commit of commits) {
   });
 }
 
+// Sort results by PR creation date (ascending)
+results.sort((a, b) => {
+  const dateA = a.pr && a.pr.createdAt ? a.pr.createdAt : '9999-99-99T99:99:99Z';
+  const dateB = b.pr && b.pr.createdAt ? b.pr.createdAt : '9999-99-99T99:99:99Z';
+  return dateA.localeCompare(dateB);
+});
+
 // 4. Generate structured reports
 console.log(`\n📝 [4/4] Generating reports...`);
 
