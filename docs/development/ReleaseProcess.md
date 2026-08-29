@@ -131,20 +131,20 @@ This swimlane diagram traces the detailed event triggers and data flow between d
 
 When cherry-picking features and bug fixes from `main` to release branches (such as `release/v15`), we must guarantee that all backported commits are linked to a valid **QA Tracking Issue** (marked by the `internal/backport` label) to ensure complete testing and audit compliance.
 
-To audit this state automatically, we maintain a central, zero-dependency Node.js utility script:
+To audit this state automatically, we maintain a central Node.js utility script that interfaces with GitHub's APIs:
 - **Script Location:** `scripts/trace_backports.js`
+- **Prerequisite:** Requires the **GitHub CLI (`gh`)** to be installed on your system and authenticated (`gh auth login`).
 - **Execution Command:**
   ```bash
   node scripts/trace_backports.js [options]
   ```
 - **Supported Options:**
   - `--branch` / `-b`: Target release branch (default: `release/v15`).
-  - `--start` / `-s`: Starting tag or commit ref (optional). If omitted, automatically defaults to the branch-off point from `main`.
+  - `--start` / `-s`: Starting tag or commit ref (optional). If omitted, automatically defaults to the branch-off (divergence) point from `main`.
 - **Functionality:**
-  1. **Syncs branch references** with `origin` to prevent stale ref confusion (with graceful local-fallback on network constraints).
-  2. **Isolates unique commits** added since divergence from `main` (or since the explicit `--start` tag).
-  3. **Identifies the backport PR** on GitHub for each commit, automatically filtering out release-please wrapper PRs.
-  4. **Scans description text** for associated issue numbers and retrieves their details.
-  5. **Filters issues by labels** to cleanly separate original user issues from the actual `internal/backport` QA tracking issue.
-  6. **Generates full audit logs** via a formatted console table and writes a structured Markdown report (`backport_qa_report.md`).
+  1. **Queries GitHub's Compare API** directly (bypassing local Git sync and fetch constraints) to fetch all unique commits on the release branch relative to `main` (or a specific tag).
+  2. **Identifies the backport PR** on GitHub for each commit, automatically filtering out release-please wrapper PRs.
+  3. **Scans description text** for associated issue numbers and retrieves their details.
+  4. **Filters issues by labels** to cleanly separate original user issues from the actual `internal/backport` QA tracking issue.
+  5. **Generates full audit logs** via a formatted console table and writes a structured Markdown report (`backport_qa_report.md`).
 

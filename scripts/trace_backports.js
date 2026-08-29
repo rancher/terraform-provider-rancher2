@@ -32,13 +32,23 @@ console.log(`📌 [1/4] Comparing starting reference '${baseCompare}' with head 
 console.log(`📋 [2/4] Fetching unique commits on '${branch}' since '${baseCompare}' from GitHub API...`);
 let commits = [];
 try {
+<<<<<<< Updated upstream
   const baseRef = encodeURIComponent(baseCompare);
   const headRef = encodeURIComponent(branch);
   const apiPath = `repos/rancher/terraform-provider-rancher2/compare/${baseRef}...${headRef}`;
   const responseJson = execFileSync('gh', ['api', apiPath], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+=======
+  const apiPath = `repos/rancher/terraform-provider-rancher2/compare/${baseCompare}...${branch}`;
+  const responseJson = execFileSync('gh', ['api', apiPath], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+>>>>>>> Stashed changes
   const response = JSON.parse(responseJson);
   
   if (response && response.commits) {
+    // Fix 1: Check and warn if GitHub Compare API truncated the returned commits array
+    if (response.total_commits > response.commits.length) {
+      console.warn(`⚠️ \x1b[33m[Warning] GitHub API compare endpoint truncated the commits list (returned ${response.commits.length} of ${response.total_commits} commits). The audit report may be incomplete.\x1b[0m`);
+    }
+
     commits = response.commits.map(c => {
       const sha = c.sha;
       const fullMessage = (c.commit && c.commit.message) || 'No message';
@@ -47,7 +57,15 @@ try {
     });
   }
 } catch (err) {
-  console.error(`❌ [Error] Failed to fetch compare logs from GitHub REST API: ${err.message}`);
+  // Fix 2: Explicitly detect when GitHub CLI is not installed (ENOENT)
+  if (err.code === 'ENOENT') {
+    console.error(`❌ [Error] The GitHub CLI ('gh') was not found on your system. Please ensure 'gh' is installed and authenticated to run this script.`);
+    process.exit(1);
+  }
+  
+  // Fix 3: Log standard error stream from the CLI for rich debugging
+  const errMsg = err.stderr ? err.stderr.toString().trim() : err.message;
+  console.error(`❌ [Error] Failed to fetch compare logs from GitHub REST API: ${errMsg}`);
   console.error(`Please verify that you have internet access and that the gh CLI is authenticated.`);
   process.exit(1);
 }
@@ -67,9 +85,11 @@ for (const commit of commits) {
   process.stdout.write(`   - Auditing ${commit.sha.substring(0, 8)}... `);
   let pr = null;
   try {
-    const prsJson = execFileSync('gh', ['api', `repos/rancher/terraform-provider-rancher2/commits/${commit.sha}/pulls`], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    const prsJson = execFileSync('gh', ['api', `repos/rancher/terraform-provider-rancher2/commits/${commit.sha}/pulls`], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
     const prs = JSON.parse(prsJson);
-    if (prs && prs.length > 0) {
+    
+    // Fix 4: Safely ensure the parsed JSON is verified as an array before filtering
+    if (prs && Array.isArray(prs) && prs.length > 0) {
       // Prioritize the backport PR base matching our target branch, filtering out release-please PRs
       const releasePleaseRegex = /^(chore\(release|release-please)/i;
       const nonReleasePleasePrs = prs.filter(p => !releasePleaseRegex.test(p.title || ''));
@@ -81,7 +101,8 @@ for (const commit of commits) {
       }
     }
   } catch (err) {
-    console.error(`\n⚠️ [Debug] Failed to fetch PR for commit ${commit.sha}: ${err.message}`);
+    const errMsg = err.stderr ? err.stderr.toString().trim() : err.message;
+    console.error(`\n⚠️ [Debug] Failed to fetch PR for commit ${commit.sha}: ${errMsg}`);
   }
 
   let qaIssue = null;
@@ -103,7 +124,7 @@ for (const commit of commits) {
     // Inspect each candidate issue to check labels
     for (const issueNum of issueNumbers) {
       try {
-        const issueJson = execFileSync('gh', ['issue', 'view', String(issueNum), '-R', 'rancher/terraform-provider-rancher2', '--json', 'number,title,labels,state,url'], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+        const issueJson = execFileSync('gh', ['issue', 'view', String(issueNum), '-R', 'rancher/terraform-provider-rancher2', '--json', 'number,title,labels,state,url'], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
         const issue = JSON.parse(issueJson);
         const isBackportQA = issue.labels && issue.labels.some(l => l.name === 'internal/backport');
         if (isBackportQA) {
@@ -111,7 +132,8 @@ for (const commit of commits) {
           break; // Found the QA tracking issue, no need to look further
         }
       } catch (err) {
-        console.error(`\n⚠️ [Debug] Failed to fetch issue #${issueNum}: ${err.message}`);
+        const errMsg = err.stderr ? err.stderr.toString().trim() : err.message;
+        console.error(`\n⚠️ [Debug] Failed to fetch issue #${issueNum}: ${errMsg}`);
       }
     }
   }
@@ -184,7 +206,11 @@ for (const r of results) {
     statusBadge = r.qaIssue.state === 'OPEN' ? '🟢 **Open**' : '🔵 **Closed**';
   }
   
-  const title = r.pr ? r.pr.title : r.subject;
+  // Fix 5: Sanitize PR title/subject for Markdown table safety (escaping pipes and removing newlines)
+  const title = (r.pr ? r.pr.title : r.subject)
+    .replace(/\|/g, '\\|')
+    .replace(/\r?\n|\r/g, ' ');
+    
   mdContent += `| ${commitLink} | ${prLink} | ${qaLink} | ${statusBadge} | ${title} |\n`;
 }
 
