@@ -25,15 +25,7 @@ console.log(`Target Branch: ${branch}`);
 console.log(`=========================================\n`);
 
 // 1. Determine starting compare reference
-let baseCompare = startRef;
-if (!baseCompare) {
-  try {
-    // Automatically find the most recent tag reachable from the target branch
-    baseCompare = execFileSync('git', ['describe', '--tags', '--abbrev=0', branch], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-  } catch (err) {
-    baseCompare = 'main'; // Fallback if no tags exist
-  }
-}
+const baseCompare = startRef || 'main';
 console.log(`📌 [1/4] Comparing starting reference '${baseCompare}' with head branch '${branch}'...`);
 
 // 2. Fetch all commits using local git
@@ -179,8 +171,8 @@ let mdContent = `# 🔍 Release Audit Report: Backport QA Status
 
 ## Summary Table
 
-| Release Commit | Backport PR | QA Tracking Issue | QA Status | Description / Title |
-| :--- | :--- | :--- | :---: | :--- |
+| Release Commit | Backport PR | QA Tracking Issue | QA Status | PR Created | Description / Title |
+| :--- | :--- | :--- | :---: | :--- | :--- |
 `;
 
 for (const r of results) {
