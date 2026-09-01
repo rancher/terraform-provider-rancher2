@@ -37,9 +37,10 @@ try {
   const response = JSON.parse(responseJson);
   
   if (response && response.commits) {
-    // Fix 1: Check and warn if GitHub Compare API truncated the returned commits array
+    // Fix 1: Fail fast if GitHub Compare API truncated the returned commits array
     if (response.total_commits > response.commits.length) {
-      console.warn(`⚠️ \x1b[33m[Warning] GitHub API compare endpoint truncated the commits list (returned ${response.commits.length} of ${response.total_commits} commits). The audit report may be incomplete.\x1b[0m`);
+      console.error(`❌ [Error] GitHub API compare endpoint truncated the commits list (returned ${response.commits.length} of ${response.total_commits} commits). Rerun with --start/-s to narrow the range so the audit is complete.`);
+      process.exit(2);
     }
 
     commits = response.commits.map(c => {
