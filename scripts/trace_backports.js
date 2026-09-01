@@ -28,24 +28,38 @@ console.log(`=========================================\n`);
 const baseCompare = startRef || 'main';
 console.log(`📌 [1/4] Comparing starting reference '${baseCompare}' with head branch '${branch}'...`);
 
-// 2. Fetch all commits using local git
-console.log(`📋 [2/4] Fetching all commits on '${branch}' since '${baseCompare}' using local Git...`);
+// 2. Fetch unique commits using GitHub Compare API
+console.log(`📋 [2/4] Fetching unique commits on '${branch}' since '${baseCompare}' from GitHub API...`);
 let commits = [];
 try {
-  // Using two-dot syntax for strict reachability (avoids merge-base shift)
-  const logArgs = ['log', `${baseCompare}..${branch}`, '--format=%H%x00%s'];
-  const logOutput = execFileSync('git', logArgs, { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  const apiPath = `repos/rancher/terraform-provider-rancher2/compare/${baseCompare}...${branch}`;
+  const responseJson = execFileSync('gh', ['api', apiPath], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  const response = JSON.parse(responseJson);
   
-  if (logOutput) {
-    commits = logOutput.split('\n').map(line => {
-      const [sha, ...subjectParts] = line.split('\0');
-      return { sha, subject: subjectParts.join('\0') };
+  if (response && response.commits) {
+    // Fix 1: Check and warn if GitHub Compare API truncated the returned commits array
+    if (response.total_commits > response.commits.length) {
+      console.warn(`⚠️ \x1b[33m[Warning] GitHub API compare endpoint truncated the commits list (returned ${response.commits.length} of ${response.total_commits} commits). The audit report may be incomplete.\x1b[0m`);
+    }
+
+    commits = response.commits.map(c => {
+      const sha = c.sha;
+      const fullMessage = (c.commit && c.commit.message) || 'No message';
+      const subject = fullMessage.split('\n')[0];
+      return { sha, subject };
     });
   }
 } catch (err) {
+  // Fix 2: Explicitly detect when GitHub CLI is not installed (ENOENT)
+  if (err.code === 'ENOENT') {
+    console.error(`❌ [Error] The GitHub CLI ('gh') was not found on your system. Please ensure 'gh' is installed and authenticated to run this script.`);
+    process.exit(1);
+  }
+  
+  // Fix 3: Log standard error stream from the CLI for rich debugging
   const errMsg = err.stderr ? err.stderr.toString().trim() : err.message;
-  console.error(`❌ [Error] Failed to fetch commits using local git: ${errMsg}`);
-  console.error(`Please verify your branch names and ensure your local repository is up to date (run 'git fetch').`);
+  console.error(`❌ [Error] Failed to fetch compare logs from GitHub REST API: ${errMsg}`);
+  console.error(`Please verify that you have internet access and that the gh CLI is authenticated.`);
   process.exit(1);
 }
 
@@ -56,6 +70,8 @@ if (commits.length === 0) {
   process.exit(0);
 }
 
+// 3. Trace each commit back to its PR and QA tracking issue
+console.log(`🛰️ [3/4] Auditing commits against GitHub API (this may take a moment)...`);
 const results = [];
 
 for (const commit of commits) {
@@ -133,7 +149,7 @@ for (const commit of commits) {
   });
 }
 
-// Sort results by PR creation date (ascending)
+// Preserve User's Sorting: Sort results by PR creation date (ascending)
 results.sort((a, b) => {
   const dateA = a.pr && a.pr.createdAt ? a.pr.createdAt : '9999-99-99T99:99:99Z';
   const dateB = b.pr && b.pr.createdAt ? b.pr.createdAt : '9999-99-99T99:99:99Z';
@@ -143,7 +159,7 @@ results.sort((a, b) => {
 // 4. Generate structured reports
 console.log(`\n📝 [4/4] Generating reports...`);
 
-// Render beautiful console table
+// Render beautiful console table (including User's Created column)
 console.log(`\n============================================================================================================================`);
 console.log(`| SHA      | Backport PR  | QA Issue   | Status   | Created    | Title                                                     |`);
 console.log(`============================================================================================================================`);
@@ -187,12 +203,12 @@ for (const r of results) {
   const prLink = r.pr ? `[#${r.pr.number}](${r.pr.url})` : '`N/A`';
   const qaLink = r.qaIssue ? `[#${r.qaIssue.number}](${r.qaIssue.url})` : '`N/A`';
   const createdDate = r.pr && r.pr.createdAt ? r.pr.createdAt.substring(0, 10) : '`N/A`';
-
+  
   let statusBadge = '🔴 **Missing**';
   if (r.qaIssue) {
     statusBadge = r.qaIssue.state === 'OPEN' ? '🟢 **Open**' : '🔵 **Closed**';
   }
-
+  
   // Fix 5: Sanitize PR title/subject for Markdown table safety (escaping pipes and removing newlines)
   const title = (r.pr ? r.pr.title : r.subject)
     .replace(/\|/g, '\\|')
