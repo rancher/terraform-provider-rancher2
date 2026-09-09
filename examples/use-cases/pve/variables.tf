@@ -62,7 +62,7 @@ variable "pve_ssh_user" {
 variable "pve_full_clone" {
   description = "Forces a full copy of all disks, even if the storage supports linked clones."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "pve_tags" {

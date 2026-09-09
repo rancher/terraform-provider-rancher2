@@ -28,7 +28,7 @@ It assumes you already have:
 | `pve_network_interface` | Network interface bus/device (e.g. `net0`) | no (default: `net0`) |
 | `pve_iso_device` | CD/DVD drive bus/device for cloud-init ISO (e.g. `ide2`) | no (default: `scsi1`) |
 | `pve_ssh_user` | SSH user created by cloud-init | no (default: `service`) |
-| `pve_full_clone` | Force full disk clone instead of linked clone | no (default: `true`) |
+| `pve_full_clone` | Force full disk clone instead of linked clone | no (default: `false`) |
 | `pve_tags` | Comma-separated VM tags | no |
 | `pve_server_template_id` | Proxmox VM template ID for server nodes | yes |
 | `pve_worker_template_id` | Proxmox VM template ID for worker nodes | yes |
@@ -47,7 +47,7 @@ pve_resource_pool         = "my-pool"
 pve_network_interface     = "net0"
 pve_iso_device            = "ide2"
 pve_ssh_user              = "service"
-pve_full_clone            = true
+pve_full_clone            = false
 pve_server_template_id    = "100"
 pve_worker_template_id    = "100"
 server_quantity           = 3

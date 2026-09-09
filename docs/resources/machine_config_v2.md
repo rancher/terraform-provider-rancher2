@@ -413,7 +413,7 @@ The following attributes are exported:
 * `pve_processor_cores` - (Optional) Number of processor cores to configure for the machine (string)
 * `pve_memory` - (Optional) Amount of memory in MiB to configure for the machine (string)
 * `pve_memory_balloon` - (Optional) Minimum amount of memory in MiB for the machine (set to `0` to disable ballooning) (string)
-* `pve_full_clone` - (Optional) Forces full copy of all disks, even if underlying storage supports linked clones. Default `true` (bool)
+* `pve_full_clone` - (Optional) Forces full copy of all disks, even if underlying storage supports linked clones. Default `false` (bool)
 * `pve_tags` - (Optional) Comma-separated list of tags to assign to the VM (e.g. `foo,bar`) (string)
 
 ## Timeouts
