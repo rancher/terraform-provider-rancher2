@@ -67,6 +67,49 @@ func TestFlattenClusterV2RKEConfigUpgradeStrategyDrainOptions(t *testing.T) {
 			testClusterV2RKEConfigUpgradeStrategyDrainOptionsConf,
 			testClusterV2RKEConfigUpgradeStrategyDrainOptionsInterface,
 		},
+		{
+			rkev1.DrainOptions{
+				Enabled:                         true,
+				IgnoreDaemonSets:                newTrue(),
+				DeleteEmptyDirData:              true,
+				GracePeriod:                     -1,
+				Timeout:                         10800,
+				SkipWaitForDeleteTimeoutSeconds: 600,
+			},
+			[]interface{}{
+				map[string]interface{}{
+					"enabled":                              true,
+					"force":                                false,
+					"ignore_daemon_sets":                   true,
+					"ignore_errors":                        false,
+					"delete_empty_dir_data":                true,
+					"disable_eviction":                     false,
+					"grace_period":                         -1,
+					"timeout":                              10800,
+					"skip_wait_for_delete_timeout_seconds": 600,
+				},
+			},
+		},
+		{
+			rkev1.DrainOptions{
+				Enabled:          true,
+				IgnoreDaemonSets: newTrue(),
+				GracePeriod:      0,
+				Timeout:          10800,
+			},
+			[]interface{}{
+				map[string]interface{}{
+					"enabled":               true,
+					"force":                 false,
+					"ignore_daemon_sets":    true,
+					"ignore_errors":         false,
+					"delete_empty_dir_data": false,
+					"disable_eviction":      false,
+					"grace_period":          0,
+					"timeout":               10800,
+				},
+			},
+		},
 	}
 
 	for _, tc := range cases {
@@ -102,6 +145,49 @@ func TestExpandClusterV2RKEConfigUpgradeStrategyDrainOptions(t *testing.T) {
 		{
 			testClusterV2RKEConfigUpgradeStrategyDrainOptionsInterface,
 			testClusterV2RKEConfigUpgradeStrategyDrainOptionsConf,
+		},
+		{
+			[]interface{}{
+				map[string]interface{}{
+					"enabled":                              true,
+					"force":                                false,
+					"ignore_daemon_sets":                   true,
+					"ignore_errors":                        false,
+					"delete_empty_dir_data":                true,
+					"disable_eviction":                     false,
+					"grace_period":                         -1,
+					"timeout":                              10800,
+					"skip_wait_for_delete_timeout_seconds": 600,
+				},
+			},
+			rkev1.DrainOptions{
+				Enabled:                         true,
+				IgnoreDaemonSets:                newTrue(),
+				DeleteEmptyDirData:              true,
+				GracePeriod:                     -1,
+				Timeout:                         10800,
+				SkipWaitForDeleteTimeoutSeconds: 600,
+			},
+		},
+		{
+			[]interface{}{
+				map[string]interface{}{
+					"enabled":               true,
+					"force":                 false,
+					"ignore_daemon_sets":    true,
+					"ignore_errors":         false,
+					"delete_empty_dir_data": false,
+					"disable_eviction":      false,
+					"grace_period":          0,
+					"timeout":               10800,
+				},
+			},
+			rkev1.DrainOptions{
+				Enabled:          true,
+				IgnoreDaemonSets: newTrue(),
+				GracePeriod:      0,
+				Timeout:          10800,
+			},
 		},
 	}
 
