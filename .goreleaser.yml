@@ -59,6 +59,7 @@ release:
   extra_files:
     - glob: './terraform-registry-manifest.json'
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
-  prerelease: auto
+  draft: true
+  use_existing_draft: true
 changelog:
   disable: true
