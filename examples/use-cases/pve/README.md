@@ -24,7 +24,7 @@ It assumes you already have:
 | `cluster_name` | Name for the new cluster in Rancher | yes |
 | `kubernetes_version` | RKE2 version (e.g. `v1.34.3+rke2r1`) | yes |
 | `pve_cloud_credential_name` | Name of the existing PVE cloud credential in Rancher | yes |
-| `pve_resource_pool` | Proxmox VE resource pool name | no |
+| `pve_resource_pool` | Proxmox VE resource pool name | yes |
 | `pve_network_interface` | Network interface bus/device (e.g. `net0`) | no (default: `net0`) |
 | `pve_iso_device` | CD/DVD drive bus/device for cloud-init ISO (e.g. `ide2`) | no (default: `scsi1`) |
 | `pve_ssh_user` | SSH user created by cloud-init | no (default: `service`) |

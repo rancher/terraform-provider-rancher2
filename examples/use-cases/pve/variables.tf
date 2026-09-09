@@ -39,7 +39,6 @@ variable "pve_cloud_credential_name" {
 variable "pve_resource_pool" {
   description = "Proxmox VE Resource Pool name."
   type        = string
-  default     = ""
 }
 
 variable "pve_network_interface" {

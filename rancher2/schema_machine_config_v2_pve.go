@@ -28,7 +28,7 @@ func machineConfigV2PveFields() map[string]*schema.Schema {
 		},
 		"pve_resource_pool": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Required:    true,
 			Description: "Proxmox VE Resource Pool name",
 		},
 		"pve_template_id": {
