@@ -6,7 +6,7 @@ page_title: "rancher2_cloud_credential Resource"
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2.x and retrieve their information.
 
-amazonec2, azure, digitalocean, harvester, linode, nutanix, openstack, pve and vsphere credentials config are supported for Cloud Credential.
+Amazonec2, azure, digitalocean, harvester, linode, nutanix, openstack, pve and vsphere credential configs are supported for Cloud Credential.
 
 ## Example Usage
 

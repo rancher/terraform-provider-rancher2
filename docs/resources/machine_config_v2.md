@@ -6,7 +6,7 @@ page_title: "rancher2_machine_config_v2 Resource"
 
 Provides a Rancher v2 Machine config v2 resource. This can be used to create Machine Config v2 for Rancher v2 and retrieve their information. This resource is available from Rancher v2.6.0 and above.
 
-The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `nutanix`, `openstack`, `pve`, and `vsphere`.
+The supported cloud providers include `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `nutanix`, `openstack`, `pve`, and `vsphere`.
 
 
 Starting with Rancher v2.12.0 and above, `google` is also offered as a supported cloud provider.
