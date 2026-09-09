@@ -6,7 +6,7 @@ page_title: "rancher2_machine_config_v2 Resource"
 
 Provides a Rancher v2 Machine config v2 resource. This can be used to create Machine Config v2 for Rancher v2 and retrieve their information. This resource is available from Rancher v2.6.0 and above.
 
-The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `nutanix`, `openstack`, and `vsphere`.
+The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `harvester`, `linode`, `nutanix`, `openstack`, `pve`, and `vsphere`.
 
 
 Starting with Rancher v2.12.0 and above, `google` is also offered as a supported cloud provider.
@@ -90,15 +90,16 @@ The following arguments are supported:
 
 * `generate_name` - (Required/ForceNew) Cluster V2 generate name. The pattern to generate machine config name. e.g  generate_name=\"prod-pool1\" will generate \"nc-prod-pool1-?????\" name computed at `name` attribute (string)
 * `fleet_namespace` - (Optional/ForceNew) Cluster V2 fleet namespace
-* `amazonec2_config` - (Optional) AWS config for the Machine Config V2. Conflicts with `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `azure_config` - (Optional) Azure config for the Machine Config V2. Conflicts with `amazonec2_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `digitalocean_config` - (Optional) Digitalocean config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `harvester_config` - (Optional) Harvester config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `linode_config` - (Optional) Linode config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `nutanix_config` - (Optional) Nutanix config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `vsphere_config` (list maxitems:1)
-* `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `openstack_config` (list maxitems:1)
-* `google_config` - (Optional) Google config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `amazonec2_config` - (Optional) AWS config for the Machine Config V2. Conflicts with `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config`, `pve_config` and `vsphere_config` (list maxitems:1)
+* `azure_config` - (Optional) Azure config for the Machine Config V2. Conflicts with `amazonec2_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config`, `pve_config` and `vsphere_config` (list maxitems:1)
+* `digitalocean_config` - (Optional) Digitalocean config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config`, `pve_config` and `vsphere_config` (list maxitems:1)
+* `harvester_config` - (Optional) Harvester config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config`, `pve_config` and `vsphere_config` (list maxitems:1)
+* `linode_config` - (Optional) Linode config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `nutanix_config`, `openstack_config`, `google_config`, `pve_config` and `vsphere_config` (list maxitems:1)
+* `nutanix_config` - (Optional) Nutanix config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `openstack_config`, `google_config`, `pve_config` and `vsphere_config` (list maxitems:1)
+* `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config`, `pve_config` and `vsphere_config` (list maxitems:1)
+* `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config`, `pve_config` and `openstack_config` (list maxitems:1)
+* `google_config` - (Optional) Google config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `pve_config` and `vsphere_config` (list maxitems:1)
+* `pve_config` - (Optional) Proxmox VE config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config`, `google_config` and `vsphere_config` (list maxitems:1)
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
@@ -393,6 +394,27 @@ The following attributes are exported:
 * `boot_type` - (Optional) Boot type of the VM. Supported values are `legacy` and `uefi`. Default `legacy` (string)
 * `timeout` - (Optional) Timeout for Nutanix operations in seconds. Default `300` (string)
 * `vm_gpu` - (Optional) GPU devices to attach to the VM (list)
+
+### `pve_config`
+
+#### Arguments
+
+* `pve_template_id` - (Required) ID of the Proxmox VE template (string)
+* `pve_iso_device` - (Required) Bus/Device of the CD/DVD Drive to mount cloud-init ISO to (e.g. `scsi1`) (string)
+* `pve_network_interface` - (Required) Bus/Device of the network interface to read machine's IP address from (e.g. `net0`) (string)
+* `pve_url` - (Optional) Proxmox VE URL (e.g. `https://<PROXMOX VE ADDRESS>:8006`). Mandatory if `rancher2_cloud_credential.pve_credential_config` is not used (string)
+* `pve_token_id` - (Optional) Proxmox VE API Token ID (including username and realm, e.g. `root@pam!rancher`). Mandatory if `rancher2_cloud_credential.pve_credential_config` is not used (string)
+* `pve_token_secret` - (Optional/Sensitive) Proxmox VE API Token secret. Mandatory if `rancher2_cloud_credential.pve_credential_config` is not used (string)
+* `pve_insecure_tls` - (Optional) Disables Proxmox VE TLS certificate verification. Default `false` (bool)
+* `pve_resource_pool` - (Optional) Proxmox VE Resource Pool name (string)
+* `pve_ssh_user` - (Optional) Username for the SSH user created via cloud-init. Default `service` (string)
+* `pve_ssh_port` - (Optional) Port to use when connecting to the machine via SSH. Default `22` (string)
+* `pve_processor_sockets` - (Optional) Number of processor sockets to configure for the machine (string)
+* `pve_processor_cores` - (Optional) Number of processor cores to configure for the machine (string)
+* `pve_memory` - (Optional) Amount of memory in MiB to configure for the machine (string)
+* `pve_memory_balloon` - (Optional) Minimum amount of memory in MiB for the machine (set to `0` to disable ballooning) (string)
+* `pve_full_clone` - (Optional) Forces full copy of all disks, even if underlying storage supports linked clones. Default `true` (bool)
+* `pve_tags` - (Optional) Comma-separated list of tags to assign to the VM (e.g. `foo,bar`) (string)
 
 ## Timeouts
 
