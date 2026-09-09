@@ -50,6 +50,10 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
         run: |
+          if [[ ! "$TAG" == v* ]]; then
+            echo "Tag must start with 'v' (e.g. v1.2.3)"
+            exit 1
+          fi
           # if the tag contains "rc" we should not be in this workflow
           if grep -q "rc" <<< "$TAG"; then
             echo "Tag contains 'rc', please use the manual-rc-release workflow"
