@@ -36,6 +36,7 @@ jobs:
       pull-requests: write
     outputs:
       version: ${{ steps.release-please-release.outputs.version }}
+      tag_name: ${{ steps.release-please-release.outputs.tag_name }}
       release_created: ${{ steps.release-please-release.outputs.release_created }}
     steps:
       - name: Release Please (Release Only)
@@ -550,7 +551,7 @@ jobs:
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          VERSION: ${{ needs.release-please-release.outputs.version }}
+          VERSION: ${{ needs.release-please-release.outputs.tag_name || needs.release-please-release.outputs.version }}
           SCRIPT_MODE: publish-release
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
