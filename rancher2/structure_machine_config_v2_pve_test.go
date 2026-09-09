@@ -17,8 +17,8 @@ var (
 			PveTemplateID:       "100",
 			PveIsoDevice:        "scsi1",
 			PveNetworkIface:     "net0",
-			PveSshUser:          "service",
-			PveSshPort:          "22",
+			PveSSHUser:          "service",
+			PveSSHPort:          "22",
 			PveProcessorSockets: "2",
 			PveProcessorCores:   "4",
 			PveMemory:           "4096",
@@ -69,8 +69,8 @@ func TestExpandMachineConfigV2Pve(t *testing.T) {
 	assert.Equal(t, testMachineConfigV2PveConf.PveTemplateID, result.PveTemplateID)
 	assert.Equal(t, testMachineConfigV2PveConf.PveIsoDevice, result.PveIsoDevice)
 	assert.Equal(t, testMachineConfigV2PveConf.PveNetworkIface, result.PveNetworkIface)
-	assert.Equal(t, testMachineConfigV2PveConf.PveSshUser, result.PveSshUser)
-	assert.Equal(t, testMachineConfigV2PveConf.PveSshPort, result.PveSshPort)
+	assert.Equal(t, testMachineConfigV2PveConf.PveSSHUser, result.PveSSHUser)
+	assert.Equal(t, testMachineConfigV2PveConf.PveSSHPort, result.PveSSHPort)
 	assert.Equal(t, testMachineConfigV2PveConf.PveProcessorSockets, result.PveProcessorSockets)
 	assert.Equal(t, testMachineConfigV2PveConf.PveProcessorCores, result.PveProcessorCores)
 	assert.Equal(t, testMachineConfigV2PveConf.PveMemory, result.PveMemory)

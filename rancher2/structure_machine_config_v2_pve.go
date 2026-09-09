@@ -22,8 +22,8 @@ type machineConfigV2Pve struct {
 	PveTemplateID       string `json:"template,omitempty" yaml:"template,omitempty"`
 	PveIsoDevice        string `json:"isoDevice,omitempty" yaml:"isoDevice,omitempty"`
 	PveNetworkIface     string `json:"networkInterface,omitempty" yaml:"networkInterface,omitempty"`
-	PveSshUser          string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	PveSshPort          string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
+	PveSSHUser          string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	PveSSHPort          string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
 	PveProcessorSockets string `json:"processorSockets,omitempty" yaml:"processorSockets,omitempty"`
 	PveProcessorCores   string `json:"processorCores,omitempty" yaml:"processorCores,omitempty"`
 	PveMemory           string `json:"memory,omitempty" yaml:"memory,omitempty"`
@@ -67,11 +67,11 @@ func flattenMachineConfigV2Pve(in *MachineConfigV2Pve) []interface{} {
 	if len(in.PveNetworkIface) > 0 {
 		obj["pve_network_interface"] = in.PveNetworkIface
 	}
-	if len(in.PveSshUser) > 0 {
-		obj["pve_ssh_user"] = in.PveSshUser
+	if len(in.PveSSHUser) > 0 {
+		obj["pve_ssh_user"] = in.PveSSHUser
 	}
-	if len(in.PveSshPort) > 0 {
-		obj["pve_ssh_port"] = in.PveSshPort
+	if len(in.PveSSHPort) > 0 {
+		obj["pve_ssh_port"] = in.PveSSHPort
 	}
 	if len(in.PveProcessorSockets) > 0 {
 		obj["pve_processor_sockets"] = in.PveProcessorSockets
@@ -135,10 +135,10 @@ func expandMachineConfigV2Pve(p []interface{}, source *MachineConfigV2) *Machine
 		obj.PveNetworkIface = v
 	}
 	if v, ok := in["pve_ssh_user"].(string); ok && len(v) > 0 {
-		obj.PveSshUser = v
+		obj.PveSSHUser = v
 	}
 	if v, ok := in["pve_ssh_port"].(string); ok && len(v) > 0 {
-		obj.PveSshPort = v
+		obj.PveSSHPort = v
 	}
 	if v, ok := in["pve_processor_sockets"].(string); ok && len(v) > 0 {
 		obj.PveProcessorSockets = v
