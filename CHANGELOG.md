@@ -12,6 +12,13 @@ ENHANCEMENTS:
 BUGFIXES:
 
 
+## [15.1.0](https://github.com/rancher/terraform-provider-rancher2/compare/v15.1.0...v15.1.0) (2026-09-10)
+
+
+### Bug Fixes
+
+* ignore temp nix script ([#2476](https://github.com/rancher/terraform-provider-rancher2/issues/2476)) ([6575ee8](https://github.com/rancher/terraform-provider-rancher2/commit/6575ee80a2405547e5ba21a55da40386917932f8))
+
 ## [15.1.0](https://github.com/rancher/terraform-provider-rancher2/compare/v15.1.0...v15.1.0) (2026-09-09)
 
 
