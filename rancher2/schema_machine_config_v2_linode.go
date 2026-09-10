@@ -15,9 +15,12 @@ func machineConfigV2LinodeFields() map[string]*schema.Schema {
 			Description: "Linode user accounts (seperated by commas) whose Linode SSH keys will be permitted root access to the created node",
 		},
 		"create_private_ip": {
-			Type:        schema.TypeBool,
-			Optional:    true,
-			Default:     false,
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			ConflictsWith: []string{
+				"linode_config.0.use_interfaces",
+			},
 			Description: "Create private IP for the instance",
 		},
 		"docker_port": {
@@ -76,6 +79,11 @@ func machineConfigV2LinodeFields() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "A JSON string specifying data for the selected StackScript",
 		},
+		"user_data": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Cloud-init user data for the Linode Metadata service",
+		},
 		"swap_size": {
 			Type:        schema.TypeString,
 			Optional:    true,
@@ -97,6 +105,36 @@ func machineConfigV2LinodeFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Description: "Prefix the User-Agent in Linode API calls with some 'product/version'",
+		},
+		"use_interfaces": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+			ConflictsWith: []string{
+				"linode_config.0.create_private_ip",
+			},
+			Description: "Enable Linode interface/VPC networking instead of legacy private IP mode",
+		},
+		"vpc_subnet_id": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			RequiredWith: []string{"linode_config.0.use_interfaces"},
+			Description:  "VPC subnet ID to attach when using interface/VPC networking",
+		},
+		"vpc_private_ip": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Optional IPv4 address to request on the VPC interface (interface networking only)",
+		},
+		"public_interface_firewall_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Firewall ID to attach to the public interface when using interface networking",
+		},
+		"vpc_interface_firewall_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Firewall ID to attach to the VPC interface when using interface networking",
 		},
 	}
 

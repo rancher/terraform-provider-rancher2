@@ -15,24 +15,30 @@ const (
 //Types
 
 type machineConfigV2Linode struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	AuthorizedUsers   string `json:"authorizedUsers,omitempty" yaml:"authorizedUsers,omitempty"`
-	CreatePrivateIP   bool   `json:"createPrivateIp,omitempty" yaml:"createPrivateIp,omitempty"`
-	DockerPort        string `json:"dockerPort,omitempty" yaml:"dockerPort,omitempty"`
-	Image             string `json:"image,omitempty" yaml:"image,omitempty"`
-	InstanceType      string `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
-	Label             string `json:"label,omitempty" yaml:"label,omitempty"`
-	Region            string `json:"region,omitempty" yaml:"region,omitempty"`
-	RootPass          string `json:"rootPass,omitempty" yaml:"rootPass,omitempty"`
-	SSHPort           string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
-	SSHUser           string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	StackScript       string `json:"stackscript,omitempty" yaml:"stackscript,omitempty"`
-	StackscriptData   string `json:"stackscriptData,omitempty" yaml:"stackscriptData,omitempty"`
-	SwapSize          string `json:"swapSize,omitempty" yaml:"swapSize,omitempty"`
-	Tags              string `json:"tags,omitempty" yaml:"tags,omitempty"`
-	Token             string `json:"token,omitempty" yaml:"token,omitempty"`
-	UAPrefix          string `json:"uaPrefix,omitempty" yaml:"uaPrefix,omitempty"`
+	metav1.TypeMeta           `json:",inline"`
+	metav1.ObjectMeta         `json:"metadata,omitempty"`
+	AuthorizedUsers           string `json:"authorizedUsers,omitempty" yaml:"authorizedUsers,omitempty"`
+	CreatePrivateIP           bool   `json:"createPrivateIp,omitempty" yaml:"createPrivateIp,omitempty"`
+	DockerPort                string `json:"dockerPort,omitempty" yaml:"dockerPort,omitempty"`
+	Image                     string `json:"image,omitempty" yaml:"image,omitempty"`
+	InstanceType              string `json:"instanceType,omitempty" yaml:"instanceType,omitempty"`
+	Label                     string `json:"label,omitempty" yaml:"label,omitempty"`
+	Region                    string `json:"region,omitempty" yaml:"region,omitempty"`
+	RootPass                  string `json:"rootPass,omitempty" yaml:"rootPass,omitempty"`
+	SSHPort                   string `json:"sshPort,omitempty" yaml:"sshPort,omitempty"`
+	SSHUser                   string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	StackScript               string `json:"stackscript,omitempty" yaml:"stackscript,omitempty"`
+	StackscriptData           string `json:"stackscriptData,omitempty" yaml:"stackscriptData,omitempty"`
+	SwapSize                  string `json:"swapSize,omitempty" yaml:"swapSize,omitempty"`
+	Tags                      string `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Token                     string `json:"token,omitempty" yaml:"token,omitempty"`
+	UserData                  string `json:"userData,omitempty" yaml:"userData,omitempty"`
+	UAPrefix                  string `json:"uaPrefix,omitempty" yaml:"uaPrefix,omitempty"`
+	UseInterfaces             bool   `json:"useInterfaces,omitempty" yaml:"useInterfaces,omitempty"`
+	VPCInterfaceFirewallID    string `json:"vpcInterfaceFirewallId,omitempty" yaml:"vpcInterfaceFirewallId,omitempty"`
+	VPCPrivateIP              string `json:"vpcPrivateIp,omitempty" yaml:"vpcPrivateIp,omitempty"`
+	VPCSubnetID               string `json:"vpcSubnetId,omitempty" yaml:"vpcSubnetId,omitempty"`
+	PublicInterfaceFirewallID string `json:"publicInterfaceFirewallId,omitempty" yaml:"publicInterfaceFirewallId,omitempty"`
 }
 
 type MachineConfigV2Linode struct {
@@ -95,6 +101,10 @@ func flattenMachineConfigV2Linode(in *MachineConfigV2Linode) []interface{} {
 		obj["stackscript_data"] = in.StackscriptData
 	}
 
+	if len(in.UserData) > 0 {
+		obj["user_data"] = in.UserData
+	}
+
 	if len(in.SwapSize) > 0 {
 		obj["swap_size"] = in.SwapSize
 	}
@@ -105,6 +115,24 @@ func flattenMachineConfigV2Linode(in *MachineConfigV2Linode) []interface{} {
 
 	if len(in.Token) > 0 {
 		obj["token"] = in.Token
+	}
+
+	obj["use_interfaces"] = in.UseInterfaces
+
+	if len(in.VPCSubnetID) > 0 {
+		obj["vpc_subnet_id"] = in.VPCSubnetID
+	}
+
+	if len(in.VPCPrivateIP) > 0 {
+		obj["vpc_private_ip"] = in.VPCPrivateIP
+	}
+
+	if len(in.PublicInterfaceFirewallID) > 0 {
+		obj["public_interface_firewall_id"] = in.PublicInterfaceFirewallID
+	}
+
+	if len(in.VPCInterfaceFirewallID) > 0 {
+		obj["vpc_interface_firewall_id"] = in.VPCInterfaceFirewallID
 	}
 
 	if len(in.UAPrefix) > 0 {
@@ -180,6 +208,10 @@ func expandMachineConfigV2Linode(p []interface{}, source *MachineConfigV2) *Mach
 		obj.StackscriptData = v
 	}
 
+	if v, ok := in["user_data"].(string); ok && len(v) > 0 {
+		obj.UserData = v
+	}
+
 	if v, ok := in["swap_size"].(string); ok && len(v) > 0 {
 		obj.SwapSize = v
 	}
@@ -190,6 +222,26 @@ func expandMachineConfigV2Linode(p []interface{}, source *MachineConfigV2) *Mach
 
 	if v, ok := in["token"].(string); ok && len(v) > 0 {
 		obj.Token = v
+	}
+
+	if v, ok := in["use_interfaces"].(bool); ok {
+		obj.UseInterfaces = v
+	}
+
+	if v, ok := in["vpc_subnet_id"].(string); ok && len(v) > 0 {
+		obj.VPCSubnetID = v
+	}
+
+	if v, ok := in["vpc_private_ip"].(string); ok && len(v) > 0 {
+		obj.VPCPrivateIP = v
+	}
+
+	if v, ok := in["public_interface_firewall_id"].(string); ok && len(v) > 0 {
+		obj.PublicInterfaceFirewallID = v
+	}
+
+	if v, ok := in["vpc_interface_firewall_id"].(string); ok && len(v) > 0 {
+		obj.VPCInterfaceFirewallID = v
 	}
 
 	if v, ok := in["ua_prefix"].(string); ok && len(v) > 0 {
