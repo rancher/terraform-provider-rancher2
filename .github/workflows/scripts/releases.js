@@ -106,16 +106,28 @@ async function runRcNotify({ github, context, core, process }) {
 async function runPublishRelease({ github, context, core, process }) {
   try {
     const version = process.env.VERSION;
-    const tag = version.startsWith('v') ? version : `v${version}`;
+    if (!version) {
+      return core.setFailed('VERSION environment variable is not defined.');
+    }
 
     const releases = await github.paginate(github.rest.repos.listReleases, {
       owner: context.repo.owner,
       repo: context.repo.repo,
     });
 
-    const release = releases.find(r => r.tag_name === tag);
+    let release = releases.find(r => r.tag_name === version);
+    let tag = version;
+
     if (!release) {
-      return core.setFailed(`Could not find release for tag ${tag}`);
+      const fallbackTag = version.startsWith('v') ? version.slice(1) : `v${version}`;
+      release = releases.find(r => r.tag_name === fallbackTag);
+      if (release) {
+        tag = fallbackTag;
+      }
+    }
+
+    if (!release) {
+      return core.setFailed(`Could not find release for tag "${version}"`);
     }
 
     if (release.draft) {
