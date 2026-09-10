@@ -115,12 +115,12 @@ async function runPublishRelease({ github, context, core, process }) {
       repo: context.repo.repo,
     });
 
-    let release = releases.find(r => r.tag_name === version);
+    let release = releases.find(r => r.tag_name === version && r.draft);
     let tag = version;
 
     if (!release) {
       const fallbackTag = version.startsWith('v') ? version.slice(1) : `v${version}`;
-      release = releases.find(r => r.tag_name === fallbackTag);
+      release = releases.find(r => r.tag_name === fallbackTag && r.draft);
       if (release) {
         tag = fallbackTag;
       }
@@ -139,7 +139,7 @@ async function runPublishRelease({ github, context, core, process }) {
         draft: false
       });
     } else {
-      core.info(`Release for tag ${tag} is already published.`);
+      core.info(`Release for tag ${tag} is not a draft. Skipping.`);
     }
   } catch (error) {
     core.setFailed(`Failed to publish release: ${error.message}`);
