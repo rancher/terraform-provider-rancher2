@@ -6,7 +6,7 @@ page_title: "rancher2_cloud_credential Resource"
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2.x and retrieve their information.
 
-amazonec2, azure, digitalocean, harvester, linode, nutanix, openstack and vsphere credentials config are supported for Cloud Credential.
+Amazonec2, azure, digitalocean, harvester, linode, nutanix, openstack, pve and vsphere credential configs are supported for Cloud Credential.
 
 ## Example Usage
 
@@ -53,6 +53,7 @@ The following arguments are supported:
 * `linode_credential_config` - (Optional) Linode config for the Cloud Credential (list maxitems:1)
 * `nutanix_credential_config` - (Optional) Nutanix config for the Cloud Credential (list maxitems:1)
 * `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
+* `pve_credential_config` - (Optional) Proxmox VE config for the Cloud Credential (list maxitems:1)
 * `s3_credential_config` - (Optional) S3 config for the Cloud Credential. For Rancher 2.6.0 and above (list maxitems:1)
 * `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
 * `annotations` - (Optional) Annotations for Cloud Credential object (map)
@@ -126,6 +127,15 @@ The following attributes are exported:
 
 * `password` - (Required/Sensitive) OpenStack password (string)
 
+### `pve_credential_config`
+
+#### Arguments
+
+* `pve_url` - (Required) Proxmox VE URL (e.g. `https://<PROXMOX VE ADDRESS>:8006`) (string)
+* `pve_token_id` - (Required) Proxmox VE API Token ID (including username and realm, e.g. `root@pam!rancher`) (string)
+* `pve_token_secret` - (Required/Sensitive) Proxmox VE API Token secret (string)
+* `pve_insecure_tls` - (Optional) Disables Proxmox VE TLS certificate verification. Default `false` (bool)
+
 ### `s3_credential_config`
 
 #### Arguments
@@ -174,5 +184,6 @@ The following drivers are supported:
 * linode
 * nutanix
 * openstack
+* pve
 * s3
 * vmwarevsphere
