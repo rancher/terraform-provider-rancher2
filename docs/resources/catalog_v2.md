@@ -53,7 +53,7 @@ The following attributes are exported:
 
 ## Timeouts
 
-`rancher2_catalog` provides the following
+`rancher2_catalog_v2` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/resources.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating v2 catalogs.
