@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.2.2](https://github.com/rancher/terraform-provider-rancher2/compare/v14.2.2...v14.2.2) (2026-09-11)
+
+
+### Bug Fixes
+
+* remove deprecated catalog v1 resources ([#2316](https://github.com/rancher/terraform-provider-rancher2/issues/2316)) ([#2328](https://github.com/rancher/terraform-provider-rancher2/issues/2328)) ([#2490](https://github.com/rancher/terraform-provider-rancher2/issues/2490)) ([8c4df45](https://github.com/rancher/terraform-provider-rancher2/commit/8c4df45f05632cdf97a14111f1784a574af6d4ce))
+
 ## [14.2.2](https://github.com/rancher/terraform-provider-rancher2/compare/v14.2.2...v14.2.2) (2026-09-10)
 
 
