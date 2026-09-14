@@ -50,6 +50,10 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
         run: |
+          if [[ ! "$TAG" == v* ]]; then
+            echo "Tag must start with 'v' (e.g. v1.2.3)"
+            exit 1
+          fi
           # if the tag contains "rc" we should not be in this workflow
           if grep -q "rc" <<< "$TAG"; then
             echo "Tag contains 'rc', please use the manual-rc-release workflow"
@@ -128,3 +132,16 @@ jobs:
         # The key must be imported by the same 'suse' user that nix-run.sh drops to,
         # so goreleaser.sh does the import itself rather than a separate step as root.
         run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/goreleaser.sh
+      - name: Publish Release
+        id: publish-release
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          VERSION: ${{ inputs.tag }}
+          SCRIPT_MODE: publish-release
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
