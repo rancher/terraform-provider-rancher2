@@ -107,6 +107,9 @@ func clusterAuthEndpoint() map[string]*schema.Schema {
 }
 
 func clusterFieldsV0() map[string]*schema.Schema {
+	clusterDriversV0 := append([]string{}, clusterDrivers...)
+	clusterDriversV0 = append(clusterDriversV0, clusterDriverRKE)
+
 	s := map[string]*schema.Schema{
 		"name": {
 			Type:     schema.TypeString,
@@ -116,19 +119,27 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ValidateFunc: validation.StringInSlice(clusterDrivers, true),
+			ValidateFunc: validation.StringInSlice(clusterDriversV0, true),
 		},
 		"kube_config": {
 			Type:      schema.TypeString,
 			Computed:  true,
 			Sensitive: true,
 		},
+		"rke_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			Computed:      true,
+			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "k3s_config"},
+			Elem:          clusterLegacyAnyMapListElem(),
+		},
 		"k3s_config": {
 			Type:          schema.TypeList,
 			MaxItems:      1,
 			Optional:      true,
 			Computed:      true,
-			ConflictsWith: []string{"aks_config", "eks_config", "gke_config"},
+			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "rke_config"},
 			Elem: &schema.Resource{
 				Schema: clusterK3SConfigFields(),
 			},
@@ -161,6 +172,30 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: clusterRegistrationTokenFields(),
 			},
+		},
+		"cluster_template_answers": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			MaxItems:    1,
+			Computed:    true,
+			Description: "Cluster template answers",
+			Elem:        clusterLegacyAnyMapListElem(),
+		},
+		"cluster_template_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Cluster template ID",
+		},
+		"cluster_template_questions": {
+			Type:        schema.TypeList,
+			Optional:    true,
+			Description: "Cluster template questions",
+			Elem:        clusterLegacyAnyMapListElem(),
+		},
+		"cluster_template_revision_id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Cluster template revision ID",
 		},
 		"default_pod_security_admission_configuration_template_name": {
 			Type:        schema.TypeString,
