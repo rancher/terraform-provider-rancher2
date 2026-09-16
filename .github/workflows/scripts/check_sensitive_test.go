@@ -4,7 +4,6 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
 )
@@ -299,23 +298,4 @@ EOF
 	if !foundSingleLineUnmarked {
 		t.Errorf("expected finding for variable single_line_unmarked_password")
 	}
-}
-
-// TestDiscardChangesAndCleanOldFolders automatically runs when tests execute,
-// reverting all uncommitted markdown edits and purging the old scripts directories
-// to keep our PR branch perfectly clean.
-func TestDiscardChangesAndCleanOldFolders(t *testing.T) {
-	// 1. Revert docs/resources and docs/data-sources
-	cmd := exec.Command("git", "checkout", "HEAD", "--", "../../../docs/resources", "../../../docs/data-sources")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	_ = cmd.Run() // run best-effort revert
-
-	// 2. Remove old scripts folders
-	_ = os.RemoveAll("../../../scripts/check_sensitive")
-	_ = os.RemoveAll("../../../scripts/sensitive_docs")
-	_ = os.Remove("../../../scripts/README.md")
-	_ = os.Remove("../../../scripts/check_sensitive.go")
-	_ = os.Remove("../../../scripts/check_sensitive_test.go")
-	_ = os.Remove("../../../.sensitive-ignore")
 }
