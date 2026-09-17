@@ -1110,7 +1110,7 @@ see more information on [Resource Management for Pods and Containers](https://ku
 * `ignore_errors` - (Optional, bool, default: false) If `ignore_errors` is set to true,  errors that occurred between drain nodes in group are ignored.
 * `delete_empty_dir_data` - (Optional, bool, default: false) if `delete_empty_dir_data` is set to true, continue draining even if there are pods using emptyDir (local storage).
 * `disable_eviction` - (Optional, bool, default: false) If `disable_eviction` is set to true, force drain to use delete rather than evict.
-* `grace_period` - (Optional/computed, int) Time in seconds given to each pod to terminate gracefully. If negative, the default value specified in the pod will be used.
+* `grace_period` - (Optional/computed, int) Time in seconds given to each pod to terminate gracefully. `0` means "delete immediately"; a negative value (`-1`) uses the pod's `terminationGracePeriodSeconds`.
 * `timeout` - (Optional/computed, int) Time to wait (in seconds) before giving up for one try.
 * `skip_wait_for_delete_timeout_seconds` - (Optional/computed, int) Skip waiting for the pods that have a DeletionTimeStamp > N seconds to be deleted. Seconds must be greater than 0 to skip. Such pods will be force deleted. 
 
