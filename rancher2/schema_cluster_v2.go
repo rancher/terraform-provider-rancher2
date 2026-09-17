@@ -221,6 +221,11 @@ func clusterV2Fields() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"local_auth_endpoint_ca_sync_required": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "Whether the authorized cluster endpoint requires internal CA synchronization",
+		},
 		"resource_version": {
 			Type:     schema.TypeString,
 			Computed: true,
