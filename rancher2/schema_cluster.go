@@ -8,6 +8,7 @@ import (
 
 const (
 	clusterDriverImported        = "imported"
+	clusterDriverRKE             = "rancherKubernetesEngine"
 	clusterRegistrationTokenName = "default-token"
 	clusterActiveCondition       = "Updated"
 	clusterConnectedCondition    = "Connected"
@@ -106,6 +107,13 @@ func clusterAuthEndpoint() map[string]*schema.Schema {
 	return s
 }
 
+func clusterLegacyAnyMapListElem() *schema.Schema {
+	return &schema.Schema{
+		Type: schema.TypeMap,
+	}
+}
+
+// clusterFieldsV0 represents the schema used by the original state version.
 func clusterFieldsV0() map[string]*schema.Schema {
 	clusterDriversV0 := append([]string{}, clusterDrivers...)
 	clusterDriversV0 = append(clusterDriversV0, clusterDriverRKE)
@@ -132,6 +140,30 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"aks_config", "eks_config", "gke_config", "k3s_config"},
+			Elem:          clusterLegacyAnyMapListElem(),
+		},
+		"aks_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			Computed:      true,
+			ConflictsWith: []string{"rke_config", "eks_config", "gke_config", "k3s_config"},
+			Elem:          clusterLegacyAnyMapListElem(),
+		},
+		"eks_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			Computed:      true,
+			ConflictsWith: []string{"rke_config", "aks_config", "gke_config", "k3s_config"},
+			Elem:          clusterLegacyAnyMapListElem(),
+		},
+		"gke_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			Computed:      true,
+			ConflictsWith: []string{"rke_config", "aks_config", "eks_config", "k3s_config"},
 			Elem:          clusterLegacyAnyMapListElem(),
 		},
 		"k3s_config": {
@@ -251,6 +283,65 @@ func clusterFieldsV0() map[string]*schema.Schema {
 	return s
 }
 
+// clusterFieldsV2 represents the schema used by the v14 provider when its
+// SchemaVersion was 2.
+func clusterFieldsV2() map[string]*schema.Schema {
+	clusterDriversV2 := append([]string{}, clusterDrivers...)
+	clusterDriversV2 = append(clusterDriversV2, clusterDriverRKE)
+
+	s := clusterFields()
+
+	// v14 still accepted the legacy RKE1 driver.
+	s["driver"] = &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		Computed:     true,
+		ValidateFunc: validation.StringInSlice(clusterDriversV2, true),
+	}
+
+	// Legacy RKE1 configuration retained only for state decoding.
+	s["rke_config"] = &schema.Schema{
+		Type:          schema.TypeList,
+		MaxItems:      1,
+		Optional:      true,
+		Computed:      true,
+		ConflictsWith: []string{"aks_config_v2", "eks_config_v2", "gke_config_v2", "k3s_config", "oke_config", "rke2_config", "imported_config"},
+		Elem:          clusterLegacyAnyMapListElem(),
+	}
+
+	// Legacy cluster-template fields retained only for state decoding.
+	s["cluster_template_answers"] = &schema.Schema{
+		Type:        schema.TypeList,
+		Optional:    true,
+		MaxItems:    1,
+		Computed:    true,
+		Description: "Cluster template answers",
+		Elem:        clusterLegacyAnyMapListElem(),
+	}
+
+	s["cluster_template_id"] = &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Cluster template ID",
+	}
+
+	s["cluster_template_questions"] = &schema.Schema{
+		Type:        schema.TypeList,
+		Optional:    true,
+		Description: "Cluster template questions",
+		Elem:        clusterLegacyAnyMapListElem(),
+	}
+
+	s["cluster_template_revision_id"] = &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Cluster template revision ID",
+	}
+
+	return s
+}
+
+// Current schema
 func clusterFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"name": {

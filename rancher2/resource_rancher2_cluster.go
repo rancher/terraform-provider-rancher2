@@ -63,6 +63,11 @@ func resourceRancher2Cluster() *schema.Resource {
 		SchemaVersion: 3,
 		StateUpgraders: []schema.StateUpgrader{
 			{
+				Type:    resourceRancher2ClusterResourceV3().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceRancher2ClusterStateUpgradeV1,
+				Version: 0,
+			},
+			{
 				Type:    resourceRancher2ClusterResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: resourceRancher2ClusterStateUpgradeV0,
 				Version: 1,
@@ -91,6 +96,12 @@ func resourceRancher2ClusterResourceV0() *schema.Resource {
 func resourceRancher2ClusterResourceV2() *schema.Resource {
 	return &schema.Resource{
 		Schema: clusterFieldsV2(),
+	}
+}
+
+func resourceRancher2ClusterResourceV3() *schema.Resource {
+	return &schema.Resource{
+		Schema: clusterFields(),
 	}
 }
 
@@ -283,6 +294,10 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 
 		return nil
 	})
+}
+
+func resourceRancher2ClusterStateUpgradeV1(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	return rawState, nil
 }
 
 func resourceRancher2ClusterUpdate(d *schema.ResourceData, meta interface{}) error {
