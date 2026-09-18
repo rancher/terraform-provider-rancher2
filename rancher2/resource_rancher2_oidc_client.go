@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"maps"
-	"time"
 	"net/url"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -128,7 +128,7 @@ func oidcClientStateRefreshFunc(client *managementClient.Client, clientID string
 			return nil, "reading client", fmt.Errorf("reading OIDC Client %s: %w", clientID, err)
 		}
 
-		if oidcClient.Status.ClientSecrets == nil || len(oidcClient.Status.ClientSecrets) == 0 {
+		if len(oidcClient.Status.ClientSecrets) == 0 {
 			return oidcClient, "pending", nil
 		}
 
@@ -178,12 +178,18 @@ func resourceRancher2OIDCClientUpdate(d *schema.ResourceData, meta any) error {
 	}
 
 	update := map[string]any{
-		"labels":                        toMapString(d.Get("labels").(map[string]any)),
-		"annotations":                   toMapString(d.Get("annotations").(map[string]any)),
-		"description":                   d.Get("description"),
-		"redirectURIs":                  toArrayString(d.Get("redirect_uris").([]any)),
-		"tokenExpirationSeconds":        d.Get("token_expiration_seconds"),
-		"refreshTokenExpirationSeconds": d.Get("refresh_token_expiration_seconds"),
+		"labels":       toMapString(d.Get("labels").(map[string]any)),
+		"annotations":  toMapString(d.Get("annotations").(map[string]any)),
+		"description":  d.Get("description"),
+		"redirectURIs": toArrayString(d.Get("redirect_uris").([]any)),
+	}
+
+	if v, ok := d.GetOk("token_expiration_seconds"); ok {
+		update["tokenExpirationSeconds"] = v
+	}
+
+	if v, ok := d.GetOk("refresh_token_expiration_seconds"); ok {
+		update["refreshTokenExpirationSeconds"] = v
 	}
 
 	_, err = client.OIDCClient.Update(oidcClient, update)
