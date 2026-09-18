@@ -11,13 +11,23 @@ import (
 func clusterV2RKEConfigMachinePoolMachineConfigFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"kind": {
-			Type:        schema.TypeString,
-			Required:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			// Computed for the same reason as name below: rancher2_machine_config_v2
+			// exposes kind as Computed only, so a config referencing it has an
+			// unknown here at plan time.
+			Computed:    true,
 			Description: "Machine config kind",
 		},
 		"name": {
-			Type:        schema.TypeString,
-			Required:    true,
+			Type:     schema.TypeString,
+			Optional: true,
+			// Computed so the SDK re-marks this as unknown after CustomizeDiff's
+			// SetNew writes a zero over it. rancher2_machine_config_v2 takes
+			// generate_name, so the name does not exist until create; without
+			// Computed the unknown is replaced by a known "" and apply then
+			// contradicts the plan. See #1501.
+			Computed:    true,
 			Description: "Machine config name",
 		},
 		"api_version": {
