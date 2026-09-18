@@ -18,6 +18,7 @@ type CloudCredential struct {
 	NutanixCredentialConfig       *nutanixCredentialConfig       `json:"nutanixcredentialConfig,omitempty" yaml:"nutanixcredentialConfig,omitempty"`
 	OpenstackCredentialConfig     *openstackCredentialConfig     `json:"openstackcredentialConfig,omitempty" yaml:"openstackcredentialConfig,omitempty"`
 	VmwarevsphereCredentialConfig *vmwarevsphereCredentialConfig `json:"vmwarevspherecredentialConfig,omitempty" yaml:"vmwarevspherecredentialConfig,omitempty"`
+	IonoscloudCredentialConfig    *ionoscloudCredentialConfig    `json:"ionoscloudcredentialConfig,omitempty" yaml:"ionoscloudcredentialConfig,omitempty"`
 }
 
 var allCloudCredentialDriverConfigFields = []string{
@@ -30,7 +31,9 @@ var allCloudCredentialDriverConfigFields = []string{
 	"nutanix_credential_config",
 	"openstack_credential_config",
 	"s3_credential_config",
-	"vsphere_credential_config"}
+	"vsphere_credential_config",
+	"ionoscloud_credential_config",
+}
 
 //Schemas
 
@@ -136,6 +139,15 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "vsphere_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialVsphereFields(),
+			},
+		},
+		"ionoscloud_credential_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "ionoscloud_credential_config"),
+			Elem: &schema.Resource{
+				Schema: cloudCredentialIonoscloudFields(),
 			},
 		},
 	}
