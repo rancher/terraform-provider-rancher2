@@ -79,3 +79,15 @@ The following arguments are supported:
 * `bootstrap` - (Optional) Enable bootstrap mode to manage `rancher2_bootstrap` resource. It can also be sourced from the `RANCHER_BOOTSTRAP` environment variable. Default: `false`
 * `retries` - (Deprecated) Use timeout instead
 * `timeout` - (Optional) Timeout duration to retry for Rancher connectivity and resource operations. Default: `"120s"`
+
+## Security and Sensitive State
+
+> **CRITICAL SECURITY NOTE:** Although some provider arguments and resource attributes are marked as sensitive to prevent them from being displayed in visual CLI outputs (such as `terraform plan` or `terraform apply`), **all sensitive values are stored in cleartext inside the Terraform state file.**
+> 
+> The sensitive flag in provider and resource schemas only prevents values from leaking into visual UI/CLI console logs. It does not encrypt, mask, or secure the values on disk or in the state storage backend. This represents the larger residual risk of managing secrets within Terraform configuration.
+> 
+> To mitigate this risk, it is highly recommended to:
+> 1. Use a **secure remote state backend** (e.g., HashiCorp Consul, AWS S3 with KMS encryption, HashiCorp Cloud Platform, etc.) that natively supports **encryption at-rest** and **transit-level TLS encryption**.
+> 2. Implement strict **Identity and Access Management (IAM)** and **access control policies** to restrict state file read permissions to authorized personnel and automated pipelines only.
+> 3. Ensure that **live infrastructure repositories and generated Terraform plans are properly secured** and kept private. Live infrastructure plans and state information should never be public knowledge, as they expose sensitive architectural and operational details.
+> 4. Be cautious when enabling Terraform debug logging (e.g., setting `TF_LOG=DEBUG` or `TRACE`). Debug logs will print sensitive fields, provider configurations, and API responses in plain text. Additionally, using the `--json` flag for machine-readable output will also include sensitive material in plain text. Always sanitize these logs and outputs before sharing them in bug reports or support tickets.
