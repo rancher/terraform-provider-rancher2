@@ -190,3 +190,25 @@ jobs:
         id: check-for-secrets
         run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh gitleaks
         continue-on-error: true
+
+  sensitive-checks:
+    name: 'Sensitive Checks'
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Test Check Sensitive
+        id: test-check-sensitive
+        run: .github/workflows/scripts/nix-run.sh go test .github/workflows/scripts/check_sensitive.go .github/workflows/scripts/check_sensitive_test.go
+      - name: Check Schema Sensitivity
+        id: check-sensitive
+        run: .github/workflows/scripts/nix-run.sh go run .github/workflows/scripts/check_sensitive.go
