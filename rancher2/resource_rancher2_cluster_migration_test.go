@@ -2,6 +2,7 @@ package rancher2
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -247,7 +248,7 @@ func TestResourceRancher2ClusterStateUpgrade(t *testing.T) {
 				ID:         "test-id",
 				Attributes: tt.attributes,
 				Meta: map[string]interface{}{
-					"schema_version": tt.version,
+					"schema_version": strconv.Itoa(tt.version),
 				},
 			}
 

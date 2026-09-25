@@ -172,6 +172,9 @@ func resourceRancher2ClusterStateUpgradeV2(rawState map[string]interface{}, meta
 	delete(rawState, "cluster_template_id")
 	delete(rawState, "cluster_template_questions")
 	delete(rawState, "cluster_template_revision_id")
+	delete(rawState, "aks_config")
+	delete(rawState, "eks_config")
+	delete(rawState, "gke_config")
 
 	return rawState, nil
 }
