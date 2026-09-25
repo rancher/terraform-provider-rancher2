@@ -58,6 +58,53 @@ func clusterSyncFields() map[string]*schema.Schema {
 	return s
 }
 
+// clusterSyncFieldsV0 represents the schema used before the removal of the
+// RKE1-only node_pool_ids and node_pool_id, node_template_id and ssh_user fields.
+func clusterSyncFieldsV0() map[string]*schema.Schema {
+	s := clusterSyncFields()
+
+	s["node_pool_ids"] = &schema.Schema{
+		Type:        schema.TypeList,
+		Optional:    true,
+		Description: "Cluster node pool ids",
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+	}
+
+	s["nodes"] = &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: clusterNodeFieldsV0(),
+		},
+	}
+
+	return s
+}
+
+// clusterNodeFieldsV0 represents the schema used before the removal of the
+// RKE1-only node_pool_id, node_template_id and ssh_user fields
+func clusterNodeFieldsV0() map[string]*schema.Schema {
+	s := clusterNodeFields()
+
+	s["node_pool_id"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	}
+	s["node_template_id"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Computed: true,
+	}
+	s["ssh_user"] = &schema.Schema{
+		Type:      schema.TypeString,
+		Computed:  true,
+		Sensitive: true,
+	}
+
+	return s
+}
+
 func clusterNodeFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 
