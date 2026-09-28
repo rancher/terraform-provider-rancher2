@@ -12,14 +12,15 @@ import (
 )
 
 const (
-	amazonec2ConfigDriver     = "amazonec2"
-	azureConfigDriver         = "azure"
-	digitaloceanConfigDriver  = "digitalocean"
-	harvesterConfigDriver     = "harvester"
-	linodeConfigDriver        = "linode"
-	nutanixConfigDriver       = "nutanix"
-	openstackConfigDriver     = "openstack"
-	vmwarevsphereConfigDriver = "vmwarevsphere"
+	amazonec2ConfigDriver        = "amazonec2"
+	azureConfigDriver            = "azure"
+	digitaloceanConfigDriver     = "digitalocean"
+	harvesterConfigDriver        = "harvester"
+	linodeConfigDriver           = "linode"
+	nutanixConfigDriver          = "nutanix"
+	openstackConfigDriver        = "openstack"
+	opentelekomcloudConfigDriver = "opentelekomcloud"
+	vmwarevsphereConfigDriver    = "vmwarevsphere"
 )
 
 func resourceRancher2CloudCredential() *schema.Resource {
@@ -30,6 +31,20 @@ func resourceRancher2CloudCredential() *schema.Resource {
 		Delete: resourceRancher2CloudCredentialDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceRancher2CloudCredentialsImport,
+		},
+		CustomizeDiff: func(d *schema.ResourceDiff, meta interface{}) error {
+			if !d.NewValueKnown("tcloud_public_credential_config") {
+				return nil
+			}
+			if v, ok := d.GetOk("tcloud_public_credential_config"); ok {
+				for _, field := range []string{"access_key", "secret_key", "username", "password", "domain_name"} {
+					if !d.NewValueKnown("tcloud_public_credential_config.0." + field) {
+						return nil
+					}
+				}
+				return validateCloudCredentialOpentelekomcloud(expandCloudCredentialOpentelekomcloud(v.([]interface{})))
+			}
+			return nil
 		},
 		Schema: cloudCredentialFields(),
 		Timeouts: &schema.ResourceTimeout{
@@ -42,6 +57,11 @@ func resourceRancher2CloudCredential() *schema.Resource {
 
 func resourceRancher2CloudCredentialCreate(d *schema.ResourceData, meta interface{}) error {
 	cloudCredential := expandCloudCredential(d)
+	if cloudCredential.OpentelekomcloudCredentialConfig != nil {
+		if err := validateCloudCredentialOpentelekomcloud(cloudCredential.OpentelekomcloudCredentialConfig); err != nil {
+			return err
+		}
+	}
 
 	log.Printf("[INFO] Creating Cloud Credential %s", cloudCredential.Name)
 
@@ -154,6 +174,12 @@ func resourceRancher2CloudCredentialUpdate(d *schema.ResourceData, meta interfac
 		update["openstackcredentialConfig"] = expandCloudCredentialOpenstack(d.Get("openstack_credential_config").([]interface{}))
 	case s3ConfigDriver:
 		update["s3credentialConfig"] = expandCloudCredentialS3(d.Get("s3_credential_config").([]interface{}))
+	case opentelekomcloudConfigDriver:
+		config := expandCloudCredentialOpentelekomcloud(d.Get("tcloud_public_credential_config").([]interface{}))
+		if err := validateCloudCredentialOpentelekomcloud(config); err != nil {
+			return err
+		}
+		update["opentelekomcloudcredentialConfig"] = config
 	case vmwarevsphereConfigDriver:
 		update["vmwarevspherecredentialConfig"] = expandCloudCredentialVsphere(d.Get("vsphere_credential_config").([]interface{}))
 	default:

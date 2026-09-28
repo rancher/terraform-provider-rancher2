@@ -108,6 +108,14 @@ func flattenCloudCredential(d *schema.ResourceData, in *CloudCredential) error {
 		if err != nil {
 			return err
 		}
+	case opentelekomcloudConfigDriver:
+		v, ok := d.Get("tcloud_public_credential_config").([]interface{})
+		if !ok {
+			v = []interface{}{}
+		}
+		if err := d.Set("tcloud_public_credential_config", flattenCloudCredentialOpentelekomcloud(in.OpentelekomcloudCredentialConfig, v)); err != nil {
+			return err
+		}
 	case vmwarevsphereConfigDriver:
 		v, ok := d.Get("vsphere_credential_config").([]interface{})
 		if !ok {
@@ -203,6 +211,11 @@ func expandCloudCredential(in *schema.ResourceData) *CloudCredential {
 	if v, ok := in.Get("vsphere_credential_config").([]interface{}); ok && len(v) > 0 {
 		obj.VmwarevsphereCredentialConfig = expandCloudCredentialVsphere(v)
 		in.Set("driver", vmwarevsphereConfigDriver)
+	}
+
+	if v, ok := in.Get("tcloud_public_credential_config").([]interface{}); ok && len(v) > 0 {
+		obj.OpentelekomcloudCredentialConfig = expandCloudCredentialOpentelekomcloud(v)
+		in.Set("driver", opentelekomcloudConfigDriver)
 	}
 
 	if v, ok := in.Get("annotations").(map[string]interface{}); ok && len(v) > 0 {

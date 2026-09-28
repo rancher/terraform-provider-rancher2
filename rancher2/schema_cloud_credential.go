@@ -9,15 +9,16 @@ import (
 
 type CloudCredential struct {
 	managementClient.CloudCredential
-	Amazonec2CredentialConfig     *amazonec2CredentialConfig     `json:"amazonec2credentialConfig,omitempty" yaml:"amazonec2credentialConfig,omitempty"`
-	AzureCredentialConfig         *azureCredentialConfig         `json:"azurecredentialConfig,omitempty" yaml:"azurecredentialConfig,omitempty"`
-	DigitaloceanCredentialConfig  *digitaloceanCredentialConfig  `json:"digitaloceancredentialConfig,omitempty" yaml:"digitaloceancredentialConfig,omitempty"`
-	GoogleCredentialConfig        *googleCredentialConfig        `json:"googlecredentialConfig,omitempty" yaml:"googlecredentialConfig,omitempty"`
-	HarvesterCredentialConfig     *harvesterCredentialConfig     `json:"harvestercredentialConfig,omitempty" yaml:"harvestercredentialConfig,omitempty"`
-	LinodeCredentialConfig        *linodeCredentialConfig        `json:"linodecredentialConfig,omitempty" yaml:"linodecredentialConfig,omitempty"`
-	NutanixCredentialConfig       *nutanixCredentialConfig       `json:"nutanixcredentialConfig,omitempty" yaml:"nutanixcredentialConfig,omitempty"`
-	OpenstackCredentialConfig     *openstackCredentialConfig     `json:"openstackcredentialConfig,omitempty" yaml:"openstackcredentialConfig,omitempty"`
-	VmwarevsphereCredentialConfig *vmwarevsphereCredentialConfig `json:"vmwarevspherecredentialConfig,omitempty" yaml:"vmwarevspherecredentialConfig,omitempty"`
+	Amazonec2CredentialConfig        *amazonec2CredentialConfig        `json:"amazonec2credentialConfig,omitempty" yaml:"amazonec2credentialConfig,omitempty"`
+	AzureCredentialConfig            *azureCredentialConfig            `json:"azurecredentialConfig,omitempty" yaml:"azurecredentialConfig,omitempty"`
+	DigitaloceanCredentialConfig     *digitaloceanCredentialConfig     `json:"digitaloceancredentialConfig,omitempty" yaml:"digitaloceancredentialConfig,omitempty"`
+	GoogleCredentialConfig           *googleCredentialConfig           `json:"googlecredentialConfig,omitempty" yaml:"googlecredentialConfig,omitempty"`
+	HarvesterCredentialConfig        *harvesterCredentialConfig        `json:"harvestercredentialConfig,omitempty" yaml:"harvestercredentialConfig,omitempty"`
+	LinodeCredentialConfig           *linodeCredentialConfig           `json:"linodecredentialConfig,omitempty" yaml:"linodecredentialConfig,omitempty"`
+	NutanixCredentialConfig          *nutanixCredentialConfig          `json:"nutanixcredentialConfig,omitempty" yaml:"nutanixcredentialConfig,omitempty"`
+	OpenstackCredentialConfig        *openstackCredentialConfig        `json:"openstackcredentialConfig,omitempty" yaml:"openstackcredentialConfig,omitempty"`
+	OpentelekomcloudCredentialConfig *opentelekomcloudCredentialConfig `json:"opentelekomcloudcredentialConfig,omitempty" yaml:"opentelekomcloudcredentialConfig,omitempty"`
+	VmwarevsphereCredentialConfig    *vmwarevsphereCredentialConfig    `json:"vmwarevspherecredentialConfig,omitempty" yaml:"vmwarevspherecredentialConfig,omitempty"`
 }
 
 var allCloudCredentialDriverConfigFields = []string{
@@ -30,6 +31,7 @@ var allCloudCredentialDriverConfigFields = []string{
 	"nutanix_credential_config",
 	"openstack_credential_config",
 	"s3_credential_config",
+	"tcloud_public_credential_config",
 	"vsphere_credential_config"}
 
 //Schemas
@@ -136,6 +138,16 @@ func cloudCredentialFields() map[string]*schema.Schema {
 			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "vsphere_credential_config"),
 			Elem: &schema.Resource{
 				Schema: cloudCredentialVsphereFields(),
+			},
+		},
+		"tcloud_public_credential_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			Description:   "T-Cloud Public credentials for the opentelekomcloud node driver.",
+			ConflictsWith: getConflicts(allCloudCredentialDriverConfigFields, "tcloud_public_credential_config"),
+			Elem: &schema.Resource{
+				Schema: cloudCredentialOpentelekomcloudFields(),
 			},
 		},
 	}

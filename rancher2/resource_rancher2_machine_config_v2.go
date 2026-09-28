@@ -241,6 +241,13 @@ func createMachineConfigV2(c *Config, obj *MachineConfigV2) (*MachineConfigV2, e
 		out.ID = resp.ID
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2OpentelekomcloudKind:
+		resp := &MachineConfigV2Opentelekomcloud{}
+		err = c.createObjectV2(rancher2DefaultLocalClusterID, machineConfigV2OpentelekomcloudAPIType, obj.OpentelekomcloudConfig, resp)
+		out.OpentelekomcloudConfig = resp
+		out.Resource = resp.Resource
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
 	default:
 		return nil, fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
 	}
@@ -366,6 +373,13 @@ func getMachineConfigV2ByID(c *Config, id, kind string) (*MachineConfigV2, error
 		out.Type = resp.Type
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2OpentelekomcloudKind:
+		resp := &MachineConfigV2Opentelekomcloud{}
+		err = c.getObjectV2ByID(rancher2DefaultLocalClusterID, id, machineConfigV2OpentelekomcloudAPIType, resp)
+		out.OpentelekomcloudConfig = resp
+		out.Resource = resp.Resource
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
 	default:
 		return nil, fmt.Errorf("[ERROR] Unsupported driver on node template: %s", kind)
 	}
@@ -450,6 +464,13 @@ func updateMachineConfigV2(c *Config, obj *MachineConfigV2) (*MachineConfigV2, e
 		err = c.updateObjectV2(rancher2DefaultLocalClusterID, obj.ID, machineConfigV2NutanixAPIType, obj.NutanixConfig, resp)
 		out.NutanixConfig = resp
 		out.ID = resp.ID
+		out.TypeMeta = resp.TypeMeta
+		out.ObjectMeta = resp.ObjectMeta
+	case machineConfigV2OpentelekomcloudKind:
+		resp := &MachineConfigV2Opentelekomcloud{}
+		err = c.updateObjectV2(rancher2DefaultLocalClusterID, obj.ID, machineConfigV2OpentelekomcloudAPIType, obj.OpentelekomcloudConfig, resp)
+		out.OpentelekomcloudConfig = resp
+		out.Resource = resp.Resource
 		out.TypeMeta = resp.TypeMeta
 		out.ObjectMeta = resp.ObjectMeta
 	default:

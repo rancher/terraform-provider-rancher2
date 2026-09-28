@@ -11,6 +11,10 @@ The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `ha
 
 Starting with Rancher v2.12.0 and above, `google` is also offered as a supported cloud provider.
 
+T-Cloud Public is available through `tcloud_public_config` when the external
+`opentelekomcloud` node driver is installed and active. See the
+[pinned driver registration example](node_driver.md#registering-the-t-cloud-public-driver).
+
 ## Example Usage
 
 ```hcl
@@ -27,6 +31,52 @@ resource "rancher2_machine_config_v2" "foo" {
   }
 }
 ```
+### Using the T-Cloud Public Node Driver
+
+The field contract matches the `opentelekomcloud` driver schema (verified
+against v2.2.1 on 2026-09-28). The Terraform block is branded
+`tcloud_public_config`, while the Rancher kind remains
+`OpentelekomcloudConfig`. This resource does not install the driver or the
+network controller, create a shared network, or wait for network readiness.
+If a `TCloudClusterNetwork` supplies the shared-network values, install its CRD
+and controller before planning this resource and wait for the network object to
+report `Ready=True` at its current observed generation.
+
+```hcl
+# Use a prepared, cluster-owned network.
+resource "rancher2_machine_config_v2" "tcloud_public" {
+  generate_name   = "tcloud-pool"
+  fleet_namespace = "fleet-default"
+
+  tcloud_public_config {
+    region           = "eu-de"
+    image_id         = "<IMAGE_ID>"
+    flavor_id        = "<FLAVOR_ID>"
+    network_scope    = "shared"
+    vpc_id           = "<VPC_ID>"
+    subnet_id        = "<SUBNET_ID>"
+    sec_groups       = "<SECURITY_GROUP_NAME>"
+    skip_default_sg  = true
+    root_volume_size = "40"
+  }
+}
+```
+
+Reference the computed `kind` and `name` in
+[`rancher2_cluster_v2`](cluster_v2.md)'s `rke_config.machine_pools.machine_config`
+block, in the same Fleet namespace. Supply a
+[`rancher2_cloud_credential`](cloud_credential.md#tcloud_public_credential_config)
+using `tcloud_public_credential_config` through the pool's
+`cloud_credential_secret_name`; prefer this to embedding authentication in the
+machine configuration.
+
+For shared networks, `vpc_id`, `subnet_id`, `sec_groups` (names, not IDs), and
+`skip_default_sg = true` are required by the driver. The network must already be
+ready; its owner is responsible for lifecycle and cleanup. The default
+`network_scope = "machine"` instead permits driver-managed per-machine networks
+and must not be mistaken for shared RKE2 networking. With `skip_eip = true`,
+Rancher's machine provisioner must be able to reach the private machine IP.
+
 ### Using the Harvester Node Driver
 
 ```hcl
@@ -99,10 +149,78 @@ The following arguments are supported:
 * `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `vsphere_config` (list maxitems:1)
 * `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `openstack_config` (list maxitems:1)
 * `google_config` - (Optional) Google config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `tcloud_public_config` - (Optional) T-Cloud Public configuration for the `opentelekomcloud` driver. Conflicts with every other driver configuration block (list maxitems:1)
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
 **Note:** `labels` and `node_taints` will be applied to nodes deployed using the Machine Config V2
+
+All other driver configuration blocks also conflict with `tcloud_public_config`.
+
+### tcloud_public_config
+
+All arguments are optional. Unless a default is listed, strings default to empty.
+Numeric driver options are **strings**, including `bandwidth_size`, `ip_version`,
+`root_volume_size`, and `ssh_port`. `sec_groups` and `tags` are comma-separated
+strings, not Terraform lists. Flavor and image defaults come from the driver
+schema; their availability in your cloud project is not guaranteed. IDs take
+precedence over the corresponding image and flavor names.
+
+| Argument            | Description / default                                                                                                                                           |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `availability_zone` | Instance availability zone.                                                                                                                                     |
+| `bandwidth_size`    | Elastic IP bandwidth size. Default `"100"`. Must be greater than zero when creating an EIP.                                                                     |
+| `bandwidth_type`    | Elastic IP bandwidth share type. Default `"PER"`.                                                                                                               |
+| `eip`               | Existing elastic IP address.                                                                                                                                    |
+| `eip_type`          | Elastic IP type. Default `"5_bgp"`.                                                                                                                             |
+| `endpoint_type`     | Cloud endpoint interface. Default `"public"`.                                                                                                                   |
+| `flavor_id`         | Instance flavor ID.                                                                                                                                             |
+| `flavor_name`       | Instance flavor name. Default `"s3.xlarge.2"`.                                                                                                                  |
+| `image_id`          | Machine image ID.                                                                                                                                               |
+| `image_name`        | Machine image name. Default `"Standard_Ubuntu_24.04_amd64_uefi_latest"`.                                                                                        |
+| `ip_version`        | `"4"` or `"6"`. Default `"4"`.                                                                                                                                  |
+| `keypair_name`      | Existing SSH key pair. Must be supplied together with `private_key_file`.                                                                                       |
+| `network_scope`     | `"machine"` or `"shared"`. Default `"machine"`.                                                                                                                 |
+| `private_key_file`  | Sensitive. SSH private key path on the provisioner, or PEM content accepted by the driver.                                                                      |
+| `region`            | T-Cloud Public region. May also be supplied through the cloud credential.                                                                                       |
+| `root_volume_size`  | Root volume size in GiB. Default `"40"`.                                                                                                                        |
+| `root_volume_type`  | Root volume type. Default `"SSD"`.                                                                                                                              |
+| `sec_groups`        | Comma-separated existing security group names.                                                                                                                  |
+| `server_group`      | Server group name.                                                                                                                                              |
+| `server_group_id`   | Server group ID.                                                                                                                                                |
+| `skip_default_sg`   | Boolean. Do not create the driver's default security group. Default `false`.                                                                                    |
+| `skip_eip`          | Boolean. Do not create an EIP; use the private IP. Default `false`.                                                                                             |
+| `ssh_allow_cidr`    | SSH source CIDR for the driver's default security group. An empty value leaves the driver's default (`0.0.0.0/0`); set a restricted CIDR when using that group. |
+| `ssh_port`          | SSH port. Default `"22"`.                                                                                                                                       |
+| `ssh_user`          | SSH username. Default `"ubuntu"`.                                                                                                                               |
+| `subnet_id`         | Existing subnet ID.                                                                                                                                             |
+| `subnet_name`       | Subnet name. Default `"subnet-docker-machine"`.                                                                                                                 |
+| `tags`              | Comma-separated instance tags, for example `"environment.test,team.platform"`.                                                                                  |
+| `user_data_file`    | User-data file path on the provisioner. Prefer `user_data_raw` for Terraform-managed content.                                                                   |
+| `user_data_raw`     | Sensitive. Inline user-data content, for example `file("cloud-init.yaml")`.                                                                                     |
+| `vpc_id`            | Existing VPC ID.                                                                                                                                                |
+| `vpc_name`          | VPC name. Default `"vpc-docker-machine"`.                                                                                                                       |
+| `access_key`        | Sensitive. Authentication access key; prefer a cloud credential.                                                                                                |
+| `auth_url`          | Identity service endpoint; prefer a cloud credential.                                                                                                           |
+| `cacert`            | Driver CA bundle option. TLS behavior depends on the installed driver.                                                                                          |
+| `cloud`             | Named cloud in a `clouds.yaml` accessible to the provisioner.                                                                                                   |
+| `domain_id`         | Authentication domain ID.                                                                                                                                       |
+| `domain_name`       | Authentication domain name; prefer a cloud credential.                                                                                                          |
+| `password`          | Sensitive. Authentication password; prefer a cloud credential.                                                                                                  |
+| `project_id`        | Authentication project ID; prefer a cloud credential.                                                                                                           |
+| `project_name`      | Authentication project name; prefer a cloud credential.                                                                                                         |
+| `secret_key`        | Sensitive. Authentication secret key; prefer a cloud credential.                                                                                                |
+| `token`             | Sensitive. Authentication token.                                                                                                                                |
+| `username`          | Authentication username; prefer a cloud credential.                                                                                                             |
+
+File paths and `clouds.yaml` refer to the **Rancher machine provisioner**, not
+the Terraform host; the provider does not upload local files. Choose either
+file-based or inline user data. The v2.2.0 driver exposes `cacert` but does not
+pass it to its authentication client; do not rely on that flag alone to configure
+custom CA trust. Sensitive values are still stored in Terraform state and,
+when embedded here, in the Rancher machine configuration; protect both.
+
+Machine configuration import is not supported.
 
 ## Attributes Reference
 
