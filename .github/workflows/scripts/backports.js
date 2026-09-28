@@ -180,6 +180,21 @@ async function runBackportPr({ github, core, process }) {
     core.info(`Created backport PR data: ${JSON.stringify(newPR)}`);
     const prNumber = newPR.number;
     try {
+      await github.graphql(`
+        mutation EnableAutoMerge($pullRequestId: ID!) {
+          enablePullRequestAutoMerge(input: {
+            pullRequestId: $pullRequestId,
+            mergeMethod: SQUASH
+          }) {
+            pullRequest { id }
+          }
+        }
+      `, { pullRequestId: newPR.node_id });
+      core.info(`Auto-merge enabled for PR #${prNumber}`);
+    } catch (error) {
+      core.warning(`Failed to enable auto-merge on PR #${prNumber}: ${error.message}`);
+    }
+    try {
       await github.rest.issues.addAssignees({
         owner,
         repo,

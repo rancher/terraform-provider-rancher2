@@ -117,7 +117,7 @@ jobs:
       - name: retrieve GPG Credentials
         id: retrieve-gpg-credentials
         # https://github.com/rancher-eio/read-vault-secrets/commits
-        uses: rancher-eio/read-vault-secrets@7282bf97898cd1c16c89f837e0bb442e6d384c89 # main
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
         with:
           secrets: |
             secret/data/github/repo/${{ github.repository }}/signing/gpg passphrase | GPG_PASSPHRASE ;

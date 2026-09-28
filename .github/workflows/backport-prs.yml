@@ -18,6 +18,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write
       issues: write
       actions: write
 
@@ -41,6 +42,15 @@ jobs:
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
             const { default: script } = await import(scriptPath);
             await script({github, context, core, process});
+
+      - name: Get Merge Token
+        id: get-merge-token
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
+
       - name: 'Find Issues and Create Cherry-Pick PRs'
         id: find-issues-create-prs
         # https://github.com/actions/github-script/releases
@@ -50,6 +60,7 @@ jobs:
           MERGE_COMMIT_SHA: ${{ steps.wait_for_settle.outputs.merge_commit_sha }}
           SCRIPT_MODE: backport-pr
         with:
+          github-token: ${{ env.GITHUB_MERGE_TOKEN }}
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
             const { default: script } = await import(scriptPath);

@@ -25,6 +25,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: 'main'
+
       - name: 'Find and Label Related Issue'
         id: find-label-issue
         # https://github.com/actions/github-script/releases
