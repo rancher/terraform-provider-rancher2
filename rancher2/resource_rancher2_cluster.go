@@ -64,12 +64,12 @@ func resourceRancher2Cluster() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceRancher2ClusterResourceV3().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceRancher2ClusterStateUpgradeV1,
+				Upgrade: resourceRancher2ClusterStateUpgradeV0,
 				Version: 0,
 			},
 			{
 				Type:    resourceRancher2ClusterResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceRancher2ClusterStateUpgradeV0,
+				Upgrade: resourceRancher2ClusterStateUpgradeV1,
 				Version: 1,
 			},
 			{
@@ -105,7 +105,7 @@ func resourceRancher2ClusterResourceV3() *schema.Resource {
 	}
 }
 
-func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceRancher2ClusterStateUpgradeV1(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rkeConfigs, ok := rawState["rke_config"].([]interface{}); ok && len(rkeConfigs) > 0 {
 		log.Printf("[INFO] Rancher v2.12+ does not support RKE1. Please migrate clusters to RKE2 or K3s, or delete the related resources. More info: https://www.suse.com/c/rke-end-of-life-by-july-2025-replatform-to-rke2-or-k3s")
 		for i1 := range rkeConfigs {
@@ -123,9 +123,10 @@ func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta
 														newValue := ""
 														if len(config) > 0 {
 															conf, err := mapInterfaceToYAML(config)
-															if err == nil {
-																newValue = conf
+															if err != nil {
+																return nil, fmt.Errorf("failed to convert event rate limit configuration: %w", err)
 															}
+															newValue = conf
 														}
 														rawState["rke_config"].([]interface{})[i1].(map[string]interface{})["services"].([]interface{})[i2].(map[string]interface{})["kube_api"].([]interface{})[i3].(map[string]interface{})["event_rate_limit"].([]interface{})[i4].(map[string]interface{})["configuration"] = newValue
 													}
@@ -139,9 +140,10 @@ func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta
 														newValue := ""
 														if len(config) > 0 {
 															conf, err := mapInterfaceToYAML(config)
-															if err == nil {
-																newValue = conf
+															if err != nil {
+																return nil, fmt.Errorf("failed to convert secrets encryption custom config: %w", err)
 															}
+															newValue = conf
 														}
 														rawState["rke_config"].([]interface{})[i1].(map[string]interface{})["services"].([]interface{})[i2].(map[string]interface{})["kube_api"].([]interface{})[i3].(map[string]interface{})["secrets_encryption_config"].([]interface{})[i4].(map[string]interface{})["custom_config"] = newValue
 													}
@@ -299,7 +301,7 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 	})
 }
 
-func resourceRancher2ClusterStateUpgradeV1(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceRancher2ClusterStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	return rawState, nil
 }
 

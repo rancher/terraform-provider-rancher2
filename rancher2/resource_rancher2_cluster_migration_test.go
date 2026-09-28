@@ -42,7 +42,7 @@ func TestResourceRancher2ClusterStateUpgraders(t *testing.T) {
 	}
 }
 
-func TestResourceRancher2ClusterStateUpgradeV0(t *testing.T) {
+func TestResourceRancher2ClusterStateUpgradeV1(t *testing.T) {
 	eventRateConfiguration := map[string]interface{}{
 		"apiVersion": "eventratelimit.admission.k8s.io/v1alpha1",
 		"kind":       "Configuration",
@@ -113,7 +113,7 @@ func TestResourceRancher2ClusterStateUpgradeV0(t *testing.T) {
 		},
 	}
 
-	upgraded, err := resourceRancher2ClusterStateUpgradeV0(rawState, nil)
+	upgraded, err := resourceRancher2ClusterStateUpgradeV1(rawState, nil)
 	if err != nil {
 		t.Fatalf("failed to upgrade V0 state: %v", err)
 	}
