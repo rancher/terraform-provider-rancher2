@@ -60,6 +60,11 @@ This component defines our standard diagnostic procedures for investigating, ret
 - Check if inputs retrieved from Vault or GitHub Secrets contain hidden characters, carriage returns (`\r`), or trailing newlines (`\n`).
 - Apply defensive sanitization (such as `tr -d '[:space:]'`) in utility scripts to guarantee GPG, Git, or API keys are clean before use.
 
+### 3. Token Scope & API Visibility
+
+- Verify token permission scopes against the specific endpoints called. Note that GitHub's Search API (`GET /search/issues`) silently strips out issues or returns 0 results if the calling GitHub App token lacks `issues: read` permission, even if the target issue exists and is public.
+- When injecting custom tokens (e.g., via Vault or App secrets) into `actions/github-script`, avoid overriding the runner's default `github-token` if standard issue/content permissions are required; instead, use `getOctokit(token)` scoped specifically to operations requiring elevated App privileges.
+
 ---
 
 ## Phase 3: Planning & Strategy
