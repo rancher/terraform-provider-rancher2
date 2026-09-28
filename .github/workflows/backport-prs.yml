@@ -30,6 +30,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: 'main'
+          persist-credentials: false
       - name: 'Wait for merge to settle'
         id: wait-for-merge-settle
         # https://github.com/actions/github-script/releases
