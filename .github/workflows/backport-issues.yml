@@ -4,7 +4,7 @@ on:
   issues:
     types: [labeled] # triggered when any label is added to an issue
 
-env :
+env:
   TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }} # eg. ["matttrach"]
 
 permissions: {}
@@ -53,7 +53,7 @@ jobs:
         id: create-github-issue
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env :
+        env:
           TERRAFORM_MAINTAINERS: ${{env.TERRAFORM_MAINTAINERS}}
           PR: ${{ steps.extract-pr.outputs.result }}
           SCRIPT_MODE: backport-issues
