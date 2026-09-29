@@ -31,8 +31,9 @@ func dataSourceRancher2Cluster() *schema.Resource {
 				Computed: true,
 			},
 			"kube_config": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"generate_kube_config": {
 				Type:        schema.TypeBool,
