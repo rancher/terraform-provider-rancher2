@@ -403,6 +403,73 @@ EOF
 }
 ```
 
+### Use the internal CA for an authorized cluster endpoint
+
+Set `use_internal_ca_certs` to use the cluster's internally generated CA certificate instead of specifying `ca_certs`.
+
+This option:
+* Requires `fqdn` to be configured.
+* Is mutually exclusive with `ca_certs`.
+* Should only be used when the cluster is reachable through an endpoint, such as a load balancer.
+* Requires the endpoint FQDN to be included in the API server certificate's SANs.
+
+Configure the FQDN through `tls-san` in `machine_global_config` to ensure the API server certificate is valid for the endpoint.
+
+For a node-driver cluster, the provider waits for the cluster to become active. The provider applies the CA during the same operation when Rancher provides it.
+
+```hcl
+resource "rancher2_cluster_v2" "node_driver" {
+  name               = "node-driver"
+  kubernetes_version = "<rke2/k3s-version>"
+
+  local_auth_endpoint {
+    enabled               = true
+    fqdn                  = "api.example.com"
+    use_internal_ca_certs = true
+  }
+
+  rke_config {
+    machine_global_config = yamlencode({
+      tls-san = ["api.example.com"]
+    })
+
+    machine_pools {
+      name                         = "pool1"
+      cloud_credential_secret_name = rancher2_cloud_credential.foo.id
+      control_plane_role           = true
+      etcd_role                    = true
+      worker_role                  = true
+      quantity                     = 1
+
+      machine_config {
+        kind = rancher2_machine_config_v2.foo.kind
+        name = rancher2_machine_config_v2.foo.name
+      }
+    }
+  }
+}
+```
+
+For a custom cluster, the CA is unavailable until a node registers and the cluster is active. Apply the configuration, register a node, wait for the cluster to be active, then run `terraform apply` again without changing the configuration.
+
+```hcl
+resource "rancher2_cluster_v2" "custom" {
+  name               = "custom"
+  kubernetes_version = "<rke2/k3s-version>"
+
+  local_auth_endpoint {
+    enabled               = true
+    fqdn                  = "api.example.com"
+    use_internal_ca_certs = true
+  }
+
+  rke_config {
+    machine_global_config = yamlencode({
+      tls-san = ["api.example.com"]
+    })
+  }
+}
+```
 
 ### Customize the agent environment variables
 
@@ -988,6 +1055,7 @@ The following attributes are exported:
 * `cluster_registration_token` - (Computed, sensitive, list, max length: 1) Cluster Registration Token generated for the cluster.
 * `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster. Note: When the cluster has `local_auth_endpoint` enabled, the kube_config will not be available until the cluster is `connected`.
 * `cluster_v1_id` - (Computed, string) Cluster v1 id for cluster v2. (e.g. to be used with `rancher2_sync`).
+* `local_auth_endpoint_ca_sync_required` - (Computed, bool) Whether the authorized cluster endpoint requires internal CA synchronization. Users cannot configure this field.
 * `resource_version` - (Computed, string) Cluster's k8s resource version.
 
 **Note:** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
@@ -1090,6 +1158,7 @@ see more information on [Resource Management for Pods and Containers](https://ku
 * `enabled` - (Optional, bool, default: false) Enable the authorized cluster endpoint.
 * `fqdn` - (Optional, string) FQDN for the authorized cluster endpoint. If one is entered, it should point to the downstream cluster.
 * `ca_certs` - (Optional, string) CA certs for the authorized cluster endpoint. It is only needed if there is a load balancer in front of the downstream cluster that is using an untrusted certificate. If you have a valid certificate, then nothing needs to be added to the CA Certificates field.
+* `use_internal_ca_certs` - (Optional, bool, default: false) Use the cluster's internally generated CA certificate for the authorized cluster endpoint instead of manually specifying `ca_certs`. This option should only be used when the cluster is reachable through an endpoint, such as a load balancer, and the endpoint FQDN is included in the API server certificate's SANs (configured through `tls-san` in `machine_global_config`). Requires `fqdn` to be configured and is mutually exclusive with `ca_certs`. During refresh, the provider compares the internally generated CA with the CA configured on the authorized cluster endpoint without making any changes to Rancher. If the internal CA is non-empty and differs from the endpoint CA, Terraform will detect the difference and show an in-place synchronization update in the next plan. A subsequent `terraform apply` fetches the current internal CA and applies it to the endpoint. This behavior supports scenarios where the CA becomes available only after cluster creation, as well as cases where the cluster's root CA is replaced later. If the fetched CA is empty, the provider preserves any existing endpoint CA and does not schedule a synchronization update. An empty CA does not cause an error. Real API and network errors still cause the operation to fail.
 
 #### `upgrade_strategy`
 
