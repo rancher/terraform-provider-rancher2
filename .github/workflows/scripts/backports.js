@@ -208,7 +208,7 @@ async function runBackportPr({ github, context, core, process = globalThis.proce
       if (mergeToken) {
         try {
           const includeConfig = await runGit(['config', '--local', '--name-only', '--get-regexp', '^includeif\\.gitdir:']);
-          const includeKeys = includeConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean);
+          const includeKeys = [...new Set(includeConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean))];
           for (const key of includeKeys) {
             await runGit(['config', '--local', '--unset-all', key]);
           }
@@ -218,7 +218,7 @@ async function runBackportPr({ github, context, core, process = globalThis.proce
 
         try {
           const headerConfig = await runGit(['config', '--local', '--name-only', '--get-regexp', 'http\\..*extraheader']);
-          const headerKeys = headerConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean);
+          const headerKeys = [...new Set(headerConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean))];
           for (const key of headerKeys) {
             await runGit(['config', '--local', '--unset-all', key]);
           }
