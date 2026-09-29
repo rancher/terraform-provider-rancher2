@@ -6,7 +6,7 @@ page_title: "rancher2_cloud_credential Resource"
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2.x and retrieve their information.
 
-amazonec2, azure, digitalocean, harvester, linode, nutanix, openstack, T-Cloud Public and vsphere credentials config are supported for Cloud Credential.
+amazonec2, azure, digitalocean, harvester, linode, nutanix, openstack, opentelekomcloud(T-Cloud Public) and vsphere credentials config are supported for Cloud Credential.
 
 ## Example Usage
 
@@ -62,14 +62,6 @@ resource "rancher2_cloud_credential" "tcloud_public" {
   }
 }
 ```
-
-Install the `opentelekomcloud` node driver in Rancher and enable its cloud
-credential support before creating this resource; see the
-[pinned registration example](node_driver.md#registering-the-t-cloud-public-driver).
-Creating a credential
-activates an installed driver; it does not install a missing driver or provision
-an RKE2 cluster. The Terraform block uses the T-Cloud Public brand while the
-Rancher driver and API identifiers remain `opentelekomcloud`.
 
 ## Argument Reference
 
@@ -185,23 +177,6 @@ The following attributes are exported:
 * `project_id` - (Optional) Project ID (string)
 * `project_name` - (Optional) Project name (string)
 * `region` - (Optional) Region (string)
-
-Provide at least one complete authentication method: `access_key` and
-`secret_key`, or `username`, `password`, and `domain_name`. The driver supports
-both complete methods in a credential and prioritizes access-key authentication.
-An incomplete access-key pair is rejected even if password authentication is
-also configured.
-Set the region and any required endpoint/project settings here or in the
-driver's machine configuration.
-
-The block maps to Rancher's `opentelekomcloudcredentialConfig` API field.
-Standalone driver options `token` and `domain_id`, and the UI-only `authMethod`
-annotation, are not part of the supported cloud credential schema.
-
-Rancher redacts `password` and `secretKey` on reads. The provider preserves
-configured secrets during refresh, but cannot recover them when importing an
-existing credential. Supply those secrets in configuration after import.
-Sensitive fields are still stored in Terraform state; protect the state backend.
 
 ### `vsphere_credential_config`
 

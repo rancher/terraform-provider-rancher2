@@ -135,114 +135,6 @@ resource "rancher2_cluster_v2" "foo-k3s" {
   }
 }
 ```
-
-### Create a T-Cloud Public RKE2 cluster on an existing network
-
-Use the existing `rancher2_cluster_v2` machine-pool interface with
-[`tcloud_public_config`](machine_config_v2.md#tcloud_public_config). No additional
-cluster resource or driver-specific cluster argument is required.
-
-**Driver compatibility:** Rancher's provisioning jobs supply cloud
-credentials through `OPENTELEKOMCLOUD_*` environment variables. An early
-live attempt with driver v2.2.0 (which declared only `OS_*` aliases) failed
-before VM creation with `at least one authorization method must be
-provided`, despite populated credential environment variables. This was
-re-verified on 2026-09-28 against a live T-Cloud Public environment with
-driver **v2.2.1**, which recognizes the `OPENTELEKOMCLOUD_*` names: a full
-RKE2 cluster (one server, one worker) was provisioned and torn down
-successfully. Use driver v2.2.1 or later; do not work around older drivers
-by copying cloud credentials into machine configurations.
-
-Before applying this example:
-
-* Register and activate the compatible `opentelekomcloud` driver, or import an
-  existing registration into a separate Terraform state. Do not destroy or
-  replace a shared driver as part of cluster cleanup.
-* Supply an existing T-Cloud Public cloud credential ID in
-  `namespace:name` format, or reference the ID of a separately managed
-  [`tcloud_public_credential_config`](cloud_credential.md#tcloud_public_credential_config).
-* Prepare the shared VPC, subnet and security group. When using the network
-  controller, create a `TCloudClusterNetwork` with `managementPolicy: Observe`
-  and security-group `managementPolicy: Observe`. Its `clusterRef` must match
-  the cluster name and Fleet namespace below. Wait for `Ready=True` at the
-  current observed generation before consuming its resource IDs and group name.
-* Verify SSH access from Rancher's machine provisioner, connectivity between
-  nodes, and security-group rules for the selected CNI. An existing network
-  policy must not be changed implicitly by this configuration.
-
-```hcl
-resource "rancher2_machine_config_v2" "tcloud_public" {
-  generate_name   = "tcloud-public-pool"
-  fleet_namespace = "fleet-default"
-
-  tcloud_public_config {
-    region           = "<REGION>"
-    flavor_name      = "<FLAVOR_NAME>"
-    image_name       = "<IMAGE_NAME>"
-    keypair_name     = "<EXISTING_KEYPAIR_NAME>"
-    private_key_file = file("<LOCAL_PRIVATE_KEY_PATH>")
-    network_scope   = "shared"
-    skip_default_sg  = true
-    vpc_id          = "<EXISTING_VPC_ID>"
-    subnet_id       = "<EXISTING_SUBNET_ID>"
-    sec_groups      = "<EXISTING_SECURITY_GROUP_NAME>"
-  }
-}
-
-resource "rancher2_cluster_v2" "tcloud_public" {
-  name               = "tcloud-public"
-  fleet_namespace    = "fleet-default"
-  kubernetes_version = "<SUPPORTED_RKE2_VERSION>"
-
-  annotations = {
-    "ui.rancher/provider"                             = "opentelekomcloud"
-    "infrastructure.otc.t-systems.com/cluster-network" = "tcloud-public-network"
-    "infrastructure.otc.t-systems.com/network-policy"  = "Observe"
-  }
-
-  rke_config {
-    machine_global_config = yamlencode({ cni = "calico" })
-
-    machine_pools {
-      name                         = "server"
-      cloud_credential_secret_name = "<CREDENTIAL_NAMESPACE>:<CREDENTIAL_NAME>"
-      control_plane_role           = true
-      etcd_role                    = true
-      worker_role                  = true
-      quantity                     = 1
-
-      machine_config {
-        kind = rancher2_machine_config_v2.tcloud_public.kind
-        name = rancher2_machine_config_v2.tcloud_public.name
-      }
-    }
-  }
-}
-```
-
-The network annotation references an already prepared controller object, not a
-network created by this example. Keep a single explicit owner for that object's
-lifecycle. For a separate worker pool, reference the same compatible machine
-configuration, set only `worker_role = true`, and provide its credential ID.
-Scaling the worker pool must reuse the shared network rather than creating
-per-machine networks.
-
-When composing this with a `TCloudClusterNetwork`, keep that manifest in a
-separate configuration layer so its CRD and controller are available before
-planning the cluster resources.
-
-`file(...)` passes the private key's contents to the driver; a workstation path
-alone is not uploaded. The value is sensitive but remains in Terraform state
-and the Rancher machine configuration. Keep keys, tokens, state and plans out
-of version control. The default EIP behavior creates a public IP for each
-machine; use `skip_eip = true` only when the provisioner can reach private IPs.
-
-Delete the test cluster and wait for machine cleanup before removing its
-machine configuration or controller network record. Under `Observe`, existing
-VPCs, subnets and security groups must remain. Keep imported shared driver
-registration and existing cloud credentials outside the test cluster's destroy
-scope.
-
 ### Create a node-driver cluster with Nutanix as the infrastructure provider
 
 ```hcl
@@ -380,6 +272,58 @@ EOF
     etcd {
       snapshot_schedule_cron = "0 */5 * * *"
       snapshot_retention = 5
+    }
+  }
+}
+```
+
+### Create a T-Cloud Public RKE2 cluster on an existing network
+
+```hcl
+resource "rancher2_machine_config_v2" "tcloud_public" {
+  generate_name   = "tcloud-public-pool"
+  fleet_namespace = "fleet-default"
+
+  tcloud_public_config {
+    region           = "<REGION>"
+    flavor_name      = "<FLAVOR_NAME>"
+    image_name       = "<IMAGE_NAME>"
+    keypair_name     = "<EXISTING_KEYPAIR_NAME>"
+    private_key_file = file("<LOCAL_PRIVATE_KEY_PATH>")
+    network_scope   = "shared"
+    skip_default_sg  = true
+    vpc_id          = "<EXISTING_VPC_ID>"
+    subnet_id       = "<EXISTING_SUBNET_ID>"
+    sec_groups      = "<EXISTING_SECURITY_GROUP_NAME>"
+  }
+}
+
+resource "rancher2_cluster_v2" "tcloud_public" {
+  name               = "tcloud-public"
+  fleet_namespace    = "fleet-default"
+  kubernetes_version = "<SUPPORTED_RKE2_VERSION>"
+
+  annotations = {
+    "ui.rancher/provider"                             = "opentelekomcloud"
+    "infrastructure.otc.t-systems.com/cluster-network" = "tcloud-public-network"
+    "infrastructure.otc.t-systems.com/network-policy"  = "Observe"
+  }
+
+  rke_config {
+    machine_global_config = yamlencode({ cni = "calico" })
+
+    machine_pools {
+      name                         = "server"
+      cloud_credential_secret_name = "<CREDENTIAL_NAMESPACE>:<CREDENTIAL_NAME>"
+      control_plane_role           = true
+      etcd_role                    = true
+      worker_role                  = true
+      quantity                     = 1
+
+      machine_config {
+        kind = rancher2_machine_config_v2.tcloud_public.kind
+        name = rancher2_machine_config_v2.tcloud_public.name
+      }
     }
   }
 }
