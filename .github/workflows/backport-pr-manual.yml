@@ -7,7 +7,7 @@ on:
         description: 'The sha of the merge commit from the main PR.'
         required: true
 
-env :
+env:
   TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }} # eg. ["matttrach"]
 
 permissions: {}
@@ -27,7 +27,7 @@ jobs:
       - name: 'Checkout Repository'
         id: checkout-repository
         # https://github.com/actions/checkout/releases
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           ref: 'main'
@@ -51,6 +51,7 @@ jobs:
         # https://github.com/rancher-eio/read-vault-secrets/commits
         uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
         with:
+          # Token permissions: contents: write, metadata: read, pull_requests: write, workflows: write
           secrets: |
             github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
 
@@ -61,10 +62,11 @@ jobs:
         env:
           MERGE_COMMIT_SHA: ${{ inputs.merge_commit_sha }}
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+          GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
           SCRIPT_MODE: backport-pr
         with:
-          github-token: ${{ env.GITHUB_MERGE_TOKEN }}
           script: |
+            // getOctokit is provided globally by actions/github-script; an explicit require is not needed
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
             const { default: script } = await import(scriptPath);
-            await script({github, context, core, process});
+            await script({github, context, core, process, getOctokit});
