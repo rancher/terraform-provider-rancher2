@@ -1,0 +1,73 @@
+name: Validate PR Description
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-pr-description:
+    name: 'Validate PR Description'
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.type != 'Bot' && !startsWith(github.head_ref, 'release-please') && !github.event.pull_request.draft
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    steps:
+      - name: Check PR Description
+        id: check-pr-description
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            try {
+              let response;
+              try {
+                response = await github.rest.repos.getContent({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  path: '.github/workflows/scripts/validate-pr-description.js',
+                  ref: context.payload.pull_request.base.ref,
+                });
+              } catch (error) {
+                if (error.status === 404) {
+                  core.info('Script not found on base branch; skipping validation until merged.');
+                  return;
+                } else {
+                  throw error;
+                }
+              }
+              const scriptContent = Buffer.from(response.data.content, 'base64').toString();
+              const fs = await import('fs');
+              const path = await import('path');
+              const { pathToFileURL } = await import('url');
+              const tempDir = fs.mkdtempSync(path.join(process.env.RUNNER_TEMP, 'pr-val-'));
+              const tempPath = path.join(tempDir, 'validate-pr-description.mjs');
+              try {
+                fs.writeFileSync(tempPath, scriptContent, 'utf8');
+                const { validatePrDescription, validateIssueExists } = await import(pathToFileURL(tempPath).href);
+                const prBody = context.payload.pull_request?.body ?? '';
+                const issueNumbers = validatePrDescription(prBody);
+                const uniqueIssues = [...new Set(issueNumbers)];
+                const results = await Promise.allSettled(uniqueIssues.map(issueNumber => validateIssueExists(github, context, issueNumber)));
+                const errors = results.filter(r => r.status === 'rejected').map(r => r.reason?.message ?? String(r.reason));
+                if (errors.length > 0) {
+                  throw new Error(errors.join('\n'));
+                }
+              } finally {
+                if (fs.existsSync(tempDir)) {
+                  fs.rmSync(tempDir, { recursive: true, force: true });
+                }
+              }
+            } catch (error) {
+              core.setFailed(error?.message ?? String(error));
+            }
