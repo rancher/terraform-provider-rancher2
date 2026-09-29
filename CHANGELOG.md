@@ -12,6 +12,25 @@ ENHANCEMENTS:
 BUGFIXES:
 
 
+## [15.2.0](https://github.com/rancher/terraform-provider-rancher2/compare/v15.1.2...v15.2.0) (2026-09-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* add sensitive field attributes and sensitive testing ([#2499](https://github.com/rancher/terraform-provider-rancher2/issues/2499)) (#2532)
+
+### Features
+
+* add release channel support ([#2493](https://github.com/rancher/terraform-provider-rancher2/issues/2493)) ([#2504](https://github.com/rancher/terraform-provider-rancher2/issues/2504)) ([b001311](https://github.com/rancher/terraform-provider-rancher2/commit/b001311441330f876da4b0661b308aa9b0a8581e))
+* add schema versioning for Terraform state migration ([#2514](https://github.com/rancher/terraform-provider-rancher2/issues/2514)) ([#2529](https://github.com/rancher/terraform-provider-rancher2/issues/2529)) ([33d5ed8](https://github.com/rancher/terraform-provider-rancher2/commit/33d5ed840803d3e7ff43f9e632ee3cdb2bff0e7c))
+* expand authenticated registry support ([#2497](https://github.com/rancher/terraform-provider-rancher2/issues/2497)) ([04d54ae](https://github.com/rancher/terraform-provider-rancher2/commit/04d54ae382a23954ad20a671ee2d47f03ea68807))
+
+
+### Bug Fixes
+
+* add sensitive field attributes and sensitive testing ([#2499](https://github.com/rancher/terraform-provider-rancher2/issues/2499)) ([#2532](https://github.com/rancher/terraform-provider-rancher2/issues/2532)) ([38a7cdc](https://github.com/rancher/terraform-provider-rancher2/commit/38a7cdc1620d1fe5e18359a5f432348d8b6ad115))
+* update release version ([#2511](https://github.com/rancher/terraform-provider-rancher2/issues/2511)) ([5e3c446](https://github.com/rancher/terraform-provider-rancher2/commit/5e3c4467eb54aa12b1fe57169f1080548a30532f))
+
 ## [15.1.2](https://github.com/rancher/terraform-provider-rancher2/compare/v15.1.2...v15.1.2) (2026-09-10)
 
 
