@@ -206,6 +206,26 @@ async function runBackportPr({ github, context, core, process = globalThis.proce
       await runGit(['config', '--local', 'user.name', 'github-actions[bot]']);
       await runGit(['config', '--local', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
       if (mergeToken) {
+        try {
+          const includeConfig = await runGit(['config', '--local', '--name-only', '--get-regexp', '^includeif\\.gitdir:']);
+          const includeKeys = [...new Set(includeConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean))];
+          for (const key of includeKeys) {
+            await runGit(['config', '--local', '--unset-all', key]);
+          }
+        } catch {
+          // ignore if no includeif.gitdir keys exist
+        }
+
+        try {
+          const headerConfig = await runGit(['config', '--local', '--name-only', '--get-regexp', 'http\\..*extraheader']);
+          const headerKeys = [...new Set(headerConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean))];
+          for (const key of headerKeys) {
+            await runGit(['config', '--local', '--unset-all', key]);
+          }
+        } catch {
+          // ignore if no extraheader keys exist
+        }
+
         core.setSecret(mergeToken);
         const b64Token = Buffer.from(`x-access-token:${mergeToken}`).toString('base64');
         core.setSecret(b64Token);
