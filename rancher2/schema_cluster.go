@@ -113,6 +113,51 @@ func clusterLegacyAnyMapListElem() *schema.Schema {
 	}
 }
 
+// clusterTemplateAnswerFieldsLegacy mirrors the v14 answerFields schema.
+func clusterTemplateAnswerFieldsLegacy() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"cluster_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"project_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"values": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+		},
+	}
+}
+
+// clusterTemplateQuestionFieldsLegacy mirrors the v14 questionFields schema.
+func clusterTemplateQuestionFieldsLegacy() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"default": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"required": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
+		},
+		"type": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Default:  "string",
+		},
+		"variable": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	}
+}
+
 // clusterFieldsV0 represents the schema used by the original state version.
 func clusterFieldsV0() map[string]*schema.Schema {
 	clusterDriversV0 := append([]string{}, clusterDrivers...)
@@ -211,7 +256,9 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			MaxItems:    1,
 			Computed:    true,
 			Description: "Cluster template answers",
-			Elem:        clusterLegacyAnyMapListElem(),
+			Elem: &schema.Resource{
+				Schema: clusterTemplateAnswerFieldsLegacy(),
+			},
 		},
 		"cluster_template_id": {
 			Type:        schema.TypeString,
@@ -222,7 +269,9 @@ func clusterFieldsV0() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Optional:    true,
 			Description: "Cluster template questions",
-			Elem:        clusterLegacyAnyMapListElem(),
+			Elem: &schema.Resource{
+				Schema: clusterTemplateQuestionFieldsLegacy(),
+			},
 		},
 		"cluster_template_revision_id": {
 			Type:        schema.TypeString,
@@ -316,7 +365,9 @@ func clusterFieldsV2() map[string]*schema.Schema {
 		MaxItems:    1,
 		Computed:    true,
 		Description: "Cluster template answers",
-		Elem:        clusterLegacyAnyMapListElem(),
+		Elem: &schema.Resource{
+			Schema: clusterTemplateAnswerFieldsLegacy(),
+		},
 	}
 
 	s["cluster_template_id"] = &schema.Schema{
@@ -329,7 +380,9 @@ func clusterFieldsV2() map[string]*schema.Schema {
 		Type:        schema.TypeList,
 		Optional:    true,
 		Description: "Cluster template questions",
-		Elem:        clusterLegacyAnyMapListElem(),
+		Elem: &schema.Resource{
+			Schema: clusterTemplateQuestionFieldsLegacy(),
+		},
 	}
 
 	s["cluster_template_revision_id"] = &schema.Schema{

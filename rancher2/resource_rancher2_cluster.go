@@ -63,7 +63,8 @@ func resourceRancher2Cluster() *schema.Resource {
 		SchemaVersion: 3,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    resourceRancher2ClusterResourceV3().CoreConfigSchema().ImpliedType(),
+				// v14 fell back to its clusterFieldsV2-shaped schema whenever schema_version was unset.
+				Type:    resourceRancher2ClusterResourceV2().CoreConfigSchema().ImpliedType(),
 				Upgrade: resourceRancher2ClusterStateUpgradeV0,
 				Version: 0,
 			},
@@ -96,12 +97,6 @@ func resourceRancher2ClusterResourceV0() *schema.Resource {
 func resourceRancher2ClusterResourceV2() *schema.Resource {
 	return &schema.Resource{
 		Schema: clusterFieldsV2(),
-	}
-}
-
-func resourceRancher2ClusterResourceV3() *schema.Resource {
-	return &schema.Resource{
-		Schema: clusterFields(),
 	}
 }
 
@@ -503,15 +498,6 @@ func clusterRegistrationTokenStateRefreshFunc(client *managementClient.Client, c
 		}
 		return obj, obj.State, nil
 	}
-}
-
-func findFlattenClusterRegistrationToken(client *managementClient.Client, clusterID string) ([]interface{}, error) {
-	clusterReg, err := findClusterRegistrationToken(client, clusterID)
-	if err != nil {
-		return []interface{}{}, err
-	}
-
-	return flattenClusterRegistrationToken(clusterReg)
 }
 
 func findClusterRegistrationToken(client *managementClient.Client, clusterID string) (*managementClient.ClusterRegistrationToken, error) {

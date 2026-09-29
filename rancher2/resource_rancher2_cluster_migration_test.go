@@ -22,7 +22,7 @@ func TestResourceRancher2ClusterStateUpgraders(t *testing.T) {
 	}
 	expectedVersions := []int{0, 1, 2}
 	expectedTypes := []cty.Type{
-		resourceRancher2ClusterResourceV3().CoreConfigSchema().ImpliedType(),
+		resourceRancher2ClusterResourceV2().CoreConfigSchema().ImpliedType(),
 		resourceRancher2ClusterResourceV0().CoreConfigSchema().ImpliedType(),
 		resourceRancher2ClusterResourceV2().CoreConfigSchema().ImpliedType(),
 	}
@@ -303,5 +303,81 @@ func TestResourceRancher2ClusterStateUpgradeV2_IdempotentWhenLegacyKeysMissing(t
 
 	if got, exists := upgraded["name"]; !exists || got != "test-cluster" {
 		t.Fatalf("expected name to be preserved")
+	}
+}
+
+// A version-0 state can be a current-shaped v15 state; current fields must survive the upgrade.
+func TestResourceRancher2ClusterStateUpgradeV0PreservesCurrentFields(t *testing.T) {
+	r := resourceRancher2Cluster()
+	r.Read = func(*schema.ResourceData, interface{}) error { return nil }
+
+	state := &terraform.InstanceState{
+		ID: "test-id",
+		Attributes: map[string]string{
+			"id":                    "test-id",
+			"name":                  "test-cluster",
+			"driver":                "rke2",
+			"fleet_workspace_name":  "my-fleet-workspace",
+			"rke2_config.#":         "1",
+			"rke2_config.0.version": "v1.30.0+rke2r1",
+		},
+		Meta: map[string]interface{}{
+			"schema_version": "0",
+		},
+	}
+
+	upgraded, err := r.Refresh(state, nil)
+	if err != nil {
+		t.Fatalf("failed to upgrade state: %v", err)
+	}
+
+	if got := upgraded.Attributes["fleet_workspace_name"]; got != "my-fleet-workspace" {
+		t.Fatalf("expected fleet_workspace_name to be preserved, got %q", got)
+	}
+
+	if got := upgraded.Attributes["rke2_config.0.version"]; got != "v1.30.0+rke2r1" {
+		t.Fatalf("expected rke2_config.0.version to be preserved, got %q", got)
+	}
+}
+
+// End-to-end: a v14-shaped state (schema_version 2) carrying historical nested cluster_template_answers/cluster_template_questions must decode and migrate to the current schema version without error.
+func TestResourceRancher2ClusterStateUpgradeV14ClusterTemplateState(t *testing.T) {
+	r := resourceRancher2Cluster()
+	r.Read = func(*schema.ResourceData, interface{}) error { return nil }
+
+	state := &terraform.InstanceState{
+		ID: "test-id",
+		Attributes: map[string]string{
+			"id":                                    "test-id",
+			"name":                                  "test-cluster",
+			"driver":                                "rancherKubernetesEngine",
+			"rke_config.#":                          "1",
+			"rke_config.0.kubernetes_version":       "v1.24.10-rancher1-1",
+			"cluster_template_id":                   "ct-abcde",
+			"cluster_template_answers.#":            "1",
+			"cluster_template_answers.0.cluster_id": "c-abcde",
+			"cluster_template_answers.0.project_id": "p-abcde",
+			"cluster_template_answers.0.values.%":   "1",
+			"cluster_template_answers.0.values.foo": "bar",
+			"cluster_template_questions.#":          "1",
+			"cluster_template_questions.0.default":  "1",
+			"cluster_template_questions.0.required": "true",
+			"cluster_template_questions.0.type":     "int",
+			"cluster_template_questions.0.variable": "someVar",
+		},
+		Meta: map[string]interface{}{
+			"schema_version": "2",
+		},
+	}
+
+	upgraded, err := r.Refresh(state, nil)
+	if err != nil {
+		t.Fatalf("failed to upgrade v14 cluster-template state: %v", err)
+	}
+
+	for _, key := range []string{"cluster_template_answers", "cluster_template_questions", "cluster_template_id", "rke_config"} {
+		if _, exists := upgraded.Attributes[key]; exists {
+			t.Fatalf("expected key %q to be removed from upgraded state", key)
+		}
 	}
 }
