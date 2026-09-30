@@ -72,15 +72,21 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           TAG: ${{ inputs.tag }}
           SHA: ${{ inputs.sha }}
+          BRANCH: ${{ inputs.branch }}
         run: |
           git config --global --add safe.directory "$PWD"
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          if [ -n "$SHA" ]; then
-            git tag "$TAG" -m "Release Candidate $TAG" "$SHA"
+          TARGET_BRANCH="${BRANCH#refs/heads/}"
+          TARGET_BRANCH="${TARGET_BRANCH#origin/}"
+          git fetch origin "$TARGET_BRANCH"
+          TARGET_SHA="$SHA"
+          if [ -z "$TARGET_SHA" ]; then
+            TARGET_SHA=$(git rev-parse FETCH_HEAD)
           else
-            git tag "$TAG" -m "Release Candidate $TAG"
+            TARGET_SHA=$(git rev-parse --verify "${TARGET_SHA}^{commit}")
           fi
+          git tag "$TAG" -m "Release Candidate $TAG" "$TARGET_SHA"
           git push origin "$TAG"
       - name: Check out new tag into a new directory
         id: checkout-new-tag
