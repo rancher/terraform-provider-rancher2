@@ -66,3 +66,31 @@ export async function validateIssueExists(github, context, issueNumber) {
 
   return true;
 }
+
+/**
+ * Main entrypoint for GitHub Actions execution.
+ *
+ * @param {object} params The github-script parameters.
+ * @param {object} params.github The Octokit GitHub client from github-script.
+ * @param {object} params.context The GitHub context from github-script.
+ * @param {object} params.core The GitHub Actions core toolkit.
+ */
+export default async function run({ github, context, core }) {
+  try {
+    const prBody = context.payload?.pull_request?.body ?? '';
+    const issueNumbers = validatePrDescription(prBody);
+    const uniqueIssues = [...new Set(issueNumbers)];
+    const results = await Promise.allSettled(
+      uniqueIssues.map((issueNumber) => validateIssueExists(github, context, issueNumber))
+    );
+    const errors = results
+      .filter((r) => r.status === 'rejected')
+      .map((r) => r.reason?.message ?? String(r.reason));
+    if (errors.length > 0) {
+      throw new Error(errors.join('\n'));
+    }
+    core?.info?.(`Successfully validated issue reference(s): ${uniqueIssues.map((n) => `#${n}`).join(', ')}`);
+  } catch (error) {
+    core.setFailed(error?.message ?? String(error));
+  }
+}

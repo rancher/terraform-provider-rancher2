@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { validateIssueExists, validatePrDescription } from './validate-pr-description.js';
+import run, { validateIssueExists, validatePrDescription } from './validate-pr-description.js';
 
 test('validatePrDescription - succeeds with valid format', () => {
   const prBody = 'Some initial context\n- Addresses: #1234\nSome other details';
@@ -257,4 +257,246 @@ test('validateIssueExists - rethrows unexpected API errors', async () => {
       message: 'Internal Server Error'
     }
   );
+});
+
+test('run - succeeds when PR body contains valid open issue', async () => {
+  let failedMessage = null;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 1234);
+          return { data: { id: 1, number: 1234, state: 'open' } };
+        }
+      }
+    }
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: 'Context\n- Addresses: #1234\nNotes'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext, core: mockCore });
+  assert.strictEqual(failedMessage, null);
+});
+
+test('run - fails when PR body is missing valid format', async () => {
+  let failedMessage = null;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = { rest: { issues: {} } };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: 'No addresses line here'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext, core: mockCore });
+  assert.strictEqual(
+    failedMessage,
+    'Please add a description line that matches this format: - Addresses: #<issue number>'
+  );
+});
+
+test('run - fails when referenced issue does not exist', async () => {
+  let failedMessage = null;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => {
+          const err = new Error('Not Found');
+          err.status = 404;
+          throw err;
+        }
+      }
+    }
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: '- Addresses: #9999'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext, core: mockCore });
+  assert.strictEqual(
+    failedMessage,
+    'Issue #9999 not found in rancher/terraform-provider-rancher2 repo.'
+  );
+});
+
+test('run - deduplicates multiple occurrences of same issue and succeeds', async () => {
+  let failedMessage = null;
+  let callCount = 0;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          callCount++;
+          assert.strictEqual(issue_number, 1234);
+          return { data: { id: 1, number: 1234, state: 'open' } };
+        }
+      }
+    }
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: '- Addresses: #1234\n* Addresses: #1234'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext, core: mockCore });
+  assert.strictEqual(failedMessage, null);
+  assert.strictEqual(callCount, 1);
+});
+
+test('run - aggregates errors when multiple referenced issues fail validation', async () => {
+  let failedMessage = null;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 101) {
+            const err = new Error('Not Found');
+            err.status = 404;
+            throw err;
+          }
+          if (issue_number === 102) {
+            return { data: { id: 2, number: 102, state: 'closed' } };
+          }
+          throw new Error('Unexpected issue');
+        }
+      }
+    }
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: '- Addresses: #101\n- Addresses: #102'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext, core: mockCore });
+  assert.strictEqual(
+    failedMessage,
+    'Issue #101 not found in rancher/terraform-provider-rancher2 repo.\nIssue #102 is already closed.'
+  );
+});
+
+test('run - fails when referenced item is a pull request', async () => {
+  let failedMessage = null;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 5678);
+          return { data: { id: 2, number: 5678, pull_request: {} } };
+        }
+      }
+    }
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: '- Addresses: #5678'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext, core: mockCore });
+  assert.strictEqual(
+    failedMessage,
+    'Issue #5678 is a pull request, not an issue.'
+  );
+});
+
+test('run - fails when referenced issue is already closed', async () => {
+  let failedMessage = null;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 4321);
+          return { data: { id: 3, number: 4321, state: 'closed' } };
+        }
+      }
+    }
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: '- Addresses: #4321'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext, core: mockCore });
+  assert.strictEqual(
+    failedMessage,
+    'Issue #4321 is already closed.'
+  );
+});
+
+test('run - fails and reports message on unexpected API error', async () => {
+  let failedMessage = null;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => {
+          const err = new Error('Internal Server Error');
+          err.status = 500;
+          throw err;
+        }
+      }
+    }
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: '- Addresses: #1234'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext, core: mockCore });
+  assert.strictEqual(failedMessage, 'Internal Server Error');
 });

@@ -1,6 +1,6 @@
+import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
 
 /**
  * Saves a sub-agent execution report to disk.
@@ -10,9 +10,13 @@ export function saveReport(agentName, report, logsDir) {
     fs.mkdirSync(logsDir, { recursive: true });
     const reportFile = path.join(logsDir, `${agentName}_report.md`);
     try {
-      fs.unlinkSync(reportFile);
+      if (fs.existsSync(reportFile)) {
+        fs.unlinkSync(reportFile);
+      }
     } catch (err) {
-      console.error(err.message || err);
+      if (err.code !== 'ENOENT') {
+        console.error(err.message || err);
+      }
     }
     fs.writeFileSync(reportFile, report, { mode: 0o600 });
   } catch (err) {
@@ -105,9 +109,13 @@ export function verifyReviewReport(report, diffHash, planHash, reviewApprovalFil
       };
 
       try {
-        fs.unlinkSync(reviewApprovalFile);
+        if (fs.existsSync(reviewApprovalFile)) {
+          fs.unlinkSync(reviewApprovalFile);
+        }
       } catch (err) {
-        console.error(err.message || err);
+        if (err.code !== 'ENOENT') {
+          console.error(err.message || err);
+        }
       }
       fs.writeFileSync(reviewApprovalFile, JSON.stringify(approvalData, null, 2), { mode: 0o600 });
       return {
@@ -122,9 +130,13 @@ export function verifyReviewReport(report, diffHash, planHash, reviewApprovalFil
   } else {
     // Self-Healing: Revoke existing signature if review failed
     try {
-      fs.unlinkSync(reviewApprovalFile);
+      if (fs.existsSync(reviewApprovalFile)) {
+        fs.unlinkSync(reviewApprovalFile);
+      }
     } catch (err) {
-      console.error(err.message || err);
+      if (err.code !== 'ENOENT') {
+        console.error(err.message || err);
+      }
     }
     return {
       status: 'rejected',
