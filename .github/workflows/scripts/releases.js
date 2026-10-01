@@ -1,5 +1,5 @@
-export default async ({ github, context, core, process }) => {
-  const mode = process.env.SCRIPT_MODE;
+export default async ({ github, context, core, process = globalThis.process, getOctokit }) => {
+  const mode = process?.env?.SCRIPT_MODE;
   switch (mode) {
   case 'check-maintainer':
     return await runCheckMaintainer({ github, context, core, process });
@@ -9,6 +9,8 @@ export default async ({ github, context, core, process }) => {
     return await runPublishRelease({ github, context, core, process });
   case 'tracking-issue':
     return await runTrackingIssue({ github, context, core, process });
+  case 'trigger-rc-release':
+    return await runTriggerRcRelease({ github, context, core, process, getOctokit });
   default:
     throw new Error(`Unknown release script mode: ${mode}`);
   }
@@ -17,20 +19,30 @@ export default async ({ github, context, core, process }) => {
 /**
  * check-maintainer: Checks if the user triggering the workflow is an authorized maintainer.
  */
-async function runCheckMaintainer({ context, core, process }) {
-  let maintainers = ["matttrach"];
+export async function runCheckMaintainer({ context, core, process = globalThis.process }) {
+  let maintainers = [];
   
-  if (process.env.MAINTAINERS && process.env.MAINTAINERS !== "undefined") {
+  if (process?.env?.MAINTAINERS && process.env.MAINTAINERS !== "undefined") {
     try {
-      maintainers = JSON.parse(process.env.MAINTAINERS);
+      const parsed = JSON.parse(process.env.MAINTAINERS);
+      maintainers = Array.isArray(parsed) ? parsed : (parsed ? [parsed] : []);
     } catch (e) {
-      core.info(`problem parsing maintainers, trying again: ${e.message}`);
-      maintainers = process.env.MAINTAINERS.split(',').map(m => m.trim());
+      core?.info?.(`problem parsing maintainers, trying again: ${e.message}`);
+      maintainers = process.env.MAINTAINERS.split(',').map(m => m.trim()).filter(Boolean);
     }
   }
 
-  const isMaintainer = maintainers.includes(context.actor);
-  core.info(`Checking if '${context.actor}' is an authorized maintainer: ${isMaintainer}`);
+  const rawActor = context?.actor || '';
+  const actor = rawActor.trim().toLowerCase();
+  if (!actor) {
+    core?.info?.('Checking if actor is an authorized maintainer: false (empty actor)');
+    return false;
+  }
+  const normalizedMaintainers = maintainers
+    .map(m => String(m).trim().toLowerCase())
+    .filter(Boolean);
+  const isMaintainer = Boolean(normalizedMaintainers.includes(actor) || actor.endsWith('[bot]'));
+  core?.info?.(`Checking if '${rawActor}' is an authorized maintainer or bot: ${isMaintainer}`);
   
   return isMaintainer;
 }
@@ -38,43 +50,55 @@ async function runCheckMaintainer({ context, core, process }) {
 /**
  * rc-notify: Sends notifications about release candidates.
  */
-async function runRcNotify({ github, context, core, process }) {
+export async function runRcNotify({ github, context, core, process = globalThis.process }) {
   let tagName =
-    process.env.TAG ||
-    process.env.TAG_NAME ||
-    context.payload.release?.tag_name;
-  let branchLabel =
-    process.env.BRANCH ||
-    process.env.BRANCH_LABEL ||
-    context.payload.release?.target_commitish;
+    process?.env?.TAG ||
+    process?.env?.TAG_NAME ||
+    context?.payload?.release?.tag_name;
+  let rawBranch =
+    process?.env?.BRANCH ||
+    process?.env?.BRANCH_LABEL ||
+    context?.payload?.release?.target_commitish ||
+    '';
+  let branchLabel = rawBranch.trim().replace(/^refs\/heads\//, '').replace(/^origin\//, '').replace(/\/+$/, '');
 
   if (!tagName || !branchLabel) {
-    core.setFailed('tagName and branchLabel must be provided via env (TAG/BRANCH) or release payload.');
+    if (core && typeof core.setFailed === 'function') {
+      core.setFailed('tagName and branchLabel must be provided via env (TAG/BRANCH) or release payload.');
+    }
     return;
   }
 
-  const owner = "rancher";
-  const repo = "terraform-provider-rancher2";
+  const owner = context?.repo?.owner || "rancher";
+  const repo = context?.repo?.repo || "terraform-provider-rancher2";
 
   if (!tagName.toLowerCase().includes('rc')) {
-    core.info(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);
+    core?.info?.(`Tag "${tagName}" does not appear to be an RC. Skipping notification.`);
     return;
   }
 
-  const isValidBranch = /^release\/v\d{1,2}$/.test(branchLabel);
+  const isValidBranch = /^release\/v\d+$/.test(branchLabel);
   if (!isValidBranch) {
-    throw new Error(`Target branch label "${branchLabel}" is invalid. It must start with "release/v" and end with exactly one or two digits.`);
+    throw new Error(`Target branch label "${branchLabel}" is invalid. It must start with "release/v" followed by the major version number.`);
   }
 
-  core.info(`RC Detected: ${tagName}`);
-  core.info(`Searching for open issues with labels: "${branchLabel}", "internal/backport", and "internal/merged"`);
+  core?.info?.(`RC Detected: ${tagName}`);
+  core?.info?.(`Searching for open issues with labels: "${branchLabel}", "internal/backport", and "internal/merged"`);
 
-  const issues = await github.paginate(github.rest.search.issuesAndPullRequests, {
-    q: `repo:${owner}/${repo} is:issue is:open label:${branchLabel} label:internal/backport label:internal/merged`
-  });
+  let issues;
+  try {
+    issues = await github.paginate(github.rest.search.issuesAndPullRequests, {
+      q: `repo:${owner}/${repo} is:issue is:open label:"${branchLabel}" label:"internal/backport" label:"internal/merged"`
+    });
+  } catch (error) {
+    if (core && typeof core.setFailed === 'function') {
+      core.setFailed(`Failed to search issues for RC notification: ${error.message}`);
+    }
+    return;
+  }
 
   if (issues.length === 0) {
-    core.info('No matching issues found. Exiting.');
+    core?.info?.('No matching issues found. Exiting.');
     return;
   }
 
@@ -90,14 +114,20 @@ async function runRcNotify({ github, context, core, process }) {
         issue_number: issue.number,
         body: commentBody
       });
-      core.info(`Commented on issue #${issue.number}`);
+      core?.info?.(`Commented on issue #${issue.number}`);
       commentedCount++;
     } catch (error) {
-      core.setFailed(`Failed to comment on issue #${issue.number}: ${error.message}`);
+      if (core && typeof core.setFailed === 'function') {
+        core.setFailed(`Failed to comment on issue #${issue.number}: ${error.message}`);
+      }
     }
   }
   
-  core.info(`Success! Notified ${commentedCount} issues.`);
+  if (commentedCount === issues.length) {
+    core?.info?.(`Success! Notified ${commentedCount} issues.`);
+  } else {
+    core?.info?.(`Notified ${commentedCount} of ${issues.length} issues.`);
+  }
 }
 
 /**
@@ -105,7 +135,7 @@ async function runRcNotify({ github, context, core, process }) {
  */
 async function runPublishRelease({ github, context, core, process }) {
   try {
-    const version = process.env.VERSION;
+    const version = process?.env?.VERSION;
     if (!version) {
       return core.setFailed('VERSION environment variable is not defined.');
     }
@@ -153,7 +183,18 @@ async function runTrackingIssue({ github, core, process }) {
   try {
     const repo = "terraform-provider-rancher2";
     const owner = "rancher";
-    const assignees = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
+    let assignees = [];
+    if (process?.env?.TERRAFORM_MAINTAINERS && process.env.TERRAFORM_MAINTAINERS !== "undefined") {
+      try {
+        const parsed = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
+        assignees = Array.isArray(parsed) ? parsed : [parsed];
+      } catch (err) {
+        if (core && typeof core.warning === 'function') {
+          core.warning(`Could not parse TERRAFORM_MAINTAINERS: ${err.message}. Defaulting to no assignees.`);
+        }
+        assignees = process.env.TERRAFORM_MAINTAINERS.split(',').map(m => m.trim()).filter(Boolean);
+      }
+    }
 
     let latestReleaseBranch = "";
     const branches = await github.paginate(github.rest.repos.listBranches,{
@@ -277,5 +318,239 @@ async function runTrackingIssue({ github, core, process }) {
     }
   } catch (error) {
     core.setFailed(`Script failed with error: ${error.message}`);
+  }
+}
+
+/**
+ * Computes the next Release Candidate tag for a given release branch.
+ */
+export async function computeNextRcTag({ github, owner, repo, branch, core }) {
+  const branchName = (branch || '').trim().replace(/^refs\/heads\//, '').replace(/^origin\//, '').replace(/\/+$/, '');
+  const match = branchName.match(/^release\/v(\d+)$/);
+  if (!match) {
+    throw new Error(`Branch '${branch}' does not match expected pattern release/v<major>`);
+  }
+  const major = parseInt(match[1], 10);
+  const prefix = `v${major}.`;
+
+  // Fetch all tags
+  const tags = await github.paginate(github.rest.repos.listTags, {
+    owner,
+    repo,
+    per_page: 100
+  });
+
+  const branchTags = tags
+    .map(t => t?.name)
+    .filter(name => typeof name === 'string' && name.startsWith(prefix));
+
+  // Try to read explicit version from release-please-config.json ('release-as') or .release-please-manifest.json
+  let configVersion = null;
+  try {
+    const response = await github.rest.repos.getContent({
+      owner,
+      repo,
+      path: 'release-please-config.json',
+      ref: branchName
+    });
+    if (response.data && response.data.content) {
+      const content = Buffer.from(response.data.content, 'base64').toString('utf8');
+      const config = JSON.parse(content);
+      const releaseAs = config['release-as'] || config.packages?.['.']?.['release-as'] || (config.packages && Object.values(config.packages)[0]?.['release-as']);
+      if (releaseAs) {
+        const releaseAsStr = String(releaseAs).trim();
+        configVersion = releaseAsStr.startsWith('v') ? releaseAsStr : `v${releaseAsStr}`;
+      }
+    }
+  } catch (err) {
+    if (core && typeof core.info === 'function') {
+      core.info(`Could not read release-please-config.json from ${branchName}: ${err.message}.`);
+    }
+  }
+
+  let manifestVersion = null;
+  try {
+    const response = await github.rest.repos.getContent({
+      owner,
+      repo,
+      path: '.release-please-manifest.json',
+      ref: branchName
+    });
+    if (response.data && response.data.content) {
+      const content = Buffer.from(response.data.content, 'base64').toString('utf8');
+      const manifest = JSON.parse(content);
+      const rawManifestVal = manifest['.'] || Object.values(manifest)[0];
+      if (rawManifestVal) {
+        const manifestStr = String(rawManifestVal).trim();
+        manifestVersion = manifestStr.startsWith('v') ? manifestStr : `v${manifestStr}`;
+      }
+    }
+  } catch (err) {
+    if (core && typeof core.info === 'function') {
+      core.info(`Could not read .release-please-manifest.json from ${branchName}: ${err.message}. Relying on tags.`);
+    }
+  }
+
+  // Parse existing tags for this major
+  const parsedTags = [];
+  const tagRegex = /^v(\d+)\.(\d+)\.(\d+)(?:-rc\.?(\d+))?$/i;
+
+  for (const tag of branchTags) {
+    const m = tag.match(tagRegex);
+    if (m) {
+      const tagMajor = parseInt(m[1], 10);
+      if (tagMajor === major) {
+        parsedTags.push({
+          raw: tag,
+          major: tagMajor,
+          minor: parseInt(m[2], 10),
+          patch: parseInt(m[3], 10),
+          rc: m[4] !== undefined ? parseInt(m[4], 10) : null,
+          isRc: m[4] !== undefined
+        });
+      }
+    }
+  }
+
+  // Find all full releases
+  const fullReleases = parsedTags.filter(t => !t.isRc);
+  fullReleases.sort((a, b) => {
+    if (a.minor !== b.minor) return b.minor - a.minor;
+    return b.patch - a.patch;
+  });
+  const latestFull = fullReleases[0] || null;
+
+  // Find all RCs and sort descending by minor, patch, then rc number
+  const rcReleases = parsedTags.filter(t => t.isRc);
+  rcReleases.sort((a, b) => {
+    if (a.minor !== b.minor) return b.minor - a.minor;
+    if (a.patch !== b.patch) return b.patch - a.patch;
+    return (b.rc ?? 0) - (a.rc ?? 0);
+  });
+
+  // Determine candidate target base version:
+  // Preference given to explicit release-as from config, then manifest version
+  let targetBase = null;
+  for (const candidate of [configVersion, manifestVersion]) {
+    if (candidate) {
+      const m = candidate.match(/^v(\d+)\.(\d+)\.(\d+)(?:-.*)?$/);
+      if (m && parseInt(m[1], 10) === major) {
+        targetBase = {
+          major,
+          minor: parseInt(m[2], 10),
+          patch: parseInt(m[3], 10)
+        };
+        break;
+      }
+    }
+  }
+
+  const highestRc = rcReleases.find(r =>
+    !latestFull || r.minor > latestFull.minor || (r.minor === latestFull.minor && r.patch > latestFull.patch)
+  ) || null;
+
+  // If no manifest version or manifest version is <= latestFull, check active RCs or bump patch
+  if (!targetBase || (latestFull && (targetBase.minor < latestFull.minor || (targetBase.minor === latestFull.minor && targetBase.patch <= latestFull.patch)))) {
+    if (highestRc) {
+      targetBase = { major, minor: highestRc.minor, patch: highestRc.patch };
+    } else if (latestFull) {
+      targetBase = { major, minor: latestFull.minor, patch: latestFull.patch + 1 };
+    } else {
+      targetBase = { major, minor: 0, patch: 0 };
+    }
+  } else if (highestRc && (highestRc.minor > targetBase.minor || (highestRc.minor === targetBase.minor && highestRc.patch > targetBase.patch))) {
+    // Prevent regressing version if an active RC cycle already exists higher than targetBase
+    targetBase = { major, minor: highestRc.minor, patch: highestRc.patch };
+  }
+
+  // Find existing RCs for targetBase
+  const matchingRcs = rcReleases.filter(r => r.minor === targetBase.minor && r.patch === targetBase.patch);
+  let nextRcNum = 1;
+  if (matchingRcs.length > 0) {
+    const validRcs = matchingRcs
+      .map(r => r.rc)
+      .filter(rc => typeof rc === 'number' && !isNaN(rc));
+    const maxRc = validRcs.length > 0 ? Math.max(...validRcs) : 0;
+    nextRcNum = maxRc + 1;
+  }
+
+  return `v${targetBase.major}.${targetBase.minor}.${targetBase.patch}-rc.${nextRcNum}`;
+}
+
+/**
+ * trigger-rc-release: Computes the next RC tag and dispatches rc-release.yml on main.
+ */
+export async function runTriggerRcRelease({ github, context, core, process = globalThis.process, getOctokit }) {
+  try {
+    const owner = context?.repo?.owner || "rancher";
+    const repo = context?.repo?.repo || "terraform-provider-rancher2";
+    const pr = context?.payload?.pull_request;
+
+    const rawBranch = (process?.env?.BRANCH || pr?.base?.ref || '').trim();
+    const branch = rawBranch.replace(/^refs\/heads\//, '').replace(/^origin\//, '').replace(/\/+$/, '');
+    const sha = (process?.env?.SHA || pr?.merge_commit_sha || '').trim();
+
+    if (!branch) {
+      if (core && typeof core.setFailed === 'function') {
+        core.setFailed('Target branch must be provided via env (BRANCH) or PR payload.');
+      }
+      return;
+    }
+
+    if (!sha && core && typeof core.info === 'function') {
+      core.info(`No commit SHA provided; rc-release.yml will default to HEAD of branch ${branch}.`);
+    }
+
+    const mergeToken = process?.env?.GITHUB_MERGE_TOKEN ? process.env.GITHUB_MERGE_TOKEN.trim() : undefined;
+    if (!mergeToken && core && typeof core.warning === 'function') {
+      core.warning('GITHUB_MERGE_TOKEN not provided. Workflow dispatch triggered by the default GITHUB_TOKEN may not trigger downstream workflow runs.');
+    }
+
+    const octokitFactory = (typeof getOctokit === 'function')
+      ? getOctokit
+      : (typeof github?.getOctokit === 'function' ? github.getOctokit.bind(github) : undefined);
+    const dispatchGithub = (mergeToken && typeof octokitFactory === 'function') ? octokitFactory(mergeToken) : github;
+
+    if (core && typeof core.info === 'function') {
+      core.info(`Computing next RC tag for branch: ${branch}...`);
+    }
+    const tag = await computeNextRcTag({ github: dispatchGithub || github, owner, repo, branch, core });
+    if (core && typeof core.info === 'function') {
+      core.info(`Computed next RC tag: ${tag}`);
+    }
+
+    if (core && typeof core.setOutput === 'function') {
+      core.setOutput('tag', tag);
+    }
+
+    if (core && typeof core.info === 'function') {
+      core.info(`Dispatching 'rc-release.yml' on 'main' with branch=${branch}, sha=${sha || '(HEAD)'}, tag=${tag}...`);
+    }
+    const inputs = {
+      branch,
+      tag
+    };
+    if (sha) {
+      inputs.sha = sha;
+    }
+
+    await dispatchGithub.rest.actions.createWorkflowDispatch({
+      owner,
+      repo,
+      workflow_id: 'rc-release.yml',
+      ref: 'main',
+      inputs
+    });
+
+    if (core && typeof core.info === 'function') {
+      core.info(`Successfully dispatched 'rc-release.yml' for ${tag}!`);
+    }
+    return tag;
+  } catch (error) {
+    if (core && typeof core.setFailed === 'function') {
+      core.setFailed(`Failed to trigger RC release workflow: ${error.message}`);
+    } else {
+      throw error;
+    }
   }
 }

@@ -1,4 +1,4 @@
-name: Manually Create RC Release
+name: Create RC Release
 on:
   workflow_dispatch:
     inputs:
@@ -60,7 +60,7 @@ jobs:
             exit 1
           fi
           # if the tag doesn't contain "rc" we should not be in this workflow
-          if grep -q "rc" <<< "$TAG"; then
+          if grep -iq "rc" <<< "$TAG"; then
             echo "Tag contains 'rc', continuing with RC release"
           else
             echo "Tag doesn't contain 'rc', please use the manual-release workflow"
@@ -79,6 +79,7 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
           TARGET_BRANCH="${BRANCH#refs/heads/}"
           TARGET_BRANCH="${TARGET_BRANCH#origin/}"
+          TARGET_BRANCH="${TARGET_BRANCH%/}"
           git fetch origin "$TARGET_BRANCH"
           TARGET_SHA="$SHA"
           if [ -z "$TARGET_SHA" ]; then
@@ -110,17 +111,10 @@ jobs:
           # check for terraform-registry-manifest.json presence and create if missing
           if [ ! -f "terraform-registry-manifest.json" ]; then
             echo "terraform-registry-manifest.json not found, creating a default one."
-            cat <<EOF > terraform-registry-manifest.json
-          {
-              "version": 1,
-              "metadata": {
-                  "protocol_versions": ["4.0", "5.0", "6.0"]
-              }
-          }
-          EOF
+            printf '{\n    "version": 1,\n    "metadata": {\n        "protocol_versions": ["4.0", "5.0", "6.0"]\n    }\n}\n' > terraform-registry-manifest.json
           fi
           cd "$DIR"
-      - name: retrieve GPG Credentials
+      - name: Retrieve GPG Credentials
         id: retrieve-gpg-credentials
         # https://github.com/rancher-eio/read-vault-secrets/commits
         uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main

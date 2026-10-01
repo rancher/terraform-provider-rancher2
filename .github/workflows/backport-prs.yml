@@ -6,7 +6,7 @@ on:
       - 'main'
 
 env:
-  TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }} # eg. '["matttrach"]'
+  TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }}
 
 permissions: {}
 
