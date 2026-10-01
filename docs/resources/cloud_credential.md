@@ -6,7 +6,7 @@ page_title: "rancher2_cloud_credential Resource"
 
 Provides a Rancher v2 Cloud Credential resource. This can be used to create Cloud Credential for Rancher v2.2.x and retrieve their information.
 
-amazonec2, azure, digitalocean, harvester, linode, nutanix, openstack and vsphere credentials config are supported for Cloud Credential.
+amazonec2, azure, digitalocean, harvester, linode, nutanix, openstack, opentelekomcloud(T-Cloud Public) and vsphere credentials config are supported for Cloud Credential.
 
 ## Example Usage
 
@@ -39,6 +39,30 @@ resource "rancher2_cloud_credential" "foo-harvester" {
 }
 ```
 
+### T-Cloud Public example
+
+```hcl
+variable "tcloud_access_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "tcloud_secret_key" {
+  type      = string
+  sensitive = true
+}
+
+resource "rancher2_cloud_credential" "tcloud_public" {
+  name = "tcloud-public"
+
+  tcloud_public_credential_config {
+    access_key = var.tcloud_access_key
+    secret_key = var.tcloud_secret_key
+    region     = "eu-de"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -54,6 +78,7 @@ The following arguments are supported:
 * `nutanix_credential_config` - (Optional) Nutanix config for the Cloud Credential (list maxitems:1)
 * `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
 * `s3_credential_config` - (Optional) S3 config for the Cloud Credential. For Rancher 2.6.0 and above (list maxitems:1)
+* `tcloud_public_credential_config` - (Optional) T-Cloud Public config for the Cloud Credential (list maxitems:1)
 * `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
 * `annotations` - (Optional) Annotations for Cloud Credential object (map)
 * `labels` - (Optional/Computed) Labels for Cloud Credential object (map)
@@ -139,6 +164,20 @@ The following attributes are exported:
 * `default_region` - (Optional) AWS default region (string)
 * `default_skip_ssl_verify` - (Optional) AWS default skip ssl verify. Default: `false` (bool)
 
+### `tcloud_public_credential_config`
+
+#### Arguments
+
+* `access_key` - (Optional/Sensitive) T-Cloud Public access key (string)
+* `secret_key` - (Optional/Sensitive) T-Cloud Public secret key (string)
+* `username` - (Optional) T-Cloud Public username (string)
+* `password` - (Optional/Sensitive) T-Cloud Public password (string)
+* `domain_name` - (Optional) Domain name for username/password authentication (string)
+* `auth_url` - (Optional) Identity service endpoint (string)
+* `project_id` - (Optional) Project ID (string)
+* `project_name` - (Optional) Project name (string)
+* `region` - (Optional) Region (string)
+
 ### `vsphere_credential_config`
 
 #### Arguments
@@ -174,5 +213,12 @@ The following drivers are supported:
 * linode
 * nutanix
 * openstack
+* opentelekomcloud (T-Cloud Public)
 * s3
 * vmwarevsphere
+
+For T-Cloud Public, use the driver identifier, not the branded Terraform block:
+
+```bash
+terraform import rancher2_cloud_credential.tcloud_public 'cattle-global-data:cc-example.opentelekomcloud'
+```

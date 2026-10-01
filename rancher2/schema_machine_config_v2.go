@@ -14,6 +14,7 @@ var allMachineDriverConfigFields = []string{
 	"vsphere_config",
 	"google_config",
 	"nutanix_config",
+	"tcloud_public_config",
 }
 
 // Schemas
@@ -124,6 +125,16 @@ func machineConfigV2Fields() map[string]*schema.Schema {
 		"resource_version": {
 			Type:     schema.TypeString,
 			Computed: true,
+		},
+		"tcloud_public_config": {
+			Type:          schema.TypeList,
+			MaxItems:      1,
+			Optional:      true,
+			Description:   "T-Cloud Public machine configuration for the opentelekomcloud driver.",
+			ConflictsWith: getConflicts(allMachineDriverConfigFields, "tcloud_public_config"),
+			Elem: &schema.Resource{
+				Schema: machineConfigV2OpentelekomcloudFields(),
+			},
 		},
 	}
 

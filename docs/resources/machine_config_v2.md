@@ -10,7 +10,6 @@ The supported cloud providers includes `amazonec2`, `azure`, `digitalocean`, `ha
 
 
 Starting with Rancher v2.12.0 and above, `google` is also offered as a supported cloud provider.
-
 ## Example Usage
 
 ```hcl
@@ -84,6 +83,33 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
 }
 ```
 
+### Using the T-Cloud Public Node Driver
+
+T-Cloud Public is available through `tcloud_public_config` when the external
+`opentelekomcloud` node driver is installed and active.
+The Terraform block is branded `tcloud_public_config`, while the Rancher kind remains
+`OpentelekomcloudConfig`.
+
+```hcl
+# Use a prepared, cluster-owned network.
+resource "rancher2_machine_config_v2" "tcloud_public" {
+  generate_name   = "tcloud-pool"
+  fleet_namespace = "fleet-default"
+
+  tcloud_public_config {
+    region           = "eu-de"
+    image_id         = "<IMAGE_ID>"
+    flavor_id        = "<FLAVOR_ID>"
+    network_scope    = "shared"
+    vpc_id           = "<VPC_ID>"
+    subnet_id        = "<SUBNET_ID>"
+    sec_groups       = "<SECURITY_GROUP_NAME>"
+    skip_default_sg  = true
+    root_volume_size = "40"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -99,11 +125,11 @@ The following arguments are supported:
 * `openstack_config` - (Optional) Openstack config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `vsphere_config` (list maxitems:1)
 * `vsphere_config` - (Optional) vSphere config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `google_config` and `openstack_config` (list maxitems:1)
 * `google_config` - (Optional) Google config for the Machine Config V2. Conflicts with `amazonec2_config`, `azure_config`, `digitalocean_config`, `harvester_config`, `linode_config`, `nutanix_config`, `openstack_config` and `vsphere_config` (list maxitems:1)
+* `tcloud_public_config` - (Optional) T-Cloud Public configuration for the `opentelekomcloud` driver. Conflicts with every other driver configuration block (list maxitems:1)
 * `annotations` - (Optional) Annotations for Machine Config V2 object (map)
 * `labels` - (Optional/Computed) Labels for Machine Config V2 object (map)
 
 **Note:** `labels` and `node_taints` will be applied to nodes deployed using the Machine Config V2
-
 ## Attributes Reference
 
 The following attributes are exported:
@@ -393,6 +419,55 @@ The following attributes are exported:
 * `boot_type` - (Optional) Boot type of the VM. Supported values are `legacy` and `uefi`. Default `legacy` (string)
 * `timeout` - (Optional) Timeout for Nutanix operations in seconds. Default `300` (string)
 * `vm_gpu` - (Optional) GPU devices to attach to the VM (list)
+
+### `tcloud_public_config`
+
+#### Arguments
+
+* `availability_zone` - (Optional) Instance availability zone (string)
+* `bandwidth_size` - (Optional) Elastic IP bandwidth size. Must be greater than zero when creating an EIP. Default `100` (string)
+* `bandwidth_type` - (Optional) Elastic IP bandwidth share type. Default `PER` (string)
+* `eip` - (Optional) Existing elastic IP address (string)
+* `eip_type` - (Optional) Elastic IP type. Default `5_bgp` (string)
+* `endpoint_type` - (Optional) Cloud endpoint interface. Default `public` (string)
+* `flavor_id` - (Optional) Instance flavor ID (string)
+* `flavor_name` - (Optional) Instance flavor name. Default `s3.xlarge.2` (string)
+* `image_id` - (Optional) Machine image ID (string)
+* `image_name` - (Optional) Machine image name. Default `Standard_Ubuntu_24.04_amd64_uefi_latest` (string)
+* `ip_version` - (Optional) IP address version. Supported values are `4` and `6`. Default `4` (string)
+* `keypair_name` - (Optional) Existing SSH key pair. Must be supplied together with `private_key_file` (string)
+* `network_scope` - (Optional) Network ownership scope. Supported values are `machine` and `shared`. Default `machine` (string)
+* `private_key_file` - (Optional/Sensitive) SSH private key path on the provisioner, or PEM content accepted by the driver (string)
+* `region` - (Optional) T-Cloud Public region. May also be supplied through the cloud credential (string)
+* `root_volume_size` - (Optional) Root volume size in GiB. Default `40` (string)
+* `root_volume_type` - (Optional) Root volume type. Default `SSD` (string)
+* `sec_groups` - (Optional) Comma-separated existing security group names (string)
+* `server_group` - (Optional) Server group name (string)
+* `server_group_id` - (Optional) Server group ID (string)
+* `skip_default_sg` - (Optional) Do not create the driver's default security group. Default `false` (bool)
+* `skip_eip` - (Optional) Do not create an EIP; use the private IP. Default `false` (bool)
+* `ssh_allow_cidr` - (Optional) SSH source CIDR for the driver's default security group. An empty value leaves the driver's default (`0.0.0.0/0`); set a restricted CIDR when using that group (string)
+* `ssh_port` - (Optional) SSH port. Default `22` (string)
+* `ssh_user` - (Optional) SSH username. Default `ubuntu` (string)
+* `subnet_id` - (Optional) Existing subnet ID (string)
+* `subnet_name` - (Optional) Subnet name. Default `subnet-docker-machine` (string)
+* `tags` - (Optional) Comma-separated instance tags, for example `environment.test,team.platform` (string)
+* `user_data_file` - (Optional) User-data file path on the provisioner. Prefer `user_data_raw` for Terraform-managed content (string)
+* `user_data_raw` - (Optional/Sensitive) Inline user-data content, for example `file("cloud-init.yaml")` (string)
+* `vpc_id` - (Optional) Existing VPC ID (string)
+* `vpc_name` - (Optional) VPC name. Default `vpc-docker-machine` (string)
+* `access_key` - (Optional/Sensitive) Authentication access key; prefer a cloud credential (string)
+* `auth_url` - (Optional) Identity service endpoint; prefer a cloud credential (string)
+* `cacert` - (Optional) Driver CA bundle option. TLS behavior depends on the installed driver (string)
+* `cloud` - (Optional) Named cloud in a `clouds.yaml` accessible to the provisioner (string)
+* `domain_id` - (Optional) Authentication domain ID (string)
+* `domain_name` - (Optional) Authentication domain name; prefer a cloud credential (string)
+* `password` - (Optional/Sensitive) Authentication password; prefer a cloud credential (string)
+* `project_id` - (Optional) Authentication project ID; prefer a cloud credential (string)
+* `project_name` - (Optional) Authentication project name; prefer a cloud credential (string)
+* `secret_key` - (Optional/Sensitive) Authentication secret key; prefer a cloud credential (string)
+* `token` - (Optional/Sensitive) Authentication token (string)
+* `username` - (Optional) Authentication username; prefer a cloud credential (string)
 
 ## Timeouts
 

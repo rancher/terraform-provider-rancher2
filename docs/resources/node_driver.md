@@ -22,7 +22,6 @@ resource "rancher2_node_driver" "foo" {
     whitelist_domains = ["*.foo.com"]
 }
 ```
-
 ## Argument Reference
 
 The following arguments are supported:

@@ -135,7 +135,6 @@ resource "rancher2_cluster_v2" "foo-k3s" {
   }
 }
 ```
-
 ### Create a node-driver cluster with Nutanix as the infrastructure provider
 
 ```hcl
@@ -273,6 +272,58 @@ EOF
     etcd {
       snapshot_schedule_cron = "0 */5 * * *"
       snapshot_retention = 5
+    }
+  }
+}
+```
+
+### Create a T-Cloud Public RKE2 cluster on an existing network
+
+```hcl
+resource "rancher2_machine_config_v2" "tcloud_public" {
+  generate_name   = "tcloud-public-pool"
+  fleet_namespace = "fleet-default"
+
+  tcloud_public_config {
+    region           = "<REGION>"
+    flavor_name      = "<FLAVOR_NAME>"
+    image_name       = "<IMAGE_NAME>"
+    keypair_name     = "<EXISTING_KEYPAIR_NAME>"
+    private_key_file = file("<LOCAL_PRIVATE_KEY_PATH>")
+    network_scope   = "shared"
+    skip_default_sg  = true
+    vpc_id          = "<EXISTING_VPC_ID>"
+    subnet_id       = "<EXISTING_SUBNET_ID>"
+    sec_groups      = "<EXISTING_SECURITY_GROUP_NAME>"
+  }
+}
+
+resource "rancher2_cluster_v2" "tcloud_public" {
+  name               = "tcloud-public"
+  fleet_namespace    = "fleet-default"
+  kubernetes_version = "<SUPPORTED_RKE2_VERSION>"
+
+  annotations = {
+    "ui.rancher/provider"                             = "opentelekomcloud"
+    "infrastructure.otc.t-systems.com/cluster-network" = "tcloud-public-network"
+    "infrastructure.otc.t-systems.com/network-policy"  = "Observe"
+  }
+
+  rke_config {
+    machine_global_config = yamlencode({ cni = "calico" })
+
+    machine_pools {
+      name                         = "server"
+      cloud_credential_secret_name = "<CREDENTIAL_NAMESPACE>:<CREDENTIAL_NAME>"
+      control_plane_role           = true
+      etcd_role                    = true
+      worker_role                  = true
+      quantity                     = 1
+
+      machine_config {
+        kind = rancher2_machine_config_v2.tcloud_public.kind
+        name = rancher2_machine_config_v2.tcloud_public.name
+      }
     }
   }
 }
