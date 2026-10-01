@@ -50,6 +50,20 @@ run_node_check() {
   done <<< "${files}"
 }
 
+run_node_test() {
+  echo "==> Running Node Unit Tests..."
+  local files=()
+  while IFS= read -r -d '' file; do
+    files+=("${file}")
+  done < <(find . -type f \( -name "*.test.js" -o -name "*.test.mjs" \) -not -path "*/node_modules/*" -print0)
+
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "No test files found to run."
+    return 0
+  fi
+  node --test "${files[@]}"
+}
+
 run_eslint() {
   echo "==> Running ESLint..."
   npm ci
@@ -75,6 +89,9 @@ case "${MODE}" in
   node-check)
     run_node_check
     ;;
+  node-test)
+    run_node_test
+    ;;
   eslint)
     run_eslint
     ;;
@@ -86,12 +103,13 @@ case "${MODE}" in
     run_actionlint
     run_shellcheck
     run_node_check
+    run_node_test
     run_eslint
     run_gitleaks
     ;;
   *)
     echo "Error: Unknown lint mode: ${MODE}" >&2
-    echo "Usage: $0 [terraform|actionlint|shellcheck|node-check|eslint|gitleaks|all]" >&2
+    echo "Usage: $0 [terraform|actionlint|shellcheck|node-check|node-test|eslint|gitleaks|all]" >&2
     exit 1
     ;;
 esac

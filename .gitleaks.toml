@@ -1,0 +1,9 @@
+[allowlist]
+description = "Ignore test files, test directories, and markdown documentation"
+paths = [
+  '''_test\.go$''',
+  '''\.test\.js$''',
+  '''(^|/)test/''',
+  '''(^|/)tests/''',
+  '''\.md$'''
+]

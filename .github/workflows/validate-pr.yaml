@@ -1,0 +1,39 @@
+name: Validate PR Description
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, edited, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-pr-description:
+    name: 'Validate PR Description'
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.type != 'Bot' && !startsWith(github.head_ref, 'release-please') && !github.event.pull_request.draft
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    steps:
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Check PR Description
+        id: check-pr-description
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/validate-pr-description.js`;
+            const { default: validate } = await import(scriptPath);
+            await validate({ github, context, core });
+
