@@ -6,7 +6,7 @@ This topic overview details the standard repository release process, tracing how
 
 ## Abstract
 
-The release process establishes a highly automated, trunk-based deployment pipeline that translates Conventional Commits into formal, GPG-signed product releases. By eliminating manual tagging and utilizing strict manifest-driven versioning, we ensure that every release is secure, auditable, and deterministic.
+The release process establishes a highly automated, branch-based deployment pipeline that translates Conventional Commits into formal, GPG-signed product releases. By utilizing strict manifest-driven versioning on release branches, we ensure that every release is secure, auditable, and deterministic.
 
 ---
 
@@ -14,15 +14,15 @@ The release process establishes a highly automated, trunk-based deployment pipel
 
 Our release process is designed around two core architectural components that work in tandem to orchestrate the software delivery lifecycle:
 
-### 1. Trunk-Based Release Strategy
+### 1. Branch-Based Release Strategy
 
-We release all product versions directly from our single source of truth—the `main` branch. This eliminates the complexity and drift of maintaining parallel release branches.
+We utilize a branch-based development release strategy. Code is primarily developed and merged into the `main` branch, but all releases (both RCs and stable versions) are generated directly from their respective `release/v<major>` branches.
 
-- More details on this strategy, GPG-signing configuration, and release candidate lifecycle can be found in **[Release From Main](./ReleaseProcess/MainBranchReleases.md)**.
+- More details on this strategy, GPG-signing configuration, and release candidate lifecycle can be found in **[Branch-Based Releases](./ReleaseProcess/BranchReleases.md)**.
 
 ### 2. Manifest-Driven Automation
 
-To automate versioning and changelog generation, we leverage `release-please` in manifest mode. This tool scans Conventional Commit squash-merge titles on the `main` branch, computes the correct SemVer increment, and maintains a running "Release PR." Once this PR is merged, the system automatically tags the release and initiates the compilation pipeline.
+To automate versioning and changelog generation, we leverage `release-please` in manifest mode. This tool scans Conventional Commits on the `release/v<major>` branches, computes the correct SemVer increment, and maintains a running "Release PR." Once this PR is merged, the system automatically tags the release and initiates the compilation pipeline.
 
 - More details on the action parameters, CLI usage, and manifest configurations can be found in **[Release Please](./ReleaseProcess/ReleasePlease.md)**.
 
@@ -30,9 +30,9 @@ To automate versioning and changelog generation, we leverage `release-please` in
 
 When a developer's contribution lands on the `main` branch:
 
-1. **Trigger & Version Calculation**: The `release-please` action is invoked. It scans the squash-merge commit title and updates the running Release PR (or opens a new one if none exists), generating an automated changelog.
-2. **Integration & Acceptance Testing**: To guarantee stability, any push to a Release Please branch triggers our comprehensive OpenID Connect (OIDC) acceptance tests inside a Nix shell, deploying real AWS infrastructure to verify binary correctness.
-3. **Verification & Signing**: Upon maintainer merge of the Release PR, the pipeline securely extracts our GPG signing credentials, compiles the binaries via GoReleaser inside a hardened container, cryptographically signs the assets, and publishes them natively to the GitHub Release Registry.
+1. **Development & Backporting**: Code is merged to `main`. An automated workflow triggers to cherry-pick those changes into the targeted release branch (e.g., `release/v15.2.0`), creating a "backport PR".
+2. **Release Candidate (RC) Generation**: When the backport PR is approved and merged into the release branch (`release/v*`), it triggers the unified RC release workflow. This computes the next RC tag, compiles binaries via GoReleaser, cryptographically signs them, and pushes the Release Candidate. Concurrently, `release-please` updates a pending "Release PR" on the release branch.
+3. **Verification & Stable Release**: Once the Release PR is approved and merged by a maintainer on the release branch, the pipeline executes the full acceptance test suite. Upon success, it automatically tags the release, extracts GPG credentials, compiles stable binaries, and publishes them to the GitHub Release Registry.
 
 ---
 
@@ -86,30 +86,27 @@ This swimlane diagram traces the detailed event triggers and data flow between d
 |                                             |           - Action: Executes NATIVE AUTO-MERGE into 'main'     |
 |                                             |           - Action: Automatically deletes status comments      |
 |                                             |                                                                |
-| === PART 2: SQUASH-MERGE TO PRODUCTION RELEASE =================─────────────────────────────────────────────┤
+| === PART 2: AUTOMATED BACKPORT TO RELEASE ==|                                                                |
 |                                             |                                                                |
 |  5. Squash Merge Lands on main ───────────> | ──► Trigger: push to main                                      |
-|                                             |       ──► Release Please Action runs:                          |
-|                                             |           - Scans Conventional Commit squash titles            |
-|                                             |           - Calculates next version increment                  |
-|                                             |           - Action: Updates/creates draft "Release PR"         |
-|                                             |             (e.g., "chore: release v1.2.3")                    |
+|                                             |       ──► Automated Backport Action runs:                      |
+|                                             |           - Cherry-picks commits to target release/v* branch   |
+|                                             |           - Action: Creates a "backport PR" against release/v* |
 |                                             |                                                                |
-|                                             | ──► Trigger: pull_request (targeting Release Please branch)    |
-|                                             |       ──► Release PR CI runs:                                  |
-|                                             |           - Nix: Runs Unit Tests                               |
-|                                             |           - AWS: Assumes OIDC IAM Role                         |
-|                                             |           - Nix: Executes FULL ACCEPTANCE TEST SUITE           |
-|                                             |                  (acc-relay: Real AWS resource deployment)      |
-|                                             |         │                                                      |
-|                                             |         ▼ (Heavy Integration Tests Pass)                       |
-|                                             |       ──► Release Candidate (RC) Step:                         |
-|                                             |           - Calculates next RC tag (e.g., v1.2.3-rc.0) via API |
+|  6. Backport PR Merged to Release Branch ─> | ──► Trigger: push to release/v*                                |
+|     (Maintainer approves/merges Backport)   |       ──► Release Candidate (RC) Step:                         |
+|                                             |           - Calculates next RC tag (e.g., v1.2.3-rc.0)         |
 |                                             |           - Vault: Securely extracts GPG keys                  |
 |                                             |           - Nix: GoReleaser compiles & signs RC binaries       |
 |                                             |           - Action: Publishes GPG-Signed RC Release            |
 |                                             |                                                                |
-|  6. Maintainer Merges Release PR ─────────> | ──► Trigger: push to main (Release PR merged)                  |
+|                                             |       ──► Release Please Action runs:                          |
+|                                             |           - Scans Conventional Commits on release branch       |
+|                                             |           - Action: Updates/creates draft "Release PR"         |
+|                                             |                                                                |
+| === PART 3: STABLE RELEASE GENERATION ======|                                                                |
+|                                             |                                                                |
+|  7. Maintainer Merges Release PR ─────────> | ──► Trigger: push to release/v* (Release PR merged)            |
 |     (Maintainer approves/merges Release PR) |       ──► Release Please Action runs:                          |
 |                                             |           - Detects Release PR merge                           |
 |                                             |           - Action: Outputs: release_created = true            |
@@ -117,10 +114,11 @@ This swimlane diagram traces the detailed event triggers and data flow between d
 |                                             |         ▼                                                      |
 |                                             |       ──► Full Release Step:                                   |
 |                                             |           - Action: Automatically tags version (v1.2.3)        |
+|                                             |           - AWS: Assumes OIDC IAM Role                         |
+|                                             |           - Nix: Executes FULL ACCEPTANCE TEST SUITE           |
 |                                             |           - Vault: Securely extracts GPG credentials           |
 |                                             |           - Keyring Workaround: Dynamically parses primary ID  |
 |                                             |           - Nix: GoReleaser cross-compiles stable binaries     |
 |                                             |           - Action: Publishes Final GPG-Signed Release         |
-|                                             |           - Action: Reconciles Release PR labels in GitHub     |
 |                                             |                                                                |
 ```

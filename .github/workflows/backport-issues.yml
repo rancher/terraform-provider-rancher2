@@ -5,7 +5,7 @@ on:
     types: [labeled] # triggered when any label is added to an issue
 
 env:
-  TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }} # eg. ["matttrach"]
+  TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }}
 
 permissions: {}
 
