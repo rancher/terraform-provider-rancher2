@@ -41,8 +41,8 @@ export async function runCheckMaintainer({ context, core, process = globalThis.p
   const normalizedMaintainers = maintainers
     .map(m => String(m).trim().toLowerCase())
     .filter(Boolean);
-  const isMaintainer = Boolean(normalizedMaintainers.includes(actor) || actor.endsWith('[bot]'));
-  core?.info?.(`Checking if '${rawActor}' is an authorized maintainer or bot: ${isMaintainer}`);
+  const isMaintainer = Boolean(normalizedMaintainers.includes(actor));
+  core?.info?.(`Checking if '${rawActor}' is an authorized maintainer: ${isMaintainer}`);
   
   return isMaintainer;
 }

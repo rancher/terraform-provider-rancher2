@@ -24,7 +24,7 @@ test('runCheckMaintainer - authorizes maintainer from MAINTAINERS env', async ()
   assert.match(loggedInfo, /alice.*authorized.*true/);
 });
 
-test('runCheckMaintainer - authorizes bot accounts ending in [bot]', async () => {
+test('runCheckMaintainer - does not authorize bot accounts unless explicitly allowed', async () => {
   const mockCore = { info: () => {} };
   const mockContext = { actor: 'rancher-eio[bot]' };
   const mockProcess = {
@@ -33,7 +33,16 @@ test('runCheckMaintainer - authorizes bot accounts ending in [bot]', async () =>
     }
   };
 
-  const isAuth = await runCheckMaintainer({
+  let isAuth = await runCheckMaintainer({
+    context: mockContext,
+    core: mockCore,
+    process: mockProcess
+  });
+
+  assert.strictEqual(isAuth, false);
+
+  mockProcess.env.MAINTAINERS = JSON.stringify(['matt', 'rancher-eio[bot]']);
+  isAuth = await runCheckMaintainer({
     context: mockContext,
     core: mockCore,
     process: mockProcess
