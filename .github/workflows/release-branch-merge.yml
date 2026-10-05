@@ -1,0 +1,89 @@
+name: Release Branch Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: 
+      - 'release/v*'
+
+permissions: {}
+
+jobs:
+  label:
+    name: 'Label Related Issue'
+    if: github.event.pull_request.merged == true
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 'Checkout Repository'
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          ref: 'main'
+          persist-credentials: false
+
+      - name: 'Find and Label Related Issue'
+        id: find-label-issue
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SCRIPT_MODE: merge-label
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+
+  trigger-rc-release:
+    name: 'Trigger RC Release'
+    needs:
+      - label
+    if: |
+      always() &&
+      needs.label.result != 'cancelled' &&
+      github.event.pull_request.merged == true &&
+      !startsWith(github.event.pull_request.head.ref, 'release-please')
+    permissions:
+      contents: read
+      id-token: write
+      actions: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 'Checkout Repository'
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          ref: 'main'
+          persist-credentials: false
+
+      - name: 'Get Merge Token'
+        id: get-merge-token
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          # Token permissions: contents: write, metadata: read, pull_requests: write, workflows: write
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
+
+      - name: 'Trigger RC Release Workflow'
+        id: trigger-rc-release-workflow
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
+          SCRIPT_MODE: trigger-rc-release
+          BRANCH: ${{ github.event.pull_request.base.ref }}
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process, getOctokit });

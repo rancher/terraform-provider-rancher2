@@ -55,8 +55,8 @@ jobs:
             exit 1
           fi
           # if the tag contains "rc" we should not be in this workflow
-          if grep -q "rc" <<< "$TAG"; then
-            echo "Tag contains 'rc', please use the manual-rc-release workflow"
+          if grep -iq "rc" <<< "$TAG"; then
+            echo "Tag contains 'rc', please use the rc-release workflow"
             exit 1
           fi
       - name: Create and Push Tag with Git
@@ -97,17 +97,10 @@ jobs:
           # check for terraform-registry-manifest.json presence and create if missing
           if [ ! -f "terraform-registry-manifest.json" ]; then
             echo "terraform-registry-manifest.json not found, creating a default one."
-            cat <<EOF > terraform-registry-manifest.json
-          {
-              "version": 1,
-              "metadata": {
-                  "protocol_versions": ["4.0", "5.0", "6.0"]
-              }
-          }
-          EOF
+            printf '{\n    "version": 1,\n    "metadata": {\n        "protocol_versions": ["4.0", "5.0", "6.0"]\n    }\n}\n' > terraform-registry-manifest.json
           fi
           cd "$DIR"
-      - name: retrieve GPG Credentials
+      - name: Retrieve GPG Credentials
         id: retrieve-gpg-credentials
         # https://github.com/rancher-eio/read-vault-secrets/commits
         uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
