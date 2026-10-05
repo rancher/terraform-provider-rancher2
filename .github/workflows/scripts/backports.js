@@ -191,7 +191,7 @@ export async function runBackportPr({ github, context, core, process = globalThi
           repo,
           issue_number: item.number,
         });
-        if (comments.some(c => c.body && trackingRegex.test(c.body))) {
+if (comments.some(c => c.user?.login === 'github-actions[bot]' && c.body && trackingRegex.test(c.body))) {
           trackingIssue = item;
           break;
         }
