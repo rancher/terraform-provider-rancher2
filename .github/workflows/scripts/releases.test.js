@@ -1389,10 +1389,11 @@ test('runTrackingIssue - successfully converts referenced issue into tracking is
   assert.strictEqual(mockCore.failedMessage, null);
   // First step: internal/tracking and internal/user
   assert.deepStrictEqual(labelsAdded[0], ['internal/tracking', 'internal/user']);
-  // Second step: tracking comment
-  assert.strictEqual(commentsCreated.length, 1);
-  assert.match(commentsCreated[0], /This is the tracking issue for PR #42,/);
-  assert.match(commentsCreated[0], /release\/v15/);
+  // Second step: tracking comments (PR linking + release instructions)
+  assert.strictEqual(commentsCreated.length, 2);
+  assert.match(commentsCreated[0], /<!-- tracking-pr: #42 -->/);
+  assert.match(commentsCreated[0], /This is the tracking issue for PR #42/);
+  assert.match(commentsCreated[1], /A label has been added for the latest release branch/);
   // Third step: latest release branch label added last
   assert.deepStrictEqual(labelsAdded[1], ['release/v15']);
 });
@@ -1447,7 +1448,9 @@ test('runTrackingIssue - respects existing internal/user label', async () => {
   assert.strictEqual(mockCore.failedMessage, null);
   // internal/user was already present, so only internal/tracking should be added
   assert.deepStrictEqual(labelsAdded[0], ['internal/tracking']);
-  assert.strictEqual(commentsCreated.length, 1);
+  assert.strictEqual(commentsCreated.length, 2);
+  assert.match(commentsCreated[0], /<!-- tracking-pr: #43 -->/);
+  assert.match(commentsCreated[1], /A label has been added for the latest release branch/);
   assert.deepStrictEqual(labelsAdded[1], ['release/v15']);
 });
 
@@ -1602,7 +1605,9 @@ test('runTrackingIssue - respects target release branch from PR labels over late
 
   assert.strictEqual(mockCore.failedMessage, null);
   assert.deepStrictEqual(labelsAdded[0], ['internal/tracking', 'internal/user']);
-  assert.strictEqual(commentsCreated.length, 1);
+  assert.strictEqual(commentsCreated.length, 2);
+  assert.match(commentsCreated[0], /<!-- tracking-pr: #50 -->/);
+  assert.match(commentsCreated[1], /A label has been added for the latest release branch/);
   assert.deepStrictEqual(labelsAdded[1], ['release/v14']);
 });
 
@@ -1770,8 +1775,11 @@ test('runTrackingIssue - handles multiple referenced issues where one already ha
   assert.strictEqual(labelsAdded.length, 2);
   assert.deepStrictEqual(labelsAdded[0], { issue_number: 101, labels: ['internal/tracking', 'internal/user'] });
   assert.deepStrictEqual(labelsAdded[1], { issue_number: 101, labels: ['release/v15'] });
-  assert.strictEqual(commentsCreated.length, 1);
+  assert.strictEqual(commentsCreated.length, 2);
   assert.strictEqual(commentsCreated[0].issue_number, 101);
+  assert.strictEqual(commentsCreated[1].issue_number, 101);
+  assert.match(commentsCreated[0].body, /<!-- tracking-pr: #53 -->/);
+  assert.match(commentsCreated[1].body, /A label has been added for the latest release branch/);
 });
 
 test('run via default export with SCRIPT_MODE=tracking-issue', async () => {
@@ -1946,8 +1954,10 @@ test('runTrackingIssue - handles PR description with inline code backticks', asy
 
   assert.strictEqual(mockCore.failedMessage, null);
   assert.deepStrictEqual(labelsAdded[0], ['internal/tracking', 'internal/user']);
-  assert.strictEqual(commentsCreated.length, 1);
-  assert.match(commentsCreated[0], /This is the tracking issue for PR #62,/);
+  assert.strictEqual(commentsCreated.length, 2);
+  assert.match(commentsCreated[0], /<!-- tracking-pr: #62 -->/);
+  assert.match(commentsCreated[0], /This is the tracking issue for PR #62/);
+  assert.match(commentsCreated[1], /A label has been added for the latest release branch/);
   assert.deepStrictEqual(labelsAdded[1], ['release/v15']);
 });
 
@@ -2043,7 +2053,9 @@ test('runTrackingIssue - does not add release branch label if already present on
   assert.strictEqual(mockCore.failedMessage, null);
   assert.strictEqual(labelsAdded.length, 1);
   assert.deepStrictEqual(labelsAdded[0], ['internal/tracking', 'internal/user']);
-  assert.strictEqual(commentsCreated.length, 1);
+  assert.strictEqual(commentsCreated.length, 2);
+  assert.match(commentsCreated[0], /<!-- tracking-pr: #64 -->/);
+  assert.match(commentsCreated[1], /A label has been added for the latest release branch/);
   assert.ok(mockCore.infoMessages.some(m => m.includes("Release branch label 'release/v15' already present on issue #304")));
 });
 

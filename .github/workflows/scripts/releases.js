@@ -293,15 +293,23 @@ export async function runTrackingIssue({ github, context, core }) {
           });
           core.info(`Added labels [${initialLabelsToAdd.join(', ')}] to issue #${issueNumber}`);
 
-          const commentBody = `This is the tracking issue for PR #${pr.number}, a label has been added for the latest release branch, if you need this change to go to any other release branches, please add labels for the branches you need this to go to. Please don't skip branches, eg. if you need something added to release/v13 and the latest is release/v15, you must also add release/v14. Once a label is added a sub-issue will be generated to facilitate the backport, these sub-issues must be in place before the PR is merged or automatic backports won't happen.`;
-
+          const linkCommentBody = `<!-- tracking-pr: #${pr.number} -->\nThis is the tracking issue for PR #${pr.number}`;
           await github.rest.issues.createComment({
             owner,
             repo,
             issue_number: issueNumber,
-            body: commentBody,
+            body: linkCommentBody,
           });
-          core.info(`Added tracking comment for PR #${pr.number} to issue #${issueNumber}`);
+          core.info(`Added PR linking comment for PR #${pr.number} to issue #${issueNumber}`);
+
+          const instructionCommentBody = `A label has been added for the latest release branch, if you need this change to go to any other release branches, please add labels for the branches you need this to go to. Please don't skip branches, eg. if you need something added to release/v13 and the latest is release/v15, you must also add release/v14. Once a label is added a sub-issue will be generated to facilitate the backport, these sub-issues must be in place before the PR is merged or automatic backports won't happen.`;
+          await github.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body: instructionCommentBody,
+          });
+          core.info(`Added release branch instructions comment to issue #${issueNumber}`);
 
           if (!currentLabels.includes(targetReleaseBranch)) {
             await github.rest.issues.addLabels({

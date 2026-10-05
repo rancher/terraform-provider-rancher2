@@ -25,72 +25,27 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const texts = [];
-            if (context.payload.issue.body) {
-              texts.push(context.payload.issue.body);
-            }
+            let comments = [];
             try {
-              const comments = await github.paginate(github.rest.issues.listComments, {
+              comments = await github.paginate(github.rest.issues.listComments, {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.issue.number,
               });
-              for (const comment of comments) {
-                if (comment.body) {
-                  texts.push(comment.body);
-                }
-              }
             } catch (error) {
-              core.info(`Could not retrieve comments for issue #${context.payload.issue.number}: ${error.message}`);
-            }
-
-            if (texts.length === 0) {
-              core.setFailed('Issue body and comments are empty.');
+              core.setFailed(`Could not retrieve comments for issue #${context.payload.issue.number}: ${error.message}`);
               return;
             }
 
-            // First, look specifically for the tracking issue message pattern (newest comments first)
-            const trackingRegex = /This is the tracking issue for (?:PR )?#(\d+)/i;
-            for (const text of [...texts].reverse()) {
-              const match = text.match(trackingRegex);
+            const trackingRegex = /<!--\s*tracking-pr:\s*#?(\d+)\s*-->/i;
+            for (let i = comments.length - 1; i >= 0; i--) {
+              const match = comments[i]?.body?.match(trackingRegex);
               if (match) {
-                const number = match[1];
-                try {
-                  const { data: issue } = await github.rest.issues.get({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: Number(number),
-                  });
-                  if (issue.pull_request) {
-                    return Number(number);
-                  }
-                } catch (error) {
-                  core.info(`Could not retrieve issue #${number}: ${error.message}`);
-                }
+                return Number(match[1]);
               }
             }
 
-            // Fallback: search for any referenced pull request numbers
-            for (const text of texts) {
-              const matches = text.matchAll(/#(\d+)/g);
-              const potentialNumbers = Array.from(matches, m => m[1]);
-              for (const number of potentialNumbers) {
-                try {
-                  const { data: issue } = await github.rest.issues.get({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: Number(number),
-                  });
-                  if (issue.pull_request) {
-                    return Number(number);
-                  }
-                } catch (error) {
-                  // Ignore errors, likely due to some other tag in the issue body.
-                  core.info(`Could not retrieve issue #${number}: ${error.message}`);
-                }
-              }
-            }
-            core.setFailed('No valid PR found.');
+            core.setFailed('No tracking PR comment found on issue.');
       - name: Create GitHub Issue
         id: create-github-issue
         # https://github.com/actions/github-script/releases

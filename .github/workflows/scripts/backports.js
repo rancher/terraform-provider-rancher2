@@ -157,7 +157,7 @@ export async function runBackportPr({ github, context, core, process = globalThi
   core.info(`Searching for 'internal/tracking' issue linked to PR #${pr.number}`);
   try {
     response = await github.request('GET /search/issues', {
-      q: `repo:${owner}/${repo} is:issue state:open label:"internal/tracking" #${pr.number}`,
+      q: `repo:${owner}/${repo} is:issue state:open label:"internal/tracking" ${pr.number}`,
       advanced_search: true,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
@@ -171,9 +171,19 @@ export async function runBackportPr({ github, context, core, process = globalThi
     core.info(`No 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
     return;
   }
-  const trackingRegex = new RegExp(`This is the tracking issue for (?:PR )?#${pr.number}\\b`, 'i');
-  let trackingIssue = searchResults.items.find(item => item.body && trackingRegex.test(item.body));
+
+  let trackingIssue = null;
+  const cleanBody = pr.body
+    ? pr.body.replace(/<!--[\s\S]*?-->/g, '').replace(/(~{3,}|`{3,})[\s\S]*?\1/g, '')
+    : '';
+  const addressedMatches = [...cleanBody.matchAll(/[-*]\s+Addresses:\s+(`?)#([0-9]+)\1/gi)];
+  const addressedNumbers = addressedMatches.map(m => parseInt(m[2], 10));
+  if (addressedNumbers.length > 0) {
+    trackingIssue = searchResults.items.find(item => addressedNumbers.includes(item.number));
+  }
+
   if (!trackingIssue) {
+    const trackingRegex = new RegExp(`<!--\\s*tracking-pr:\\s*#?${pr.number}\\s*-->`, 'i');
     for (const item of searchResults.items) {
       try {
         const comments = await github.paginate(github.rest.issues.listComments, {
@@ -186,10 +196,11 @@ export async function runBackportPr({ github, context, core, process = globalThi
           break;
         }
       } catch (error) {
-        core.info(`Could not retrieve comments for issue #${item.number} during disambiguation: ${error.message}`);
+        core.info(`Could not retrieve comments for issue #${item.number}: ${error.message}`);
       }
     }
   }
+
   if (!trackingIssue) {
     core.info(`No verified 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
     return;

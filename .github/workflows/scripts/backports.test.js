@@ -23,13 +23,16 @@ function createMockCore() {
   };
 }
 
-test('runBackportPr - finds tracking issue when tracking text is in comments', async () => {
+test('runBackportPr - finds tracking issue and resolves via PR body addressed issue in O(1)', async () => {
   const mockCore = createMockCore();
   const mockProcess = {
     env: {
       MERGE_COMMIT_SHA: 'abc1234',
     },
   };
+
+  let searchEndpointCalled = false;
+  let subIssuesEndpointCalled = false;
 
   const mockGithub = {
     rest: {
@@ -46,23 +49,14 @@ test('runBackportPr - finds tracking issue when tracking text is in comments', a
           ],
         }),
       },
-      issues: {
-        listComments: async () => {},
-      },
-    },
-    paginate: async (method, params) => {
-      if (method === mockGithub.rest.issues.listComments && params.issue_number === 100) {
-        return [
-          {
-            body: 'This is the tracking issue for PR #42, a label has been added for the latest release branch',
-          },
-        ];
-      }
-      return [];
     },
     request: async (endpoint, params) => {
       if (endpoint === 'GET /search/issues') {
-        assert.ok(params.q.includes('#42'));
+        searchEndpointCalled = true;
+        // Verify valid GitHub issue search query syntax
+        assert.ok(params.q.includes('42'));
+        assert.ok(params.q.includes('label:"internal/tracking"'));
+        assert.strictEqual(params.q.includes('tracking-pr'), false);
         return {
           data: {
             total_count: 1,
@@ -77,6 +71,7 @@ test('runBackportPr - finds tracking issue when tracking text is in comments', a
         };
       }
       if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        subIssuesEndpointCalled = true;
         assert.strictEqual(params.issue_number, 100);
         return { data: [] }; // Empty sub-issues terminates execution cleanly
       }
@@ -92,56 +87,62 @@ test('runBackportPr - finds tracking issue when tracking text is in comments', a
   });
 
   assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(searchEndpointCalled, true);
+  assert.strictEqual(subIssuesEndpointCalled, true);
   assert.ok(mockCore.infoMessages.some(m => m.includes('Found tracking issue: #100')));
   assert.ok(mockCore.infoMessages.some(m => m.includes('No sub-issues found for issue #100. Exiting.')));
 });
 
-test('runBackportPr - finds tracking issue when tracking text is in body (legacy format)', async () => {
+test('runBackportPr - disambiguates multiple search results using hidden comment header', async () => {
   const mockCore = createMockCore();
   const mockProcess = {
     env: {
-      MERGE_COMMIT_SHA: 'def5678',
+      MERGE_COMMIT_SHA: 'jkl3456',
     },
   };
 
-  let listCommentsCalled = false;
   const mockGithub = {
     rest: {
       repos: {
         listPullRequestsAssociatedWithCommit: async () => ({
           data: [
             {
-              number: 43,
+              number: 45,
               base: { ref: 'main' },
               merged_at: '2026-10-01T00:00:00Z',
+              // No Addresses in body, requiring comment inspection
+              body: 'Generic PR description',
             },
           ],
         }),
       },
       issues: {
-        listComments: async () => {
-          listCommentsCalled = true;
-          return { data: [] };
-        },
+        listComments: async () => {},
       },
     },
-    paginate: async () => [],
+    paginate: async (method, params) => {
+      if (params.issue_number === 400) {
+        return [{ body: 'Mentioned #45 here casually' }];
+      }
+      if (params.issue_number === 401) {
+        return [{ body: '<!-- tracking-pr: #45 -->\nThis is the tracking issue for PR #45' }];
+      }
+      return [];
+    },
     request: async (endpoint, params) => {
       if (endpoint === 'GET /search/issues') {
         return {
           data: {
-            total_count: 1,
+            total_count: 2,
             items: [
-              {
-                number: 200,
-                body: 'This is the tracking issue for #43\n\nPlease add labels...',
-              },
+              { number: 400, body: 'Not the tracking issue' },
+              { number: 401, body: 'Real tracking issue' },
             ],
           },
         };
       }
       if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
-        assert.strictEqual(params.issue_number, 200);
+        assert.strictEqual(params.issue_number, 401);
         return { data: [] };
       }
       throw new Error(`Unexpected endpoint: ${endpoint}`);
@@ -156,8 +157,63 @@ test('runBackportPr - finds tracking issue when tracking text is in body (legacy
   });
 
   assert.strictEqual(mockCore.failedMessage, null);
-  assert.strictEqual(listCommentsCalled, false);
-  assert.ok(mockCore.infoMessages.some(m => m.includes('Found tracking issue: #200')));
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Found tracking issue: #401')));
+});
+
+test('runBackportPr - ignores search results without matching tracking header when multiple exist', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      MERGE_COMMIT_SHA: 'ghi9012',
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 44,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR description without Addresses',
+            },
+          ],
+        }),
+      },
+      issues: {
+        listComments: async () => {},
+      },
+    },
+    paginate: async () => [
+      { body: 'Hey, is this related to #44 or is it independent?' },
+    ],
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 2,
+            items: [
+              { number: 300, body: 'Unrelated issue 1' },
+              { number: 301, body: 'Unrelated issue 2' },
+            ],
+          },
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.ok(mockCore.infoMessages.some(m => m.includes("No verified 'internal/tracking' issue found for PR #44. Exiting.")));
 });
 
 test('runBackportPr - ignores false positive issue when search returns single issue that merely references PR number', async () => {
@@ -177,6 +233,7 @@ test('runBackportPr - ignores false positive issue when search returns single is
               number: 44,
               base: { ref: 'main' },
               merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR description without Addresses',
             },
           ],
         }),
@@ -218,13 +275,15 @@ test('runBackportPr - ignores false positive issue when search returns single is
   assert.ok(mockCore.infoMessages.some(m => m.includes("No verified 'internal/tracking' issue found for PR #44. Exiting.")));
 });
 
-test('runBackportPr - disambiguates correct tracking issue when multiple search results exist', async () => {
+test('runBackportPr - resolves matching issue when PR description addresses multiple issues', async () => {
   const mockCore = createMockCore();
   const mockProcess = {
     env: {
-      MERGE_COMMIT_SHA: 'jkl3456',
+      MERGE_COMMIT_SHA: 'multi123',
     },
   };
+
+  let subIssuesEndpointCalled = false;
 
   const mockGithub = {
     rest: {
@@ -232,40 +291,34 @@ test('runBackportPr - disambiguates correct tracking issue when multiple search 
         listPullRequestsAssociatedWithCommit: async () => ({
           data: [
             {
-              number: 45,
+              number: 47,
+              title: 'Multi-issue fix',
+              body: '<!-- comment -->\n- Addresses: #101\n- Addresses: #102',
               base: { ref: 'main' },
               merged_at: '2026-10-01T00:00:00Z',
             },
           ],
         }),
       },
-      issues: {
-        listComments: async () => {},
-      },
-    },
-    paginate: async (method, params) => {
-      if (params.issue_number === 400) {
-        return [{ body: 'Mentioned #45 here casually' }];
-      }
-      if (params.issue_number === 401) {
-        return [{ body: 'This is the tracking issue for PR #45, a label has been added' }];
-      }
-      return [];
     },
     request: async (endpoint, params) => {
       if (endpoint === 'GET /search/issues') {
         return {
           data: {
-            total_count: 2,
+            total_count: 1,
             items: [
-              { number: 400, body: 'Not the tracking issue' },
-              { number: 401, body: 'Real tracking issue body' },
+              {
+                number: 102,
+                title: 'Second Issue',
+                body: 'Bug description',
+              },
             ],
           },
         };
       }
       if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
-        assert.strictEqual(params.issue_number, 401);
+        subIssuesEndpointCalled = true;
+        assert.strictEqual(params.issue_number, 102);
         return { data: [] };
       }
       throw new Error(`Unexpected endpoint: ${endpoint}`);
@@ -280,7 +333,8 @@ test('runBackportPr - disambiguates correct tracking issue when multiple search 
   });
 
   assert.strictEqual(mockCore.failedMessage, null);
-  assert.ok(mockCore.infoMessages.some(m => m.includes('Found tracking issue: #401')));
+  assert.strictEqual(subIssuesEndpointCalled, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Found tracking issue: #102')));
 });
 
 test('runBackportPr - exits when search results are empty', async () => {
@@ -427,4 +481,26 @@ test('runBackportIssues - throws on invalid PR number', async () => {
     },
     { message: /Invalid PR number: not-a-number/ }
   );
+});
+
+test('trackingRegex in backport-issues - accurately extracts PR number from hidden comment header', () => {
+  const trackingRegex = /<!--\s*tracking-pr:\s*#?(\d+)\s*-->/i;
+
+  const standardHeader = '<!-- tracking-pr: #42 -->\nThis is the tracking issue for PR #42';
+  const match1 = standardHeader.match(trackingRegex);
+  assert.ok(match1);
+  assert.strictEqual(Number(match1[1]), 42);
+
+  const withoutHash = '<!-- tracking-pr: 99 -->\nThis is the tracking issue for PR #99';
+  const match2 = withoutHash.match(trackingRegex);
+  assert.ok(match2);
+  assert.strictEqual(Number(match2[1]), 99);
+
+  const extraSpaces = '<!--    tracking-pr:   #12345   -->';
+  const match3 = extraSpaces.match(trackingRegex);
+  assert.ok(match3);
+  assert.strictEqual(Number(match3[1]), 12345);
+
+  const userComment = 'Here is a regular user comment mentioning #42 casually.';
+  assert.strictEqual(userComment.match(trackingRegex), null);
 });
