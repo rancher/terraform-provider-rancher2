@@ -122,10 +122,13 @@ test('runBackportPr - disambiguates multiple search results using hidden comment
     },
     paginate: async (method, params) => {
       if (params.issue_number === 400) {
-        return [{ body: 'Mentioned #45 here casually' }];
+        return [{ user: { login: 'github-actions[bot]' }, body: 'Mentioned #45 here casually' }];
       }
       if (params.issue_number === 401) {
-        return [{ body: '<!-- tracking-pr: #45 -->\nThis is the tracking issue for PR #45' }];
+        return [{
+          user: { login: 'github-actions[bot]' },
+          body: '<!-- tracking-pr: #45 -->\nThis is the tracking issue for PR #45',
+        }];
       }
       return [];
     },
@@ -197,6 +200,64 @@ test('runBackportPr - ignores search results without matching tracking header wh
             items: [
               { number: 300, body: 'Unrelated issue 1' },
               { number: 301, body: 'Unrelated issue 2' },
+            ],
+          },
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.ok(mockCore.infoMessages.some(m => m.includes("No verified 'internal/tracking' issue found for PR #44. Exiting.")));
+});
+
+test('runBackportPr - ignores tracking comment when author is not github-actions[bot]', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      MERGE_COMMIT_SHA: 'botcheck1',
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 44,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR description without Addresses',
+            },
+          ],
+        }),
+      },
+      issues: {
+        listComments: async () => {},
+      },
+    },
+    paginate: async () => [
+      {
+        user: { login: 'regular-user' },
+        body: '<!-- tracking-pr: #44 -->\nThis looks like a tracking issue but is user spoofed',
+      },
+    ],
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 1,
+            items: [
+              { number: 500, body: 'User issue' },
             ],
           },
         };

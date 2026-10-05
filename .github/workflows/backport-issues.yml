@@ -42,7 +42,7 @@ jobs:
               const comment = comments[i];
               const match = comment?.user?.login === 'github-actions[bot]' ? comment.body?.match(trackingRegex) : null;
               if (match) {
-                return match[1];
+                return Number(match[1]);
               }
             }
 
