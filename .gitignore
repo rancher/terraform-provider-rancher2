@@ -24,4 +24,4 @@ node_modules
 .nix-script.sh
 *.log
 .DS_store
-
+plans

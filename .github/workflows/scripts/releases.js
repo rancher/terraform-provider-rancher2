@@ -1,3 +1,5 @@
+import { validatePrDescription } from './validate-pr-description.js';
+
 export default async ({ github, context, core, process = globalThis.process, getOctokit }) => {
   const mode = process?.env?.SCRIPT_MODE;
   switch (mode) {
@@ -177,27 +179,32 @@ async function runPublishRelease({ github, context, core, process }) {
 }
 
 /**
- * tracking-issue: Automatically creates tracking and backport issues for open pull requests.
+ * Filters and sorts release branches in descending order (e.g. release/v15 before release/v14).
+ *
+ * @param {Array<string|object>} items List of branch objects or names.
+ * @returns {string[]} Sorted release branch names.
  */
-async function runTrackingIssue({ github, core, process }) {
+function extractReleaseBranches(items) {
+  return (items || [])
+    .map(b => (typeof b === 'string' ? b : b?.name))
+    .filter(name => typeof name === 'string' && /^release\/v\d+$/.test(name))
+    .sort((a, b) => {
+      const versionA = parseInt(a.replace('release/v', ''), 10);
+      const versionB = parseInt(b.replace('release/v', ''), 10);
+      return versionB - versionA;
+    });
+}
+
+/**
+ * tracking-issue: Automatically converts referenced issues into tracking issues for open pull requests.
+ */
+export async function runTrackingIssue({ github, context, core }) {
   try {
-    const repo = "terraform-provider-rancher2";
-    const owner = "rancher";
-    let assignees = [];
-    if (process?.env?.TERRAFORM_MAINTAINERS && process.env.TERRAFORM_MAINTAINERS !== "undefined") {
-      try {
-        const parsed = JSON.parse(process.env.TERRAFORM_MAINTAINERS);
-        assignees = Array.isArray(parsed) ? parsed : [parsed];
-      } catch (err) {
-        if (core && typeof core.warning === 'function') {
-          core.warning(`Could not parse TERRAFORM_MAINTAINERS: ${err.message}. Defaulting to no assignees.`);
-        }
-        assignees = process.env.TERRAFORM_MAINTAINERS.split(',').map(m => m.trim()).filter(Boolean);
-      }
-    }
+    const repo = context?.repo?.repo || "terraform-provider-rancher2";
+    const owner = context?.repo?.owner || "rancher";
 
     let latestReleaseBranch = "";
-    const branches = await github.paginate(github.rest.repos.listBranches,{
+    const branches = await github.paginate(github.rest.repos.listBranches, {
       owner,
       repo,
     });
@@ -207,14 +214,7 @@ async function runTrackingIssue({ github, core, process }) {
       return;
     }
 
-    const releaseBranches = branches
-      .map(b => b.name)
-      .filter(name => name.startsWith('release/v'))
-      .sort((a, b) => {
-        const versionA = parseInt(a.replace('release/v', ''), 10);
-        const versionB = parseInt(b.replace('release/v', ''), 10);
-        return versionB - versionA;
-      });
+    const releaseBranches = extractReleaseBranches(branches);
 
     if (releaseBranches.length > 0) {
       latestReleaseBranch = releaseBranches[0];
@@ -236,80 +236,87 @@ async function runTrackingIssue({ github, core, process }) {
     const errors = [];
     for (const pr of pulls) {
       try {
-        let response;
-        let newLabels = ['internal/tracking'];
-        let releaseName = "";
-
-        const releaseLabels = pr.labels
-          .filter(label => label.name.startsWith('release/v'))
-          .sort((a, b) => {
-            const versionA = parseInt(a.name.replace('release/v', ''), 10);
-            const versionB = parseInt(b.name.replace('release/v', ''), 10);
-            return versionB - versionA;
-          });
-        const latestReleaseLabel = (releaseLabels.length > 0) ? releaseLabels[0].name : null;
-
-        if (latestReleaseLabel) {
-          newLabels.push(latestReleaseLabel);
-          releaseName = latestReleaseLabel;
-        } else {
-          newLabels.push(latestReleaseBranch);
-          releaseName = latestReleaseBranch;
-        }
-
-        const existingIssues = await github.paginate(github.rest.search.issuesAndPullRequests, {
-          q: `repo:${owner}/${repo} is:issue is:open label:internal/tracking in:body #${pr.number}`
-        });
-
-        if (existingIssues.length > 0) {
-          core.info(`Tracking issue already exists for PR #${pr.number}. Skipping.`);
+        let issueNumbers;
+        try {
+          issueNumbers = validatePrDescription(pr.body);
+        } catch (error) {
+          core.info(`PR #${pr.number} does not contain valid issue references (${error.message}). Skipping.`);
           continue;
         }
 
-        response = await github.rest.issues.create({
-          owner: owner,
-          repo:  repo,
-          title: pr.title,
-          body:  `This is the tracking issue for #${pr.number} \n\n` +
-            `Please add labels indicating the release versions eg. '${releaseName}' \n\n` +
-            `Please add comments for user issues which this issue addresses. \n\n` +
-            `Description copied from PR: \n${pr.body ?? ''}`,
-          labels: newLabels,
-          assignees: assignees
-        });
+        const releaseLabels = extractReleaseBranches(pr.labels);
+        const targetReleaseBranch = releaseLabels.length > 0 ? releaseLabels[0] : latestReleaseBranch;
 
-        const newIssue = response.data;
-        core.info(`Created tracking issue #${newIssue.number}: ${newIssue.html_url}`);
+        const uniqueIssues = [...new Set(issueNumbers)];
 
-        const parentIssue = newIssue;
-        const parentIssueTitle = parentIssue.title;
-        const parentIssueNumber = parentIssue.number;
-        
-        response = await github.rest.issues.create({
-          owner: owner,
-          repo: repo,
-          title: `[${releaseName}] ${parentIssueTitle}`,
-          body:  `Backport #${pr.number} to ${releaseName} for #${parentIssueNumber}\n\n` +
-            `Please add this issue to the proper milestone.\n` +
-            `Copied from PR: \n${pr.body ?? ''}`,
-          labels: [releaseName, "internal/backport"],
-          assignees: assignees
-        });
-        const newSubIssue = response.data;
-        core.info(`Created backport issue #${newSubIssue.number}: ${newSubIssue.html_url}`);
-        const subIssueId = newSubIssue.id;
-        
-        await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
-          owner: owner,
-          repo: repo,
-          issue_number: parentIssueNumber,
-          sub_issue_id: subIssueId,
-          headers: {
-            'X-GitHub-Api-Version': '2022-11-28'
+        for (const issueNumStr of uniqueIssues) {
+          const issueNumber = parseInt(issueNumStr, 10);
+          let issue;
+          try {
+            ({ data: issue } = await github.rest.issues.get({
+              owner,
+              repo,
+              issue_number: issueNumber,
+            }));
+          } catch (error) {
+            core.warning(`Could not fetch issue #${issueNumber} for PR #${pr.number}: ${error.message}`);
+            continue;
           }
-        });
+
+          if (issue.pull_request) {
+            core.warning(`Issue #${issueNumber} referenced in PR #${pr.number} is a pull request, not an issue. Skipping.`);
+            continue;
+          }
+
+          if (issue.state !== 'open') {
+            core.warning(`Issue #${issueNumber} referenced in PR #${pr.number} is already closed. Skipping.`);
+            continue;
+          }
+
+          const currentLabels = (issue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
+
+          if (currentLabels.includes('internal/tracking')) {
+            core.info(`Issue #${issueNumber} already has 'internal/tracking' label. Skipping.`);
+            continue;
+          }
+
+          const initialLabelsToAdd = ['internal/tracking'];
+          if (!currentLabels.includes('internal/user')) {
+            initialLabelsToAdd.push('internal/user');
+          }
+
+          await github.rest.issues.addLabels({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            labels: initialLabelsToAdd,
+          });
+          core.info(`Added labels [${initialLabelsToAdd.join(', ')}] to issue #${issueNumber}`);
+
+          const commentBody = `This is the tracking issue for PR #${pr.number}, a label has been added for the latest release branch, if you need this change to go to any other release branches, please add labels for the branches you need this to go to. Please don't skip branches, eg. if you need something added to release/v13 and the latest is release/v15, you must also add release/v14. Once a label is added a sub-issue will be generated to facilitate the backport, these sub-issues must be in place before the PR is merged or automatic backports won't happen.`;
+
+          await github.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: issueNumber,
+            body: commentBody,
+          });
+          core.info(`Added tracking comment for PR #${pr.number} to issue #${issueNumber}`);
+
+          if (!currentLabels.includes(targetReleaseBranch)) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              labels: [targetReleaseBranch],
+            });
+            core.info(`Added release branch label '${targetReleaseBranch}' to issue #${issueNumber}`);
+          } else {
+            core.info(`Release branch label '${targetReleaseBranch}' already present on issue #${issueNumber}`);
+          }
+        }
       } catch (error) {
-        errors.push(`Failed to process PR [${pr.number}](${pr.html_url}): ${error.message}`);
+        errors.push(`Failed to process PR [${pr.number}](${pr.html_url || ''}): ${error.message}`);
       }
     }
 

@@ -111,7 +111,7 @@ async function runWaitForSettle({ github, context, core, process = globalThis.pr
 /**
  * backport-pr: Cherry-picks a commit to the appropriate backport branches and creates PRs.
  */
-async function runBackportPr({ github, context, core, process = globalThis.process, getOctokit }) {
+export async function runBackportPr({ github, context, core, process = globalThis.process, getOctokit }) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
   const mergeCommitSha = process?.env?.MERGE_COMMIT_SHA;
@@ -157,7 +157,7 @@ async function runBackportPr({ github, context, core, process = globalThis.proce
   core.info(`Searching for 'internal/tracking' issue linked to PR #${pr.number}`);
   try {
     response = await github.request('GET /search/issues', {
-      q: `repo:${owner}/${repo} is:issue state:open label:"internal/tracking" in:body #${pr.number}`,
+      q: `repo:${owner}/${repo} is:issue state:open label:"internal/tracking" #${pr.number}`,
       advanced_search: true,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
@@ -167,11 +167,33 @@ async function runBackportPr({ github, context, core, process = globalThis.proce
     throw new Error(`Failed to search for internal/tracking issue for PR #${pr.number}: ${error.message}`);
   }
   const searchResults = response.data;
-  if (searchResults.total_count === 0) {
+  if (!searchResults?.items || searchResults.items.length === 0) {
     core.info(`No 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
     return;
   }
-  const trackingIssue = searchResults.items[0];
+  const trackingRegex = new RegExp(`This is the tracking issue for (?:PR )?#${pr.number}\\b`, 'i');
+  let trackingIssue = searchResults.items.find(item => item.body && trackingRegex.test(item.body));
+  if (!trackingIssue) {
+    for (const item of searchResults.items) {
+      try {
+        const comments = await github.paginate(github.rest.issues.listComments, {
+          owner,
+          repo,
+          issue_number: item.number,
+        });
+        if (comments.some(c => c.body && trackingRegex.test(c.body))) {
+          trackingIssue = item;
+          break;
+        }
+      } catch (error) {
+        core.info(`Could not retrieve comments for issue #${item.number} during disambiguation: ${error.message}`);
+      }
+    }
+  }
+  if (!trackingIssue) {
+    core.info(`No verified 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
+    return;
+  }
   core.info(`Found tracking issue: #${trackingIssue.number}`);
 
   core.info(`Fetching sub-issues for tracking issue #${trackingIssue.number}`);
@@ -361,7 +383,7 @@ async function runBackportPr({ github, context, core, process = globalThis.proce
 /**
  * backport-issues: Creates sub-issues for tracking backports.
  */
-async function runBackportIssues({ github, context, core, process = globalThis.process }) {
+export async function runBackportIssues({ github, context, core, process = globalThis.process }) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
   const releaseLabel = context.payload.label.name;
@@ -369,7 +391,8 @@ async function runBackportIssues({ github, context, core, process = globalThis.p
   const parentIssueTitle = parentIssue.title;
   const parentIssueNumber = parentIssue.number;
   const assignees = parseMaintainers(core, process?.env?.TERRAFORM_MAINTAINERS);
-  const extractedPrNumber = parseInt(process?.env?.PR, 10);
+  const rawPr = process?.env?.PR ? String(process.env.PR).replace(/^["']|["']$/g, '').trim() : '';
+  const extractedPrNumber = parseInt(rawPr, 10);
   if (isNaN(extractedPrNumber)) {
     throw new Error(`Invalid PR number: ${process?.env?.PR}`);
   }
