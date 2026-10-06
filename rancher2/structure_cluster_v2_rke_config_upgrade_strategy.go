@@ -23,9 +23,7 @@ func flattenClusterV2RKEConfigUpgradeStrategyDrainOptions(in rkev1.DrainOptions)
 	obj["ignore_errors"] = in.IgnoreErrors
 	obj["delete_empty_dir_data"] = in.DeleteEmptyDirData
 	obj["disable_eviction"] = in.DisableEviction
-	if in.GracePeriod > 0 {
-		obj["grace_period"] = in.GracePeriod
-	}
+	obj["grace_period"] = in.GracePeriod
 	if in.Timeout > 0 {
 		obj["timeout"] = in.Timeout
 	}
@@ -84,7 +82,7 @@ func expandClusterV2RKEConfigUpgradeStrategyDrainOptions(p []interface{}) rkev1.
 	if v, ok := in["disable_eviction"].(bool); ok {
 		obj.DisableEviction = v
 	}
-	if v, ok := in["grace_period"].(int); ok && v > 0 {
+	if v, ok := in["grace_period"].(int); ok {
 		obj.GracePeriod = v
 	}
 	if v, ok := in["timeout"].(int); ok && v > 0 {
