@@ -315,6 +315,9 @@ func flattenClusterGKEConfigV2(in *managementClient.GKEClusterConfigSpec, p []in
 	if in.Subnetwork != nil && len(*in.Subnetwork) > 0 {
 		obj["subnetwork"] = *in.Subnetwork
 	}
+	if in.ReleaseChannel != nil && len(*in.ReleaseChannel) > 0 {
+		obj["release_channel"] = *in.ReleaseChannel
+	}
 
 	return []interface{}{obj}
 }
@@ -656,6 +659,9 @@ func expandClusterGKEConfigV2(p []interface{}) *managementClient.GKEClusterConfi
 	}
 	if v, ok := in["subnetwork"].(string); ok && len(v) > 0 {
 		obj.Subnetwork = &v
+	}
+	if v, ok := in["release_channel"].(string); ok && len(v) > 0 {
+		obj.ReleaseChannel = &v
 	}
 
 	return obj

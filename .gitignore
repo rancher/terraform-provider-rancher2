@@ -23,4 +23,6 @@ node_modules
 GEMINI.md
 .vscode
 .nix-script.sh
-sync_fork_v15.sh
+*.log
+.DS_store
+
