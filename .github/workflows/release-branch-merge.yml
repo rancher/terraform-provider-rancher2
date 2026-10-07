@@ -16,7 +16,7 @@ concurrency:
 jobs:
   label:
     name: 'Label Related Issue'
-    if: github.event.workflow_run.conclusion != 'cancelled'
+    if: github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
       issues: write
@@ -54,7 +54,7 @@ jobs:
     if: |
       always() &&
       needs.label.result != 'cancelled' &&
-      github.event.workflow_run.conclusion != 'cancelled'
+      github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
       id-token: write

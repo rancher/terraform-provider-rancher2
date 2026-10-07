@@ -596,7 +596,7 @@ test('runTriggerRcRelease - skips RC release when workflow run published a full 
 
   assert.strictEqual(result, null);
   assert.strictEqual(dispatched, false);
-  assert.match(loggedInfo, /published a full release; skipping RC release/);
+  assert.match(loggedInfo, /attempted a full release/);
 });
 
 test('runTriggerRcRelease - skips RC release when commit is from release-please PR', async () => {
@@ -792,7 +792,7 @@ test('runTriggerRcRelease - skips RC release when workflow run job matches full 
 
   assert.strictEqual(result, null);
   assert.strictEqual(dispatched, false);
-  assert.match(loggedInfo, /published a full release; skipping RC release/);
+  assert.match(loggedInfo, /attempted a full release/);
 });
 
 test('runTriggerRcRelease - skips RC release when workflow run job matches legacy publish job name', async () => {
@@ -836,7 +836,7 @@ test('runTriggerRcRelease - skips RC release when workflow run job matches legac
 
   assert.strictEqual(result, null);
   assert.strictEqual(dispatched, false);
-  assert.match(loggedInfo, /published a full release; skipping RC release/);
+  assert.match(loggedInfo, /attempted a full release/);
 });
 
 test('runTriggerRcRelease - skips RC release when workflow run job matches release job name', async () => {
@@ -880,7 +880,7 @@ test('runTriggerRcRelease - skips RC release when workflow run job matches relea
 
   assert.strictEqual(result, null);
   assert.strictEqual(dispatched, false);
-  assert.match(loggedInfo, /published a full release; skipping RC release/);
+  assert.match(loggedInfo, /attempted a full release/);
 });
 
 test('runTriggerRcRelease - skips RC release when target branch starts with release-please', async () => {
@@ -1125,7 +1125,7 @@ test('runTriggerRcRelease - falls back to non-paginated listJobsForWorkflowRun w
 
   assert.strictEqual(result, null);
   assert.strictEqual(dispatched, false);
-  assert.match(loggedInfo, /published a full release; skipping RC release/);
+  assert.match(loggedInfo, /attempted a full release/);
 });
 
 test('runTriggerRcRelease - falls back to non-paginated listPullRequestsAssociatedWithCommit when github.paginate is undefined', async () => {
@@ -1374,7 +1374,7 @@ test('runTriggerRcRelease - safely handles object { jobs: [...] } from non-pagin
 
   assert.strictEqual(result, null);
   assert.strictEqual(dispatched, false);
-  assert.match(loggedInfo, /published a full release; skipping RC release/);
+  assert.match(loggedInfo, /attempted a full release/);
 });
 
 test('runTriggerRcRelease - resolves branch and sha from workflow_run payload when process.env lacks them', async () => {
