@@ -77,7 +77,7 @@ jobs:
             if ! git cat-file -e "${CLEAN_SHA}^{commit}" 2>/dev/null; then
               git fetch origin "$CLEAN_SHA" 2>/dev/null || true
             fi
-            TARGET_SHA=$(git rev-parse --verify "${CLEAN_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${CLEAN_SHA}^{commit}" 2>/dev/null || git rev-parse --verify FETCH_HEAD 2>/dev/null || true)
+            TARGET_SHA=$(git rev-parse --verify "${CLEAN_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${CLEAN_SHA}^{commit}" 2>/dev/null || true)
           else
             TARGET_SHA="${DEFAULT_SHA//[[:space:]]/}"
             if ! git cat-file -e "${TARGET_SHA}^{commit}" 2>/dev/null; then

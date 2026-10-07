@@ -699,7 +699,7 @@ test('runMergeLabel - skips unmerged PR when resolving via SHA', async () => {
   assert.ok(core.infoMessages.some(msg => msg.includes('No pull request found for merge-label; skipping.')));
 });
 
-test('runMergeLabel - warns and continues when issue fetch throws error', async () => {
+test('runMergeLabel - fails and continues when issue fetch throws error', async () => {
   const mockGithub = {
     rest: {
       issues: {
@@ -723,8 +723,7 @@ test('runMergeLabel - warns and continues when issue fetch throws error', async 
 
   await runMergeLabel({ github: mockGithub, context, core });
 
-  assert.strictEqual(core.failedMessage, null);
-  assert.ok(core.warningMessages.some(msg => msg.includes('Could not process issue #404')));
+  assert.ok(core.failedMessage !== null && core.failedMessage.includes('Could not process issue #404'));
 });
 
 test('runMergeLabel - ignores issue references inside HTML comments', async () => {

@@ -74,7 +74,7 @@ jobs:
           if [ -z "$TARGET_SHA" ]; then
             TARGET_SHA=$(git rev-parse FETCH_HEAD 2>/dev/null || true)
           else
-            TARGET_SHA=$(git rev-parse --verify "${TARGET_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${TARGET_SHA}^{commit}" 2>/dev/null || git rev-parse --verify FETCH_HEAD 2>/dev/null || true)
+            TARGET_SHA=$(git rev-parse --verify "${TARGET_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${TARGET_SHA}^{commit}" 2>/dev/null || true)
           fi
           if [ -z "$TARGET_SHA" ]; then
             echo "Error: Could not resolve target commit for tag $TAG." >&2

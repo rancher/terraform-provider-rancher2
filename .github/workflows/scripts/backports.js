@@ -589,8 +589,8 @@ export async function runMergeLabel({ github, context, core, process = globalThi
         }
       }
     } catch (error) {
-      if (core && typeof core.warning === 'function') {
-        core.warning(`Could not process issue #${issueNumber}: ${error.message}`);
+      if (core && typeof core.setFailed === 'function') {
+        core.setFailed(`Could not process issue #${issueNumber}: ${error.message}`);
       }
     }
   }
