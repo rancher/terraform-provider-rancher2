@@ -1,20 +1,26 @@
 name: Release Branch Merge
 
 on:
-  pull_request:
-    types: [closed]
+  workflow_run:
+    workflows: ["release"]
+    types: [completed]
     branches: 
       - 'release/v*'
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   label:
     name: 'Label Related Issue'
-    if: github.event.pull_request.merged == true
+    if: github.event.workflow_run.conclusion != 'cancelled'
     permissions:
       contents: read
       issues: write
+      pull-requests: read
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -33,6 +39,8 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           SCRIPT_MODE: merge-label
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
@@ -46,12 +54,12 @@ jobs:
     if: |
       always() &&
       needs.label.result != 'cancelled' &&
-      github.event.pull_request.merged == true &&
-      !startsWith(github.event.pull_request.head.ref, 'release-please')
+      github.event.workflow_run.conclusion != 'cancelled'
     permissions:
       contents: read
       id-token: write
       actions: write
+      pull-requests: read
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -80,10 +88,11 @@ jobs:
         env:
           GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
           SCRIPT_MODE: trigger-rc-release
-          BRANCH: ${{ github.event.pull_request.base.ref }}
-          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id }}
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
             const { default: script } = await import(scriptPath);
-            await script({ github, context, core, process, getOctokit });
+            await script({ github, context, core, process, getOctokit: typeof getOctokit === 'function' ? getOctokit : undefined });

@@ -29,6 +29,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+          ref: 'main'
       - name: Check Author
         id: check-user-in-maintainers
         # https://github.com/actions/github-script/releases
@@ -65,15 +66,30 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           TAG: ${{ inputs.tag }}
           SHA: ${{ inputs.sha }}
+          DEFAULT_SHA: ${{ github.sha }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           git config --global --add safe.directory "$PWD"
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          if [ -n "$SHA" ]; then
-            git tag "$TAG" -m "Release $TAG" "$SHA"
+          CLEAN_SHA="${SHA//[[:space:]]/}"
+          if [ -n "$CLEAN_SHA" ]; then
+            if ! git cat-file -e "${CLEAN_SHA}^{commit}" 2>/dev/null; then
+              git fetch origin "$CLEAN_SHA" 2>/dev/null || true
+            fi
+            TARGET_SHA=$(git rev-parse --verify "${CLEAN_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${CLEAN_SHA}^{commit}" 2>/dev/null || git rev-parse --verify FETCH_HEAD 2>/dev/null || true)
           else
-            git tag "$TAG" -m "Release $TAG"
+            TARGET_SHA="${DEFAULT_SHA//[[:space:]]/}"
+            if ! git cat-file -e "${TARGET_SHA}^{commit}" 2>/dev/null; then
+              git fetch origin "$TARGET_SHA" 2>/dev/null || git fetch origin "$REF_NAME" 2>/dev/null || true
+            fi
+            TARGET_SHA=$(git rev-parse --verify "${TARGET_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${TARGET_SHA}^{commit}" 2>/dev/null || git rev-parse --verify FETCH_HEAD 2>/dev/null || true)
           fi
+          if [ -z "$TARGET_SHA" ]; then
+            echo "Error: Could not resolve target commit for tag $TAG." >&2
+            exit 1
+          fi
+          git tag "$TAG" -m "Release $TAG" "$TARGET_SHA"
           git push origin "$TAG"
       - name: Check out new tag into a new directory
         id: checkout-new-tag

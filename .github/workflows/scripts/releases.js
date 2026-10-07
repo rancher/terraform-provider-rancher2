@@ -349,11 +349,13 @@ export async function computeNextRcTag({ github, owner, repo, branch, core }) {
   const prefix = `v${major}.`;
 
   // Fetch all tags
-  const tags = await github.paginate(github.rest.repos.listTags, {
-    owner,
-    repo,
-    per_page: 100
-  });
+  const tags = typeof github?.paginate === 'function'
+    ? await github.paginate(github.rest?.repos?.listTags, {
+      owner,
+      repo,
+      per_page: 100
+    })
+    : (await github.rest?.repos?.listTags({ owner, repo, per_page: 100 }))?.data || [];
 
   const branchTags = tags
     .map(t => t?.name)
@@ -501,9 +503,10 @@ export async function runTriggerRcRelease({ github, context, core, process = glo
     const repo = context?.repo?.repo || "terraform-provider-rancher2";
     const pr = context?.payload?.pull_request;
 
-    const rawBranch = (process?.env?.BRANCH || pr?.base?.ref || '').trim();
-    const branch = rawBranch.replace(/^refs\/heads\//, '').replace(/^origin\//, '').replace(/\/+$/, '');
-    const sha = (process?.env?.SHA || pr?.merge_commit_sha || '').trim();
+    const normalizeBranch = b => (b || '').toString().trim().replace(/^refs\/heads\//, '').replace(/^origin\//, '').replace(/\/+$/, '');
+    const rawBranch = (process?.env?.BRANCH || context?.payload?.workflow_run?.head_branch || pr?.base?.ref || '').trim();
+    const branch = normalizeBranch(rawBranch);
+    const sha = (process?.env?.SHA || context?.payload?.workflow_run?.head_sha || pr?.merge_commit_sha || '').trim();
 
     if (!branch) {
       if (core && typeof core.setFailed === 'function') {
@@ -512,8 +515,108 @@ export async function runTriggerRcRelease({ github, context, core, process = glo
       return;
     }
 
+    if (branch.startsWith('release-please')) {
+      if (core && typeof core.info === 'function') {
+        core.info(`Branch ${branch} is a release-please branch; skipping RC release.`);
+      }
+      return null;
+    }
+
     if (!sha && core && typeof core.info === 'function') {
       core.info(`No commit SHA provided; rc-release.yml will default to HEAD of branch ${branch}.`);
+    }
+
+    const isReleasePleasePr = (p) => {
+      if (!p) return false;
+      const headRef = normalizeBranch(p?.head?.ref || '');
+      if (headRef.startsWith('release-please')) return true;
+      if (Array.isArray(p?.labels) && p.labels.some(l => (typeof l === 'string' ? l : l?.name)?.startsWith('autorelease'))) return true;
+      if (typeof p?.title === 'string' && /^chore(?:\([^)]*\))?:\s*release/i.test(p.title)) return true;
+      return false;
+    };
+
+    const workflowRunId = (process?.env?.WORKFLOW_RUN_ID || context?.payload?.workflow_run?.id || '').toString().trim();
+    if (workflowRunId && (typeof github?.paginate === 'function' || typeof github?.rest?.actions?.listJobsForWorkflowRun === 'function')) {
+      const runId = parseInt(workflowRunId, 10);
+      if (!isNaN(runId)) {
+        try {
+          const jobs = typeof github?.paginate === 'function'
+            ? await github.paginate(github.rest?.actions?.listJobsForWorkflowRun, {
+              owner,
+              repo,
+              run_id: runId
+            })
+            : (await github.rest?.actions?.listJobsForWorkflowRun({ owner, repo, run_id: runId }))?.data?.jobs || [];
+          const jobList = Array.isArray(jobs) ? jobs : (Array.isArray(jobs?.jobs) ? jobs.jobs : []);
+          const fullReleaseJob = jobList.find(j => j?.name === 'Generate Full Release' || j?.name?.toLowerCase().includes('full release') || j?.name?.toLowerCase() === 'publish' || j?.name?.toLowerCase() === 'release');
+          if (fullReleaseJob && fullReleaseJob.conclusion === 'success') {
+            if (core && typeof core.info === 'function') {
+              core.info(`Workflow run #${workflowRunId} published a full release; skipping RC release.`);
+            }
+            return null;
+          }
+        } catch (err) {
+          if (core && typeof core.warning === 'function') {
+            core.warning(`Could not check workflow run jobs for #${workflowRunId}: ${err.message}`);
+          }
+        }
+      }
+    }
+
+    let releasePleasePr = isReleasePleasePr(pr) ? pr : null;
+    if (!releasePleasePr && Array.isArray(context?.payload?.workflow_run?.pull_requests)) {
+      releasePleasePr = context.payload.workflow_run.pull_requests.find(p => isReleasePleasePr(p) && (!p?.base?.ref || !branch || normalizeBranch(p?.base?.ref) === branch))
+        || context.payload.workflow_run.pull_requests.find(isReleasePleasePr);
+    }
+    if (!releasePleasePr && sha && (typeof github?.paginate === 'function' || typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function')) {
+      try {
+        const pulls = typeof github?.paginate === 'function'
+          ? await github.paginate(github.rest?.repos?.listPullRequestsAssociatedWithCommit, {
+            owner,
+            repo,
+            commit_sha: sha
+          })
+          : (await github.rest?.repos?.listPullRequestsAssociatedWithCommit({ owner, repo, commit_sha: sha }))?.data || [];
+        releasePleasePr = pulls.find(p => isReleasePleasePr(p) && (!p?.base?.ref || !branch || normalizeBranch(p?.base?.ref) === branch))
+          || pulls.find(isReleasePleasePr);
+      } catch (err) {
+        if (core && typeof core.warning === 'function') {
+          core.warning(`Could not check associated pull requests for SHA ${sha}: ${err.message}`);
+        }
+      }
+    }
+
+    if (!releasePleasePr && Array.isArray(context?.payload?.workflow_run?.pull_requests) && github?.rest?.pulls?.get) {
+      const candidates = context.payload.workflow_run.pull_requests.filter(p => p && (!branch || !p.base?.ref || normalizeBranch(p.base?.ref) === branch));
+      const pool = candidates.length > 0 ? candidates : context.payload.workflow_run.pull_requests;
+      for (const candidate of pool) {
+        if (candidate?.number) {
+          try {
+            const { data: fullPr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: candidate.number
+            });
+            if (isReleasePleasePr(fullPr)) {
+              releasePleasePr = fullPr;
+              break;
+            }
+          } catch (err) {
+            if (core && typeof core.warning === 'function') {
+              core.warning(`Could not fetch PR #${candidate.number} details: ${err.message}`);
+            }
+          }
+        }
+      }
+    }
+
+    if (releasePleasePr) {
+      const headRef = releasePleasePr.head?.ref || '';
+      const prIdentifier = releasePleasePr.number ? `PR #${releasePleasePr.number}` : 'Triggering PR';
+      if (core && typeof core.info === 'function') {
+        core.info(`${prIdentifier} is a release-please PR (${headRef || 'autorelease'}); skipping RC release.`);
+      }
+      return null;
     }
 
     const mergeToken = process?.env?.GITHUB_MERGE_TOKEN ? process.env.GITHUB_MERGE_TOKEN.trim() : undefined;

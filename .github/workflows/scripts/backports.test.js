@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { runBackportIssues, runBackportPr } from './backports.js';
+import { runBackportIssues, runBackportPr, runMergeLabel } from './backports.js';
 
 function createMockCore() {
   return {
@@ -565,3 +565,851 @@ test('trackingRegex in backport-issues - accurately extracts PR number from hidd
   const userComment = 'Here is a regular user comment mentioning #42 casually.';
   assert.strictEqual(userComment.match(trackingRegex), null);
 });
+
+test('runMergeLabel - adds internal/merged label to issues referenced in PR payload', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 123);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        number: 456,
+        body: 'Fixes #123 on release branch'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 123);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - resolves PR from SHA via listPullRequestsAssociatedWithCommit in workflow_run context', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    paginate: async (fn, params) => {
+      assert.strictEqual(params.commit_sha, 'commit-sha-789');
+      return [
+        {
+          number: 555,
+          state: 'closed',
+          merged_at: '2026-10-06T12:00:00Z',
+          body: 'Resolves #321'
+        }
+      ];
+    },
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 321);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'commit-sha-789'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: {} } });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 321);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - skips unmerged PR when resolving via SHA', async () => {
+  let addLabelsCalled = false;
+  const mockGithub = {
+    paginate: async (fn, params) => {
+      assert.strictEqual(params.commit_sha, 'unmerged-sha');
+      return [
+        {
+          number: 888,
+          state: 'open',
+          merged_at: null,
+          body: 'Addresses #999'
+        }
+      ];
+    },
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      issues: {
+        addLabels: async () => {
+          addLabelsCalled = true;
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'unmerged-sha'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: {} } });
+
+  assert.strictEqual(addLabelsCalled, false);
+  assert.ok(core.infoMessages.some(msg => msg.includes('No pull request found for merge-label; skipping.')));
+});
+
+test('runMergeLabel - warns and continues when issue fetch throws error', async () => {
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => {
+          throw new Error('Not found (404)');
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        number: 456,
+        body: 'Fixes #404'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core });
+
+  assert.strictEqual(core.failedMessage, null);
+  assert.ok(core.warningMessages.some(msg => msg.includes('Could not process issue #404')));
+});
+
+test('runMergeLabel - ignores issue references inside HTML comments', async () => {
+  const addedLabels = [];
+  const fetchedIssues = [];
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          fetchedIssues.push(issue_number);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        number: 456,
+        body: 'Fixes #123 on release branch <!-- tracking-pr: #999 -->'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core });
+
+  assert.deepStrictEqual(fetchedIssues, [123]);
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 123);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - ignores issue references inside fenced code blocks', async () => {
+  const addedLabels = [];
+  const fetchedIssues = [];
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          fetchedIssues.push(issue_number);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        number: 456,
+        body: 'Fixes #123 on release branch\n```\n#999 should be ignored\n```\n~~~bash\n#888 also ignored\n~~~'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core });
+
+  assert.deepStrictEqual(fetchedIssues, [123]);
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 123);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - skips adding internal/merged if already present on issue', async () => {
+  let addLabelsCalled = false;
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => ({
+          data: {
+            pull_request: null,
+            labels: [{ name: 'internal/backport' }, { name: 'internal/merged' }]
+          }
+        }),
+        addLabels: async () => {
+          addLabelsCalled = true;
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        number: 456,
+        body: 'Fixes #123 on release branch'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core });
+
+  assert.strictEqual(addLabelsCalled, false);
+  assert.ok(core.infoMessages.some(msg => msg.includes("already has 'internal/merged' label; skipping.")));
+});
+
+test('runMergeLabel - prioritizes PR matching target branch when multiple PRs associated with commit SHA', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    paginate: async () => [
+      {
+        number: 100,
+        state: 'closed',
+        merged_at: '2026-10-06T12:00:00Z',
+        base: { ref: 'main' },
+        body: 'Resolves #111'
+      },
+      {
+        number: 200,
+        state: 'closed',
+        merged_at: '2026-10-06T12:05:00Z',
+        base: { ref: 'release/v15' },
+        body: 'Resolves #222'
+      }
+    ],
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 222);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'shared-sha-123',
+        head_branch: 'release/v15'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: { BRANCH: 'release/v15' } } });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 222);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - falls back to fetching PR by number from workflow_run.pull_requests when commit lookup fails', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    paginate: async () => {
+      throw new Error('API Rate Limit (403)');
+    },
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      pulls: {
+        get: async ({ pull_number }) => {
+          assert.strictEqual(pull_number, 888);
+          return {
+            data: {
+              number: 888,
+              state: 'closed',
+              merged_at: '2026-10-06T12:00:00Z',
+              body: 'Resolves #999'
+            }
+          };
+        }
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 999);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'commit-fallback-sha',
+        head_branch: 'release/v15',
+        pull_requests: [
+          {
+            number: 888,
+            base: { ref: 'release/v15' }
+          }
+        ]
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: { BRANCH: 'release/v15' } } });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 999);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - normalizes branch prefix (refs/heads/) when matching associated PR', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    paginate: async () => [
+      {
+        number: 300,
+        state: 'closed',
+        merged_at: '2026-10-06T12:00:00Z',
+        base: { ref: 'release/v15' },
+        body: 'Resolves #444'
+      }
+    ],
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 444);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'commit-prefixed-branch',
+        head_branch: 'refs/heads/release/v15'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: { BRANCH: 'refs/heads/release/v15' } } });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 444);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - checks subsequent pull_requests candidates if earlier ones are unmerged', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    paginate: async () => [],
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      pulls: {
+        get: async ({ pull_number }) => {
+          if (pull_number === 101) {
+            return {
+              data: {
+                number: 101,
+                state: 'open',
+                merged_at: null,
+                body: 'Fixes #555'
+              }
+            };
+          }
+          if (pull_number === 102) {
+            return {
+              data: {
+                number: 102,
+                state: 'closed',
+                merged_at: '2026-10-06T12:00:00Z',
+                body: 'Fixes #666'
+              }
+            };
+          }
+          throw new Error('Unexpected PR number');
+        }
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 666);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'commit-multi-pr',
+        head_branch: 'release/v15',
+        pull_requests: [
+          { number: 101, base: { ref: 'release/v15' } },
+          { number: 102, base: { ref: 'release/v15' } }
+        ]
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: { BRANCH: 'release/v15' } } });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 666);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - logs info and skips when issue lacks internal/backport label', async () => {
+  let addLabelsCalled = false;
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => ({
+          data: {
+            pull_request: null,
+            labels: [{ name: 'enhancement' }]
+          }
+        }),
+        addLabels: async () => {
+          addLabelsCalled = true;
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        number: 456,
+        body: 'Fixes #789 on release branch'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core });
+
+  assert.strictEqual(addLabelsCalled, false);
+  assert.ok(core.infoMessages.some(msg => msg.includes("does not have 'internal/backport' label; skipping.")));
+});
+
+test('runMergeLabel - falls back to direct listPullRequestsAssociatedWithCommit when github.paginate is undefined', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+          assert.strictEqual(commit_sha, 'sha-no-paginate-backport');
+          return {
+            data: [
+              {
+                number: 777,
+                state: 'closed',
+                merged_at: '2026-10-06T12:00:00Z',
+                base: { ref: 'release/v15' },
+                body: 'Resolves #888'
+              }
+            ]
+          };
+        }
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 888);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'sha-no-paginate-backport',
+        head_branch: 'release/v15'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: { BRANCH: 'release/v15' } } });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 888);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - normalizes candidate base.ref prefix when matching PR from workflow_run.pull_requests', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    rest: {
+      pulls: {
+        get: async ({ pull_number }) => {
+          assert.strictEqual(pull_number, 555);
+          return {
+            data: {
+              number: 555,
+              state: 'closed',
+              merged_at: '2026-10-06T12:00:00Z',
+              base: { ref: 'refs/heads/release/v15' },
+              body: 'Fixes #777'
+            }
+          };
+        }
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 777);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_branch: 'release/v15',
+        pull_requests: [
+          { number: 555, base: { ref: 'refs/heads/release/v15' } }
+        ]
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: { BRANCH: 'refs/heads/release/v15' } } });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 777);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - matches both issue URL and shorthand #issue with word boundaries', async () => {
+  const addedLabels = [];
+  const fetchedIssues = [];
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          fetchedIssues.push(issue_number);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        number: 456,
+        body: 'Addresses: #101\nAlso resolves https://github.com/rancher/terraform-provider-rancher2/issues/202 and ignores token#303 and https://github.com/other/repo/issues/404'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core });
+
+  assert.deepStrictEqual(fetchedIssues.sort((a, b) => a - b), [101, 202]);
+  assert.strictEqual(addedLabels.length, 2);
+  assert.deepStrictEqual(addedLabels.map(a => a.issue_number).sort((a, b) => a - b), [101, 202]);
+});
+
+test('runMergeLabel - skips and logs when referenced item is a pull request', async () => {
+  let addLabelsCalled = false;
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => ({
+          data: {
+            pull_request: { url: `https://api.github.com/repos/rancher/terraform-provider-rancher2/pulls/${issue_number}` },
+            labels: [{ name: 'internal/backport' }]
+          }
+        }),
+        addLabels: async () => {
+          addLabelsCalled = true;
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        number: 456,
+        body: 'Addresses: #101'
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core });
+
+  assert.strictEqual(addLabelsCalled, false);
+  assert.ok(core.infoMessages.some(msg => msg.includes('#101 is a pull request, not an issue; skipping.')));
+});
+
+test('runMergeLabel - uses candidate.body directly from workflow_run.pull_requests without pulls.get API call', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 505);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_branch: 'release/v15',
+        pull_requests: [
+          {
+            number: 999,
+            state: 'closed',
+            merged_at: '2026-10-06T12:00:00Z',
+            base: { ref: 'release/v15' },
+            body: 'Fixes #505'
+          }
+        ]
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: {} } });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 505);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+test('runMergeLabel - handles null and sparse entries in pulls and pull_requests safely', async () => {
+  const addedLabels = [];
+  const mockGithub = {
+    paginate: async () => [
+      null,
+      undefined,
+      {
+        number: 888,
+        state: 'closed',
+        merged_at: '2026-10-06T12:00:00Z',
+        base: { ref: 'release/v15' },
+        body: 'Closes #707'
+      }
+    ],
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => {}
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 707);
+          return {
+            data: {
+              pull_request: null,
+              labels: [{ name: 'internal/backport' }]
+            }
+          };
+        },
+        addLabels: async (params) => {
+          addedLabels.push(params);
+        }
+      }
+    }
+  };
+
+  const core = createMockCore();
+  const context = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'commit-sparse-sha',
+        head_branch: 'release/v15',
+        pull_requests: [null, undefined]
+      }
+    }
+  };
+
+  await runMergeLabel({ github: mockGithub, context, core, process: { env: { SHA: 'commit-sparse-sha', BRANCH: 'release/v15' } } });
+
+  assert.strictEqual(addedLabels.length, 1);
+  assert.strictEqual(addedLabels[0].issue_number, 707);
+  assert.deepStrictEqual(addedLabels[0].labels, ['internal/merged']);
+});
+
+
+
+

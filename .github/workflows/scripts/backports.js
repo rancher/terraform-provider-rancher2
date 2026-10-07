@@ -33,7 +33,9 @@ function parseMaintainers(core, envVar) {
     const parsed = JSON.parse(envVar);
     return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
-    core.warning(`Could not parse TERRAFORM_MAINTAINERS: ${err.message}. Defaulting to no assignees.`);
+    if (core && typeof core.warning === 'function') {
+      core.warning(`Could not parse TERRAFORM_MAINTAINERS: ${err.message}. Defaulting to no assignees.`);
+    }
     return [];
   }
 }
@@ -48,7 +50,7 @@ export default async ({ github, context, core, process = globalThis.process, get
   case 'backport-issues':
     return await runBackportIssues({ github, context, core, process });
   case 'merge-label':
-    return await runMergeLabel({ github, context, core });
+    return await runMergeLabel({ github, context, core, process });
   default:
     throw new Error(`Unknown backport script mode: ${mode}`);
   }
@@ -463,17 +465,94 @@ export async function runBackportIssues({ github, context, core, process = globa
 /**
  * merge-label: Adds internal/merged label to issues referenced in a merged PR body.
  */
-async function runMergeLabel({ github, context, core }) {
+export async function runMergeLabel({ github, context, core, process = globalThis.process }) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
-  const pr = context.payload.pull_request;
+  let pr = context?.payload?.pull_request;
 
-  const issueRegex = /#(\d+)/g;
-  const prBody = pr.body ?? "";
-  const matches = prBody.matchAll(issueRegex);
-  const issueNumbers = [...new Set(Array.from(matches, m => parseInt(m[1], 10)))];
+  const normalizeBranch = b => (b || '').toString().trim().replace(/^refs\/heads\//, '').replace(/^origin\//, '').replace(/\/+$/, '');
 
-  core.info(`Found issue numbers in PR body: ${issueNumbers}`);
+  if (!pr) {
+    const sha = (process?.env?.SHA || context?.payload?.workflow_run?.head_sha || '').trim();
+    if (sha && (typeof github?.paginate === 'function' || typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function')) {
+      try {
+        const pulls = typeof github?.paginate === 'function'
+          ? await github.paginate(github.rest?.repos?.listPullRequestsAssociatedWithCommit, {
+            owner,
+            repo,
+            commit_sha: sha
+          })
+          : (await github.rest?.repos?.listPullRequestsAssociatedWithCommit({ owner, repo, commit_sha: sha }))?.data || [];
+        const rawBranch = (process?.env?.BRANCH || context?.payload?.workflow_run?.head_branch || '').trim();
+        const branch = normalizeBranch(rawBranch);
+        pr = pulls.find(p => p?.state === 'closed' && Boolean(p?.merged_at) && (!branch || normalizeBranch(p?.base?.ref) === branch))
+          || pulls.find(p => p?.state === 'closed' && Boolean(p?.merged_at));
+      } catch (err) {
+        if (core && typeof core.warning === 'function') {
+          core.warning(`Could not fetch PR associated with SHA ${sha}: ${err.message}`);
+        }
+      }
+    }
+  }
+
+  if (!pr && Array.isArray(context?.payload?.workflow_run?.pull_requests)) {
+    const rawBranch = (process?.env?.BRANCH || context?.payload?.workflow_run?.head_branch || '').trim();
+    const branch = normalizeBranch(rawBranch);
+    const candidates = context.payload.workflow_run.pull_requests.filter(p => p && (!branch || !p.base?.ref || normalizeBranch(p.base?.ref) === branch));
+    const pool = candidates.length > 0 ? candidates : context.payload.workflow_run.pull_requests;
+    for (const candidate of pool) {
+      if (candidate?.number) {
+        if (candidate.body && candidate.state === 'closed' && Boolean(candidate.merged_at)) {
+          pr = candidate;
+          break;
+        }
+        if (github?.rest?.pulls?.get) {
+          try {
+            const { data: fullPr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: candidate.number
+            });
+            if (fullPr?.state === 'closed' && Boolean(fullPr?.merged_at)) {
+              pr = fullPr;
+              break;
+            }
+          } catch (err) {
+            if (core && typeof core.warning === 'function') {
+              core.warning(`Could not fetch PR #${candidate.number} details: ${err.message}`);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (!pr) {
+    if (core && typeof core.info === 'function') {
+      core.info("No pull request found for merge-label; skipping.");
+    }
+    return;
+  }
+
+  const rawBody = pr.body ?? "";
+  const cleanBody = rawBody
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/(~{3,}|`{3,})[\s\S]*?\1/g, '');
+
+  const issueRegex = /(?:^|[^\w])#(\d+)\b/g;
+  const hashMatches = cleanBody.matchAll(issueRegex);
+  const hashNumbers = Array.from(hashMatches, m => parseInt(m[1], 10));
+
+  const escapeRegex = s => (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const issueUrlRegex = new RegExp(`https?:\\/\\/github\\.com\\/${escapeRegex(owner)}\\/${escapeRegex(repo)}\\/issues\\/(\\d+)\\b`, 'gi');
+  const urlMatches = cleanBody.matchAll(issueUrlRegex);
+  const urlNumbers = Array.from(urlMatches, m => parseInt(m[1], 10));
+
+  const issueNumbers = [...new Set([...hashNumbers, ...urlNumbers])];
+
+  if (core && typeof core.info === 'function') {
+    core.info(`Found issue numbers in PR body: ${issueNumbers}`);
+  }
 
   for (const issueNumber of issueNumbers) {
     try {
@@ -483,17 +562,36 @@ async function runMergeLabel({ github, context, core }) {
         issue_number: issueNumber,
       });
 
-      if (!issueData.pull_request && issueData.labels.some(l => l.name === 'internal/backport')) {
-        core.info(`Adding 'internal/merged' label to issue #${issueNumber}`);
+      const hasBackport = issueData.labels?.some(l => (typeof l === 'string' ? l : l?.name) === 'internal/backport');
+      const alreadyMerged = issueData.labels?.some(l => (typeof l === 'string' ? l : l?.name) === 'internal/merged');
+
+      if (!issueData.pull_request && hasBackport && !alreadyMerged) {
+        if (core && typeof core.info === 'function') {
+          core.info(`Adding 'internal/merged' label to issue #${issueNumber}`);
+        }
         await github.rest.issues.addLabels({
           owner,
           repo,
           issue_number: issueNumber,
           labels: ["internal/merged"]
         });
+      } else if (!issueData.pull_request && hasBackport && alreadyMerged) {
+        if (core && typeof core.info === 'function') {
+          core.info(`Issue #${issueNumber} already has 'internal/merged' label; skipping.`);
+        }
+      } else if (!issueData.pull_request && !hasBackport) {
+        if (core && typeof core.info === 'function') {
+          core.info(`Issue #${issueNumber} does not have 'internal/backport' label; skipping.`);
+        }
+      } else if (issueData.pull_request) {
+        if (core && typeof core.info === 'function') {
+          core.info(`Issue #${issueNumber} is a pull request, not an issue; skipping.`);
+        }
       }
     } catch (error) {
-      core.setFailed(`Could not process issue #${issueNumber}: ${error.message}`);
+      if (core && typeof core.warning === 'function') {
+        core.warning(`Could not process issue #${issueNumber}: ${error.message}`);
+      }
     }
   }
 }
