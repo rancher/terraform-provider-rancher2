@@ -34,6 +34,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+          ref: 'main'
       - name: Verify Tag
         id: verify-tag
         env:
@@ -64,12 +65,20 @@ jobs:
           TARGET_BRANCH="${BRANCH#refs/heads/}"
           TARGET_BRANCH="${TARGET_BRANCH#origin/}"
           TARGET_BRANCH="${TARGET_BRANCH%/}"
+          TARGET_BRANCH="${TARGET_BRANCH//[[:space:]]/}"
           git fetch origin "$TARGET_BRANCH"
-          TARGET_SHA="$SHA"
+          TARGET_SHA="${SHA//[[:space:]]/}"
+          if [ -n "$TARGET_SHA" ] && ! git cat-file -e "${TARGET_SHA}^{commit}" 2>/dev/null; then
+            git fetch origin "$TARGET_SHA" 2>/dev/null || true
+          fi
           if [ -z "$TARGET_SHA" ]; then
-            TARGET_SHA=$(git rev-parse FETCH_HEAD)
+            TARGET_SHA=$(git rev-parse FETCH_HEAD 2>/dev/null || true)
           else
-            TARGET_SHA=$(git rev-parse --verify "${TARGET_SHA}^{commit}")
+            TARGET_SHA=$(git rev-parse --verify "${TARGET_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${TARGET_SHA}^{commit}" 2>/dev/null || true)
+          fi
+          if [ -z "$TARGET_SHA" ]; then
+            echo "Error: Could not resolve target commit for tag $TAG." >&2
+            exit 1
           fi
           git tag "$TAG" -m "Release Candidate $TAG" "$TARGET_SHA"
           git push origin "$TAG"

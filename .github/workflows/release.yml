@@ -81,6 +81,10 @@ jobs:
     name: Wait for E2E Tests
     needs:
       - release-please-pr
+    if: |
+      !cancelled() &&
+      needs.release-please-pr.result == 'success' &&
+      needs.release-please-pr.outputs.prs_created == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -91,10 +95,12 @@ jobs:
       - name: Checkout Code
         id: checkout-code
         # https://github.com/actions/checkout/releases
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: wait-for-e2e
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: 'main'
+          fetch-depth: 0
+      - name: 'Trigger Wait for E2E'
         id: wait-for-e2e-tests
-        if: needs.release-please-pr.outputs.prs_created == 'true'
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
@@ -112,7 +118,11 @@ jobs:
     needs:
       - setup
       - release-please-pr
-    if: needs.release-please-pr.outputs.prs_created == 'true'
+    if: |
+      !cancelled() &&
+      needs.setup.result == 'success' &&
+      needs.release-please-pr.result == 'success' &&
+      needs.release-please-pr.outputs.prs_created == 'true'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -132,6 +142,12 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: 'Checkout Workflow Scripts from main'
+        id: checkout-scripts-main
+        run: |
+          git config --global --add safe.directory "$PWD"
+          git fetch origin main:refs/remotes/origin/main || git fetch origin main
+          git checkout origin/main -- .github/workflows/scripts 2>/dev/null || git checkout FETCH_HEAD -- .github/workflows/scripts
       - name: 'Clear out GitHub Runner'
         id: clear-runner
         # https://github.com/actions/github-script/releases
@@ -273,7 +289,9 @@ jobs:
       - setup
       - release-please-pr
       - test
-    if: always() && needs.release-please-pr.outputs.prs_created == 'true'
+    if: |
+      !cancelled() &&
+      needs.release-please-pr.outputs.prs_created == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -283,10 +301,11 @@ jobs:
       - name: Checkout Code
         id: checkout-code
         # https://github.com/actions/checkout/releases
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           fetch-depth: 0
+          ref: 'main'
       - name: Check for Tests Run
         id: check-tests-run
         # https://github.com/actions/github-script/releases
@@ -325,6 +344,12 @@ jobs:
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           fetch-depth: 0
+      - name: 'Checkout Workflow Scripts from main'
+        id: checkout-scripts-main
+        run: |
+          git config --global --add safe.directory "$PWD"
+          git fetch origin main:refs/remotes/origin/main || git fetch origin main
+          git checkout origin/main -- .github/workflows/scripts 2>/dev/null || git checkout FETCH_HEAD -- .github/workflows/scripts
       - name: 'Clear out GitHub Runner'
         id: clear-runner
         # https://github.com/actions/github-script/releases
@@ -368,7 +393,9 @@ jobs:
       - test
       - audit
       - cleanup
-    if: always() && needs.release-please-pr.outputs.prs_created == 'true'
+    if: |
+      !cancelled() &&
+      needs.release-please-pr.outputs.prs_created == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -379,9 +406,10 @@ jobs:
       - name: Checkout Code
         id: checkout-code
         # https://github.com/actions/checkout/releases
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+          ref: 'main'
       - name: Comment Success on PR
         id: comment-success
         # https://github.com/actions/github-script/releases
@@ -433,6 +461,12 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: 'Checkout Workflow Scripts and GoReleaser Config from main'
+        id: checkout-scripts-main
+        run: |
+          git config --global --add safe.directory "$PWD"
+          git fetch origin main:refs/remotes/origin/main || git fetch origin main
+          git checkout origin/main -- .github/workflows/scripts .goreleaser.yml terraform-registry-manifest.json 2>/dev/null || git checkout FETCH_HEAD -- .github/workflows/scripts .goreleaser.yml terraform-registry-manifest.json
       - name: 'Clear out GitHub Runner'
         id: clear-runner
         # https://github.com/actions/github-script/releases
@@ -444,7 +478,7 @@ jobs:
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
             const { default: script } = await import(scriptPath);
             await script({ github, context, core, process });
-      - name: retrieve GPG Credentials
+      - name: Retrieve GPG Credentials
         id: retrieve-gpg-credentials
         # https://github.com/rancher-eio/read-vault-secrets/commits
         uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
@@ -461,6 +495,7 @@ jobs:
           GPG_PASSPHRASE: ${{ env.GPG_PASSPHRASE }}
           GPG_KEY: ${{ env.GPG_KEY }}
           GORELEASER_CONFIG: .goreleaser.yml
+          SKIP_VALIDATE: 'true'
         # The key must be imported by the same 'suse' user that nix-run.sh drops to,
         # so goreleaser.sh does the import itself rather than a separate step as root.
         run: |-
