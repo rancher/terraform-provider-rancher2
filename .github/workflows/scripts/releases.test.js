@@ -552,6 +552,966 @@ test('runTriggerRcRelease - catches errors gracefully and sets failure', async (
   assert.match(failedMessage, /Failed to trigger RC release workflow: API Rate Limit Exceeded/);
 });
 
+test('runTriggerRcRelease - skips RC release when workflow run published a full release', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async (fn, params) => {
+      assert.strictEqual(params.run_id, 12345);
+      return [
+        { name: 'Generate Full Release', conclusion: 'success' }
+      ];
+    },
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 12345,
+          head_branch: 'release/v15',
+          head_sha: 'abc12345'
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'abc12345', WORKFLOW_RUN_ID: '12345' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /attempted a full release/);
+});
+
+test('runTriggerRcRelease - skips RC release when commit is from release-please PR', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async (fn, params) => {
+      if (params.run_id) {
+        return [{ name: 'Generate Full Release', conclusion: 'skipped' }];
+      }
+      assert.strictEqual(params.commit_sha, 'commit-rp-123');
+      return [
+        {
+          number: 2506,
+          state: 'closed',
+          merged_at: '2026-10-06T15:00:00Z',
+          head: { ref: 'release-please--branches--release/v15' }
+        }
+      ];
+    },
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 54321,
+          head_branch: 'release/v15',
+          head_sha: 'commit-rp-123'
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'commit-rp-123', WORKFLOW_RUN_ID: '54321' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /is a release-please PR.*skipping RC release/);
+});
+
+test('runTriggerRcRelease - skips RC release when direct PR payload is a release-please PR', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    rest: {
+      actions: {
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        pull_request: {
+          number: 2506,
+          head: { ref: 'release-please--branches--release/v15' }
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /is a release-please PR.*skipping RC release/);
+});
+
+test('runTriggerRcRelease - skips RC release when multiple PRs associated and one is release-please', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async (fn, params) => {
+      if (params.commit_sha) {
+        return [
+          {
+            number: 100,
+            state: 'closed',
+            merged_at: '2026-10-06T12:00:00Z',
+            head: { ref: 'some-feature-branch' }
+          },
+          {
+            number: 101,
+            state: 'closed',
+            merged_at: '2026-10-06T12:00:00Z',
+            head: { ref: 'release-please--branches--release/v15' }
+          }
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'shared-commit-sha' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /is a release-please PR.*skipping RC release/);
+});
+
+test('runTriggerRcRelease - skips RC release when workflow run job matches full release case-insensitively', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async () => [
+      { name: 'generate full release', conclusion: 'success' }
+    ],
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 9999,
+          head_branch: 'release/v15',
+          head_sha: 'sha-9999'
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha-9999', WORKFLOW_RUN_ID: '9999' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /attempted a full release/);
+});
+
+test('runTriggerRcRelease - skips RC release when workflow run job matches legacy publish job name', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async () => [
+      { name: 'publish', conclusion: 'success' }
+    ],
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 8888,
+          head_branch: 'release/v13',
+          head_sha: 'sha-8888'
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v13', SHA: 'sha-8888', WORKFLOW_RUN_ID: '8888' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /attempted a full release/);
+});
+
+test('runTriggerRcRelease - skips RC release when workflow run job matches release job name', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async () => [
+      { name: 'release', conclusion: 'success' }
+    ],
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 7777,
+          head_branch: 'release/v14',
+          head_sha: 'sha-7777'
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v14', SHA: 'sha-7777', WORKFLOW_RUN_ID: '7777' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /attempted a full release/);
+});
+
+test('runTriggerRcRelease - skips RC release when target branch starts with release-please', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    rest: {
+      actions: {
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release-please--branches--release/v15' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /is a release-please branch; skipping RC release/);
+});
+
+test('runTriggerRcRelease - skips RC release when workflow_run.pull_requests contains a release-please PR without commit lookup', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  let commitLookupCalled = false;
+  const mockGithub = {
+    paginate: async () => [],
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {
+          commitLookupCalled = true;
+        }
+      },
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 7777,
+          head_branch: 'release/v15',
+          head_sha: 'sha-7777',
+          pull_requests: [
+            {
+              number: 3000,
+              head: { ref: 'release-please--branches--release/v15' }
+            }
+          ]
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha-7777', WORKFLOW_RUN_ID: '7777' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.strictEqual(commitLookupCalled, false);
+  assert.match(loggedInfo, /is a release-please PR.*skipping RC release/);
+});
+
+test('runTriggerRcRelease - matches release-please PR targeting the specific branch when multiple PRs associated', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async (fn, params) => {
+      if (params.commit_sha) {
+        return [
+          {
+            number: 201,
+            state: 'closed',
+            merged_at: '2026-10-06T12:00:00Z',
+            head: { ref: 'release-please--branches--release/v14' },
+            base: { ref: 'release/v14' }
+          },
+          {
+            number: 202,
+            state: 'closed',
+            merged_at: '2026-10-06T12:00:00Z',
+            head: { ref: 'release-please--branches--release/v15' },
+            base: { ref: 'release/v15' }
+          }
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha-branch-match' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /PR #202 is a release-please PR/);
+});
+
+test('runTriggerRcRelease - skips RC release when PR has autorelease label even with custom branch name', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async (fn, params) => {
+      if (params.commit_sha) {
+        return [
+          {
+            number: 501,
+            state: 'closed',
+            merged_at: '2026-10-06T12:00:00Z',
+            head: { ref: 'custom-automation-branch' },
+            labels: [{ name: 'autorelease: pending' }]
+          }
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha-autorelease-label' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /PR #501 is a release-please PR/);
+});
+
+test('runTriggerRcRelease - falls back to non-paginated listJobsForWorkflowRun when github.paginate is undefined', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: async ({ run_id }) => {
+          assert.strictEqual(run_id, 4444);
+          return {
+            data: {
+              jobs: [{ name: 'Generate Full Release', conclusion: 'success' }]
+            }
+          };
+        },
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 4444,
+          head_branch: 'release/v15',
+          head_sha: 'sha-4444'
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha-4444', WORKFLOW_RUN_ID: '4444' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /attempted a full release/);
+});
+
+test('runTriggerRcRelease - falls back to non-paginated listPullRequestsAssociatedWithCommit when github.paginate is undefined', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async ({ commit_sha }) => {
+          assert.strictEqual(commit_sha, 'sha-fallback-no-paginate');
+          return {
+            data: [
+              {
+                number: 601,
+                state: 'closed',
+                merged_at: '2026-10-06T12:00:00Z',
+                head: { ref: 'release-please--branches--release/v15' }
+              }
+            ]
+          };
+        }
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha-fallback-no-paginate' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /PR #601 is a release-please PR/);
+});
+
+test('runTriggerRcRelease - skips RC release when PR title matches chore release pattern', async () => {
+  let dispatched = false;
+  let loggedInfo = '';
+
+  const mockGithub = {
+    paginate: async () => [
+      {
+        number: 701,
+        title: 'chore(release/v15): release 15.2.0',
+        state: 'closed',
+        merged_at: '2026-10-06T12:00:00Z',
+        head: { ref: 'custom-release-branch' },
+        base: { ref: 'refs/heads/release/v15' }
+      }
+    ],
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha-title-release' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /PR #701 is a release-please PR/);
+});
+
+test('runTriggerRcRelease - matches candidate release-please PR when base.ref has refs/heads/ prefix', async () => {
+  let dispatched = false;
+  let loggedInfo = '';
+
+  const mockGithub = {
+    rest: {
+      actions: {
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 12345,
+          pull_requests: [
+            {
+              number: 702,
+              head: { ref: 'release-please--branches--release/v15' },
+              base: { ref: 'refs/heads/release/v15' }
+            }
+          ]
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /PR #702 is a release-please PR/);
+});
+
+test('runTriggerRcRelease - falls back to pulls.get when commit lookup throws and workflow_run.pull_requests has candidate', async () => {
+  let dispatched = false;
+  let loggedInfo = '';
+
+  const mockGithub = {
+    paginate: async () => {
+      throw new Error('API Rate Limit (403)');
+    },
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {}
+      },
+      pulls: {
+        get: async ({ pull_number }) => {
+          assert.strictEqual(pull_number, 801);
+          return {
+            data: {
+              number: 801,
+              title: 'chore(release/v15): release 15.2.0',
+              head: { ref: 'custom-pr-branch' }
+            }
+          };
+        }
+      },
+      actions: {
+        listJobsForWorkflowRun: async () => ({ data: { jobs: [] } }),
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 55555,
+          pull_requests: [
+            {
+              number: 801,
+              base: { ref: 'release/v15' }
+            }
+          ]
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha-pr-fallback' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /PR #801 is a release-please PR/);
+});
+
+test('runTriggerRcRelease - safely handles object { jobs: [...] } from non-paginated listJobsForWorkflowRun', async () => {
+  let dispatched = false;
+  let loggedInfo = '';
+
+  const mockGithub = {
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: async () => ({
+          data: {
+            jobs: [
+              { name: 'Generate Full Release', conclusion: 'success' }
+            ]
+          }
+        })
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 66666,
+          head_branch: 'release/v15'
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', WORKFLOW_RUN_ID: '66666' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /attempted a full release/);
+});
+
+test('runTriggerRcRelease - resolves branch and sha from workflow_run payload when process.env lacks them', async () => {
+  let dispatchedBranch = null;
+  let dispatchedSha = null;
+  let dispatchedTag = null;
+
+  const mockGithub = {
+    paginate: async (fn, params) => {
+      if (params?.run_id) return [];
+      if (params?.commit_sha) return [];
+      return [
+        { name: 'v15.1.0' },
+        { name: 'v15.2.0-rc.1' }
+      ];
+    },
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async ({ inputs }) => {
+          dispatchedBranch = inputs.branch;
+          dispatchedSha = inputs.sha;
+          dispatchedTag = inputs.tag;
+        }
+      },
+      repos: {
+        listPullRequestsAssociatedWithCommit: () => {},
+        getContent: async () => {
+          throw new Error('Not found');
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setFailed: () => {},
+    setOutput: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 77777,
+          head_branch: 'release/v15',
+          head_sha: 'sha-from-payload'
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: {} }
+  });
+
+  assert.strictEqual(result, 'v15.2.0-rc.2');
+  assert.strictEqual(dispatchedBranch, 'release/v15');
+  assert.strictEqual(dispatchedSha, 'sha-from-payload');
+  assert.strictEqual(dispatchedTag, 'v15.2.0-rc.2');
+});
+
+test('runTriggerRcRelease - matches release-please PR when head.ref has refs/heads/ prefix', async () => {
+  let dispatched = false;
+  let loggedInfo = '';
+
+  const mockGithub = {
+    rest: {
+      actions: {
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 12345,
+          pull_requests: [
+            {
+              number: 703,
+              head: { ref: 'refs/heads/release-please--branches--release/v15' },
+              base: { ref: 'release/v15' }
+            }
+          ]
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /PR #703 is a release-please PR/);
+});
+
+test('computeNextRcTag - falls back to direct listTags when github.paginate is undefined', async () => {
+  const mockGithub = {
+    rest: {
+      repos: {
+        listTags: async () => ({
+          data: [
+            { name: 'v15.1.0' },
+            { name: 'v15.2.0-rc.1' }
+          ]
+        }),
+        getContent: async () => {
+          throw new Error('Not found');
+        }
+      }
+    }
+  };
+
+  const tag = await computeNextRcTag({
+    github: mockGithub,
+    owner: 'rancher',
+    repo: 'terraform-provider-rancher2',
+    branch: 'release/v15'
+  });
+
+  assert.strictEqual(tag, 'v15.2.0-rc.2');
+});
+
+
 test('computeNextRcTag - uses version from release-please-config.json packages release-as', async () => {
   const mockGithub = {
     paginate: async () => [
@@ -2103,4 +3063,245 @@ test('runTrackingIssue - handles malformed label structures gracefully', async (
   assert.strictEqual(mockCore.failedMessage, null);
   assert.deepStrictEqual(labelsAdded[0], ['internal/tracking']);
   assert.deepStrictEqual(labelsAdded[1], ['release/v15']);
+});
+
+test('runTriggerRcRelease - handles null and sparse entries in jobs and pull_requests safely', async () => {
+  let dispatched = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.actions.listJobsForWorkflowRun) {
+        return [null, undefined, { name: 'Run Tests', conclusion: 'success' }];
+      }
+      if (method === mockGithub.rest.repos.listTags) {
+        return [{ name: 'v15.2.0-rc.1' }];
+      }
+      return [];
+    },
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: async () => {},
+        createWorkflowDispatch: async ({ workflow_id, ref, inputs }) => {
+          dispatched = true;
+          assert.strictEqual(workflow_id, 'rc-release.yml');
+          assert.strictEqual(ref, 'main');
+          assert.strictEqual(inputs.tag, 'v15.2.0-rc.2');
+        }
+      },
+      repos: {
+        listTags: async () => {},
+        listPullRequestsAssociatedWithCommit: async () => {},
+        getContent: async () => { throw new Error('Not found'); }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setFailed: () => {},
+    setOutput: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          id: 77777,
+          head_sha: 'sparse-sha',
+          head_branch: 'release/v15',
+          pull_requests: [null, undefined]
+        }
+      }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sparse-sha', WORKFLOW_RUN_ID: '77777' } }
+  });
+
+  assert.strictEqual(result, 'v15.2.0-rc.2');
+  assert.strictEqual(dispatched, true);
+});
+
+test('runTrackingIssue - dispatches backport-issues.yml when adopting tracking issue', async () => {
+  const mockCore = createMockCore();
+  let dispatchedWorkflow = null;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.search.issuesAndPullRequests) {
+        return [
+          {
+            number: 10,
+            title: 'Add feature',
+            body: '- Addresses: #200',
+            labels: [],
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 200,
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async (params) => {
+          dispatchedWorkflow = params;
+        },
+      },
+    },
+  };
+
+  await runTrackingIssue({ github: mockGithub, core: mockCore });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.deepStrictEqual(dispatchedWorkflow, {
+    owner: 'rancher',
+    repo: 'terraform-provider-rancher2',
+    workflow_id: 'backport-issues.yml',
+    ref: 'main',
+    inputs: {
+      issue_number: '200',
+      release_label: 'release/v15',
+      pr_number: '10',
+    },
+  });
+});
+
+test('runTrackingIssue - warns and continues when workflow dispatch fails', async () => {
+  const mockCore = createMockCore();
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.search.issuesAndPullRequests) {
+        return [
+          {
+            number: 11,
+            title: 'Fix something',
+            body: '- Addresses: #201',
+            labels: [],
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 201,
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          throw new Error('API Rate Limit or Network Error');
+        },
+      },
+    },
+  };
+
+  await runTrackingIssue({ github: mockGithub, core: mockCore });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.ok(mockCore.warningMessages.some(m => m.includes("Failed to dispatch 'backport-issues.yml' for issue #201: API Rate Limit or Network Error")));
+});
+
+test('runTrackingIssue - uses GITHUB_MERGE_TOKEN and getOctokit when available', async () => {
+  const mockCore = createMockCore();
+  let tokenUsed = null;
+  let customDispatchCalled = false;
+
+  const mockProcess = {
+    env: {
+      GITHUB_MERGE_TOKEN: 'custom-vault-token-123',
+    },
+  };
+
+  const mockGetOctokit = (token) => {
+    tokenUsed = token;
+    return {
+      rest: {
+        actions: {
+          createWorkflowDispatch: async () => {
+            customDispatchCalled = true;
+          },
+        },
+      },
+    };
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.search.issuesAndPullRequests) {
+        return [
+          {
+            number: 12,
+            title: 'Update provider',
+            body: '- Addresses: #202',
+            labels: [],
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 202,
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          throw new Error('Should not be called when custom octokit is provided');
+        },
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+    getOctokit: mockGetOctokit,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(tokenUsed, 'custom-vault-token-123');
+  assert.strictEqual(customDispatchCalled, true);
 });

@@ -3,6 +3,20 @@ name: Backports
 on:
   issues:
     types: [labeled] # triggered when any label is added to an issue
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Tracking Issue Number'
+        required: true
+        type: string
+      release_label:
+        description: 'Release branch label (e.g. release/v15)'
+        required: true
+        type: string
+      pr_number:
+        description: 'Pull Request Number'
+        required: false
+        type: string
 
 env:
   TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }}
@@ -13,7 +27,7 @@ jobs:
   create-issue:
     name: 'Create Backport Issue'
     runs-on: ubuntu-latest
-    if: startsWith(github.event.label.name, 'release/v')
+    if: github.event_name == 'workflow_dispatch' || (startsWith(github.event.label.name, 'release/v') && !github.event.issue.pull_request)
     timeout-minutes: 10
     permissions:
       issues: write
@@ -25,15 +39,36 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
+            if (context.eventName === 'workflow_dispatch' && context.payload.inputs?.pr_number) {
+              const rawPrInput = String(context.payload.inputs.pr_number).trim();
+              if (rawPrInput !== '') {
+                const cleanedPr = rawPrInput.replace(/^#/, '');
+                const parsedPr = parseInt(cleanedPr, 10);
+                if (!isNaN(parsedPr) && parsedPr > 0) {
+                  return parsedPr;
+                }
+                core.setFailed(`Invalid pr_number input provided: ${context.payload.inputs.pr_number}`);
+                return;
+              }
+            }
+
+            const rawInputIssue = context.payload?.inputs?.issue_number ? String(context.payload.inputs.issue_number).trim().replace(/^#/, '') : undefined;
+            const rawIssueNumber = context.payload?.issue?.number || rawInputIssue;
+            const issueNumber = parseInt(rawIssueNumber, 10);
+            if (isNaN(issueNumber) || issueNumber <= 0) {
+              core.setFailed('Could not determine valid issue number from event payload or workflow inputs.');
+              return;
+            }
+
             let comments = [];
             try {
               comments = await github.paginate(github.rest.issues.listComments, {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.payload.issue.number,
+                issue_number: issueNumber,
               });
             } catch (error) {
-              core.setFailed(`Could not retrieve comments for issue #${context.payload.issue.number}: ${error.message}`);
+              core.setFailed(`Could not retrieve comments for issue #${issueNumber}: ${error.message}`);
               return;
             }
 
@@ -42,7 +77,7 @@ jobs:
               const comment = comments[i];
               const match = comment?.user?.login === 'github-actions[bot]' ? comment.body?.match(trackingRegex) : null;
               if (match) {
-                return Number(match[1]);
+                return parseInt(match[1], 10);
               }
             }
 
@@ -52,8 +87,10 @@ jobs:
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          TERRAFORM_MAINTAINERS: ${{env.TERRAFORM_MAINTAINERS}}
+          TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
           PR: ${{ steps.extract-pr.outputs.result }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          RELEASE_LABEL: ${{ inputs.release_label }}
           SCRIPT_MODE: backport-issues
         with:
           script: |
@@ -75,4 +112,4 @@ jobs:
             const tempPath = path.join(process.env.RUNNER_TEMP, 'backports.mjs');
             fs.writeFileSync(tempPath, scriptContent, 'utf8');
             const { default: script } = await import(pathToFileURL(tempPath).href);
-            await script({github, context, core, process});
+            await script({github, context, core, process, getOctokit});

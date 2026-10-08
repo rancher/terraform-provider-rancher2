@@ -19,6 +19,8 @@ jobs:
       issues: write # To create issues and add labels
       pull-requests: read # To read PRs
       contents: read # To checkout the repo and get branch names
+      id-token: write # Required for Vault OIDC authentication
+      actions: write # To dispatch backport-issues workflow
     steps:
       - name: Checkout Code
         id: checkout-code
@@ -27,15 +29,23 @@ jobs:
         with:
           fetch-depth: 0
           ref: 'main'
+      - name: Read Vault Secrets
+        id: read-vault-secrets
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
       - name: Create Tracking Issue
         id: create-tracking-issue
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+          GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
           SCRIPT_MODE: tracking-issue
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
             const { default: script } = await import(scriptPath);
-            await script({github, context, core, process});
+            await script({github, context, core, process, getOctokit});
