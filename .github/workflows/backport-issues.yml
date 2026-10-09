@@ -43,9 +43,8 @@ jobs:
               const rawPrInput = String(context.payload.inputs.pr_number).trim();
               if (rawPrInput !== '') {
                 const cleanedPr = rawPrInput.replace(/^#/, '');
-                const parsedPr = parseInt(cleanedPr, 10);
-                if (!isNaN(parsedPr) && parsedPr > 0) {
-                  return parsedPr;
+                if (/^[1-9]\d*$/.test(cleanedPr)) {
+                  return parseInt(cleanedPr, 10);
                 }
                 core.setFailed(`Invalid pr_number input provided: ${context.payload.inputs.pr_number}`);
                 return;
@@ -53,12 +52,12 @@ jobs:
             }
 
             const rawInputIssue = context.payload?.inputs?.issue_number ? String(context.payload.inputs.issue_number).trim().replace(/^#/, '') : undefined;
-            const rawIssueNumber = context.payload?.issue?.number || rawInputIssue;
-            const issueNumber = parseInt(rawIssueNumber, 10);
-            if (isNaN(issueNumber) || issueNumber <= 0) {
+            const rawIssueNumber = context.payload?.issue?.number !== undefined ? String(context.payload.issue.number) : rawInputIssue;
+            if (!rawIssueNumber || !/^[1-9]\d*$/.test(rawIssueNumber)) {
               core.setFailed('Could not determine valid issue number from event payload or workflow inputs.');
               return;
             }
+            const issueNumber = parseInt(rawIssueNumber, 10);
 
             let comments = [];
             try {

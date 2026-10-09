@@ -480,6 +480,9 @@ test('runBackportIssues - creates sub-issue and handles quoted PR numbers', asyn
       },
     },
     request: async (endpoint, params) => {
+      if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        return { data: [] };
+      }
       if (endpoint === 'POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
         subIssueLinkedParams = params;
         return { data: {} };
@@ -593,6 +596,9 @@ test('runBackportIssues - handles workflow_dispatch inputs via env and fetches p
       },
     },
     request: async (endpoint, params) => {
+      if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        return { data: [] };
+      }
       if (endpoint === 'POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
         subIssueLinkedParams = params;
         return { status: 201 };
@@ -1791,14 +1797,133 @@ test('runBackportIssues - throws when PR number is non-positive', async () => {
   );
 });
 
+test('runBackportIssues - throws when release label format is invalid', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '48',
+      ISSUE_NUMBER: '600',
+      RELEASE_LABEL: 'invalid-label',
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: {},
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Invalid release label: "invalid-label". It must match the pattern release\/v<major>/ }
+  );
+});
+
+test('runBackportIssues - throws when issue number is malformed string or decimal', async () => {
+  const mockCore = createMockCore();
+
+  for (const malformed of ['600abc', '1.5', 'not-a-number']) {
+    await assert.rejects(
+      async () => {
+        await runBackportIssues({
+          github: {},
+          context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+          core: mockCore,
+          process: {
+            env: {
+              PR: '48',
+              ISSUE_NUMBER: malformed,
+              RELEASE_LABEL: 'release/v15',
+            },
+          },
+        });
+      },
+      { message: new RegExp(`Invalid issue number: ${malformed}`) }
+    );
+  }
+});
+
+test('runBackportIssues - throws when PR number is malformed string or decimal', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => ({
+          data: { number: 600, title: 'Valid Parent Issue' },
+        }),
+      },
+    },
+    request: async () => ({ data: [] }),
+  };
+
+  for (const malformed of ['48abc', '1.5']) {
+    await assert.rejects(
+      async () => {
+        await runBackportIssues({
+          github: mockGithub,
+          context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+          core: mockCore,
+          process: {
+            env: {
+              PR: malformed,
+              ISSUE_NUMBER: '600',
+              RELEASE_LABEL: 'release/v15',
+            },
+          },
+        });
+      },
+      { message: new RegExp(`Invalid PR number: ${malformed}`) }
+    );
+  }
+});
+
+test('runBackportIssues - throws when sub-issues lookup throws an API error', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '48',
+      ISSUE_NUMBER: '600',
+      RELEASE_LABEL: 'release/v15',
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => ({
+          data: { number: 600, title: 'Valid Parent Issue' },
+        }),
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        throw new Error('API rate limit exceeded');
+      }
+      return { data: [] };
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Failed to check existing sub-issues for #600: API rate limit exceeded/ }
+  );
+});
+
 test('extract-pr workflow logic - validates explicit pr_number inputs and tracking headers correctly', () => {
   const parsePrInput = (rawInput) => {
     const rawPrInput = String(rawInput ?? '').trim();
     if (rawPrInput !== '') {
       const cleanedPr = rawPrInput.replace(/^#/, '');
-      const parsedPr = parseInt(cleanedPr, 10);
-      if (!isNaN(parsedPr) && parsedPr > 0) {
-        return { success: true, pr: parsedPr };
+      if (/^[1-9]\d*$/.test(cleanedPr)) {
+        return { success: true, pr: parseInt(cleanedPr, 10) };
       }
       return { success: false, error: `Invalid pr_number input provided: ${rawInput}` };
     }
@@ -1816,6 +1941,14 @@ test('extract-pr workflow logic - validates explicit pr_number inputs and tracki
   assert.strictEqual(invalidAlpha.success, false);
   assert.match(invalidAlpha.error, /Invalid pr_number input provided: abc/);
 
+  const invalidAlphaSuffix = parsePrInput('#48abc');
+  assert.strictEqual(invalidAlphaSuffix.success, false);
+  assert.match(invalidAlphaSuffix.error, /Invalid pr_number input provided: #48abc/);
+
+  const invalidFloat = parsePrInput('1.5');
+  assert.strictEqual(invalidFloat.success, false);
+  assert.match(invalidFloat.error, /Invalid pr_number input provided: 1.5/);
+
   const invalidNegative = parsePrInput('-10');
   assert.strictEqual(invalidNegative.success, false);
   assert.match(invalidNegative.error, /Invalid pr_number input provided: -10/);
@@ -1823,4 +1956,21 @@ test('extract-pr workflow logic - validates explicit pr_number inputs and tracki
   const invalidZero = parsePrInput('0');
   assert.strictEqual(invalidZero.success, false);
   assert.match(invalidZero.error, /Invalid pr_number input provided: 0/);
+
+  const parseIssueInput = ({ issueNumberPayload, issueNumberInput }) => {
+    const rawInputIssue = issueNumberInput ? String(issueNumberInput).trim().replace(/^#/, '') : undefined;
+    const rawIssueNumber = issueNumberPayload !== undefined ? String(issueNumberPayload) : rawInputIssue;
+    if (!rawIssueNumber || !/^[1-9]\d*$/.test(rawIssueNumber)) {
+      return { success: false, error: 'Could not determine valid issue number from event payload or workflow inputs.' };
+    }
+    return { success: true, issueNumber: parseInt(rawIssueNumber, 10) };
+  };
+
+  assert.deepStrictEqual(parseIssueInput({ issueNumberPayload: 500 }), { success: true, issueNumber: 500 });
+  assert.deepStrictEqual(parseIssueInput({ issueNumberInput: '600' }), { success: true, issueNumber: 600 });
+  assert.deepStrictEqual(parseIssueInput({ issueNumberInput: '#600' }), { success: true, issueNumber: 600 });
+  assert.strictEqual(parseIssueInput({ issueNumberInput: '#600abc' }).success, false);
+  assert.strictEqual(parseIssueInput({ issueNumberInput: '1.5' }).success, false);
+  assert.strictEqual(parseIssueInput({ issueNumberInput: '0' }).success, false);
+  assert.strictEqual(parseIssueInput({}).success, false);
 });

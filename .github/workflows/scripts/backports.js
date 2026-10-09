@@ -405,14 +405,17 @@ export async function runBackportIssues({ github, context, core, process = globa
   if (!releaseLabel) {
     throw new Error('Release label must be provided via env (RELEASE_LABEL) or label event payload.');
   }
+  if (!/^release\/v\d+$/.test(releaseLabel)) {
+    throw new Error(`Invalid release label: "${releaseLabel}". It must match the pattern release/v<major> (e.g. release/v15).`);
+  }
 
   let parentIssue = context?.payload?.issue;
-  const envIssue = process?.env?.ISSUE_NUMBER ? process.env.ISSUE_NUMBER.trim().replace(/^#/, '') : '';
-  const rawIssueNumber = envIssue || parentIssue?.number;
-  const parentIssueNumber = parseInt(rawIssueNumber, 10);
-  if (isNaN(parentIssueNumber) || parentIssueNumber <= 0) {
-    throw new Error(`Invalid issue number: ${process?.env?.ISSUE_NUMBER || parentIssue?.number}`);
+  const envIssue = process?.env?.ISSUE_NUMBER ? String(process.env.ISSUE_NUMBER).replace(/^["']|["']$/g, '').trim().replace(/^#/, '') : '';
+  const rawIssueNumber = envIssue || (parentIssue?.number !== undefined ? String(parentIssue.number) : '');
+  if (!rawIssueNumber || !/^[1-9]\d*$/.test(rawIssueNumber)) {
+    throw new Error(`Invalid issue number: ${process?.env?.ISSUE_NUMBER ?? parentIssue?.number}`);
   }
+  const parentIssueNumber = parseInt(rawIssueNumber, 10);
 
   if (!parentIssue || !parentIssue.title) {
     try {
@@ -458,18 +461,16 @@ export async function runBackportIssues({ github, context, core, process = globa
         }
       }
     } catch (checkError) {
-      if (core && typeof core.info === 'function') {
-        core.info(`Could not check existing sub-issues for #${parentIssueNumber}: ${checkError.message}`);
-      }
+      throw new Error(`Failed to check existing sub-issues for #${parentIssueNumber}: ${checkError.message}`);
     }
   }
 
   const assignees = parseMaintainers(core, process?.env?.TERRAFORM_MAINTAINERS);
   const rawPr = process?.env?.PR ? String(process.env.PR).replace(/^["']|["']$/g, '').trim().replace(/^#/, '') : '';
-  const extractedPrNumber = parseInt(rawPr, 10);
-  if (isNaN(extractedPrNumber) || extractedPrNumber <= 0) {
+  if (!rawPr || !/^[1-9]\d*$/.test(rawPr)) {
     throw new Error(`Invalid PR number: ${process?.env?.PR}`);
   }
+  const extractedPrNumber = parseInt(rawPr, 10);
   let response;
 
   try {
