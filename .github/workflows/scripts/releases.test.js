@@ -3123,3 +3123,279 @@ test('runTriggerRcRelease - handles null and sparse entries in jobs and pull_req
   assert.strictEqual(result, 'v15.2.0-rc.2');
   assert.strictEqual(dispatched, true);
 });
+
+test('runTrackingIssue - dispatches backport-issues.yml when adopting tracking issue', async () => {
+  const mockCore = createMockCore();
+  let dispatchedWorkflow = null;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.search.issuesAndPullRequests) {
+        return [
+          {
+            number: 10,
+            title: 'Add feature',
+            body: '- Addresses: #200',
+            labels: [],
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 200,
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async (params) => {
+          dispatchedWorkflow = params;
+        },
+      },
+    },
+  };
+
+  await runTrackingIssue({ github: mockGithub, core: mockCore });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.deepStrictEqual(dispatchedWorkflow, {
+    owner: 'rancher',
+    repo: 'terraform-provider-rancher2',
+    workflow_id: 'backport-issues.yml',
+    ref: 'main',
+    inputs: {
+      issue_number: '200',
+      release_label: 'release/v15',
+      pr_number: '10',
+    },
+  });
+});
+
+test('runTrackingIssue - records error and fails when workflow dispatch fails', async () => {
+  const mockCore = createMockCore();
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.search.issuesAndPullRequests) {
+        return [
+          {
+            number: 11,
+            title: 'Fix something',
+            body: '- Addresses: #201',
+            labels: [],
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 201,
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          throw new Error('API Rate Limit or Network Error');
+        },
+      },
+    },
+  };
+
+  await runTrackingIssue({ github: mockGithub, core: mockCore });
+
+  assert.match(mockCore.failedMessage, /Failed to dispatch 'backport-issues.yml' for issue #201: API Rate Limit or Network Error/);
+  assert.ok(mockCore.warningMessages.some(m => m.includes("Failed to dispatch 'backport-issues.yml' for issue #201: API Rate Limit or Network Error")));
+});
+
+test('runTrackingIssue - uses GITHUB_MERGE_TOKEN and getOctokit when available', async () => {
+  const mockCore = createMockCore();
+  let tokenUsed = null;
+  let customDispatchCalled = false;
+  let customDispatchParams = null;
+
+  const mockProcess = {
+    env: {
+      GITHUB_MERGE_TOKEN: 'custom-vault-token-123',
+    },
+  };
+
+  const mockGetOctokit = (token) => {
+    tokenUsed = token;
+    return {
+      rest: {
+        actions: {
+          createWorkflowDispatch: async (params) => {
+            customDispatchCalled = true;
+            customDispatchParams = params;
+          },
+        },
+      },
+    };
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.search.issuesAndPullRequests) {
+        return [
+          {
+            number: 12,
+            title: 'Update provider',
+            body: '- Addresses: #202',
+            labels: [],
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 202,
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          throw new Error('Should not be called when custom octokit is provided');
+        },
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+    getOctokit: mockGetOctokit,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(tokenUsed, 'custom-vault-token-123');
+  assert.strictEqual(customDispatchCalled, true);
+  assert.deepStrictEqual(customDispatchParams, {
+    owner: 'rancher',
+    repo: 'terraform-provider-rancher2',
+    workflow_id: 'backport-issues.yml',
+    ref: 'main',
+    inputs: {
+      issue_number: '202',
+      release_label: 'release/v15',
+      pr_number: '12',
+    },
+  });
+});
+
+test('runTrackingIssue - falls back to github.getOctokit when getOctokit argument is undefined', async () => {
+  const mockCore = createMockCore();
+  let tokenUsed = null;
+  let customDispatchCalled = false;
+  let customDispatchParams = null;
+
+  const mockProcess = {
+    env: {
+      GITHUB_MERGE_TOKEN: 'token-via-github-octokit',
+    },
+  };
+
+  const mockGithub = {
+    getOctokit: (token) => {
+      tokenUsed = token;
+      return {
+        rest: {
+          actions: {
+            createWorkflowDispatch: async (params) => {
+              customDispatchCalled = true;
+              customDispatchParams = params;
+            },
+          },
+        },
+      };
+    },
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.search.issuesAndPullRequests) {
+        return [
+          {
+            number: 13,
+            title: 'Fix issue',
+            body: '- Addresses: #203',
+            labels: [],
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 203,
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(tokenUsed, 'token-via-github-octokit');
+  assert.strictEqual(customDispatchCalled, true);
+  assert.deepStrictEqual(customDispatchParams, {
+    owner: 'rancher',
+    repo: 'terraform-provider-rancher2',
+    workflow_id: 'backport-issues.yml',
+    ref: 'main',
+    inputs: {
+      issue_number: '203',
+      release_label: 'release/v15',
+      pr_number: '13',
+    },
+  });
+});

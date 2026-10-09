@@ -399,16 +399,78 @@ export async function runBackportPr({ github, context, core, process = globalThi
 export async function runBackportIssues({ github, context, core, process = globalThis.process }) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
-  const releaseLabel = context.payload.label.name;
-  const parentIssue = context.payload.issue;
+
+  const envLabel = process?.env?.RELEASE_LABEL ? process.env.RELEASE_LABEL.trim() : '';
+  const releaseLabel = envLabel || context?.payload?.label?.name;
+  if (!releaseLabel) {
+    throw new Error('Release label must be provided via env (RELEASE_LABEL) or label event payload.');
+  }
+  if (!/^release\/v\d+$/.test(releaseLabel)) {
+    throw new Error(`Invalid release label: "${releaseLabel}". It must match the pattern release/v<major> (e.g. release/v15).`);
+  }
+
+  let parentIssue = context?.payload?.issue;
+  const envIssue = process?.env?.ISSUE_NUMBER ? String(process.env.ISSUE_NUMBER).replace(/^["']|["']$/g, '').trim().replace(/^#/, '') : '';
+  const rawIssueNumber = envIssue || (parentIssue?.number !== undefined ? String(parentIssue.number) : '');
+  if (!rawIssueNumber || !/^[1-9]\d*$/.test(rawIssueNumber)) {
+    throw new Error(`Invalid issue number: ${process?.env?.ISSUE_NUMBER ?? parentIssue?.number}`);
+  }
+  const parentIssueNumber = parseInt(rawIssueNumber, 10);
+
+  if (!parentIssue || !parentIssue.title) {
+    try {
+      const issueRes = await github.rest.issues.get({
+        owner,
+        repo,
+        issue_number: parentIssueNumber,
+      });
+      parentIssue = issueRes.data;
+    } catch (error) {
+      throw new Error(`Failed to retrieve parent issue #${parentIssueNumber}: ${error.message}`);
+    }
+  }
+
+  if (parentIssue?.pull_request) {
+    throw new Error(`Issue #${parentIssueNumber} is a pull request, not an issue.`);
+  }
+
   const parentIssueTitle = parentIssue.title;
-  const parentIssueNumber = parentIssue.number;
+
+  // Check if a sub-issue for this release branch already exists on the parent issue to ensure idempotency
+  if (typeof github?.request === 'function') {
+    try {
+      const existingSubIssuesRes = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
+        owner,
+        repo,
+        issue_number: parentIssueNumber,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      });
+      const existingSubIssues = existingSubIssuesRes?.data;
+      if (Array.isArray(existingSubIssues)) {
+        const alreadyExists = existingSubIssues.some(si =>
+          si?.labels?.some(l => (typeof l === 'string' ? l : l?.name) === releaseLabel) ||
+          (si?.title && si.title.startsWith(`[${releaseLabel}]`))
+        );
+        if (alreadyExists) {
+          if (core && typeof core.info === 'function') {
+            core.info(`Sub-issue for release label '${releaseLabel}' already exists on tracking issue #${parentIssueNumber}. Skipping creation.`);
+          }
+          return;
+        }
+      }
+    } catch (checkError) {
+      throw new Error(`Failed to check existing sub-issues for #${parentIssueNumber}: ${checkError.message}`);
+    }
+  }
+
   const assignees = parseMaintainers(core, process?.env?.TERRAFORM_MAINTAINERS);
-  const rawPr = process?.env?.PR ? String(process.env.PR).replace(/^["']|["']$/g, '').trim() : '';
-  const extractedPrNumber = parseInt(rawPr, 10);
-  if (isNaN(extractedPrNumber)) {
+  const rawPr = process?.env?.PR ? String(process.env.PR).replace(/^["']|["']$/g, '').trim().replace(/^#/, '') : '';
+  if (!rawPr || !/^[1-9]\d*$/.test(rawPr)) {
     throw new Error(`Invalid PR number: ${process?.env?.PR}`);
   }
+  const extractedPrNumber = parseInt(rawPr, 10);
   let response;
 
   try {
@@ -444,7 +506,9 @@ export async function runBackportIssues({ github, context, core, process = globa
     throw new Error(`Failed to create backport issue: ${error.message}`);
   }
   const newIssue = response.data;
-  core.info(`New backport issue data: ${JSON.stringify(newIssue)}`);
+  if (core && typeof core.info === 'function') {
+    core.info(`New backport issue data: ${JSON.stringify(newIssue)}`);
+  }
   const subIssueId = newIssue.id;
 
   try {

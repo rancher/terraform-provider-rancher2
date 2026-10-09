@@ -480,6 +480,9 @@ test('runBackportIssues - creates sub-issue and handles quoted PR numbers', asyn
       },
     },
     request: async (endpoint, params) => {
+      if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        return { data: [] };
+      }
       if (endpoint === 'POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
         subIssueLinkedParams = params;
         return { data: {} };
@@ -544,23 +547,301 @@ test('runBackportIssues - throws on invalid PR number', async () => {
   );
 });
 
+test('runBackportIssues - handles workflow_dispatch inputs via env and fetches parent issue', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '48',
+      ISSUE_NUMBER: '600',
+      RELEASE_LABEL: 'release/v15',
+      TERRAFORM_MAINTAINERS: '["testmaintainer"]',
+    },
+  };
+
+  let createdIssueParams = null;
+  let subIssueLinkedParams = null;
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 48) {
+            return {
+              data: {
+                number: 48,
+                title: 'Add support for feature X',
+                body: 'Detailed PR description for feature X',
+              },
+            };
+          }
+          if (issue_number === 600) {
+            return {
+              data: {
+                number: 600,
+                title: 'Parent Issue From Env',
+              },
+            };
+          }
+          throw new Error(`Unexpected issue number: ${issue_number}`);
+        },
+        create: async (params) => {
+          createdIssueParams = params;
+          return {
+            data: {
+              id: 8888,
+              number: 601,
+            },
+          };
+        },
+      },
+    },
+    request: async (endpoint, params) => {
+      if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        return { data: [] };
+      }
+      if (endpoint === 'POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        subIssueLinkedParams = params;
+        return { status: 201 };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {},
+  };
+
+  await runBackportIssues({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(createdIssueParams.title, '[release/v15] Parent Issue From Env');
+  assert.deepStrictEqual(createdIssueParams.labels, ['release/v15', 'internal/backport']);
+  assert.deepStrictEqual(createdIssueParams.assignees, ['testmaintainer']);
+  assert.match(createdIssueParams.body, /Backport #48 to release\/v15 for #600/);
+  assert.strictEqual(subIssueLinkedParams.issue_number, 600);
+  assert.strictEqual(subIssueLinkedParams.sub_issue_id, 8888);
+});
+
+test('runBackportIssues - throws when release label is missing', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '49',
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      issue: { number: 700, title: 'Title' },
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: {},
+        context: mockContext,
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Release label must be provided via env \(RELEASE_LABEL\) or label event payload/ }
+  );
+});
+
+test('runBackportIssues - throws when parent issue retrieval fails', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '49',
+      ISSUE_NUMBER: '999',
+      RELEASE_LABEL: 'release/v15',
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 999) {
+            throw new Error('Not Found');
+          }
+          return { data: { number: 49, title: 'PR' } };
+        },
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {},
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: mockGithub,
+        context: mockContext,
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Failed to retrieve parent issue #999: Not Found/ }
+  );
+});
+
+test('runBackportIssues - skips creation when sub-issue for release branch already exists (idempotent)', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '48',
+      ISSUE_NUMBER: '600',
+      RELEASE_LABEL: 'release/v15',
+    },
+  };
+
+  let createIssueCalled = false;
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 600) {
+            return {
+              data: {
+                number: 600,
+                title: 'Existing Parent Issue',
+              },
+            };
+          }
+          throw new Error(`Unexpected issue number: ${issue_number}`);
+        },
+        create: async () => {
+          createIssueCalled = true;
+          return { data: { id: 9999, number: 601 } };
+        },
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        return {
+          data: [
+            {
+              number: 601,
+              title: '[release/v15] Existing Parent Issue',
+              labels: [{ name: 'release/v15' }, { name: 'internal/backport' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {},
+  };
+
+  await runBackportIssues({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(createIssueCalled, false);
+  assert.ok(mockCore.infoMessages.some(m => m.includes("Sub-issue for release label 'release/v15' already exists on tracking issue #600. Skipping creation.")));
+});
+
+test('runBackportIssues - sanitizes leading "#" from ISSUE_NUMBER and PR env inputs', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '#48',
+      ISSUE_NUMBER: '#600',
+      RELEASE_LABEL: 'release/v15',
+    },
+  };
+
+  let fetchedIssueNumber = null;
+  let fetchedPrNumber = null;
+  let createdIssueParams = null;
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 600) {
+            fetchedIssueNumber = issue_number;
+            return { data: { number: 600, title: 'Parent Issue With Hash' } };
+          }
+          if (issue_number === 48) {
+            fetchedPrNumber = issue_number;
+            return { data: { number: 48, title: 'PR With Hash', body: 'Body' } };
+          }
+          throw new Error(`Unexpected issue number: ${issue_number}`);
+        },
+        create: async (params) => {
+          createdIssueParams = params;
+          return { data: { id: 7777, number: 605 } };
+        },
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        return { data: [] };
+      }
+      if (endpoint === 'POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        return { status: 201 };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {},
+  };
+
+  await runBackportIssues({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(fetchedIssueNumber, 600);
+  assert.strictEqual(fetchedPrNumber, 48);
+  assert.strictEqual(createdIssueParams.title, '[release/v15] Parent Issue With Hash');
+});
+
 test('trackingRegex in backport-issues - accurately extracts PR number from hidden comment header', () => {
   const trackingRegex = /<!--\s*tracking-pr:\s*#?(\d+)\s*-->/i;
 
   const standardHeader = '<!-- tracking-pr: #42 -->\nThis is the tracking issue for PR #42';
   const match1 = standardHeader.match(trackingRegex);
   assert.ok(match1);
-  assert.strictEqual(Number(match1[1]), 42);
+  assert.strictEqual(parseInt(match1[1], 10), 42);
 
   const withoutHash = '<!-- tracking-pr: 99 -->\nThis is the tracking issue for PR #99';
   const match2 = withoutHash.match(trackingRegex);
   assert.ok(match2);
-  assert.strictEqual(Number(match2[1]), 99);
+  assert.strictEqual(parseInt(match2[1], 10), 99);
 
   const extraSpaces = '<!--    tracking-pr:   #12345   -->';
   const match3 = extraSpaces.match(trackingRegex);
   assert.ok(match3);
-  assert.strictEqual(Number(match3[1]), 12345);
+  assert.strictEqual(parseInt(match3[1], 10), 12345);
 
   const userComment = 'Here is a regular user comment mentioning #42 casually.';
   assert.strictEqual(userComment.match(trackingRegex), null);
@@ -1412,3 +1693,284 @@ test('runMergeLabel - handles null and sparse entries in pulls and pull_requests
 
 
 
+test('runBackportIssues - throws when parent issue is a pull request', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '48',
+      ISSUE_NUMBER: '500',
+      RELEASE_LABEL: 'release/v15',
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 500) {
+            return {
+              data: {
+                number: 500,
+                title: 'This is actually a pull request',
+                pull_request: { url: 'https://api.github.com/repos/rancher/terraform-provider-rancher2/pulls/500' },
+              },
+            };
+          }
+          return { data: { number: issue_number, title: 'PR' } };
+        },
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {},
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: mockGithub,
+        context: mockContext,
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Issue #500 is a pull request, not an issue/ }
+  );
+});
+
+test('runBackportIssues - throws when issue number is non-positive', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '48',
+      ISSUE_NUMBER: '0',
+      RELEASE_LABEL: 'release/v15',
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: {},
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Invalid issue number: 0/ }
+  );
+});
+
+test('runBackportIssues - throws when PR number is non-positive', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '-5',
+      ISSUE_NUMBER: '600',
+      RELEASE_LABEL: 'release/v15',
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => ({
+          data: { number: 600, title: 'Valid Parent Issue' },
+        }),
+      },
+    },
+    request: async () => ({ data: [] }),
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Invalid PR number: -5/ }
+  );
+});
+
+test('runBackportIssues - throws when release label format is invalid', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '48',
+      ISSUE_NUMBER: '600',
+      RELEASE_LABEL: 'invalid-label',
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: {},
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Invalid release label: "invalid-label". It must match the pattern release\/v<major>/ }
+  );
+});
+
+test('runBackportIssues - throws when issue number is malformed string or decimal', async () => {
+  const mockCore = createMockCore();
+
+  for (const malformed of ['600abc', '1.5', 'not-a-number']) {
+    await assert.rejects(
+      async () => {
+        await runBackportIssues({
+          github: {},
+          context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+          core: mockCore,
+          process: {
+            env: {
+              PR: '48',
+              ISSUE_NUMBER: malformed,
+              RELEASE_LABEL: 'release/v15',
+            },
+          },
+        });
+      },
+      { message: new RegExp(`Invalid issue number: ${malformed}`) }
+    );
+  }
+});
+
+test('runBackportIssues - throws when PR number is malformed string or decimal', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => ({
+          data: { number: 600, title: 'Valid Parent Issue' },
+        }),
+      },
+    },
+    request: async () => ({ data: [] }),
+  };
+
+  for (const malformed of ['48abc', '1.5']) {
+    await assert.rejects(
+      async () => {
+        await runBackportIssues({
+          github: mockGithub,
+          context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+          core: mockCore,
+          process: {
+            env: {
+              PR: malformed,
+              ISSUE_NUMBER: '600',
+              RELEASE_LABEL: 'release/v15',
+            },
+          },
+        });
+      },
+      { message: new RegExp(`Invalid PR number: ${malformed}`) }
+    );
+  }
+});
+
+test('runBackportIssues - throws when sub-issues lookup throws an API error', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: '48',
+      ISSUE_NUMBER: '600',
+      RELEASE_LABEL: 'release/v15',
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => ({
+          data: { number: 600, title: 'Valid Parent Issue' },
+        }),
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues') {
+        throw new Error('API rate limit exceeded');
+      }
+      return { data: [] };
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Failed to check existing sub-issues for #600: API rate limit exceeded/ }
+  );
+});
+
+test('extract-pr workflow logic - validates explicit pr_number inputs and tracking headers correctly', () => {
+  const parsePrInput = (rawInput) => {
+    const rawPrInput = String(rawInput ?? '').trim();
+    if (rawPrInput !== '') {
+      const cleanedPr = rawPrInput.replace(/^#/, '');
+      if (/^[1-9]\d*$/.test(cleanedPr)) {
+        return { success: true, pr: parseInt(cleanedPr, 10) };
+      }
+      return { success: false, error: `Invalid pr_number input provided: ${rawInput}` };
+    }
+    return { success: true, pr: null };
+  };
+
+  assert.deepStrictEqual(parsePrInput('48'), { success: true, pr: 48 });
+  assert.deepStrictEqual(parsePrInput('#48'), { success: true, pr: 48 });
+  assert.deepStrictEqual(parsePrInput('  #102  '), { success: true, pr: 102 });
+  assert.deepStrictEqual(parsePrInput(''), { success: true, pr: null });
+  assert.deepStrictEqual(parsePrInput('   '), { success: true, pr: null });
+  assert.deepStrictEqual(parsePrInput(undefined), { success: true, pr: null });
+
+  const invalidAlpha = parsePrInput('abc');
+  assert.strictEqual(invalidAlpha.success, false);
+  assert.match(invalidAlpha.error, /Invalid pr_number input provided: abc/);
+
+  const invalidAlphaSuffix = parsePrInput('#48abc');
+  assert.strictEqual(invalidAlphaSuffix.success, false);
+  assert.match(invalidAlphaSuffix.error, /Invalid pr_number input provided: #48abc/);
+
+  const invalidFloat = parsePrInput('1.5');
+  assert.strictEqual(invalidFloat.success, false);
+  assert.match(invalidFloat.error, /Invalid pr_number input provided: 1.5/);
+
+  const invalidNegative = parsePrInput('-10');
+  assert.strictEqual(invalidNegative.success, false);
+  assert.match(invalidNegative.error, /Invalid pr_number input provided: -10/);
+
+  const invalidZero = parsePrInput('0');
+  assert.strictEqual(invalidZero.success, false);
+  assert.match(invalidZero.error, /Invalid pr_number input provided: 0/);
+
+  const parseIssueInput = ({ issueNumberPayload, issueNumberInput }) => {
+    const rawInputIssue = issueNumberInput ? String(issueNumberInput).trim().replace(/^#/, '') : undefined;
+    const rawIssueNumber = issueNumberPayload !== undefined ? String(issueNumberPayload) : rawInputIssue;
+    if (!rawIssueNumber || !/^[1-9]\d*$/.test(rawIssueNumber)) {
+      return { success: false, error: 'Could not determine valid issue number from event payload or workflow inputs.' };
+    }
+    return { success: true, issueNumber: parseInt(rawIssueNumber, 10) };
+  };
+
+  assert.deepStrictEqual(parseIssueInput({ issueNumberPayload: 500 }), { success: true, issueNumber: 500 });
+  assert.deepStrictEqual(parseIssueInput({ issueNumberInput: '600' }), { success: true, issueNumber: 600 });
+  assert.deepStrictEqual(parseIssueInput({ issueNumberInput: '#600' }), { success: true, issueNumber: 600 });
+  assert.strictEqual(parseIssueInput({ issueNumberInput: '#600abc' }).success, false);
+  assert.strictEqual(parseIssueInput({ issueNumberInput: '1.5' }).success, false);
+  assert.strictEqual(parseIssueInput({ issueNumberInput: '0' }).success, false);
+  assert.strictEqual(parseIssueInput({}).success, false);
+});
