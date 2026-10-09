@@ -3183,7 +3183,7 @@ test('runTrackingIssue - dispatches backport-issues.yml when adopting tracking i
   });
 });
 
-test('runTrackingIssue - warns and continues when workflow dispatch fails', async () => {
+test('runTrackingIssue - records error and fails when workflow dispatch fails', async () => {
   const mockCore = createMockCore();
 
   const mockGithub = {
@@ -3227,7 +3227,7 @@ test('runTrackingIssue - warns and continues when workflow dispatch fails', asyn
 
   await runTrackingIssue({ github: mockGithub, core: mockCore });
 
-  assert.strictEqual(mockCore.failedMessage, null);
+  assert.match(mockCore.failedMessage, /Failed to dispatch 'backport-issues.yml' for issue #201: API Rate Limit or Network Error/);
   assert.ok(mockCore.warningMessages.some(m => m.includes("Failed to dispatch 'backport-issues.yml' for issue #201: API Rate Limit or Network Error")));
 });
 
@@ -3235,6 +3235,7 @@ test('runTrackingIssue - uses GITHUB_MERGE_TOKEN and getOctokit when available',
   const mockCore = createMockCore();
   let tokenUsed = null;
   let customDispatchCalled = false;
+  let customDispatchParams = null;
 
   const mockProcess = {
     env: {
@@ -3247,8 +3248,9 @@ test('runTrackingIssue - uses GITHUB_MERGE_TOKEN and getOctokit when available',
     return {
       rest: {
         actions: {
-          createWorkflowDispatch: async () => {
+          createWorkflowDispatch: async (params) => {
             customDispatchCalled = true;
+            customDispatchParams = params;
           },
         },
       },
@@ -3304,4 +3306,96 @@ test('runTrackingIssue - uses GITHUB_MERGE_TOKEN and getOctokit when available',
   assert.strictEqual(mockCore.failedMessage, null);
   assert.strictEqual(tokenUsed, 'custom-vault-token-123');
   assert.strictEqual(customDispatchCalled, true);
+  assert.deepStrictEqual(customDispatchParams, {
+    owner: 'rancher',
+    repo: 'terraform-provider-rancher2',
+    workflow_id: 'backport-issues.yml',
+    ref: 'main',
+    inputs: {
+      issue_number: '202',
+      release_label: 'release/v15',
+      pr_number: '12',
+    },
+  });
+});
+
+test('runTrackingIssue - falls back to github.getOctokit when getOctokit argument is undefined', async () => {
+  const mockCore = createMockCore();
+  let tokenUsed = null;
+  let customDispatchCalled = false;
+  let customDispatchParams = null;
+
+  const mockProcess = {
+    env: {
+      GITHUB_MERGE_TOKEN: 'token-via-github-octokit',
+    },
+  };
+
+  const mockGithub = {
+    getOctokit: (token) => {
+      tokenUsed = token;
+      return {
+        rest: {
+          actions: {
+            createWorkflowDispatch: async (params) => {
+              customDispatchCalled = true;
+              customDispatchParams = params;
+            },
+          },
+        },
+      };
+    },
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.search.issuesAndPullRequests) {
+        return [
+          {
+            number: 13,
+            title: 'Fix issue',
+            body: '- Addresses: #203',
+            labels: [],
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 203,
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(tokenUsed, 'token-via-github-octokit');
+  assert.strictEqual(customDispatchCalled, true);
+  assert.deepStrictEqual(customDispatchParams, {
+    owner: 'rancher',
+    repo: 'terraform-provider-rancher2',
+    workflow_id: 'backport-issues.yml',
+    ref: 'main',
+    inputs: {
+      issue_number: '203',
+      release_label: 'release/v15',
+      pr_number: '13',
+    },
+  });
 });

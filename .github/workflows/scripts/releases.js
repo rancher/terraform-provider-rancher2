@@ -344,7 +344,9 @@ export async function runTrackingIssue({ github, context, core, process = global
               });
               core.info(`Dispatched 'backport-issues.yml' for issue #${issueNumber} with label '${targetReleaseBranch}'`);
             } catch (dispatchError) {
-              core.warning(`Failed to dispatch 'backport-issues.yml' for issue #${issueNumber}: ${dispatchError.message}`);
+              const msg = `Failed to dispatch 'backport-issues.yml' for issue #${issueNumber}: ${dispatchError.message}`;
+              core.warning(msg);
+              errors.push(msg);
             }
           }
         }
