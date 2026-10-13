@@ -4,74 +4,80 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestFlattenMachineConfigV2HarvesterCPU(t *testing.T) {
+func TestFlattenMachineConfigV2Harvester_CPU(t *testing.T) {
 	testcases := []struct {
-		Input       *MachineConfigV2HarvesterCPU
+		Input       *MachineConfigV2Harvester
 		Expectation []any
 	}{
 		{
 			// All default values
-			Input: &MachineConfigV2HarvesterCPU{},
-			Expectation: []any{map[string]interface{}{
-				"count":                 2,
-				"pinning":               false,
-				"isolateEmulatorThread": false,
-			}},
+			Input:       &MachineConfigV2Harvester{},
+			Expectation: []any{map[string]any{}},
 		},
 		{
-			Input: &MachineConfigV2HarvesterCPU{
-				Count:                 3,
-				Pinning:               true,
-				IsolateEmulatorThread: true,
+			Input: &MachineConfigV2Harvester{
+				machineConfigV2Harvester: machineConfigV2Harvester{
+					CPUCount:              "3",
+					CPUPinning:            true,
+					IsolateEmulatorThread: true,
+				},
 			},
-			Expectation: []any{map[string]interface{}{
-				"count":                 3,
-				"pinning":               true,
-				"isolateEmulatorThread": true,
+			Expectation: []any{map[string]any{
+				"cpu_count":               "3",
+				"cpu_pinning":             true,
+				"isolate_emulator_thread": true,
 			}},
 		},
 	}
 
 	for _, tc := range testcases {
-		output := flattenMachineConfigV2HarvesterCPU(tc.Input)
-		assert.Equal(t, tc.Expectation, output, "unexpected output from flattenMachineConfigV2HarvesterCPU")
+		output := flattenMachineConfigV2Harvester(tc.Input)
+		assert.Equal(t, tc.Expectation, output, "unexpected output from flattenMachineConfigV2Harvester")
 	}
 }
 
-func TestExpandMachineConfigV2HarvesterCPU(t *testing.T) {
+func TestExpandMachineConfigV2Harvester_CPU(t *testing.T) {
 	testcases := []struct {
 		Input       []any
-		Expectation *MachineConfigV2HarvesterCPU
+		Expectation *MachineConfigV2Harvester
 	}{
 		{
 			// All default values
-			Input: []any{map[string]interface{}{
-				"count":                 2,
-				"pinning":               false,
-				"isolateEmulatorThread": false,
-			}},
-			Expectation: &MachineConfigV2HarvesterCPU{
-				Count: 2,
+			Input: []any{map[string]any{}},
+			Expectation: &MachineConfigV2Harvester{
+				machineConfigV2Harvester: machineConfigV2Harvester{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       machineConfigV2HarvesterKind,
+						APIVersion: machineConfigV2HarvesterAPIVersion,
+					},
+				},
 			},
 		},
 		{
-			Input: []any{map[string]interface{}{
-				"count":                 3,
-				"pinning":               true,
-				"isolateEmulatorThread": true,
+			Input: []any{map[string]any{
+				"cpu_count":               "3",
+				"cpu_pinning":             true,
+				"isolate_emulator_thread": true,
 			}},
-			Expectation: &MachineConfigV2HarvesterCPU{
-				Count:                 3,
-				Pinning:               true,
-				IsolateEmulatorThread: true,
+			Expectation: &MachineConfigV2Harvester{
+				machineConfigV2Harvester: machineConfigV2Harvester{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       machineConfigV2HarvesterKind,
+						APIVersion: machineConfigV2HarvesterAPIVersion,
+					},
+					CPUCount:              "3",
+					CPUPinning:            true,
+					IsolateEmulatorThread: true,
+				},
 			},
 		},
 	}
 
 	for _, tc := range testcases {
-		output := expandMachineConfigV2HarvesterCPU(tc.Input)
-		assert.Equal(t, tc.Expectation, output, "unexpected output from flattenMachineConfigV2HarvesterCPU")
+		output := expandMachineConfigV2Harvester(tc.Input, &MachineConfigV2{})
+		assert.Equal(t, tc.Expectation, output, "unexpected output from expandMachineConfigV2Harvester")
 	}
 }
