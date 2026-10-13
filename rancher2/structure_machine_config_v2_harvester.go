@@ -14,31 +14,27 @@ const (
 
 //Types
 
-type MachineConfigV2HarvesterCPU struct {
-	Count                 int  `json:"count,omitempty", yaml:count,omitempty"`
-	Pinning               bool `json:"pinning,omitempty", yaml:pinning,omitempty"`
-	IsolateEmulatorThread bool `json:"isolateEmulatorThread,omitempty", yaml:isolateEmulatorThread,omitempty"`
-}
-
 type machineConfigV2Harvester struct {
-	metav1.TypeMeta    `json:",inline"`
-	metav1.ObjectMeta  `json:"metadata,omitempty"`
-	VMNamespace        string                       `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
-	VMAffinity         string                       `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
-	CPU                *MachineConfigV2HarvesterCPU `json:"cpu,omitempty" yaml:"cpu,omitempty"`
-	MemorySize         string                       `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
-	ReservedMemorySize string                       `json:"reservedMemorySize,omitempty" yaml:"reservedMemorySize,omitempty"`
-	DiskSize           string                       `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
-	DiskBus            string                       `json:"diskBus,omitempty" yaml:"diskBus,omitempty"`
-	ImageName          string                       `json:"imageName,omitempty" yaml:"imageName,omitempty"`
-	DiskInfo           string                       `json:"diskInfo,omitempty" yaml:"diskInfo,omitempty"`
-	SSHUser            string                       `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	SSHPassword        string                       `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
-	NetworkName        string                       `json:"networkName,omitempty" yaml:"networkName,omitempty"`
-	NetworkModel       string                       `json:"networkModel,omitempty" yaml:"networkModel,omitempty"`
-	NetworkInfo        string                       `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
-	UserData           string                       `json:"userData,omitempty" yaml:"userData,omitempty"`
-	NetworkData        string                       `json:"networkData,omitempty" yaml:"networkData,omitempty"`
+	metav1.TypeMeta       `json:",inline"`
+	metav1.ObjectMeta     `json:"metadata,omitempty"`
+	VMNamespace           string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
+	VMAffinity            string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
+	CPUCount              string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
+	CPUPinning            bool   `json:"cpuPinning,omitempty" yaml:"cpuPinning,omitempty"`
+	IsolateEmulatorThread bool   `json:"isolateEmulatorThread,omitempty" yaml:"isolateEmulatorThread,omitempty"`
+	MemorySize            string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
+	ReservedMemorySize    string `json:"reservedMemorySize,omitempty" yaml:"reservedMemorySize,omitempty"`
+	DiskSize              string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
+	DiskBus               string `json:"diskBus,omitempty" yaml:"diskBus,omitempty"`
+	ImageName             string `json:"imageName,omitempty" yaml:"imageName,omitempty"`
+	DiskInfo              string `json:"diskInfo,omitempty" yaml:"diskInfo,omitempty"`
+	SSHUser               string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	SSHPassword           string `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
+	NetworkName           string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
+	NetworkModel          string `json:"networkModel,omitempty" yaml:"networkModel,omitempty"`
+	NetworkInfo           string `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
+	UserData              string `json:"userData,omitempty" yaml:"userData,omitempty"`
+	NetworkData           string `json:"networkData,omitempty" yaml:"networkData,omitempty"`
 }
 
 type MachineConfigV2Harvester struct {
@@ -47,24 +43,6 @@ type MachineConfigV2Harvester struct {
 }
 
 // Flatteners
-
-func flattenMachineConfigV2HarvesterCPU(in *MachineConfigV2HarvesterCPU) []interface{} {
-	if in == nil {
-		return nil
-	}
-
-	obj := make(map[string]interface{})
-
-	if in.Count > 0 {
-		obj["count"] = in.Count
-	} else {
-		obj["count"] = 2
-	}
-	obj["pinning"] = in.Pinning
-	obj["isolateEmulatorThread"] = in.IsolateEmulatorThread
-
-	return []interface{}{obj}
-}
 
 func flattenMachineConfigV2Harvester(in *MachineConfigV2Harvester) []interface{} {
 	if in == nil {
@@ -81,8 +59,16 @@ func flattenMachineConfigV2Harvester(in *MachineConfigV2Harvester) []interface{}
 		obj["vm_affinity"] = in.VMAffinity
 	}
 
-	if in.CPU != nil {
-		obj["cpu"] = flattenMachineConfigV2HarvesterCPU(in.CPU)
+	if len(in.CPUCount) > 0 {
+		obj["cpu_count"] = in.CPUCount
+	}
+
+	if in.CPUPinning {
+		obj["cpu_pinning"] = in.CPUPinning
+	}
+
+	if in.IsolateEmulatorThread {
+		obj["isolate_emulator_thread"] = in.IsolateEmulatorThread
 	}
 
 	if len(in.MemorySize) > 0 {
@@ -142,29 +128,6 @@ func flattenMachineConfigV2Harvester(in *MachineConfigV2Harvester) []interface{}
 
 // Expanders
 
-func expandMachineConfigV2HarvesterCPU(p []interface{}) *MachineConfigV2HarvesterCPU {
-	if p == nil || len(p) != 1 || p[0] == nil {
-		return nil
-	}
-	in := p[0].(map[string]interface{})
-
-	obj := MachineConfigV2HarvesterCPU{}
-
-	if v, ok := in["count"].(int); ok {
-		obj.Count = v
-	}
-
-	if v, ok := in["pinning"].(bool); ok {
-		obj.Pinning = v
-	}
-
-	if v, ok := in["isolateEmulatorThread"].(bool); ok {
-		obj.IsolateEmulatorThread = v
-	}
-
-	return &obj
-}
-
 func expandMachineConfigV2Harvester(p []interface{}, source *MachineConfigV2) *MachineConfigV2Harvester {
 	if p == nil || len(p) == 0 || p[0] == nil {
 		return nil
@@ -189,10 +152,17 @@ func expandMachineConfigV2Harvester(p []interface{}, source *MachineConfigV2) *M
 		obj.VMAffinity = v
 	}
 
-	if v, ok := in["cpu"].([]interface{}); ok && len(v) > 0 {
-		obj.CPU = expandMachineConfigV2HarvesterCPU(v)
+	if v, ok := in["cpu_count"].(string); ok && len(v) > 0 {
+		obj.CPUCount = v
 	}
 
+	if v, ok := in["cpu_pinning"].(bool); ok {
+		obj.CPUPinning = v
+	}
+
+	if v, ok := in["isolate_emulator_thread"].(bool); ok {
+		obj.IsolateEmulatorThread = v
+	}
 	if v, ok := in["memory_size"].(string); ok && len(v) > 0 {
 		obj.MemorySize = v
 	}
