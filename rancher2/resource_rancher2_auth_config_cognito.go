@@ -20,63 +20,45 @@ func resourceRancher2AuthConfigCognito() *schema.Resource {
 }
 
 func resourceRancher2AuthConfigCognitoCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).ManagementClient()
+	authCognito, err := expandAuthConfigCognito(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config: %s", err)
+	}
+
+	newAuth := &managementClient.CognitoConfig{}
+	err = meta.(*Config).CreateOrUpdateAuthConfig(authCognito.Name, authCognito, newAuth, managementClient.AuthConfigFieldDisplayName)
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigCognitoName)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigCognitoName, err)
-	}
-
-	log.Printf("[INFO] Creating Auth Config %s", AuthConfigCognitoName)
-
-	authOIDC, err := expandAuthConfigCognito(d)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigCognitoName, err)
-	}
-
-	// Checking if other auth config is enabled
-	if authOIDC.Enabled {
-		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigCognitoName)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigCognitoName, err)
-		}
-	}
-
-	newAuth := &managementClient.CognitoConfig{}
-	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOIDC, newAuth)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigCognitoName, err)
-	}
+	d.SetId(authCognito.Name)
 
 	return resourceRancher2AuthConfigCognitoRead(d, meta)
 }
 
 func resourceRancher2AuthConfigCognitoRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigCognitoName)
+	log.Printf("[INFO] Refreshing Auth Config %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigCognitoName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigCognitoName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	authOIDC, err := meta.(*Config).GetAuthConfig(auth)
+	authCognito, err := meta.(*Config).GetAuthConfig(auth)
 	if err != nil {
 		return err
 	}
 
-	err = flattenAuthConfigCognito(d, authOIDC.(*managementClient.CognitoConfig))
+	err = flattenAuthConfigCognito(d, authCognito.(*managementClient.CognitoConfig))
 	if err != nil {
 		return err
 	}
@@ -85,32 +67,42 @@ func resourceRancher2AuthConfigCognitoRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceRancher2AuthConfigCognitoUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config %s", AuthConfigCognitoName)
-	return resourceRancher2AuthConfigCognitoCreate(d, meta)
+	authCognito, err := expandAuthConfigCognito(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", d.Id(), err)
+	}
+
+	newAuth := &managementClient.CognitoConfig{}
+	err = meta.(*Config).UpdateAuthConfigByName(d.Id(), authCognito, newAuth, managementClient.AuthConfigFieldDisplayName)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigCognitoRead(d, meta)
 }
 
 func resourceRancher2AuthConfigCognitoDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigCognitoName)
+	log.Printf("[INFO] Disabling Auth Config %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigCognitoName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigCognitoName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	if auth.Enabled == true {
+	if auth.Enabled {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigCognitoName, err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 		}
 	}
 
