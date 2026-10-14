@@ -10,7 +10,7 @@ export default async ({ github, context, core, process = globalThis.process, get
   case 'publish-release':
     return await runPublishRelease({ github, context, core, process });
   case 'tracking-issue':
-    return await runTrackingIssue({ github, context, core, process });
+    return await runTrackingIssue({ github, context, core, process, getOctokit });
   case 'trigger-rc-release':
     return await runTriggerRcRelease({ github, context, core, process, getOctokit });
   default:
@@ -198,7 +198,7 @@ function extractReleaseBranches(items) {
 /**
  * tracking-issue: Automatically converts referenced issues into tracking issues for open pull requests.
  */
-export async function runTrackingIssue({ github, context, core }) {
+export async function runTrackingIssue({ github, context, core, process = globalThis.process, getOctokit }) {
   try {
     const repo = context?.repo?.repo || "terraform-provider-rancher2";
     const owner = context?.repo?.owner || "rancher";
@@ -321,6 +321,33 @@ export async function runTrackingIssue({ github, context, core }) {
             core.info(`Added release branch label '${targetReleaseBranch}' to issue #${issueNumber}`);
           } else {
             core.info(`Release branch label '${targetReleaseBranch}' already present on issue #${issueNumber}`);
+          }
+
+          const mergeToken = process?.env?.GITHUB_MERGE_TOKEN ? process.env.GITHUB_MERGE_TOKEN.trim() : undefined;
+          const octokitFactory = (typeof getOctokit === 'function')
+            ? getOctokit
+            : (typeof github?.getOctokit === 'function' ? github.getOctokit.bind(github) : undefined);
+          const dispatchGithub = (mergeToken && typeof octokitFactory === 'function') ? octokitFactory(mergeToken) : github;
+
+          if (typeof dispatchGithub?.rest?.actions?.createWorkflowDispatch === 'function') {
+            try {
+              await dispatchGithub.rest.actions.createWorkflowDispatch({
+                owner,
+                repo,
+                workflow_id: 'backport-issues.yml',
+                ref: 'main',
+                inputs: {
+                  issue_number: String(issueNumber),
+                  release_label: targetReleaseBranch,
+                  pr_number: String(pr.number),
+                },
+              });
+              core.info(`Dispatched 'backport-issues.yml' for issue #${issueNumber} with label '${targetReleaseBranch}'`);
+            } catch (dispatchError) {
+              const msg = `Failed to dispatch 'backport-issues.yml' for issue #${issueNumber}: ${dispatchError.message}`;
+              core.warning(msg);
+              errors.push(msg);
+            }
           }
         }
       } catch (error) {
