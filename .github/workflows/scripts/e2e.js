@@ -3,6 +3,10 @@ import { execSync } from 'child_process';
 export default async ({ github, context, core, process }) => {
   const mode = process.env.SCRIPT_MODE;
   switch (mode) {
+  case 'filter-pr':
+    return await runFilterPr({ context, core });
+  case 'e2e-status':
+    return await runE2EStatus({ core, process });
   case 'check-ip':
     return await runCheckIp({ github, context, core, process });
   case 'check-lock':
@@ -21,22 +25,45 @@ export default async ({ github, context, core, process }) => {
 };
 
 /**
+ * getWorkflowArtifacts: Retrieves artifacts for a run using pagination if available, falling back to direct REST call.
+ */
+async function getWorkflowArtifacts({ github, owner, repo, runId }) {
+  if (typeof github?.paginate === 'function') {
+    return await github.paginate(github?.rest?.actions?.listWorkflowRunArtifacts, {
+      owner,
+      repo,
+      run_id: runId,
+    });
+  }
+  const response = await github?.rest?.actions?.listWorkflowRunArtifacts({
+    owner,
+    repo,
+    run_id: runId,
+  });
+  return response?.data?.artifacts || response?.artifacts || [];
+}
+
+/**
  * check-ip: Checks if there are any IP collisions on active runners.
  */
-async function runCheckIp({ github, core, process }) {
+async function runCheckIp({ github, context, core, process }) {
   const ip = process.env.IP;
-  const index = parseInt(process.env.INDEX);
-  const owner = process.env.OWNER;
-  const repo = process.env.REPO;
-  const runId = process.env.RUN_ID;
+  const index = parseInt(process.env.INDEX, 10);
+  const owner = process.env.OWNER || context?.repo?.owner;
+  const repo = process.env.REPO || context?.repo?.repo;
+  const runId = process.env.RUN_ID || context?.runId;
     
   core.info(`Checking collisions for IP: ${ip} (My Index: ${index})`);
   
-  const { data: { artifacts } } = await github.rest.actions.listWorkflowRunArtifacts({
-    owner: owner,
-    repo: repo,
-    run_id: runId,
-  });
+  let artifacts;
+  try {
+    artifacts = await getWorkflowArtifacts({ github, owner, repo, runId });
+  } catch (error) {
+    if (core && typeof core.setFailed === 'function') {
+      core.setFailed(`Failed to list workflow run artifacts: ${error.message}`);
+    }
+    return;
+  }
   
   const prefix = `ip-${ip}-`;
   const conflicts = artifacts.filter(a => a.name.startsWith(prefix));
@@ -45,7 +72,7 @@ async function runCheckIp({ github, core, process }) {
 
   for (const artifact of conflicts) {
     const parts = artifact.name.split('-');
-    const otherIndex = parseInt(parts[parts.length - 1]);
+    const otherIndex = parseInt(parts[parts.length - 1], 10);
     
     core.info(`Found data: ${artifact.name} (Index: ${otherIndex})`);
 
@@ -62,20 +89,24 @@ async function runCheckIp({ github, core, process }) {
 /**
  * check-lock: Checks if a test lock has been acquired by a run with a lower index.
  */
-async function runCheckLock({ github, core, process }) {
+async function runCheckLock({ github, context, core, process }) {
   const testName = process.env.TEST_NAME;
-  const index = parseInt(process.env.INDEX);
-  const owner = process.env.OWNER;
-  const repo = process.env.REPO;
-  const runId = process.env.RUN_ID;
+  const index = parseInt(process.env.INDEX, 10);
+  const owner = process.env.OWNER || context?.repo?.owner;
+  const repo = process.env.REPO || context?.repo?.repo;
+  const runId = process.env.RUN_ID || context?.runId;
     
   core.info(`Checking lock for test: ${testName} (My Index: ${index})`);
   
-  const { data: { artifacts } } = await github.rest.actions.listWorkflowRunArtifacts({
-    owner: owner,
-    repo: repo,
-    run_id: runId,
-  });
+  let artifacts;
+  try {
+    artifacts = await getWorkflowArtifacts({ github, owner, repo, runId });
+  } catch (error) {
+    if (core && typeof core.setFailed === 'function') {
+      core.setFailed(`Failed to list workflow run artifacts: ${error.message}`);
+    }
+    return;
+  }
   
   const prefix = `lock-${testName}-`;
   const conflicts = artifacts.filter(a => a.name.startsWith(prefix));
@@ -84,7 +115,7 @@ async function runCheckLock({ github, core, process }) {
 
   for (const artifact of conflicts) {
     const parts = artifact.name.split('-');
-    const otherIndex = parseInt(parts[parts.length - 1]);
+    const otherIndex = parseInt(parts[parts.length - 1], 10);
     
     core.info(`Found data: ${artifact.name} (Index: ${otherIndex})`);
 
@@ -101,25 +132,32 @@ async function runCheckLock({ github, core, process }) {
 /**
  * check-run: Validates that lock artifacts exist for all scheduled tests.
  */
-async function runCheckRun({ github, core, process }) {
+async function runCheckRun({ github, context, core, process }) {
   const testNames = JSON.parse(process.env.ALL_TESTS_JSON);
-  const owner = process.env.OWNER;
-  const repo = process.env.REPO;
-  const runId = process.env.RUN_ID;
+  const owner = process.env.OWNER || context?.repo?.owner;
+  const repo = process.env.REPO || context?.repo?.repo;
+  const runId = process.env.RUN_ID || context?.runId;
 
   core.info(`Checking for lock files.`);
 
-  const { data: { artifacts } } = await github.rest.actions.listWorkflowRunArtifacts({
-    owner: owner,
-    repo: repo,
-    run_id: runId,
-  });
+  let artifacts;
+  try {
+    artifacts = await getWorkflowArtifacts({ github, owner, repo, runId });
+  } catch (error) {
+    if (core && typeof core.setFailed === 'function') {
+      core.setFailed(`Failed to list workflow run artifacts: ${error.message}`);
+    }
+    throw error;
+  }
 
   for (const testName of testNames){
     core.info(`Checking lock for test: ${testName}`);
     const prefix = `lock-${testName}-`;
     const locks = artifacts.filter(a => a.name.startsWith(prefix));
     if (locks.length == 0) {
+      if (core && typeof core.setFailed === 'function') {
+        core.setFailed(`No lock found for ${testName}, failing.`);
+      }
       throw new Error(`No lock found for ${testName}, failing.`);
     }
     for (const lock of locks) {
@@ -229,3 +267,129 @@ async function runReportE2EStatus({ github, context, core, process }) {
     core.setFailed(`Failed to create comment on release PR: ${error.message}`);
   }
 }
+
+/**
+ * shouldRunE2E: Evaluates if a PR is an authorized, automated PR targeting a release branch.
+ */
+function shouldRunE2E(pr, core = { info: () => {}, warning: () => {} }) {
+  if (!pr) {
+    core.warning('No pull request payload found.');
+    return false;
+  }
+
+  const baseRepo = pr.base?.repo?.full_name;
+  const headRepo = pr.head?.repo?.full_name;
+  if (!baseRepo || !headRepo) {
+    core.warning('Missing repository information in PR payload. Skipping E2E tests.');
+    return false;
+  }
+
+  const isFork = Boolean(pr.head?.repo?.fork || baseRepo.toLowerCase() !== headRepo.toLowerCase());
+  if (isFork) {
+    core.info(`PR is from an external fork (${headRepo} -> ${baseRepo}). Skipping E2E tests for security.`);
+    return false;
+  }
+
+  const rawBaseRef = pr.base?.ref || '';
+  const cleanBaseRef = rawBaseRef.replace(/^refs\/heads\//, '');
+  if (!/^release\/v\d+.*$/.test(cleanBaseRef)) {
+    core.info(`PR target branch "${rawBaseRef}" is not a release branch. Skipping E2E tests.`);
+    return false;
+  }
+
+  const rawHeadRef = pr.head?.ref || '';
+  const cleanHeadRef = rawHeadRef.replace(/^refs\/heads\//, '');
+  const userType = pr.user?.type;
+  const userLogin = pr.user?.login;
+  const normalizedLogin = typeof userLogin === 'string' ? userLogin.toLowerCase() : '';
+  const isBot = userType === 'Bot' || normalizedLogin === 'github-actions[bot]' || normalizedLogin.endsWith('[bot]');
+
+  const isBackport = isBot && /^backport-\d+-(?:release-)?v\d+.*$/.test(cleanHeadRef);
+  const isReleasePlease = isBot && /^release-please--branches--release(?:--|\/)v\d+.*$/.test(cleanHeadRef);
+
+  if (isBackport || isReleasePlease) {
+    core.info(`PR #${pr.number} qualifies for E2E tests (Type: ${isBackport ? 'backport' : 'release-please'}, Head: ${cleanHeadRef}, Author: ${userLogin}).`);
+    return true;
+  }
+
+  core.info(`PR #${pr.number} is not an authorized automated PR (Author: ${userLogin}, Type: ${userType}, Head: ${cleanHeadRef}). Skipping E2E tests.`);
+  return false;
+}
+
+/**
+ * filter-pr: Evaluates PR qualification and sets the 'should_run' step output.
+ */
+async function runFilterPr({ context, core }) {
+  const pr = context?.payload?.pull_request;
+  if (!pr) {
+    core.setFailed('Missing pull_request in context payload.');
+    core.setOutput('should_run', 'false');
+    return false;
+  }
+  const shouldRun = shouldRunE2E(pr, core);
+  core.setOutput('should_run', shouldRun ? 'true' : 'false');
+  return shouldRun;
+}
+
+/**
+ * evaluateE2EStatus: Evaluates the combined statuses of the workflow jobs for Branch Protection.
+ */
+function evaluateE2EStatus({ filterResult, setupResult = 'success', shouldRun, testResult, auditResult, cleanupResult }, core = { info: () => {}, setFailed: () => {} }) {
+  if (filterResult !== 'success') {
+    core.setFailed(`Filter job did not complete successfully (Result: ${filterResult}).`);
+    return false;
+  }
+
+  if (shouldRun !== 'true') {
+    core.info('E2E tests were safely skipped (PR does not qualify). Status check passing.');
+    return true;
+  }
+
+  if (setupResult !== 'success' && setupResult !== 'skipped') {
+    core.setFailed(`Setup job did not complete successfully (Result: ${setupResult}).`);
+    return false;
+  }
+
+  if (testResult === 'success' && auditResult === 'success' && (cleanupResult === 'success' || cleanupResult === 'skipped')) {
+    core.info('All E2E tests and audits passed successfully!');
+    return true;
+  }
+
+  core.setFailed(`E2E tests failed or incomplete (Test: ${testResult}, Audit: ${auditResult}, Cleanup: ${cleanupResult}).`);
+  return false;
+}
+
+/**
+ * e2e-status: Evaluates workflow outcome and determines status check pass/fail.
+ */
+async function runE2EStatus({ core, process }) {
+  const filterResult = process.env.FILTER_RESULT;
+  const setupResult = process.env.SETUP_RESULT;
+  const shouldRun = process.env.SHOULD_RUN;
+  const testResult = process.env.TEST_RESULT;
+  const auditResult = process.env.AUDIT_RESULT;
+  const cleanupResult = process.env.CLEANUP_RESULT;
+
+  return evaluateE2EStatus({
+    filterResult,
+    setupResult,
+    shouldRun,
+    testResult,
+    auditResult,
+    cleanupResult,
+  }, core);
+}
+
+export {
+  getWorkflowArtifacts,
+  runCheckIp,
+  runCheckLock,
+  runCheckRun,
+  runClearRunner,
+  runWaitForE2E,
+  runReportE2EStatus,
+  runFilterPr,
+  shouldRunE2E,
+  runE2EStatus,
+  evaluateE2EStatus,
+};
