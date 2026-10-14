@@ -20,56 +20,37 @@ func resourceRancher2AuthConfigADFS() *schema.Resource {
 }
 
 func resourceRancher2AuthConfigADFSCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).ManagementClient()
+	authADFS, err := expandAuthConfigADFS(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config: %s", err)
+	}
+
+	newAuth := &managementClient.ADFSConfig{}
+	err = meta.(*Config).CreateOrUpdateAuthConfig(authADFS.Name, authADFS, newAuth, managementClient.AuthConfigFieldDisplayName)
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigADFSName)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigADFSName, err)
-	}
-
-	log.Printf("[INFO] Creating Auth Config %s %s", AuthConfigADFSName, auth.Name)
-
-	authADFS, err := expandAuthConfigADFS(d)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigADFSName, err)
-	}
-
-	// Checking if other auth config is enabled
-	if authADFS.Enabled {
-		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigADFSName)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigADFSName, err)
-		}
-	}
-
-	// Updated auth config
-	newAuth := &managementClient.ADFSConfig{}
-	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authADFS, newAuth)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigADFSName, err)
-	}
+	d.SetId(authADFS.Name)
 
 	return resourceRancher2AuthConfigADFSRead(d, meta)
 }
 
 func resourceRancher2AuthConfigADFSRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigADFSName)
+	log.Printf("[INFO] Refreshing Auth Config %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigADFSName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigADFSName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
 	authADFS, err := meta.(*Config).GetAuthConfig(auth)
@@ -86,33 +67,42 @@ func resourceRancher2AuthConfigADFSRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceRancher2AuthConfigADFSUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config %s", AuthConfigADFSName)
+	authADFS, err := expandAuthConfigADFS(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", d.Id(), err)
+	}
 
-	return resourceRancher2AuthConfigADFSCreate(d, meta)
+	newAuth := &managementClient.ADFSConfig{}
+	err = meta.(*Config).UpdateAuthConfigByName(d.Id(), authADFS, newAuth, managementClient.AuthConfigFieldDisplayName)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigADFSRead(d, meta)
 }
 
 func resourceRancher2AuthConfigADFSDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigADFSName)
+	log.Printf("[INFO] Disabling Auth Config %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigADFSName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigADFSName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	if auth.Enabled == true {
+	if auth.Enabled {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigADFSName, err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 		}
 	}
 

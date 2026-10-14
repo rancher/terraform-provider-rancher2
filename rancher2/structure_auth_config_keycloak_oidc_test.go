@@ -30,6 +30,7 @@ func init() {
 		AccessMode:          "access",
 		AllowedPrincipalIDs: []string{"allowed1", "allowed2"},
 		Enabled:             true,
+		DisplayName:         "Login via Keycloak",
 		ClientID:            "client_id",
 		Issuer:              "issuer",
 		RancherURL:          "rancher_url",
@@ -63,6 +64,7 @@ func init() {
 		"access_mode":           "access",
 		"allowed_principal_ids": []any{"allowed1", "allowed2"},
 		"enabled":               true,
+		"display_name":          "Login via Keycloak",
 		"client_id":             "client_id",
 		"client_secret":         "top-secret-secret",
 		"issuer":                "issuer",
@@ -113,6 +115,20 @@ func TestExpandAuthConfigKeyCloakOIDC(t *testing.T) {
 
 	assert.NoError(t, err, "Error in expandAuthConfigKeyCloakOIDC")
 	assert.Equal(t, testAuthConfigKeyCloakOIDCConf, output, "Unexpected output from expandAuthConfigKeyCloakOIDC")
+}
+
+func TestExpandAuthConfigKeyCloakOIDCClearsDisplayName(t *testing.T) {
+	input := maps.Clone(testAuthConfigKeyCloakOIDCInterface)
+	input["display_name"] = ""
+
+	expected := *testAuthConfigKeyCloakOIDCConf
+	expected.DisplayName = ""
+
+	inputResourceData := schema.TestResourceDataRaw(t, authConfigKeyCloakOIDCFields(), input)
+	output, err := expandAuthConfigKeyCloakOIDC(inputResourceData)
+
+	assert.NoError(t, err, "Error in expandAuthConfigKeyCloakOIDC")
+	assert.Equal(t, &expected, output, "Expected display_name to be cleared")
 }
 
 func TestExpandAuthConfigKeyCloakOIDCWithAccessModeRequirements(t *testing.T) {

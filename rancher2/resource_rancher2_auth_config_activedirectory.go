@@ -21,32 +21,51 @@ func resourceRancher2AuthConfigActiveDirectory() *schema.Resource {
 }
 
 func resourceRancher2AuthConfigActiveDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
+	authActiveDirectory, err := expandAuthConfigActiveDirectory(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config: %s", err)
+	}
+
+	// Create the Auth Config disabled, so that enabling it goes through testAndApply.
+	disabled := *authActiveDirectory
+	disabled.Enabled = false
+	_, err = meta.(*Config).CreateAuthConfigIfMissing(authActiveDirectory.Name, &disabled, &managementClient.ActiveDirectoryConfig{})
+	if err != nil {
+		return err
+	}
+
+	d.SetId(authActiveDirectory.Name)
+
+	err = resourceRancher2AuthConfigActiveDirectoryApply(d, meta, authActiveDirectory)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigActiveDirectoryRead(d, meta)
+}
+
+func resourceRancher2AuthConfigActiveDirectoryApply(d *schema.ResourceData, meta interface{}, authActiveDirectory *managementClient.ActiveDirectoryConfig) error {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigActiveDirectoryName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", d.Id(), err)
 	}
 
-	log.Printf("[INFO] Creating Auth Config %s %s", AuthConfigActiveDirectoryName, auth.Name)
-
-	authActiveDirectory, err := expandAuthConfigActiveDirectory(d)
+	err = checkAuthConfigType(d.Id(), auth, authActiveDirectory)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+		return err
 	}
 
-	log.Printf("[INFO] +++ %v", authActiveDirectory)
+	err = meta.(*Config).CheckAuthConfigCanBeEnabled(d.Id(), authActiveDirectory)
+	if err != nil {
+		return err
+	}
 
-	// Checking if other auth config is enabled
 	if authActiveDirectory.Enabled {
-		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigActiveDirectoryName)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
-		}
-		// Updated auth config
 		authResource := &norman.Resource{
 			ID:      auth.ID,
 			Type:    auth.Type,
@@ -67,34 +86,34 @@ func resourceRancher2AuthConfigActiveDirectoryCreate(d *schema.ResourceData, met
 		if len(auth.Actions["disable"]) > 0 {
 			err = client.Post(auth.Actions["disable"], nil, nil)
 			if err != nil {
-				return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+				return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 			}
 		}
 		newAuth := &managementClient.ActiveDirectoryConfig{}
-		err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authActiveDirectory, newAuth)
+		err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authActiveDirectory, newAuth, managementClient.AuthConfigFieldDisplayName)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+			return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", d.Id(), err)
 		}
 	}
 
-	return resourceRancher2AuthConfigActiveDirectoryRead(d, meta)
+	return nil
 }
 
 func resourceRancher2AuthConfigActiveDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigActiveDirectoryName)
+	log.Printf("[INFO] Refreshing Auth Config %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigActiveDirectoryName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigActiveDirectoryName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
 	authActiveDirectory, err := meta.(*Config).GetAuthConfig(auth)
@@ -111,33 +130,43 @@ func resourceRancher2AuthConfigActiveDirectoryRead(d *schema.ResourceData, meta 
 }
 
 func resourceRancher2AuthConfigActiveDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config %s", AuthConfigActiveDirectoryName)
+	log.Printf("[INFO] Updating Auth Config %s", d.Id())
 
-	return resourceRancher2AuthConfigActiveDirectoryCreate(d, meta)
+	authActiveDirectory, err := expandAuthConfigActiveDirectory(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", d.Id(), err)
+	}
+
+	err = resourceRancher2AuthConfigActiveDirectoryApply(d, meta, authActiveDirectory)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigActiveDirectoryRead(d, meta)
 }
 
 func resourceRancher2AuthConfigActiveDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigActiveDirectoryName)
+	log.Printf("[INFO] Disabling Auth Config %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigActiveDirectoryName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigActiveDirectoryName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	if auth.Enabled == true {
+	if auth.Enabled {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigActiveDirectoryName, err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 		}
 	}
 

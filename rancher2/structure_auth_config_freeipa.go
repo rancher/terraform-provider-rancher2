@@ -13,8 +13,8 @@ func flattenAuthConfigFreeIpa(d *schema.ResourceData, in *managementClient.LdapC
 		return err
 	}
 
-	d.SetId(AuthConfigFreeIpaName)
-	d.Set("name", AuthConfigFreeIpaName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.FreeIpaConfigType)
 
 	return nil
@@ -28,7 +28,7 @@ func expandAuthConfigFreeIpa(in *schema.ResourceData) (*managementClient.LdapCon
 		return nil, err
 	}
 
-	obj.Name = AuthConfigFreeIpaName
+	obj.Name = expandAuthConfigName(in, AuthConfigFreeIpaName)
 	obj.Type = managementClient.FreeIpaConfigType
 
 	return obj, nil

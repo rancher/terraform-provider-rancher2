@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigADFS(d *schema.ResourceData, in *managementClient.ADFSConfig) error {
-	d.SetId(AuthConfigADFSName)
-	d.Set("name", AuthConfigADFSName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.ADFSConfigType)
 	d.Set("access_mode", in.AccessMode)
 
@@ -21,6 +21,7 @@ func flattenAuthConfigADFS(d *schema.ResourceData, in *managementClient.ADFSConf
 	}
 
 	d.Set("enabled", in.Enabled)
+	d.Set("display_name", in.DisplayName)
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -50,7 +51,7 @@ func expandAuthConfigADFS(in *schema.ResourceData) (*managementClient.ADFSConfig
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigADFSName)
 	}
 
-	obj.Name = AuthConfigADFSName
+	obj.Name = expandAuthConfigName(in, AuthConfigADFSName)
 	obj.Type = managementClient.ADFSConfigType
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
@@ -75,6 +76,10 @@ func expandAuthConfigADFS(in *schema.ResourceData) (*managementClient.ADFSConfig
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		obj.DisplayName = v
 	}
 
 	if v, ok := in.Get("display_name_field").(string); ok && len(v) > 0 {
