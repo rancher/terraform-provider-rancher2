@@ -6,7 +6,9 @@ page_title: "rancher2_auth_config_keycloak Resource"
 
 Provides a Rancher v2 Auth Config KeyCloak resource. This can be used to configure and enable Auth Config KeyCloak for Rancher v2 RKE clusters and retrieve their information.
 
-In addition to the built-in local auth, only one external auth config provider can be enabled at a time.
+In addition to the built-in local auth, only one external auth config provider can be enabled at a time, unless the `multiple-auth-providers` feature is enabled in Rancher.
+
+Destroying this resource disables the auth config in Rancher, it does not delete it.
 
 ## Example Usage
 
@@ -39,6 +41,8 @@ The following arguments are supported:
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `keycloak_user://<USER_ID>`  `keycloak_group://<GROUP_ID>` (list)
 * `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
+* `name` - (Optional/ForceNew) The name of the auth config in Rancher. Changing this replaces the resource. Default `keycloak` (string)
+* `display_name` - (Optional) Display name for the auth config in the Rancher UI. If unset, any display name set in Rancher is cleared (string)
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
 * `entity_id` - (Optional/Computed) KeyCloak Client ID field (string)
@@ -48,5 +52,4 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
-* `name` - (Computed) The name of the resource (string)
 * `type` - (Computed) The type of the resource (string)

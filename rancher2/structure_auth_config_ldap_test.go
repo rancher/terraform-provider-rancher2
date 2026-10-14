@@ -88,7 +88,7 @@ func TestFlattenAuthConfigLdap(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := schema.TestResourceDataRaw(t, authConfigLdapFields(), map[string]interface{}{})
+		output := schema.TestResourceDataRaw(t, authConfigLdapFields(AuthConfigFreeIpaName), map[string]interface{}{})
 		err := flattenAuthConfigLdap(output, tc.Input)
 		if err != nil {
 			assert.FailNow(t, "[ERROR] on flattener: %#v", err)
@@ -117,7 +117,7 @@ func TestExpandAuthConfigLdap(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		inputResourceData := schema.TestResourceDataRaw(t, authConfigLdapFields(), tc.Input)
+		inputResourceData := schema.TestResourceDataRaw(t, authConfigLdapFields(AuthConfigFreeIpaName), tc.Input)
 		output, err := expandAuthConfigLdap(inputResourceData)
 		if err != nil {
 			assert.FailNow(t, "[ERROR] on expander: %#v", err)
