@@ -6,7 +6,7 @@ export default async ({ github, context, core, process }) => {
   case 'filter-pr':
     return await runFilterPr({ github, context, core, process });
   case 'e2e-status':
-    return await runE2EStatus({ core, process });
+    return await runE2EStatus({ github, context, core, process });
   case 'check-ip':
     return await runCheckIp({ github, context, core, process });
   case 'check-lock':
@@ -318,13 +318,31 @@ function shouldRunE2E(pr, core = { info: () => {}, warning: () => {} }) {
 }
 
 /**
- * filter-pr: Evaluates PR qualification and sets the 'should_run' step output.
+ * resolveTargetPr: Resolves the target pull request object from payload, PR number, or workflow_run commit fallback.
  */
-async function runFilterPr({ github, context, core, process }) {
-  let pr = context?.payload?.pull_request;
-  let prNumber = process.env.PR_NUMBER ? parseInt(process.env.PR_NUMBER, 10) : null;
+async function resolveTargetPr({ github, context, core, process }) {
+  if (context?.payload?.pull_request) {
+    return context.payload.pull_request;
+  }
 
-  if (!pr && prNumber) {
+  let prNumber = null;
+  if (process.env.PR_NUMBER) {
+    const parsed = Number.parseInt(process.env.PR_NUMBER, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      prNumber = parsed;
+    }
+  }
+
+  const parentRun = context?.payload?.workflow_run;
+
+  if (!prNumber && parentRun?.pull_requests?.length > 0) {
+    const parentPrNum = parentRun.pull_requests[0].number;
+    if (Number.isFinite(parentPrNum) && parentPrNum > 0) {
+      prNumber = parentPrNum;
+    }
+  }
+
+  if (prNumber) {
     core.info(`Fetching PR #${prNumber} from API...`);
     try {
       const response = await github.rest.pulls.get({
@@ -332,28 +350,123 @@ async function runFilterPr({ github, context, core, process }) {
         repo: context.repo.repo,
         pull_number: prNumber,
       });
-      pr = response.data;
+      return response.data;
     } catch (error) {
       core.setFailed(`Failed to fetch PR #${prNumber}: ${error.message}`);
-      core.setOutput('should_run', 'false');
-      return false;
+      return null;
     }
   }
 
+  // Fallback for listener runs triggered by fork PRs where workflow_run.pull_requests is empty
+  const headSha = parentRun?.head_sha || process.env.WORKFLOW_RUN_SHA;
+  if (headSha && typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function') {
+    core.info(`Attempting fallback PR resolution for commit SHA: ${headSha}...`);
+    try {
+      let associatedPrs = [];
+      if (typeof github.paginate === 'function') {
+        associatedPrs = await github.paginate(
+          github.rest.repos.listPullRequestsAssociatedWithCommit,
+          {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            commit_sha: headSha,
+          }
+        );
+      } else {
+        const res = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          commit_sha: headSha,
+        });
+        associatedPrs = res?.data || res || [];
+      }
+
+      // Match PR by head branch and repo owner if available, prioritizing open PRs
+      const matched = associatedPrs.find(p => {
+        if (p.state && p.state !== 'open') {
+          return false;
+        }
+        if (parentRun?.head_branch && p.head?.ref !== parentRun.head_branch) {
+          return false;
+        }
+        if (parentRun?.head_repository?.full_name && p.head?.repo?.full_name?.toLowerCase() !== parentRun.head_repository.full_name.toLowerCase()) {
+          return false;
+        }
+        return true;
+      }) || associatedPrs.find(p => p.state === 'open') || associatedPrs[0];
+
+      if (matched) {
+        core.info(`Resolved PR #${matched.number} via commit lookup.`);
+        if (matched.number && typeof github?.rest?.pulls?.get === 'function') {
+          try {
+            const fullPr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: matched.number,
+            });
+            if (fullPr?.data) {
+              return fullPr.data;
+            }
+          } catch (err) {
+            core.info(`Could not fetch full details for PR #${matched.number}, using commit-matched PR object: ${err.message}`);
+          }
+        }
+        return matched;
+      }
+    } catch (error) {
+      core.warning(`Error searching PRs associated with commit ${headSha}: ${error.message}`);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * filter-pr: Evaluates PR qualification and sets the 'should_run' step output.
+ */
+async function runFilterPr({ github, context, core, process }) {
+  const pr = await resolveTargetPr({ github, context, core, process });
+  const parentRun = context?.payload?.workflow_run;
+
   if (!pr) {
+    const isExternalRun = (parentRun?.head_repository?.fork === true) ||
+      (parentRun?.head_repository?.full_name &&
+        parentRun.head_repository.full_name.toLowerCase() !== `${context?.repo?.owner}/${context?.repo?.repo}`.toLowerCase());
+
+    if (isExternalRun) {
+      core.info('Triggered by an external fork repository without an identifiable open PR. Skipping E2E tests safely.');
+      core.setOutput('should_run', 'false');
+      core.setOutput('sha', parentRun?.head_sha || process.env.WORKFLOW_RUN_SHA || '');
+      core.setOutput('is_fork', 'true');
+      return false;
+    }
+
     core.setFailed('Missing pull_request in context payload and PR_NUMBER env var.');
     core.setOutput('should_run', 'false');
     return false;
   }
 
+  const baseRepo = pr.base?.repo?.full_name;
+  const headRepo = pr.head?.repo?.full_name;
+  const isFork = Boolean(
+    pr.head?.repo?.fork ||
+    !pr.head?.repo ||
+    (baseRepo && headRepo && baseRepo.toLowerCase() !== headRepo.toLowerCase())
+  );
+  core.setOutput('is_fork', isFork ? 'true' : 'false');
+
+  const workflowRunSha = process.env.WORKFLOW_RUN_SHA || parentRun?.head_sha;
+  if (workflowRunSha && pr.head?.sha && workflowRunSha !== pr.head.sha) {
+    core.info(`Workflow run commit (${workflowRunSha}) is superseded by current PR head (${pr.head.sha}). Skipping stale run.`);
+    core.setOutput('should_run', 'false');
+    core.setOutput('sha', '');
+    return false;
+  }
+
   const shouldRun = shouldRunE2E(pr, core);
   core.setOutput('should_run', shouldRun ? 'true' : 'false');
-  
-  if (shouldRun) {
-    const sha = process.env.SHA || pr.head.sha;
-    core.setOutput('sha', sha);
-  }
-  
+  core.setOutput('sha', pr.head?.sha || '');
+
   return shouldRun;
 }
 
@@ -397,6 +510,7 @@ async function runE2EStatus({ github, context, core, process }) {
   const auditResult = process.env.AUDIT_RESULT;
   const cleanupResult = process.env.CLEANUP_RESULT;
   const sha = process.env.SHA;
+  const isFork = process.env.IS_FORK === 'true';
 
   const passed = evaluateE2EStatus({
     filterResult,
@@ -407,8 +521,19 @@ async function runE2EStatus({ github, context, core, process }) {
     cleanupResult,
   }, core);
 
-  if (sha) {
+  if (sha && github?.rest?.repos?.createCommitStatus) {
     core.info(`Posting commit status to SHA: ${sha}`);
+    let description;
+    if (!passed) {
+      description = filterResult !== 'success'
+        ? 'E2E test filter job failed'
+        : 'E2E tests failed or incomplete';
+    } else if (shouldRun !== 'true') {
+      description = 'E2E tests safely skipped (PR does not qualify)';
+    } else {
+      description = 'All E2E tests and audits passed successfully';
+    }
+
     try {
       await github.rest.repos.createCommitStatus({
         owner: context.repo.owner,
@@ -416,11 +541,16 @@ async function runE2EStatus({ github, context, core, process }) {
         sha: sha,
         state: passed ? 'success' : 'failure',
         context: 'E2E Tests / executor',
-        description: passed ? 'All E2E tests and audits passed successfully' : 'E2E tests failed or incomplete',
-        target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+        description,
+        target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
       });
     } catch (error) {
-      core.warning(`Failed to post commit status: ${error.message}`);
+      if (isFork) {
+        core.info(`Unable to post commit status to fork PR commit (${sha}): ${error.message}`);
+      } else {
+        core.setFailed(`Failed to post commit status to SHA ${sha}: ${error.message}`);
+        return false;
+      }
     }
   }
 
@@ -435,6 +565,7 @@ export {
   runClearRunner,
   runWaitForE2E,
   runReportE2EStatus,
+  resolveTargetPr,
   runFilterPr,
   shouldRunE2E,
   runE2EStatus,

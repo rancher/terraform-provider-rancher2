@@ -10,10 +10,6 @@ on:
         description: 'PR Number to run tests against'
         required: true
         type: number
-      sha:
-        description: 'Commit SHA to checkout (optional, defaults to PR head)'
-        required: false
-        type: string
 
 env:
   AWS_REGION: us-west-2
@@ -36,6 +32,7 @@ jobs:
     outputs:
       should_run: ${{ steps.check-qualification.outputs.should_run }}
       sha: ${{ steps.check-qualification.outputs.sha }}
+      is_fork: ${{ steps.check-qualification.outputs.is_fork }}
     steps:
       - name: 'Checkout Repository'
         id: checkout-repository
@@ -50,7 +47,7 @@ jobs:
         env:
           SCRIPT_MODE: filter-pr
           PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.workflow_run.pull_requests[0].number }}
-          SHA: ${{ github.event.inputs.sha || github.event.workflow_run.head_sha }}
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
@@ -380,6 +377,7 @@ jobs:
           AUDIT_RESULT: ${{ needs.audit.result }}
           CLEANUP_RESULT: ${{ needs.cleanup.result }}
           SHA: ${{ needs.filter.outputs.sha }}
+          IS_FORK: ${{ needs.filter.outputs.is_fork }}
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
