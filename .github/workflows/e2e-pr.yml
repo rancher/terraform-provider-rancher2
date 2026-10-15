@@ -1,0 +1,388 @@
+name: E2E Tests (Release PRs)
+
+on:
+  workflow_run:
+    workflows: ["PR Executor Listener"]
+    types: [completed]
+
+env:
+  AWS_REGION: us-west-2
+  AWS_ROLE: arn:aws:iam::270074865685:role/terraform-module-ci-test
+  ALL_TESTS_JSON: '["TestOneBasic","TestThreeBasic","TestProductionBasic"]'
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.pull_requests[0].number || github.run_id }}
+
+jobs:
+  filter:
+    name: 'Filter Qualifying PRs'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      should_run: ${{ steps.check-qualification.outputs.should_run }}
+      sha: ${{ steps.check-qualification.outputs.sha }}
+      is_fork: ${{ steps.check-qualification.outputs.is_fork }}
+    steps:
+      - name: 'Checkout Repository'
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: 'main'
+      - name: 'Check PR Qualification'
+        id: check-qualification
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SCRIPT_MODE: filter-pr
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          PR_HEAD_SHA: ${{ github.event.workflow_run.pull_requests[0].head.sha }}
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+
+  setup:
+    name: 'Setup Matrix'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    outputs:
+      tests: ${{ steps.set-matrix.outputs.tests }}
+    steps:
+      - name: 'Set Matrix Output'
+        id: set-matrix
+        env:
+          TEST_LIST: ${{ env.ALL_TESTS_JSON }}
+        run: |
+          echo "tests=$TEST_LIST" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: 'Run E2E Tests'
+    needs:
+      - filter
+      - setup
+    if: |
+      !cancelled() &&
+      needs.filter.result == 'success' &&
+      needs.filter.outputs.should_run == 'true' &&
+      needs.filter.outputs.sha != '' &&
+      needs.setup.result == 'success'
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
+    timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        attempts: [1, 2, 3]
+        test_name: ${{ fromJSON(needs.setup.outputs.tests) }}
+    steps:
+      - name: 'Checkout Code'
+        id: checkout-code
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.filter.outputs.sha }}
+      - name: 'Checkout Workflow Scripts from main'
+        id: checkout-scripts-main
+        run: |
+          git config --global --add safe.directory "$PWD"
+          git fetch origin main:refs/remotes/origin/main || git fetch origin main
+          git checkout origin/main -- .github/workflows/scripts 2>/dev/null || git checkout FETCH_HEAD -- .github/workflows/scripts
+      - name: 'Clear out GitHub Runner'
+        id: clear-runner
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SCRIPT_MODE: clear-runner
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+      - name: 'Get IP'
+        id: get-ip
+        run: |
+          IP=$(curl -s https://ipinfo.io/ip)
+          if ! [[ "$IP" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+            echo "Error: Invalid IP address format: $IP" >&2
+            exit 1
+          fi
+          echo "ip=$IP" >> "$GITHUB_OUTPUT"
+      - name: 'Broadcast IP Artifact'
+        id: upload-ip-artifact
+        # https://github.com/actions/upload-artifact/releases
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ip-${{ steps.get-ip.outputs.ip }}-${{ strategy.job-index }}
+          path: /dev/null
+          retention-days: 1
+      - name: 'Stagger Job Start (Jitter)'
+        id: stagger-start
+        env:
+          JOB_INDEX: ${{ strategy.job-index }}
+        run: |
+          DELAY=$(( JOB_INDEX * 45 ))
+          echo "Sleeping for $DELAY seconds to prevent race conditions..."
+          sleep "$DELAY"
+      - name: 'Check for Lock'
+        id: check-lock
+        if: strategy.job-index != 0
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TEST_NAME: ${{ matrix.test_name }}
+          INDEX: ${{ strategy.job-index }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          RUN_ID: ${{ github.run_id }}
+          SCRIPT_MODE: check-lock
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+      - name: 'Check for IP Collision'
+        id: check-ip
+        if: steps.check-lock.outputs.status == 'clean' && strategy.job-index != 0
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          IP: ${{ steps.get-ip.outputs.ip }}
+          INDEX: ${{ strategy.job-index }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          RUN_ID: ${{ github.run_id }}
+          SCRIPT_MODE: check-ip
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+      - name: 'Determine if Test Should Proceed'
+        id: proceed
+        env:
+          JOB_INDEX: ${{ strategy.job-index }}
+          STATUS_LOCK: ${{ steps.check-lock.outputs.status }}
+          STATUS_IP: ${{ steps.check-ip.outputs.status }}
+          IP_ADDR: ${{ steps.get-ip.outputs.ip }}
+        run: |
+          RUN="false"
+          if [[ "$JOB_INDEX" == "0" ]]; then
+            RUN="true"
+          elif [[ "$STATUS_LOCK" == "clean" && "$STATUS_IP" == "clean" ]]; then
+            RUN="true"
+          fi
+          echo "run=$RUN" >> "$GITHUB_OUTPUT"
+          if [[ "$RUN" == "false" ]]; then
+            echo "Skipping test execution. Another attempt claimed the lock or IP collision detected."
+          else
+            echo "Proceeding with test execution on IP: $IP_ADDR"
+          fi
+      - name: 'Create Lock Artifact'
+        id: upload-lock-artifact
+        if: steps.proceed.outputs.run == 'true'
+        # https://github.com/actions/upload-artifact/releases
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lock-${{ matrix.test_name }}-${{ strategy.job-index }}
+          path: /dev/null
+          retention-days: 1
+      - name: 'Run Unit Tests'
+        id: run-unit-tests
+        if: steps.proceed.outputs.run == 'true'
+        run: .github/workflows/scripts/nix-run.sh make test
+      - name: 'Configure AWS Credentials'
+        id: aws-creds
+        if: steps.proceed.outputs.run == 'true'
+        # https://github.com/aws-actions/configure-aws-credentials/releases
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
+        with:
+          role-to-assume: ${{ env.AWS_ROLE }}
+          role-session-name: ${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 21600
+          output-credentials: true
+      - name: 'Run E2E Tests'
+        id: run-e2e-tests
+        if: steps.proceed.outputs.run == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.aws-creds.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.aws-creds.outputs.aws-session-token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_OWNER: ${{ github.repository_owner }}
+          IDENTIFIER: ${{ github.run_id }}
+          ZONE: ${{ secrets.ZONE }}
+          TEST_NAME: ${{ matrix.test_name }}
+        run: |
+          .github/workflows/scripts/nix-run.sh bash -c "
+            export AWS_MAX_ATTEMPTS=\"100\"
+            export AWS_RETRY_MODE=\"adaptive\"
+            export ACME_SERVER_URL=\"https://acme-v02.api.letsencrypt.org/directory\"
+            export RANCHER_INSECURE=\"false\"
+            ./run_tests.sh -t \"\$TEST_NAME\" -d
+          "
+
+  audit:
+    name: 'Audit E2E Test Runs'
+    needs:
+      - filter
+      - setup
+      - test
+    if: |
+      !cancelled() &&
+      needs.filter.result == 'success' &&
+      needs.filter.outputs.should_run == 'true' &&
+      needs.filter.outputs.sha != '' &&
+      needs.setup.result == 'success' &&
+      needs.test.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: 'Checkout Code'
+        id: checkout-code
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          ref: 'main'
+      - name: 'Check for Tests Run'
+        id: check-tests-run
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ALL_TESTS_JSON: ${{ env.ALL_TESTS_JSON }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          RUN_ID: ${{ github.run_id }}
+          SCRIPT_MODE: check-run
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+
+  cleanup:
+    name: 'Cleanup AWS Resources'
+    needs:
+      - filter
+      - test
+      - audit
+    if: |
+      always() &&
+      needs.filter.result == 'success' &&
+      needs.filter.outputs.should_run == 'true' &&
+      needs.filter.outputs.sha != ''
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: 'Checkout Code'
+        id: checkout-code
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          ref: 'main'
+      - name: 'Checkout Workflow Scripts from main'
+        id: checkout-scripts-main
+        run: |
+          git config --global --add safe.directory "$PWD"
+          git fetch origin main:refs/remotes/origin/main || git fetch origin main
+          git checkout origin/main -- .github/workflows/scripts 2>/dev/null || git checkout FETCH_HEAD -- .github/workflows/scripts
+      - name: 'Clear out GitHub Runner'
+        id: clear-runner
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SCRIPT_MODE: clear-runner
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+      - name: 'Configure AWS Credentials'
+        id: aws-creds
+        # https://github.com/aws-actions/configure-aws-credentials/releases
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
+        with:
+          role-to-assume: ${{ env.AWS_ROLE }}
+          role-session-name: ${{ github.run_id }}-cleanup
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+          output-credentials: true
+      - name: 'Cleanup AWS Resources'
+        id: cleanup-aws
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.aws-creds.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.aws-creds.outputs.aws-session-token }}
+          IDENTIFIER: ${{ github.run_id }}
+        run: |
+          .github/workflows/scripts/nix-run.sh bash -c "
+            export AWS_MAX_ATTEMPTS=\"100\"
+            export AWS_RETRY_MODE=\"adaptive\"
+            ./run_tests.sh -c \"\$IDENTIFIER\"
+          "
+
+  e2e-status:
+    name: 'E2E Test Status Gate'
+    needs:
+      - filter
+      - setup
+      - test
+      - audit
+      - cleanup
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - name: 'Checkout Repository'
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: 'main'
+      - name: 'Evaluate E2E Status'
+        id: evaluate-status
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SCRIPT_MODE: e2e-status
+          FILTER_RESULT: ${{ needs.filter.result }}
+          SETUP_RESULT: ${{ needs.setup.result }}
+          SHOULD_RUN: ${{ needs.filter.outputs.should_run }}
+          TEST_RESULT: ${{ needs.test.result }}
+          AUDIT_RESULT: ${{ needs.audit.result }}
+          CLEANUP_RESULT: ${{ needs.cleanup.result }}
+          SHA: ${{ needs.filter.outputs.sha }}
+          IS_FORK: ${{ needs.filter.outputs.is_fork }}
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
