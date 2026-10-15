@@ -237,23 +237,20 @@ test('runFilterPr - sets step output should_run to true for qualifying PR', asyn
 
 test('runFilterPr - sets step output should_run to false when PR missing from payload and no PR_NUMBER', async () => {
   let failedMsg = '';
-  let outputKey = '';
-  let outputValue = '';
+  const outputs = {};
   const mockCore = {
     info: () => {},
     warning: () => {},
     setFailed: (msg) => { failedMsg = msg; },
     setOutput: (key, val) => {
-      outputKey = key;
-      outputValue = val;
+      outputs[key] = val;
     },
   };
 
   const mockContext = { payload: {} };
   const result = await runFilterPr({ context: mockContext, core: mockCore, process: { env: {} } });
   assert.strictEqual(result, false);
-  assert.strictEqual(outputKey, 'should_run');
-  assert.strictEqual(outputValue, 'false');
+  assert.strictEqual(outputs['should_run'], 'false');
   assert.match(failedMsg, /Missing pull_request in context payload and PR_NUMBER env var/);
 });
 
@@ -461,7 +458,7 @@ test('defaultHandler - routes filter-pr and e2e-status modes', async () => {
     payload: {
       pull_request: {
         base: { ref: 'release/v2', repo: { full_name: 'rancher/repo', fork: false } },
-        head: { ref: 'backport-1-release-v2', repo: { full_name: 'rancher/repo', fork: false } },
+        head: { ref: 'backport-1-release-v2', repo: { full_name: 'rancher/repo', fork: false }, sha: 'mockheadsha123' },
         user: { login: 'github-actions[bot]', type: 'Bot' },
       },
     },
@@ -1717,4 +1714,246 @@ test('resolveTargetPr - fetches full PR object when match is found via commit lo
   assert.strictEqual(fullPrFetched, true);
   assert.strictEqual(pr.number, 992);
   assert.strictEqual(pr.head.sha, 'commitsha992');
+});
+
+test('resolveTargetPr - fails closed and returns null when associated PRs do not match branch or repository', async () => {
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => [
+          {
+            number: 101,
+            state: 'open',
+            head: { ref: 'other-branch', repo: { full_name: 'unrelated/terraform-provider-rancher2' } },
+          },
+          {
+            number: 102,
+            state: 'closed',
+            head: { ref: 'patch-3', repo: { full_name: 'contributor/terraform-provider-rancher2' } },
+          },
+        ],
+      },
+      pulls: {
+        get: async () => {
+          throw new Error('Should not be called');
+        },
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'commitsha103',
+        head_branch: 'patch-3',
+        head_repository: { full_name: 'contributor/terraform-provider-rancher2' },
+        pull_requests: [],
+      },
+    },
+  };
+
+  const pr = await resolveTargetPr({
+    github: mockGithub,
+    context: mockContext,
+    core: { info: () => {}, warning: () => {}, setFailed: () => {} },
+    process: { env: {} },
+  });
+
+  assert.strictEqual(pr, null);
+});
+
+test('runFilterPr - fails closed and sets core.setFailed when resolved PR lacks head.sha', async () => {
+  let failedMsg = '';
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setFailed: (msg) => { failedMsg = msg; },
+    setOutput: (key, val) => { outputs[key] = val; },
+  };
+
+  const mockPr = {
+    number: 888,
+    base: {
+      ref: 'release/v2.10',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    head: {
+      ref: 'backport-123-release-v2.10',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+      // head.sha is intentionally missing/undefined
+    },
+    user: {
+      login: 'github-actions[bot]',
+      type: 'Bot',
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: mockPr,
+    },
+  };
+
+  const result = await runFilterPr({
+    github: {},
+    context: mockContext,
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.strictEqual(result, false);
+  assert.match(failedMsg, /missing a verified head commit SHA/);
+  assert.strictEqual(outputs['should_run'], 'false');
+  assert.strictEqual(outputs['sha'], '');
+});
+
+test('resolveTargetPr - matches head branch even when one has refs/heads/ prefix', async () => {
+  const fullPrData = {
+    number: 993,
+    base: {
+      ref: 'release/v2',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    head: {
+      ref: 'refs/heads/patch-normalized',
+      repo: { full_name: 'contributor/terraform-provider-rancher2', fork: true },
+      sha: 'commitsha993',
+    },
+    user: {
+      login: 'contributor',
+      type: 'User',
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => [
+          {
+            number: 993,
+            state: 'open',
+            head: { ref: 'refs/heads/patch-normalized', repo: { full_name: 'contributor/terraform-provider-rancher2' } },
+          },
+        ],
+      },
+      pulls: {
+        get: async () => ({ data: fullPrData }),
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'commitsha993',
+        head_branch: 'patch-normalized', // without refs/heads/
+        head_repository: { full_name: 'contributor/terraform-provider-rancher2' },
+        pull_requests: [],
+      },
+    },
+  };
+
+  const pr = await resolveTargetPr({
+    github: mockGithub,
+    context: mockContext,
+    core: { info: () => {}, warning: () => {}, setFailed: () => {} },
+    process: { env: {} },
+  });
+
+  assert.ok(pr);
+  assert.strictEqual(pr.number, 993);
+  assert.strictEqual(pr.head.sha, 'commitsha993');
+});
+
+test('runFilterPr - sets sha to empty string and is_fork to false when PR cannot be resolved for internal run', async () => {
+  let failedMsg = '';
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setFailed: (msg) => { failedMsg = msg; },
+    setOutput: (key, val) => { outputs[key] = val; },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'missingprsha',
+        head_branch: 'main',
+        head_repository: {
+          full_name: 'rancher/terraform-provider-rancher2',
+          fork: false,
+        },
+        pull_requests: [],
+      },
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  const result = await runFilterPr({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.strictEqual(result, false);
+  assert.match(failedMsg, /Missing pull_request in context payload and PR_NUMBER env var/);
+  assert.strictEqual(outputs['should_run'], 'false');
+  assert.strictEqual(outputs['sha'], '');
+  assert.strictEqual(outputs['is_fork'], 'false');
+});
+
+test('runE2EStatus - uses process.env.GITHUB_RUN_ID when context.runId is missing', async () => {
+  let createdStatus = null;
+  const mockGithub = {
+    rest: {
+      repos: {
+        createCommitStatus: async (args) => {
+          createdStatus = args;
+        },
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    // runId intentionally missing
+  };
+
+  const mockProcess = {
+    env: {
+      FILTER_RESULT: 'success',
+      SHOULD_RUN: 'true',
+      TEST_RESULT: 'success',
+      AUDIT_RESULT: 'success',
+      CLEANUP_RESULT: 'success',
+      SHA: 'runidsha987',
+      IS_FORK: 'false',
+      GITHUB_RUN_ID: '778899',
+    },
+  };
+
+  const result = await runE2EStatus({
+    github: mockGithub,
+    context: mockContext,
+    core: { info: () => {}, setFailed: () => {} },
+    process: mockProcess,
+  });
+
+  assert.strictEqual(result, true);
+  assert.ok(createdStatus);
+  assert.strictEqual(createdStatus.target_url, 'https://github.com/rancher/terraform-provider-rancher2/actions/runs/778899');
 });

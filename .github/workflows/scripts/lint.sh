@@ -73,6 +73,7 @@ run_eslint() {
 run_gitleaks() {
   echo "==> Scanning for secrets with gitleaks..."
   gitleaks detect --no-banner -v --no-git
+  gitleaks detect --no-banner -v
 }
 
 case "${MODE}" in
