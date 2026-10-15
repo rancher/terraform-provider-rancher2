@@ -4,7 +4,7 @@ export default async ({ github, context, core, process }) => {
   const mode = process.env.SCRIPT_MODE;
   switch (mode) {
   case 'filter-pr':
-    return await runFilterPr({ context, core });
+    return await runFilterPr({ github, context, core, process });
   case 'e2e-status':
     return await runE2EStatus({ core, process });
   case 'check-ip':
@@ -302,7 +302,8 @@ function shouldRunE2E(pr, core = { info: () => {}, warning: () => {} }) {
   const userType = pr.user?.type;
   const userLogin = pr.user?.login;
   const normalizedLogin = typeof userLogin === 'string' ? userLogin.toLowerCase() : '';
-  const isBot = userType === 'Bot' || normalizedLogin === 'github-actions[bot]' || normalizedLogin.endsWith('[bot]');
+  const authorizedBots = ['github-actions[bot]', 'rancher-merge-bot[bot]'];
+  const isBot = authorizedBots.includes(normalizedLogin);
 
   const isBackport = isBot && /^backport-\d+-(?:release-)?v\d+.*$/.test(cleanHeadRef);
   const isReleasePlease = isBot && /^release-please--branches--release(?:--|\/)v\d+.*$/.test(cleanHeadRef);
@@ -319,15 +320,40 @@ function shouldRunE2E(pr, core = { info: () => {}, warning: () => {} }) {
 /**
  * filter-pr: Evaluates PR qualification and sets the 'should_run' step output.
  */
-async function runFilterPr({ context, core }) {
-  const pr = context?.payload?.pull_request;
+async function runFilterPr({ github, context, core, process }) {
+  let pr = context?.payload?.pull_request;
+  let prNumber = process.env.PR_NUMBER ? parseInt(process.env.PR_NUMBER, 10) : null;
+
+  if (!pr && prNumber) {
+    core.info(`Fetching PR #${prNumber} from API...`);
+    try {
+      const response = await github.rest.pulls.get({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        pull_number: prNumber,
+      });
+      pr = response.data;
+    } catch (error) {
+      core.setFailed(`Failed to fetch PR #${prNumber}: ${error.message}`);
+      core.setOutput('should_run', 'false');
+      return false;
+    }
+  }
+
   if (!pr) {
-    core.setFailed('Missing pull_request in context payload.');
+    core.setFailed('Missing pull_request in context payload and PR_NUMBER env var.');
     core.setOutput('should_run', 'false');
     return false;
   }
+
   const shouldRun = shouldRunE2E(pr, core);
   core.setOutput('should_run', shouldRun ? 'true' : 'false');
+  
+  if (shouldRun) {
+    const sha = process.env.SHA || pr.head.sha;
+    core.setOutput('sha', sha);
+  }
+  
   return shouldRun;
 }
 
@@ -361,16 +387,18 @@ function evaluateE2EStatus({ filterResult, setupResult = 'success', shouldRun, t
 
 /**
  * e2e-status: Evaluates workflow outcome and determines status check pass/fail.
+ * Posts the final status directly to the PR's commit SHA to enforce branch protection.
  */
-async function runE2EStatus({ core, process }) {
+async function runE2EStatus({ github, context, core, process }) {
   const filterResult = process.env.FILTER_RESULT;
   const setupResult = process.env.SETUP_RESULT;
   const shouldRun = process.env.SHOULD_RUN;
   const testResult = process.env.TEST_RESULT;
   const auditResult = process.env.AUDIT_RESULT;
   const cleanupResult = process.env.CLEANUP_RESULT;
+  const sha = process.env.SHA;
 
-  return evaluateE2EStatus({
+  const passed = evaluateE2EStatus({
     filterResult,
     setupResult,
     shouldRun,
@@ -378,6 +406,25 @@ async function runE2EStatus({ core, process }) {
     auditResult,
     cleanupResult,
   }, core);
+
+  if (sha) {
+    core.info(`Posting commit status to SHA: ${sha}`);
+    try {
+      await github.rest.repos.createCommitStatus({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        sha: sha,
+        state: passed ? 'success' : 'failure',
+        context: 'E2E Tests / executor',
+        description: passed ? 'All E2E tests and audits passed successfully' : 'E2E tests failed or incomplete',
+        target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+      });
+    } catch (error) {
+      core.warning(`Failed to post commit status: ${error.message}`);
+    }
+  }
+
+  return passed;
 }
 
 export {

@@ -197,15 +197,13 @@ test('shouldRunE2E - returns false on null or empty payload', () => {
 });
 
 test('runFilterPr - sets step output should_run to true for qualifying PR', async () => {
-  let outputKey = '';
-  let outputValue = '';
+  const outputs = {};
   const mockCore = {
     info: () => {},
     warning: () => {},
     setFailed: () => {},
     setOutput: (key, val) => {
-      outputKey = key;
-      outputValue = val;
+      outputs[key] = val;
     },
   };
 
@@ -220,6 +218,7 @@ test('runFilterPr - sets step output should_run to true for qualifying PR', asyn
         head: {
           ref: 'backport-999-release-v2',
           repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+          sha: '1234567890abcdef',
         },
         user: {
           login: 'github-actions[bot]',
@@ -229,13 +228,13 @@ test('runFilterPr - sets step output should_run to true for qualifying PR', asyn
     },
   };
 
-  const result = await runFilterPr({ context: mockContext, core: mockCore });
+  const result = await runFilterPr({ context: mockContext, core: mockCore, process: { env: {} } });
   assert.strictEqual(result, true);
-  assert.strictEqual(outputKey, 'should_run');
-  assert.strictEqual(outputValue, 'true');
+  assert.strictEqual(outputs['should_run'], 'true');
+  assert.strictEqual(outputs['sha'], '1234567890abcdef');
 });
 
-test('runFilterPr - sets step output should_run to false when PR missing from payload', async () => {
+test('runFilterPr - sets step output should_run to false when PR missing from payload and no PR_NUMBER', async () => {
   let failedMsg = '';
   let outputKey = '';
   let outputValue = '';
@@ -250,11 +249,67 @@ test('runFilterPr - sets step output should_run to false when PR missing from pa
   };
 
   const mockContext = { payload: {} };
-  const result = await runFilterPr({ context: mockContext, core: mockCore });
+  const result = await runFilterPr({ context: mockContext, core: mockCore, process: { env: {} } });
   assert.strictEqual(result, false);
   assert.strictEqual(outputKey, 'should_run');
   assert.strictEqual(outputValue, 'false');
-  assert.match(failedMsg, /Missing pull_request/);
+  assert.match(failedMsg, /Missing pull_request in context payload and PR_NUMBER env var/);
+});
+
+test('runFilterPr - fetches PR dynamically via API when payload is missing', async () => {
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setFailed: () => {},
+    setOutput: (key, val) => {
+      outputs[key] = val;
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'repo' },
+    payload: {}, // Missing PR payload
+  };
+
+  const mockGithub = {
+    rest: {
+      pulls: {
+        get: async ({ pull_number }) => {
+          assert.strictEqual(pull_number, 402);
+          return {
+            data: {
+              number: 402,
+              base: {
+                ref: 'release/v2',
+                repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+              },
+              head: {
+                ref: 'backport-999-release-v2',
+                repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+                sha: 'abcdef1234567890',
+              },
+              user: {
+                login: 'github-actions[bot]',
+                type: 'Bot',
+              },
+            },
+          };
+        },
+      },
+    },
+  };
+
+  const result = await runFilterPr({ 
+    github: mockGithub, 
+    context: mockContext, 
+    core: mockCore, 
+    process: { env: { PR_NUMBER: '402' } } 
+  });
+  
+  assert.strictEqual(result, true);
+  assert.strictEqual(outputs['should_run'], 'true');
+  assert.strictEqual(outputs['sha'], 'abcdef1234567890');
 });
 
 test('evaluateE2EStatus - passes when tests were safely skipped', () => {
@@ -1010,3 +1065,78 @@ test('runCheckRun - sets core.setFailed when lock is missing', async () => {
   assert.strictEqual(failedMsg, 'No lock found for TestOneBasic, failing.');
 });
 
+
+test('shouldRunE2E - rejects unrelated bot account', () => {
+  let loggedInfo = '';
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+  };
+
+  const pr = {
+    number: 801,
+    base: {
+      ref: 'release/v2',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    head: {
+      ref: 'backport-123-release-v2',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    user: {
+      login: 'some-malicious-app[bot]',
+      type: 'Bot',
+    },
+  };
+
+  const result = shouldRunE2E(pr, mockCore);
+  assert.strictEqual(result, false);
+  assert.match(loggedInfo, /not an authorized automated PR/);
+});
+
+test('runE2EStatus - posts commit status to API when SHA is provided', async () => {
+  let loggedInfo = '';
+  let commitStatusCalled = false;
+  let commitStatusArgs = {};
+  
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    setFailed: () => {},
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        createCommitStatus: async (args) => {
+          commitStatusCalled = true;
+          commitStatusArgs = args;
+        },
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    runId: 9999,
+  };
+
+  const mockProcess = {
+    env: {
+      FILTER_RESULT: 'success',
+      SHOULD_RUN: 'true',
+      TEST_RESULT: 'success',
+      AUDIT_RESULT: 'success',
+      CLEANUP_RESULT: 'success',
+      SHA: '1234567890abcdef',
+    },
+  };
+
+  const result = await runE2EStatus({ github: mockGithub, context: mockContext, core: mockCore, process: mockProcess });
+  
+  assert.strictEqual(result, true);
+  assert.match(loggedInfo, /Posting commit status to SHA: 1234567890abcdef/);
+  assert.strictEqual(commitStatusCalled, true);
+  assert.strictEqual(commitStatusArgs.sha, '1234567890abcdef');
+  assert.strictEqual(commitStatusArgs.state, 'success');
+  assert.strictEqual(commitStatusArgs.context, 'E2E Tests / executor');
+});
