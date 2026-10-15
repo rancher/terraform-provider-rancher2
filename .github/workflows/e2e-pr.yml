@@ -41,6 +41,7 @@ jobs:
         env:
           SCRIPT_MODE: filter-pr
           PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          PR_HEAD_SHA: ${{ github.event.workflow_run.pull_requests[0].head.sha }}
           WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
         with:
           script: |

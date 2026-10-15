@@ -466,9 +466,9 @@ async function runFilterPr({ github, context, core, process }) {
     return false;
   }
 
-  const workflowRunSha = process.env.WORKFLOW_RUN_SHA || parentRun?.head_sha;
-  if (workflowRunSha && workflowRunSha !== pr.head.sha) {
-    core.info(`Workflow run commit (${workflowRunSha}) is superseded by current PR head (${pr.head.sha}). Skipping stale run.`);
+  const triggerPrHeadSha = process.env.PR_HEAD_SHA || parentRun?.pull_requests?.[0]?.head?.sha;
+  if (triggerPrHeadSha && triggerPrHeadSha !== pr.head.sha) {
+    core.info(`Workflow run PR head commit (${triggerPrHeadSha}) is superseded by current PR head (${pr.head.sha}). Skipping stale run.`);
     core.setOutput('should_run', 'false');
     core.setOutput('sha', '');
     return false;

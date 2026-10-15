@@ -1321,7 +1321,7 @@ test('runFilterPr - always outputs sha even when PR does not qualify (should_run
   assert.strictEqual(outputs['is_fork'], 'false');
 });
 
-test('runFilterPr - detects superseded commit when WORKFLOW_RUN_SHA does not match pr.head.sha', async () => {
+test('runFilterPr - detects superseded commit when PR_HEAD_SHA does not match pr.head.sha', async () => {
   const outputs = {};
   let loggedInfo = '';
   const mockCore = {
@@ -1360,7 +1360,7 @@ test('runFilterPr - detects superseded commit when WORKFLOW_RUN_SHA does not mat
     core: mockCore,
     process: {
       env: {
-        WORKFLOW_RUN_SHA: 'olderstalesha111',
+        PR_HEAD_SHA: 'olderstalesha111',
       },
     },
   });
@@ -1369,6 +1369,166 @@ test('runFilterPr - detects superseded commit when WORKFLOW_RUN_SHA does not mat
   assert.strictEqual(outputs['should_run'], 'false');
   assert.strictEqual(outputs['sha'], '');
   assert.match(loggedInfo, /superseded by current PR head/);
+});
+
+test('runFilterPr - does not mark run as superseded when PR_HEAD_SHA matches pr.head.sha', async () => {
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setFailed: () => {},
+    setOutput: (key, val) => {
+      outputs[key] = val;
+    },
+  };
+
+  const mockContext = {
+    payload: {
+      pull_request: {
+        number: 890,
+        base: {
+          ref: 'release/v2',
+          repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+        },
+        head: {
+          ref: 'backport-1-release-v2',
+          repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+          sha: 'matchingheadsha888',
+        },
+        user: {
+          login: 'github-actions[bot]',
+          type: 'Bot',
+        },
+      },
+    },
+  };
+
+  const result = await runFilterPr({
+    github: {},
+    context: mockContext,
+    core: mockCore,
+    process: {
+      env: {
+        PR_HEAD_SHA: 'matchingheadsha888',
+      },
+    },
+  });
+
+  assert.strictEqual(result, true);
+  assert.strictEqual(outputs['should_run'], 'true');
+  assert.strictEqual(outputs['sha'], 'matchingheadsha888');
+});
+
+test('runFilterPr - detects superseded commit when parentRun.pull_requests[0].head.sha does not match pr.head.sha', async () => {
+  const outputs = {};
+  let loggedInfo = '';
+  const mockCore = {
+    info: (msg) => { loggedInfo += msg; },
+    warning: () => {},
+    setFailed: () => {},
+    setOutput: (key, val) => {
+      outputs[key] = val;
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        pull_requests: [
+          {
+            number: 891,
+            head: {
+              ref: 'backport-1-release-v2',
+              sha: 'staleheadsha333',
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      pulls: {
+        get: async () => ({
+          data: {
+            number: 891,
+            base: {
+              ref: 'release/v2',
+              repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+            },
+            head: {
+              ref: 'backport-1-release-v2',
+              repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+              sha: 'newestprheadsha444',
+            },
+            user: {
+              login: 'github-actions[bot]',
+              type: 'Bot',
+            },
+          },
+        }),
+      },
+    },
+  };
+
+  const result = await runFilterPr({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(outputs['should_run'], 'false');
+  assert.strictEqual(outputs['sha'], '');
+  assert.match(loggedInfo, /superseded by current PR head/);
+});
+
+test('runFilterPr - safe fork fallback does not mark as superseded when pull_requests is empty and PR_HEAD_SHA is undefined', async () => {
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setFailed: () => {},
+    setOutput: (key, val) => {
+      outputs[key] = val;
+    },
+  };
+
+  const mockContext = {
+    payload: {
+      pull_request: {
+        number: 892,
+        base: {
+          ref: 'release/v2',
+          repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+        },
+        head: {
+          ref: 'patch-fork',
+          repo: { full_name: 'external-contributor/terraform-provider-rancher2', fork: true },
+          sha: 'forkprheadsha555',
+        },
+        user: {
+          login: 'external-user',
+          type: 'User',
+        },
+      },
+    },
+  };
+
+  const result = await runFilterPr({
+    github: {},
+    context: mockContext,
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(outputs['should_run'], 'false');
+  assert.strictEqual(outputs['sha'], 'forkprheadsha555');
+  assert.strictEqual(outputs['is_fork'], 'true');
 });
 
 test('runFilterPr - resolves fork PR via commit search fallback when pull_requests is empty in workflow_run', async () => {
