@@ -853,6 +853,97 @@ test('shouldRunE2E - rejects PR when base.ref has no digits after release/v (e.g
   assert.match(loggedInfo, /not a release branch/);
 });
 
+test('shouldRunE2E - rejects PR when base.ref has trailing characters or minor versions (e.g. release/v15-malicious, release/v15.1)', () => {
+  let loggedInfo = '';
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+  };
+
+  const pr1 = {
+    number: 604,
+    base: {
+      ref: 'release/v15-malicious',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    head: {
+      ref: 'backport-123-release-v15',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    user: { login: 'github-actions[bot]', type: 'Bot' },
+  };
+  assert.strictEqual(shouldRunE2E(pr1, mockCore), false);
+  assert.match(loggedInfo, /not a release branch/);
+
+  const pr2 = {
+    number: 605,
+    base: {
+      ref: 'release/v15.1',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    head: {
+      ref: 'release-please--branches--release--v15',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    user: { login: 'github-actions[bot]', type: 'Bot' },
+  };
+  assert.strictEqual(shouldRunE2E(pr2, mockCore), false);
+  assert.match(loggedInfo, /not a release branch/);
+});
+
+test('shouldRunE2E - rejects bot PR when head.ref has trailing characters or malicious suffix', () => {
+  let loggedInfo = '';
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+  };
+
+  const pr1 = {
+    number: 606,
+    base: {
+      ref: 'release/v15',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    head: {
+      ref: 'backport-123-release-v15-malicious',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    user: { login: 'github-actions[bot]', type: 'Bot' },
+  };
+  assert.strictEqual(shouldRunE2E(pr1, mockCore), false);
+  assert.match(loggedInfo, /not an authorized automated PR/);
+
+  const pr2 = {
+    number: 607,
+    base: {
+      ref: 'release/v15',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    head: {
+      ref: 'release-please--branches--release--v15-malicious',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    user: { login: 'github-actions[bot]', type: 'Bot' },
+  };
+  assert.strictEqual(shouldRunE2E(pr2, mockCore), false);
+  assert.match(loggedInfo, /not an authorized automated PR/);
+
+  const pr3 = {
+    number: 608,
+    base: {
+      ref: 'release/v15',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    head: {
+      ref: 'release-please--branches--release/v15.1',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    user: { login: 'github-actions[bot]', type: 'Bot' },
+  };
+  assert.strictEqual(shouldRunE2E(pr3, mockCore), false);
+  assert.match(loggedInfo, /not an authorized automated PR/);
+});
+
 test('shouldRunE2E - rejects bot PR when head.repo.fork is true even if repo full_names match', () => {
   let loggedInfo = '';
   const mockCore = {
@@ -1776,11 +1867,11 @@ test('runFilterPr - fails closed and sets core.setFailed when resolved PR lacks 
   const mockPr = {
     number: 888,
     base: {
-      ref: 'release/v2.10',
+      ref: 'release/v2',
       repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
     },
     head: {
-      ref: 'backport-123-release-v2.10',
+      ref: 'backport-123-release-v2',
       repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
       // head.sha is intentionally missing/undefined
     },

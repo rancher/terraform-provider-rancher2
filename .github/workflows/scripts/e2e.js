@@ -292,7 +292,7 @@ function shouldRunE2E(pr, core = { info: () => {}, warning: () => {} }) {
 
   const rawBaseRef = pr.base?.ref || '';
   const cleanBaseRef = rawBaseRef.replace(/^refs\/heads\//, '');
-  if (!/^release\/v\d+.*$/.test(cleanBaseRef)) {
+  if (!/^release\/v\d+$/.test(cleanBaseRef)) {
     core.info(`PR target branch "${rawBaseRef}" is not a release branch. Skipping E2E tests.`);
     return false;
   }
@@ -305,8 +305,8 @@ function shouldRunE2E(pr, core = { info: () => {}, warning: () => {} }) {
   const authorizedBots = ['github-actions[bot]', 'rancher-merge-bot[bot]'];
   const isBot = authorizedBots.includes(normalizedLogin);
 
-  const isBackport = isBot && /^backport-\d+-(?:release-)?v\d+.*$/.test(cleanHeadRef);
-  const isReleasePlease = isBot && /^release-please--branches--release(?:--|\/)v\d+.*$/.test(cleanHeadRef);
+  const isBackport = isBot && /^backport-\d+-(?:release-)?v\d+$/.test(cleanHeadRef);
+  const isReleasePlease = isBot && /^release-please--branches--release(?:--|\/)v\d+$/.test(cleanHeadRef);
 
   if (isBackport || isReleasePlease) {
     core.info(`PR #${pr.number} qualifies for E2E tests (Type: ${isBackport ? 'backport' : 'release-please'}, Head: ${cleanHeadRef}, Author: ${userLogin}).`);
