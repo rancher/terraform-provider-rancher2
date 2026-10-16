@@ -108,7 +108,7 @@ module "rancher" {
     module.tls,
   ]
   source  = "rancher/aws/rancher2"
-  version = "3.1.4"
+  version = "3.1.5"
   # project
   identifier   = local.identifier
   owner        = local.owner
