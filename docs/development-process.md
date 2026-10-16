@@ -18,7 +18,7 @@ For the comprehensive architectural specifications, end-to-end delivery lifecycl
    ```markdown
    - Addresses: #<issue-number>
    ```
-2. **Conventional Commits**: Ensure commit messages follow Conventional Commits (e.g. `fix:`, `feat:`, `chore:`) and subject lines stay under 100 characters.
+2. **Conventional Commits**: Ensure commit messages follow Conventional Commits (e.g. `fix:`, `feat:`, or `chore(main):`) and subject lines stay under 100 characters.
 3. **Local Testing & Linting**: Run tests and linters locally before submitting:
    ```bash
    make build

@@ -63,8 +63,7 @@ sequenceDiagram
     rect rgb(255, 240, 245)
         Note over Executor,AWS: Stage 4: Cloud Teardown & PR Status Gate
         Executor->>AWS: ./run_tests.sh -c <identifier> (Cleanup resources)
-        Executor->>PR: Post Commit Status: e2e-status (success / failure)
-        Executor->>PR: Post Comment: End to End Tests Passed!
+        Executor->>PR: Post Commit Status: E2E Tests / executor (success / failure)
     end
 ```
 
@@ -83,7 +82,13 @@ sequenceDiagram
 - **Trigger**: Runs on `workflow_run` when workflow `PR Executor Listener` completes.
 - **Trusted Context**: Executes using the workflow definition from the repository default branch (`main`), preventing external PRs from tampering with test runner logic.
 - **Timeout**: 360 minutes (6 hours) to accommodate full cloud provisioning lifecycles.
-- **Permissions**: `contents: read`, `id-token: write`, `issues: write`, `pull-requests: write`, `statuses: write`, `actions: write`.
+- **Permissions**: Top-level `permissions: {}` enforces least privilege. Per-job permissions are explicitly declared:
+  - `filter`: `contents: read`, `pull-requests: read`
+  - `setup`: `permissions: {}`
+  - `test`: `actions: read`, `contents: read`, `id-token: write`
+  - `audit`: `actions: read`, `contents: read`
+  - `cleanup`: `contents: read`, `id-token: write`
+  - `e2e-status`: `contents: read`, `statuses: write`
 
 ---
 
@@ -107,7 +112,6 @@ Constructs the dynamic test matrix:
 ```json
 ["TestOneBasic", "TestThreeBasic", "TestProductionBasic"]
 ```
-Also creates an informative comment on the target PR linking to the active GitHub Actions run (`runWaitForE2E`).
 
 ### Job 3: Matrix Test Execution (`test`)
 
@@ -116,7 +120,7 @@ Executes in parallel for each test in the matrix across 3 staggered attempts:
 1. **Concurrency Jitter**: Calculates a progressive delay based on the matrix index (`strategy.job-index * 45s`) to prevent runner race conditions.
 2. **Lock & IP Collision Prevention**:
    - Downloads all active workflow artifacts.
-   - **IP Collision (`check-ip`)**: Resolves runner public IP (`curl ifconfig.me`). Verifies whether another concurrent job already registered that IP in an artifact named `ip-<ip>-<index>`. If an older index job is running on the same IP, flags collision to avoid AWS API throttling.
+   - **IP Collision (`check-ip`)**: Resolves runner public IP (`curl -s https://ipinfo.io/ip`). Verifies whether another concurrent job already registered that IP in an artifact named `ip-<ip>-<index>`. If an older index job is running on the same IP, flags collision to avoid AWS API throttling.
    - **Test Locking (`check-lock`)**: Checks whether another runner is currently executing the same test (`lock-<test_name>-<index>`).
 3. **Disk Space Optimization (`clear-runner`)**:
    - Calls `runClearRunner` to delete unused SDKs (Android, .NET, Swift, Julia, Powershell) and prunes Docker volumes to reclaim >30GB of runner disk space.
@@ -140,14 +144,14 @@ Guaranteed to execute (`if: always()`). Re-authenticates to AWS via OIDC and inv
 ```
 Scans for any orphaned test infrastructure tagged with the unique identifier and issues forceful cloud terminations.
 
-### Job 6: Commit Status Check Gate (`e2e-status`)
+### Job 6: Commit Status Check Gate (`e2e-status` job)
 
 Runs `runE2EStatus` in `e2e.js` (`SCRIPT_MODE: e2e-status`). Evaluates the collective results of `filter`, `test`, `audit`, and `cleanup`:
-- Submits a commit status check named `e2e-status` to the target PR's head commit SHA (`POST /repos/{owner}/{repo}/statuses/{sha}`):
+- Submits a commit status check with context `'E2E Tests / executor'` to the target PR's head commit SHA (`POST /repos/{owner}/{repo}/statuses/{sha}`):
+  - **Context**: `E2E Tests / executor`.
   - **State**: `success` or `failure`.
   - **Target URL**: Link to the GitHub Actions workflow run.
   - **Description**: `E2E tests passed successfully` or `E2E tests failed`.
-- Comments on the PR thread notifying collaborators of the final test outcome (`runReportE2EStatus`).
 
 ---
 
@@ -157,4 +161,4 @@ Runs `runE2EStatus` in `e2e.js` (`SCRIPT_MODE: e2e-status`). Evaluates the colle
 2. **Strict Fork Isolation**: External forks are barred from triggering cloud tests. Only repository-internal automated bot branches can invoke OIDC credential exchanges.
 3. **Distributed Artifact Locks**: Workflows coordinate test execution state dynamically using GitHub Actions workflow artifacts rather than external state databases.
 4. **Guaranteed Cloud Cleanup**: The `cleanup` job runs under `if: always()` to ensure temporary cloud infrastructure is eradicated even if test execution crashes or times out.
-5. **Commit Status Gate Integration**: The `e2e-status` context check provides a native GitHub branch protection requirement, preventing auto-merge from advancing if tests fail.
+5. **Commit Status Gate Integration**: The `E2E Tests / executor` commit status context check provides a native GitHub branch protection requirement, preventing auto-merge from advancing if tests fail.

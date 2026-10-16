@@ -73,7 +73,7 @@ This swimlane diagram traces the actual event triggers, security boundaries, and
 |                                             |    ├─► AWS OIDC: Assumes test IAM role                         |
 |                                             |    ├─► Nix: Runs live AWS acceptance tests (run_tests.sh)      |
 |                                             |    ├─► Cleanup: Guarantees teardown of AWS cloud resources    |
-|                                             |    └─► Status Gate: Submits commit status check (e2e-status)   |
+|                                             |    └─► Status Gate: Submits commit status check (E2E Tests / executor) |
 |                                             |                                                                |
 | === PART 3: RELEASE CANDIDATE (RC) STAGING =|                                                                |
 |                                             |                                                                |

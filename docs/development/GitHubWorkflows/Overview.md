@@ -60,7 +60,7 @@ flowchart TD
     subgraph Stage5["5. Privileged AWS E2E Testing Gate"]
         LISTEN[e2e-pr-listener.yml<br/>PR activity on release/v*]
         E2E[e2e-pr.yml via workflow_run<br/>AWS OIDC + Lock + Matrix Tests]
-        STATUS[Commit Status Check: e2e-status]
+        STATUS[Commit Status Check:<br/>E2E Tests / executor]
         BPR --> LISTEN --> E2E --> STATUS
     end
 
@@ -107,7 +107,7 @@ flowchart TD
     6. **Node Tests**: Runs unit tests on automation tooling via `node --test` (`*.test.js`).
     7. **ESLint**: Runs ESLint across all repository modules.
     8. **ShellCheck**: Statically analyzes all shell scripts with `shellcheck -x`.
-    9. **Validate Commit Message**: Validates Conventional Commit prefixes (`fix:`, `feat:`, `chore:`, etc.), 100-character line length, and spelling via `cspell`.
+    9. **Validate Commit Message**: Validates Conventional Commit prefixes (`fix:`, `feat:`, `chore(main):`, etc.), 100-character line length, and spelling via `cspell`.
     10. **Gitleaks**: Audits commits for hardcoded tokens, passwords, and private keys.
     11. **Sensitive Checks**: Tests and executes `check_sensitive.go` against provider schemas to ensure sensitive attributes are marked appropriately.
 
@@ -172,7 +172,7 @@ flowchart TD
     - Executes live functional tests (`./run_tests.sh -t <test_name> -d`).
   - **Audit Job (`audit`)**: Verifies that all expected tests ran and produced lock artifacts.
   - **Cleanup Job (`cleanup`)**: Always runs to assume the AWS role and execute `./run_tests.sh -c <identifier>`, ensuring zero orphaned cloud resources.
-  - **Status Gate (`e2e-status`)**: Evaluates results and writes a commit status check (`e2e-status`) to the PR head commit via the GitHub Statuses API.
+  - **Status Gate (`e2e-status` job)**: Evaluates results and writes a commit status check with context `'E2E Tests / executor'` to the PR head commit via the GitHub Statuses API.
 
 ### Stage 6: Release Candidate (RC) Staging on Release Branches
 
