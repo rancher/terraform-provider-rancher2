@@ -16,13 +16,23 @@ Our workflow and automation ecosystem is built on top of a highly secure, dual-l
 
 ### 1. Unified Script Orchestration
 
-Workflows in this repository act as orchestrators rather than executors. Any non-trivial logic—such as Git tagging, manifest scans, or PR validation—is extracted into dedicated, testable JavaScript or Bash scripts under `.github/workflows/scripts/`. This separation allows us to run standard unit tests locally and verify our scripts dynamically without relying on the GHA runner environment.
+Workflows in this repository act as orchestrators rather than executors. Any non-trivial logic—such as Git tagging, manifest scans, or PR validation—is extracted into dedicated, testable JavaScript, Bash, or Go scripts under `.github/workflows/scripts/`. This separation allows us to run standard unit tests locally and verify our scripts dynamically without relying on the GHA runner environment.
 
 ### 2. Platform-Level Security Policies & Protections
 
-To prevent malicious script execution and secure our privilege boundary against unreviewed fork contributions (such as poisoned pipeline attacks), we enforce centralized GitHub Rulesets and execution allowlists.
+To prevent malicious script execution and secure our privilege boundary against unreviewed fork contributions (such as poisoned pipeline attacks), we enforce centralized GitHub Rulesets, fork isolation via the listener-executor pattern, and execution allowlists.
 
 - More details on configuring these actor and event restrictions, setup parameters, and threat mitigations can be found in **[Workflow Execution Protections](./GitHubWorkflows/WorkflowExecutionProtections.md)**.
+
+---
+
+## 🛠️ Modular Architectural Blueprints Map
+
+- **[End-to-End Value Stream Lifecycle](./GitHubWorkflows/Overview.md)**: Comprehensive specification of the 7-stage delivery value stream from PR to release.
+- **[Pull Request & Merge Lifecycle on Main](./GitHubWorkflows/PullRequestLifecycle.md)**: PR description validation, the 11-job Nix container CI matrix, and maintainer squash-merging.
+- **[Backport Orchestration & Issue Tracking](./GitHubWorkflows/BackportOrchestration.md)**: Automated tracking issue adoption, GitHub Sub-Issues hierarchy, and cherry-picking to release branches.
+- **[Privileged AWS End-to-End Testing](./GitHubWorkflows/EndToEndTesting.md)**: Listener-executor security model, AWS OIDC authentication, artifact locking, and commit status checks.
+- **[Workflow Execution Protections](./GitHubWorkflows/WorkflowExecutionProtections.md)**: Repository-level GitHub Actions execution policies and security configurations.
 
 ---
 
@@ -58,3 +68,4 @@ All helper and runner scripts in `.github/workflows/scripts/` must strictly comp
 
 - **JavaScript Scripts**: Must use ESM modules, handle paginated lists via `github.paginate()`, and be fully unit-tested with the native Node.js test runner.
 - **Bash Scripts**: Must use double brackets `[[ ]]`, fail-fast with `set -euo pipefail`, and handle error logging to stderr.
+- **Go Scripts**: Must include standalone unit tests executed via `go run` or `go test`.
