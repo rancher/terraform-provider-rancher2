@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigAzureAD(d *schema.ResourceData, in *managementClient.AzureADConfig) error {
-	d.SetId(AuthConfigAzureADName)
-	d.Set("name", AuthConfigAzureADName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.AzureADConfigType)
 	d.Set("access_mode", in.AccessMode)
 
@@ -21,6 +21,7 @@ func flattenAuthConfigAzureAD(d *schema.ResourceData, in *managementClient.Azure
 	}
 
 	d.Set("enabled", in.Enabled)
+	d.Set("display_name", in.DisplayName)
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -51,7 +52,7 @@ func expandAuthConfigAzureAD(in *schema.ResourceData) (*managementClient.AzureAD
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigAzureADName)
 	}
 
-	obj.Name = AuthConfigAzureADName
+	obj.Name = expandAuthConfigName(in, AuthConfigAzureADName)
 	obj.Type = managementClient.AzureADConfigType
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
@@ -76,6 +77,10 @@ func expandAuthConfigAzureAD(in *schema.ResourceData) (*managementClient.AzureAD
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		obj.DisplayName = v
 	}
 
 	if v, ok := in.Get("application_id").(string); ok && len(v) > 0 {

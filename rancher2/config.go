@@ -2,7 +2,9 @@ package rancher2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -903,33 +905,6 @@ func (c *Config) ClusterRegistrationTokenExist(id string) error {
 	return nil
 }
 
-func (c *Config) CheckAuthConfigEnabled(id string) error {
-	if id == "" {
-		return fmt.Errorf("Auth config id is nil")
-	}
-
-	client, err := c.ManagementClient()
-	if err != nil {
-		return err
-	}
-
-	listOpts := NewListOpts(nil)
-	auths, err := client.AuthConfig.List(listOpts)
-	if err != nil {
-		return err
-	}
-
-	for _, auth := range auths.Data {
-		if auth.Enabled {
-			if auth.ID != id && auth.ID != "local" {
-				return fmt.Errorf("%s provider is already enabled", auth.ID)
-			}
-		}
-	}
-
-	return nil
-}
-
 func (c *Config) GetAuthConfig(in *managementClient.AuthConfig) (interface{}, error) {
 	resp, err := getAuthConfigObject(in.Type)
 	if err != nil {
@@ -949,8 +924,169 @@ func (c *Config) GetAuthConfig(in *managementClient.AuthConfig) (interface{}, er
 	return resp, nil
 }
 
-func (c *Config) UpdateAuthConfig(url string, createObj interface{}, respObject interface{}) error {
-	return c.Client.Management.Ops.DoModify("PUT", url, createObj, respObject)
+// UpdateAuthConfig PUTs createObj to url.
+//
+// Rancher merges the request body into the existing AuthConfig, so fields
+// omitted by `omitempty` keep their current value. Any keepEmpty fields are
+// sent as "" when empty so that they are cleared.
+func (c *Config) UpdateAuthConfig(url string, createObj interface{}, respObject interface{}, keepEmpty ...string) error {
+	body, err := authConfigUpdateBody(createObj, keepEmpty...)
+	if err != nil {
+		return err
+	}
+
+	return c.Client.Management.Ops.DoModify("PUT", url, body, respObject)
+}
+
+// CreateOrUpdateAuthConfig creates the AuthConfig called name from obj if it
+// doesn't exist, otherwise it updates the existing AuthConfig.
+func (c *Config) CreateOrUpdateAuthConfig(name string, obj interface{}, respObject interface{}, keepEmpty ...string) error {
+	created, err := c.CreateAuthConfigIfMissing(name, obj, respObject)
+	if err != nil || created {
+		return err
+	}
+
+	return c.UpdateAuthConfigByName(name, obj, respObject, keepEmpty...)
+}
+
+// CreateAuthConfigIfMissing creates the AuthConfig called name from obj if it
+// doesn't exist, and reports whether it was created.
+func (c *Config) CreateAuthConfigIfMissing(name string, obj interface{}, respObject interface{}) (bool, error) {
+	client, err := c.ManagementClient()
+	if err != nil {
+		return false, err
+	}
+
+	existing, err := client.AuthConfig.ByID(name)
+	if err == nil {
+		return false, checkAuthConfigType(name, existing, obj)
+	}
+	if !IsNotFound(err) {
+		return false, fmt.Errorf("getting Auth Config %s: %w", name, err)
+	}
+
+	if err := c.CheckAuthConfigCanBeEnabled(name, obj); err != nil {
+		return false, err
+	}
+
+	log.Printf("[INFO] Creating Auth Config %s", name)
+	if err := client.APIBaseClient.Create(managementClient.AuthConfigType, obj, respObject); err != nil {
+		return false, fmt.Errorf("creating Auth Config %s: %w", name, err)
+	}
+
+	return true, nil
+}
+
+// UpdateAuthConfigByName updates the existing AuthConfig called name from obj.
+func (c *Config) UpdateAuthConfigByName(name string, obj interface{}, respObject interface{}, keepEmpty ...string) error {
+	client, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	auth, err := client.AuthConfig.ByID(name)
+	if err != nil {
+		return fmt.Errorf("getting Auth Config %s: %w", name, err)
+	}
+
+	if err := checkAuthConfigType(name, auth, obj); err != nil {
+		return err
+	}
+
+	if err := c.CheckAuthConfigCanBeEnabled(name, obj); err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Updating Auth Config %s", name)
+	if err := c.UpdateAuthConfig(auth.Links["self"], obj, respObject, keepEmpty...); err != nil {
+		return fmt.Errorf("updating Auth Config %s: %w", name, err)
+	}
+
+	return nil
+}
+
+// checkAuthConfigType returns an error if the existing AuthConfig is not the
+// same type as obj, so that one kind of auth provider can't overwrite another.
+func checkAuthConfigType(name string, existing *managementClient.AuthConfig, obj interface{}) error {
+	want, err := decodeAuthConfigCommon(obj)
+	if err != nil {
+		return err
+	}
+
+	if want.Type == "" {
+		return fmt.Errorf("Auth Config %s has no type", name)
+	}
+
+	if existing.Type != want.Type {
+		return fmt.Errorf("Auth Config %s already exists with type %s, not %s", name, existing.Type, want.Type)
+	}
+
+	return nil
+}
+
+// CheckAuthConfigCanBeEnabled returns an error if obj is enabled and enabling
+// it would exceed the number of enabled AuthConfigs that Rancher allows.
+func (c *Config) CheckAuthConfigCanBeEnabled(name string, obj interface{}) error {
+	common, err := decodeAuthConfigCommon(obj)
+	if err != nil {
+		return err
+	}
+
+	if !common.Enabled {
+		return nil
+	}
+
+	client, err := c.ManagementClient()
+	if err != nil {
+		return err
+	}
+
+	return checkAuthConfigCanBeEnabled(client.Feature, client.AuthConfig, name)
+}
+
+type authConfigCommon struct {
+	Type    string `json:"type"`
+	Enabled bool   `json:"enabled"`
+}
+
+// decodeAuthConfigCommon extracts the fields shared by all AuthConfig types.
+func decodeAuthConfigCommon(obj interface{}) (authConfigCommon, error) {
+	var common authConfigCommon
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return common, fmt.Errorf("marshalling Auth Config: %w", err)
+	}
+
+	if err := json.Unmarshal(b, &common); err != nil {
+		return common, fmt.Errorf("unmarshalling Auth Config: %w", err)
+	}
+
+	return common, nil
+}
+
+func authConfigUpdateBody(obj interface{}, keepEmpty ...string) (interface{}, error) {
+	if len(keepEmpty) == 0 {
+		return obj, nil
+	}
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return nil, fmt.Errorf("marshalling Auth Config: %w", err)
+	}
+
+	body := map[string]interface{}{}
+	if err := json.Unmarshal(b, &body); err != nil {
+		return nil, fmt.Errorf("unmarshalling Auth Config: %w", err)
+	}
+
+	for _, field := range keepEmpty {
+		if _, ok := body[field]; !ok {
+			body[field] = ""
+		}
+	}
+
+	return body, nil
 }
 
 func (c *Config) GetUserByName(name string) (*managementClient.User, error) {
