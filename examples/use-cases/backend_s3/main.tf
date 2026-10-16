@@ -14,7 +14,7 @@ locals {
 
 module "s3_bucket" {
   source        = "terraform-aws-modules/s3-bucket/aws"
-  version       = "5.0.2"
+  version       = "5.17.0"
   bucket        = lower(local.identifier)
   force_destroy = true
   versioning = {
