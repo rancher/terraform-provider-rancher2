@@ -1,17 +1,30 @@
-# Rancher2 Provider
+# Rancher2 Provider: Development Process
 
-Terraform has recently evolved into a spotlight infrastructure provisioning tool that is maintained by Rancher engineering. As its popularity grows, so will its open source development.
+Welcome to the development guide for the Rancher2 Terraform Provider.
 
-Improvements to note since Jan 2023
-* Rancher2 Provider docs
-* Branching into `master 3.x.x` for Rancher 2.7 clusters and `release/v2 2.x.x` for Rancher 2.6 clusters
+For the comprehensive architectural specifications, end-to-end delivery lifecycle, and automation blueprints, please consult the primary developer documentation under **[docs/development/](development/README.md)**:
 
-### Development Process
+- **[End-to-End Value Stream Lifecycle](development/GitHubWorkflows/Overview.md)**: Complete guide to how changes move from pull requests through testing, backporting, RC staging, and production releases.
+- **[Pull Request & Merge Lifecycle](development/GitHubWorkflows/PullRequestLifecycle.md)**: PR description validation rules, Conventional Commits format, and the 11-job Nix container CI matrix.
+- **[Backport Orchestration & Issue Tracking](development/GitHubWorkflows/BackportOrchestration.md)**: Automated issue tracking adoption, GitHub Sub-Issues hierarchy, and cherry-picking to release branches.
+- **[Privileged AWS End-to-End Testing](development/GitHubWorkflows/EndToEndTesting.md)**: Pre-merge acceptance test matrix, AWS OIDC authentication, and distributed locking.
+- **[Release Process & Automation](development/ReleaseProcess.md)**: Release candidate generation, Vault GPG signing, and Google Release Please manifest automation.
 
-If you are an open source contributor,
+---
 
-1. Add a feature / bug fix and smoke test it
-2. Add or update tests
-3. Open a PR! Add detailed test steps to **Testing** on the [PR template](.github/pull_request_template.md) so Terraform maintainers know how to test your solution.
-4. Get 2 PR reviews (at least 1 from a Terraform maintainer)
-5. Merge your PR (a Terraform maintainer will do this if you do not have repo access)
+### Quick Start for Contributors
+
+1. **Issue Association**: Every contribution targeting `main` must be associated with an open GitHub issue. In your PR description, include:
+   ```markdown
+   - Addresses: #<issue-number>
+   ```
+2. **Conventional Commits**: Ensure commit messages follow Conventional Commits (e.g. `fix:`, `feat:`, `chore:`) and subject lines stay under 100 characters.
+3. **Local Testing & Linting**: Run tests and linters locally before submitting:
+   ```bash
+   make build
+   make test
+   make fmt
+   make lint
+   ```
+4. **Pull Request Validation**: Once opened against `main`, automated CI will validate the issue reference and execute the hermetic Nix container CI matrix.
+5. **Maintainer Review & Backport**: Repository maintainers (`TERRAFORM_MAINTAINERS`) will review and squash-merge approved changes into `main`. Merging triggers automated cherry-picking into target `release/v<major>` maintenance branches.
