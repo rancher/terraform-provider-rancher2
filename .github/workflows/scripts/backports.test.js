@@ -1974,3 +1974,182 @@ test('extract-pr workflow logic - validates explicit pr_number inputs and tracki
   assert.strictEqual(parseIssueInput({ issueNumberInput: '0' }).success, false);
   assert.strictEqual(parseIssueInput({}).success, false);
 });
+
+test('runBackportPr - adopts referenced issue on demand when search returns 0 results', async () => {
+  const mockCore = createMockCore();
+  let labelsAdded = false;
+  let subIssuesFetched = false;
+  let gitCommands = [];
+
+  const mockGitExec = async (args) => {
+    gitCommands.push(args.join(' '));
+    return { stdout: '', stderr: '' };
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 47,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'Fix bug\n\n- Addresses: #701',
+            },
+          ],
+        }),
+      },
+      pulls: {
+        create: async () => ({
+          data: { number: 471, node_id: 'PR_node_471' },
+        }),
+      },
+      issues: {
+        get: async ({ issue_number }) => ({
+          data: {
+            number: issue_number,
+            title: 'Bug report 701',
+            state: 'open',
+            labels: [{ name: 'release/v15' }],
+          },
+        }),
+        addLabels: async () => {
+          labelsAdded = true;
+        },
+      },
+    },
+    graphql: async () => ({}),
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return { data: { total_count: 0, items: [] } };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        subIssuesFetched = true;
+        return {
+          data: [
+            {
+              number: 702,
+              title: '[release/v15] Bug report 701',
+              labels: [{ name: 'release/v15' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: { env: { MERGE_COMMIT_SHA: 'abc1234' } },
+    gitExec: mockGitExec,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(labelsAdded, true);
+  assert.strictEqual(subIssuesFetched, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Found 1 sub-issues.')));
+});
+
+test('runBackportPr - generates sub-issue on demand when tracking issue has 0 sub-issues', async () => {
+  const mockCore = createMockCore();
+  let subIssueCreated = false;
+  let subIssueCallCount = 0;
+  let gitCommands = [];
+
+  const mockGitExec = async (args) => {
+    gitCommands.push(args.join(' '));
+    return { stdout: '', stderr: '' };
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 48,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'Feature PR\n\n- Addresses: #801',
+            },
+          ],
+        }),
+      },
+      pulls: {
+        create: async () => ({
+          data: { number: 481, node_id: 'PR_node_481' },
+        }),
+      },
+      issues: {
+        get: async ({ issue_number }) => ({
+          data: {
+            number: issue_number,
+            title: 'Feature issue 801',
+            state: 'open',
+            labels: [{ name: 'internal/tracking' }, { name: 'release/v15' }],
+          },
+        }),
+        create: async () => {
+          subIssueCreated = true;
+          return { data: { id: 802, number: 802 } };
+        },
+        addLabels: async () => {},
+      },
+    },
+    graphql: async () => ({}),
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 1,
+            items: [
+              {
+                number: 801,
+                title: 'Feature issue 801',
+                state: 'open',
+                labels: [{ name: 'internal/tracking' }, { name: 'release/v15' }],
+              },
+            ],
+          },
+        };
+      }
+      if (endpoint === 'POST /repos/rancher/terraform-provider-rancher2/issues/801/sub_issues') {
+        return { data: {} };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        subIssueCallCount++;
+        if (subIssueCallCount <= 2) {
+          // First check in runBackportPr and second check in runBackportIssues return 0 sub-issues
+          return { data: [] };
+        }
+        // Third check after on-demand generation returns the created sub-issue
+        return {
+          data: [
+            {
+              number: 802,
+              title: '[release/v15] Feature issue 801',
+              labels: [{ name: 'release/v15' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: { env: { MERGE_COMMIT_SHA: 'def5678' } },
+    gitExec: mockGitExec,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(subIssueCreated, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Found 1 sub-issues.')));
+});

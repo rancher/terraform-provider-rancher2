@@ -3399,3 +3399,149 @@ test('runTrackingIssue - falls back to github.getOctokit when getOctokit argumen
     },
   });
 });
+
+test('runTrackingIssue - targets specific PR when PR_NUMBER env variable is provided', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let searchCalled = false;
+  let subIssueCreated = false;
+
+  const mockProcess = {
+    env: {
+      PR_NUMBER: '42',
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullGetCalled = true;
+          return {
+            data: {
+              number: pull_number,
+              title: 'Specific PR',
+              body: '- Addresses: #301',
+              base: { ref: 'main' },
+              labels: [],
+            },
+          };
+        },
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 301,
+            title: 'Fix issue 301',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+        create: async () => {
+          subIssueCreated = true;
+          return { data: { id: 999, number: 302 } };
+        },
+      },
+      actions: {
+        createWorkflowDispatch: async () => {},
+      },
+    },
+    request: async () => ({ data: [] }),
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(pullGetCalled, true);
+  assert.strictEqual(searchCalled, false);
+  assert.strictEqual(subIssueCreated, true);
+});
+
+test('runTrackingIssue - falls back to runner github client when dispatchGithub throws 403', async () => {
+  const mockCore = createMockCore();
+  let runnerDispatchCalled = false;
+  let customDispatchCalled = false;
+
+  const mockProcess = {
+    env: {
+      GITHUB_MERGE_TOKEN: 'scoped-pull-requests-token',
+    },
+  };
+
+  const mockGetOctokit = () => ({
+    rest: {
+      actions: {
+        createWorkflowDispatch: async () => {
+          customDispatchCalled = true;
+          throw new Error('Resource not accessible by integration');
+        },
+      },
+    },
+  });
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      return [
+        {
+          number: 55,
+          title: 'PR with token fallback',
+          body: '- Addresses: #401',
+          labels: [],
+        },
+      ];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 401,
+            title: 'Issue 401',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+        create: async () => ({ data: { id: 888, number: 402 } }),
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          runnerDispatchCalled = true;
+        },
+      },
+    },
+    request: async () => ({ data: [] }),
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+    getOctokit: mockGetOctokit,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(customDispatchCalled, true);
+  assert.strictEqual(runnerDispatchCalled, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes("Successfully dispatched 'backport-issues.yml' using fallback client")));
+});
