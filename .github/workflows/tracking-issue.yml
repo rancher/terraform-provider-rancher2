@@ -1,18 +1,30 @@
 name: TrackingIssue
 # This workflow generates a "tracking" issue when a PR is found targeting main and isn't already tracked.
 on:
-  schedule:
-    - cron: '0 */4 * * *' # Every 4 hours
-  workflow_dispatch: {} # Allows manual triggering
+  workflow_run:
+    workflows: ["Validate PR Description"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Specific PR number to adopt and track (optional)'
+        required: false
 
 env:
   TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }}
 
 permissions: {}
 
+concurrency:
+  group: tracking-issue-adoption
+  cancel-in-progress: false
+
 jobs:
   generate-issue:
     name: 'Create Tracking Issue'
+    if: |
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -44,6 +56,7 @@ jobs:
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
           GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
           SCRIPT_MODE: tracking-issue
+          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.workflow_run.pull_requests[0].number || '' }}
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
