@@ -15,6 +15,10 @@ env:
 
 permissions: {}
 
+concurrency:
+  group: tracking-issue-adoption
+  cancel-in-progress: false
+
 jobs:
   generate-issue:
     name: 'Create Tracking Issue'

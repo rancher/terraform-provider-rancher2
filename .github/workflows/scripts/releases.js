@@ -234,9 +234,16 @@ export async function runTrackingIssue({ github, context, core, process = global
           repo,
           pull_number: envPrNum,
         });
-        if (singlePrRes?.data && singlePrRes.data.base?.ref === 'main') {
-          pulls = [singlePrRes.data];
+        const prData = singlePrRes?.data;
+        const prLabels = (prData?.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
+        const excludedLabels = ['internal/ignore', 'internal/pr-backport', 'autorelease: pending', 'autorelease: tagged'];
+        const hasExcludedLabel = prLabels.some(l => excludedLabels.includes(l));
+
+        if (prData && prData.state === 'open' && !prData.draft && prData.base?.ref === 'main' && !hasExcludedLabel) {
+          pulls = [prData];
           core.info(`Targeting specific PR #${envPrNum} from workflow_run/dispatch.`);
+        } else {
+          core.info(`Target PR #${envPrNum} is not eligible (closed, draft, non-main, or excluded labels). Falling back to open PR search.`);
         }
       } catch (err) {
         core.info(`Could not fetch specific PR #${envPrNum}: ${err.message}. Falling back to open PR search.`);
@@ -312,8 +319,8 @@ export async function runTrackingIssue({ github, context, core, process = global
                   },
                 },
               });
-            } catch {
-              // ignore if already present or verification fails
+            } catch (subIssueErr) {
+              core.warning(`Direct sub-issue creation failed for already tracked issue #${issueNumber}: ${subIssueErr.message}`);
             }
             continue;
           }
@@ -404,11 +411,12 @@ export async function runTrackingIssue({ github, context, core, process = global
               });
               core.info(`Dispatched 'backport-issues.yml' for issue #${issueNumber} with label '${targetReleaseBranch}'`);
             } catch (dispatchError) {
-              // If dispatch with merge token failed (e.g. 403 lack of actions: write on scoped Vault token),
+              // If dispatch with merge token failed with 403 (lack of actions: write on scoped Vault token),
               // fall back to the runner's default github client which has actions: write declared in the workflow.
-              if (dispatchGithub !== github && typeof github?.rest?.actions?.createWorkflowDispatch === 'function') {
+              const is403 = dispatchError?.status === 403 || dispatchError?.response?.status === 403;
+              if (is403 && dispatchGithub !== github && typeof github?.rest?.actions?.createWorkflowDispatch === 'function') {
                 try {
-                  core.info(`Dispatch with merge token failed (${dispatchError.message}). Falling back to runner GITHUB_TOKEN...`);
+                  core.info(`Dispatch with merge token failed with 403 (${dispatchError.message}). Falling back to runner GITHUB_TOKEN...`);
                   await github.rest.actions.createWorkflowDispatch({
                     owner,
                     repo,
@@ -775,9 +783,10 @@ export async function runTriggerRcRelease({ github, context, core, process = glo
         core.info(`Successfully dispatched 'rc-release.yml' for ${tag}!`);
       }
     } catch (dispatchErr) {
-      if (dispatchGithub !== github && typeof github?.rest?.actions?.createWorkflowDispatch === 'function') {
+      const is403 = dispatchErr?.status === 403 || dispatchErr?.response?.status === 403;
+      if (is403 && dispatchGithub !== github && typeof github?.rest?.actions?.createWorkflowDispatch === 'function') {
         if (core && typeof core.info === 'function') {
-          core.info(`Dispatch with merge token failed (${dispatchErr.message}). Falling back to runner GITHUB_TOKEN...`);
+          core.info(`Dispatch with merge token failed with 403 (${dispatchErr.message}). Falling back to runner GITHUB_TOKEN...`);
         }
         await github.rest.actions.createWorkflowDispatch({
           owner,

@@ -203,33 +203,37 @@ export async function runBackportPr({ github, context, core, process = globalThi
 
   // Fallback: If no tracking issue found via search, check if PR body references an open issue directly
   if (!trackingIssue && addressedNumbers.length > 0) {
-    const fallbackNum = addressedNumbers[0];
-    core.info(`No tracking issue found in search for PR #${pr.number}. Attempting direct lookup for referenced issue #${fallbackNum}...`);
-    try {
-      const directIssueRes = await github.rest.issues.get({
-        owner,
-        repo,
-        issue_number: fallbackNum,
-      });
-      const directIssue = directIssueRes?.data;
-      if (directIssue && !directIssue.pull_request && directIssue.state === 'open') {
-        const currentLabels = (directIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
-        const toAdd = [];
-        if (!currentLabels.includes('internal/tracking')) toAdd.push('internal/tracking');
-        if (!currentLabels.includes('internal/user')) toAdd.push('internal/user');
-        if (toAdd.length > 0 && typeof github?.rest?.issues?.addLabels === 'function') {
-          await github.rest.issues.addLabels({
-            owner,
-            repo,
-            issue_number: fallbackNum,
-            labels: toAdd,
-          });
-          core.info(`Added labels [${toAdd.join(', ')}] to issue #${fallbackNum}`);
+    for (const fallbackNum of addressedNumbers) {
+      core.info(`No tracking issue found in search for PR #${pr.number}. Attempting direct lookup for referenced issue #${fallbackNum}...`);
+      try {
+        const directIssueRes = await github.rest.issues.get({
+          owner,
+          repo,
+          issue_number: fallbackNum,
+        });
+        const directIssue = directIssueRes?.data;
+        if (directIssue && !directIssue.pull_request && directIssue.state === 'open') {
+          const currentLabels = (directIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
+          const toAdd = [];
+          if (!currentLabels.includes('internal/tracking')) toAdd.push('internal/tracking');
+          if (!currentLabels.includes('internal/user')) toAdd.push('internal/user');
+          if (toAdd.length > 0 && typeof github?.rest?.issues?.addLabels === 'function') {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: fallbackNum,
+              labels: toAdd,
+            });
+            core.info(`Added labels [${toAdd.join(', ')}] to issue #${fallbackNum}`);
+          }
+          trackingIssue = directIssue;
+          break;
+        } else {
+          core.info(`Referenced item #${fallbackNum} is not an open issue (pull_request=${Boolean(directIssue?.pull_request)}, state=${directIssue?.state}).`);
         }
-        trackingIssue = directIssue;
+      } catch (directErr) {
+        core.info(`Direct issue lookup for #${fallbackNum} failed: ${directErr.message}`);
       }
-    } catch (directErr) {
-      core.info(`Direct issue lookup for #${fallbackNum} failed: ${directErr.message}`);
     }
   }
 
@@ -263,43 +267,58 @@ export async function runBackportPr({ github, context, core, process = globalThi
     return;
   }
 
-  if (subIssues.length === 0) {
-    core.info(`No sub-issues found for tracking issue #${trackingIssue.number}. Attempting on-demand sub-issue generation...`);
-    const currentLabels = (trackingIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
-    let releaseLabel = currentLabels.find(l => /^release\/v\d+$/.test(l));
-    if (!releaseLabel) {
+  const currentLabels = (trackingIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
+  let releaseLabels = currentLabels.filter(l => /^release\/v\d+$/.test(l));
+  if (releaseLabels.length === 0) {
+    try {
+      const branches = await github.paginate(github.rest.repos.listBranches, { owner, repo });
+      const releaseBranches = branches
+        .map(b => b.name)
+        .filter(name => /^release\/v\d+$/.test(name))
+        .sort((a, b) => {
+          const aVer = parseInt(a.replace('release/v', ''), 10);
+          const bVer = parseInt(b.replace('release/v', ''), 10);
+          return bVer - aVer;
+        });
+      releaseLabels = [releaseBranches[0] || 'release/v15'];
+    } catch {
+      releaseLabels = ['release/v15'];
+    }
+  }
+
+  // Find any release labels that do not already have a sub-issue
+  const existingSubIssueLabels = new Set(
+    subIssues
+      .flatMap(sub => (sub.labels || []).map(l => (typeof l === 'string' ? l : l?.name)))
+      .filter(l => /^release\/v\d+$/.test(l))
+  );
+  const missingReleaseLabels = releaseLabels.filter(l => !existingSubIssueLabels.has(l));
+
+  if (missingReleaseLabels.length > 0) {
+    core.info(`Missing sub-issues for release labels [${missingReleaseLabels.join(', ')}] on tracking issue #${trackingIssue.number}. Attempting on-demand sub-issue generation...`);
+    for (const releaseLabel of missingReleaseLabels) {
       try {
-        const branches = await github.paginate(github.rest.repos.listBranches, { owner, repo });
-        const releaseBranches = branches
-          .map(b => b.name)
-          .filter(name => /^release\/v\d+$/.test(name))
-          .sort((a, b) => {
-            const aVer = parseInt(a.replace('release/v', ''), 10);
-            const bVer = parseInt(b.replace('release/v', ''), 10);
-            return bVer - aVer;
-          });
-        releaseLabel = releaseBranches[0] || 'release/v15';
-      } catch {
-        releaseLabel = 'release/v15';
+        await runBackportIssues({
+          github,
+          context,
+          core,
+          process: {
+            ...process,
+            env: {
+              ...process?.env,
+              RELEASE_LABEL: releaseLabel,
+              ISSUE_NUMBER: String(trackingIssue.number),
+              PR: String(pr.number),
+            },
+          },
+        });
+        core.info(`Created sub-issue on demand for #${trackingIssue.number} on branch '${releaseLabel}'`);
+      } catch (createErr) {
+        core.warning(`On-demand sub-issue generation failed for ${releaseLabel}: ${createErr.message}`);
       }
     }
 
     try {
-      await runBackportIssues({
-        github,
-        context,
-        core,
-        process: {
-          ...process,
-          env: {
-            ...process?.env,
-            RELEASE_LABEL: releaseLabel,
-            ISSUE_NUMBER: String(trackingIssue.number),
-            PR: String(pr.number),
-          },
-        },
-      });
-
       const refetched = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
         owner: owner,
         repo: repo,
@@ -310,10 +329,10 @@ export async function runBackportPr({ github, context, core, process = globalThi
       });
       if (Array.isArray(refetched?.data) && refetched.data.length > 0) {
         subIssues = refetched.data;
-        core.info(`Successfully generated sub-issue on demand for #${trackingIssue.number}`);
+        core.info(`Successfully generated sub-issues on demand for #${trackingIssue.number}`);
       }
-    } catch (createErr) {
-      core.warning(`On-demand sub-issue generation failed: ${createErr.message}`);
+    } catch (refetchErr) {
+      core.warning(`Failed to refetch sub-issues for #${trackingIssue.number}: ${refetchErr.message}`);
     }
   }
 
