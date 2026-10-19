@@ -172,8 +172,16 @@ export async function runBackportPr({ github, context, core, process = globalThi
   const cleanBody = pr.body
     ? pr.body.replace(/<!--[\s\S]*?-->/g, '').replace(/(~{3,}|`{3,})[\s\S]*?\1/g, '')
     : '';
-  const addressedMatches = [...cleanBody.matchAll(/[-*]\s+Addresses:\s+(`?)#([0-9]+)\1/gi)];
-  const addressedNumbers = addressedMatches.map(m => parseInt(m[2], 10));
+  const addressedNumbers = [];
+  for (const line of cleanBody.split('\n')) {
+    const match = line.trim().match(/^[-*]\s+Addresses:\s+(`?)#([0-9]+)\1\.?$/i);
+    if (match) {
+      const num = parseInt(match[2], 10);
+      if (!addressedNumbers.includes(num)) {
+        addressedNumbers.push(num);
+      }
+    }
+  }
 
   let trackingIssue = null;
   if (searchResults?.items && searchResults.items.length > 0) {

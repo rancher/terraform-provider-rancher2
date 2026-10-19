@@ -2839,3 +2839,94 @@ test('runBackportPr - throws and fails when refetched sub-issues list is missing
     /Failed to verify created sub-issues on demand for #1201: missing sub-issue\(s\) for label\(s\) \[release\/v15\]/
   );
 });
+
+test('runBackportPr - adopts referenced issue on demand when PR body uses trailing period (- Addresses: #1301.)', async () => {
+  const mockCore = createMockCore();
+  const gitCommands = [];
+  const mockGitExec = async (args) => {
+    gitCommands.push(args.join(' '));
+    return { stdout: '', stderr: '' };
+  };
+
+  const addedLabels = [];
+  let subIssuesEndpointCalled = false;
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 61,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'Context\n- Addresses: #1301.\n* Addresses: `#1302`.\nFooter',
+            },
+          ],
+        }),
+      },
+      pulls: {
+        create: async () => ({ data: { number: 611, node_id: 'PR_611' } }),
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 1301) {
+            return {
+              data: {
+                number: 1301,
+                title: 'Trailing Period Issue',
+                state: 'open',
+                labels: [{ name: 'release/v15' }],
+              },
+            };
+          }
+          throw new Error('Not found');
+        },
+        create: async () => ({ data: { id: 1303, number: 1303 } }),
+        addLabels: async ({ issue_number, labels }) => {
+          addedLabels.push({ issue_number, labels });
+        },
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return { data: { total_count: 0, items: [] } };
+      }
+      if (endpoint.startsWith('POST ')) {
+        return { data: {} };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        if (!subIssuesEndpointCalled) {
+          subIssuesEndpointCalled = true;
+          return { data: [] };
+        }
+        return {
+          data: [
+            {
+              number: 1303,
+              title: '[release/v15] Trailing Period Issue',
+              labels: [{ name: 'release/v15' }],
+            },
+          ],
+        };
+      }
+      if (endpoint === 'POST /graphql') {
+        return { data: {} };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: { env: { MERGE_COMMIT_SHA: 'trailperiodsha' } },
+    gitExec: mockGitExec,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.ok(mockCore.infoMessages.some(msg => msg.includes('Attempting direct lookup for referenced issue #1301...')));
+  assert.ok(addedLabels.some(l => l.issue_number === 1301 && l.labels.includes('internal/tracking')));
+});
+
