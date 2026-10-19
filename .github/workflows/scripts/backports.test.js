@@ -2753,3 +2753,89 @@ test('runBackportPr - throws when release branch discovery fails or finds no bra
     /Failed to determine target release branch for #1106: GitHub API 500 on listBranches/
   );
 });
+
+test('runBackportPr - throws and fails when refetched sub-issues list is missing one of the requested release labels', async () => {
+  const mockCore = createMockCore();
+  const mockGitExec = async () => ({ stdout: '', stderr: '' });
+  let subIssueFetchCount = 0;
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 60,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR body\n\n- Addresses: #1201',
+            },
+          ],
+        }),
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 1201,
+            title: 'Issue 1201',
+            state: 'open',
+            labels: [{ name: 'internal/tracking' }, { name: 'release/v14' }, { name: 'release/v15' }],
+          },
+        }),
+        create: async () => ({ data: { id: 1202, number: 1202 } }),
+        addLabels: async () => {},
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 1,
+            items: [
+              {
+                number: 1201,
+                title: 'Issue 1201',
+                state: 'open',
+                labels: [{ name: 'internal/tracking' }, { name: 'release/v14' }, { name: 'release/v15' }],
+              },
+            ],
+          },
+        };
+      }
+      if (endpoint.startsWith('POST ')) {
+        return { data: {} };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        subIssueFetchCount++;
+        // Initial check in runBackportPr and checks in runBackportIssues
+        if (subIssueFetchCount <= 3) {
+          return { data: [] };
+        }
+        // Refetched call only returns release/v14, missing release/v15
+        return {
+          data: [
+            {
+              number: 1202,
+              title: '[release/v14] Issue 1201',
+              labels: [{ name: 'release/v14' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportPr({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+        core: mockCore,
+        process: { env: { MERGE_COMMIT_SHA: 'missingsublabel' } },
+        gitExec: mockGitExec,
+      });
+    },
+    /Failed to verify created sub-issues on demand for #1201: missing sub-issue\(s\) for label\(s\) \[release\/v15\]/
+  );
+});

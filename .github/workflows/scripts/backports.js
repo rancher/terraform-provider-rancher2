@@ -361,6 +361,16 @@ export async function runBackportPr({ github, context, core, process = globalThi
     if (subIssues.length === 0) {
       throw new Error(`Failed to verify created sub-issues on demand for #${trackingIssue.number}: sub-issue list is empty.`);
     }
+
+    const refetchedLabels = new Set(
+      subIssues
+        .flatMap(sub => (sub.labels || []).map(l => (typeof l === 'string' ? l : l?.name)))
+        .filter(l => typeof l === 'string' && /^release\/v\d+$/.test(l))
+    );
+    const unverifiedReleaseLabels = missingReleaseLabels.filter(l => !refetchedLabels.has(l));
+    if (unverifiedReleaseLabels.length > 0) {
+      throw new Error(`Failed to verify created sub-issues on demand for #${trackingIssue.number}: missing sub-issue(s) for label(s) [${unverifiedReleaseLabels.join(', ')}].`);
+    }
   }
 
   if (subIssues.length === 0) {

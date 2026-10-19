@@ -227,9 +227,16 @@ export async function runTrackingIssue({ github, context, core, process = global
 
     const isWorkflowRun = context?.eventName === 'workflow_run' || Boolean(context?.payload?.workflow_run) || Boolean(process?.env?.WORKFLOW_RUN_SHA);
     let pulls;
-    let envPrNum = process?.env?.PR_NUMBER ? parseInt(String(process.env.PR_NUMBER).trim(), 10) : null;
-    if (!Number.isFinite(envPrNum) || envPrNum <= 0) {
-      envPrNum = null;
+    let envPrNum = null;
+    const rawPrNumber = process?.env?.PR_NUMBER !== undefined && process?.env?.PR_NUMBER !== null
+      ? String(process.env.PR_NUMBER).trim()
+      : '';
+    if (rawPrNumber !== '') {
+      const cleanedPr = rawPrNumber.replace(/^#/, '');
+      if (!/^[1-9]\d*$/.test(cleanedPr)) {
+        throw new Error(`Invalid PR_NUMBER: "${process.env.PR_NUMBER}". Expected a positive integer.`);
+      }
+      envPrNum = parseInt(cleanedPr, 10);
     }
 
     if (!envPrNum && isWorkflowRun) {

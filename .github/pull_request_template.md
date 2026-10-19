@@ -1,5 +1,5 @@
 <!--- If there is no user issue related to this then you should remove the next line --->
-- Addresses #
+- Addresses: #
 <!--- Add labels (eg. release/v15) for each release branch to target --->
 <!--- Please don't manually add "internal" labels, those are for automation only --->
 

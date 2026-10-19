@@ -3998,3 +3998,105 @@ test('runTrackingIssue - skips adoption without broad search when workflow_run P
   assert.strictEqual(searchCalled, false);
   assert.ok(mockCore.infoMessages.some(m => m.includes('Skipping tracking adoption for ineligible workflow_run PR #99.')));
 });
+
+test('runTrackingIssue - fails and skips search when PR_NUMBER is non-numeric', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockProcess = {
+    env: {
+      PR_NUMBER: 'abc',
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.failedMessage?.includes('Invalid PR_NUMBER: "abc"'));
+});
+
+test('runTrackingIssue - fails and skips search when PR_NUMBER contains trailing non-numeric characters', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockProcess = {
+    env: {
+      PR_NUMBER: '42abc',
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.failedMessage?.includes('Invalid PR_NUMBER: "42abc"'));
+});
+
+test('runTrackingIssue - fails and skips search when PR_NUMBER is zero or negative', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockProcess = {
+    env: {
+      PR_NUMBER: '0',
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.failedMessage?.includes('Invalid PR_NUMBER: "0"'));
+});
