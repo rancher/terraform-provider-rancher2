@@ -225,9 +225,60 @@ export async function runTrackingIssue({ github, context, core, process = global
       return;
     }
 
+    const isWorkflowRun = context?.eventName === 'workflow_run' || Boolean(context?.payload?.workflow_run) || Boolean(process?.env?.WORKFLOW_RUN_SHA);
     let pulls;
-    const envPrNum = process?.env?.PR_NUMBER ? parseInt(String(process.env.PR_NUMBER).trim(), 10) : null;
-    if (Number.isFinite(envPrNum) && envPrNum > 0) {
+    let envPrNum = process?.env?.PR_NUMBER ? parseInt(String(process.env.PR_NUMBER).trim(), 10) : null;
+    if (!Number.isFinite(envPrNum) || envPrNum <= 0) {
+      envPrNum = null;
+    }
+
+    if (!envPrNum && isWorkflowRun) {
+      const parentRun = context?.payload?.workflow_run;
+      if (parentRun?.pull_requests?.length > 0) {
+        const parentPrNum = parentRun.pull_requests[0].number;
+        if (Number.isFinite(parentPrNum) && parentPrNum > 0) {
+          envPrNum = parentPrNum;
+          core.info(`Resolved PR #${envPrNum} from workflow_run.pull_requests.`);
+        }
+      }
+
+      if (!envPrNum) {
+        const headSha = parentRun?.head_sha || (process?.env?.WORKFLOW_RUN_SHA ? String(process.env.WORKFLOW_RUN_SHA).trim() : '');
+        if (headSha && (typeof github?.paginate === 'function' || typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function')) {
+          core.info(`Attempting to resolve PR from workflow_run commit SHA: ${headSha}...`);
+          try {
+            let associatedPrs = [];
+            if (typeof github.paginate === 'function') {
+              associatedPrs = await github.paginate(
+                github.rest.repos.listPullRequestsAssociatedWithCommit,
+                { owner, repo, commit_sha: headSha }
+              );
+            } else {
+              const res = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: headSha,
+              });
+              associatedPrs = res.data || [];
+            }
+            const matchingPr = associatedPrs.find(p => p.state === 'open' && p.base?.ref === 'main');
+            if (matchingPr) {
+              envPrNum = matchingPr.number;
+              core.info(`Resolved PR #${envPrNum} from commit SHA ${headSha}`);
+            }
+          } catch (shaErr) {
+            core.info(`Could not resolve PR from commit SHA ${headSha}: ${shaErr.message}`);
+          }
+        }
+      }
+
+      if (!envPrNum) {
+        core.info('Could not identify a single PR from workflow_run event. Skipping adoption to prevent broad PR search.');
+        return;
+      }
+    }
+
+    if (envPrNum) {
       try {
         const singlePrRes = await github.rest.pulls.get({
           owner,
@@ -243,10 +294,20 @@ export async function runTrackingIssue({ github, context, core, process = global
           pulls = [prData];
           core.info(`Targeting specific PR #${envPrNum} from workflow_run/dispatch.`);
         } else {
-          core.info(`Target PR #${envPrNum} is not eligible (closed, draft, non-main, or excluded labels). Falling back to open PR search.`);
+          core.info(`Target PR #${envPrNum} is not eligible (closed, draft, non-main, or excluded labels).`);
+          if (isWorkflowRun) {
+            core.info(`Skipping tracking adoption for ineligible workflow_run PR #${envPrNum}.`);
+            return;
+          }
+          core.info('Falling back to open PR search.');
         }
       } catch (err) {
-        core.info(`Could not fetch specific PR #${envPrNum}: ${err.message}. Falling back to open PR search.`);
+        core.info(`Could not fetch specific PR #${envPrNum}: ${err.message}.`);
+        if (isWorkflowRun) {
+          core.info(`Skipping tracking adoption for workflow_run PR #${envPrNum} after fetch failure.`);
+          return;
+        }
+        core.info('Falling back to open PR search.');
       }
     }
 
@@ -356,19 +417,10 @@ export async function runTrackingIssue({ github, context, core, process = global
           });
           core.info(`Added release branch instructions comment to issue #${issueNumber}`);
 
-          if (!currentLabels.includes(targetReleaseBranch)) {
-            await github.rest.issues.addLabels({
-              owner,
-              repo,
-              issue_number: issueNumber,
-              labels: [targetReleaseBranch],
-            });
-            core.info(`Added release branch label '${targetReleaseBranch}' to issue #${issueNumber}`);
-          } else {
-            core.info(`Release branch label '${targetReleaseBranch}' already present on issue #${issueNumber}`);
-          }
-
-          // Directly create the backport sub-issue
+          // Directly create the backport sub-issue BEFORE adding the release label.
+          // Adding the release label triggers backport-issues.yml via the 'issues: labeled' event.
+          // Creating the sub-issue first ensures that the sub-issue is already present,
+          // so any label-triggered or dispatched workflow finds it and safely skips duplicate creation.
           try {
             core.info(`Creating backport sub-issue for #${issueNumber} on '${targetReleaseBranch}'...`);
             await runBackportIssues({
@@ -388,6 +440,18 @@ export async function runTrackingIssue({ github, context, core, process = global
             core.info(`Successfully created/verified backport sub-issue for #${issueNumber} on '${targetReleaseBranch}'`);
           } catch (subIssueErr) {
             core.warning(`Direct sub-issue creation failed for #${issueNumber}: ${subIssueErr.message}`);
+          }
+
+          if (!currentLabels.includes(targetReleaseBranch)) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              labels: [targetReleaseBranch],
+            });
+            core.info(`Added release branch label '${targetReleaseBranch}' to issue #${issueNumber}`);
+          } else {
+            core.info(`Release branch label '${targetReleaseBranch}' already present on issue #${issueNumber}`);
           }
 
           const mergeToken = process?.env?.GITHUB_MERGE_TOKEN ? process.env.GITHUB_MERGE_TOKEN.trim() : undefined;

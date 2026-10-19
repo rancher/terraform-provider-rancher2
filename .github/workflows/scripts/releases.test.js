@@ -3795,3 +3795,206 @@ test('runTriggerRcRelease - rethrows error without fallback when dispatch error 
   assert.strictEqual(runnerDispatchCalled, false);
   assert.ok(mockCore.failedMessage?.includes('Failed to trigger RC release workflow: Internal Server Error'));
 });
+
+test('runTrackingIssue - resolves PR from commit SHA when workflow_run pull_requests is empty', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let commitLookupCalled = false;
+  let searchCalled = false;
+  let subIssueCreatedBeforeLabel = false;
+  let releaseLabelAdded = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.repos.listPullRequestsAssociatedWithCommit) {
+        commitLookupCalled = true;
+        return [
+          {
+            number: 88,
+            state: 'open',
+            base: { ref: 'main' },
+            labels: [],
+          },
+        ];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: {
+        listBranches: async () => {},
+        listPullRequestsAssociatedWithCommit: async () => {},
+      },
+      search: { issuesAndPullRequests: async () => {} },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullGetCalled = true;
+          return {
+            data: {
+              number: pull_number,
+              title: 'Fork PR',
+              body: '- Addresses: #500',
+              state: 'open',
+              draft: false,
+              base: { ref: 'main' },
+              labels: [],
+            },
+          };
+        },
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 500,
+            title: 'Issue 500',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        create: async () => {
+          if (!releaseLabelAdded) {
+            subIssueCreatedBeforeLabel = true;
+          }
+          return { data: { id: 501, number: 501 } };
+        },
+        addLabels: async ({ labels }) => {
+          if (labels.includes('release/v15')) {
+            releaseLabelAdded = true;
+          }
+        },
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async () => {},
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes('/sub_issues')) {
+        return { data: [] };
+      }
+      return { data: {} };
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'commit-sha-fork-88',
+        pull_requests: [],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(commitLookupCalled, true);
+  assert.strictEqual(pullGetCalled, true);
+  assert.strictEqual(searchCalled, false);
+  assert.strictEqual(subIssueCreatedBeforeLabel, true);
+  assert.strictEqual(releaseLabelAdded, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Resolved PR #88 from commit SHA commit-sha-fork-88')));
+});
+
+test('runTrackingIssue - skips adoption without broad search when workflow_run has no resolvable PR', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.repos.listPullRequestsAssociatedWithCommit) {
+        return [];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: {
+        listBranches: async () => {},
+        listPullRequestsAssociatedWithCommit: async () => {},
+      },
+      search: { issuesAndPullRequests: async () => {} },
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'unknown-sha',
+        pull_requests: [],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Could not identify a single PR from workflow_run event. Skipping adoption to prevent broad PR search.')));
+});
+
+test('runTrackingIssue - skips adoption without broad search when workflow_run PR is ineligible', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      pulls: {
+        get: async ({ pull_number }) => ({
+          data: {
+            number: pull_number,
+            title: 'Closed PR',
+            state: 'closed',
+            base: { ref: 'main' },
+            labels: [],
+          },
+        }),
+      },
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'closed-sha',
+        pull_requests: [{ number: 99 }],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Skipping tracking adoption for ineligible workflow_run PR #99.')));
+});

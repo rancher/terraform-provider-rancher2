@@ -23,6 +23,10 @@ env:
 
 permissions: {}
 
+concurrency:
+  group: backport-issues-${{ github.event.inputs.issue_number || github.event.issue.number || github.run_id }}
+  cancel-in-progress: false
+
 jobs:
   create-issue:
     name: 'Create Backport Issue'

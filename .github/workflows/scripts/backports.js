@@ -205,19 +205,30 @@ export async function runBackportPr({ github, context, core, process = globalThi
   if (!trackingIssue && addressedNumbers.length > 0) {
     for (const fallbackNum of addressedNumbers) {
       core.info(`No tracking issue found in search for PR #${pr.number}. Attempting direct lookup for referenced issue #${fallbackNum}...`);
+      let directIssue;
       try {
         const directIssueRes = await github.rest.issues.get({
           owner,
           repo,
           issue_number: fallbackNum,
         });
-        const directIssue = directIssueRes?.data;
-        if (directIssue && !directIssue.pull_request && directIssue.state === 'open') {
-          const currentLabels = (directIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
-          const toAdd = [];
-          if (!currentLabels.includes('internal/tracking')) toAdd.push('internal/tracking');
-          if (!currentLabels.includes('internal/user')) toAdd.push('internal/user');
-          if (toAdd.length > 0 && typeof github?.rest?.issues?.addLabels === 'function') {
+        directIssue = directIssueRes?.data;
+      } catch (directErr) {
+        const isNotFound = directErr?.status === 404 || directErr?.response?.status === 404;
+        if (isNotFound) {
+          core.info(`Referenced issue #${fallbackNum} was not found (404). Continuing search...`);
+          continue;
+        }
+        throw new Error(`Direct issue lookup for #${fallbackNum} failed with API error: ${directErr.message}`);
+      }
+
+      if (directIssue && !directIssue.pull_request && directIssue.state === 'open') {
+        const currentLabels = (directIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
+        const toAdd = [];
+        if (!currentLabels.includes('internal/tracking')) toAdd.push('internal/tracking');
+        if (!currentLabels.includes('internal/user')) toAdd.push('internal/user');
+        if (toAdd.length > 0 && typeof github?.rest?.issues?.addLabels === 'function') {
+          try {
             await github.rest.issues.addLabels({
               owner,
               repo,
@@ -225,14 +236,14 @@ export async function runBackportPr({ github, context, core, process = globalThi
               labels: toAdd,
             });
             core.info(`Added labels [${toAdd.join(', ')}] to issue #${fallbackNum}`);
+          } catch (labelErr) {
+            throw new Error(`Failed to add tracking labels to issue #${fallbackNum}: ${labelErr.message}`);
           }
-          trackingIssue = directIssue;
-          break;
-        } else {
-          core.info(`Referenced item #${fallbackNum} is not an open issue (pull_request=${Boolean(directIssue?.pull_request)}, state=${directIssue?.state}).`);
         }
-      } catch (directErr) {
-        core.info(`Direct issue lookup for #${fallbackNum} failed: ${directErr.message}`);
+        trackingIssue = directIssue;
+        break;
+      } else {
+        core.info(`Referenced item #${fallbackNum} is not an open issue (pull_request=${Boolean(directIssue?.pull_request)}, state=${directIssue?.state}).`);
       }
     }
   }
@@ -269,9 +280,11 @@ export async function runBackportPr({ github, context, core, process = globalThi
 
   const currentLabels = (trackingIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
   let releaseLabels = currentLabels.filter(l => /^release\/v\d+$/.test(l));
-  if (releaseLabels.length === 0) {
+  if (releaseLabels.length === 0 && typeof github?.rest?.repos?.listBranches === 'function') {
     try {
-      const branches = await github.paginate(github.rest.repos.listBranches, { owner, repo });
+      const branches = typeof github.paginate === 'function'
+        ? await github.paginate(github.rest.repos.listBranches, { owner, repo })
+        : (await github.rest.repos.listBranches({ owner, repo }))?.data || [];
       const releaseBranches = branches
         .map(b => b.name)
         .filter(name => /^release\/v\d+$/.test(name))
@@ -280,9 +293,13 @@ export async function runBackportPr({ github, context, core, process = globalThi
           const bVer = parseInt(b.replace('release/v', ''), 10);
           return bVer - aVer;
         });
-      releaseLabels = [releaseBranches[0] || 'release/v15'];
-    } catch {
-      releaseLabels = ['release/v15'];
+      if (!releaseBranches || releaseBranches.length === 0) {
+        throw new Error('No release branches matching release/v<major> found in repository.');
+      }
+      releaseLabels = [releaseBranches[0]];
+    } catch (branchErr) {
+      core.error(`Failed to discover release branches for #${trackingIssue.number}: ${branchErr.message}`);
+      throw new Error(`Failed to determine target release branch for #${trackingIssue.number}: ${branchErr.message}`);
     }
   }
 
@@ -296,6 +313,7 @@ export async function runBackportPr({ github, context, core, process = globalThi
 
   if (missingReleaseLabels.length > 0) {
     core.info(`Missing sub-issues for release labels [${missingReleaseLabels.join(', ')}] on tracking issue #${trackingIssue.number}. Attempting on-demand sub-issue generation...`);
+    const creationErrors = [];
     for (const releaseLabel of missingReleaseLabels) {
       try {
         await runBackportIssues({
@@ -315,6 +333,7 @@ export async function runBackportPr({ github, context, core, process = globalThi
         core.info(`Created sub-issue on demand for #${trackingIssue.number} on branch '${releaseLabel}'`);
       } catch (createErr) {
         core.warning(`On-demand sub-issue generation failed for ${releaseLabel}: ${createErr.message}`);
+        creationErrors.push(`${releaseLabel}: ${createErr.message}`);
       }
     }
 
@@ -327,12 +346,20 @@ export async function runBackportPr({ github, context, core, process = globalThi
           'X-GitHub-Api-Version': '2022-11-28'
         }
       });
-      if (Array.isArray(refetched?.data) && refetched.data.length > 0) {
+      if (Array.isArray(refetched?.data)) {
         subIssues = refetched.data;
-        core.info(`Successfully generated sub-issues on demand for #${trackingIssue.number}`);
+        core.info(`Successfully refetched sub-issues on demand for #${trackingIssue.number} (found ${subIssues.length})`);
       }
     } catch (refetchErr) {
-      core.warning(`Failed to refetch sub-issues for #${trackingIssue.number}: ${refetchErr.message}`);
+      throw new Error(`Failed to refetch sub-issues for #${trackingIssue.number}: ${refetchErr.message}`);
+    }
+
+    if (creationErrors.length > 0) {
+      throw new Error(`Failed to create on-demand sub-issue(s) for #${trackingIssue.number}:\n- ${creationErrors.join('\n- ')}`);
+    }
+
+    if (subIssues.length === 0) {
+      throw new Error(`Failed to verify created sub-issues on demand for #${trackingIssue.number}: sub-issue list is empty.`);
     }
   }
 

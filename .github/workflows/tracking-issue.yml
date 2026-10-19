@@ -57,6 +57,7 @@ jobs:
           GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
           SCRIPT_MODE: tracking-issue
           PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.workflow_run.pull_requests[0].number || '' }}
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha || '' }}
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
