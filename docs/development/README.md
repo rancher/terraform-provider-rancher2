@@ -21,7 +21,7 @@ To scale our documentation as the project grows, we organize our files into a st
 
 ### 1. Topic Overview (`docs/development/<Topic>.md`)
 
-A **Topic Overview** serves as a high-level domain abstract, indexing the components, files, and architectural goals of a specific domain (such as `AgenticFramework.md` or `ReleaseProcess.md`).
+A **Topic Overview** serves as a high-level domain abstract, indexing the components, files, and architectural goals of a specific domain (such as `GitHubWorkflows.md` or `ReleaseProcess.md`).
 
 - **Required Sections**:
   - **Purpose**: High-level domain abstract.
@@ -40,8 +40,9 @@ A **Component Specification** is a detailed, focused technical design document t
 
 ## 🛠️ Domain Index Maps
 
+- **[GitHub Workflows & Automation](./GitHubWorkflows.md)**: End-to-end value stream, 11-job Nix CI matrix, backport orchestration, AWS E2E testing, and platform policies.
+- **[Release Process & Automation](./ReleaseProcess.md)**: Branch-based SemVer delivery, RC computation, Vault GPG signing, and Release Please automation.
 - **[Agentic Framework](./AgenticFramework.md)**: Secure zero-trust sandboxing, Touch ID gating, PR pipeline automation, and agent developer workflows.
 - **[Coding Standards](./CodingStandards.md)**: Repository-wide standards for Go, Terraform, Shell/GitHub scripts, Workflows, and pre-commit reviews.
-- **[Release Process](./ReleaseProcess.md)**: Canonical tag, GPG-signing, and release workflows.
-- **[Testing](./Testing.md)**: Acceptance and unit-testing standards.
+- **[Testing & Quality Verification](./Testing.md)**: Acceptance and unit-testing standards.
 - **[Documentation Changelog](./CHANGELOG.md)**: Revision history of developer blueprints and specifications.
