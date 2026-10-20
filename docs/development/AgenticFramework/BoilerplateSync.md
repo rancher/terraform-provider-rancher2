@@ -19,7 +19,7 @@ Each child repository declares its tracking files, local destinations, and maste
     { "local": ".prettierrc", "remote": "shared-configs/.prettierrc" },
     { "local": ".golangci.yml", "remote": "shared-configs/.golangci.yml" },
     { "local": "cspell.json", "remote": "shared-configs/cspell.json" },
-    { "local": ".github/workflows/scripts/lint.sh", "remote": "scripts/lint.sh" }
+    { "local": ".github/workflows/scripts/lint.js", "remote": "scripts/lint.js" }
   ]
 }
 ```

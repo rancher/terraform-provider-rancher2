@@ -231,3 +231,4 @@ flowchart TD
 6. **Cryptographic Signing via Vault**: All release candidate and production binaries are signed with GPG keys fetched dynamically from HashiCorp Vault during CI execution.
 7. **Manifest-Driven SemVer**: Release versioning, changelogs, and tag creation are managed deterministically by Google's `release-please` running in manifest mode (`release-please-config.json` and `.release-please-manifest.json`).
 8. **Hermetic Nix Execution**: All builds, linters, tests, and release steps execute inside pinned Nix container images (`ghcr.io/rancher/ci-image/nix:20260603-18`) to ensure 100% reproducible environments.
+9. **Workflow Script Test Co-existence**: All workflow automation scripts located in `.github/workflows/scripts/` must be accompanied by co-located unit tests (`*.test.js` or `*_test.go`) in the same directory, verified on every pull request via the `node-test` and `sensitive-checks` jobs.
