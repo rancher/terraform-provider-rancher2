@@ -113,7 +113,7 @@ async function runWaitForSettle({ github, context, core, process = globalThis.pr
 /**
  * backport-pr: Cherry-picks a commit to the appropriate backport branches and creates PRs.
  */
-export async function runBackportPr({ github, context, core, process = globalThis.process, getOctokit }) {
+export async function runBackportPr({ github, context, core, process = globalThis.process, getOctokit, gitExec = runGit }) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
   const mergeCommitSha = process?.env?.MERGE_COMMIT_SHA;
@@ -169,42 +169,99 @@ export async function runBackportPr({ github, context, core, process = globalThi
     throw new Error(`Failed to search for internal/tracking issue for PR #${pr.number}: ${error.message}`);
   }
   const searchResults = response.data;
-  if (!searchResults?.items || searchResults.items.length === 0) {
-    core.info(`No 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
-    return;
-  }
-
-  let trackingIssue = null;
   const cleanBody = pr.body
     ? pr.body.replace(/<!--[\s\S]*?-->/g, '').replace(/(~{3,}|`{3,})[\s\S]*?\1/g, '')
     : '';
-  const addressedMatches = [...cleanBody.matchAll(/[-*]\s+Addresses:\s+(`?)#([0-9]+)\1/gi)];
-  const addressedNumbers = addressedMatches.map(m => parseInt(m[2], 10));
-  if (addressedNumbers.length > 0) {
-    trackingIssue = searchResults.items.find(item => addressedNumbers.includes(item.number));
+  const addressedNumbers = [];
+  for (const line of cleanBody.split('\n')) {
+    const match = line.trim().match(/^[-*]\s+Addresses:\s+(`?)#([0-9]+)\1\.?$/i);
+    if (match) {
+      const num = parseInt(match[2], 10);
+      if (!addressedNumbers.includes(num)) {
+        addressedNumbers.push(num);
+      }
+    }
   }
 
-  if (!trackingIssue) {
-    const trackingRegex = new RegExp(`<!--\\s*tracking-pr:\\s*#?${pr.number}\\s*-->`, 'i');
-    for (const item of searchResults.items) {
+  let trackingIssue = null;
+  if (searchResults?.items && searchResults.items.length > 0) {
+    if (addressedNumbers.length > 0) {
+      trackingIssue = searchResults.items.find(item => addressedNumbers.includes(item.number));
+    }
+
+    if (!trackingIssue) {
+      const trackingRegex = new RegExp(`<!--\\s*tracking-pr:\\s*#?${pr.number}\\s*-->`, 'i');
+      for (const item of searchResults.items) {
+        try {
+          const comments = await github.paginate(github.rest.issues.listComments, {
+            owner,
+            repo,
+            issue_number: item.number,
+          });
+          if (comments.some(c => c.user?.login === 'github-actions[bot]' && c.body && trackingRegex.test(c.body))) {
+            trackingIssue = item;
+            break;
+          }
+        } catch (error) {
+          core.info(`Could not retrieve comments for issue #${item.number}: ${error.message}`);
+        }
+      }
+    }
+  }
+
+  // Fallback: If no tracking issue found via search, check if PR body references an open issue directly
+  if (!trackingIssue && addressedNumbers.length > 0) {
+    for (const fallbackNum of addressedNumbers) {
+      core.info(`No tracking issue found in search for PR #${pr.number}. Attempting direct lookup for referenced issue #${fallbackNum}...`);
+      let directIssue;
       try {
-        const comments = await github.paginate(github.rest.issues.listComments, {
+        const directIssueRes = await github.rest.issues.get({
           owner,
           repo,
-          issue_number: item.number,
+          issue_number: fallbackNum,
         });
-        if (comments.some(c => c.user?.login === 'github-actions[bot]' && c.body && trackingRegex.test(c.body))) {
-          trackingIssue = item;
-          break;
+        directIssue = directIssueRes?.data;
+      } catch (directErr) {
+        const isNotFound = directErr?.status === 404 || directErr?.response?.status === 404;
+        if (isNotFound) {
+          core.info(`Referenced issue #${fallbackNum} was not found (404). Continuing search...`);
+          continue;
         }
-      } catch (error) {
-        core.info(`Could not retrieve comments for issue #${item.number}: ${error.message}`);
+        throw new Error(`Direct issue lookup for #${fallbackNum} failed with API error: ${directErr.message}`);
+      }
+
+      if (directIssue && !directIssue.pull_request && directIssue.state === 'open') {
+        const currentLabels = (directIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
+        const toAdd = [];
+        if (!currentLabels.includes('internal/tracking')) toAdd.push('internal/tracking');
+        if (!currentLabels.includes('internal/user')) toAdd.push('internal/user');
+        if (toAdd.length > 0 && typeof github?.rest?.issues?.addLabels === 'function') {
+          try {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: fallbackNum,
+              labels: toAdd,
+            });
+            core.info(`Added labels [${toAdd.join(', ')}] to issue #${fallbackNum}`);
+          } catch (labelErr) {
+            throw new Error(`Failed to add tracking labels to issue #${fallbackNum}: ${labelErr.message}`);
+          }
+        }
+        trackingIssue = directIssue;
+        break;
+      } else {
+        core.info(`Referenced item #${fallbackNum} is not an open issue (pull_request=${Boolean(directIssue?.pull_request)}, state=${directIssue?.state}).`);
       }
     }
   }
 
   if (!trackingIssue) {
-    core.info(`No verified 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
+    if (!searchResults?.items || searchResults.items.length === 0) {
+      core.info(`No 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
+    } else {
+      core.info(`No verified 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
+    }
     return;
   }
   core.info(`Found tracking issue: #${trackingIssue.number}`);
@@ -222,12 +279,108 @@ export async function runBackportPr({ github, context, core, process = globalThi
   } catch (error) {
     throw new Error(`Failed to fetch sub-issues for tracking issue #${trackingIssue.number}: ${error.message}`);
   }
-  const subIssues = response.data;
+  let subIssues = response.data;
   core.info(`Sub-issues data: ${JSON.stringify(subIssues)}`);
   if (!Array.isArray(subIssues)) {
     core.warning(`Unexpected sub-issues data format: ${JSON.stringify(subIssues)}`);
     return;
   }
+
+  const currentLabels = (trackingIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
+  let releaseLabels = currentLabels.filter(l => /^release\/v\d+$/.test(l));
+  if (releaseLabels.length === 0 && typeof github?.rest?.repos?.listBranches === 'function') {
+    try {
+      const branches = typeof github.paginate === 'function'
+        ? await github.paginate(github.rest.repos.listBranches, { owner, repo })
+        : (await github.rest.repos.listBranches({ owner, repo }))?.data || [];
+      const releaseBranches = branches
+        .map(b => b.name)
+        .filter(name => /^release\/v\d+$/.test(name))
+        .sort((a, b) => {
+          const aVer = parseInt(a.replace('release/v', ''), 10);
+          const bVer = parseInt(b.replace('release/v', ''), 10);
+          return bVer - aVer;
+        });
+      if (!releaseBranches || releaseBranches.length === 0) {
+        throw new Error('No release branches matching release/v<major> found in repository.');
+      }
+      releaseLabels = [releaseBranches[0]];
+    } catch (branchErr) {
+      core.error(`Failed to discover release branches for #${trackingIssue.number}: ${branchErr.message}`);
+      throw new Error(`Failed to determine target release branch for #${trackingIssue.number}: ${branchErr.message}`);
+    }
+  }
+
+  // Find any release labels that do not already have a sub-issue
+  const existingSubIssueLabels = new Set(
+    subIssues
+      .flatMap(sub => (sub.labels || []).map(l => (typeof l === 'string' ? l : l?.name)))
+      .filter(l => /^release\/v\d+$/.test(l))
+  );
+  const missingReleaseLabels = releaseLabels.filter(l => !existingSubIssueLabels.has(l));
+
+  if (missingReleaseLabels.length > 0) {
+    core.info(`Missing sub-issues for release labels [${missingReleaseLabels.join(', ')}] on tracking issue #${trackingIssue.number}. Attempting on-demand sub-issue generation...`);
+    const creationErrors = [];
+    for (const releaseLabel of missingReleaseLabels) {
+      try {
+        await runBackportIssues({
+          github,
+          context,
+          core,
+          process: {
+            ...process,
+            env: {
+              ...process?.env,
+              RELEASE_LABEL: releaseLabel,
+              ISSUE_NUMBER: String(trackingIssue.number),
+              PR: String(pr.number),
+            },
+          },
+        });
+        core.info(`Created sub-issue on demand for #${trackingIssue.number} on branch '${releaseLabel}'`);
+      } catch (createErr) {
+        core.warning(`On-demand sub-issue generation failed for ${releaseLabel}: ${createErr.message}`);
+        creationErrors.push(`${releaseLabel}: ${createErr.message}`);
+      }
+    }
+
+    try {
+      const refetched = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
+        owner: owner,
+        repo: repo,
+        issue_number: trackingIssue.number,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      });
+      if (Array.isArray(refetched?.data)) {
+        subIssues = refetched.data;
+        core.info(`Successfully refetched sub-issues on demand for #${trackingIssue.number} (found ${subIssues.length})`);
+      }
+    } catch (refetchErr) {
+      throw new Error(`Failed to refetch sub-issues for #${trackingIssue.number}: ${refetchErr.message}`);
+    }
+
+    if (creationErrors.length > 0) {
+      throw new Error(`Failed to create on-demand sub-issue(s) for #${trackingIssue.number}:\n- ${creationErrors.join('\n- ')}`);
+    }
+
+    if (subIssues.length === 0) {
+      throw new Error(`Failed to verify created sub-issues on demand for #${trackingIssue.number}: sub-issue list is empty.`);
+    }
+
+    const refetchedLabels = new Set(
+      subIssues
+        .flatMap(sub => (sub.labels || []).map(l => (typeof l === 'string' ? l : l?.name)))
+        .filter(l => typeof l === 'string' && /^release\/v\d+$/.test(l))
+    );
+    const unverifiedReleaseLabels = missingReleaseLabels.filter(l => !refetchedLabels.has(l));
+    if (unverifiedReleaseLabels.length > 0) {
+      throw new Error(`Failed to verify created sub-issues on demand for #${trackingIssue.number}: missing sub-issue(s) for label(s) [${unverifiedReleaseLabels.join(', ')}].`);
+    }
+  }
+
   if (subIssues.length === 0) {
     core.info(`No sub-issues found for issue #${trackingIssue.number}. Exiting.`);
     return;
@@ -238,24 +391,24 @@ export async function runBackportPr({ github, context, core, process = globalThi
 
   try {
     try {
-      await runGit(['config', '--local', 'user.name', 'github-actions[bot]']);
-      await runGit(['config', '--local', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
+      await gitExec(['config', '--local', 'user.name', 'github-actions[bot]']);
+      await gitExec(['config', '--local', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
       if (mergeToken) {
         try {
-          const includeConfig = await runGit(['config', '--local', '--name-only', '--get-regexp', '^includeif\\.gitdir:']);
+          const includeConfig = await gitExec(['config', '--local', '--name-only', '--get-regexp', '^includeif\\.gitdir:']);
           const includeKeys = [...new Set(includeConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean))];
           for (const key of includeKeys) {
-            await runGit(['config', '--local', '--unset-all', key]);
+            await gitExec(['config', '--local', '--unset-all', key]);
           }
         } catch {
           // ignore if no includeif.gitdir keys exist
         }
 
         try {
-          const headerConfig = await runGit(['config', '--local', '--name-only', '--get-regexp', 'http\\..*extraheader']);
+          const headerConfig = await gitExec(['config', '--local', '--name-only', '--get-regexp', 'http\\..*extraheader']);
           const headerKeys = [...new Set(headerConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean))];
           for (const key of headerKeys) {
-            await runGit(['config', '--local', '--unset-all', key]);
+            await gitExec(['config', '--local', '--unset-all', key]);
           }
         } catch {
           // ignore if no extraheader keys exist
@@ -264,7 +417,7 @@ export async function runBackportPr({ github, context, core, process = globalThi
         core.setSecret(mergeToken);
         const b64Token = Buffer.from(`x-access-token:${mergeToken}`).toString('base64');
         core.setSecret(b64Token);
-        await runGit(['config', '--local', '--replace-all', 'http.https://github.com/.extraheader', `AUTHORIZATION: basic ${b64Token}`]);
+        await gitExec(['config', '--local', '--replace-all', 'http.https://github.com/.extraheader', `AUTHORIZATION: basic ${b64Token}`]);
       }
     } catch (error) {
       throw new Error(`Failed to configure git credentials: ${error.message}`);
@@ -295,10 +448,10 @@ export async function runBackportPr({ github, context, core, process = globalThi
       const newBranchName = `backport-${pr.number}-${targetBranch.replace(/\//g, '-')}`;
 
       try {
-        await runGit(['fetch', 'origin', targetBranch]);
-        await runGit(['checkout', '-B', newBranchName, `origin/${targetBranch}`]);
-        await runGit(['cherry-pick', '--allow-empty', '-x', mergeCommitSha, '-X', 'theirs']);
-        await runGit(['push', 'origin', newBranchName]);
+        await gitExec(['fetch', 'origin', targetBranch]);
+        await gitExec(['checkout', '-B', newBranchName, `origin/${targetBranch}`]);
+        await gitExec(['cherry-pick', '--allow-empty', '-x', mergeCommitSha, '-X', 'theirs']);
+        await gitExec(['push', 'origin', newBranchName]);
 
         core.info(`Creating pull request for branch ${newBranchName} targeting ${targetBranch}...`);
         response = await prGithub.rest.pulls.create({
@@ -364,12 +517,12 @@ export async function runBackportPr({ github, context, core, process = globalThi
         core.error(`Failed to backport to ${targetBranch} for sub-issue #${subIssueNumber}: ${error.message}`);
         failedBackports.push({ subIssueNumber, targetBranch, error: error.message });
         try {
-          await runGit(['cherry-pick', '--abort']);
+          await gitExec(['cherry-pick', '--abort']);
         } catch {
           // ignore if cherry-pick was not active
         }
         try {
-          await runGit(['checkout', 'main', '-f']);
+          await gitExec(['checkout', 'main', '-f']);
         } catch {
           // ignore fallback checkout failure
         }
@@ -378,7 +531,7 @@ export async function runBackportPr({ github, context, core, process = globalThi
   } finally {
     if (mergeToken) {
       try {
-        await runGit(['config', '--local', '--unset-all', 'http.https://github.com/.extraheader']);
+        await gitExec(['config', '--local', '--unset-all', 'http.https://github.com/.extraheader']);
       } catch {
         // ignore if unsetting extraheader fails or key was not present
       }

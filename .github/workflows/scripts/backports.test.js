@@ -1974,3 +1974,959 @@ test('extract-pr workflow logic - validates explicit pr_number inputs and tracki
   assert.strictEqual(parseIssueInput({ issueNumberInput: '0' }).success, false);
   assert.strictEqual(parseIssueInput({}).success, false);
 });
+
+test('runBackportPr - adopts referenced issue on demand when search returns 0 results', async () => {
+  const mockCore = createMockCore();
+  let labelsAdded = false;
+  let subIssuesFetched = false;
+  let gitCommands = [];
+
+  const mockGitExec = async (args) => {
+    gitCommands.push(args.join(' '));
+    return { stdout: '', stderr: '' };
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 47,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'Fix bug\n\n- Addresses: #701',
+            },
+          ],
+        }),
+      },
+      pulls: {
+        create: async () => ({
+          data: { number: 471, node_id: 'PR_node_471' },
+        }),
+      },
+      issues: {
+        get: async ({ issue_number }) => ({
+          data: {
+            number: issue_number,
+            title: 'Bug report 701',
+            state: 'open',
+            labels: [{ name: 'release/v15' }],
+          },
+        }),
+        addLabels: async () => {
+          labelsAdded = true;
+        },
+      },
+    },
+    graphql: async () => ({}),
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return { data: { total_count: 0, items: [] } };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        subIssuesFetched = true;
+        return {
+          data: [
+            {
+              number: 702,
+              title: '[release/v15] Bug report 701',
+              labels: [{ name: 'release/v15' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: { env: { MERGE_COMMIT_SHA: 'abc1234' } },
+    gitExec: mockGitExec,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(labelsAdded, true);
+  assert.strictEqual(subIssuesFetched, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Found 1 sub-issues.')));
+});
+
+test('runBackportPr - generates sub-issue on demand when tracking issue has 0 sub-issues', async () => {
+  const mockCore = createMockCore();
+  let subIssueCreated = false;
+  let subIssueCallCount = 0;
+  let gitCommands = [];
+
+  const mockGitExec = async (args) => {
+    gitCommands.push(args.join(' '));
+    return { stdout: '', stderr: '' };
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 48,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'Feature PR\n\n- Addresses: #801',
+            },
+          ],
+        }),
+      },
+      pulls: {
+        create: async () => ({
+          data: { number: 481, node_id: 'PR_node_481' },
+        }),
+      },
+      issues: {
+        get: async ({ issue_number }) => ({
+          data: {
+            number: issue_number,
+            title: 'Feature issue 801',
+            state: 'open',
+            labels: [{ name: 'internal/tracking' }, { name: 'release/v15' }],
+          },
+        }),
+        create: async () => {
+          subIssueCreated = true;
+          return { data: { id: 802, number: 802 } };
+        },
+        addLabels: async () => {},
+      },
+    },
+    graphql: async () => ({}),
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 1,
+            items: [
+              {
+                number: 801,
+                title: 'Feature issue 801',
+                state: 'open',
+                labels: [{ name: 'internal/tracking' }, { name: 'release/v15' }],
+              },
+            ],
+          },
+        };
+      }
+      if (endpoint === 'POST /repos/rancher/terraform-provider-rancher2/issues/801/sub_issues') {
+        return { data: {} };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        subIssueCallCount++;
+        if (subIssueCallCount <= 2) {
+          // First check in runBackportPr and second check in runBackportIssues return 0 sub-issues
+          return { data: [] };
+        }
+        // Third check after on-demand generation returns the created sub-issue
+        return {
+          data: [
+            {
+              number: 802,
+              title: '[release/v15] Feature issue 801',
+              labels: [{ name: 'release/v15' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: { env: { MERGE_COMMIT_SHA: 'def5678' } },
+    gitExec: mockGitExec,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(subIssueCreated, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Found 1 sub-issues.')));
+});
+
+test('runBackportPr - iterates multiple addressed numbers until an open non-PR issue is found', async () => {
+  const mockCore = createMockCore();
+  let adoptedIssueNumber = null;
+  let gitCommands = [];
+
+  const mockGitExec = async (args) => {
+    gitCommands.push(args.join(' '));
+    return { stdout: '', stderr: '' };
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 49,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'Multi-addressed PR\n\n- Addresses: #901\n- Addresses: #902',
+            },
+          ],
+        }),
+      },
+      pulls: {
+        create: async () => ({
+          data: { number: 491, node_id: 'PR_node_491' },
+        }),
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 901) {
+            // First reference is closed
+            return {
+              data: {
+                number: 901,
+                title: 'Closed issue 901',
+                state: 'closed',
+                labels: [{ name: 'release/v15' }],
+              },
+            };
+          }
+          // Second reference is open
+          return {
+            data: {
+              number: 902,
+              title: 'Open issue 902',
+              state: 'open',
+              labels: [{ name: 'release/v15' }],
+            },
+          };
+        },
+        addLabels: async ({ issue_number, labels }) => {
+          if (labels.includes('internal/tracking')) {
+            adoptedIssueNumber = issue_number;
+          }
+        },
+      },
+    },
+    graphql: async () => ({}),
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return { data: { total_count: 0, items: [] } };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        return {
+          data: [
+            {
+              number: 903,
+              title: '[release/v15] Sub issue for 902',
+              labels: [{ name: 'release/v15' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: { env: { MERGE_COMMIT_SHA: 'ghi7890' } },
+    gitExec: mockGitExec,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(adoptedIssueNumber, 902);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Found tracking issue: #902')));
+});
+
+test('runBackportPr - creates backport children for every release label on tracking issue', async () => {
+  const mockCore = createMockCore();
+  const createdSubIssueBranches = [];
+  let gitCommands = [];
+
+  const mockGitExec = async (args) => {
+    gitCommands.push(args.join(' '));
+    return { stdout: '', stderr: '' };
+  };
+
+  let subIssueFetchCount = 0;
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 50,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'Multi-release backport PR\n\n- Addresses: #1001',
+            },
+          ],
+        }),
+      },
+      pulls: {
+        create: async () => ({
+          data: { number: 501, node_id: 'PR_node_501' },
+        }),
+      },
+      issues: {
+        get: async ({ issue_number }) => ({
+          data: {
+            number: issue_number,
+            title: 'Issue 1001',
+            state: 'open',
+            labels: [{ name: 'internal/tracking' }, { name: 'release/v14' }, { name: 'release/v15' }],
+          },
+        }),
+        create: async ({ body }) => {
+          if (body?.includes('release/v14')) {
+            createdSubIssueBranches.push('release/v14');
+            return { data: { id: 1002, number: 1002 } };
+          }
+          if (body?.includes('release/v15')) {
+            createdSubIssueBranches.push('release/v15');
+            return { data: { id: 1003, number: 1003 } };
+          }
+          return { data: { id: 9999, number: 9999 } };
+        },
+        addLabels: async () => {},
+      },
+    },
+    graphql: async () => ({}),
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 1,
+            items: [
+              {
+                number: 1001,
+                title: 'Issue 1001',
+                state: 'open',
+                labels: [{ name: 'internal/tracking' }, { name: 'release/v14' }, { name: 'release/v15' }],
+              },
+            ],
+          },
+        };
+      }
+      if (endpoint.startsWith('POST ')) {
+        return { data: {} };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        subIssueFetchCount++;
+        // Initial check in runBackportPr and checks in runBackportIssues
+        if (subIssueFetchCount <= 3) {
+          return { data: [] };
+        }
+        // Final refetched call returns both created sub-issues
+        return {
+          data: [
+            {
+              number: 1002,
+              title: '[release/v14] Issue 1001',
+              labels: [{ name: 'release/v14' }],
+            },
+            {
+              number: 1003,
+              title: '[release/v15] Issue 1001',
+              labels: [{ name: 'release/v15' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: { env: { MERGE_COMMIT_SHA: 'jkl0123' } },
+    gitExec: mockGitExec,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.ok(createdSubIssueBranches.includes('release/v14'));
+  assert.ok(createdSubIssueBranches.includes('release/v15'));
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Found 2 sub-issues.')));
+});
+
+test('runBackportPr - throws and propagates API errors from direct issue lookup (non-404)', async () => {
+  const mockCore = createMockCore();
+  const mockGitExec = async () => ({ stdout: '', stderr: '' });
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 51,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR body\n\n- Addresses: #1101',
+            },
+          ],
+        }),
+      },
+      issues: {
+        get: async () => {
+          const err = new Error('Internal Server Error');
+          err.status = 500;
+          throw err;
+        },
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return { data: { total_count: 0, items: [] } };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportPr({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+        core: mockCore,
+        process: { env: { MERGE_COMMIT_SHA: 'err123' } },
+        gitExec: mockGitExec,
+      });
+    },
+    /Direct issue lookup for #1101 failed with API error: Internal Server Error/
+  );
+});
+
+test('runBackportPr - continues search when direct issue lookup returns 404 and adopts subsequent valid issue', async () => {
+  const mockCore = createMockCore();
+  let adoptedNumber = null;
+  const mockGitExec = async () => ({ stdout: '', stderr: '' });
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 52,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR body\n\n- Addresses: #1101\n- Addresses: #1102',
+            },
+          ],
+        }),
+      },
+      pulls: {
+        create: async () => ({ data: { number: 521, node_id: 'PR_521' } }),
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 1101) {
+            const err = new Error('Not Found');
+            err.status = 404;
+            throw err;
+          }
+          return {
+            data: {
+              number: 1102,
+              title: 'Valid Issue',
+              state: 'open',
+              labels: [{ name: 'release/v15' }],
+            },
+          };
+        },
+        addLabels: async ({ issue_number, labels }) => {
+          if (labels.includes('internal/tracking')) {
+            adoptedNumber = issue_number;
+          }
+        },
+      },
+    },
+    graphql: async () => ({}),
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return { data: { total_count: 0, items: [] } };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        return {
+          data: [
+            {
+              number: 1103,
+              title: '[release/v15] Valid Issue',
+              labels: [{ name: 'release/v15' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: { env: { MERGE_COMMIT_SHA: 'search404' } },
+    gitExec: mockGitExec,
+  });
+
+  assert.strictEqual(adoptedNumber, 1102);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Referenced issue #1101 was not found (404)')));
+});
+
+test('runBackportPr - throws and propagates error when adding tracking labels fails during direct lookup', async () => {
+  const mockCore = createMockCore();
+  const mockGitExec = async () => ({ stdout: '', stderr: '' });
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 53,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR body\n\n- Addresses: #1103',
+            },
+          ],
+        }),
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 1103,
+            title: 'Found Issue',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {
+          throw new Error('Permission denied on label write');
+        },
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return { data: { total_count: 0, items: [] } };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportPr({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+        core: mockCore,
+        process: { env: { MERGE_COMMIT_SHA: 'labelerr' } },
+        gitExec: mockGitExec,
+      });
+    },
+    /Failed to add tracking labels to issue #1103: Permission denied on label write/
+  );
+});
+
+test('runBackportPr - throws and propagates error when on-demand sub-issue generation fails', async () => {
+  const mockCore = createMockCore();
+  const mockGitExec = async () => ({ stdout: '', stderr: '' });
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 54,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR body\n\n- Addresses: #1104',
+            },
+          ],
+        }),
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 1104,
+            title: 'Issue 1104',
+            state: 'open',
+            labels: [{ name: 'internal/tracking' }, { name: 'release/v15' }],
+          },
+        }),
+        create: async () => {
+          throw new Error('API Rate limit exceeded on issue create');
+        },
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 1,
+            items: [
+              {
+                number: 1104,
+                title: 'Issue 1104',
+                state: 'open',
+                labels: [{ name: 'internal/tracking' }, { name: 'release/v15' }],
+              },
+            ],
+          },
+        };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        return { data: [] };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportPr({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+        core: mockCore,
+        process: { env: { MERGE_COMMIT_SHA: 'subcreateerr' } },
+        gitExec: mockGitExec,
+      });
+    },
+    /Failed to create on-demand sub-issue\(s\) for #1104/
+  );
+});
+
+test('runBackportPr - throws and propagates error when refetching sub-issues fails', async () => {
+  const mockCore = createMockCore();
+  const mockGitExec = async () => ({ stdout: '', stderr: '' });
+  let subIssueFetchCount = 0;
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 55,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR body\n\n- Addresses: #1105',
+            },
+          ],
+        }),
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 1105,
+            title: 'Issue 1105',
+            state: 'open',
+            labels: [{ name: 'internal/tracking' }, { name: 'release/v15' }],
+          },
+        }),
+        create: async () => ({ data: { id: 1106, number: 1106 } }),
+        addLabels: async () => {},
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 1,
+            items: [
+              {
+                number: 1105,
+                title: 'Issue 1105',
+                state: 'open',
+                labels: [{ name: 'internal/tracking' }, { name: 'release/v15' }],
+              },
+            ],
+          },
+        };
+      }
+      if (endpoint.startsWith('POST ')) {
+        return { data: {} };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        subIssueFetchCount++;
+        if (subIssueFetchCount <= 2) {
+          return { data: [] };
+        }
+        // Refetch call fails
+        throw new Error('Refetch network timeout');
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportPr({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+        core: mockCore,
+        process: { env: { MERGE_COMMIT_SHA: 'refetcherr' } },
+        gitExec: mockGitExec,
+      });
+    },
+    /Failed to refetch sub-issues for #1105: Refetch network timeout/
+  );
+});
+
+test('runBackportPr - throws when release branch discovery fails or finds no branches', async () => {
+  const mockCore = createMockCore();
+  const mockGitExec = async () => ({ stdout: '', stderr: '' });
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 56,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR body\n\n- Addresses: #1106',
+            },
+          ],
+        }),
+        listBranches: async () => {
+          throw new Error('GitHub API 500 on listBranches');
+        },
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 1106,
+            title: 'Issue 1106',
+            state: 'open',
+            labels: [{ name: 'internal/tracking' }],
+          },
+        }),
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 1,
+            items: [
+              {
+                number: 1106,
+                title: 'Issue 1106',
+                state: 'open',
+                labels: [{ name: 'internal/tracking' }],
+              },
+            ],
+          },
+        };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        return { data: [] };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportPr({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+        core: mockCore,
+        process: { env: { MERGE_COMMIT_SHA: 'branchdiscoveryfail' } },
+        gitExec: mockGitExec,
+      });
+    },
+    /Failed to determine target release branch for #1106: GitHub API 500 on listBranches/
+  );
+});
+
+test('runBackportPr - throws and fails when refetched sub-issues list is missing one of the requested release labels', async () => {
+  const mockCore = createMockCore();
+  const mockGitExec = async () => ({ stdout: '', stderr: '' });
+  let subIssueFetchCount = 0;
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 60,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'PR body\n\n- Addresses: #1201',
+            },
+          ],
+        }),
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 1201,
+            title: 'Issue 1201',
+            state: 'open',
+            labels: [{ name: 'internal/tracking' }, { name: 'release/v14' }, { name: 'release/v15' }],
+          },
+        }),
+        create: async () => ({ data: { id: 1202, number: 1202 } }),
+        addLabels: async () => {},
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return {
+          data: {
+            total_count: 1,
+            items: [
+              {
+                number: 1201,
+                title: 'Issue 1201',
+                state: 'open',
+                labels: [{ name: 'internal/tracking' }, { name: 'release/v14' }, { name: 'release/v15' }],
+              },
+            ],
+          },
+        };
+      }
+      if (endpoint.startsWith('POST ')) {
+        return { data: {} };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        subIssueFetchCount++;
+        // Initial check in runBackportPr and checks in runBackportIssues
+        if (subIssueFetchCount <= 3) {
+          return { data: [] };
+        }
+        // Refetched call only returns release/v14, missing release/v15
+        return {
+          data: [
+            {
+              number: 1202,
+              title: '[release/v14] Issue 1201',
+              labels: [{ name: 'release/v14' }],
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportPr({
+        github: mockGithub,
+        context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+        core: mockCore,
+        process: { env: { MERGE_COMMIT_SHA: 'missingsublabel' } },
+        gitExec: mockGitExec,
+      });
+    },
+    /Failed to verify created sub-issues on demand for #1201: missing sub-issue\(s\) for label\(s\) \[release\/v15\]/
+  );
+});
+
+test('runBackportPr - adopts referenced issue on demand when PR body uses trailing period (- Addresses: #1301.)', async () => {
+  const mockCore = createMockCore();
+  const gitCommands = [];
+  const mockGitExec = async (args) => {
+    gitCommands.push(args.join(' '));
+    return { stdout: '', stderr: '' };
+  };
+
+  const addedLabels = [];
+  let subIssuesEndpointCalled = false;
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({
+          data: [
+            {
+              number: 61,
+              base: { ref: 'main' },
+              merged_at: '2026-10-01T00:00:00Z',
+              body: 'Context\n- Addresses: #1301.\n* Addresses: `#1302`.\nFooter',
+            },
+          ],
+        }),
+      },
+      pulls: {
+        create: async () => ({ data: { number: 611, node_id: 'PR_611' } }),
+      },
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 1301) {
+            return {
+              data: {
+                number: 1301,
+                title: 'Trailing Period Issue',
+                state: 'open',
+                labels: [{ name: 'release/v15' }],
+              },
+            };
+          }
+          throw new Error('Not found');
+        },
+        create: async () => ({ data: { id: 1303, number: 1303 } }),
+        addLabels: async ({ issue_number, labels }) => {
+          addedLabels.push({ issue_number, labels });
+        },
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint === 'GET /search/issues') {
+        return { data: { total_count: 0, items: [] } };
+      }
+      if (endpoint.startsWith('POST ')) {
+        return { data: {} };
+      }
+      if (endpoint.includes('/sub_issues')) {
+        if (!subIssuesEndpointCalled) {
+          subIssuesEndpointCalled = true;
+          return { data: [] };
+        }
+        return {
+          data: [
+            {
+              number: 1303,
+              title: '[release/v15] Trailing Period Issue',
+              labels: [{ name: 'release/v15' }],
+            },
+          ],
+        };
+      }
+      if (endpoint === 'POST /graphql') {
+        return { data: {} };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  await runBackportPr({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' } },
+    core: mockCore,
+    process: { env: { MERGE_COMMIT_SHA: 'trailperiodsha' } },
+    gitExec: mockGitExec,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.ok(mockCore.infoMessages.some(msg => msg.includes('Attempting direct lookup for referenced issue #1301...')));
+  assert.ok(addedLabels.some(l => l.issue_number === 1301 && l.labels.includes('internal/tracking')));
+});
+

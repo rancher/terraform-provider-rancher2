@@ -3399,3 +3399,704 @@ test('runTrackingIssue - falls back to github.getOctokit when getOctokit argumen
     },
   });
 });
+
+test('runTrackingIssue - targets specific PR when PR_NUMBER env variable is provided', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let searchCalled = false;
+  let subIssueCreated = false;
+
+  const mockProcess = {
+    env: {
+      PR_NUMBER: '42',
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullGetCalled = true;
+          return {
+            data: {
+              number: pull_number,
+              title: 'Specific PR',
+              body: '- Addresses: #301',
+              state: 'open',
+              draft: false,
+              base: { ref: 'main' },
+              labels: [],
+            },
+          };
+        },
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 301,
+            title: 'Fix issue 301',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+        create: async () => {
+          subIssueCreated = true;
+          return { data: { id: 999, number: 302 } };
+        },
+      },
+      actions: {
+        createWorkflowDispatch: async () => {},
+      },
+    },
+    request: async () => ({ data: [] }),
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(pullGetCalled, true);
+  assert.strictEqual(searchCalled, false);
+  assert.strictEqual(subIssueCreated, true);
+});
+
+test('runTrackingIssue - falls back to search when targeted PR is ineligible', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let searchCalled = false;
+
+  const mockProcess = {
+    env: {
+      PR_NUMBER: '43',
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullGetCalled = true;
+          return {
+            data: {
+              number: pull_number,
+              title: 'Draft PR with internal/ignore',
+              body: '- Addresses: #301',
+              state: 'open',
+              draft: true,
+              base: { ref: 'main' },
+              labels: [{ name: 'internal/ignore' }],
+            },
+          };
+        },
+      },
+      actions: {
+        createWorkflowDispatch: async () => {},
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(pullGetCalled, true);
+  assert.strictEqual(searchCalled, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Target PR #43 is not eligible')));
+});
+
+test('runTrackingIssue - falls back to runner github client when dispatchGithub throws 403', async () => {
+  const mockCore = createMockCore();
+  let runnerDispatchCalled = false;
+  let customDispatchCalled = false;
+
+  const mockProcess = {
+    env: {
+      GITHUB_MERGE_TOKEN: 'scoped-pull-requests-token',
+    },
+  };
+
+  const mockGetOctokit = () => ({
+    rest: {
+      actions: {
+        createWorkflowDispatch: async () => {
+          customDispatchCalled = true;
+          const err = new Error('Resource not accessible by integration');
+          err.status = 403;
+          throw err;
+        },
+      },
+    },
+  });
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      return [
+        {
+          number: 55,
+          title: 'PR with token fallback',
+          body: '- Addresses: #401',
+          labels: [],
+        },
+      ];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 401,
+            title: 'Issue 401',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+        create: async () => ({ data: { id: 888, number: 402 } }),
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          runnerDispatchCalled = true;
+        },
+      },
+    },
+    request: async () => ({ data: [] }),
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+    getOctokit: mockGetOctokit,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(customDispatchCalled, true);
+  assert.strictEqual(runnerDispatchCalled, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes("Successfully dispatched 'backport-issues.yml' using fallback client")));
+});
+
+test('runTrackingIssue - does not fall back to runner client when dispatch error is not 403', async () => {
+  const mockCore = createMockCore();
+  let runnerDispatchCalled = false;
+  let customDispatchCalled = false;
+
+  const mockProcess = {
+    env: {
+      GITHUB_MERGE_TOKEN: 'scoped-pull-requests-token',
+    },
+  };
+
+  const mockGetOctokit = () => ({
+    rest: {
+      actions: {
+        createWorkflowDispatch: async () => {
+          customDispatchCalled = true;
+          const err = new Error('Gateway Timeout');
+          err.status = 504;
+          throw err;
+        },
+      },
+    },
+  });
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      return [
+        {
+          number: 56,
+          title: 'PR with non-403 error',
+          body: '- Addresses: #403',
+          labels: [],
+        },
+      ];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 403,
+            title: 'Issue 403',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        addLabels: async () => {},
+        createComment: async () => {},
+        create: async () => ({ data: { id: 889, number: 404 } }),
+      },
+      actions: {
+        createWorkflowDispatch: async () => {
+          runnerDispatchCalled = true;
+        },
+      },
+    },
+    request: async () => ({ data: [] }),
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+    getOctokit: mockGetOctokit,
+  });
+
+  assert.strictEqual(customDispatchCalled, true);
+  assert.strictEqual(runnerDispatchCalled, false);
+  assert.ok(mockCore.failedMessage?.includes("Failed to dispatch 'backport-issues.yml'"));
+});
+
+test('runTriggerRcRelease - falls back to runner github client when dispatch fails with 403', async () => {
+  let customDispatchCalled = false;
+  let runnerDispatchCalled = false;
+
+  const mockProcess = {
+    env: {
+      BRANCH: 'release/v15',
+      SHA: 'abc1234',
+      WORKFLOW_RUN_ID: '999',
+      GITHUB_MERGE_TOKEN: 'scoped-token',
+    },
+  };
+
+  const mockGetOctokit = () => ({
+    rest: {
+      actions: {
+        createWorkflowDispatch: async () => {
+          customDispatchCalled = true;
+          const err = new Error('Resource not accessible by integration');
+          err.status = 403;
+          throw err;
+        },
+      },
+    },
+  });
+
+  const mockGithub = {
+    paginate: async () => [{ name: 'Validate PR Description', conclusion: 'success' }],
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({ data: [] }),
+        listBranches: async () => ({ data: [{ name: 'release/v15' }] }),
+        listTags: async () => ({ data: [{ name: 'v2.15.0' }] }),
+      },
+      actions: {
+        listJobsForWorkflowRun: async () => ({ data: { jobs: [] } }),
+        createWorkflowDispatch: async () => {
+          runnerDispatchCalled = true;
+        },
+      },
+    },
+  };
+
+  const mockCore = createMockCore();
+
+  const tag = await runTriggerRcRelease({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+    core: mockCore,
+    process: mockProcess,
+    getOctokit: mockGetOctokit,
+  });
+
+  assert.strictEqual(customDispatchCalled, true);
+  assert.strictEqual(runnerDispatchCalled, true);
+  assert.strictEqual(tag, 'v15.0.0-rc.1');
+});
+
+test('runTriggerRcRelease - rethrows error without fallback when dispatch error is not 403', async () => {
+  let customDispatchCalled = false;
+  let runnerDispatchCalled = false;
+
+  const mockProcess = {
+    env: {
+      BRANCH: 'release/v15',
+      SHA: 'abc1234',
+      WORKFLOW_RUN_ID: '999',
+      GITHUB_MERGE_TOKEN: 'scoped-token',
+    },
+  };
+
+  const mockGetOctokit = () => ({
+    rest: {
+      actions: {
+        createWorkflowDispatch: async () => {
+          customDispatchCalled = true;
+          const err = new Error('Internal Server Error');
+          err.status = 500;
+          throw err;
+        },
+      },
+    },
+  });
+
+  const mockGithub = {
+    paginate: async () => [{ name: 'Validate PR Description', conclusion: 'success' }],
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => ({ data: [] }),
+        listBranches: async () => ({ data: [{ name: 'release/v15' }] }),
+        listTags: async () => ({ data: [{ name: 'v2.15.0' }] }),
+      },
+      actions: {
+        listJobsForWorkflowRun: async () => ({ data: { jobs: [] } }),
+        createWorkflowDispatch: async () => {
+          runnerDispatchCalled = true;
+        },
+      },
+    },
+  };
+
+  const mockCore = createMockCore();
+
+  await runTriggerRcRelease({
+    github: mockGithub,
+    context: { repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' }, payload: {} },
+    core: mockCore,
+    process: mockProcess,
+    getOctokit: mockGetOctokit,
+  });
+
+  assert.strictEqual(customDispatchCalled, true);
+  assert.strictEqual(runnerDispatchCalled, false);
+  assert.ok(mockCore.failedMessage?.includes('Failed to trigger RC release workflow: Internal Server Error'));
+});
+
+test('runTrackingIssue - resolves PR from commit SHA when workflow_run pull_requests is empty', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let commitLookupCalled = false;
+  let searchCalled = false;
+  let subIssueCreatedBeforeLabel = false;
+  let releaseLabelAdded = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.repos.listPullRequestsAssociatedWithCommit) {
+        commitLookupCalled = true;
+        return [
+          {
+            number: 88,
+            state: 'open',
+            base: { ref: 'main' },
+            labels: [],
+          },
+        ];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: {
+        listBranches: async () => {},
+        listPullRequestsAssociatedWithCommit: async () => {},
+      },
+      search: { issuesAndPullRequests: async () => {} },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullGetCalled = true;
+          return {
+            data: {
+              number: pull_number,
+              title: 'Fork PR',
+              body: '- Addresses: #500',
+              state: 'open',
+              draft: false,
+              base: { ref: 'main' },
+              labels: [],
+            },
+          };
+        },
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 500,
+            title: 'Issue 500',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        create: async () => {
+          if (!releaseLabelAdded) {
+            subIssueCreatedBeforeLabel = true;
+          }
+          return { data: { id: 501, number: 501 } };
+        },
+        addLabels: async ({ labels }) => {
+          if (labels.includes('release/v15')) {
+            releaseLabelAdded = true;
+          }
+        },
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async () => {},
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes('/sub_issues')) {
+        return { data: [] };
+      }
+      return { data: {} };
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'commit-sha-fork-88',
+        pull_requests: [],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(commitLookupCalled, true);
+  assert.strictEqual(pullGetCalled, true);
+  assert.strictEqual(searchCalled, false);
+  assert.strictEqual(subIssueCreatedBeforeLabel, true);
+  assert.strictEqual(releaseLabelAdded, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Resolved PR #88 from commit SHA commit-sha-fork-88')));
+});
+
+test('runTrackingIssue - skips adoption without broad search when workflow_run has no resolvable PR', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.repos.listPullRequestsAssociatedWithCommit) {
+        return [];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: {
+        listBranches: async () => {},
+        listPullRequestsAssociatedWithCommit: async () => {},
+      },
+      search: { issuesAndPullRequests: async () => {} },
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'unknown-sha',
+        pull_requests: [],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Could not identify a single PR from workflow_run event. Skipping adoption to prevent broad PR search.')));
+});
+
+test('runTrackingIssue - skips adoption without broad search when workflow_run PR is ineligible', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      pulls: {
+        get: async ({ pull_number }) => ({
+          data: {
+            number: pull_number,
+            title: 'Closed PR',
+            state: 'closed',
+            base: { ref: 'main' },
+            labels: [],
+          },
+        }),
+      },
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'closed-sha',
+        pull_requests: [{ number: 99 }],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Skipping tracking adoption for ineligible workflow_run PR #99.')));
+});
+
+test('runTrackingIssue - fails and skips search when PR_NUMBER is non-numeric', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockProcess = {
+    env: {
+      PR_NUMBER: 'abc',
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.failedMessage?.includes('Invalid PR_NUMBER: "abc"'));
+});
+
+test('runTrackingIssue - fails and skips search when PR_NUMBER contains trailing non-numeric characters', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockProcess = {
+    env: {
+      PR_NUMBER: '42abc',
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.failedMessage?.includes('Invalid PR_NUMBER: "42abc"'));
+});
+
+test('runTrackingIssue - fails and skips search when PR_NUMBER is zero or negative', async () => {
+  const mockCore = createMockCore();
+  let searchCalled = false;
+
+  const mockProcess = {
+    env: {
+      PR_NUMBER: '0',
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      searchCalled = true;
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(searchCalled, false);
+  assert.ok(mockCore.failedMessage?.includes('Invalid PR_NUMBER: "0"'));
+});
