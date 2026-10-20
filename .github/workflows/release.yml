@@ -69,10 +69,23 @@ jobs:
         id: verify-tag
         env:
           TAG: ${{ inputs.tag }}
+          BRANCH: ${{ inputs.branch }}
         run: |
           if [[ ! "$TAG" == v* ]]; then
             echo "Tag must start with 'v' (e.g. v1.2.3 or v1.2.3-rc.1)"
             exit 1
+          fi
+          if grep -iq "rc" <<< "$TAG"; then
+            if [ -z "$BRANCH" ]; then
+              echo "Error: 'branch' input is required for RC releases."
+              exit 1
+            fi
+            CLEAN_BRANCH="${BRANCH#refs/heads/}"
+            CLEAN_BRANCH="${CLEAN_BRANCH#origin/}"
+            if [[ ! "$CLEAN_BRANCH" =~ ^release/v[0-9]+ ]]; then
+              echo "Error: RC releases must target a 'release/v<major>' branch (got '$BRANCH')."
+              exit 1
+            fi
           fi
 
       - name: 'Create and Push Tag with Git'
@@ -94,7 +107,10 @@ jobs:
           TARGET_BRANCH="${TARGET_BRANCH%/}"
           TARGET_BRANCH="${TARGET_BRANCH//[[:space:]]/}"
           if [ -n "$TARGET_BRANCH" ]; then
-            git fetch origin "$TARGET_BRANCH" || true
+            if ! git fetch origin "$TARGET_BRANCH"; then
+              echo "Error: Failed to fetch origin/$TARGET_BRANCH. Branch does not exist or fetch failed." >&2
+              exit 1
+            fi
           fi
           CLEAN_SHA="${SHA//[[:space:]]/}"
           if [ -n "$CLEAN_SHA" ]; then
@@ -103,20 +119,31 @@ jobs:
             fi
             TARGET_SHA=$(git rev-parse --verify "${CLEAN_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${CLEAN_SHA}^{commit}" 2>/dev/null || true)
           elif [ -n "$TARGET_BRANCH" ]; then
-            TARGET_SHA=$(git rev-parse FETCH_HEAD 2>/dev/null || git rev-parse --verify "origin/${TARGET_BRANCH}^{commit}" 2>/dev/null || true)
+            TARGET_SHA=$(git rev-parse --verify "origin/${TARGET_BRANCH}^{commit}" 2>/dev/null || true)
           else
             TARGET_SHA="${DEFAULT_SHA//[[:space:]]/}"
             if ! git cat-file -e "${TARGET_SHA}^{commit}" 2>/dev/null; then
               git fetch origin "$TARGET_SHA" 2>/dev/null || git fetch origin "$REF_NAME" 2>/dev/null || true
             fi
-            TARGET_SHA=$(git rev-parse --verify "${TARGET_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${TARGET_SHA}^{commit}" 2>/dev/null || git rev-parse --verify FETCH_HEAD 2>/dev/null || true)
+            TARGET_SHA=$(git rev-parse --verify "${TARGET_SHA}^{commit}" 2>/dev/null || git rev-parse --verify "origin/${TARGET_SHA}^{commit}" 2>/dev/null || true)
           fi
           if [ -z "$TARGET_SHA" ]; then
             echo "Error: Could not resolve target commit for tag $TAG." >&2
             exit 1
           fi
-          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
-            echo "Tag $TAG already exists on remote origin, skipping tag creation."
+
+          # Check if tag already exists on remote origin
+          EXISTING_REMOTE_TAG_REF=$(git ls-remote --tags origin "refs/tags/${TAG}^{}" 2>/dev/null | awk '{print $1}')
+          if [ -z "$EXISTING_REMOTE_TAG_REF" ]; then
+            EXISTING_REMOTE_TAG_REF=$(git ls-remote --tags origin "refs/tags/${TAG}" 2>/dev/null | awk '{print $1}')
+          fi
+
+          if [ -n "$EXISTING_REMOTE_TAG_REF" ]; then
+            if [ "$EXISTING_REMOTE_TAG_REF" != "$TARGET_SHA" ]; then
+              echo "Error: Tag '$TAG' already exists on remote pointing to $EXISTING_REMOTE_TAG_REF, which does not match requested target SHA $TARGET_SHA." >&2
+              exit 1
+            fi
+            echo "Tag $TAG already exists on remote origin pointing to matching target SHA $TARGET_SHA. Proceeding with idempotent release."
           else
             git tag "$TAG" -m "Release $TAG" "$TARGET_SHA"
             git push origin "$TAG"
