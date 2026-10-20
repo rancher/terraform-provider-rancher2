@@ -66,9 +66,9 @@ flowchart TD
 
     subgraph Stage6["6. Release Candidate (RC) Staging"]
         MERGE_BP[Backport PR Merged to release/v*]
-        RP_DRAFT[release.yml<br/>release-please-pr updates draft Release PR]
+        RP_DRAFT[release-please.yml<br/>release-please-pr updates draft Release PR]
         RBM[release-branch-merge.yml<br/>Labels sub-issues internal/merged]
-        RC[rc-release.yml<br/>Computes next RC, tags, Vault GPG sign]
+        RC[release.yml<br/>Computes next RC, tags, Vault GPG sign]
         NOTIFY[rc-notify<br/>Notifies tracking issues with RC link]
         STATUS -->|Passed| MERGE_BP
         MERGE_BP --> RP_DRAFT
@@ -77,10 +77,10 @@ flowchart TD
 
     subgraph Stage7["7. Full Production Release"]
         RP_MERGE[Maintainer Merges Release PR on release/v*]
-        REL[release.yml<br/>release-please-release outputs tag]
-        GORELEASER[GoReleaser + Vault GPG sign]
+        REL[release-please.yml<br/>release-please-release outputs tag]
+        EXEC_REL[release.yml<br/>GoReleaser + Vault GPG sign]
         PUB[publish-release<br/>Promotes draft to published]
-        RP_MERGE --> REL --> GORELEASER --> PUB
+        RP_MERGE --> REL --> EXEC_REL --> PUB
     end
 ```
 
@@ -140,7 +140,7 @@ flowchart TD
 ### Stage 4: Automated Cherry-Pick & Backport PR Generation
 
 - **Push Trigger & API Settle (`.github/workflows/backport-prs.yml`)**:
-  - Triggers on push to `main` (manual fallback in `backport-pr-manual.yml`).
+  - Triggers on push to `main` or manually via `workflow_dispatch` taking `merge_commit_sha`.
   - Step `wait-for-settle`: Polling loop in `backports.js` with exponential backoff ensures GitHub's API has indexed the merge commit and its associated pull request.
   - Step `get-merge-token`: Fetches privileged `GITHUB_MERGE_TOKEN` from HashiCorp Vault.
 - **Cherry-Pick PR Generation**:
@@ -178,23 +178,23 @@ flowchart TD
 
 - **Backport PR Merge**:
   - Once CI and E2E tests pass, the backport PR merges into `release/v*` (via auto-merge or maintainer).
-- **Release Please Staging (`.github/workflows/release.yml`)**:
+- **Release Please Staging (`.github/workflows/release-please.yml`)**:
   - Triggers on push to `release/v*`.
   - `release-please-release` job executes. Since this is a backport commit (not a merged release PR), no release is created.
   - `release-please-pr` job executes using Vault credentials: calls Google's `release-please-action` with `skip-github-release: true` to create or update an ongoing draft Release PR containing cumulative changelogs and upcoming SemVer increments.
 - **RC Release Dispatch (`.github/workflows/release-branch-merge.yml`)**:
-  - Triggers via `workflow_run` upon completion of `release.yml` on `release/v*`.
+  - Triggers via `workflow_run` upon completion of `Release Please` on `release/v*`.
   - `label` job: Executes `backports.js` (`SCRIPT_MODE: merge-label`) to attach the `internal/merged` label to the related backport issue.
   - `trigger-rc-release` job: Executes `releases.js` (`SCRIPT_MODE: trigger-rc-release`).
     - Detects whether the merged PR was a `release-please` PR; if so, skips RC creation.
     - Computes the next RC tag (e.g., `v15.2.0-rc.1` -> `v15.2.0-rc.2`) via `computeNextRcTag` by evaluating existing tags, `release-please-config.json`, and `.release-please-manifest.json`.
-    - Dispatches `rc-release.yml` on `main` with the target branch, commit SHA, and computed RC tag.
-- **RC Tag Creation & Packaging (`.github/workflows/rc-release.yml`)**:
+    - Dispatches `release.yml` on `main` with the target branch, commit SHA, and computed RC tag.
+- **RC Tag Creation & Packaging (`.github/workflows/release.yml`)**:
   - Runs in `ghcr.io/rancher/ci-image/nix:20260603-18` with environment `release`.
-  - Validates that the tag starts with `v` and contains `rc`.
-  - Pushes the Git tag, prepares `terraform-registry-manifest.json`, and retrieves GPG signing credentials from Vault.
-  - Compiles and cryptographically signs provider binaries using GoReleaser with `.goreleaser_rc.yml` via `.github/workflows/scripts/goreleaser.sh`.
-  - `find-issues-create-comments` job: Executes `releases.js` (`SCRIPT_MODE: rc-notify`), discovering all open issues with labels `<branch>`, `internal/backport`, and `internal/merged`, and commenting with the release candidate link for QA validation.
+  - Validates that the tag starts with `v`.
+  - Pushes the Git tag (for manual/automated dispatch), prepares `terraform-registry-manifest.json`, and retrieves GPG signing credentials from Vault.
+  - Compiles and cryptographically signs provider binaries using GoReleaser with `.goreleaser_rc.yml` (since tag contains `rc`) via `.github/workflows/scripts/goreleaser.sh`.
+  - `find-issues-create-comments` step: Executes `releases.js` (`SCRIPT_MODE: rc-notify`), discovering all open issues with labels `<branch>`, `internal/backport`, and `internal/merged`, and commenting with the release candidate link for QA validation.
 
 ### Stage 7: Full Production Release
 
@@ -202,21 +202,20 @@ flowchart TD
   - Maintainers validate the RC build with QA.
   - Once validated, maintainers review and squash-merge the pending `release-please` PR on `release/v*`.
   - (Note: E2E tests validate the `release-please` PR prior to merge via the Stage 5 listener/executor pipeline).
-- **Automated Tagging & Binary Publication (`.github/workflows/release.yml`)**:
+- **Automated Tagging & Reusable Release Workflow (`.github/workflows/release-please.yml`)**:
   - Triggers on push to `release/v*`.
   - `release-please-release` job detects the merged Release PR, outputs `release_created: true`, and extracts the new release tag name (e.g., `v15.2.0`).
-  - `release` job runs:
-    - Checks out codebase and workflow scripts from `main`.
-    - Clears runner disk space (`e2e.js` `clear-runner`).
+  - `release` job invokes the unified `.github/workflows/release.yml` reusable workflow via `workflow_call`:
+    - Checks out the new release tag.
+    - Prepares the registry manifest.
     - Retrieves GPG signing credentials (`passphrase`, `privateKeyId`, `privateKey`) from Vault.
     - Runs GoReleaser with `.goreleaser.yml` inside Nix, compiling and signing cross-platform binaries.
     - Executes `releases.js` (`SCRIPT_MODE: publish-release`), promoting the draft GitHub release to published (`draft: false`).
   - `release-please-pr` job updates the release manifest and opens the next release PR cycle.
-- **Manual Release Fallback (`.github/workflows/manual-release.yml`)**:
-  - Allows authorized maintainers (`TERRAFORM_MAINTAINERS`) to manually trigger a full release on a selected branch and commit SHA.
-  - Verifies user authorization via `releases.js` (`check-maintainer`).
-  - Verifies the tag does not contain `rc`.
-  - Creates the tag, retrieves Vault GPG credentials, compiles and signs binaries via GoReleaser, and publishes the release.
+- **Manual Release Fallback (`.github/workflows/release.yml`)**:
+  - Allows authorized maintainers (`TERRAFORM_MAINTAINERS`) to manually trigger a release on demand via `workflow_dispatch` (supporting both stable tags and RC tags).
+  - Verifies user authorization via `releases.js` (`check-maintainer`) for stable releases.
+  - Creates the tag, retrieves Vault GPG credentials, compiles and signs binaries via GoReleaser, and publishes the release or notifies issues.
 - **License Scanning (`.github/workflows/fossa.yml`)**:
   - Pushes to `main` and `release/**` trigger FOSSA scans using tokens retrieved from HashiCorp Vault.
 

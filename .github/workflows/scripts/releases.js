@@ -685,7 +685,7 @@ export async function computeNextRcTag({ github, owner, repo, branch, core }) {
 }
 
 /**
- * trigger-rc-release: Computes the next RC tag and dispatches rc-release.yml on main.
+ * trigger-rc-release: Computes the next RC tag and dispatches release.yml on main.
  */
 export async function runTriggerRcRelease({ github, context, core, process = globalThis.process, getOctokit }) {
   try {
@@ -713,7 +713,7 @@ export async function runTriggerRcRelease({ github, context, core, process = glo
     }
 
     if (!sha && core && typeof core.info === 'function') {
-      core.info(`No commit SHA provided; rc-release.yml will default to HEAD of branch ${branch}.`);
+      core.info(`No commit SHA provided; release.yml will default to HEAD of branch ${branch}.`);
     }
 
     const isReleasePleasePr = (p) => {
@@ -832,7 +832,7 @@ export async function runTriggerRcRelease({ github, context, core, process = glo
     }
 
     if (core && typeof core.info === 'function') {
-      core.info(`Dispatching 'rc-release.yml' on 'main' with branch=${branch}, sha=${sha || '(HEAD)'}, tag=${tag}...`);
+      core.info(`Dispatching 'release.yml' on 'main' with branch=${branch}, sha=${sha || '(HEAD)'}, tag=${tag}...`);
     }
     const inputs = {
       branch,
@@ -846,12 +846,12 @@ export async function runTriggerRcRelease({ github, context, core, process = glo
       await dispatchGithub.rest.actions.createWorkflowDispatch({
         owner,
         repo,
-        workflow_id: 'rc-release.yml',
+        workflow_id: 'release.yml',
         ref: 'main',
         inputs
       });
       if (core && typeof core.info === 'function') {
-        core.info(`Successfully dispatched 'rc-release.yml' for ${tag}!`);
+        core.info(`Successfully dispatched 'release.yml' for ${tag}!`);
       }
     } catch (dispatchErr) {
       const is403 = dispatchErr?.status === 403 || dispatchErr?.response?.status === 403;
@@ -862,12 +862,12 @@ export async function runTriggerRcRelease({ github, context, core, process = glo
         await github.rest.actions.createWorkflowDispatch({
           owner,
           repo,
-          workflow_id: 'rc-release.yml',
+          workflow_id: 'release.yml',
           ref: 'main',
           inputs
         });
         if (core && typeof core.info === 'function') {
-          core.info(`Successfully dispatched 'rc-release.yml' for ${tag} via fallback client!`);
+          core.info(`Successfully dispatched 'release.yml' for ${tag} via fallback client!`);
         }
       } else {
         throw dispatchErr;

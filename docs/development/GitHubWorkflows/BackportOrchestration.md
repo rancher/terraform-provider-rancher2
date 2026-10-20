@@ -94,7 +94,7 @@ flowchart TD
 
 ### 3. Automated Cherry-Pick & Backport PR Generation (`.github/workflows/backport-prs.yml`)
 
-- **Trigger**: Runs on `push` to `main` (manual fallback via `backport-pr-manual.yml` taking `merge_commit_sha`).
+- **Trigger**: Runs on `push` to `main` or manually via `workflow_dispatch` taking `merge_commit_sha`.
 - **Timeout**: 15 minutes.
 - **Permissions**: `contents: write`, `pull-requests: write`, `id-token: write`, `issues: write`, `actions: write`.
 - **Step 1: Settle (`wait-for-settle`)**:
