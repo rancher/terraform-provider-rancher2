@@ -380,7 +380,7 @@ test('runTriggerRcRelease - dispatches workflow with computed tag and explicit s
   assert.notStrictEqual(dispatchedParams, null);
   assert.strictEqual(dispatchedParams.owner, 'rancher');
   assert.strictEqual(dispatchedParams.repo, 'terraform-provider-rancher2');
-  assert.strictEqual(dispatchedParams.workflow_id, 'rc-release.yml');
+  assert.strictEqual(dispatchedParams.workflow_id, 'release.yml');
   assert.strictEqual(dispatchedParams.ref, 'main');
   assert.deepStrictEqual(dispatchedParams.inputs, {
     branch: 'release/v15',
@@ -3083,7 +3083,7 @@ test('runTriggerRcRelease - handles null and sparse entries in jobs and pull_req
         listJobsForWorkflowRun: async () => {},
         createWorkflowDispatch: async ({ workflow_id, ref, inputs }) => {
           dispatched = true;
-          assert.strictEqual(workflow_id, 'rc-release.yml');
+          assert.strictEqual(workflow_id, 'release.yml');
           assert.strictEqual(ref, 'main');
           assert.strictEqual(inputs.tag, 'v15.2.0-rc.2');
         }

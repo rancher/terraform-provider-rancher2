@@ -1,9 +1,14 @@
-name: 'Auto Cherry-Pick to Release Branches'
+name: 'Cherry-Pick to Release Branches'
 
 on:
   push:
     branches:
       - 'main'
+  workflow_dispatch:
+    inputs:
+      merge_commit_sha:
+        description: 'The sha of the merge commit from the main PR.'
+        required: true
 
 env:
   TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }}
@@ -12,7 +17,7 @@ permissions: {}
 
 jobs:
   create-cherry-pick-prs:
-    name: 'Auto Cherry-Pick PRs'
+    name: 'Cherry-Pick PRs'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -36,6 +41,7 @@ jobs:
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
+          MERGE_COMMIT_SHA: ${{ inputs.merge_commit_sha }}
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
           SCRIPT_MODE: wait-for-settle
         with:
@@ -59,7 +65,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
-          MERGE_COMMIT_SHA: ${{ steps.wait-for-merge-settle.outputs.merge_commit_sha }}
+          MERGE_COMMIT_SHA: ${{ steps.wait-for-merge-settle.outputs.merge_commit_sha || inputs.merge_commit_sha }}
           GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
           SCRIPT_MODE: backport-pr
         with:

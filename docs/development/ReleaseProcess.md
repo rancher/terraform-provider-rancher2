@@ -77,7 +77,7 @@ This swimlane diagram traces the actual event triggers, security boundaries, and
 |                                             |                                                                |
 | === PART 3: RELEASE CANDIDATE (RC) STAGING =|                                                                |
 |                                             |                                                                |
-|  6. Backport PR Merged to release/v* -----> | ──► Trigger: push to release/v* (release.yml)                   |
+|  6. Backport PR Merged to release/v* -----> | ──► Trigger: push to release/v* (release-please.yml)            |
 |     (Auto-merges upon passing CI & E2E)     |    ├─► release-please-release: Skipped (not a release PR)      |
 |                                             |    └─► release-please-pr: Updates draft Release PR via Vault   |
 |                                             |         │                                                      |
@@ -87,7 +87,7 @@ This swimlane diagram traces the actual event triggers, security boundaries, and
 |                                             |    └─► trigger-rc-release: Computes next RC tag                |
 |                                             |         │                                                      |
 |                                             |         ▼                                                      |
-|                                             | ──► Trigger: rc-release.yml (Dispatched with tag & branch)     |
+|                                             | ──► Trigger: release.yml (Dispatched with tag & branch)        |
 |                                             |    ├─► Tags commit and pushes to origin                        |
 |                                             |    ├─► Vault: Retrieves GPG signing keys                       |
 |                                             |    ├─► Nix: GoReleaser builds & signs (.goreleaser_rc.yml)     |
@@ -95,10 +95,11 @@ This swimlane diagram traces the actual event triggers, security boundaries, and
 |                                             |                                                                |
 | === PART 4: FULL PRODUCTION RELEASE ========|                                                                |
 |                                             |                                                                |
-|  7. Maintainer Merges Release PR ---------> | ──► Trigger: push to release/v* (Release PR merged)            |
+|  7. Maintainer Merges Release PR ---------> | ──► Trigger: push to release/v* (release-please.yml)           |
 |     (After RC validation by QA team)        |    ├─► release-please-release: Outputs release_created = true  |
-|                                             |    ├─► Full Release Step:                                      |
-|                                             |    │    - Clears runner disk space                             |
+|                                             |    ├─► Full Release Step (calls release.yml via workflow_call):|
+|                                             |    │    - Checks out new release tag                           |
+|                                             |    │    - Prepares registry manifest                           |
 |                                             |    │    - Vault: Retrieves GPG signing credentials             |
 |                                             |    │    - Nix: GoReleaser compiles & signs (.goreleaser.yml)   |
 |                                             |    │    - publish-release: Promotes draft to published         |

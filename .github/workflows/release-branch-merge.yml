@@ -2,7 +2,7 @@ name: Release Branch Merge
 
 on:
   workflow_run:
-    workflows: ["release"]
+    workflows: ["Release Please"]
     types: [completed]
     branches: 
       - 'release/v*'
