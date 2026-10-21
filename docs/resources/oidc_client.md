@@ -15,6 +15,7 @@ resource "rancher2_oidc_client" "foo" {
   description = "Foo OIDC Client"
   token_expiration_seconds = 600 # expiration of the id_token and access_token
   refresh_token_expiration_seconds = 7200 # expiration of the refresh_token
+  scopes = ["openid", "profile"]
   redirect_uris = [
     "http://127.0.0.1:5556/auth/rancher/callback",
     "http://127.0.0.1:33418/",
@@ -28,6 +29,7 @@ resource "rancher2_oidc_client" "foo" {
 The following arguments are supported:
 
 * `redirect_uris` - (Required) List of allowed redirect URIs for this OIDC Client (list)
+* `scopes` - (Optional) List of allowed scopes for this OIDC Client (list of strings)
 * `description` - (Optional) A human-readable description for the OIDC Client (string)
 * `token_expiration_seconds` - (Optional/Computed) ID Token and Access Token will only be valid for this many seconds (int)
 * `refresh_token_expiration_seconds` - (Optional/Computed) How long can the refresh token be used for (int)

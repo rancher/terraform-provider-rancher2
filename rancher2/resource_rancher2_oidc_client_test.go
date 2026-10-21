@@ -312,6 +312,7 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 
 	newResourceData := func() *schema.ResourceData {
 		d := schema.TestResourceDataRaw(t, oidcClientFields(), map[string]any{
+			"scopes":      []any{"openid", "profile"},
 			"description": "Updated description",
 			"redirect_uris": []any{
 				"http://127.0.0.1:5556/auth/rancher/callback",
@@ -351,6 +352,7 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 		wantPayload := map[string]any{
 			"labels":      map[string]string{},
 			"annotations": map[string]string{},
+			"scopes":      []string{"openid", "profile"},
 			"description": "Updated description",
 			"redirectURIs": []string{
 				"http://127.0.0.1:5556/auth/rancher/callback",
@@ -408,6 +410,7 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 			"annotations": map[string]string{
 				"example.com/owner": "team-a",
 			},
+			"scopes":      toArrayString([]any{}),
 			"description": "Updated description",
 			"redirectURIs": []string{
 				"http://127.0.0.1:5556/auth/rancher/callback",
