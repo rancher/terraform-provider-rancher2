@@ -61,6 +61,7 @@ func oidcClientFields() map[string]*schema.Schema {
 		"scopes": {
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Description: "List of allowed scopes for this OIDC Client.",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
@@ -190,9 +191,12 @@ func resourceRancher2OIDCClientUpdate(d *schema.ResourceData, meta any) error {
 		"annotations":                   toMapString(d.Get("annotations").(map[string]any)),
 		"description":                   d.Get("description"),
 		"redirectURIs":                  toArrayString(d.Get("redirect_uris").([]any)),
-		"scopes":                        toArrayString(d.Get("scopes").([]any)),
 		"tokenExpirationSeconds":        d.Get("token_expiration_seconds"),
 		"refreshTokenExpirationSeconds": d.Get("refresh_token_expiration_seconds"),
+	}
+
+	if scopes, ok := d.GetOk("scopes"); ok || d.HasChange("scopes") {
+		update["scopes"] = toArrayString(scopes.([]any))
 	}
 
 	_, err = client.OIDCClient.Update(oidcClient, update)

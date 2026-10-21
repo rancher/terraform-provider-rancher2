@@ -29,7 +29,7 @@ resource "rancher2_oidc_client" "foo" {
 The following arguments are supported:
 
 * `redirect_uris` - (Required) List of allowed redirect URIs for this OIDC Client (list)
-* `scopes` - (Optional) List of allowed scopes for this OIDC Client (list of strings)
+* `scopes` - (Optional/Computed) List of allowed scopes for this OIDC Client (list of strings). When omitted, existing scopes are preserved. Set explicitly to `[]` to use Rancher's default unrestricted set of supported scopes.
 * `description` - (Optional) A human-readable description for the OIDC Client (string)
 * `token_expiration_seconds` - (Optional/Computed) ID Token and Access Token will only be valid for this many seconds (int)
 * `refresh_token_expiration_seconds` - (Optional/Computed) How long can the refresh token be used for (int)
