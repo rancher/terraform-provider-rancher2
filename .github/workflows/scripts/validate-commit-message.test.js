@@ -132,21 +132,53 @@ describe('validate-commit-message', () => {
 
   describe('getCommitMessages', () => {
     it('falls back to git log when prNumber is not provided', () => {
-      const mockExec = (cmd) => {
-        assert.ok(cmd.includes('git log origin/main..HEAD'));
+      const mockExec = (cmd, args) => {
+        assert.strictEqual(cmd, 'git');
+        assert.deepStrictEqual(args, ['log', 'origin/main..HEAD', '--format=%s']);
         return 'feat: commit one\nfix: commit two\n';
       };
       const messages = getCommitMessages(undefined, mockExec);
       assert.deepStrictEqual(messages, ['feat: commit one', 'fix: commit two']);
     });
 
+    it('propagates git log failures without swallowing them', () => {
+      const mockExec = () => {
+        throw new Error('fatal: ambiguous argument origin/main: unknown revision');
+      };
+      assert.throws(
+        () => getCommitMessages(undefined, mockExec),
+        /fatal: ambiguous argument/
+      );
+    });
+
     it('calls gh api when prNumber is provided', () => {
-      const mockExec = (cmd) => {
-        assert.ok(cmd.includes('pulls/42/commits'));
+      const mockExec = (cmd, args) => {
+        assert.strictEqual(cmd, 'gh');
+        assert.deepStrictEqual(args, [
+          'api',
+          '--paginate',
+          'repos/{owner}/{repo}/pulls/42/commits',
+          '--jq',
+          '.[].commit.message | split("\\n")[0]',
+        ]);
         return 'feat: api commit one\nfix: api commit two\n';
       };
       const messages = getCommitMessages('42', mockExec);
       assert.deepStrictEqual(messages, ['feat: api commit one', 'fix: api commit two']);
+    });
+
+    it('prevents shell injection when malicious prNumber is supplied', () => {
+      const calls = [];
+      const maliciousPr = '42"; rm -rf /; echo "pwned';
+      const mockExec = (cmd, args) => {
+        calls.push({ cmd, args });
+        return 'feat: test commit\n';
+      };
+      const messages = getCommitMessages(maliciousPr, mockExec);
+      assert.strictEqual(calls.length, 1);
+      assert.strictEqual(calls[0].cmd, 'gh');
+      assert.strictEqual(calls[0].args[2], `repos/{owner}/{repo}/pulls/${maliciousPr}/commits`);
+      assert.deepStrictEqual(messages, ['feat: test commit']);
     });
 
     it('preserves commit text with leading whitespace without trimming', () => {
@@ -161,23 +193,20 @@ describe('validate-commit-message', () => {
   describe('main', () => {
     it('runs validation loop across all commits', async () => {
       const mockExec = (cmd) => {
-        if (cmd.startsWith('gh api')) {
+        if (cmd === 'gh') {
           return 'feat: first commit\nfix: second commit\n';
-        }
-        if (cmd.startsWith('cspell')) {
-          return '';
         }
         return '';
       };
       await assert.doesNotReject(async () => {
-        await main({ prNumber: '100', exec: mockExec });
+        await main({ prNumber: '100', exec: mockExec, messageExec: () => '' });
       });
     });
 
     it('handles empty commit list without error', async () => {
       const mockExec = () => '';
       await assert.doesNotReject(async () => {
-        await main({ prNumber: '100', exec: mockExec });
+        await main({ prNumber: '100', exec: mockExec, messageExec: () => '' });
       });
     });
   });

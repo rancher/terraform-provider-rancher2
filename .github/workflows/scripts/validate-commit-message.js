@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -67,32 +67,39 @@ export function validateMessage(message, exec = execSync) {
   return true;
 }
 
-export function getCommitMessages(prNumber, exec = execSync) {
+export function getCommitMessages(prNumber, exec = execFileSync) {
   if (!prNumber) {
     console.log('Notice: PR_NUMBER environment variable is not set.');
     console.log('Falling back to checking local commits against origin/main...');
-    try {
-      const output = exec('git log origin/main..HEAD --format=%s', { encoding: 'utf-8' });
-      return (output || '')
-        .split('\n')
-        .map((line) => line.replace(/\r$/, ''))
-        .filter((line) => line !== '');
-    } catch (err) {
-      console.warn('Warning: Failed to fetch commits from origin/main..HEAD:', err.message);
-      return [];
-    }
+    const output = exec('git', ['log', 'origin/main..HEAD', '--format=%s'], { encoding: 'utf-8' });
+    return (output || '')
+      .split('\n')
+      .map((line) => line.replace(/\r$/, ''))
+      .filter((line) => line !== '');
   }
 
-  const output = exec(`gh api --paginate "repos/{owner}/{repo}/pulls/${prNumber}/commits" --jq '.[].commit.message | split("\\n")[0]'`, {
-    encoding: 'utf-8',
-  });
+  const output = exec(
+    'gh',
+    [
+      'api',
+      '--paginate',
+      `repos/{owner}/{repo}/pulls/${prNumber}/commits`,
+      '--jq',
+      '.[].commit.message | split("\\n")[0]',
+    ],
+    { encoding: 'utf-8' }
+  );
   return (output || '')
     .split('\n')
     .map((line) => line.replace(/\r$/, ''))
     .filter((line) => line !== '');
 }
 
-export async function main({ prNumber = process.env.PR_NUMBER, exec = execSync } = {}) {
+export async function main({
+  prNumber = process.env.PR_NUMBER,
+  exec = execFileSync,
+  messageExec = execSync,
+} = {}) {
   const commitMessages = getCommitMessages(prNumber, exec);
 
   console.log('Commit messages found:');
@@ -105,7 +112,7 @@ export async function main({ prNumber = process.env.PR_NUMBER, exec = execSync }
 
   for (const message of commitMessages) {
     console.log(`checking message ^${message}$`);
-    validateMessage(message, exec);
+    validateMessage(message, messageExec);
     console.log(`message ^${message}$ passed all checks`);
   }
 }
