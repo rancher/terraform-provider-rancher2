@@ -10,10 +10,10 @@ terraform {
 }
 
 provider "rancher2" {
-  api_url    = "https://rancher.192.168.0.131.sslip.io"
+  api_url    = "https://rancher.example.com"
   insecure   = true
-  access_key = "token-hf7vc"
-  secret_key = "mmf52l956zjbbkrhncmc4q8fvnrlbdhfftrrjdlnqwmkz5b7lrlst7"
+  access_key = "token-*****"
+  secret_key = "*************************************************"
 }
 
 resource "rancher2_machine_config_v2" "foo-harvester-v2" {

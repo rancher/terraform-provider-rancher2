@@ -21,8 +21,8 @@ func TestFlattenMachineConfigV2Harvester_CPU(t *testing.T) {
 			Input: &MachineConfigV2Harvester{
 				machineConfigV2Harvester: machineConfigV2Harvester{
 					CPUCount:              "3",
-					CPUPinning:            true,
-					IsolateEmulatorThread: true,
+					CPUPinning:            new(true),
+					IsolateEmulatorThread: new(true),
 				},
 			},
 			Expectation: []any{map[string]any{
@@ -69,8 +69,8 @@ func TestExpandMachineConfigV2Harvester_CPU(t *testing.T) {
 						APIVersion: machineConfigV2HarvesterAPIVersion,
 					},
 					CPUCount:              "3",
-					CPUPinning:            true,
-					IsolateEmulatorThread: true,
+					CPUPinning:            new(true),
+					IsolateEmulatorThread: new(true),
 				},
 			},
 		},

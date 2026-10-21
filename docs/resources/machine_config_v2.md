@@ -51,11 +51,9 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
   harvester_config {
     vm_namespace = "default"
 
-    cpu {
-      count = 2
-      pinning = true
-      isolate_emulator_thread = true
-    }
+    cpu_count = 2
+    cpu_pinning = true
+    isolate_emulator_thread = true
 
     memory_size = "4"
     disk_info = <<EOF

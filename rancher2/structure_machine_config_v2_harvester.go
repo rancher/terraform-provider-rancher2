@@ -20,8 +20,8 @@ type machineConfigV2Harvester struct {
 	VMNamespace           string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
 	VMAffinity            string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
 	CPUCount              string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
-	CPUPinning            bool   `json:"cpuPinning,omitempty" yaml:"cpuPinning,omitempty"`
-	IsolateEmulatorThread bool   `json:"isolateEmulatorThread,omitempty" yaml:"isolateEmulatorThread,omitempty"`
+	CPUPinning            *bool  `json:"cpuPinning,omitempty" yaml:"cpuPinning,omitempty"`
+	IsolateEmulatorThread *bool  `json:"isolateEmulatorThread,omitempty" yaml:"isolateEmulatorThread,omitempty"`
 	MemorySize            string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
 	ReservedMemorySize    string `json:"reservedMemorySize,omitempty" yaml:"reservedMemorySize,omitempty"`
 	DiskSize              string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
@@ -63,12 +63,12 @@ func flattenMachineConfigV2Harvester(in *MachineConfigV2Harvester) []interface{}
 		obj["cpu_count"] = in.CPUCount
 	}
 
-	if in.CPUPinning {
-		obj["cpu_pinning"] = in.CPUPinning
+	if in.CPUPinning != nil {
+		obj["cpu_pinning"] = *in.CPUPinning
 	}
 
-	if in.IsolateEmulatorThread {
-		obj["isolate_emulator_thread"] = in.IsolateEmulatorThread
+	if in.IsolateEmulatorThread != nil {
+		obj["isolate_emulator_thread"] = *in.IsolateEmulatorThread
 	}
 
 	if len(in.MemorySize) > 0 {
@@ -157,11 +157,11 @@ func expandMachineConfigV2Harvester(p []interface{}, source *MachineConfigV2) *M
 	}
 
 	if v, ok := in["cpu_pinning"].(bool); ok {
-		obj.CPUPinning = v
+		obj.CPUPinning = new(v)
 	}
 
 	if v, ok := in["isolate_emulator_thread"].(bool); ok {
-		obj.IsolateEmulatorThread = v
+		obj.IsolateEmulatorThread = new(v)
 	}
 	if v, ok := in["memory_size"].(string); ok && len(v) > 0 {
 		obj.MemorySize = v
