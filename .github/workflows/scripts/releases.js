@@ -24,7 +24,7 @@ export default async ({ github, context, core, process = globalThis.process, get
  */
 export async function runCheckMaintainer({ context, core, process = globalThis.process }) {
   let maintainers = [];
-  
+
   if (process?.env?.MAINTAINERS && process.env.MAINTAINERS !== "undefined") {
     try {
       const parsed = JSON.parse(process.env.MAINTAINERS);
@@ -46,7 +46,7 @@ export async function runCheckMaintainer({ context, core, process = globalThis.p
     .filter(Boolean);
   const isMaintainer = Boolean(normalizedMaintainers.includes(actor));
   core?.info?.(`Checking if '${rawActor}' is an authorized maintainer: ${isMaintainer}`);
-  
+
   return isMaintainer;
 }
 
@@ -125,7 +125,7 @@ export async function runRcNotify({ github, context, core, process = globalThis.
       }
     }
   }
-  
+
   if (commentedCount === issues.length) {
     core?.info?.(`Success! Notified ${commentedCount} issues.`);
   } else {
@@ -331,9 +331,9 @@ export async function runTrackingIssue({ github, context, core, process = global
     const errors = [];
     for (const pr of pulls) {
       try {
-        let issueNumbers;
+        let issues;
         try {
-          issueNumbers = validatePrDescription(pr.body);
+          issues = validatePrDescription(owner, repo, pr.body);
         } catch (error) {
           core.info(`PR #${pr.number} does not contain valid issue references (${error.message}). Skipping.`);
           continue;
@@ -342,15 +342,24 @@ export async function runTrackingIssue({ github, context, core, process = global
         const releaseLabels = extractReleaseBranches(pr.labels);
         const targetReleaseBranch = releaseLabels.length > 0 ? releaseLabels[0] : latestReleaseBranch;
 
-        const uniqueIssues = [...new Set(issueNumbers)];
+        const issueMap = new Map(
+          issues.map((issue) => { return [JSON.stringify(issue), issue]; }),
+        );
+        const uniqueIssues = issueMap.values();
 
-        for (const issueNumStr of uniqueIssues) {
-          const issueNumber = parseInt(issueNumStr, 10);
+        for (const i of uniqueIssues) {
+          const issueOwner = i.owner;
+          const issueRepo = i.repo;
+          if (issueOwner.toLowerCase() !== owner.toLowerCase() || issueRepo.toLowerCase() !== repo.toLowerCase()) {
+            core.info(`Skipping external issue ${issueOwner}/${issueRepo}#${i.issue} for tracking adoption.`);
+            continue;
+          }
+          const issueNumber = parseInt(i.issue, 10);
           let issue;
           try {
             ({ data: issue } = await github.rest.issues.get({
-              owner,
-              repo,
+              owner: issueOwner,
+              repo: issueRepo,
               issue_number: issueNumber,
             }));
           } catch (error) {
