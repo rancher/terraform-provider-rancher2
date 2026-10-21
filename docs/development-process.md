@@ -4,6 +4,7 @@ Welcome to the development guide for the Rancher2 Terraform Provider.
 
 For the comprehensive architectural specifications, end-to-end delivery lifecycle, and automation blueprints, please consult the primary developer documentation under **[docs/development/](development/README.md)**:
 
+- **[Project Management & Delivery Guide](development/ProjectManagementGuide.md)**: High-level value stream navigation for PMs, release coordinators, and QA to follow work moving through the system.
 - **[End-to-End Value Stream Lifecycle](development/GitHubWorkflows/Overview.md)**: Complete guide to how changes move from pull requests through testing, backporting, RC staging, and production releases.
 - **[Pull Request & Merge Lifecycle](development/GitHubWorkflows/PullRequestLifecycle.md)**: PR description validation rules, Conventional Commits format, and the 11-job Nix container CI matrix.
 - **[Backport Orchestration & Issue Tracking](development/GitHubWorkflows/BackportOrchestration.md)**: Automated issue tracking adoption, GitHub Sub-Issues hierarchy, and cherry-picking to release branches.

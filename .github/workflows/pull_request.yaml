@@ -73,7 +73,7 @@ jobs:
           fetch-depth: 0
       - name: Lint Terraform
         id: lint-terraform
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh terraform
+        run: .github/workflows/scripts/nix-run.sh node .github/workflows/scripts/lint.js terraform
 
   actionlint:
     name: 'Lint Workflows'
@@ -92,7 +92,7 @@ jobs:
           fetch-depth: 0
       - name: Action Lint
         id: action-lint
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh actionlint
+        run: .github/workflows/scripts/nix-run.sh node .github/workflows/scripts/lint.js actionlint
 
   node-check:
     name: 'Node Check'
@@ -111,7 +111,7 @@ jobs:
           fetch-depth: 0
       - name: Node Syntax Check
         id: node-syntax-check
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh node-check
+        run: .github/workflows/scripts/nix-run.sh node .github/workflows/scripts/lint.js node-check
 
   node-test:
     name: 'Node Tests'
@@ -128,7 +128,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Node Unit Tests
         id: node-unit-tests
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh node-test
+        run: .github/workflows/scripts/nix-run.sh node .github/workflows/scripts/lint.js node-test
 
   eslint:
     name: 'ESLint'
@@ -147,7 +147,7 @@ jobs:
           fetch-depth: 0
       - name: ESLint Check
         id: eslint-check
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh eslint
+        run: .github/workflows/scripts/nix-run.sh node .github/workflows/scripts/lint.js eslint
 
   shellcheck:
     name: 'Shellcheck'
@@ -166,7 +166,7 @@ jobs:
           fetch-depth: 0
       - name: Shell Check
         id: shell-check
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh shellcheck
+        run: .github/workflows/scripts/nix-run.sh node .github/workflows/scripts/lint.js shellcheck
 
   validate-commit-message:
     name: 'Validate Commit Message'
@@ -186,7 +186,7 @@ jobs:
         id: check-commit-message
         env:
           PR_NUMBER: ${{ github.event.number }}
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/validate-commit-message.sh
+        run: .github/workflows/scripts/nix-run.sh node .github/workflows/scripts/validate-commit-message.js
 
   gitleaks:
     name: 'Scan for Secrets'
@@ -205,7 +205,7 @@ jobs:
           fetch-depth: 0
       - name: Check for Secrets
         id: check-for-secrets
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh gitleaks
+        run: .github/workflows/scripts/nix-run.sh node .github/workflows/scripts/lint.js gitleaks
         continue-on-error: true
 
   sensitive-checks:

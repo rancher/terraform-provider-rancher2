@@ -40,6 +40,7 @@ A **Component Specification** is a detailed, focused technical design document t
 
 ## 🛠️ Domain Index Maps
 
+- **[Project Management & Delivery Guide](./ProjectManagementGuide.md)**: High-level value stream guide for tracking issues, PRs, QA verification, and releases without deep workflow trigger specifics.
 - **[GitHub Workflows & Automation](./GitHubWorkflows.md)**: End-to-end value stream, 11-job Nix CI matrix, backport orchestration, AWS E2E testing, and platform policies.
 - **[Release Process & Automation](./ReleaseProcess.md)**: Branch-based SemVer delivery, RC computation, Vault GPG signing, and Release Please automation.
 - **[Agentic Framework](./AgenticFramework.md)**: Secure zero-trust sandboxing, Touch ID gating, PR pipeline automation, and agent developer workflows.

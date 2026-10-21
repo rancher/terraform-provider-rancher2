@@ -58,18 +58,18 @@ The PR lifecycle on `main` is governed by two core workflows:
 - **Parallel Quality Jobs**:
   1. **Build (`build`)**: Executes `make build` with `CROSS=1` to compile cross-platform provider binaries for Linux, Darwin, and Windows across AMD64 and ARM64.
   2. **Test (`test`)**: Executes unit tests via `make test` using `gotestsum` with standard verbose formatting and test report generation.
-  3. **Terraform Linting (`terraform`)**: Executes `lint.sh terraform`, verifying `terraform fmt -check -recursive -diff` and running `tflint --recursive`.
-  4. **Actionlint (`actionlint`)**: Executes `lint.sh actionlint` to validate all workflow YAML definitions against GitHub Actions schema rules.
-  5. **Node Syntax Check (`node-check`)**: Executes `lint.sh node-check` using `node --check` across all JavaScript automation files in the repository.
-  6. **Node Unit Tests (`node-test`)**: Executes `lint.sh node-test` using Node's native test runner (`node --test`) against all `*.test.js` files under `.github/workflows/scripts/`.
-  7. **ESLint (`eslint`)**: Executes `lint.sh eslint` using `npm ci` and `eslint .` to enforce modern ECMAScript style.
-  8. **ShellCheck (`shellcheck`)**: Executes `lint.sh shellcheck` scanning all shell scripts with `shellcheck -x`.
-  9. **Commit Message Validation (`validate-commit-message`)**: Executes `validate-commit-message.sh`:
+  3. **Terraform Linting (`terraform`)**: Executes `node lint.js terraform`, verifying `terraform fmt -check -recursive -diff` and running `tflint --recursive`.
+  4. **Actionlint (`actionlint`)**: Executes `node lint.js actionlint` to validate all workflow YAML definitions against GitHub Actions schema rules.
+  5. **Node Syntax Check (`node-check`)**: Executes `node lint.js node-check` using `node --check` across all JavaScript automation files in the repository.
+  6. **Node Unit Tests (`node-test`)**: Executes `node lint.js node-test` using Node's native test runner (`node --test`) against all `*.test.js` files under `.github/workflows/scripts/`.
+  7. **ESLint (`eslint`)**: Executes `node lint.js eslint` using `npm ci` and `eslint .` to enforce modern ECMAScript style.
+  8. **ShellCheck (`shellcheck`)**: Executes `node lint.js shellcheck` scanning all shell scripts with `shellcheck -x`.
+  9. **Commit Message Validation (`validate-commit-message`)**: Executes `validate-commit-message.js`:
      - Fetches commit messages for the PR via GitHub API (`repos/{owner}/{repo}/pulls/$PR_NUMBER/commits`).
      - Enforces Conventional Commit prefixes: `fix:`, `feature:`, `feat:`, `refactor!:`, `feature!:`, `feat!:`, or `chore(main):`.
      - Enforces line length $\le$ 100 characters.
      - Performs automated spell checks using `cspell` with repository dictionary `custom_words.txt`.
-  10. **Secret Scanning (`gitleaks`)**: Executes `lint.sh gitleaks` across working files and Git history (`continue-on-error: true`).
+  10. **Secret Scanning (`gitleaks`)**: Executes `node lint.js gitleaks` across working files and Git history (`continue-on-error: true`).
   11. **Schema Sensitivity Audit (`sensitive-checks`)**: Tests and runs `.github/workflows/scripts/check_sensitive.go` to flag sensitive attributes and schema definitions that require security review.
 
 ---
