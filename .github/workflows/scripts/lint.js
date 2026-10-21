@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -55,7 +55,7 @@ export function getShellcheckFiles(dir = '.', fsModule = fs) {
   return files;
 }
 
-export function runShellcheck(exec = execSync, fsModule = fs) {
+export function runShellcheck(exec = execFileSync, fsModule = fs) {
   console.log('==> Running shellcheck...');
   const files = getShellcheckFiles('.', fsModule);
 
@@ -67,7 +67,7 @@ export function runShellcheck(exec = execSync, fsModule = fs) {
   for (const file of files) {
     if (fsModule.existsSync(file)) {
       console.log(`Checking ${file}...`);
-      exec(`shellcheck -x "${file}"`, { stdio: 'inherit' });
+      exec('shellcheck', ['-x', file], { stdio: 'inherit' });
     }
   }
 }
@@ -92,7 +92,7 @@ export function getJsFiles(dir = '.', fsModule = fs) {
   return files;
 }
 
-export function runNodeCheck(exec = execSync, fsModule = fs) {
+export function runNodeCheck(exec = execFileSync, fsModule = fs) {
   console.log('==> Running Node Syntax Check...');
   const files = getJsFiles('.', fsModule);
 
@@ -104,7 +104,7 @@ export function runNodeCheck(exec = execSync, fsModule = fs) {
   for (const file of files) {
     if (fsModule.existsSync(file)) {
       console.log(`Checking ${file}...`);
-      exec(`node --check "${file}"`, { stdio: 'inherit' });
+      exec('node', ['--check', file], { stdio: 'inherit' });
     }
   }
 }
@@ -132,7 +132,7 @@ export function getTestFiles(dir = '.', fsModule = fs) {
   return files;
 }
 
-export function runNodeTest(exec = execSync, fsModule = fs) {
+export function runNodeTest(exec = execFileSync, fsModule = fs) {
   console.log('==> Running Node Unit Tests...');
   const files = getTestFiles('.', fsModule);
 
@@ -141,8 +141,7 @@ export function runNodeTest(exec = execSync, fsModule = fs) {
     return;
   }
 
-  const quotedFiles = files.map((f) => `"${f}"`).join(' ');
-  exec(`node --test ${quotedFiles}`, { stdio: 'inherit' });
+  exec('node', ['--test', ...files], { stdio: 'inherit' });
 }
 
 export function runEslint(exec = execSync) {
@@ -157,17 +156,24 @@ export function runGitleaks(exec = execSync) {
   exec('gitleaks detect --no-banner -v', { stdio: 'inherit' });
 }
 
-export function runAll(exec = execSync, fsModule = fs) {
+export function runAll(exec = execSync, fsModule = fs, fileExec = execFileSync) {
   runTerraform(exec);
   runActionlint(exec);
-  runShellcheck(exec, fsModule);
-  runNodeCheck(exec, fsModule);
-  runNodeTest(exec, fsModule);
+  runShellcheck(fileExec, fsModule);
+  runNodeCheck(fileExec, fsModule);
+  runNodeTest(fileExec, fsModule);
   runEslint(exec);
   runGitleaks(exec);
 }
 
-export function main(mode = process.argv[2] || 'all', exec = execSync, fsModule = fs) {
+export function main(
+  mode = process.argv[2] || 'all',
+  exec = execSync,
+  fsModule = fs,
+  fileExec = execFileSync
+) {
+  const activeFileExec = fileExec !== execFileSync ? fileExec : (exec !== execSync ? exec : execFileSync);
+
   switch (mode) {
   case 'terraform':
     runTerraform(exec);
@@ -176,13 +182,13 @@ export function main(mode = process.argv[2] || 'all', exec = execSync, fsModule 
     runActionlint(exec);
     break;
   case 'shellcheck':
-    runShellcheck(exec, fsModule);
+    runShellcheck(activeFileExec, fsModule);
     break;
   case 'node-check':
-    runNodeCheck(exec, fsModule);
+    runNodeCheck(activeFileExec, fsModule);
     break;
   case 'node-test':
-    runNodeTest(exec, fsModule);
+    runNodeTest(activeFileExec, fsModule);
     break;
   case 'eslint':
     runEslint(exec);
@@ -191,7 +197,7 @@ export function main(mode = process.argv[2] || 'all', exec = execSync, fsModule 
     runGitleaks(exec);
     break;
   case 'all':
-    runAll(exec, fsModule);
+    runAll(exec, fsModule, activeFileExec);
     break;
   default:
     console.error(`Error: Unknown lint mode: ${mode}`);

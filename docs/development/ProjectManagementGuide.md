@@ -13,9 +13,9 @@ Rather than focusing on technical GitHub Actions workflow triggers, runner confi
 The following nuances address common points of interest and areas of confusion encountered when tracking work through the pipeline:
 
 - **The "Main" Issue is the Public Anchor**: Created by community members, users, developers, or project managers, the main issue is the primary public point of contact for anyone searching for known bugs, reproduction details, or enhancement requests.
-- **Release Labels Belong on the Main Issue, Not the PR**: Target release branch labels (e.g., `release/v15`, `release/v14`) must be placed directly on the **main issue**, never on pull requests.
+- **Release Labels Designate Target Branches**: Target release branch labels (e.g., `release/v15`, `release/v14`) indicate which maintenance branches require the change. While tracking automation actively supports placing release labels directly on the PR (extracting them to select the target branch and syncing them to the main issue), placing them on the **main issue** serves as the public source of truth.
 - **Sub-Issues Must Exist Before the PR Merges**: Release branch child sub-issues must be created **before** the pull request on `main` is merged in order for automated backport cherry-picking to trigger.
-- **Backports Automatically Merge When Testing Passes**: When an automated backport pull request passes acceptance and integration testing, automation merges it directly into the target release branch without requiring manual merge intervention.
+- **Backports Auto-Merge on Passing Tests (Best-Effort)**: When an automated backport pull request passes acceptance and integration testing, automation attempts to automatically merge it into the target release branch. If auto-merge cannot be enabled (e.g., due to branch protection or configuration restrictions), maintainers perform a manual merge fallback once tests pass.
 - **Backport Issues Become QA Issues**: Once a backport merges to its release branch and is packaged into a Release Candidate (RC), that backport sub-issue transitions into the active QA verification issue for that release line.
 - **QA Engineers Close QA Sub-Issues**: QA engineers validate functionality on the RC build and close their respective backport/QA sub-issue once verification is complete.
 - **Main Issues Close When the Release Happens**: The main parent issue stays open across all release branch testing and closes automatically only when the official production release is published.
@@ -56,7 +56,7 @@ The diagram below illustrates how work items progress through the delivery lifec
 [ 4. Automated Backport PRs Generated ] ──► (Cherry-picks to release/v*)
               │
               ▼
-[ 5. Acceptance Testing & Auto-Merge ] ──► (Auto-merges when tests pass)
+[ 5. Acceptance Testing & Auto-Merge ] ──► (Best-effort auto-merge when tests pass)
               │
               ▼
 [ 6. RC Staging & QA Validation ] ──► (Backport issue becomes QA issue;
@@ -97,8 +97,9 @@ All feature development and bug fixes are implemented against `main` (trunk) fir
 Before the PR on `main` is merged, the target release hierarchy is established.
 
 - **Release Line Assignment**:
-  - Target release branch labels (such as `release/v15`, `release/v14`) **must be added directly to the main issue**, not to the developer's pull request.
-  - Automation inspects the main issue's labels to identify which maintenance branches require backports.
+  - Target release branch labels (such as `release/v15`, `release/v14`) identify which maintenance branches require backports.
+  - Labels may be added directly to the **main issue** or placed on the **pull request** (where automation detects them, selects the target release branch, and synchronizes the label to the main issue).
+  - Automation inspects these labels to identify which maintenance branches require backports.
 - **Sub-Issue Creation Prerequisite**:
   - Release branch child sub-issues (e.g., `[release/v15] Fix cluster proxy config`) **must be created before the PR is merged into `main`**.
   - When a PR merges to `main`, automation queries the main issue for existing child sub-issues to determine which branches to cherry-pick into. If sub-issues are not present at the time of merge, automated backports will not trigger.
@@ -135,7 +136,7 @@ Backports undergo automated testing before entering maintenance lines.
 
 - **What Happens:**
   - Backport PRs run automated end-to-end (E2E) acceptance tests on real cloud infrastructure.
-  - **Automated Merge**: When all acceptance tests pass, automation **automatically merges the backport PR** into the target release branch without requiring manual merge intervention.
+  - **Automated Merge (Best-Effort)**: When all acceptance tests pass, automation enables **auto-merge** to merge the backport PR into the target release branch. If auto-merge fails to engage (e.g., due to branch rules or permissions), repository maintainers manually review and merge the passing backport.
 
 ---
 
@@ -170,9 +171,9 @@ The following indicators mark work as it moves through GitHub Issues and Pull Re
 | :--- | :--- | :--- | :--- |
 | **Main Issue** | Issues tab | Primary public point of contact for bug reports and enhancements. | PR opened on `main`; `release/v*` labels added. |
 | **PR on `main`** | Pull Requests tab | Development of change targeting trunk (`- Addresses: #<issue>`). | CI matrix checks pass; maintainer review. |
-| **`release/v<major>`** | **Main Issue** (Labels) | Designates target release branch (must be on main issue, not PR). | Sub-issues created for backport generation. |
+| **`release/v<major>`** | **Main Issue** / PR (Labels) | Designates target release branch (synced to main issue by automation if placed on PR). | Sub-issues created for backport generation. |
 | **Sub-issues Widget** | Main Issue (Sidebar) | Displays child sub-issues per release branch. **Must exist before PR merge.** | Directs automated cherry-pick targets upon merge to `main`. |
-| **Backport PR** | Pull Requests tab | Automated cherry-pick PR targeting a release branch. | Automatically merges once acceptance tests pass. |
+| **Backport PR** | Pull Requests tab | Automated cherry-pick PR targeting a release branch. | Auto-merges once tests pass (with manual fallback if auto-merge fails). |
 | **Child Sub-Issue** | Sub-issues list | Transitions into the **QA verification issue** once backport merges. | Closed by QA engineer after testing the RC build. |
 | **RC Notification Comment** | Main Issue (Comments) | Automation posts the `vX.Y.Z-rc.N` pre-release link for testing. | QA validates the RC build. |
 | **Main Issue Closed** | Main Issue | Final production release published to Terraform Registry. | Work is complete and officially released. |
@@ -188,10 +189,10 @@ The following indicators mark work as it moves through GitHub Issues and Pull Re
 ### 2. Which release branches will receive this change?
 - Check the **Sub-issues** list on the main issue.
 - Each child issue is prefixed with the target branch name (e.g., `[release/v15]`, `[release/v14]`). 
-- **Important**: If a release branch is missing, add the label to the **main issue** (not the PR) and ensure the sub-issue exists **before** merging the PR on `main`.
+- **Important**: If a release branch is missing, ensure the release label is on the main issue or PR, and ensure the sub-issue exists **before** merging the PR on `main`.
 
 ### 3. Will the backport PR require a manual merge?
-- No. Backport PRs are configured for automated merge and will automatically merge as soon as all acceptance test checks turn green.
+- In most cases, no. Backport PRs have auto-merge enabled automatically and will merge once acceptance tests pass. However, auto-merge is best-effort; if auto-merge cannot be engaged (or is blocked by repository rules), maintainers will manually merge the PR once tests are green.
 
 ### 4. Is the fix ready for QA testing?
 - Look for an automated comment from `github-actions[bot]` on the main issue stating that a Release Candidate (e.g., `v...-rc...`) is available.

@@ -58,6 +58,10 @@ describe('validate-commit-message', () => {
         () => validatePrefix('random: unsupported commit'),
         /\.\.\.Commit message does not start with the required prefix\./
       );
+      assert.throws(
+        () => validatePrefix(' feat: leading space prefix'),
+        /\.\.\.Commit message does not start with the required prefix\./
+      );
     });
   });
 
@@ -143,6 +147,14 @@ describe('validate-commit-message', () => {
       };
       const messages = getCommitMessages('42', mockExec);
       assert.deepStrictEqual(messages, ['feat: api commit one', 'fix: api commit two']);
+    });
+
+    it('preserves commit text with leading whitespace without trimming', () => {
+      const mockExecGit = () => ' feat: leading whitespace commit\n';
+      assert.deepStrictEqual(getCommitMessages(undefined, mockExecGit), [' feat: leading whitespace commit']);
+
+      const mockExecGh = () => ' feat: api leading whitespace commit\n';
+      assert.deepStrictEqual(getCommitMessages('42', mockExecGh), [' feat: api leading whitespace commit']);
     });
   });
 

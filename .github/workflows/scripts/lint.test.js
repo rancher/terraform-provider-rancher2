@@ -58,7 +58,7 @@ describe('lint.js', () => {
     });
 
     it('executes shellcheck on found files', () => {
-      const checkedFiles = [];
+      const checkedCalls = [];
       const mockFs = {
         readdirSync: () => [
           { name: 'test.sh', isDirectory: () => false, isFile: () => true },
@@ -71,13 +71,38 @@ describe('lint.js', () => {
         closeSync: () => {},
         existsSync: () => true,
       };
-      const mockExec = (cmd) => {
-        checkedFiles.push(cmd);
+      const mockExec = (cmd, args) => {
+        checkedCalls.push({ cmd, args });
       };
 
       runShellcheck(mockExec, mockFs);
-      assert.strictEqual(checkedFiles.length, 1);
-      assert.ok(checkedFiles[0].includes('shellcheck -x'));
+      assert.strictEqual(checkedCalls.length, 1);
+      assert.strictEqual(checkedCalls[0].cmd, 'shellcheck');
+      assert.deepStrictEqual(checkedCalls[0].args, ['-x', 'test.sh']);
+    });
+
+    it('passes filenames with quotes and shell metacharacters safely as argv elements without injection', () => {
+      const checkedCalls = [];
+      const trickyFile = 'my $script; "evil".sh';
+      const mockFs = {
+        readdirSync: () => [
+          { name: trickyFile, isDirectory: () => false, isFile: () => true },
+        ],
+        openSync: () => 1,
+        readSync: (fd, buf) => {
+          buf.write('#!');
+        },
+        closeSync: () => {},
+        existsSync: () => true,
+      };
+      const mockExec = (cmd, args) => {
+        checkedCalls.push({ cmd, args });
+      };
+
+      runShellcheck(mockExec, mockFs);
+      assert.strictEqual(checkedCalls.length, 1);
+      assert.strictEqual(checkedCalls[0].cmd, 'shellcheck');
+      assert.deepStrictEqual(checkedCalls[0].args, ['-x', trickyFile]);
     });
 
     it('handles scenario when no shell scripts exist', () => {
@@ -100,19 +125,20 @@ describe('lint.js', () => {
     });
 
     it('runs node --check on all discovered js files', () => {
-      const commands = [];
+      const calls = [];
       const mockFs = {
         readdirSync: () => [
           { name: 'script.js', isDirectory: () => false, isFile: () => true },
         ],
         existsSync: () => true,
       };
-      const mockExec = (cmd) => {
-        commands.push(cmd);
+      const mockExec = (cmd, args) => {
+        calls.push({ cmd, args });
       };
       runNodeCheck(mockExec, mockFs);
-      assert.strictEqual(commands.length, 1);
-      assert.ok(commands[0].includes('node --check'));
+      assert.strictEqual(calls.length, 1);
+      assert.strictEqual(calls[0].cmd, 'node');
+      assert.deepStrictEqual(calls[0].args, ['--check', 'script.js']);
     });
   });
 
@@ -124,19 +150,19 @@ describe('lint.js', () => {
     });
 
     it('executes node --test on discovered test files', () => {
-      const commands = [];
+      const calls = [];
       const mockFs = {
         readdirSync: () => [
           { name: 'sample.test.js', isDirectory: () => false, isFile: () => true },
         ],
       };
-      const mockExec = (cmd) => {
-        commands.push(cmd);
+      const mockExec = (cmd, args) => {
+        calls.push({ cmd, args });
       };
       runNodeTest(mockExec, mockFs);
-      assert.strictEqual(commands.length, 1);
-      assert.ok(commands[0].includes('node --test'));
-      assert.ok(commands[0].includes('sample.test.js'));
+      assert.strictEqual(calls.length, 1);
+      assert.strictEqual(calls[0].cmd, 'node');
+      assert.deepStrictEqual(calls[0].args, ['--test', 'sample.test.js']);
     });
   });
 

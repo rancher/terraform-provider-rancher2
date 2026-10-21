@@ -73,7 +73,10 @@ export function getCommitMessages(prNumber, exec = execSync) {
     console.log('Falling back to checking local commits against origin/main...');
     try {
       const output = exec('git log origin/main..HEAD --format=%s', { encoding: 'utf-8' });
-      return output.split('\n').map((line) => line.trim()).filter(Boolean);
+      return (output || '')
+        .split('\n')
+        .map((line) => line.replace(/\r$/, ''))
+        .filter((line) => line !== '');
     } catch (err) {
       console.warn('Warning: Failed to fetch commits from origin/main..HEAD:', err.message);
       return [];
@@ -83,7 +86,10 @@ export function getCommitMessages(prNumber, exec = execSync) {
   const output = exec(`gh api --paginate "repos/{owner}/{repo}/pulls/${prNumber}/commits" --jq '.[].commit.message | split("\\n")[0]'`, {
     encoding: 'utf-8',
   });
-  return output.split('\n').map((line) => line.trim()).filter(Boolean);
+  return (output || '')
+    .split('\n')
+    .map((line) => line.replace(/\r$/, ''))
+    .filter((line) => line !== '');
 }
 
 export async function main({ prNumber = process.env.PR_NUMBER, exec = execSync } = {}) {
