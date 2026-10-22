@@ -334,10 +334,18 @@ export async function runAutoMerge({ github, context, core, process = globalThis
 
   // Initialize elevated Octokit instance with GITHUB_MERGE_TOKEN
   const mergeToken = process?.env?.GITHUB_MERGE_TOKEN ? process.env.GITHUB_MERGE_TOKEN.trim() : undefined;
+  if (!mergeToken) {
+    core.setFailed('GITHUB_MERGE_TOKEN is required to approve PRs and enable auto-merge.');
+    return false;
+  }
   const octokitFactory = (typeof getOctokit === 'function')
     ? getOctokit
     : (typeof github?.getOctokit === 'function' ? github.getOctokit.bind(github) : undefined);
-  const prGithub = (mergeToken && typeof octokitFactory === 'function') ? octokitFactory(mergeToken) : github;
+  if (typeof octokitFactory !== 'function') {
+    core.setFailed('Cannot initialize the merge-token client: getOctokit is unavailable.');
+    return false;
+  }
+  const prGithub = octokitFactory(mergeToken);
 
   // Gate 5: Check if Bot already approved the current head commit
   let botLogin = null;
@@ -367,8 +375,27 @@ export async function runAutoMerge({ github, context, core, process = globalThis
       });
       core.info(`Successfully submitted bot approval on PR #${prNumber}.`);
     } catch (error) {
-      // If error indicates self-review or already approved, log warning
-      core.warning(`Notice during bot approval creation on PR #${prNumber}: ${error.message}`);
+      let approvalConfirmed = false;
+      if (botLogin) {
+        try {
+          const currentReviews = await github.paginate(github.rest.pulls.listReviews, {
+            owner,
+            repo,
+            pull_number: prNumber,
+          });
+          const { latestReviews } = evaluateReviews(currentReviews, authorLogin);
+          approvalConfirmed = latestReviews.some(
+            r => r.user.login === botLogin && r.commit_id === pr.head.sha && r.state === 'APPROVED'
+          );
+        } catch (verificationError) {
+          core.warning(`Could not verify bot approval on PR #${prNumber}: ${verificationError.message}`);
+        }
+      }
+      if (!approvalConfirmed) {
+        core.setFailed(`Failed to submit bot approval on PR #${prNumber}: ${error.message}`);
+        return false;
+      }
+      core.warning(`Bot approval on PR #${prNumber} is already present for commit ${pr.head.sha}: ${error.message}`);
     }
   } else {
     core.info(`Bot (@${botLogin}) has already approved commit ${pr.head.sha} on PR #${prNumber}.`);
