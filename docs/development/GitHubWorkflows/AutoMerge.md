@@ -34,7 +34,7 @@ When an authorized engineer with `triage` access reviews and approves a PR targe
 
 ## Security Model: Listener-Executor Architecture
 
-To protect repository secrets and Vault OIDC credentials from untrusted PR code, the system implements the strict Listener-Executor pattern:
+To protect repository secrets and Vault OIDC credentials from untrusted PR code, the system implements the strict Listener-Executor pattern with an unprivileged preflight validation gate:
 
 ```mermaid
 sequenceDiagram
@@ -43,30 +43,37 @@ sequenceDiagram
     participant PR as GitHub Pull Request
     participant Listener as auto-merge-listener.yml<br/>(pull_request_review trigger)
     participant GHA as GitHub Actions Platform
-    participant Executor as auto-merge.yml<br/>(workflow_run trigger on main)
+    participant Preflight as auto-merge.yml: preflight<br/>(Unprivileged Gate on main)
+    participant Executor as auto-merge.yml: auto-merge<br/>(Environment: release on main)
     participant Vault as HashiCorp Vault (OIDC)
-    participant Script as auto-merge.js<br/>(Validation & Auto-Merge)
+    participant Script as auto-merge.js<br/>(Bot Approval & GraphQL)
     participant GHApi as GitHub REST & GraphQL API
 
     TriageUser->>PR: Submit "APPROVE" Review
     PR->>Listener: Trigger on pull_request_review [submitted]
     Note over Listener: Runs with minimal permissions: {}<br/>No secrets or token access
+    Listener->>GHA: Upload auto-merge-approval-signal artifact
     Listener-->>GHA: Job completes successfully
-    GHA->>Executor: Trigger on workflow_run [completed] (Context: main)
+    GHA->>Preflight: Trigger on workflow_run [completed] (Context: main)
 
+    Note over Preflight: Preflight checks run without release environment or Vault access
+    Preflight->>GHApi: 1. Verify approval signal artifact exists
+    Preflight->>GHApi: 2. Validate PR target is 'main' & state is 'open'
+    Preflight->>GHApi: 3. Check changed files (reject if .github/**)
+    Preflight->>GHApi: 4. Verify reviewer role in [triage, write, admin]
+    Preflight->>GHApi: 5. Ensure no active CHANGES_REQUESTED reviews
+    Preflight-->>GHA: Preflight outputs eligible: true
+
+    GHA->>Executor: Trigger auto-merge job (needs: preflight, eligible == true)
     rect rgb(240, 248, 255)
         Note over Executor,Vault: Authenticate via OIDC to retrieve scoped merge token
         Executor->>Vault: Read GITHUB_MERGE_TOKEN
-        Vault-->>Executor: Scoped Token (pull_requests: write, contents: write)
+        Vault-->>Executor: Scoped Token (pull_requests: write, metadata: read)
     end
 
-    Executor->>Script: Execute auto-merge.js
-    Script->>GHApi: 1. Validate PR target is 'main' & state is 'open'
-    Script->>GHApi: 2. Check changed files (reject if .github/**)
-    Script->>GHApi: 3. Verify reviewer role in [triage, write, admin]
-    Script->>GHApi: 4. Ensure no active CHANGES_REQUESTED reviews
-    Script->>GHApi: 5. Submit Bot Review Approval
-    Script->>GHApi: 6. Enable Native Auto-Merge via GraphQL
+    Executor->>Script: Execute auto-merge.js (Fail-closed bot identity check)
+    Script->>GHApi: Submit Bot Review Approval
+    Script->>GHApi: Enable Native Auto-Merge via GraphQL
     GHApi-->>PR: Bot Approves & Auto-Merge Enabled
     Note over PR: GitHub merges PR automatically when<br/>pull_request.yaml checks pass and<br/>all conversations are resolved
 ```

@@ -332,10 +332,18 @@ export async function runAutoMerge({ github, context, core, process = globalThis
   try {
     if (typeof prGithub?.rest?.users?.getAuthenticated === 'function') {
       const { data: authUser } = await prGithub.rest.users.getAuthenticated();
-      botLogin = authUser?.login;
+      if (authUser?.login && typeof authUser.login === 'string') {
+        botLogin = authUser.login.trim();
+      }
     }
   } catch (error) {
-    core.warning(`Could not resolve authenticated bot login: ${error.message}`);
+    core.setFailed(`Failed to resolve authenticated bot login: ${error.message}`);
+    return false;
+  }
+
+  if (!botLogin) {
+    core.setFailed('Could not resolve authenticated bot identity from GITHUB_MERGE_TOKEN. Failing closed.');
+    return false;
   }
 
   // Gate 3: Reviews and Approvals Checks
@@ -497,6 +505,189 @@ export async function runAutoMerge({ github, context, core, process = globalThis
   }
 }
 
+/**
+ * runPreflight: Unprivileged preflight validation to determine PR eligibility before retrieving secrets.
+ */
+export async function runPreflight({ github, context, core, process = globalThis.process }) {
+  const owner = context?.repo?.owner || process?.env?.GITHUB_REPOSITORY?.split('/')[0];
+  const repo = context?.repo?.repo || process?.env?.GITHUB_REPOSITORY?.split('/')[1];
+
+  if (!owner || !repo) {
+    core.setFailed('Missing repository owner and repo in context.');
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  // If running from workflow_run, verify the listener produced the explicit approval signal artifact
+  const parentRun = context?.payload?.workflow_run;
+  if (parentRun?.id && typeof github?.rest?.actions?.listWorkflowRunArtifacts === 'function') {
+    try {
+      let artifacts = [];
+      if (typeof github.paginate === 'function') {
+        artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+          owner,
+          repo,
+          run_id: parentRun.id,
+        });
+      } else {
+        const res = await github.rest.actions.listWorkflowRunArtifacts({
+          owner,
+          repo,
+          run_id: parentRun.id,
+        });
+        artifacts = res?.data?.artifacts || res?.artifacts || [];
+      }
+
+      const hasSignal = artifacts.some(a => a.name === 'auto-merge-approval-signal');
+      if (!hasSignal) {
+        core.info(`Workflow run ${parentRun.id} lacks 'auto-merge-approval-signal' artifact (listener was skipped or event was not an approved review on main). Skipping auto-merge.`);
+        core.setOutput('eligible', 'false');
+        return false;
+      }
+    } catch (error) {
+      core.warning(`Could not verify workflow run artifacts: ${error.message}`);
+    }
+  }
+
+  const pr = await resolveTargetPr({ github, context, core, process });
+  if (!pr) {
+    core.info('Could not resolve target PR for preflight auto-merge. Skipping.');
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  const prNumber = pr.number;
+  core.info(`Running preflight auto-merge validation for PR #${prNumber}...`);
+
+  // Gate 1: State, Draft, and Target Branch Checks
+  if (pr.state !== 'open') {
+    core.info(`PR #${prNumber} is not open (state: "${pr.state}"). Skipping auto-merge.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  if (pr.draft) {
+    core.info(`PR #${prNumber} is a draft. Skipping auto-merge.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  const baseRef = pr.base?.ref ? pr.base.ref.replace(/^refs\/heads\//, '') : '';
+  if (baseRef !== 'main') {
+    core.info(`PR #${prNumber} targets branch "${baseRef}", not "main". Skipping auto-merge.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  const triggerPrHeadSha = process?.env?.PR_HEAD_SHA || process?.env?.WORKFLOW_RUN_SHA;
+  if (triggerPrHeadSha && pr.head?.sha && triggerPrHeadSha !== pr.head.sha) {
+    core.info(`PR #${prNumber} head commit (${triggerPrHeadSha}) is superseded by current head (${pr.head.sha}). Skipping stale run.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  // Gate 2: Exclude modifications to .github/**
+  const { modifiesWorkflows, workflowFiles } = await checkWorkflowModifications({
+    github,
+    owner,
+    repo,
+    prNumber,
+    core,
+  });
+
+  if (modifiesWorkflows) {
+    core.info(`PR #${prNumber} modifies files in .github/ (${workflowFiles.join(', ')}). Workflow changes require human write approval. Skipping auto-merge.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  // Gate 3: Reviews and Approvals Checks
+  let reviews = [];
+  try {
+    if (typeof github?.paginate === 'function' && typeof github?.rest?.pulls?.listReviews === 'function') {
+      reviews = await github.paginate(github.rest.pulls.listReviews, {
+        owner,
+        repo,
+        pull_number: prNumber,
+      });
+    } else if (typeof github?.rest?.pulls?.listReviews === 'function') {
+      const res = await github.rest.pulls.listReviews({
+        owner,
+        repo,
+        pull_number: prNumber,
+      });
+      reviews = res?.data || res || [];
+    } else if (typeof github?.paginate === 'function') {
+      reviews = await github.paginate();
+    }
+  } catch (error) {
+    core.setFailed(`Failed to list reviews for PR #${prNumber}: ${error.message}`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  const authorLogin = pr.user?.login;
+  const { hasChangesRequested, approvedReviewers, latestReviews } = evaluateReviews(reviews, authorLogin, null);
+
+  if (hasChangesRequested) {
+    core.info(`PR #${prNumber} has one or more active CHANGES_REQUESTED reviews. Skipping auto-merge.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  if (approvedReviewers.length === 0) {
+    core.info(`PR #${prNumber} has no approved reviews from qualifying non-author, non-bot users. Skipping auto-merge.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  // Gate 4: Verify Reviewer Permissions
+  let qualifyingReviewer = null;
+  for (const username of approvedReviewers) {
+    const { isAuthorized, roleName, permission } = await checkReviewerPermission({
+      github,
+      owner,
+      repo,
+      username,
+      core,
+    });
+    if (isAuthorized) {
+      const qualifyingReview = latestReviews.find(
+        r => r.user?.login?.toLowerCase() === username.toLowerCase()
+      );
+      qualifyingReviewer = {
+        username,
+        role: roleName || permission,
+        review: qualifyingReview,
+      };
+      break;
+    }
+  }
+
+  if (!qualifyingReviewer) {
+    core.info(`PR #${prNumber} does not have an approved review from a user with triage, write, or admin permissions. Skipping auto-merge.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  // Validate that the qualifying review matches current PR head
+  if (qualifyingReviewer.review?.commit_id && pr.head?.sha && qualifyingReviewer.review.commit_id !== pr.head.sha) {
+    core.info(`Approval by @${qualifyingReviewer.username} was submitted on commit ${qualifyingReviewer.review.commit_id}, but current PR head is ${pr.head.sha}. Skipping stale review.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
+
+  core.info(`Preflight validation succeeded: PR #${prNumber} is eligible for auto-merge via sign-off from @${qualifyingReviewer.username} (role: ${qualifyingReviewer.role}).`);
+  core.setOutput('eligible', 'true');
+  core.setOutput('pr_number', String(pr.number));
+  core.setOutput('pr_head_sha', pr.head?.sha || '');
+  return true;
+}
+
 export default async ({ github, context, core, process = globalThis.process, getOctokit }) => {
+  const mode = process?.env?.SCRIPT_MODE;
+  if (mode === 'preflight') {
+    return await runPreflight({ github, context, core, process });
+  }
   return await runAutoMerge({ github, context, core, process, getOctokit });
 };

@@ -20,7 +20,26 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: 'Execute Auto Merge Listener'
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: echo "Auto merge listener executed for PR ${PR_NUMBER}. Completion will trigger the privileged Auto Merge workflow on main."
+      - name: 'Save Approval Signal'
+        id: save-signal
+        run: |
+          mkdir -p signal
+          cat << 'EOF' > signal/approval-signal.json
+          {
+            "pr_number": ${{ github.event.pull_request.number }},
+            "review_id": ${{ github.event.review.id }},
+            "review_state": "${{ github.event.review.state }}",
+            "review_user": "${{ github.event.review.user.login }}",
+            "review_commit_id": "${{ github.event.review.commit_id }}",
+            "head_sha": "${{ github.event.pull_request.head.sha }}",
+            "base_ref": "${{ github.event.pull_request.base.ref }}"
+          }
+          EOF
+
+      - name: 'Upload Approval Signal Artifact'
+        # https://github.com/actions/upload-artifact/releases
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: auto-merge-approval-signal
+          path: signal/approval-signal.json
+          retention-days: 1

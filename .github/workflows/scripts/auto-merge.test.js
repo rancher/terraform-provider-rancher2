@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {
+import defaultHandler, {
   checkReviewerPermission,
   checkWorkflowModifications,
   evaluateReviews,
   resolveTargetPr,
   runAutoMerge,
+  runPreflight,
 } from './auto-merge.js';
 
 function createMockCore() {
@@ -280,9 +281,9 @@ test('evaluateReviews - DISMISSED review clears prior CHANGES_REQUESTED and APPR
 test('evaluateReviews - case-insensitive user logins and author comparison', () => {
   const reviews = [
     { user: { login: 'ReviewerOne' }, state: 'APPROVED' },
-    { user: { login: 'AuthorUser' }, state: 'APPROVED' },
+    { user: { login: 'Author' }, state: 'APPROVED' },
   ];
-  const res = evaluateReviews(reviews, 'authoruser');
+  const res = evaluateReviews(reviews, 'author');
   assert.strictEqual(res.hasChangesRequested, false);
   assert.deepStrictEqual(res.approvedReviewers, ['ReviewerOne']);
 });
@@ -889,4 +890,397 @@ test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', 
 
   assert.strictEqual(result, true);
   assert.strictEqual(mockCore.outputs.auto_merge_status, 'already_enabled');
+});
+
+test('runAutoMerge - fails closed when authenticated bot login cannot be resolved', async () => {
+  const mockCore = createMockCore();
+
+  // Test case 1: getAuthenticated throws an error
+  const failingElevatedGithub = {
+    rest: {
+      users: {
+        getAuthenticated: async () => {
+          throw new Error('Bad credentials / token expired');
+        },
+      },
+    },
+  };
+
+  const mockGithub = {
+    paginate: async () => [],
+    rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'write', role_name: 'write' },
+        }),
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'test' },
+    payload: {
+      pull_request: {
+        number: 1,
+        state: 'open',
+        draft: false,
+        base: { ref: 'main' },
+        head: { sha: 'sha1' },
+        user: { login: 'author' },
+      },
+    },
+  };
+
+  const result1 = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    getOctokit: () => failingElevatedGithub,
+  });
+
+  assert.strictEqual(result1, false);
+  assert.match(mockCore.failedMessage, /Failed to resolve authenticated bot login/);
+
+  // Test case 2: getAuthenticated returns empty login
+  const mockCore2 = createMockCore();
+  const emptyLoginElevatedGithub = {
+    rest: {
+      users: {
+        getAuthenticated: async () => ({
+          data: { login: '' },
+        }),
+      },
+    },
+  };
+
+  const result2 = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore2,
+    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    getOctokit: () => emptyLoginElevatedGithub,
+  });
+
+  assert.strictEqual(result2, false);
+  assert.match(mockCore2.failedMessage, /Could not resolve authenticated bot identity from GITHUB_MERGE_TOKEN/);
+});
+
+test('runPreflight - succeeds for qualifying PR with valid approval signal', async () => {
+  const mockCore = createMockCore();
+  let callCount = 0;
+
+  const mockGithub = {
+    paginate: async () => {
+      callCount++;
+      if (callCount === 1) {
+        // Artifacts lookup
+        return [{ name: 'auto-merge-approval-signal' }];
+      }
+      if (callCount === 2) {
+        // Changed files lookup
+        return [{ filename: 'rancher2/resource_cluster.go' }];
+      }
+      // Reviews lookup
+      return [{ user: { login: 'triage-reviewer' }, state: 'APPROVED', commit_id: 'commit-sha' }];
+    },
+    rest: {
+      actions: {
+        listWorkflowRunArtifacts: async () => ({
+          data: { artifacts: [{ name: 'auto-merge-approval-signal' }] },
+        }),
+      },
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'triage', role_name: 'triage' },
+        }),
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'test' },
+    payload: {
+      workflow_run: {
+        id: 9999,
+        pull_requests: [{ number: 42, head: { sha: 'commit-sha' } }],
+      },
+      pull_request: {
+        number: 42,
+        state: 'open',
+        draft: false,
+        base: { ref: 'main' },
+        head: { sha: 'commit-sha' },
+        user: { login: 'author' },
+      },
+    },
+  };
+
+  const result = await runPreflight({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: { PR_NUMBER: '42', PR_HEAD_SHA: 'commit-sha' } },
+  });
+
+  assert.strictEqual(result, true);
+  assert.strictEqual(mockCore.outputs.eligible, 'true');
+  assert.strictEqual(mockCore.outputs.pr_number, '42');
+  assert.strictEqual(mockCore.outputs.pr_head_sha, 'commit-sha');
+});
+
+test('runPreflight - fails when auto-merge-approval-signal artifact is missing in workflow_run', async () => {
+  const mockCore = createMockCore();
+
+  const mockGithub = {
+    paginate: async () => {
+      return [{ name: 'other-unrelated-artifact' }];
+    },
+    rest: {
+      actions: {
+        listWorkflowRunArtifacts: async () => ({
+          data: { artifacts: [{ name: 'other-unrelated-artifact' }] },
+        }),
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'test' },
+    payload: {
+      workflow_run: {
+        id: 8888,
+      },
+      pull_request: {
+        number: 42,
+        state: 'open',
+        draft: false,
+        base: { ref: 'main' },
+        head: { sha: 'commit-sha' },
+        user: { login: 'author' },
+      },
+    },
+  };
+
+  const result = await runPreflight({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.eligible, 'false');
+  assert.ok(mockCore.infoMessages.some(m => m.includes("lacks 'auto-merge-approval-signal' artifact")));
+});
+
+test('runPreflight - skips non-open or draft PR', async () => {
+  const mockCoreClosed = createMockCore();
+  const mockGithub = {
+    paginate: async () => [],
+    rest: {
+      actions: {
+        listWorkflowRunArtifacts: async () => ({
+          data: { artifacts: [] },
+        }),
+      },
+    },
+  };
+
+  const resultClosed = await runPreflight({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        pull_request: {
+          number: 10,
+          state: 'closed',
+          draft: false,
+          base: { ref: 'main' },
+          head: { sha: 'sha1' },
+        },
+      },
+    },
+    core: mockCoreClosed,
+  });
+
+  assert.strictEqual(resultClosed, false);
+  assert.strictEqual(mockCoreClosed.outputs.eligible, 'false');
+
+  const mockCoreDraft = createMockCore();
+  const resultDraft = await runPreflight({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        pull_request: {
+          number: 11,
+          state: 'open',
+          draft: true,
+          base: { ref: 'main' },
+          head: { sha: 'sha1' },
+        },
+      },
+    },
+    core: mockCoreDraft,
+  });
+
+  assert.strictEqual(resultDraft, false);
+  assert.strictEqual(mockCoreDraft.outputs.eligible, 'false');
+});
+
+test('runPreflight - skips PR modifying .github/**', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    paginate: async () => [{ filename: '.github/workflows/ci.yml' }],
+  };
+
+  const result = await runPreflight({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        pull_request: {
+          number: 12,
+          state: 'open',
+          draft: false,
+          base: { ref: 'main' },
+          head: { sha: 'sha1' },
+        },
+      },
+    },
+    core: mockCore,
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.eligible, 'false');
+  assert.ok(mockCore.infoMessages.some(m => m.includes('modifies files in .github/')));
+});
+
+test('runPreflight - skips PR with active CHANGES_REQUESTED', async () => {
+  const mockCore = createMockCore();
+  let callCount = 0;
+  const mockGithub = {
+    paginate: async () => {
+      callCount++;
+      if (callCount === 1) {
+        return [{ filename: 'rancher2/config.go' }];
+      }
+      return [
+        { user: { login: 'reviewer1' }, state: 'CHANGES_REQUESTED' },
+        { user: { login: 'reviewer2' }, state: 'APPROVED' },
+      ];
+    },
+  };
+
+  const result = await runPreflight({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        pull_request: {
+          number: 13,
+          state: 'open',
+          draft: false,
+          base: { ref: 'main' },
+          head: { sha: 'sha1' },
+        },
+      },
+    },
+    core: mockCore,
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.eligible, 'false');
+  assert.ok(mockCore.infoMessages.some(m => m.includes('active CHANGES_REQUESTED')));
+});
+
+test('runPreflight - skips PR when reviewer lacks qualifying role', async () => {
+  const mockCore = createMockCore();
+  let callCount = 0;
+  const mockGithub = {
+    paginate: async () => {
+      callCount++;
+      if (callCount === 1) {
+        return [{ filename: 'rancher2/config.go' }];
+      }
+      return [{ user: { login: 'read-only-user' }, state: 'APPROVED', commit_id: 'sha1' }];
+    },
+    rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'read', role_name: 'read' },
+        }),
+      },
+    },
+  };
+
+  const result = await runPreflight({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        pull_request: {
+          number: 14,
+          state: 'open',
+          draft: false,
+          base: { ref: 'main' },
+          head: { sha: 'sha1' },
+        },
+      },
+    },
+    core: mockCore,
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.eligible, 'false');
+  assert.ok(mockCore.infoMessages.some(m => m.includes('does not have an approved review from a user with triage, write, or admin')));
+});
+
+test('default export - routes preflight mode and execute mode', async () => {
+  const mockCorePreflight = createMockCore();
+  const mockGithub = {
+    paginate: async () => [{ filename: 'rancher2/config.go' }],
+  };
+
+  const preflightRes = await defaultHandler({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        pull_request: {
+          number: 20,
+          state: 'closed',
+          draft: false,
+          base: { ref: 'main' },
+        },
+      },
+    },
+    core: mockCorePreflight,
+    process: { env: { SCRIPT_MODE: 'preflight' } },
+  });
+
+  assert.strictEqual(preflightRes, false);
+  assert.strictEqual(mockCorePreflight.outputs.eligible, 'false');
+
+  const mockCoreExecute = createMockCore();
+  const executeRes = await defaultHandler({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        pull_request: {
+          number: 21,
+          state: 'closed',
+          draft: false,
+          base: { ref: 'main' },
+        },
+      },
+    },
+    core: mockCoreExecute,
+    process: { env: { SCRIPT_MODE: 'execute' } },
+  });
+
+  assert.strictEqual(executeRes, false);
+  assert.strictEqual(mockCoreExecute.outputs.auto_merge_status, 'skipped_not_open');
 });
