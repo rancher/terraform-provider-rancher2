@@ -176,22 +176,6 @@
     ]
   },
   "hooksConfig": {
-    "disabled": [
-      "review-phase-before-subagent",
-      "plan-phase-before-ask-user",
-      "commit-phase-before-ask-user",
-      "plan-phase-before-exit-plan-mode",
-      "block-restricted-commands",
-      "plan-phase-before-write",
-      "commit-phase-before-write",
-      "plan-phase-before-replace",
-      "commit-phase-before-replace",
-      "plan-phase-after-enter-plan-mode",
-      "plan-phase-after-exit-plan-mode",
-      "plan-phase-after-ask-user",
-      "commit-phase-after-ask-user",
-      "review-phase-after-subagent",
-      "load-agents-and-workflow-context"
-    ]
+    "disabled": []
   }
 }

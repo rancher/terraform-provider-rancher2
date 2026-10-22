@@ -403,7 +403,20 @@ export function evaluateReviews(reviews, authorLogin, botLogin) {
 /**
  * checkReviewerPermission: Checks if a user has triage, write, or admin permission in the repository.
  */
-export async function checkReviewerPermission({ github, owner, repo, username, core }) {
+export async function checkReviewerPermission({ github, owner, repo, username, core, review }) {
+  if (review && review.author_association) {
+    const assoc = review.author_association.toUpperCase();
+    const authorizedAssociations = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+    const isAuthorized = authorizedAssociations.includes(assoc);
+    core.info('User @' + username + ' has author_association "' + assoc + '". Authorized: ' + isAuthorized);
+    return {
+      isAuthorized,
+      permission: assoc,
+      roleName: assoc,
+    };
+  }
+
+  core.warning('No author_association found for @' + username + '. Falling back to getCollaboratorPermissionLevel.');
   const allowedRoles = ['triage', 'write', 'admin'];
   try {
     const res = await github.rest.repos.getCollaboratorPermissionLevel({
@@ -413,7 +426,7 @@ export async function checkReviewerPermission({ github, owner, repo, username, c
     });
     const permission = res?.data?.permission;
     const roleName = res?.data?.role_name || permission;
-    core.info(`User @${username} has repository permission "${permission}" (role: "${roleName}").`);
+    core.info('User @' + username + ' has repository permission "' + permission + '" (role: "' + roleName + '").');
 
     const isAuthorized = allowedRoles.includes(permission) || allowedRoles.includes(roleName);
     return {
@@ -422,7 +435,7 @@ export async function checkReviewerPermission({ github, owner, repo, username, c
       roleName,
     };
   } catch (error) {
-    core.warning(`Failed to retrieve collaborator permission for @${username}: ${error.message}`);
+    core.warning('Failed to retrieve collaborator permission for @' + username + ': ' + error.message);
     return {
       isAuthorized: false,
       permission: null,
@@ -586,12 +599,17 @@ export async function runAutoMerge({ github, context, core, process = globalThis
       return false;
     }
 
+    const triggerReview = latestReviews.find(
+      r => r.user?.login?.toLowerCase() === validatedSignal.review_user.toLowerCase()
+    );
+
     const { isAuthorized, roleName, permission } = await checkReviewerPermission({
       github,
       owner,
       repo,
       username: validatedSignal.review_user,
       core,
+      review: triggerReview,
     });
 
     if (!isAuthorized) {
@@ -599,10 +617,6 @@ export async function runAutoMerge({ github, context, core, process = globalThis
       core.setOutput('auto_merge_status', 'no_qualifying_permission');
       return false;
     }
-
-    const triggerReview = latestReviews.find(
-      r => r.user?.login?.toLowerCase() === validatedSignal.review_user.toLowerCase()
-    );
 
     if (!triggerReview || (typeof triggerReview.state === 'string' && triggerReview.state.toUpperCase() !== 'APPROVED')) {
       core.info(`Triggering review by @${validatedSignal.review_user} is no longer in APPROVED state. Skipping auto-merge.`);
@@ -644,6 +658,7 @@ export async function runAutoMerge({ github, context, core, process = globalThis
         repo,
         username,
         core,
+        review: latestReviews.find(r => r.user?.login?.toLowerCase() === username.toLowerCase()),
       });
       if (isAuthorized) {
         const qualifyingReview = latestReviews.find(
@@ -880,12 +895,17 @@ export async function runPreflight({ github, context, core, process = globalThis
       return false;
     }
 
+    const triggerReview = latestReviews.find(
+      r => r.user?.login?.toLowerCase() === validatedSignal.review_user.toLowerCase()
+    );
+
     const { isAuthorized, roleName, permission } = await checkReviewerPermission({
       github,
       owner,
       repo,
       username: validatedSignal.review_user,
       core,
+      review: triggerReview,
     });
 
     if (!isAuthorized) {
@@ -893,10 +913,6 @@ export async function runPreflight({ github, context, core, process = globalThis
       core.setOutput('eligible', 'false');
       return false;
     }
-
-    const triggerReview = latestReviews.find(
-      r => r.user?.login?.toLowerCase() === validatedSignal.review_user.toLowerCase()
-    );
 
     if (!triggerReview || (typeof triggerReview.state === 'string' && triggerReview.state.toUpperCase() !== 'APPROVED')) {
       core.info(`Review by triggering reviewer @${validatedSignal.review_user} is not in APPROVED state. Skipping auto-merge.`);
@@ -937,6 +953,7 @@ export async function runPreflight({ github, context, core, process = globalThis
         repo,
         username,
         core,
+        review: latestReviews.find(r => r.user?.login?.toLowerCase() === username.toLowerCase()),
       });
       if (isAuthorized) {
         const qualifyingReview = latestReviews.find(
