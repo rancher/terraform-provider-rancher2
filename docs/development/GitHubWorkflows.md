@@ -30,6 +30,7 @@ To prevent malicious script execution and secure our privilege boundary against 
 
 - **[End-to-End Value Stream Lifecycle](./GitHubWorkflows/Overview.md)**: Comprehensive specification of the 7-stage delivery value stream from PR to release.
 - **[Pull Request & Merge Lifecycle on Main](./GitHubWorkflows/PullRequestLifecycle.md)**: PR description validation, the 11-job Nix container CI matrix, and maintainer squash-merging.
+- **[Automated PR Merge System on Main](./GitHubWorkflows/AutoMerge.md)**: Two-stage listener-executor architecture, triage role auto-approval, and GraphQL native auto-merge enablement.
 - **[Backport Orchestration & Issue Tracking](./GitHubWorkflows/BackportOrchestration.md)**: Automated tracking issue adoption, GitHub Sub-Issues hierarchy, and cherry-picking to release branches.
 - **[Privileged AWS End-to-End Testing](./GitHubWorkflows/EndToEndTesting.md)**: Listener-executor security model, AWS OIDC authentication, artifact locking, and commit status checks.
 - **[Workflow Execution Protections](./GitHubWorkflows/WorkflowExecutionProtections.md)**: Repository-level GitHub Actions execution policies and security configurations.

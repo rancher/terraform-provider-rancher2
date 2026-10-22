@@ -1,0 +1,58 @@
+name: Auto Merge
+# This privileged workflow processes qualifying review approvals to safely approve and enable auto-merge.
+
+on:
+  workflow_run:
+    workflows: ["Auto Merge Listener"]
+    types: [completed]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.pull_requests[0].number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  auto-merge:
+    name: 'Process Auto Merge'
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: 'Checkout Repository'
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          ref: 'main'
+          persist-credentials: false
+
+      - name: 'Get Merge Token'
+        id: get-merge-token
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          # Token permissions: contents: write, metadata: read, pull_requests: write, workflows: write
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
+
+      - name: 'Execute Auto Merge'
+        id: execute-auto-merge
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
+          PR_HEAD_SHA: ${{ github.event.workflow_run.pull_requests[0].head.sha }}
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        with:
+          script: |
+            // getOctokit is provided globally by actions/github-script; an explicit require is not needed
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/auto-merge.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process, getOctokit });

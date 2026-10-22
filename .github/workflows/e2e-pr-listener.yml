@@ -1,4 +1,5 @@
 name: PR Executor Listener
+# This unprivileged workflow acts as a middleman to securely trigger e2e tests.
 
 on:
   pull_request:

@@ -1,0 +1,26 @@
+name: Auto Merge Listener
+# This unprivileged workflow acts as a middleman to securely trigger automated merge on PR review approvals.
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  emit-event:
+    name: 'Emit Auto Merge Workflow Run Event'
+    if: github.event.pull_request.base.ref == 'main' && github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: 'Execute Auto Merge Listener'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: echo "Auto merge listener executed for PR ${PR_NUMBER}. Completion will trigger the privileged Auto Merge workflow on main."
