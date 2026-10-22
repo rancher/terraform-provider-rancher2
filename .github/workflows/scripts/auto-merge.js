@@ -404,19 +404,7 @@ export function evaluateReviews(reviews, authorLogin, botLogin) {
  * checkReviewerPermission: Checks if a user has triage, write, or admin permission in the repository.
  */
 export async function checkReviewerPermission({ github, owner, repo, username, core, review }) {
-  if (review && review.author_association) {
-    const assoc = review.author_association.toUpperCase();
-    const authorizedAssociations = ['OWNER', 'MEMBER', 'COLLABORATOR'];
-    const isAuthorized = authorizedAssociations.includes(assoc);
-    core.info('User @' + username + ' has author_association "' + assoc + '". Authorized: ' + isAuthorized);
-    return {
-      isAuthorized,
-      permission: assoc,
-      roleName: assoc,
-    };
-  }
-
-  core.warning('No author_association found for @' + username + '. Falling back to getCollaboratorPermissionLevel.');
+  core.info('Querying collaborator permission level for @' + username + '...');
   const allowedRoles = ['triage', 'write', 'admin'];
   try {
     const res = await github.rest.repos.getCollaboratorPermissionLevel({
@@ -602,6 +590,12 @@ export async function runAutoMerge({ github, context, core, process = globalThis
     const triggerReview = latestReviews.find(
       r => r.user?.login?.toLowerCase() === validatedSignal.review_user.toLowerCase()
     );
+
+    if (triggerReview?.user?.type === 'Bot' || validatedSignal.review_user.toLowerCase().endsWith('[bot]')) {
+      core.info(`Reviewer @${validatedSignal.review_user} is a bot. Skipping auto-merge.`);
+      core.setOutput('auto_merge_status', 'skipped_bot');
+      return false;
+    }
 
     const { isAuthorized, roleName, permission } = await checkReviewerPermission({
       github,
@@ -899,6 +893,12 @@ export async function runPreflight({ github, context, core, process = globalThis
       r => r.user?.login?.toLowerCase() === validatedSignal.review_user.toLowerCase()
     );
 
+    if (triggerReview?.user?.type === 'Bot' || validatedSignal.review_user.toLowerCase().endsWith('[bot]')) {
+      core.info(`Triggering reviewer @${validatedSignal.review_user} is a bot. Skipping auto-merge.`);
+      core.setOutput('eligible', 'false');
+      return false;
+    }
+
     const { isAuthorized, roleName, permission } = await checkReviewerPermission({
       github,
       owner,
@@ -1000,3 +1000,4 @@ export default async ({ github, context, core, process = globalThis.process, get
   }
   return await runAutoMerge({ github, context, core, process, getOctokit });
 };
+
