@@ -406,40 +406,11 @@ export async function runAutoMerge({ github, context, core, process = globalThis
     return false;
   }
 
-<<<<<<< Updated upstream
-  core.info(`PR #${prNumber} qualified for auto-merge via sign-off from @${qualifyingReviewer.username} (role: ${qualifyingReviewer.role}).`);
-
-  // Initialize elevated Octokit instance with GITHUB_MERGE_TOKEN
-  const mergeToken = process?.env?.GITHUB_MERGE_TOKEN ? process.env.GITHUB_MERGE_TOKEN.trim() : undefined;
-  if (!mergeToken) {
-    core.setFailed('GITHUB_MERGE_TOKEN is required to approve PRs and enable auto-merge.');
-    return false;
-  }
-  const octokitFactory = (typeof getOctokit === 'function')
-    ? getOctokit
-    : (typeof github?.getOctokit === 'function' ? github.getOctokit.bind(github) : undefined);
-  if (typeof octokitFactory !== 'function') {
-    core.setFailed('Cannot initialize the merge-token client: getOctokit is unavailable.');
-    return false;
-  }
-  const prGithub = octokitFactory(mergeToken);
-
-  // Gate 5: Check if Bot already approved the current head commit
-  let botLogin = null;
-  try {
-    if (typeof prGithub.rest?.users?.getAuthenticated === 'function') {
-      const { data: authUser } = await prGithub.rest.users.getAuthenticated();
-      botLogin = authUser?.login;
-    }
-  } catch (error) {
-    core.info(`Could not resolve authenticated bot login: ${error.message}`);
-=======
   // Validate that the qualifying review matches the current PR head if commit_id is present on the review
   if (qualifyingReviewer.review?.commit_id && pr.head?.sha && qualifyingReviewer.review.commit_id !== pr.head.sha) {
     core.info(`Approval by @${qualifyingReviewer.username} was submitted on commit ${qualifyingReviewer.review.commit_id}, but current PR head is ${pr.head.sha}. Skipping stale review.`);
     core.setOutput('auto_merge_status', 'skipped_superseded');
     return false;
->>>>>>> Stashed changes
   }
 
   core.info(`PR #${prNumber} qualified for auto-merge via sign-off from @${qualifyingReviewer.username} (role: ${qualifyingReviewer.role}).`);
@@ -465,16 +436,6 @@ export async function runAutoMerge({ github, context, core, process = globalThis
       let approvalConfirmed = false;
       if (botLogin) {
         try {
-<<<<<<< Updated upstream
-          const currentReviews = await github.paginate(github.rest.pulls.listReviews, {
-            owner,
-            repo,
-            pull_number: prNumber,
-          });
-          const { latestReviews } = evaluateReviews(currentReviews, authorLogin);
-          approvalConfirmed = latestReviews.some(
-            r => r.user.login === botLogin && r.commit_id === pr.head.sha && r.state === 'APPROVED'
-=======
           const currentReviews = await (typeof github.paginate === 'function' && typeof github.rest?.pulls?.listReviews === 'function'
             ? github.paginate(github.rest.pulls.listReviews, {
               owner,
@@ -487,7 +448,6 @@ export async function runAutoMerge({ github, context, core, process = globalThis
           const { latestReviews: freshReviews } = evaluateReviews(currentReviews, authorLogin, botLogin);
           approvalConfirmed = freshReviews.some(
             r => r.user?.login?.toLowerCase() === botLogin.toLowerCase() && r.commit_id === pr.head.sha && r.state === 'APPROVED'
->>>>>>> Stashed changes
           );
         } catch (verificationError) {
           core.warning(`Could not verify bot approval on PR #${prNumber}: ${verificationError.message}`);
