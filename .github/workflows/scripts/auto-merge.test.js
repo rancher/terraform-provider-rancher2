@@ -97,7 +97,7 @@ test('resolveTargetPr - resolves via commit SHA fallback', async () => {
     rest: {
       repos: {
         listPullRequestsAssociatedWithCommit: async () => [
-          { number: 55, state: 'open', head: { ref: 'feature-branch' } },
+          { number: 55, state: 'open', head: { ref: 'feature-branch', sha: 'commit-sha-123' } },
         ],
       },
     },
@@ -117,6 +117,35 @@ test('resolveTargetPr - resolves via commit SHA fallback', async () => {
     process: { env: {} },
   });
   assert.strictEqual(result.number, 55);
+});
+
+test('resolveTargetPr - rejects fallback PR when head SHA does not match triggering SHA', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    paginate: async (fn, params) => fn(params),
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => [
+          { number: 55, state: 'open', head: { ref: 'feature-branch', sha: 'different-newer-sha' } },
+        ],
+      },
+    },
+  };
+  const result = await resolveTargetPr({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        workflow_run: {
+          head_sha: 'commit-sha-123',
+          head_branch: 'feature-branch',
+        },
+      },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+  assert.strictEqual(result, null);
 });
 
 test('checkWorkflowModifications - flags changes in .github/', async () => {
@@ -141,6 +170,29 @@ test('checkWorkflowModifications - flags changes in .github/', async () => {
   });
   assert.strictEqual(res.modifiesWorkflows, true);
   assert.deepStrictEqual(res.workflowFiles, ['.github/workflows/pull_request.yaml']);
+});
+
+test('checkWorkflowModifications - flags changes when previous_filename is in .github/ (rename protection)', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      pulls: {
+        listFiles: async () => {},
+      },
+    },
+    paginate: async () => [
+      { filename: 'scripts/moved_workflow.sh', previous_filename: '.github/workflows/old.yml' },
+    ],
+  };
+  const res = await checkWorkflowModifications({
+    github: mockGithub,
+    owner: 'rancher',
+    repo: 'test',
+    prNumber: 1,
+    core: mockCore,
+  });
+  assert.strictEqual(res.modifiesWorkflows, true);
+  assert.deepStrictEqual(res.workflowFiles, ['.github/workflows/old.yml']);
 });
 
 test('checkWorkflowModifications - allows PRs without changes in .github/', async () => {
@@ -233,6 +285,16 @@ test('evaluateReviews - case-insensitive user logins and author comparison', () 
   const res = evaluateReviews(reviews, 'authoruser');
   assert.strictEqual(res.hasChangesRequested, false);
   assert.deepStrictEqual(res.approvedReviewers, ['ReviewerOne']);
+});
+
+test('evaluateReviews - excludes authenticated bot from approvedReviewers', () => {
+  const reviews = [
+    { user: { login: 'rancher-bot' }, state: 'APPROVED' },
+    { user: { login: 'triage-reviewer' }, state: 'APPROVED' },
+  ];
+  const res = evaluateReviews(reviews, 'author', 'rancher-bot');
+  assert.strictEqual(res.hasChangesRequested, false);
+  assert.deepStrictEqual(res.approvedReviewers, ['triage-reviewer']);
 });
 
 test('checkReviewerPermission - authorizes triage, write, and admin', async () => {
@@ -387,6 +449,70 @@ test('runAutoMerge - skips PR modifying .github/**', async () => {
   assert.strictEqual(mockCore.outputs.auto_merge_status, 'skipped_workflow_files');
 });
 
+test('runAutoMerge - fails when GITHUB_MERGE_TOKEN is missing', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      pulls: {
+        listFiles: async () => {},
+      },
+    },
+    paginate: async () => [{ filename: 'rancher2/config.go' }],
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'test' },
+    payload: {
+      pull_request: {
+        number: 1,
+        state: 'open',
+        draft: false,
+        base: { ref: 'main' },
+        head: { sha: 'sha1' },
+      },
+    },
+  };
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: {} },
+  });
+  assert.strictEqual(result, false);
+  assert.match(mockCore.failedMessage, /GITHUB_MERGE_TOKEN is required/);
+});
+
+test('runAutoMerge - fails when getOctokit is unavailable', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      pulls: {
+        listFiles: async () => {},
+      },
+    },
+    paginate: async () => [{ filename: 'rancher2/config.go' }],
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'test' },
+    payload: {
+      pull_request: {
+        number: 1,
+        state: 'open',
+        draft: false,
+        base: { ref: 'main' },
+        head: { sha: 'sha1' },
+      },
+    },
+  };
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+  });
+  assert.strictEqual(result, false);
+  assert.match(mockCore.failedMessage, /getOctokit is unavailable/);
+});
+
 test('runAutoMerge - blocks when CHANGES_REQUESTED is active', async () => {
   const mockCore = createMockCore();
   let callCount = 0;
@@ -400,14 +526,21 @@ test('runAutoMerge - blocks when CHANGES_REQUESTED is active', async () => {
     paginate: async () => {
       callCount++;
       if (callCount === 1) {
-        // listFiles
         return [{ filename: 'rancher2/config.go' }];
       }
-      // listReviews
       return [
         { user: { login: 'reviewer' }, state: 'CHANGES_REQUESTED' },
         { user: { login: 'approver' }, state: 'APPROVED' },
       ];
+    },
+  };
+  const elevatedGithub = {
+    rest: {
+      users: {
+        getAuthenticated: async () => ({
+          data: { login: 'rancher-bot' },
+        }),
+      },
     },
   };
   const mockContext = {
@@ -427,10 +560,62 @@ test('runAutoMerge - blocks when CHANGES_REQUESTED is active', async () => {
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: {} },
+    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    getOctokit: () => elevatedGithub,
   });
   assert.strictEqual(result, false);
   assert.strictEqual(mockCore.outputs.auto_merge_status, 'blocked_changes_requested');
+});
+
+test('runAutoMerge - does not allow bot approval to self-qualify without human approval', async () => {
+  const mockCore = createMockCore();
+  let callCount = 0;
+  const mockGithub = {
+    rest: {
+      pulls: {
+        listFiles: async () => {},
+        listReviews: async () => {},
+      },
+    },
+    paginate: async () => {
+      callCount++;
+      if (callCount === 1) {
+        return [{ filename: 'rancher2/config.go' }];
+      }
+      return [{ user: { login: 'rancher-bot' }, state: 'APPROVED' }];
+    },
+  };
+  const elevatedGithub = {
+    rest: {
+      users: {
+        getAuthenticated: async () => ({
+          data: { login: 'rancher-bot' },
+        }),
+      },
+    },
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'test' },
+    payload: {
+      pull_request: {
+        number: 1,
+        state: 'open',
+        draft: false,
+        base: { ref: 'main' },
+        head: { sha: 'sha1' },
+        user: { login: 'author' },
+      },
+    },
+  };
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    getOctokit: () => elevatedGithub,
+  });
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.auto_merge_status, 'no_approvals');
 });
 
 test('runAutoMerge - skips when reviewer lacks qualifying role', async () => {
@@ -456,6 +641,15 @@ test('runAutoMerge - skips when reviewer lacks qualifying role', async () => {
       return [{ user: { login: 'guest' }, state: 'APPROVED' }];
     },
   };
+  const elevatedGithub = {
+    rest: {
+      users: {
+        getAuthenticated: async () => ({
+          data: { login: 'rancher-bot' },
+        }),
+      },
+    },
+  };
   const mockContext = {
     repo: { owner: 'rancher', repo: 'test' },
     payload: {
@@ -473,10 +667,67 @@ test('runAutoMerge - skips when reviewer lacks qualifying role', async () => {
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: {} },
+    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    getOctokit: () => elevatedGithub,
   });
   assert.strictEqual(result, false);
   assert.strictEqual(mockCore.outputs.auto_merge_status, 'no_qualifying_permission');
+});
+
+test('runAutoMerge - skips when qualifying review commit_id does not match PR head', async () => {
+  const mockCore = createMockCore();
+  let callCount = 0;
+  const mockGithub = {
+    rest: {
+      pulls: {
+        listFiles: async () => {},
+        listReviews: async () => {},
+      },
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'triage', role_name: 'triage' },
+        }),
+      },
+    },
+    paginate: async () => {
+      callCount++;
+      if (callCount === 1) {
+        return [{ filename: 'rancher2/config.go' }];
+      }
+      return [{ user: { login: 'triage-reviewer' }, state: 'APPROVED', commit_id: 'old-sha' }];
+    },
+  };
+  const elevatedGithub = {
+    rest: {
+      users: {
+        getAuthenticated: async () => ({
+          data: { login: 'rancher-bot' },
+        }),
+      },
+    },
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'test' },
+    payload: {
+      pull_request: {
+        number: 1,
+        state: 'open',
+        draft: false,
+        base: { ref: 'main' },
+        head: { sha: 'new-sha' },
+        user: { login: 'author' },
+      },
+    },
+  };
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    getOctokit: () => elevatedGithub,
+  });
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.auto_merge_status, 'skipped_superseded');
 });
 
 test('runAutoMerge - successfully submits bot approval and enables auto-merge for triage approver', async () => {
@@ -484,31 +735,23 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
   let callCount = 0;
   let botReviewCreated = false;
   let autoMergeMutationCalled = false;
+  let elevatedClientUsedForReview = false;
+  let elevatedClientUsedForMutation = false;
 
-  const mockGithub = {
-    paginate: async () => {
-      callCount++;
-      if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
-      }
-      return [{ user: { login: 'triage-engineer' }, state: 'APPROVED' }];
-    },
+  const elevatedGithub = {
     rest: {
-      repos: {
-        getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
-        }),
-      },
       users: {
         getAuthenticated: async () => ({
           data: { login: 'rancher-bot' },
         }),
       },
       pulls: {
-        createReview: async ({ event, commit_id }) => {
+        createReview: async ({ event, commit_id, body }) => {
           assert.strictEqual(event, 'APPROVE');
           assert.strictEqual(commit_id, 'sha1');
+          assert.match(body, /@triage-engineer/);
           botReviewCreated = true;
+          elevatedClientUsedForReview = true;
           return { data: { id: 123 } };
         },
       },
@@ -517,12 +760,35 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
       assert.ok(query.includes('enablePullRequestAutoMerge'));
       assert.strictEqual(vars.pullRequestId, 'PR_node_id_123');
       autoMergeMutationCalled = true;
+      elevatedClientUsedForMutation = true;
       return {
         enablePullRequestAutoMerge: {
           pullRequest: { id: 'PR_node_id_123' },
         },
       };
     },
+  };
+
+  const mockGithub = {
+    paginate: async () => {
+      callCount++;
+      if (callCount === 1) {
+        return [{ filename: 'rancher2/config.go' }];
+      }
+      return [{ user: { login: 'triage-engineer' }, state: 'APPROVED', commit_id: 'sha1' }];
+    },
+    rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'triage', role_name: 'triage' },
+        }),
+      },
+    },
+  };
+
+  const mockGetOctokit = (token) => {
+    assert.strictEqual(token, 'vault-merge-token-secret');
+    return elevatedGithub;
   };
 
   const mockContext = {
@@ -544,12 +810,15 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: {} },
+    process: { env: { GITHUB_MERGE_TOKEN: 'vault-merge-token-secret' } },
+    getOctokit: mockGetOctokit,
   });
 
   assert.strictEqual(result, true);
   assert.strictEqual(botReviewCreated, true);
+  assert.strictEqual(elevatedClientUsedForReview, true);
   assert.strictEqual(autoMergeMutationCalled, true);
+  assert.strictEqual(elevatedClientUsedForMutation, true);
   assert.strictEqual(mockCore.outputs.auto_merge_status, 'enabled');
 });
 
@@ -557,20 +826,8 @@ test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', 
   const mockCore = createMockCore();
   let callCount = 0;
 
-  const mockGithub = {
-    paginate: async () => {
-      callCount++;
-      if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
-      }
-      return [{ user: { login: 'triage-engineer' }, state: 'APPROVED' }];
-    },
+  const elevatedGithub = {
     rest: {
-      repos: {
-        getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
-        }),
-      },
       users: {
         getAuthenticated: async () => ({
           data: { login: 'rancher-bot' },
@@ -585,6 +842,28 @@ test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', 
     },
   };
 
+  const mockGithub = {
+    paginate: async () => {
+      callCount++;
+      if (callCount === 1) {
+        return [{ filename: 'rancher2/config.go' }];
+      }
+      return [{ user: { login: 'triage-engineer' }, state: 'APPROVED', commit_id: 'sha1' }];
+    },
+    rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'triage', role_name: 'triage' },
+        }),
+      },
+    },
+  };
+
+  const mockGetOctokit = (token) => {
+    assert.strictEqual(token, 'vault-merge-token-secret');
+    return elevatedGithub;
+  };
+
   const mockContext = {
     repo: { owner: 'rancher', repo: 'test' },
     payload: {
@@ -604,7 +883,8 @@ test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', 
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: {} },
+    process: { env: { GITHUB_MERGE_TOKEN: 'vault-merge-token-secret' } },
+    getOctokit: mockGetOctokit,
   });
 
   assert.strictEqual(result, true);

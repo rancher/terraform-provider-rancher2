@@ -46,7 +46,7 @@ export async function resolveTargetPr({ github, context, core, process = globalT
     }
   }
 
-  const headSha = parentRun?.head_sha || process?.env?.WORKFLOW_RUN_SHA;
+  const headSha = parentRun?.head_sha || process?.env?.WORKFLOW_RUN_SHA || process?.env?.PR_HEAD_SHA;
   if (headSha && typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function') {
     core.info(`Attempting fallback PR resolution for commit SHA: ${headSha}...`);
     try {
@@ -81,11 +81,33 @@ export async function resolveTargetPr({ github, context, core, process = globalT
         if (parentRun?.head_repository?.full_name && p.head?.repo?.full_name?.toLowerCase() !== parentRun.head_repository.full_name.toLowerCase()) {
           return false;
         }
+        // Reject fallback PR matches with stale head SHA
+        if (!p.head?.sha || p.head.sha !== headSha) {
+          return false;
+        }
         return true;
       });
 
       if (matched) {
         core.info(`Resolved PR #${matched.number} via commit search fallback.`);
+        if (matched.number && typeof github?.rest?.pulls?.get === 'function') {
+          try {
+            const fullPr = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: matched.number,
+            });
+            if (fullPr?.data) {
+              if (fullPr.data.head?.sha && fullPr.data.head.sha !== headSha) {
+                core.info(`PR #${matched.number} head (${fullPr.data.head.sha}) has changed since commit ${headSha}. Rejecting stale match.`);
+                return null;
+              }
+              return fullPr.data;
+            }
+          } catch (err) {
+            core.info(`Could not fetch full details for PR #${matched.number}, using commit-matched PR object: ${err.message}`);
+          }
+        }
         return matched;
       }
     } catch (error) {
@@ -98,6 +120,7 @@ export async function resolveTargetPr({ github, context, core, process = globalT
 
 /**
  * checkWorkflowModifications: Checks if any files modified in the PR reside under .github/.
+ * Validates both filename and previous_filename to protect against workflow renaming.
  */
 export async function checkWorkflowModifications({ github, owner, repo, prNumber, core }) {
   let files = [];
@@ -123,19 +146,36 @@ export async function checkWorkflowModifications({ github, owner, repo, prNumber
     throw error;
   }
 
-  const workflowFiles = files.filter(f => f.filename && f.filename.startsWith('.github/'));
+  const workflowFiles = files.filter(f => {
+    const filenameMatches = typeof f?.filename === 'string' && f.filename.startsWith('.github/');
+    const prevMatches = typeof f?.previous_filename === 'string' && f.previous_filename.startsWith('.github/');
+    return filenameMatches || prevMatches;
+  });
+
+  const matchedPaths = [];
+  for (const f of workflowFiles) {
+    if (typeof f?.filename === 'string' && f.filename.startsWith('.github/')) {
+      matchedPaths.push(f.filename);
+    }
+    if (typeof f?.previous_filename === 'string' && f.previous_filename.startsWith('.github/')) {
+      matchedPaths.push(f.previous_filename);
+    }
+  }
+
   return {
     modifiesWorkflows: workflowFiles.length > 0,
-    workflowFiles: workflowFiles.map(f => f.filename),
+    workflowFiles: [...new Set(matchedPaths)],
   };
 }
 
 /**
  * evaluateReviews: Determines the latest review state for each reviewer.
+ * Excludes author and authenticated bot reviews from approved human candidates.
  */
-export function evaluateReviews(reviews, authorLogin) {
+export function evaluateReviews(reviews, authorLogin, botLogin) {
   const DECISION_STATES = new Set(['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED']);
   const normalizedAuthor = typeof authorLogin === 'string' ? authorLogin.toLowerCase() : null;
+  const normalizedBot = typeof botLogin === 'string' ? botLogin.toLowerCase() : null;
   const latestByUser = new Map();
 
   for (const review of reviews || []) {
@@ -162,8 +202,12 @@ export function evaluateReviews(reviews, authorLogin) {
   const approvedReviewers = latestReviews
     .filter(r => {
       const isApproved = (typeof r.state === 'string' ? r.state.toUpperCase() : '') === 'APPROVED';
-      const isAuthor = normalizedAuthor && r.user.login.toLowerCase() === normalizedAuthor;
-      return isApproved && !isAuthor;
+      const userLower = r.user.login.toLowerCase();
+      const isAuthor = normalizedAuthor && userLower === normalizedAuthor;
+      const isBot = (normalizedBot && userLower === normalizedBot)
+        || userLower.endsWith('[bot]')
+        || r.user?.type === 'Bot';
+      return isApproved && !isAuthor && !isBot;
     })
     .map(r => r.user.login);
 
@@ -247,7 +291,7 @@ export async function runAutoMerge({ github, context, core, process = globalThis
     return false;
   }
 
-  const triggerPrHeadSha = process?.env?.PR_HEAD_SHA;
+  const triggerPrHeadSha = process?.env?.PR_HEAD_SHA || process?.env?.WORKFLOW_RUN_SHA;
   if (triggerPrHeadSha && pr.head?.sha && triggerPrHeadSha !== pr.head.sha) {
     core.info(`PR #${prNumber} head commit (${triggerPrHeadSha}) is superseded by current head (${pr.head.sha}). Skipping stale run.`);
     core.setOutput('auto_merge_status', 'skipped_superseded');
@@ -267,6 +311,31 @@ export async function runAutoMerge({ github, context, core, process = globalThis
     core.info(`PR #${prNumber} modifies files in .github/ (${workflowFiles.join(', ')}). Workflow changes require human write approval. Skipping auto-merge.`);
     core.setOutput('auto_merge_status', 'skipped_workflow_files');
     return false;
+  }
+
+  // Initialize elevated Octokit instance with GITHUB_MERGE_TOKEN
+  const mergeToken = process?.env?.GITHUB_MERGE_TOKEN ? process.env.GITHUB_MERGE_TOKEN.trim() : undefined;
+  if (!mergeToken) {
+    core.setFailed('GITHUB_MERGE_TOKEN is required to approve PRs and enable auto-merge.');
+    return false;
+  }
+  const octokitFactory = (typeof getOctokit === 'function')
+    ? getOctokit
+    : (typeof github?.getOctokit === 'function' ? github.getOctokit.bind(github) : undefined);
+  if (typeof octokitFactory !== 'function') {
+    core.setFailed('Cannot initialize the merge-token client: getOctokit is unavailable.');
+    return false;
+  }
+  const prGithub = octokitFactory(mergeToken);
+
+  let botLogin = null;
+  try {
+    if (typeof prGithub?.rest?.users?.getAuthenticated === 'function') {
+      const { data: authUser } = await prGithub.rest.users.getAuthenticated();
+      botLogin = authUser?.login;
+    }
+  } catch (error) {
+    core.warning(`Could not resolve authenticated bot login: ${error.message}`);
   }
 
   // Gate 3: Reviews and Approvals Checks
@@ -294,7 +363,7 @@ export async function runAutoMerge({ github, context, core, process = globalThis
   }
 
   const authorLogin = pr.user?.login;
-  const { hasChangesRequested, approvedReviewers } = evaluateReviews(reviews, authorLogin);
+  const { hasChangesRequested, approvedReviewers, latestReviews } = evaluateReviews(reviews, authorLogin, botLogin);
 
   if (hasChangesRequested) {
     core.info(`PR #${prNumber} has one or more active CHANGES_REQUESTED reviews. Skipping auto-merge.`);
@@ -303,7 +372,7 @@ export async function runAutoMerge({ github, context, core, process = globalThis
   }
 
   if (approvedReviewers.length === 0) {
-    core.info(`PR #${prNumber} has no approved reviews from non-author users. Skipping auto-merge.`);
+    core.info(`PR #${prNumber} has no approved reviews from qualifying non-author, non-bot users. Skipping auto-merge.`);
     core.setOutput('auto_merge_status', 'no_approvals');
     return false;
   }
@@ -319,7 +388,14 @@ export async function runAutoMerge({ github, context, core, process = globalThis
       core,
     });
     if (isAuthorized) {
-      qualifyingReviewer = { username, role: roleName || permission };
+      const qualifyingReview = latestReviews.find(
+        r => r.user?.login?.toLowerCase() === username.toLowerCase()
+      );
+      qualifyingReviewer = {
+        username,
+        role: roleName || permission,
+        review: qualifyingReview,
+      };
       break;
     }
   }
@@ -330,6 +406,7 @@ export async function runAutoMerge({ github, context, core, process = globalThis
     return false;
   }
 
+<<<<<<< Updated upstream
   core.info(`PR #${prNumber} qualified for auto-merge via sign-off from @${qualifyingReviewer.username} (role: ${qualifyingReviewer.role}).`);
 
   // Initialize elevated Octokit instance with GITHUB_MERGE_TOKEN
@@ -356,10 +433,20 @@ export async function runAutoMerge({ github, context, core, process = globalThis
     }
   } catch (error) {
     core.info(`Could not resolve authenticated bot login: ${error.message}`);
+=======
+  // Validate that the qualifying review matches the current PR head if commit_id is present on the review
+  if (qualifyingReviewer.review?.commit_id && pr.head?.sha && qualifyingReviewer.review.commit_id !== pr.head.sha) {
+    core.info(`Approval by @${qualifyingReviewer.username} was submitted on commit ${qualifyingReviewer.review.commit_id}, but current PR head is ${pr.head.sha}. Skipping stale review.`);
+    core.setOutput('auto_merge_status', 'skipped_superseded');
+    return false;
+>>>>>>> Stashed changes
   }
 
+  core.info(`PR #${prNumber} qualified for auto-merge via sign-off from @${qualifyingReviewer.username} (role: ${qualifyingReviewer.role}).`);
+
+  // Gate 5: Check if Bot already approved the current head commit
   const alreadyApprovedByBot = botLogin && reviews.some(
-    r => r.user?.login === botLogin && r.commit_id === pr.head.sha && r.state === 'APPROVED'
+    r => r.user?.login?.toLowerCase() === botLogin.toLowerCase() && r.commit_id === pr.head.sha && r.state === 'APPROVED'
   );
 
   if (!alreadyApprovedByBot) {
@@ -378,6 +465,7 @@ export async function runAutoMerge({ github, context, core, process = globalThis
       let approvalConfirmed = false;
       if (botLogin) {
         try {
+<<<<<<< Updated upstream
           const currentReviews = await github.paginate(github.rest.pulls.listReviews, {
             owner,
             repo,
@@ -386,6 +474,20 @@ export async function runAutoMerge({ github, context, core, process = globalThis
           const { latestReviews } = evaluateReviews(currentReviews, authorLogin);
           approvalConfirmed = latestReviews.some(
             r => r.user.login === botLogin && r.commit_id === pr.head.sha && r.state === 'APPROVED'
+=======
+          const currentReviews = await (typeof github.paginate === 'function' && typeof github.rest?.pulls?.listReviews === 'function'
+            ? github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number: prNumber,
+            })
+            : (github.rest?.pulls?.listReviews
+              ? (await github.rest.pulls.listReviews({ owner, repo, pull_number: prNumber }))?.data || []
+              : []));
+          const { latestReviews: freshReviews } = evaluateReviews(currentReviews, authorLogin, botLogin);
+          approvalConfirmed = freshReviews.some(
+            r => r.user?.login?.toLowerCase() === botLogin.toLowerCase() && r.commit_id === pr.head.sha && r.state === 'APPROVED'
+>>>>>>> Stashed changes
           );
         } catch (verificationError) {
           core.warning(`Could not verify bot approval on PR #${prNumber}: ${verificationError.message}`);
