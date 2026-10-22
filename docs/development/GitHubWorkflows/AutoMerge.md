@@ -57,10 +57,10 @@ sequenceDiagram
     GHA->>Preflight: Trigger on workflow_run [completed] (Context: main)
 
     Note over Preflight: Preflight checks run without release environment or Vault access
-    Preflight->>GHApi: 1. Verify approval signal artifact exists
+    Preflight->>GHApi: 1. Download & validate approval signal artifact (review_id, review_user, review_commit_id, head_sha)
     Preflight->>GHApi: 2. Validate PR target is 'main' & state is 'open'
     Preflight->>GHApi: 3. Check changed files (reject if .github/**)
-    Preflight->>GHApi: 4. Verify reviewer role in [triage, write, admin]
+    Preflight->>GHApi: 4. Verify triggering reviewer role in [triage, write, admin]
     Preflight->>GHApi: 5. Ensure no active CHANGES_REQUESTED reviews
     Preflight-->>GHA: Preflight outputs eligible: true
 
@@ -88,13 +88,14 @@ Before submitting an automated approval or enabling auto-merge, `.github/workflo
    - The PR target branch must strictly equal `main`.
    - The PR must be `open` and must not be in `draft` mode.
 
-2. **Review State & Non-Self Approval**:
-   - The review that triggered the event must have state `APPROVED`.
-   - The reviewer must not be the author of the pull request (`review.user.login !== pr.user.login`).
+2. **Triggering Approval Signal & Non-Self Approval**:
+   - The triggering review signal must be downloaded and verified for integrity (`review_id`, `review_user`, `review_commit_id`, `head_sha`).
+   - The triggering review must have state `APPROVED` and match the current `head.sha`.
+   - The triggering reviewer must not be the author of the pull request (`review.user.login !== pr.user.login`).
 
-3. **Role & Permission Verification**:
-   - The reviewer's repository permission is checked via `GET /repos/{owner}/{repo}/collaborators/{username}/permission`.
-   - The effective permission must be `triage`, `write`, or `admin`. Users with `read` or `none` permissions are rejected.
+3. **Triggering Reviewer Role & Permission Verification**:
+   - The triggering reviewer's repository permission is checked via `GET /repos/{owner}/{repo}/collaborators/{username}/permission`.
+   - The effective permission must be `triage`, `write`, or `admin`. Read-level contributors cannot trigger auto-merge or re-use existing approvals.
 
 4. **Workflow File Modification Exemption**:
    - Changed files are retrieved via `GET /repos/{owner}/{repo}/pulls/{number}/files`.

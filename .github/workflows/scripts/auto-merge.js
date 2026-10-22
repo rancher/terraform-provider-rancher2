@@ -4,6 +4,188 @@
  * then submits a bot approval and enables native auto-merge via GraphQL.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
+
+/**
+ * resolveApprovalSignal: Resolves triggering approval signal from payload, env vars, signal file, or Actions API.
+ */
+export async function resolveApprovalSignal({ github, context, core, process = globalThis.process }) {
+  // 1. Direct pull_request_review event payload
+  if (context?.payload?.review && context?.payload?.pull_request) {
+    return {
+      pr_number: context.payload.pull_request.number,
+      review_id: context.payload.review.id,
+      review_state: context.payload.review.state,
+      review_user: context.payload.review.user?.login,
+      review_commit_id: context.payload.review.commit_id,
+      head_sha: context.payload.pull_request.head?.sha,
+      base_ref: context.payload.pull_request.base?.ref,
+    };
+  }
+
+  // 2. Direct JSON string passed via APPROVAL_SIGNAL env var
+  if (process?.env?.APPROVAL_SIGNAL) {
+    try {
+      const parsed = typeof process.env.APPROVAL_SIGNAL === 'string'
+        ? JSON.parse(process.env.APPROVAL_SIGNAL)
+        : process.env.APPROVAL_SIGNAL;
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    } catch (err) {
+      core.warning(`Failed to parse APPROVAL_SIGNAL env var: ${err.message}`);
+    }
+  }
+
+  // 3. Signal file on disk (from actions/download-artifact step)
+  const candidatePaths = [];
+  if (process?.env?.APPROVAL_SIGNAL_PATH) {
+    candidatePaths.push(process.env.APPROVAL_SIGNAL_PATH);
+    if (process?.env?.GITHUB_WORKSPACE) {
+      candidatePaths.push(path.resolve(process.env.GITHUB_WORKSPACE, process.env.APPROVAL_SIGNAL_PATH));
+    }
+  }
+  const workspace = process?.env?.GITHUB_WORKSPACE || process?.cwd?.() || '.';
+  candidatePaths.push(
+    path.resolve(workspace, 'signal/approval-signal.json'),
+    path.resolve(workspace, 'approval-signal.json'),
+    'signal/approval-signal.json',
+    'approval-signal.json'
+  );
+
+  for (const filePath of candidatePaths) {
+    try {
+      if (fs.existsSync(filePath)) {
+        const raw = fs.readFileSync(filePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return parsed;
+        }
+      }
+    } catch (err) {
+      core.warning(`Failed to read approval signal file at ${filePath}: ${err.message}`);
+    }
+  }
+
+  // 4. Fallback to TRIGGER_REVIEW_* env variables if set from previous job outputs
+  if (process?.env?.TRIGGER_REVIEW_ID && process?.env?.TRIGGER_REVIEW_USER) {
+    return {
+      pr_number: process.env.PR_NUMBER ? Number.parseInt(process.env.PR_NUMBER, 10) : undefined,
+      review_id: process.env.TRIGGER_REVIEW_ID,
+      review_user: process.env.TRIGGER_REVIEW_USER,
+      review_commit_id: process.env.TRIGGER_REVIEW_COMMIT_ID || process.env.PR_HEAD_SHA,
+      head_sha: process.env.PR_HEAD_SHA || process.env.TRIGGER_REVIEW_COMMIT_ID,
+      review_state: 'APPROVED',
+      base_ref: 'main',
+    };
+  }
+
+  // 5. Direct API download fallback if in workflow_run context
+  const parentRun = context?.payload?.workflow_run;
+  const owner = context?.repo?.owner || process?.env?.GITHUB_REPOSITORY?.split('/')[0];
+  const repo = context?.repo?.repo || process?.env?.GITHUB_REPOSITORY?.split('/')[1];
+
+  if (parentRun?.id && owner && repo && typeof github?.rest?.actions?.downloadArtifact === 'function') {
+    try {
+      let artifacts = [];
+      if (typeof github.paginate === 'function' && typeof github?.rest?.actions?.listWorkflowRunArtifacts === 'function') {
+        artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+          owner,
+          repo,
+          run_id: parentRun.id,
+        });
+      } else if (typeof github?.rest?.actions?.listWorkflowRunArtifacts === 'function') {
+        const res = await github.rest.actions.listWorkflowRunArtifacts({
+          owner,
+          repo,
+          run_id: parentRun.id,
+        });
+        artifacts = res?.data?.artifacts || res?.artifacts || [];
+      }
+
+      const signalArtifact = artifacts.find(a => a.name === 'auto-merge-approval-signal');
+      if (signalArtifact) {
+        const downloadRes = await github.rest.actions.downloadArtifact({
+          owner,
+          repo,
+          artifact_id: signalArtifact.id,
+          archive_format: 'zip',
+        });
+        if (downloadRes?.data) {
+          if (typeof downloadRes.data === 'string') {
+            try { return JSON.parse(downloadRes.data); } catch { /* ignore */ }
+          } else if (Buffer.isBuffer(downloadRes.data)) {
+            try { return JSON.parse(downloadRes.data.toString('utf8')); } catch { /* ignore */ }
+          } else if (typeof downloadRes.data === 'object') {
+            return downloadRes.data;
+          }
+        }
+      }
+    } catch (apiErr) {
+      core.warning(`API download of approval signal failed: ${apiErr.message}`);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * validateApprovalSignal: Validates the integrity and freshness of the approval signal against the PR.
+ */
+export function validateApprovalSignal(signal, pr, core) {
+  if (!signal || typeof signal !== 'object') {
+    core.info('Missing or invalid approval signal.');
+    return { isValid: false, reason: 'missing_signal' };
+  }
+
+  const reviewUser = signal.review_user ? String(signal.review_user).trim() : '';
+  const reviewId = signal.review_id !== undefined && signal.review_id !== null ? String(signal.review_id).trim() : '';
+  const reviewCommitId = signal.review_commit_id ? String(signal.review_commit_id).trim() : '';
+  const signalHeadSha = signal.head_sha ? String(signal.head_sha).trim() : '';
+  const reviewState = signal.review_state ? String(signal.review_state).trim().toUpperCase() : '';
+  const baseRef = signal.base_ref ? String(signal.base_ref).trim().replace(/^refs\/heads\//, '') : '';
+  const prNum = signal.pr_number !== undefined && signal.pr_number !== null ? Number.parseInt(signal.pr_number, 10) : null;
+
+  if (!reviewUser || !reviewId || !reviewCommitId || !signalHeadSha) {
+    core.info('Approval signal lacks required fields (review_user, review_id, review_commit_id, head_sha).');
+    return { isValid: false, reason: 'incomplete_signal' };
+  }
+
+  if (reviewState !== 'APPROVED') {
+    core.info(`Approval signal review_state is "${reviewState}", expected "APPROVED".`);
+    return { isValid: false, reason: 'not_approved_state' };
+  }
+
+  if (baseRef && baseRef !== 'main') {
+    core.info(`Approval signal base_ref is "${baseRef}", expected "main".`);
+    return { isValid: false, reason: 'not_main_base' };
+  }
+
+  if (prNum && pr && pr.number && prNum !== pr.number) {
+    core.info(`Approval signal PR #${prNum} does not match target PR #${pr.number}.`);
+    return { isValid: false, reason: 'pr_mismatch' };
+  }
+
+  if (pr?.head?.sha && (reviewCommitId !== pr.head.sha || signalHeadSha !== pr.head.sha)) {
+    core.info(`Approval signal commit (${reviewCommitId}) or head (${signalHeadSha}) does not match current PR head (${pr.head.sha}). Skipping stale signal.`);
+    return { isValid: false, reason: 'stale_signal' };
+  }
+
+  return {
+    isValid: true,
+    signal: {
+      pr_number: prNum,
+      review_id: reviewId,
+      review_user: reviewUser,
+      review_commit_id: reviewCommitId,
+      head_sha: signalHeadSha,
+      review_state: reviewState,
+      base_ref: baseRef,
+    },
+  };
+}
+
 /**
  * resolveTargetPr: Resolves the target pull request object from payload, PR number, or workflow_run commit fallback.
  */
@@ -379,46 +561,114 @@ export async function runAutoMerge({ github, context, core, process = globalThis
     return false;
   }
 
-  if (approvedReviewers.length === 0) {
-    core.info(`PR #${prNumber} has no approved reviews from qualifying non-author, non-bot users. Skipping auto-merge.`);
-    core.setOutput('auto_merge_status', 'no_approvals');
-    return false;
-  }
+  // Gate 4: Verify Reviewer Permissions and Bind to Triggering Signal
+  const parentRun = context?.payload?.workflow_run;
+  const signal = await resolveApprovalSignal({ github, context, core, process });
 
-  // Gate 4: Verify Reviewer Permissions
   let qualifyingReviewer = null;
-  for (const username of approvedReviewers) {
+
+  if (signal) {
+    const { isValid, reason, signal: validatedSignal } = validateApprovalSignal(signal, pr, core);
+    if (!isValid) {
+      core.setFailed(`Triggering approval signal failed validation (${reason}). Failing closed.`);
+      return false;
+    }
+
+    if (authorLogin && validatedSignal.review_user.toLowerCase() === authorLogin.toLowerCase()) {
+      core.info(`Reviewer @${validatedSignal.review_user} is the author of PR #${prNumber}. Skipping auto-merge.`);
+      core.setOutput('auto_merge_status', 'skipped_author');
+      return false;
+    }
+
+    if (validatedSignal.review_user.toLowerCase() === botLogin.toLowerCase()) {
+      core.info(`Reviewer @${validatedSignal.review_user} is the authenticated bot. Skipping auto-merge.`);
+      core.setOutput('auto_merge_status', 'skipped_bot');
+      return false;
+    }
+
     const { isAuthorized, roleName, permission } = await checkReviewerPermission({
       github,
       owner,
       repo,
-      username,
+      username: validatedSignal.review_user,
       core,
     });
-    if (isAuthorized) {
-      const qualifyingReview = latestReviews.find(
-        r => r.user?.login?.toLowerCase() === username.toLowerCase()
-      );
-      qualifyingReviewer = {
-        username,
-        role: roleName || permission,
-        review: qualifyingReview,
-      };
-      break;
+
+    if (!isAuthorized) {
+      core.info(`Triggering reviewer @${validatedSignal.review_user} does not have triage, write, or admin permissions (role: ${roleName || permission}). Skipping auto-merge.`);
+      core.setOutput('auto_merge_status', 'no_qualifying_permission');
+      return false;
     }
-  }
 
-  if (!qualifyingReviewer) {
-    core.info(`PR #${prNumber} does not have an approved review from a user with triage, write, or admin permissions. Skipping auto-merge.`);
-    core.setOutput('auto_merge_status', 'no_qualifying_permission');
-    return false;
-  }
+    const triggerReview = latestReviews.find(
+      r => r.user?.login?.toLowerCase() === validatedSignal.review_user.toLowerCase()
+    );
 
-  // Validate that the qualifying review matches the current PR head if commit_id is present on the review
-  if (qualifyingReviewer.review?.commit_id && pr.head?.sha && qualifyingReviewer.review.commit_id !== pr.head.sha) {
-    core.info(`Approval by @${qualifyingReviewer.username} was submitted on commit ${qualifyingReviewer.review.commit_id}, but current PR head is ${pr.head.sha}. Skipping stale review.`);
-    core.setOutput('auto_merge_status', 'skipped_superseded');
+    if (!triggerReview || (typeof triggerReview.state === 'string' && triggerReview.state.toUpperCase() !== 'APPROVED')) {
+      core.info(`Triggering review by @${validatedSignal.review_user} is no longer in APPROVED state. Skipping auto-merge.`);
+      core.setOutput('auto_merge_status', 'no_approvals');
+      return false;
+    }
+
+    if (triggerReview.commit_id && pr.head?.sha && triggerReview.commit_id !== pr.head.sha) {
+      core.info(`Approval by @${validatedSignal.review_user} was submitted on commit ${triggerReview.commit_id}, but current PR head is ${pr.head.sha}. Skipping stale review.`);
+      core.setOutput('auto_merge_status', 'skipped_superseded');
+      return false;
+    }
+
+    if (triggerReview.id && validatedSignal.review_id && String(triggerReview.id) !== String(validatedSignal.review_id)) {
+      core.info(`Latest review ID (${triggerReview.id}) for @${validatedSignal.review_user} does not match triggering review ID (${validatedSignal.review_id}). Skipping superseded review.`);
+      core.setOutput('auto_merge_status', 'skipped_superseded');
+      return false;
+    }
+
+    qualifyingReviewer = {
+      username: validatedSignal.review_user,
+      role: roleName || permission,
+      review: triggerReview,
+    };
+  } else if (parentRun?.id) {
+    core.setFailed(`Workflow run ${parentRun.id} lacks valid 'auto-merge-approval-signal'. Failing closed.`);
     return false;
+  } else {
+    if (approvedReviewers.length === 0) {
+      core.info(`PR #${prNumber} has no approved reviews from qualifying non-author, non-bot users. Skipping auto-merge.`);
+      core.setOutput('auto_merge_status', 'no_approvals');
+      return false;
+    }
+
+    for (const username of approvedReviewers) {
+      const { isAuthorized, roleName, permission } = await checkReviewerPermission({
+        github,
+        owner,
+        repo,
+        username,
+        core,
+      });
+      if (isAuthorized) {
+        const qualifyingReview = latestReviews.find(
+          r => r.user?.login?.toLowerCase() === username.toLowerCase()
+        );
+        qualifyingReviewer = {
+          username,
+          role: roleName || permission,
+          review: qualifyingReview,
+        };
+        break;
+      }
+    }
+
+    if (!qualifyingReviewer) {
+      core.info(`PR #${prNumber} does not have an approved review from a user with triage, write, or admin permissions. Skipping auto-merge.`);
+      core.setOutput('auto_merge_status', 'no_qualifying_permission');
+      return false;
+    }
+
+    if (qualifyingReviewer.review?.commit_id && pr.head?.sha && qualifyingReviewer.review.commit_id !== pr.head.sha) {
+      core.info(`Approval by @${qualifyingReviewer.username} was submitted on commit ${qualifyingReviewer.review.commit_id}, but current PR head is ${pr.head.sha}. Skipping stale review.`);
+      core.setOutput('auto_merge_status', 'skipped_superseded');
+      return false;
+    }
   }
 
   core.info(`PR #${prNumber} qualified for auto-merge via sign-off from @${qualifyingReviewer.username} (role: ${qualifyingReviewer.role}).`);
@@ -518,36 +768,7 @@ export async function runPreflight({ github, context, core, process = globalThis
     return false;
   }
 
-  // If running from workflow_run, verify the listener produced the explicit approval signal artifact
   const parentRun = context?.payload?.workflow_run;
-  if (parentRun?.id && typeof github?.rest?.actions?.listWorkflowRunArtifacts === 'function') {
-    try {
-      let artifacts = [];
-      if (typeof github.paginate === 'function') {
-        artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
-          owner,
-          repo,
-          run_id: parentRun.id,
-        });
-      } else {
-        const res = await github.rest.actions.listWorkflowRunArtifacts({
-          owner,
-          repo,
-          run_id: parentRun.id,
-        });
-        artifacts = res?.data?.artifacts || res?.artifacts || [];
-      }
-
-      const hasSignal = artifacts.some(a => a.name === 'auto-merge-approval-signal');
-      if (!hasSignal) {
-        core.info(`Workflow run ${parentRun.id} lacks 'auto-merge-approval-signal' artifact (listener was skipped or event was not an approved review on main). Skipping auto-merge.`);
-        core.setOutput('eligible', 'false');
-        return false;
-      }
-    } catch (error) {
-      core.warning(`Could not verify workflow run artifacts: ${error.message}`);
-    }
-  }
 
   const pr = await resolveTargetPr({ github, context, core, process });
   if (!pr) {
@@ -635,52 +856,123 @@ export async function runPreflight({ github, context, core, process = globalThis
     return false;
   }
 
-  if (approvedReviewers.length === 0) {
-    core.info(`PR #${prNumber} has no approved reviews from qualifying non-author, non-bot users. Skipping auto-merge.`);
+  // Gate 4: Download, read, and validate Approval Signal
+  const signal = await resolveApprovalSignal({ github, context, core, process });
+  if (parentRun?.id && !signal) {
+    core.info(`Workflow run ${parentRun.id} lacks 'auto-merge-approval-signal' artifact (listener was skipped or event was not an approved review on main). Skipping auto-merge.`);
     core.setOutput('eligible', 'false');
     return false;
   }
 
-  // Gate 4: Verify Reviewer Permissions
   let qualifyingReviewer = null;
-  for (const username of approvedReviewers) {
+
+  if (signal) {
+    const { isValid, reason, signal: validatedSignal } = validateApprovalSignal(signal, pr, core);
+    if (!isValid) {
+      core.info(`Approval signal failed validation (${reason}). Skipping auto-merge.`);
+      core.setOutput('eligible', 'false');
+      return false;
+    }
+
+    if (authorLogin && validatedSignal.review_user.toLowerCase() === authorLogin.toLowerCase()) {
+      core.info(`Triggering reviewer @${validatedSignal.review_user} is the author of PR #${prNumber}. Self-approvals are not permitted. Skipping auto-merge.`);
+      core.setOutput('eligible', 'false');
+      return false;
+    }
+
     const { isAuthorized, roleName, permission } = await checkReviewerPermission({
       github,
       owner,
       repo,
-      username,
+      username: validatedSignal.review_user,
       core,
     });
-    if (isAuthorized) {
-      const qualifyingReview = latestReviews.find(
-        r => r.user?.login?.toLowerCase() === username.toLowerCase()
-      );
-      qualifyingReviewer = {
-        username,
-        role: roleName || permission,
-        review: qualifyingReview,
-      };
-      break;
+
+    if (!isAuthorized) {
+      core.info(`Triggering reviewer @${validatedSignal.review_user} does not have an approved review from a user with triage, write, or admin permissions (role: ${roleName || permission}). Skipping auto-merge.`);
+      core.setOutput('eligible', 'false');
+      return false;
     }
-  }
 
-  if (!qualifyingReviewer) {
-    core.info(`PR #${prNumber} does not have an approved review from a user with triage, write, or admin permissions. Skipping auto-merge.`);
-    core.setOutput('eligible', 'false');
-    return false;
-  }
+    const triggerReview = latestReviews.find(
+      r => r.user?.login?.toLowerCase() === validatedSignal.review_user.toLowerCase()
+    );
 
-  // Validate that the qualifying review matches current PR head
-  if (qualifyingReviewer.review?.commit_id && pr.head?.sha && qualifyingReviewer.review.commit_id !== pr.head.sha) {
-    core.info(`Approval by @${qualifyingReviewer.username} was submitted on commit ${qualifyingReviewer.review.commit_id}, but current PR head is ${pr.head.sha}. Skipping stale review.`);
-    core.setOutput('eligible', 'false');
-    return false;
+    if (!triggerReview || (typeof triggerReview.state === 'string' && triggerReview.state.toUpperCase() !== 'APPROVED')) {
+      core.info(`Review by triggering reviewer @${validatedSignal.review_user} is not in APPROVED state. Skipping auto-merge.`);
+      core.setOutput('eligible', 'false');
+      return false;
+    }
+
+    if (triggerReview.commit_id && pr.head?.sha && triggerReview.commit_id !== pr.head.sha) {
+      core.info(`Approval by @${validatedSignal.review_user} was submitted on commit ${triggerReview.commit_id}, but current PR head is ${pr.head.sha}. Skipping stale review.`);
+      core.setOutput('eligible', 'false');
+      return false;
+    }
+
+    if (triggerReview.id && validatedSignal.review_id && String(triggerReview.id) !== String(validatedSignal.review_id)) {
+      core.info(`Latest review ID (${triggerReview.id}) for @${validatedSignal.review_user} does not match triggering review ID (${validatedSignal.review_id}). Skipping superseded review.`);
+      core.setOutput('eligible', 'false');
+      return false;
+    }
+
+    qualifyingReviewer = {
+      username: validatedSignal.review_user,
+      role: roleName || permission,
+      review: triggerReview,
+      signal: validatedSignal,
+    };
+  } else {
+    // Direct execution fallback when not triggered via workflow_run signal
+    if (approvedReviewers.length === 0) {
+      core.info(`PR #${prNumber} has no approved reviews from qualifying non-author, non-bot users. Skipping auto-merge.`);
+      core.setOutput('eligible', 'false');
+      return false;
+    }
+
+    for (const username of approvedReviewers) {
+      const { isAuthorized, roleName, permission } = await checkReviewerPermission({
+        github,
+        owner,
+        repo,
+        username,
+        core,
+      });
+      if (isAuthorized) {
+        const qualifyingReview = latestReviews.find(
+          r => r.user?.login?.toLowerCase() === username.toLowerCase()
+        );
+        qualifyingReviewer = {
+          username,
+          role: roleName || permission,
+          review: qualifyingReview,
+        };
+        break;
+      }
+    }
+
+    if (!qualifyingReviewer) {
+      core.info(`PR #${prNumber} does not have an approved review from a user with triage, write, or admin permissions. Skipping auto-merge.`);
+      core.setOutput('eligible', 'false');
+      return false;
+    }
+
+    if (qualifyingReviewer.review?.commit_id && pr.head?.sha && qualifyingReviewer.review.commit_id !== pr.head.sha) {
+      core.info(`Approval by @${qualifyingReviewer.username} was submitted on commit ${qualifyingReviewer.review.commit_id}, but current PR head is ${pr.head.sha}. Skipping stale review.`);
+      core.setOutput('eligible', 'false');
+      return false;
+    }
   }
 
   core.info(`Preflight validation succeeded: PR #${prNumber} is eligible for auto-merge via sign-off from @${qualifyingReviewer.username} (role: ${qualifyingReviewer.role}).`);
   core.setOutput('eligible', 'true');
   core.setOutput('pr_number', String(pr.number));
   core.setOutput('pr_head_sha', pr.head?.sha || '');
+  if (qualifyingReviewer.signal) {
+    core.setOutput('review_id', String(qualifyingReviewer.signal.review_id));
+    core.setOutput('review_user', qualifyingReviewer.signal.review_user);
+    core.setOutput('review_commit_id', qualifyingReviewer.signal.review_commit_id);
+  }
   return true;
 }
 

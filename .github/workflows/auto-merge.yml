@@ -26,6 +26,9 @@ jobs:
       eligible: ${{ steps.validate-preflight.outputs.eligible }}
       pr_number: ${{ steps.validate-preflight.outputs.pr_number }}
       pr_head_sha: ${{ steps.validate-preflight.outputs.pr_head_sha }}
+      review_id: ${{ steps.validate-preflight.outputs.review_id }}
+      review_user: ${{ steps.validate-preflight.outputs.review_user }}
+      review_commit_id: ${{ steps.validate-preflight.outputs.review_commit_id }}
     steps:
       - name: 'Checkout Repository'
         id: checkout-repository
@@ -35,12 +38,24 @@ jobs:
           ref: 'main'
           persist-credentials: false
 
+      - name: 'Download Approval Signal'
+        id: download-signal
+        # https://github.com/actions/download-artifact/releases
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: auto-merge-approval-signal
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: signal
+
       - name: 'Validate Auto Merge Preflight'
         id: validate-preflight
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           SCRIPT_MODE: preflight
+          APPROVAL_SIGNAL_PATH: signal/approval-signal.json
           PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
           PR_HEAD_SHA: ${{ github.event.workflow_run.pull_requests[0].head.sha || github.event.workflow_run.head_sha }}
           WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
@@ -61,6 +76,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
+      actions: read
     steps:
       - name: 'Checkout Repository'
         id: checkout-repository
@@ -70,6 +86,17 @@ jobs:
           fetch-depth: 0
           ref: 'main'
           persist-credentials: false
+
+      - name: 'Download Approval Signal'
+        id: download-signal
+        # https://github.com/actions/download-artifact/releases
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: auto-merge-approval-signal
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: signal
 
       - name: 'Get Merge Token'
         id: get-merge-token
@@ -87,6 +114,10 @@ jobs:
         env:
           SCRIPT_MODE: execute
           GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
+          APPROVAL_SIGNAL_PATH: signal/approval-signal.json
+          TRIGGER_REVIEW_ID: ${{ needs.preflight.outputs.review_id }}
+          TRIGGER_REVIEW_USER: ${{ needs.preflight.outputs.review_user }}
+          TRIGGER_REVIEW_COMMIT_ID: ${{ needs.preflight.outputs.review_commit_id }}
           PR_NUMBER: ${{ needs.preflight.outputs.pr_number || github.event.workflow_run.pull_requests[0].number }}
           PR_HEAD_SHA: ${{ needs.preflight.outputs.pr_head_sha || github.event.workflow_run.pull_requests[0].head.sha || github.event.workflow_run.head_sha }}
           WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}

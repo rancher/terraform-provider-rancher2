@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 import defaultHandler, {
   checkReviewerPermission,
   checkWorkflowModifications,
   evaluateReviews,
+  resolveApprovalSignal,
   resolveTargetPr,
   runAutoMerge,
   runPreflight,
+  validateApprovalSignal,
 } from './auto-merge.js';
 
 function createMockCore() {
@@ -971,23 +976,34 @@ test('runPreflight - succeeds for qualifying PR with valid approval signal', asy
   let callCount = 0;
 
   const mockGithub = {
-    paginate: async () => {
+    paginate: async (_fn, params) => {
+      if (params?.run_id) {
+        // Artifacts lookup
+        return [{ id: 101, name: 'auto-merge-approval-signal' }];
+      }
       callCount++;
       if (callCount === 1) {
-        // Artifacts lookup
-        return [{ name: 'auto-merge-approval-signal' }];
-      }
-      if (callCount === 2) {
         // Changed files lookup
         return [{ filename: 'rancher2/resource_cluster.go' }];
       }
       // Reviews lookup
-      return [{ user: { login: 'triage-reviewer' }, state: 'APPROVED', commit_id: 'commit-sha' }];
+      return [{ id: 'rev-1', user: { login: 'triage-reviewer' }, state: 'APPROVED', commit_id: 'commit-sha' }];
     },
     rest: {
       actions: {
         listWorkflowRunArtifacts: async () => ({
-          data: { artifacts: [{ name: 'auto-merge-approval-signal' }] },
+          data: { artifacts: [{ id: 101, name: 'auto-merge-approval-signal' }] },
+        }),
+        downloadArtifact: async () => ({
+          data: {
+            pr_number: 42,
+            review_id: 'rev-1',
+            review_user: 'triage-reviewer',
+            review_commit_id: 'commit-sha',
+            head_sha: 'commit-sha',
+            review_state: 'APPROVED',
+            base_ref: 'main',
+          },
         }),
       },
       repos: {
@@ -1027,6 +1043,9 @@ test('runPreflight - succeeds for qualifying PR with valid approval signal', asy
   assert.strictEqual(mockCore.outputs.eligible, 'true');
   assert.strictEqual(mockCore.outputs.pr_number, '42');
   assert.strictEqual(mockCore.outputs.pr_head_sha, 'commit-sha');
+  assert.strictEqual(mockCore.outputs.review_id, 'rev-1');
+  assert.strictEqual(mockCore.outputs.review_user, 'triage-reviewer');
+  assert.strictEqual(mockCore.outputs.review_commit_id, 'commit-sha');
 });
 
 test('runPreflight - fails when auto-merge-approval-signal artifact is missing in workflow_run', async () => {
@@ -1283,4 +1302,411 @@ test('default export - routes preflight mode and execute mode', async () => {
 
   assert.strictEqual(executeRes, false);
   assert.strictEqual(mockCoreExecute.outputs.auto_merge_status, 'skipped_not_open');
+});
+
+test('resolveApprovalSignal - resolves from pull_request_review event payload', async () => {
+  const mockCore = createMockCore();
+  const signal = await resolveApprovalSignal({
+    context: {
+      payload: {
+        pull_request: { number: 10, head: { sha: 'sha-head' }, base: { ref: 'main' } },
+        review: { id: 777, state: 'approved', user: { login: 'reviewer-alice' }, commit_id: 'sha-head' },
+      },
+    },
+    core: mockCore,
+  });
+
+  assert.deepStrictEqual(signal, {
+    pr_number: 10,
+    review_id: 777,
+    review_state: 'approved',
+    review_user: 'reviewer-alice',
+    review_commit_id: 'sha-head',
+    head_sha: 'sha-head',
+    base_ref: 'main',
+  });
+});
+
+test('resolveApprovalSignal - resolves from APPROVAL_SIGNAL env var', async () => {
+  const mockCore = createMockCore();
+  const rawSignal = {
+    pr_number: 15,
+    review_id: 'rev-88',
+    review_user: 'bob',
+    review_commit_id: 'sha-15',
+    head_sha: 'sha-15',
+    review_state: 'APPROVED',
+    base_ref: 'main',
+  };
+
+  const signal = await resolveApprovalSignal({
+    core: mockCore,
+    process: { env: { APPROVAL_SIGNAL: JSON.stringify(rawSignal) } },
+  });
+
+  assert.deepStrictEqual(signal, rawSignal);
+});
+
+test('resolveApprovalSignal - resolves from signal file on disk', async () => {
+  const mockCore = createMockCore();
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'signal-test-'));
+  const signalPath = path.join(tmpDir, 'approval-signal.json');
+  const expectedSignal = {
+    pr_number: 22,
+    review_id: 'rev-99',
+    review_user: 'carol',
+    review_commit_id: 'sha-22',
+    head_sha: 'sha-22',
+    review_state: 'APPROVED',
+    base_ref: 'main',
+  };
+  fs.writeFileSync(signalPath, JSON.stringify(expectedSignal));
+
+  const signal = await resolveApprovalSignal({
+    core: mockCore,
+    process: { env: { APPROVAL_SIGNAL_PATH: signalPath } },
+  });
+
+  assert.deepStrictEqual(signal, expectedSignal);
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+});
+
+test('resolveApprovalSignal - resolves from TRIGGER_REVIEW_* env vars', async () => {
+  const mockCore = createMockCore();
+  const signal = await resolveApprovalSignal({
+    core: mockCore,
+    process: {
+      env: {
+        PR_NUMBER: '33',
+        PR_HEAD_SHA: 'sha-33',
+        TRIGGER_REVIEW_ID: 'rev-33',
+        TRIGGER_REVIEW_USER: 'dan',
+        TRIGGER_REVIEW_COMMIT_ID: 'sha-33',
+      },
+    },
+  });
+
+  assert.strictEqual(signal.pr_number, 33);
+  assert.strictEqual(signal.review_id, 'rev-33');
+  assert.strictEqual(signal.review_user, 'dan');
+  assert.strictEqual(signal.review_commit_id, 'sha-33');
+});
+
+test('resolveApprovalSignal - resolves from downloadArtifact API', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      actions: {
+        listWorkflowRunArtifacts: async () => ({
+          data: { artifacts: [{ id: 456, name: 'auto-merge-approval-signal' }] },
+        }),
+        downloadArtifact: async () => ({
+          data: {
+            pr_number: 55,
+            review_id: 'rev-55',
+            review_user: 'erin',
+            review_commit_id: 'sha-55',
+            head_sha: 'sha-55',
+            review_state: 'APPROVED',
+            base_ref: 'main',
+          },
+        }),
+      },
+    },
+  };
+
+  const signal = await resolveApprovalSignal({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: { workflow_run: { id: 1234 } },
+    },
+    core: mockCore,
+  });
+
+  assert.strictEqual(signal.review_user, 'erin');
+  assert.strictEqual(signal.review_id, 'rev-55');
+});
+
+test('validateApprovalSignal - validates structure and rejects invalid signals', () => {
+  const mockCore = createMockCore();
+  const validSignal = {
+    pr_number: 100,
+    review_id: 1,
+    review_user: 'user1',
+    review_commit_id: 'sha-100',
+    head_sha: 'sha-100',
+    review_state: 'APPROVED',
+    base_ref: 'main',
+  };
+  const pr = { number: 100, head: { sha: 'sha-100' } };
+
+  const validRes = validateApprovalSignal(validSignal, pr, mockCore);
+  assert.strictEqual(validRes.isValid, true);
+  assert.strictEqual(validRes.signal.review_user, 'user1');
+
+  // Rejects missing fields
+  const missingRes = validateApprovalSignal({ ...validSignal, review_user: '' }, pr, mockCore);
+  assert.strictEqual(missingRes.isValid, false);
+  assert.strictEqual(missingRes.reason, 'incomplete_signal');
+
+  // Rejects non-APPROVED state
+  const stateRes = validateApprovalSignal({ ...validSignal, review_state: 'CHANGES_REQUESTED' }, pr, mockCore);
+  assert.strictEqual(stateRes.isValid, false);
+  assert.strictEqual(stateRes.reason, 'not_approved_state');
+
+  // Rejects base branch other than main
+  const baseRes = validateApprovalSignal({ ...validSignal, base_ref: 'release/v1' }, pr, mockCore);
+  assert.strictEqual(baseRes.isValid, false);
+  assert.strictEqual(baseRes.reason, 'not_main_base');
+
+  // Rejects mismatched PR number
+  const prRes = validateApprovalSignal({ ...validSignal, pr_number: 999 }, pr, mockCore);
+  assert.strictEqual(prRes.isValid, false);
+  assert.strictEqual(prRes.reason, 'pr_mismatch');
+
+  // Rejects stale commit SHA
+  const staleRes = validateApprovalSignal({ ...validSignal, review_commit_id: 'old-sha' }, pr, mockCore);
+  assert.strictEqual(staleRes.isValid, false);
+  assert.strictEqual(staleRes.reason, 'stale_signal');
+});
+
+test('runPreflight - rejects when triggering review commit does not match PR head', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    paginate: async () => {
+      // Changed files then reviews
+      return [
+        { id: 'rev-stale', user: { login: 'triage-user' }, state: 'APPROVED', commit_id: 'old-commit' },
+      ];
+    },
+    rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'triage', role_name: 'triage' },
+        }),
+      },
+    },
+  };
+
+  const signal = {
+    pr_number: 70,
+    review_id: 'rev-stale',
+    review_user: 'triage-user',
+    review_commit_id: 'sha-current',
+    head_sha: 'sha-current',
+    review_state: 'APPROVED',
+    base_ref: 'main',
+  };
+
+  const result = await runPreflight({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        pull_request: {
+          number: 70,
+          state: 'open',
+          draft: false,
+          base: { ref: 'main' },
+          head: { sha: 'sha-current' },
+          user: { login: 'author-user' },
+        },
+      },
+    },
+    core: mockCore,
+    process: { env: { APPROVAL_SIGNAL: JSON.stringify(signal) } },
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.eligible, 'false');
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Skipping stale review')));
+});
+
+test('runPreflight - rejects when triggering review is from PR author', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    paginate: async () => [],
+  };
+
+  const signal = {
+    pr_number: 80,
+    review_id: 'rev-author',
+    review_user: 'author-user',
+    review_commit_id: 'sha-80',
+    head_sha: 'sha-80',
+    review_state: 'APPROVED',
+    base_ref: 'main',
+  };
+
+  const result = await runPreflight({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        pull_request: {
+          number: 80,
+          state: 'open',
+          draft: false,
+          base: { ref: 'main' },
+          head: { sha: 'sha-80' },
+          user: { login: 'author-user' },
+        },
+      },
+    },
+    core: mockCore,
+    process: { env: { APPROVAL_SIGNAL: JSON.stringify(signal) } },
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.eligible, 'false');
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Self-approvals are not permitted')));
+});
+
+test('runAutoMerge - binds to triggering review signal and rejects read-only user even with existing write approval on PR', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    paginate: async () => {
+      return [
+        { id: 'rev-write', user: { login: 'write-user' }, state: 'APPROVED', commit_id: 'sha-90' },
+        { id: 'rev-read', user: { login: 'read-contributor' }, state: 'APPROVED', commit_id: 'sha-90' },
+      ];
+    },
+    rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async ({ username }) => {
+          if (username === 'read-contributor') {
+            return { data: { permission: 'read', role_name: 'read' } };
+          }
+          return { data: { permission: 'write', role_name: 'write' } };
+        },
+      },
+    },
+  };
+
+  // Signal was produced by read-contributor's review
+  const signal = {
+    pr_number: 90,
+    review_id: 'rev-read',
+    review_user: 'read-contributor',
+    review_commit_id: 'sha-90',
+    head_sha: 'sha-90',
+    review_state: 'APPROVED',
+    base_ref: 'main',
+  };
+
+  const mockElevatedGithub = {
+    rest: {
+      users: { getAuthenticated: async () => ({ data: { login: 'rancher-bot' } }) },
+    },
+  };
+
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        workflow_run: { id: 9991 },
+        pull_request: {
+          number: 90,
+          state: 'open',
+          draft: false,
+          base: { ref: 'main' },
+          head: { sha: 'sha-90' },
+          user: { login: 'author-user' },
+        },
+      },
+    },
+    core: mockCore,
+    process: {
+      env: {
+        GITHUB_MERGE_TOKEN: 'mock-token',
+        APPROVAL_SIGNAL: JSON.stringify(signal),
+      },
+    },
+    getOctokit: () => mockElevatedGithub,
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.auto_merge_status, 'no_qualifying_permission');
+  assert.ok(mockCore.infoMessages.some(m => m.includes('does not have triage, write, or admin permissions')));
+});
+
+test('runAutoMerge - binds to qualifying triage signal and succeeds', async () => {
+  const mockCore = createMockCore();
+  let reviewCreated = false;
+  let autoMergeEnabled = false;
+
+  const mockGithub = {
+    paginate: async () => [
+      { id: 'rev-triage', user: { login: 'triage-member' }, state: 'APPROVED', commit_id: 'sha-95' },
+    ],
+    rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'triage', role_name: 'triage' },
+        }),
+      },
+    },
+  };
+
+  const signal = {
+    pr_number: 95,
+    review_id: 'rev-triage',
+    review_user: 'triage-member',
+    review_commit_id: 'sha-95',
+    head_sha: 'sha-95',
+    review_state: 'APPROVED',
+    base_ref: 'main',
+  };
+
+  const mockElevatedGithub = {
+    rest: {
+      users: { getAuthenticated: async () => ({ data: { login: 'rancher-bot' } }) },
+      pulls: {
+        createReview: async ({ body }) => {
+          assert.match(body, /Automated approval triggered by @triage-member \(role: triage\)/);
+          reviewCreated = true;
+          return { data: { id: 888 } };
+        },
+      },
+    },
+    graphql: async (query) => {
+      assert.match(query, /enablePullRequestAutoMerge/);
+      autoMergeEnabled = true;
+      return { enablePullRequestAutoMerge: {} };
+    },
+  };
+
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        workflow_run: { id: 9992 },
+        pull_request: {
+          number: 95,
+          node_id: 'PR_node_95',
+          state: 'open',
+          draft: false,
+          base: { ref: 'main' },
+          head: { sha: 'sha-95' },
+          user: { login: 'author-user' },
+        },
+      },
+    },
+    core: mockCore,
+    process: {
+      env: {
+        GITHUB_MERGE_TOKEN: 'mock-token',
+        APPROVAL_SIGNAL: JSON.stringify(signal),
+      },
+    },
+    getOctokit: () => mockElevatedGithub,
+  });
+
+  assert.strictEqual(result, true);
+  assert.strictEqual(reviewCreated, true);
+  assert.strictEqual(autoMergeEnabled, true);
+  assert.strictEqual(mockCore.outputs.auto_merge_status, 'enabled');
 });
