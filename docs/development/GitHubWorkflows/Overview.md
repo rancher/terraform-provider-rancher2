@@ -132,10 +132,11 @@ flowchart TD
 
 ### Stage 3: Human Review & Squash-Merge to `main`
 
-- **Review Gating**:
-  - Repository maintainers (`TERRAFORM_MAINTAINERS`) review code changes, review automated CI check results, and collaborate with the author to resolve feedback.
+- **Review Gating & Automated Merge**:
+  - Repository maintainers (`TERRAFORM_MAINTAINERS`) or trusted contributors with `triage` access review code changes, review automated CI check results, and collaborate with the author to resolve feedback.
+  - When an authorized contributor with `triage` access submits an `APPROVED` review, the [Automated PR Merge System](./AutoMerge.md) (`auto-merge-listener.yml` -> `auto-merge.yml`) validates the reviewer's permissions, verifies that `.github/**` is untouched and no changes are requested, submits an automated bot approval, and enables native GitHub auto-merge (`enablePullRequestAutoMerge` with `mergeMethod: SQUASH`).
 - **Squash-Merge**:
-  - Once approved and all CI checks pass, maintainers squash-merge the PR into `main`, producing a single clean commit SHA with Conventional Commit syntax on trunk.
+  - Once approved and all CI checks pass with conversation threads resolved, GitHub automatically squash-merges the PR into `main`, producing a single clean commit SHA with Conventional Commit syntax on trunk.
 
 ### Stage 4: Automated Cherry-Pick & Backport PR Generation
 

@@ -1,4 +1,5 @@
 name: E2E Tests (Release PRs)
+# This privileged workflow watches the "PR Executor Listener" workflow and safely executes e2e tests.
 
 on:
   workflow_run:

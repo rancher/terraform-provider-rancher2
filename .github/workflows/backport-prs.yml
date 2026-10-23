@@ -1,4 +1,5 @@
 name: 'Cherry-Pick to Release Branches'
+# This workflow generates PRs to release branches by cherry-picking commits on main
 
 on:
   push:
