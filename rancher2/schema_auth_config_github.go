@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"maps"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -32,9 +34,7 @@ func authConfigGithubFields() map[string]*schema.Schema {
 		},
 	}
 
-	for k, v := range authConfigFields() {
-		s[k] = v
-	}
+	maps.Copy(s, authConfigFields(AuthConfigGithubName))
 
 	return s
 }
