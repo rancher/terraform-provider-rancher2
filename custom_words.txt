@@ -13,7 +13,10 @@ cognito
 config
 datasource
 destructuring
+direnv
 eks
+envrc
+errorf
 eslint
 esm
 etcd
@@ -22,7 +25,9 @@ github
 gke
 globalroles
 globbing
+golangci
 goreleaser
+gotestsum
 ipv
 ipv4
 ipv6
@@ -50,7 +55,10 @@ repo
 rke
 rke2
 sha
+shellcheck
 terraform
+testacc
+tflint
 ttl
 url
 variablize
