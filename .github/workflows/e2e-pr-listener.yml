@@ -1,0 +1,21 @@
+name: PR Executor Listener
+# This unprivileged workflow acts as a middleman to securely trigger e2e tests.
+
+on:
+  pull_request:
+    branches:
+      - 'release/v*'
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  emit-event:
+    name: 'Emit E2E Workflow Run Event'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: 'Execute PR Listener'
+        run: echo "PR listener executed. The completion of this workflow will trigger the privileged E2E Tests (Release PRs) workflow safely from the base branch via the workflow_run event."

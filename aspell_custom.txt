@@ -1,6 +1,9 @@
 aks
 api
 auth
+authconfig
+autonumber
+autorelease
 aws
 azure
 backport

@@ -1,0 +1,59 @@
+name: Auto Merge Listener
+# This unprivileged workflow acts as a middleman to securely trigger automated merge on PR review approvals.
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  emit-event:
+    name: 'Emit Auto Merge Workflow Run Event'
+    if: github.event.pull_request.base.ref == 'main' && github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: 'Save Approval Signal'
+        id: save-signal
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW_ID: ${{ github.event.review.id }}
+          REVIEW_STATE: ${{ github.event.review.state }}
+          REVIEW_USER: ${{ github.event.review.user.login }}
+          REVIEW_COMMIT_ID: ${{ github.event.review.commit_id }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          mkdir -p signal
+          jq -n \
+            --arg pr_number "$PR_NUMBER" \
+            --arg review_id "$REVIEW_ID" \
+            --arg review_state "$REVIEW_STATE" \
+            --arg review_user "$REVIEW_USER" \
+            --arg review_commit_id "$REVIEW_COMMIT_ID" \
+            --arg head_sha "$HEAD_SHA" \
+            --arg base_ref "$BASE_REF" \
+            '{
+              pr_number: ($pr_number | tonumber),
+              review_id: ($review_id | tonumber),
+              review_state: $review_state,
+              review_user: $review_user,
+              review_commit_id: $review_commit_id,
+              head_sha: $head_sha,
+              base_ref: $base_ref
+            }' > signal/approval-signal.json
+
+      - name: 'Upload Approval Signal Artifact'
+        # https://github.com/actions/upload-artifact/releases
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: auto-merge-approval-signal
+          path: signal/approval-signal.json
+          retention-days: 1
