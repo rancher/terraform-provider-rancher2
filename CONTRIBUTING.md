@@ -80,7 +80,7 @@ If you wish to add a new resource, data source, or field to the provider:
 ### Prerequisites
 
 To build and test the provider locally, your machine requires:
-- **Go**: Version 1.25 or later.
+- **Go**: Version 1.26.5 or later.
 - **Terraform**: Version 1.5.0 or later.
 - **Git**: Configured with a GPG signing key for commits.
 
@@ -174,6 +174,7 @@ The Rancher2 Terraform Provider major versions correspond to Rancher minor relea
 | `release/v13` | `v13.x` | Rancher `2.13.x` |
 | `release/v14` | `v14.x` | Rancher `2.14.x` |
 | `release/v15` | `v15.x` | Rancher `2.15.x` |
+| `release/v16` | `v16.x` | Rancher `2.16.x` |
 
 See [docs/compatibility-matrix.md](docs/compatibility-matrix.md) for full version alignment details.
 
@@ -272,7 +273,7 @@ Unit tests execute quickly and do not require live infrastructure:
 make test
 
 # Run a specific unit test by name
-make dt -- t=TestName
+make dt -- t='-run=TestName ./...'
 ```
 
 ### Acceptance Tests (End-to-End)
