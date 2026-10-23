@@ -2,7 +2,7 @@
 
 ## Version compatibility matrix
 
-The version matrix specifies the Terraform provider version _recommended_ to use with the associated minor Rancher version that it was released for.
+The version matrix specifies the Terraform provider version to use with the associated minor Rancher version that it was released for.
 When updating the version matrix, add a row for each Terraform version released with a minor Rancher release.
 This shouldn't be a changelog for every branch, each branch has its own CHANGELOG.md file which should be updated with changes.
 
@@ -16,11 +16,11 @@ This shouldn't be a changelog for every branch, each branch has its own CHANGELO
 | 7.x                        | 2.11.x          | release/v7 |
 | 8.x                        | 2.12.x          | release/v8 |
 | 13.x                       | 2.13.x          | release/v13 |
+| 14.x                       | 2.14.x          | release/v14 |
+| 15.x                       | 2.15.x          | release/v15 |
+| 16.x                       | 2.16.x          | release/v16 |
 
 ## FAQ
 
-**Can I use an earlier Terraform version?**
-Yes, but Terraform may not support all features and fields supported in your Rancher version so provisioning may be limited.
-
-**Can I use a later Terraform version?**
-Yes, but you must NOT use any new features and fields that your Rancher version does not support.
+**Can I use an earlier or later Rancher provider version?**
+Using incorrectly correlated versions isn't supported at this time.

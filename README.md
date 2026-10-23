@@ -54,7 +54,7 @@ The following example runs a single implementation, the most basic one:
 ./run_tests.sh -t TestOneBasic
 ```
 
-See [development process](docs/development-process.md) for more details.
+See [contributor's guide](CONTRIBUTING.md) and [development process](docs/development-process.md) for more details.
 
 Testing the Provider
 ---------------------------
