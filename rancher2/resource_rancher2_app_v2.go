@@ -73,11 +73,14 @@ func resourceRancher2AppV2Create(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return err
 	}
-	err = appV2OperationWait(meta, clusterID, chartOperation.OperationNamespace+"/"+chartOperation.OperationName)
+	// The Helm release now exists in the cluster. Store the ID before waiting so that a wait
+	// failure leaves the resource tainted in state instead of untracked; otherwise later
+	// applies fail with "cannot re-use a name that is still in use".
+	d.SetId(clusterID + appV2ClusterIDsep + chartInstallAction.Namespace + "/" + d.Get("name").(string))
+	err = appV2OperationWait(meta, clusterID, chartOperation.OperationNamespace+"/"+chartOperation.OperationName, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("[ERROR] installing App V2: %s", err)
 	}
-	d.SetId(clusterID + appV2ClusterIDsep + chartInstallAction.Namespace + "/" + d.Get("name").(string))
 
 	return resourceRancher2AppV2Read(d, meta)
 }
@@ -142,7 +145,7 @@ func resourceRancher2AppV2Update(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return err
 	}
-	err = appV2OperationWait(meta, clusterID, chartOperation.OperationNamespace+"/"+chartOperation.OperationName)
+	err = appV2OperationWait(meta, clusterID, chartOperation.OperationNamespace+"/"+chartOperation.OperationName, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("[ERROR] upgrading App V2: %s", err)
 	}
@@ -201,28 +204,58 @@ func appV2StateRefreshFunc(meta interface{}, clusterID, appID string) resource.S
 	}
 }
 
-func appV2OperationWait(meta interface{}, clusterID, opID string) error {
-	for obj, err := getAppV2OperationByID(meta.(*Config), clusterID, opID); ; obj, err = getAppV2OperationByID(meta.(*Config), clusterID, opID) {
+// appV2OperationWaitGracePeriod is added to the resource timeout when waiting for an App V2
+// operation. Helm receives the same timeout, so this leaves time for the operation pod to
+// start and report Helm's final result before the provider gives up.
+const appV2OperationWaitGracePeriod = 2 * time.Minute
+
+func appV2OperationWait(meta interface{}, clusterID, opID string, timeout time.Duration) error {
+	c := meta.(*Config)
+	return waitForAppV2Operation(
+		opID,
+		timeout+appV2OperationWaitGracePeriod,
+		func() (map[string]interface{}, error) {
+			return getAppV2OperationByID(c, clusterID, opID)
+		},
+		func(op map[string]interface{}) (string, error) {
+			return getAppV2OperationLogs(c, clusterID, op)
+		},
+	)
+}
+
+// waitForAppV2Operation polls an App V2 operation until it finishes or the timeout expires.
+// Transient API errors, such as a 404 from the cluster proxy while the downstream cluster
+// agent is reconnecting, are retried until the timeout expires.
+func waitForAppV2Operation(opID string, timeout time.Duration, getOperation func() (map[string]interface{}, error), getLogs func(map[string]interface{}) (string, error)) error {
+	return resource.Retry(timeout, func() *resource.RetryError {
+		obj, err := getOperation()
 		if err != nil {
-			return err
+			if isAppV2OperationTransientError(err) {
+				log.Printf("[DEBUG] Retrying App V2 operation %s after transient error: %v", opID, err)
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
 		}
 		if metadata, ok := obj["metadata"].(map[string]interface{}); ok && len(metadata) > 0 {
 			if state, ok := metadata["state"].(map[string]interface{}); ok && len(state) > 0 {
 				if transitioning, ok := state["transitioning"].(bool); ok && !transitioning {
 					if opError, ok := state["error"].(bool); ok && opError {
-						message, err := getAppV2OperationLogs(meta.(*Config), clusterID, obj)
+						message, err := getLogs(obj)
 						if err != nil {
-							return fmt.Errorf("%s: %s", state["message"], err)
+							return resource.NonRetryableError(fmt.Errorf("%s: %s", state["message"], err))
 						}
-						return fmt.Errorf("%s", message)
+						return resource.NonRetryableError(fmt.Errorf("%s", message))
 					}
 					return nil
 				}
-
 			}
 		}
-		time.Sleep(5 * time.Second)
-	}
+		return resource.RetryableError(fmt.Errorf("App V2 operation %s is still in progress", opID))
+	})
+}
+
+func isAppV2OperationTransientError(err error) bool {
+	return IsNotFound(err) || IsServerError(err) || IsBadGatewayError(err) || IsServiceUnavailableError(err)
 }
 
 // Rancher2 App V2 API CRUD functions
@@ -391,7 +424,7 @@ func getAppV2OperationByID(c *Config, clusterID, id string) (map[string]interfac
 	resp := map[string]interface{}{}
 	err := c.getObjectV2ByID(clusterID, id, appV2OperationAPIType, &resp)
 	if err != nil {
-		if !IsServerError(err) && !IsNotFound(err) && !IsForbidden(err) {
+		if !isAppV2OperationTransientError(err) && !IsForbidden(err) {
 			return nil, fmt.Errorf("Getting App V2 logs: %s", err)
 		}
 		return nil, err
