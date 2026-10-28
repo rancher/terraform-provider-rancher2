@@ -48,6 +48,17 @@ jobs:
         with:
           secrets: |
             github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
+      - name: Download PR Signal
+        id: download-pr-signal
+        # https://github.com/actions/download-artifact/releases
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: github.event_name == 'workflow_run'
+        continue-on-error: true
+        with:
+          name: validate-pr-signal
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: signal
       - name: Create Tracking Issue
         id: create-tracking-issue
         # https://github.com/actions/github-script/releases
@@ -58,6 +69,7 @@ jobs:
           SCRIPT_MODE: tracking-issue
           PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.workflow_run.pull_requests[0].number || '' }}
           WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha || '' }}
+          PR_SIGNAL_PATH: signal/pr-signal.json
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;

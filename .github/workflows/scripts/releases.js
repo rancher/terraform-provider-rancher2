@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { validatePrDescription } from './validate-pr-description.js';
 import { runBackportIssues } from './backports.js';
 
@@ -240,16 +242,54 @@ export async function runTrackingIssue({ github, context, core, process = global
     }
 
     if (!envPrNum && isWorkflowRun) {
-      const parentRun = context?.payload?.workflow_run;
-      if (parentRun?.pull_requests?.length > 0) {
-        const parentPrNum = parentRun.pull_requests[0].number;
-        if (Number.isFinite(parentPrNum) && parentPrNum > 0) {
-          envPrNum = parentPrNum;
-          core.info(`Resolved PR #${envPrNum} from workflow_run.pull_requests.`);
+      // 1. Try resolving from PR signal artifact downloaded on disk
+      const candidatePaths = [];
+      if (process?.env?.PR_SIGNAL_PATH) {
+        candidatePaths.push(process.env.PR_SIGNAL_PATH);
+        if (process?.env?.GITHUB_WORKSPACE) {
+          candidatePaths.push(path.resolve(process.env.GITHUB_WORKSPACE, process.env.PR_SIGNAL_PATH));
+        }
+      }
+      const workspace = process?.env?.GITHUB_WORKSPACE || (typeof process?.cwd === 'function' ? process.cwd() : '.');
+      candidatePaths.push(
+        path.resolve(workspace, 'signal/pr-signal.json'),
+        path.resolve(workspace, 'pr-signal.json'),
+        'signal/pr-signal.json',
+        'pr-signal.json'
+      );
+
+      for (const filePath of candidatePaths) {
+        try {
+          if (fs.existsSync(filePath)) {
+            const raw = fs.readFileSync(filePath, 'utf8');
+            const parsed = JSON.parse(raw);
+            const num = parseInt(parsed?.pr_number, 10);
+            if (Number.isFinite(num) && num > 0) {
+              envPrNum = num;
+              core.info(`Resolved PR #${envPrNum} from PR signal artifact at ${filePath}.`);
+              break;
+            }
+          }
+        } catch (err) {
+          core.warning(`Failed to read PR signal file at ${filePath}: ${err.message}`);
         }
       }
 
+      // 2. Try workflow_run.pull_requests
       if (!envPrNum) {
+        const parentRun = context?.payload?.workflow_run;
+        if (parentRun?.pull_requests?.length > 0) {
+          const parentPrNum = parentRun.pull_requests[0].number;
+          if (Number.isFinite(parentPrNum) && parentPrNum > 0) {
+            envPrNum = parentPrNum;
+            core.info(`Resolved PR #${envPrNum} from workflow_run.pull_requests.`);
+          }
+        }
+      }
+
+      // 3. Fallback to commit SHA via listPullRequestsAssociatedWithCommit
+      if (!envPrNum) {
+        const parentRun = context?.payload?.workflow_run;
         const headSha = parentRun?.head_sha || (process?.env?.WORKFLOW_RUN_SHA ? String(process.env.WORKFLOW_RUN_SHA).trim() : '');
         if (headSha && (typeof github?.paginate === 'function' || typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function')) {
           core.info(`Attempting to resolve PR from workflow_run commit SHA: ${headSha}...`);
@@ -275,6 +315,23 @@ export async function runTrackingIssue({ github, context, core, process = global
             }
           } catch (shaErr) {
             core.info(`Could not resolve PR from commit SHA ${headSha}: ${shaErr.message}`);
+          }
+        }
+
+        // 4. Fallback to Search API if commit lookup yielded no PR
+        if (!envPrNum && headSha && typeof github?.rest?.search?.issuesAndPullRequests === 'function') {
+          try {
+            const searchRes = await github.rest.search.issuesAndPullRequests({
+              q: `${headSha} type:pr state:open repo:${owner}/${repo}`
+            });
+            const items = searchRes?.data?.items || searchRes?.data || [];
+            const found = items.find(p => p.state === 'open' && (p.pull_request || p.html_url?.includes('/pull/')));
+            if (found) {
+              envPrNum = found.number;
+              core.info(`Resolved PR #${envPrNum} from search API for commit SHA ${headSha}`);
+            }
+          } catch (searchErr) {
+            core.info(`Could not resolve PR from search API for commit SHA ${headSha}: ${searchErr.message}`);
           }
         }
       }
