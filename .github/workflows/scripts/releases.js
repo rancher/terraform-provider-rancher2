@@ -228,6 +228,8 @@ export async function runTrackingIssue({ github, context, core, process = global
     }
 
     const isWorkflowRun = context?.eventName === 'workflow_run' || Boolean(context?.payload?.workflow_run) || Boolean(process?.env?.WORKFLOW_RUN_SHA);
+    const parentRun = context?.payload?.workflow_run;
+    const headSha = parentRun?.head_sha || (process?.env?.WORKFLOW_RUN_SHA ? String(process.env.WORKFLOW_RUN_SHA).trim() : '');
     let pulls;
     let envPrNum = null;
     const rawPrNumber = process?.env?.PR_NUMBER !== undefined && process?.env?.PR_NUMBER !== null
@@ -264,6 +266,14 @@ export async function runTrackingIssue({ github, context, core, process = global
             const raw = fs.readFileSync(filePath, 'utf8');
             const parsed = JSON.parse(raw);
             const num = parseInt(parsed?.pr_number, 10);
+            const signalSha = typeof parsed?.head_sha === 'string' ? parsed.head_sha.trim() : '';
+
+            // Verify that the signal belongs to the triggering run
+            if (headSha && (!signalSha || signalSha !== headSha)) {
+              core.warning(`PR signal head_sha '${signalSha}' does not match workflow_run head_sha '${headSha}'. Ignoring signal artifact.`);
+              continue;
+            }
+
             if (Number.isFinite(num) && num > 0) {
               envPrNum = num;
               core.info(`Resolved PR #${envPrNum} from PR signal artifact at ${filePath}.`);
@@ -277,7 +287,6 @@ export async function runTrackingIssue({ github, context, core, process = global
 
       // 2. Try workflow_run.pull_requests
       if (!envPrNum) {
-        const parentRun = context?.payload?.workflow_run;
         if (parentRun?.pull_requests?.length > 0) {
           const parentPrNum = parentRun.pull_requests[0].number;
           if (Number.isFinite(parentPrNum) && parentPrNum > 0) {
@@ -289,8 +298,6 @@ export async function runTrackingIssue({ github, context, core, process = global
 
       // 3. Fallback to commit SHA via listPullRequestsAssociatedWithCommit
       if (!envPrNum) {
-        const parentRun = context?.payload?.workflow_run;
-        const headSha = parentRun?.head_sha || (process?.env?.WORKFLOW_RUN_SHA ? String(process.env.WORKFLOW_RUN_SHA).trim() : '');
         if (headSha && (typeof github?.paginate === 'function' || typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function')) {
           core.info(`Attempting to resolve PR from workflow_run commit SHA: ${headSha}...`);
           try {
@@ -308,7 +315,7 @@ export async function runTrackingIssue({ github, context, core, process = global
               });
               associatedPrs = res.data || [];
             }
-            const matchingPr = associatedPrs.find(p => p.state === 'open' && p.base?.ref === 'main');
+            const matchingPr = associatedPrs.find(p => p.state === 'open' && p.base?.ref === 'main' && (!headSha || !p.head?.sha || p.head.sha === headSha));
             if (matchingPr) {
               envPrNum = matchingPr.number;
               core.info(`Resolved PR #${envPrNum} from commit SHA ${headSha}`);
@@ -325,10 +332,29 @@ export async function runTrackingIssue({ github, context, core, process = global
               q: `${headSha} type:pr state:open repo:${owner}/${repo}`
             });
             const items = searchRes?.data?.items || searchRes?.data || [];
-            const found = items.find(p => p.state === 'open' && (p.pull_request || p.html_url?.includes('/pull/')));
-            if (found) {
-              envPrNum = found.number;
-              core.info(`Resolved PR #${envPrNum} from search API for commit SHA ${headSha}`);
+            const candidates = items.filter(p => p.state === 'open' && (p.pull_request || p.html_url?.includes('/pull/')));
+            for (const candidate of candidates) {
+              if (candidate.number) {
+                if (typeof github?.rest?.pulls?.get === 'function') {
+                  try {
+                    const candPr = await github.rest.pulls.get({
+                      owner,
+                      repo,
+                      pull_number: candidate.number,
+                    });
+                    if (candPr?.data?.head?.sha && candPr.data.head.sha !== headSha) {
+                      core.info(`Search candidate PR #${candidate.number} head SHA '${candPr.data.head.sha}' does not match commit SHA '${headSha}'. Skipping.`);
+                      continue;
+                    }
+                  } catch (candErr) {
+                    core.info(`Could not inspect search candidate PR #${candidate.number}: ${candErr.message}`);
+                    continue;
+                  }
+                }
+                envPrNum = candidate.number;
+                core.info(`Resolved PR #${envPrNum} from search API for commit SHA ${headSha}`);
+                break;
+              }
             }
           } catch (searchErr) {
             core.info(`Could not resolve PR from search API for commit SHA ${headSha}: ${searchErr.message}`);
@@ -353,6 +379,17 @@ export async function runTrackingIssue({ github, context, core, process = global
         const prLabels = (prData?.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
         const excludedLabels = ['internal/ignore', 'internal/pr-backport', 'autorelease: pending', 'autorelease: tagged'];
         const hasExcludedLabel = prLabels.some(l => excludedLabels.includes(l));
+
+        // Validate that fetched PR belongs to the triggering workflow run when in workflow_run context
+        if (isWorkflowRun && headSha && prData?.head?.sha && prData.head.sha !== headSha) {
+          core.warning(
+            `Target PR #${envPrNum} head SHA '${prData.head.sha}' does not match workflow_run head SHA '${headSha}'. Rejecting untrusted adoption.`
+          );
+          if (isWorkflowRun) {
+            core.info(`Skipping tracking adoption for workflow_run PR #${envPrNum} with mismatched head SHA.`);
+            return;
+          }
+        }
 
         if (prData && prData.state === 'open' && !prData.draft && prData.base?.ref === 'main' && !hasExcludedLabel) {
           pulls = [prData];
