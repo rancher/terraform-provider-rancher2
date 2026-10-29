@@ -1,24 +1,51 @@
 # Rancher2 Provider
 
-_For Terraform Maintainers Only_
-
-QA has a new process to test Terraform using RCs which will enable us to better test this tool before a release is published.
-
 ### Test Process
 
-1. Cut a Terraform RC.
-
-Terraform RCs enable QA to test features and bug fixes _before_ the next Terraform version is released. This process is also how Rancher is tested and released. Terraform is expected to mirror Rancher's functionality and use of third party packages because it uses the Rancher API, so it's ideal and best practice to test the provider in the same way.
-
-To cut an RC, run the `Manually Create RC Release` workflow specifying the release branch, the sha to tag, and the tag name.
-For example, you might release `abcd1234` from `release/v13` as `v13.0.0-rc.1`
+To cut an RC, run the `Release` workflow specifying the release branch, the sha to tag, and the tag name.
+For example, you might release `abcd1234` from `release/v15` as `v15.0.0-rc.1`
 This will tag the sha from the release branch and generate an RC release for it.
 The format for the tag must be `v<major>.<minor>.<patch>-rc.<rc number>`
 
-2. Move the issue To Test
+1. Move the issue To Test
+2. QA uses the test plan to test the feature or bug fix.
+3. If test validation passes, please update the testing issue and close it.
+4. If not, please update the testing issue and work with the developer to resolve any issues.
 
-3. QA uses the test plan and the Terraform RC to test the feature or bug fix.
+### Configuring Terraform to use a Local Binary
 
-QA will test using a downloaded binary from the RC. Using an RC asset enables us to quickly test features and bugs without waiting for Hashicorp to publish a pre-release.
+There are two configuration objects you need to configure Terraform to use a local binary.
+1. A `terraform.rc` or `terraform.tfrc` or `.terraformrc` file.
+2. An environment variable with the full path to that file.
 
-4. If test validation passes, please update the testing issue and close it. If not, please update the testing issue and work with the developer to resolve any issues.
+Environment variable: "TF_CLI_CONFIG_FILE"
+eg. `export TF_CLI_CONFIG_FILE="full/path/to/terraform.rc"`
+
+This config tells Terraform to get the rancher/rancher2 provider from a path, while directly downloading everything else (exclude nothing) from the Terraform registry:
+
+```hcl2
+provider_installation {
+  dev_overrides {
+    "rancher/rancher2" = "<full path to your repo>/bin"
+  }
+  direct {
+    exclude = []
+  }
+}
+```
+
+The `make build` command places a locally built binary in the repo's directory in ./bin folder (ignored).
+This allows the same configuration to work for a binary built from source as well as a downloaded binary from a release.
+
+### Downloading Release Candidate Binary
+
+- Download the proper archive for your hardware/OS from a release candidate release, eg. [v15.2.0-rc.4](https://github.com/rancher/terraform-provider-rancher2/releases/tag/v15.2.0-rc.4).  
+  https://github.com/rancher/terraform-provider-rancher2/releases/download/v15.2.0-rc.4/terraform-provider-rancher2_15.2.0-rc.4_darwin_arm64.zip
+- Unzip the archive and the binary will be named something like this: `terraform-provider-rancher2_v15.2.0-rc.4`.  
+- Copy the binary to a trusted directory, make it executable, and rename it to `terraform-provider-rancher2`.  
+
+For local testing:
+- cp the binary to my repo's ./bin directory.  
+- Update your terraform rc file to the proper path, eg. `"Users/matttrach/go/src/github.com/rancher/terraform-provider-rancher2/bin/terraform-provider-rancher2"`  
+- Make sure your 'TF_CLI_CONFIG_FILE' env variable is pointing to your terraform rc file.  
+- Then the `make test` command or `run_tests.sh` script should work properly using the local binary.  
