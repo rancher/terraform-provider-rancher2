@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 import defaultHandler, {
   computeNextRcTag,
@@ -3902,6 +3905,811 @@ test('runTrackingIssue - resolves PR from commit SHA when workflow_run pull_requ
   assert.strictEqual(subIssueCreatedBeforeLabel, true);
   assert.strictEqual(releaseLabelAdded, true);
   assert.ok(mockCore.infoMessages.some(m => m.includes('Resolved PR #88 from commit SHA commit-sha-fork-88')));
+});
+
+test('runTrackingIssue - resolves PR from PR signal artifact file on disk when workflow_run pull_requests is empty', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let subIssueCreatedBeforeLabel = false;
+  let releaseLabelAdded = false;
+
+  const tmpSignalDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-signal-test-'));
+  const signalFilePath = path.join(tmpSignalDir, 'pr-signal.json');
+  fs.writeFileSync(signalFilePath, JSON.stringify({ pr_number: 99, head_sha: 'signal-head-sha' }), 'utf8');
+
+  try {
+    const mockGithub = {
+      paginate: async (method) => {
+        if (method === mockGithub.rest.repos.listBranches) {
+          return [{ name: 'main' }, { name: 'release/v15' }];
+        }
+        return [];
+      },
+      rest: {
+        repos: {
+          listBranches: async () => {},
+        },
+        pulls: {
+          get: async ({ pull_number }) => {
+            pullGetCalled = true;
+            return {
+              data: {
+                number: pull_number,
+                title: 'PR with Signal',
+                body: '- Addresses: #502',
+                state: 'open',
+                draft: false,
+                base: { ref: 'main' },
+                labels: [],
+              },
+            };
+          },
+        },
+        issues: {
+          get: async () => ({
+            data: {
+              number: 502,
+              title: 'Issue 502',
+              state: 'open',
+              labels: [],
+            },
+          }),
+          create: async () => {
+            if (!releaseLabelAdded) {
+              subIssueCreatedBeforeLabel = true;
+            }
+            return { data: { id: 503, number: 503 } };
+          },
+          addLabels: async ({ labels }) => {
+            if (labels.includes('release/v15')) {
+              releaseLabelAdded = true;
+            }
+          },
+          createComment: async () => {},
+        },
+        actions: {
+          createWorkflowDispatch: async () => {},
+        },
+      },
+      request: async (endpoint) => {
+        if (endpoint.includes('/sub_issues')) {
+          return { data: [] };
+        }
+        return { data: {} };
+      },
+    };
+
+    const mockContext = {
+      eventName: 'workflow_run',
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          head_sha: 'signal-head-sha',
+          pull_requests: [],
+        },
+      },
+    };
+
+    const mockProcess = {
+      env: {
+        PR_SIGNAL_PATH: signalFilePath,
+      },
+      cwd: () => tmpSignalDir,
+    };
+
+    await runTrackingIssue({
+      github: mockGithub,
+      context: mockContext,
+      core: mockCore,
+      process: mockProcess,
+    });
+
+    assert.strictEqual(pullGetCalled, true);
+    assert.strictEqual(subIssueCreatedBeforeLabel, true);
+    assert.strictEqual(releaseLabelAdded, true);
+    assert.ok(mockCore.infoMessages.some(m => m.includes('Resolved PR #99 from PR signal artifact')));
+  } finally {
+    fs.rmSync(tmpSignalDir, { recursive: true, force: true });
+  }
+});
+
+test('runTrackingIssue - ignores PR signal artifact file when head_sha does not match workflow_run head_sha', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+
+  const tmpSignalDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-signal-test-'));
+  const signalFilePath = path.join(tmpSignalDir, 'pr-signal.json');
+  fs.writeFileSync(signalFilePath, JSON.stringify({ pr_number: 99, head_sha: 'spoofed-sha' }), 'utf8');
+
+  try {
+    const mockGithub = {
+      paginate: async (method) => {
+        if (method === mockGithub.rest.repos.listBranches) {
+          return [{ name: 'main' }, { name: 'release/v15' }];
+        }
+        return [];
+      },
+      rest: {
+        repos: {
+          listBranches: async () => {},
+        },
+        pulls: {
+          get: async () => {
+            pullGetCalled = true;
+            return { data: {} };
+          },
+        },
+      },
+    };
+
+    const mockContext = {
+      eventName: 'workflow_run',
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          head_sha: 'actual-sha',
+          pull_requests: [],
+        },
+      },
+    };
+
+    const mockProcess = {
+      env: {
+        PR_SIGNAL_PATH: signalFilePath,
+      },
+      cwd: () => tmpSignalDir,
+    };
+
+    await runTrackingIssue({
+      github: mockGithub,
+      context: mockContext,
+      core: mockCore,
+      process: mockProcess,
+    });
+
+    assert.strictEqual(pullGetCalled, false);
+    assert.ok(mockCore.warningMessages.some(m => m.includes("PR signal head_sha 'spoofed-sha' does not match workflow_run head_sha 'actual-sha'")));
+    assert.ok(mockCore.infoMessages.some(m => m.includes('Could not identify a single PR from workflow_run event. Skipping adoption')));
+  } finally {
+    fs.rmSync(tmpSignalDir, { recursive: true, force: true });
+  }
+});
+
+test('runTrackingIssue - ignores PR signal artifact file when head_sha is missing from artifact', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+
+  const tmpSignalDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-signal-test-'));
+  const signalFilePath = path.join(tmpSignalDir, 'pr-signal.json');
+  fs.writeFileSync(signalFilePath, JSON.stringify({ pr_number: 99 }), 'utf8');
+
+  try {
+    const mockGithub = {
+      paginate: async (method) => {
+        if (method === mockGithub.rest.repos.listBranches) {
+          return [{ name: 'main' }, { name: 'release/v15' }];
+        }
+        return [];
+      },
+      rest: {
+        repos: {
+          listBranches: async () => {},
+        },
+        pulls: {
+          get: async () => {
+            pullGetCalled = true;
+            return { data: {} };
+          },
+        },
+      },
+    };
+
+    const mockContext = {
+      eventName: 'workflow_run',
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          head_sha: 'actual-sha',
+          pull_requests: [],
+        },
+      },
+    };
+
+    const mockProcess = {
+      env: {
+        PR_SIGNAL_PATH: signalFilePath,
+      },
+      cwd: () => tmpSignalDir,
+    };
+
+    await runTrackingIssue({
+      github: mockGithub,
+      context: mockContext,
+      core: mockCore,
+      process: mockProcess,
+    });
+
+    assert.strictEqual(pullGetCalled, false);
+    assert.ok(mockCore.warningMessages.some(m => m.includes("PR signal head_sha '' does not match workflow_run head_sha 'actual-sha'")));
+  } finally {
+    fs.rmSync(tmpSignalDir, { recursive: true, force: true });
+  }
+});
+
+test('runTrackingIssue - ignores PR signal artifact file when head_branch does not match workflow_run head_branch', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+
+  const tmpSignalDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-signal-test-'));
+  const signalFilePath = path.join(tmpSignalDir, 'pr-signal.json');
+  fs.writeFileSync(
+    signalFilePath,
+    JSON.stringify({
+      pr_number: 99,
+      head_sha: 'actual-sha',
+      head_branch: 'spoofed-branch',
+      head_repo: 'rancher/terraform-provider-rancher2',
+    }),
+    'utf8'
+  );
+
+  try {
+    const mockGithub = {
+      paginate: async (method) => {
+        if (method === mockGithub.rest.repos.listBranches) {
+          return [{ name: 'main' }, { name: 'release/v15' }];
+        }
+        return [];
+      },
+      rest: {
+        repos: {
+          listBranches: async () => {},
+        },
+        pulls: {
+          get: async () => {
+            pullGetCalled = true;
+            return { data: {} };
+          },
+        },
+      },
+    };
+
+    const mockContext = {
+      eventName: 'workflow_run',
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          head_sha: 'actual-sha',
+          head_branch: 'actual-branch',
+          head_repository: { full_name: 'rancher/terraform-provider-rancher2' },
+          pull_requests: [],
+        },
+      },
+    };
+
+    const mockProcess = {
+      env: {
+        PR_SIGNAL_PATH: signalFilePath,
+      },
+      cwd: () => tmpSignalDir,
+    };
+
+    await runTrackingIssue({
+      github: mockGithub,
+      context: mockContext,
+      core: mockCore,
+      process: mockProcess,
+    });
+
+    assert.strictEqual(pullGetCalled, false);
+    assert.ok(mockCore.warningMessages.some(m => m.includes("PR signal head_branch 'spoofed-branch' does not match workflow_run head_branch 'actual-branch'")));
+    assert.ok(mockCore.infoMessages.some(m => m.includes('Could not identify a single PR from workflow_run event. Skipping adoption')));
+  } finally {
+    fs.rmSync(tmpSignalDir, { recursive: true, force: true });
+  }
+});
+
+test('runTrackingIssue - ignores PR signal artifact file when head_repo does not match workflow_run head_repository', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+
+  const tmpSignalDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-signal-test-'));
+  const signalFilePath = path.join(tmpSignalDir, 'pr-signal.json');
+  fs.writeFileSync(
+    signalFilePath,
+    JSON.stringify({
+      pr_number: 99,
+      head_sha: 'actual-sha',
+      head_branch: 'actual-branch',
+      head_repo: 'attacker/terraform-provider-rancher2',
+    }),
+    'utf8'
+  );
+
+  try {
+    const mockGithub = {
+      paginate: async (method) => {
+        if (method === mockGithub.rest.repos.listBranches) {
+          return [{ name: 'main' }, { name: 'release/v15' }];
+        }
+        return [];
+      },
+      rest: {
+        repos: {
+          listBranches: async () => {},
+        },
+        pulls: {
+          get: async () => {
+            pullGetCalled = true;
+            return { data: {} };
+          },
+        },
+      },
+    };
+
+    const mockContext = {
+      eventName: 'workflow_run',
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: {
+        workflow_run: {
+          head_sha: 'actual-sha',
+          head_branch: 'actual-branch',
+          head_repository: { full_name: 'rancher/terraform-provider-rancher2' },
+          pull_requests: [],
+        },
+      },
+    };
+
+    const mockProcess = {
+      env: {
+        PR_SIGNAL_PATH: signalFilePath,
+      },
+      cwd: () => tmpSignalDir,
+    };
+
+    await runTrackingIssue({
+      github: mockGithub,
+      context: mockContext,
+      core: mockCore,
+      process: mockProcess,
+    });
+
+    assert.strictEqual(pullGetCalled, false);
+    assert.ok(mockCore.warningMessages.some(m => m.includes("PR signal head_repo 'attacker/terraform-provider-rancher2' does not match workflow_run head_repo 'rancher/terraform-provider-rancher2'")));
+    assert.ok(mockCore.infoMessages.some(m => m.includes('Could not identify a single PR from workflow_run event. Skipping adoption')));
+  } finally {
+    fs.rmSync(tmpSignalDir, { recursive: true, force: true });
+  }
+});
+
+test('runTrackingIssue - rejects PR adoption when fetched PR head branch does not match workflow_run head branch', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let subIssueCreated = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      return [];
+    },
+    rest: {
+      repos: {
+        listBranches: async () => {},
+      },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullGetCalled = true;
+          return {
+            data: {
+              number: pull_number,
+              title: 'Mismatched Head Branch PR',
+              body: '- Addresses: #502',
+              state: 'open',
+              draft: false,
+              base: { ref: 'main' },
+              head: {
+                sha: 'expected-head-sha',
+                ref: 'mismatched-branch',
+                repo: { full_name: 'rancher/terraform-provider-rancher2' },
+              },
+              labels: [],
+            },
+          };
+        },
+      },
+      issues: {
+        create: async () => {
+          subIssueCreated = true;
+          return { data: { id: 503, number: 503 } };
+        },
+      },
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'expected-head-sha',
+        head_branch: 'expected-branch',
+        head_repository: { full_name: 'rancher/terraform-provider-rancher2' },
+        pull_requests: [{ number: 99 }],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(pullGetCalled, true);
+  assert.strictEqual(subIssueCreated, false);
+  assert.ok(mockCore.warningMessages.some(m => m.includes("Target PR #99 head branch 'mismatched-branch' does not match workflow_run head branch 'expected-branch'")));
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Skipping tracking adoption for workflow_run PR #99 with mismatched head branch')));
+});
+
+test('runTrackingIssue - rejects PR adoption when fetched PR head repository does not match workflow_run head repository', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let subIssueCreated = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      return [];
+    },
+    rest: {
+      repos: {
+        listBranches: async () => {},
+      },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullGetCalled = true;
+          return {
+            data: {
+              number: pull_number,
+              title: 'Mismatched Head Repo PR',
+              body: '- Addresses: #502',
+              state: 'open',
+              draft: false,
+              base: { ref: 'main' },
+              head: {
+                sha: 'expected-head-sha',
+                ref: 'expected-branch',
+                repo: { full_name: 'untrusted-fork/terraform-provider-rancher2' },
+              },
+              labels: [],
+            },
+          };
+        },
+      },
+      issues: {
+        create: async () => {
+          subIssueCreated = true;
+          return { data: { id: 503, number: 503 } };
+        },
+      },
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'expected-head-sha',
+        head_branch: 'expected-branch',
+        head_repository: { full_name: 'rancher/terraform-provider-rancher2' },
+        pull_requests: [{ number: 99 }],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(pullGetCalled, true);
+  assert.strictEqual(subIssueCreated, false);
+  assert.ok(mockCore.warningMessages.some(m => m.includes("Target PR #99 head repository 'untrusted-fork/terraform-provider-rancher2' does not match workflow_run head repository 'rancher/terraform-provider-rancher2'")));
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Skipping tracking adoption for workflow_run PR #99 with mismatched head repository')));
+});
+
+test('runTrackingIssue - rejects PR adoption when fetched PR head SHA does not match workflow_run head SHA', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let subIssueCreated = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      return [];
+    },
+    rest: {
+      repos: {
+        listBranches: async () => {},
+      },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullGetCalled = true;
+          return {
+            data: {
+              number: pull_number,
+              title: 'Mismatched Head SHA PR',
+              body: '- Addresses: #502',
+              state: 'open',
+              draft: false,
+              base: { ref: 'main' },
+              head: { sha: 'different-head-sha' },
+              labels: [],
+            },
+          };
+        },
+      },
+      issues: {
+        create: async () => {
+          subIssueCreated = true;
+          return { data: { id: 503, number: 503 } };
+        },
+      },
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'expected-head-sha',
+        pull_requests: [{ number: 99 }],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(pullGetCalled, true);
+  assert.strictEqual(subIssueCreated, false);
+  assert.ok(mockCore.warningMessages.some(m => m.includes("PR #99 head SHA 'different-head-sha' does not match workflow_run head SHA 'expected-head-sha'")));
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Skipping tracking adoption for workflow_run PR #99 with mismatched head SHA')));
+});
+
+test('runTrackingIssue - skips search candidate PR when head_sha does not match workflow_run head_sha', async () => {
+  const mockCore = createMockCore();
+  let pullCalls = 0;
+  let subIssueCreated = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.repos.listPullRequestsAssociatedWithCommit) {
+        return [];
+      }
+      return [];
+    },
+    rest: {
+      repos: {
+        listBranches: async () => {},
+        listPullRequestsAssociatedWithCommit: async () => {},
+      },
+      search: {
+        issuesAndPullRequests: async () => ({
+          data: {
+            items: [
+              { number: 101, state: 'open', pull_request: {} },
+              { number: 102, state: 'open', pull_request: {} },
+            ],
+          },
+        }),
+      },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullCalls++;
+          if (pull_number === 101) {
+            return {
+              data: {
+                number: 101,
+                title: 'Wrong SHA PR',
+                state: 'open',
+                draft: false,
+                base: { ref: 'main' },
+                head: { sha: 'wrong-sha' },
+                labels: [],
+              },
+            };
+          }
+          return {
+            data: {
+              number: 102,
+              title: 'Correct SHA PR',
+              body: '- Addresses: #504',
+              state: 'open',
+              draft: false,
+              base: { ref: 'main' },
+              head: { sha: 'matching-sha' },
+              labels: [],
+            },
+          };
+        },
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 504,
+            title: 'Issue 504',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        create: async () => {
+          subIssueCreated = true;
+          return { data: { id: 505, number: 505 } };
+        },
+        addLabels: async () => {},
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async () => {},
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes('/sub_issues')) {
+        return { data: [] };
+      }
+      return { data: {} };
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'matching-sha',
+        pull_requests: [],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(subIssueCreated, true);
+  assert.ok(pullCalls >= 2);
+  assert.ok(mockCore.infoMessages.some(m => m.includes("Search candidate PR #101 head SHA 'wrong-sha' does not match commit SHA 'matching-sha'")));
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Resolved PR #102 from search API for commit SHA matching-sha')));
+});
+
+test('runTrackingIssue - resolves PR from search API fallback when commit lookup returns empty', async () => {
+  const mockCore = createMockCore();
+  let pullGetCalled = false;
+  let searchApiCalled = false;
+  let subIssueCreatedBeforeLabel = false;
+  let releaseLabelAdded = false;
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: 'main' }, { name: 'release/v15' }];
+      }
+      if (method === mockGithub.rest.repos.listPullRequestsAssociatedWithCommit) {
+        return [];
+      }
+      return [];
+    },
+    rest: {
+      repos: {
+        listBranches: async () => {},
+        listPullRequestsAssociatedWithCommit: async () => {},
+      },
+      search: {
+        issuesAndPullRequests: async () => {
+          searchApiCalled = true;
+          return {
+            data: {
+              items: [
+                {
+                  number: 101,
+                  state: 'open',
+                  pull_request: {},
+                },
+              ],
+            },
+          };
+        },
+      },
+      pulls: {
+        get: async ({ pull_number }) => {
+          pullGetCalled = true;
+          return {
+            data: {
+              number: pull_number,
+              title: 'Search fallback PR',
+              body: '- Addresses: #504',
+              state: 'open',
+              draft: false,
+              base: { ref: 'main' },
+              labels: [],
+            },
+          };
+        },
+      },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 504,
+            title: 'Issue 504',
+            state: 'open',
+            labels: [],
+          },
+        }),
+        create: async () => {
+          if (!releaseLabelAdded) {
+            subIssueCreatedBeforeLabel = true;
+          }
+          return { data: { id: 505, number: 505 } };
+        },
+        addLabels: async ({ labels }) => {
+          if (labels.includes('release/v15')) {
+            releaseLabelAdded = true;
+          }
+        },
+        createComment: async () => {},
+      },
+      actions: {
+        createWorkflowDispatch: async () => {},
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes('/sub_issues')) {
+        return { data: [] };
+      }
+      return { data: {} };
+    },
+  };
+
+  const mockContext = {
+    eventName: 'workflow_run',
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      workflow_run: {
+        head_sha: 'search-head-sha',
+        pull_requests: [],
+      },
+    },
+  };
+
+  await runTrackingIssue({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+
+  assert.strictEqual(searchApiCalled, true);
+  assert.strictEqual(pullGetCalled, true);
+  assert.strictEqual(subIssueCreatedBeforeLabel, true);
+  assert.strictEqual(releaseLabelAdded, true);
+  assert.ok(mockCore.infoMessages.some(m => m.includes('Resolved PR #101 from search API for commit SHA search-head-sha')));
 });
 
 test('runTrackingIssue - skips adoption without broad search when workflow_run has no resolvable PR', async () => {

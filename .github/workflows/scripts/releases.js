@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { validatePrDescription } from './validate-pr-description.js';
 import { runBackportIssues } from './backports.js';
 
@@ -226,6 +228,10 @@ export async function runTrackingIssue({ github, context, core, process = global
     }
 
     const isWorkflowRun = context?.eventName === 'workflow_run' || Boolean(context?.payload?.workflow_run) || Boolean(process?.env?.WORKFLOW_RUN_SHA);
+    const parentRun = context?.payload?.workflow_run;
+    const headSha = parentRun?.head_sha || (process?.env?.WORKFLOW_RUN_SHA ? String(process.env.WORKFLOW_RUN_SHA).trim() : '');
+    const headBranch = (parentRun?.head_branch || (process?.env?.WORKFLOW_RUN_HEAD_BRANCH ? String(process.env.WORKFLOW_RUN_HEAD_BRANCH).trim() : '')).replace(/^refs\/heads\//, '');
+    const headRepo = (parentRun?.head_repository?.full_name || (process?.env?.WORKFLOW_RUN_HEAD_REPO ? String(process.env.WORKFLOW_RUN_HEAD_REPO).trim() : '')).toLowerCase();
     let pulls;
     let envPrNum = null;
     const rawPrNumber = process?.env?.PR_NUMBER !== undefined && process?.env?.PR_NUMBER !== null
@@ -240,17 +246,70 @@ export async function runTrackingIssue({ github, context, core, process = global
     }
 
     if (!envPrNum && isWorkflowRun) {
-      const parentRun = context?.payload?.workflow_run;
-      if (parentRun?.pull_requests?.length > 0) {
-        const parentPrNum = parentRun.pull_requests[0].number;
-        if (Number.isFinite(parentPrNum) && parentPrNum > 0) {
-          envPrNum = parentPrNum;
-          core.info(`Resolved PR #${envPrNum} from workflow_run.pull_requests.`);
+      // 1. Try resolving from PR signal artifact downloaded on disk
+      const candidatePaths = [];
+      if (process?.env?.PR_SIGNAL_PATH) {
+        candidatePaths.push(process.env.PR_SIGNAL_PATH);
+        if (process?.env?.GITHUB_WORKSPACE) {
+          candidatePaths.push(path.resolve(process.env.GITHUB_WORKSPACE, process.env.PR_SIGNAL_PATH));
+        }
+      }
+      const workspace = process?.env?.GITHUB_WORKSPACE || (typeof process?.cwd === 'function' ? process.cwd() : '.');
+      candidatePaths.push(
+        path.resolve(workspace, 'signal/pr-signal.json'),
+        path.resolve(workspace, 'pr-signal.json'),
+        'signal/pr-signal.json',
+        'pr-signal.json'
+      );
+
+      for (const filePath of candidatePaths) {
+        try {
+          if (fs.existsSync(filePath)) {
+            const raw = fs.readFileSync(filePath, 'utf8');
+            const parsed = JSON.parse(raw);
+            const num = parseInt(parsed?.pr_number, 10);
+            const signalSha = typeof parsed?.head_sha === 'string' ? parsed.head_sha.trim() : '';
+            const signalBranch = typeof parsed?.head_branch === 'string' ? parsed.head_branch.trim().replace(/^refs\/heads\//, '') : '';
+            const signalRepo = typeof parsed?.head_repo === 'string' ? parsed.head_repo.trim().toLowerCase() : '';
+
+            // Verify that the signal belongs to the triggering run (matching SHA, branch, and repository)
+            if (headSha && (!signalSha || signalSha !== headSha)) {
+              core.warning(`PR signal head_sha '${signalSha}' does not match workflow_run head_sha '${headSha}'. Ignoring signal artifact.`);
+              continue;
+            }
+            if (headBranch && signalBranch && signalBranch !== headBranch) {
+              core.warning(`PR signal head_branch '${signalBranch}' does not match workflow_run head_branch '${headBranch}'. Ignoring signal artifact.`);
+              continue;
+            }
+            if (headRepo && signalRepo && signalRepo !== headRepo) {
+              core.warning(`PR signal head_repo '${signalRepo}' does not match workflow_run head_repo '${headRepo}'. Ignoring signal artifact.`);
+              continue;
+            }
+
+            if (Number.isFinite(num) && num > 0) {
+              envPrNum = num;
+              core.info(`Resolved PR #${envPrNum} from PR signal artifact at ${filePath}.`);
+              break;
+            }
+          }
+        } catch (err) {
+          core.warning(`Failed to read PR signal file at ${filePath}: ${err.message}`);
         }
       }
 
+      // 2. Try workflow_run.pull_requests
       if (!envPrNum) {
-        const headSha = parentRun?.head_sha || (process?.env?.WORKFLOW_RUN_SHA ? String(process.env.WORKFLOW_RUN_SHA).trim() : '');
+        if (parentRun?.pull_requests?.length > 0) {
+          const parentPrNum = parentRun.pull_requests[0].number;
+          if (Number.isFinite(parentPrNum) && parentPrNum > 0) {
+            envPrNum = parentPrNum;
+            core.info(`Resolved PR #${envPrNum} from workflow_run.pull_requests.`);
+          }
+        }
+      }
+
+      // 3. Fallback to commit SHA via listPullRequestsAssociatedWithCommit
+      if (!envPrNum) {
         if (headSha && (typeof github?.paginate === 'function' || typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function')) {
           core.info(`Attempting to resolve PR from workflow_run commit SHA: ${headSha}...`);
           try {
@@ -268,13 +327,76 @@ export async function runTrackingIssue({ github, context, core, process = global
               });
               associatedPrs = res.data || [];
             }
-            const matchingPr = associatedPrs.find(p => p.state === 'open' && p.base?.ref === 'main');
+            const matchingPr = associatedPrs.find(p => {
+              if (p.state !== 'open' || p.base?.ref !== 'main') {
+                return false;
+              }
+              if (headSha && p.head?.sha && p.head.sha !== headSha) {
+                return false;
+              }
+              const prBranch = p.head?.ref ? p.head.ref.replace(/^refs\/heads\//, '') : '';
+              if (headBranch && prBranch && prBranch !== headBranch) {
+                return false;
+              }
+              const prRepo = p.head?.repo?.full_name ? p.head.repo.full_name.toLowerCase() : '';
+              if (headRepo && prRepo && prRepo !== headRepo) {
+                return false;
+              }
+              return true;
+            });
             if (matchingPr) {
               envPrNum = matchingPr.number;
               core.info(`Resolved PR #${envPrNum} from commit SHA ${headSha}`);
             }
           } catch (shaErr) {
             core.info(`Could not resolve PR from commit SHA ${headSha}: ${shaErr.message}`);
+          }
+        }
+
+        // 4. Fallback to Search API if commit lookup yielded no PR
+        if (!envPrNum && headSha && typeof github?.rest?.search?.issuesAndPullRequests === 'function') {
+          try {
+            const searchRes = await github.rest.search.issuesAndPullRequests({
+              q: `${headSha} type:pr state:open repo:${owner}/${repo}`
+            });
+            const items = searchRes?.data?.items || searchRes?.data || [];
+            const candidates = items.filter(p => p.state === 'open' && (p.pull_request || p.html_url?.includes('/pull/')));
+            for (const candidate of candidates) {
+              if (candidate.number) {
+                if (typeof github?.rest?.pulls?.get === 'function') {
+                  try {
+                    const candPr = await github.rest.pulls.get({
+                      owner,
+                      repo,
+                      pull_number: candidate.number,
+                    });
+                    const cData = candPr?.data;
+                    if (headSha && cData?.head?.sha && cData.head.sha !== headSha) {
+                      core.info(`Search candidate PR #${candidate.number} head SHA '${cData.head.sha}' does not match commit SHA '${headSha}'. Skipping.`);
+                      continue;
+                    }
+                    const candBranch = cData?.head?.ref ? cData.head.ref.replace(/^refs\/heads\//, '') : '';
+                    if (headBranch && candBranch && candBranch !== headBranch) {
+                      core.info(`Search candidate PR #${candidate.number} head branch '${candBranch}' does not match workflow_run head branch '${headBranch}'. Skipping.`);
+                      continue;
+                    }
+                    const candRepo = cData?.head?.repo?.full_name ? cData.head.repo.full_name.toLowerCase() : '';
+                    if (headRepo && candRepo && candRepo !== headRepo) {
+                      core.info(`Search candidate PR #${candidate.number} head repo '${candRepo}' does not match workflow_run head repo '${headRepo}'. Skipping.`);
+                      continue;
+                    }
+                  } catch (candErr) {
+                    core.info(`Could not inspect search candidate PR #${candidate.number}: ${candErr.message}`);
+                    continue;
+                  }
+                }
+                envPrNum = candidate.number;
+                core.info(`Resolved PR #${envPrNum} from search API for commit SHA ${headSha}`);
+                break;
+              }
+            }
+          } catch (searchErr) {
+            core.info(`Could not resolve PR from search API for commit SHA ${headSha}: ${searchErr.message}`);
           }
         }
       }
@@ -296,6 +418,35 @@ export async function runTrackingIssue({ github, context, core, process = global
         const prLabels = (prData?.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
         const excludedLabels = ['internal/ignore', 'internal/pr-backport', 'autorelease: pending', 'autorelease: tagged'];
         const hasExcludedLabel = prLabels.some(l => excludedLabels.includes(l));
+
+        // Validate that fetched PR belongs to the triggering workflow run when in workflow_run context
+        if (isWorkflowRun) {
+          const prSha = prData?.head?.sha;
+          const prBranch = prData?.head?.ref ? prData.head.ref.replace(/^refs\/heads\//, '') : '';
+          const prRepo = prData?.head?.repo?.full_name ? prData.head.repo.full_name.toLowerCase() : '';
+
+          if (headSha && prSha && prSha !== headSha) {
+            core.warning(
+              `Target PR #${envPrNum} head SHA '${prSha}' does not match workflow_run head SHA '${headSha}'. Rejecting untrusted adoption.`
+            );
+            core.info(`Skipping tracking adoption for workflow_run PR #${envPrNum} with mismatched head SHA.`);
+            return;
+          }
+          if (headBranch && prBranch && prBranch !== headBranch) {
+            core.warning(
+              `Target PR #${envPrNum} head branch '${prBranch}' does not match workflow_run head branch '${headBranch}'. Rejecting untrusted adoption.`
+            );
+            core.info(`Skipping tracking adoption for workflow_run PR #${envPrNum} with mismatched head branch.`);
+            return;
+          }
+          if (headRepo && prRepo && prRepo !== headRepo) {
+            core.warning(
+              `Target PR #${envPrNum} head repository '${prRepo}' does not match workflow_run head repository '${headRepo}'. Rejecting untrusted adoption.`
+            );
+            core.info(`Skipping tracking adoption for workflow_run PR #${envPrNum} with mismatched head repository.`);
+            return;
+          }
+        }
 
         if (prData && prData.state === 'open' && !prData.draft && prData.base?.ref === 'main' && !hasExcludedLabel) {
           pulls = [prData];

@@ -37,3 +37,33 @@ jobs:
             const { default: validate } = await import(scriptPath);
             await validate({ github, context, core });
 
+      - name: Save PR Signal
+        id: save-pr-signal
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          mkdir -p signal
+          jq -n \
+            --arg pr_number "$PR_NUMBER" \
+            --arg head_sha "$HEAD_SHA" \
+            --arg head_repo "$HEAD_REPO" \
+            --arg head_branch "$HEAD_BRANCH" \
+            '{
+              pr_number: ($pr_number | tonumber),
+              head_sha: $head_sha,
+              head_repo: $head_repo,
+              head_branch: $head_branch
+            }' > signal/pr-signal.json
+
+      - name: Upload PR Signal Artifact
+        id: upload-pr-signal
+        # https://github.com/actions/upload-artifact/releases
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: validate-pr-signal
+          path: signal/pr-signal.json
+          retention-days: 1
+
