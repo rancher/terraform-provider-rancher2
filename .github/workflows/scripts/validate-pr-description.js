@@ -1,12 +1,16 @@
 /**
- * Validates that the pull request description contains the required format:
- * "- Addresses: #<issue number>" or "* Addresses: #<issue number>"
+ * Validates that the pull request description contains the required format, e.g.:
+ * - Addresses: #<issue number>
+ * * Addresses: #<issue number>
+ * - Addresses: <org>/<repo>#<issue number>
  *
+ * @param {string} owner The owner to be assumed for issue references that don't specify one
+ * @param {string} repo The repo to be assumed for issue references that don't specify one
  * @param {string} prBody The description of the pull request.
- * @returns {string[]} The matched issue numbers.
+ * @returns {obj[]} Array of objects of the matched owner, repo and issue number
  * @throws {Error} If no valid format line is found.
  */
-export function validatePrDescription(prBody) {
+export function validatePrDescription(owner, repo, prBody) {
   if (!prBody) {
     throw new Error('Please add a description line that matches this format: - Addresses: #<issue number>');
   }
@@ -17,9 +21,13 @@ export function validatePrDescription(prBody) {
   const issueNumbers = [];
   const lines = cleanBody.split('\n');
   for (const line of lines) {
-    const match = line.trim().match(/^[-*]\s+Addresses:\s+(`?)#([0-9]+)\1\.?$/i);
+    const match = line.trim().match(/^\s*[-*]\s+Addresses:\s+(`?)(([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+))?#([0-9]+)\1(\.?)$/im);
     if (match) {
-      issueNumbers.push(match[2]);
+      issueNumbers.push({
+        owner: match[3] ? match[3] : owner,
+        repo: match[4] ? match[4] : repo,
+        issue: match[5],
+      });
     }
   }
 
@@ -34,14 +42,13 @@ export function validatePrDescription(prBody) {
  * Validates that the issue exists in the repository.
  *
  * @param {object} github The Octokit GitHub client from github-script.
- * @param {object} context The GitHub context from github-script.
+ * @param {string} owner The GitHub owner of the issue
+ * @param {string} repo The GitHub repo of the issue
  * @param {string} issueNumber The issue number to validate.
  * @returns {Promise<boolean>} True if the issue exists.
  * @throws {Error} If the issue does not exist.
  */
-export async function validateIssueExists(github, context, issueNumber) {
-  const { owner, repo } = context.repo;
-
+export async function validateIssueExists(github, owner, repo, issueNumber) {
   let issue;
   try {
     ({ data: issue } = await github.rest.issues.get({
@@ -78,10 +85,14 @@ export async function validateIssueExists(github, context, issueNumber) {
 export default async function run({ github, context, core }) {
   try {
     const prBody = context.payload?.pull_request?.body ?? '';
-    const issueNumbers = validatePrDescription(prBody);
-    const uniqueIssues = [...new Set(issueNumbers)];
+    const {owner, repo } = context.repo ?? {owner: 'rancher', repo: 'terraform-provider-rancher2'};
+    const issues = validatePrDescription(owner, repo, prBody);
+    const issueMap = new Map(
+      issues.map((issue) => { return [JSON.stringify(issue), issue]; }),
+    );
+    const uniqueIssues = [...issueMap.values()];
     const results = await Promise.allSettled(
-      uniqueIssues.map((issueNumber) => validateIssueExists(github, context, issueNumber))
+      uniqueIssues.map(({owner, repo, issue}) => validateIssueExists(github, owner, repo, issue))
     );
     const errors = results
       .filter((r) => r.status === 'rejected')
