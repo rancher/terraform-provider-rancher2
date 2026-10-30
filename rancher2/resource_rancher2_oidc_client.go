@@ -237,9 +237,13 @@ func resourceRancher2OIDCClientDelete(d *schema.ResourceData, meta any) error {
 }
 
 func resourceRancher2OIDCClientImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	id := d.Id()
 	err := resourceRancher2OIDCClientRead(d, meta)
-	if err != nil || d.Id() == "" {
+	if err != nil {
 		return []*schema.ResourceData{}, err
+	}
+	if d.Id() == "" {
+		return []*schema.ResourceData{}, fmt.Errorf("OIDC Client %q not found", id)
 	}
 
 	return []*schema.ResourceData{d}, nil
