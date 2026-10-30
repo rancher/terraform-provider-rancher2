@@ -264,48 +264,27 @@ export async function resolveTargetPr({ github, context, core, process = globalT
         associatedPrs = res?.data || res || [];
       }
 
-      // Search API fallback for commits on fork PRs not present in upstream commit list
-      if (associatedPrs.length === 0 && typeof github?.rest?.search?.issuesAndPullRequests === 'function') {
-        try {
-          const searchRes = await github.rest.search.issuesAndPullRequests({
-            q: `${headSha} type:pr state:open repo:${owner}/${repo}`,
-          });
-          const items = searchRes?.data?.items || searchRes?.data || [];
-          for (const item of items) {
-            if (item.number && item.state === 'open') {
-              associatedPrs.push({
-                number: item.number,
-                state: item.state,
-                head: { sha: headSha },
-              });
-            }
-          }
-        } catch (searchError) {
-          core.warning(`Search fallback failed for commit SHA ${headSha}: ${searchError.message}`);
-        }
-      }
-
       const parentBranch = parentRun?.head_branch ? parentRun.head_branch.replace(/^refs\/heads\//, '') : null;
       const matched = associatedPrs.find(p => {
         if (p.state && p.state !== 'open') {
           return false;
         }
         const prHeadRef = p.head?.ref ? p.head.ref.replace(/^refs\/heads\//, '') : null;
-        if (parentBranch && prHeadRef && prHeadRef !== parentBranch) {
+        if (parentBranch && prHeadRef !== parentBranch) {
           return false;
         }
-        if (parentRun?.head_repository?.full_name && p.head?.repo?.full_name && p.head.repo.full_name.toLowerCase() !== parentRun.head_repository.full_name.toLowerCase()) {
+        if (parentRun?.head_repository?.full_name && p.head?.repo?.full_name?.toLowerCase() !== parentRun.head_repository.full_name.toLowerCase()) {
           return false;
         }
-        // Reject fallback PR matches with stale head SHA
-        if (p.head?.sha && p.head.sha !== headSha) {
+        // Reject fallback PR matches with missing or stale head SHA
+        if (!p.head?.sha || p.head.sha !== headSha) {
           return false;
         }
         return true;
       });
 
       if (matched) {
-        core.info(`Resolved PR #${matched.number} via commit search fallback.`);
+        core.info(`Resolved PR #${matched.number} via commit lookup.`);
         if (matched.number && typeof github?.rest?.pulls?.get === 'function') {
           try {
             const fullPr = await github.rest.pulls.get({
@@ -313,12 +292,27 @@ export async function resolveTargetPr({ github, context, core, process = globalT
               repo,
               pull_number: matched.number,
             });
-            if (fullPr?.data) {
-              if (fullPr.data.head?.sha && fullPr.data.head.sha !== headSha) {
-                core.info(`PR #${matched.number} head (${fullPr.data.head.sha}) has changed since commit ${headSha}. Rejecting stale match.`);
+            const fullData = fullPr?.data;
+            if (fullData) {
+              if (fullData.head?.sha && fullData.head.sha !== headSha) {
+                core.info(`PR #${matched.number} head (${fullData.head.sha}) has changed since commit ${headSha}. Rejecting stale match.`);
                 return null;
               }
-              return fullPr.data;
+              if (fullData.state && fullData.state !== 'open') {
+                core.info(`PR #${matched.number} is not open (state: "${fullData.state}"). Rejecting.`);
+                return null;
+              }
+              const fullHeadRef = fullData.head?.ref ? fullData.head.ref.replace(/^refs\/heads\//, '') : null;
+              if (parentBranch && fullHeadRef && fullHeadRef !== parentBranch) {
+                core.info(`PR #${matched.number} head ref "${fullHeadRef}" does not match triggering branch "${parentBranch}". Rejecting.`);
+                return null;
+              }
+              const fullRepo = fullData.head?.repo?.full_name ? fullData.head.repo.full_name.toLowerCase() : null;
+              if (parentRun?.head_repository?.full_name && fullRepo && fullRepo !== parentRun.head_repository.full_name.toLowerCase()) {
+                core.info(`PR #${matched.number} head repo "${fullRepo}" does not match triggering repository "${parentRun.head_repository.full_name}". Rejecting.`);
+                return null;
+              }
+              return fullData;
             }
           } catch (err) {
             core.info(`Could not fetch full details for PR #${matched.number}, using commit-matched PR object: ${err.message}`);

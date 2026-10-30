@@ -222,24 +222,49 @@ test('resolveTargetPr - resolves via approval signal file on disk when signal pa
   }
 });
 
-test('resolveTargetPr - resolves via Search API fallback when commit lookup returns empty', async () => {
+test('resolveTargetPr - rejects fallback candidate when head.sha is missing or mismatched', async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     paginate: async (fn, params) => fn(params),
     rest: {
       repos: {
-        listPullRequestsAssociatedWithCommit: async () => [],
+        listPullRequestsAssociatedWithCommit: async () => [
+          { number: 88, state: 'open', head: { ref: 'fork-branch' } }, // missing head.sha
+        ],
       },
-      search: {
-        issuesAndPullRequests: async () => ({
-          data: {
-            items: [{ number: 88, state: 'open' }],
-          },
-        }),
+    },
+  };
+  const result = await resolveTargetPr({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        workflow_run: {
+          head_sha: 'commit-sha-456',
+          head_branch: 'fork-branch',
+          pull_requests: [],
+        },
+      },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+  assert.strictEqual(result, null);
+});
+
+test('resolveTargetPr - rejects fallback candidate when fetched PR branch or repository mismatches', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    paginate: async (fn, params) => fn(params),
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => [
+          { number: 88, state: 'open', head: { ref: 'fork-branch', sha: 'commit-sha-456' } },
+        ],
       },
       pulls: {
         get: async ({ pull_number }) => ({
-          data: { number: pull_number, state: 'open', head: { ref: 'fork-branch', sha: 'commit-sha-456' } },
+          data: { number: pull_number, state: 'open', head: { ref: 'other-branch', sha: 'commit-sha-456' } },
         }),
       },
     },
@@ -259,7 +284,7 @@ test('resolveTargetPr - resolves via Search API fallback when commit lookup retu
     core: mockCore,
     process: { env: {} },
   });
-  assert.strictEqual(result.number, 88);
+  assert.strictEqual(result, null);
 });
 
 test('checkWorkflowModifications - flags changes in .github/', async () => {
