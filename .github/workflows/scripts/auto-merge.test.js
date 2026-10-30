@@ -154,6 +154,114 @@ test('resolveTargetPr - rejects fallback PR when head SHA does not match trigger
   assert.strictEqual(result, null);
 });
 
+test('resolveTargetPr - resolves via signal parameter when workflow_run.pull_requests is empty (fork PR)', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      pulls: {
+        get: async ({ pull_number }) => ({
+          data: { number: pull_number, title: 'From Signal Parameter' },
+        }),
+      },
+    },
+  };
+  const result = await resolveTargetPr({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        workflow_run: {
+          id: 1234,
+          pull_requests: [],
+          head_sha: 'commit-sha',
+        },
+      },
+    },
+    core: mockCore,
+    process: { env: { PR_NUMBER: '' } },
+    signal: { pr_number: 2588 },
+  });
+  assert.strictEqual(result.number, 2588);
+});
+
+test('resolveTargetPr - resolves via approval signal file on disk when signal parameter is omitted', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-signal-test-'));
+  const signalPath = path.join(tempDir, 'approval-signal.json');
+  fs.writeFileSync(signalPath, JSON.stringify({ pr_number: 777 }));
+
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      pulls: {
+        get: async ({ pull_number }) => ({
+          data: { number: pull_number, title: 'From Signal File' },
+        }),
+      },
+    },
+  };
+
+  try {
+    const result = await resolveTargetPr({
+      github: mockGithub,
+      context: {
+        repo: { owner: 'rancher', repo: 'test' },
+        payload: {
+          workflow_run: {
+            id: 1234,
+            pull_requests: [],
+            head_sha: 'commit-sha',
+          },
+        },
+      },
+      core: mockCore,
+      process: { env: { PR_NUMBER: '', APPROVAL_SIGNAL_PATH: signalPath } },
+    });
+    assert.strictEqual(result.number, 777);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test('resolveTargetPr - resolves via Search API fallback when commit lookup returns empty', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    paginate: async (fn, params) => fn(params),
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => [],
+      },
+      search: {
+        issuesAndPullRequests: async () => ({
+          data: {
+            items: [{ number: 88, state: 'open' }],
+          },
+        }),
+      },
+      pulls: {
+        get: async ({ pull_number }) => ({
+          data: { number: pull_number, state: 'open', head: { ref: 'fork-branch', sha: 'commit-sha-456' } },
+        }),
+      },
+    },
+  };
+  const result = await resolveTargetPr({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        workflow_run: {
+          head_sha: 'commit-sha-456',
+          head_branch: 'fork-branch',
+          pull_requests: [],
+        },
+      },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+  assert.strictEqual(result.number, 88);
+});
+
 test('checkWorkflowModifications - flags changes in .github/', async () => {
   const mockCore = createMockCore();
   const mockGithub = {
@@ -1091,6 +1199,112 @@ test('runPreflight - fails when auto-merge-approval-signal artifact is missing i
   assert.strictEqual(result, false);
   assert.strictEqual(mockCore.outputs.eligible, 'false');
   assert.ok(mockCore.infoMessages.some(m => m.includes("lacks 'auto-merge-approval-signal' artifact")));
+});
+
+test('runPreflight - fails when target PR cannot be resolved', async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      pulls: {
+        get: async () => {
+          throw new Error('Not found');
+        },
+      },
+    },
+  };
+
+  const result = await runPreflight({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {},
+    },
+    core: mockCore,
+    process: { env: { PR_NUMBER: '99999' } },
+  });
+
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.eligible, 'false');
+  assert.strictEqual(mockCore.failedMessage, 'Could not resolve target PR for preflight auto-merge.');
+});
+
+test('runPreflight - succeeds for fork PR when workflow_run.pull_requests is empty by reading PR from signal artifact', async () => {
+  const mockCore = createMockCore();
+  let callCount = 0;
+
+  const mockGithub = {
+    paginate: async (_fn, params) => {
+      if (params?.run_id) {
+        return [{ id: 101, name: 'auto-merge-approval-signal' }];
+      }
+      callCount++;
+      if (callCount === 1) {
+        return [{ filename: 'rancher2/resource_cluster.go' }];
+      }
+      return [{ id: 'rev-fork-1', user: { login: 'triage-reviewer' }, state: 'APPROVED', commit_id: 'fork-sha' }];
+    },
+    rest: {
+      actions: {
+        listWorkflowRunArtifacts: async () => ({
+          data: { artifacts: [{ id: 101, name: 'auto-merge-approval-signal' }] },
+        }),
+        downloadArtifact: async () => ({
+          data: {
+            pr_number: 2588,
+            review_id: 'rev-fork-1',
+            review_user: 'triage-reviewer',
+            review_commit_id: 'fork-sha',
+            head_sha: 'fork-sha',
+            review_state: 'APPROVED',
+            base_ref: 'main',
+          },
+        }),
+      },
+      pulls: {
+        get: async ({ pull_number }) => ({
+          data: {
+            number: pull_number,
+            state: 'open',
+            draft: false,
+            base: { ref: 'main' },
+            head: { sha: 'fork-sha', ref: 'trivial-docs' },
+            user: { login: 'fork-author' },
+          },
+        }),
+      },
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'triage', role_name: 'triage' },
+        }),
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'test' },
+    payload: {
+      workflow_run: {
+        id: 9999,
+        pull_requests: [], // Empty for fork PRs!
+        head_sha: 'fork-sha',
+        head_branch: 'trivial-docs',
+      },
+    },
+  };
+
+  const result = await runPreflight({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: { PR_NUMBER: '', PR_HEAD_SHA: 'fork-sha', WORKFLOW_RUN_SHA: 'fork-sha' } },
+  });
+
+  assert.strictEqual(result, true);
+  assert.strictEqual(mockCore.outputs.eligible, 'true');
+  assert.strictEqual(mockCore.outputs.pr_number, '2588');
+  assert.strictEqual(mockCore.outputs.pr_head_sha, 'fork-sha');
+  assert.strictEqual(mockCore.outputs.review_id, 'rev-fork-1');
+  assert.strictEqual(mockCore.outputs.review_user, 'triage-reviewer');
 });
 
 test('runPreflight - skips non-open or draft PR', async () => {
