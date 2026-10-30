@@ -66,6 +66,9 @@ describe('validate-commit-message', () => {
       assert.strictEqual(isProductDirectory('./internal/provider/provider.go'), true);
       assert.strictEqual(isProductDirectory('internal/provider/provider_test.go'), true);
       assert.strictEqual(isProductDirectory('rancher2\\windows\\path.go'), true);
+      assert.strictEqual(isProductDirectory('main.go'), true);
+      assert.strictEqual(isProductDirectory('./main.go'), true);
+      assert.strictEqual(isProductDirectory('main_test.go'), true);
     });
 
     it('identifies files outside EU directories', () => {
@@ -86,6 +89,8 @@ describe('validate-commit-message', () => {
       assert.strictEqual(isProductFile('./rancher2/resource_cluster.go'), true);
       assert.strictEqual(isProductFile('internal/provider/provider.go'), true);
       assert.strictEqual(isProductFile('./internal/provider/provider.go'), true);
+      assert.strictEqual(isProductFile('main.go'), true);
+      assert.strictEqual(isProductFile('./main.go'), true);
     });
 
     it('excludes Go test files (_test.go) even if inside EU directories', () => {
@@ -93,6 +98,7 @@ describe('validate-commit-message', () => {
       assert.strictEqual(isProductFile('./rancher2/resource_cluster_test.go'), false);
       assert.strictEqual(isProductFile('internal/provider/provider_test.go'), false);
       assert.strictEqual(isProductFile('rancher2\\cluster_test.go'), false);
+      assert.strictEqual(isProductFile('main_test.go'), false);
     });
 
     it('identifies files outside rancher or internal as non-product changes', () => {
@@ -238,11 +244,19 @@ describe('validate-commit-message', () => {
         ]),
         true
       );
+      assert.strictEqual(
+        validateProductImpact('fix: update provider entrypoint', ['main.go']),
+        true
+      );
     });
 
     it('rejects non-product commit prefix when product files are changed', () => {
       assert.throws(
         () => validateProductImpact('docs: update docstrings', ['rancher/resource_cluster.go']),
+        /\.\.\.Commit message does not indicate a product change, but files in \.\/rancher or \.\/internal were modified\./
+      );
+      assert.throws(
+        () => validateProductImpact('docs: update entrypoint docs', ['main.go']),
         /\.\.\.Commit message does not indicate a product change, but files in \.\/rancher or \.\/internal were modified\./
       );
     });
@@ -284,6 +298,10 @@ describe('validate-commit-message', () => {
         ]),
         true
       );
+      assert.strictEqual(
+        validateProductImpact('test: add main entry test', ['main_test.go']),
+        true
+      );
     });
 
     it('allows test: prefix when mixed with files outside EU directories and EU _test.go files', () => {
@@ -308,6 +326,11 @@ describe('validate-commit-message', () => {
       assert.throws(
         () =>
           validateProductImpact('test: update cluster', ['internal/provider/provider.go']),
+        /\.\.\.Commit message cannot use "test:" prefix because files in \.\/rancher or \.\/internal that are not tests were modified\./
+      );
+      assert.throws(
+        () =>
+          validateProductImpact('test: update entrypoint', ['main.go']),
         /\.\.\.Commit message cannot use "test:" prefix because files in \.\/rancher or \.\/internal that are not tests were modified\./
       );
     });
@@ -520,6 +543,7 @@ describe('validate-commit-message', () => {
         assert.strictEqual(cmd, 'gh');
         assert.deepStrictEqual(args, [
           'api',
+          '--paginate',
           'repos/{owner}/{repo}/commits/abc1234',
           '--jq',
           '.files[]?.filename // empty',
@@ -528,6 +552,16 @@ describe('validate-commit-message', () => {
       };
       const files = getCommitChangedFiles('abc1234', '42', mockExec);
       assert.deepStrictEqual(files, ['docs/README.md']);
+    });
+
+    it('handles paginated multi-page files output from gh api', () => {
+      const mockExec = (cmd, args) => {
+        assert.strictEqual(cmd, 'gh');
+        assert.ok(args.includes('--paginate'));
+        return 'rancher2/resource_cluster.go\nmain.go\ndocs/cluster.md\n';
+      };
+      const files = getCommitChangedFiles('abc1234', '42', mockExec);
+      assert.deepStrictEqual(files, ['rancher2/resource_cluster.go', 'main.go', 'docs/cluster.md']);
     });
   });
 

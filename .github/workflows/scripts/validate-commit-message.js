@@ -42,7 +42,9 @@ export function isProductDirectory(file) {
   return (
     normalized.startsWith('rancher/') ||
     normalized.startsWith('rancher2/') ||
-    normalized.startsWith('internal/')
+    normalized.startsWith('internal/') ||
+    normalized === 'main.go' ||
+    normalized === 'main_test.go'
   );
 }
 
@@ -275,6 +277,7 @@ export function getCommitChangedFiles(sha, prNumber, exec = execFileSync) {
     'gh',
     [
       'api',
+      '--paginate',
       `repos/{owner}/{repo}/commits/${sha}`,
       '--jq',
       '.files[]?.filename // empty',
