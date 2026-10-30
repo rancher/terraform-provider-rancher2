@@ -287,6 +287,74 @@ test('resolveTargetPr - rejects fallback candidate when fetched PR branch or rep
   assert.strictEqual(result, null);
 });
 
+test('resolveTargetPr - rejects fallback candidate when fetched PR lacks head.sha or pulls.get fails', async () => {
+  const mockCoreMissingSha = createMockCore();
+  const mockGithubMissingSha = {
+    paginate: async (fn, params) => fn(params),
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => [
+          { number: 88, state: 'open', head: { ref: 'fork-branch', sha: 'commit-sha-456' } },
+        ],
+      },
+      pulls: {
+        get: async ({ pull_number }) => ({
+          data: { number: pull_number, state: 'open', head: { ref: 'fork-branch' } }, // lacks sha
+        }),
+      },
+    },
+  };
+  const resultMissingSha = await resolveTargetPr({
+    github: mockGithubMissingSha,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        workflow_run: {
+          head_sha: 'commit-sha-456',
+          head_branch: 'fork-branch',
+          pull_requests: [],
+        },
+      },
+    },
+    core: mockCoreMissingSha,
+    process: { env: {} },
+  });
+  assert.strictEqual(resultMissingSha, null);
+
+  const mockCoreThrow = createMockCore();
+  const mockGithubThrow = {
+    paginate: async (fn, params) => fn(params),
+    rest: {
+      repos: {
+        listPullRequestsAssociatedWithCommit: async () => [
+          { number: 88, state: 'open', head: { ref: 'fork-branch', sha: 'commit-sha-456' } },
+        ],
+      },
+      pulls: {
+        get: async () => {
+          throw new Error('API failure');
+        },
+      },
+    },
+  };
+  const resultThrow = await resolveTargetPr({
+    github: mockGithubThrow,
+    context: {
+      repo: { owner: 'rancher', repo: 'test' },
+      payload: {
+        workflow_run: {
+          head_sha: 'commit-sha-456',
+          head_branch: 'fork-branch',
+          pull_requests: [],
+        },
+      },
+    },
+    core: mockCoreThrow,
+    process: { env: {} },
+  });
+  assert.strictEqual(resultThrow, null);
+});
+
 test('checkWorkflowModifications - flags changes in .github/', async () => {
   const mockCore = createMockCore();
   const mockGithub = {

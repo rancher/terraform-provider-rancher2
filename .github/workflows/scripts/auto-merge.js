@@ -294,28 +294,30 @@ export async function resolveTargetPr({ github, context, core, process = globalT
             });
             const fullData = fullPr?.data;
             if (fullData) {
-              if (fullData.head?.sha && fullData.head.sha !== headSha) {
-                core.info(`PR #${matched.number} head (${fullData.head.sha}) has changed since commit ${headSha}. Rejecting stale match.`);
+              if (!fullData.head?.sha || fullData.head.sha !== headSha) {
+                core.info(`PR #${matched.number} head (${fullData.head?.sha}) does not match required commit ${headSha}. Rejecting.`);
                 return null;
               }
-              if (fullData.state && fullData.state !== 'open') {
+              if (!fullData.state || fullData.state !== 'open') {
                 core.info(`PR #${matched.number} is not open (state: "${fullData.state}"). Rejecting.`);
                 return null;
               }
               const fullHeadRef = fullData.head?.ref ? fullData.head.ref.replace(/^refs\/heads\//, '') : null;
-              if (parentBranch && fullHeadRef && fullHeadRef !== parentBranch) {
+              if (parentBranch && (!fullHeadRef || fullHeadRef !== parentBranch)) {
                 core.info(`PR #${matched.number} head ref "${fullHeadRef}" does not match triggering branch "${parentBranch}". Rejecting.`);
                 return null;
               }
               const fullRepo = fullData.head?.repo?.full_name ? fullData.head.repo.full_name.toLowerCase() : null;
-              if (parentRun?.head_repository?.full_name && fullRepo && fullRepo !== parentRun.head_repository.full_name.toLowerCase()) {
+              if (parentRun?.head_repository?.full_name && (!fullRepo || fullRepo !== parentRun.head_repository.full_name.toLowerCase())) {
                 core.info(`PR #${matched.number} head repo "${fullRepo}" does not match triggering repository "${parentRun.head_repository.full_name}". Rejecting.`);
                 return null;
               }
               return fullData;
             }
+            return null;
           } catch (err) {
-            core.info(`Could not fetch full details for PR #${matched.number}, using commit-matched PR object: ${err.message}`);
+            core.info(`Could not fetch full details for PR #${matched.number}: ${err.message}`);
+            return null;
           }
         }
         return matched;
