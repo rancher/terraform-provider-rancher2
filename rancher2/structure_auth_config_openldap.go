@@ -8,8 +8,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigOpenLdap(d *schema.ResourceData, in *managementClient.LdapConfig) error {
-	d.SetId(AuthConfigOpenLdapName)
-	d.Set("name", AuthConfigOpenLdapName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.OpenLdapConfigType)
 
 	err := flattenAuthConfigLdap(d, in)
@@ -28,7 +28,7 @@ func expandAuthConfigOpenLdap(in *schema.ResourceData) (*managementClient.LdapCo
 		return nil, err
 	}
 
-	obj.Name = AuthConfigOpenLdapName
+	obj.Name = expandAuthConfigName(in, AuthConfigOpenLdapName)
 	obj.Type = managementClient.OpenLdapConfigType
 
 	return obj, nil

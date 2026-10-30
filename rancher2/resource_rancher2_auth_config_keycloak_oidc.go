@@ -20,63 +20,45 @@ func resourceRancher2AuthConfigKeyCloakOIDC() *schema.Resource {
 }
 
 func resourceRancher2AuthConfigKeyCloakOIDCCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).ManagementClient()
+	authKeyCloakOIDC, err := expandAuthConfigKeyCloakOIDC(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config: %s", err)
+	}
+
+	newAuth := &managementClient.KeyCloakOIDCConfig{}
+	err = meta.(*Config).CreateOrUpdateAuthConfig(authKeyCloakOIDC.Name, authKeyCloakOIDC, newAuth, managementClient.AuthConfigFieldDisplayName)
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigKeyCloakOIDCName)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigKeyCloakOIDCName, err)
-	}
-
-	log.Printf("[INFO] Creating Auth Config %s", AuthConfigKeyCloakOIDCName)
-
-	authOIDC, err := expandAuthConfigKeyCloakOIDC(d)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigKeyCloakOIDCName, err)
-	}
-
-	// Checking if other auth config is enabled
-	if authOIDC.Enabled {
-		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigKeyCloakOIDCName)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigKeyCloakOIDCName, err)
-		}
-	}
-
-	newAuth := &managementClient.KeyCloakOIDCConfig{}
-	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOIDC, newAuth)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigKeyCloakOIDCName, err)
-	}
+	d.SetId(authKeyCloakOIDC.Name)
 
 	return resourceRancher2AuthConfigKeyCloakOIDCRead(d, meta)
 }
 
 func resourceRancher2AuthConfigKeyCloakOIDCRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigKeyCloakOIDCName)
+	log.Printf("[INFO] Refreshing Auth Config %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigKeyCloakOIDCName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigKeyCloakOIDCName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	authOIDC, err := meta.(*Config).GetAuthConfig(auth)
+	authKeyCloakOIDC, err := meta.(*Config).GetAuthConfig(auth)
 	if err != nil {
 		return err
 	}
 
-	err = flattenAuthConfigKeyCloakOIDC(d, authOIDC.(*managementClient.KeyCloakOIDCConfig))
+	err = flattenAuthConfigKeyCloakOIDC(d, authKeyCloakOIDC.(*managementClient.KeyCloakOIDCConfig))
 	if err != nil {
 		return err
 	}
@@ -85,32 +67,42 @@ func resourceRancher2AuthConfigKeyCloakOIDCRead(d *schema.ResourceData, meta int
 }
 
 func resourceRancher2AuthConfigKeyCloakOIDCUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config %s", AuthConfigKeyCloakOIDCName)
-	return resourceRancher2AuthConfigKeyCloakOIDCCreate(d, meta)
+	authKeyCloakOIDC, err := expandAuthConfigKeyCloakOIDC(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", d.Id(), err)
+	}
+
+	newAuth := &managementClient.KeyCloakOIDCConfig{}
+	err = meta.(*Config).UpdateAuthConfigByName(d.Id(), authKeyCloakOIDC, newAuth, managementClient.AuthConfigFieldDisplayName)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigKeyCloakOIDCRead(d, meta)
 }
 
 func resourceRancher2AuthConfigKeyCloakOIDCDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigKeyCloakOIDCName)
+	log.Printf("[INFO] Disabling Auth Config %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigKeyCloakOIDCName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigKeyCloakOIDCName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	if auth.Enabled == true {
+	if auth.Enabled {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigKeyCloakOIDCName, err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 		}
 	}
 

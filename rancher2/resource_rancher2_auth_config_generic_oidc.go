@@ -20,63 +20,45 @@ func resourceRancher2AuthConfigGenericOIDC() *schema.Resource {
 }
 
 func resourceRancher2AuthConfigGenericOIDCCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).ManagementClient()
+	authGenericOIDC, err := expandAuthConfigGenericOIDC(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config: %s", err)
+	}
+
+	newAuth := &managementClient.GenericOIDCConfig{}
+	err = meta.(*Config).CreateOrUpdateAuthConfig(authGenericOIDC.Name, authGenericOIDC, newAuth, managementClient.AuthConfigFieldDisplayName)
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigGenericOIDCName)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigGenericOIDCName, err)
-	}
-
-	log.Printf("[INFO] Creating Auth Config %s", AuthConfigGenericOIDCName)
-
-	authOIDC, err := expandAuthConfigGenericOIDC(d)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigGenericOIDCName, err)
-	}
-
-	// Checking if other auth config is enabled
-	if authOIDC.Enabled {
-		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigGenericOIDCName)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigGenericOIDCName, err)
-		}
-	}
-
-	newAuth := &managementClient.GenericOIDCConfig{}
-	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOIDC, newAuth)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigGenericOIDCName, err)
-	}
+	d.SetId(authGenericOIDC.Name)
 
 	return resourceRancher2AuthConfigGenericOIDCRead(d, meta)
 }
 
 func resourceRancher2AuthConfigGenericOIDCRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigGenericOIDCName)
+	log.Printf("[INFO] Refreshing Auth Config %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigGenericOIDCName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigGenericOIDCName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	authOIDC, err := meta.(*Config).GetAuthConfig(auth)
+	authGenericOIDC, err := meta.(*Config).GetAuthConfig(auth)
 	if err != nil {
 		return err
 	}
 
-	err = flattenAuthConfigGenericOIDC(d, authOIDC.(*managementClient.GenericOIDCConfig))
+	err = flattenAuthConfigGenericOIDC(d, authGenericOIDC.(*managementClient.GenericOIDCConfig))
 	if err != nil {
 		return err
 	}
@@ -85,32 +67,42 @@ func resourceRancher2AuthConfigGenericOIDCRead(d *schema.ResourceData, meta inte
 }
 
 func resourceRancher2AuthConfigGenericOIDCUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config %s", AuthConfigGenericOIDCName)
-	return resourceRancher2AuthConfigGenericOIDCCreate(d, meta)
+	authGenericOIDC, err := expandAuthConfigGenericOIDC(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", d.Id(), err)
+	}
+
+	newAuth := &managementClient.GenericOIDCConfig{}
+	err = meta.(*Config).UpdateAuthConfigByName(d.Id(), authGenericOIDC, newAuth, managementClient.AuthConfigFieldDisplayName)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigGenericOIDCRead(d, meta)
 }
 
 func resourceRancher2AuthConfigGenericOIDCDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigGenericOIDCName)
+	log.Printf("[INFO] Disabling Auth Config %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigGenericOIDCName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigGenericOIDCName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	if auth.Enabled == true {
+	if auth.Enabled {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigGenericOIDCName, err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 		}
 	}
 

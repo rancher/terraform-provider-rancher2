@@ -6,7 +6,7 @@ page_title: "rancher2_auth_config_azuread Resource"
 
 Provides a Rancher v2 Auth Config AzureAD resource. This can be used to configure and enable Auth Config AzureAD for Rancher v2 RKE clusters and retrieve their information.
 
-In addition to the built-in local auth, only one external auth config provider can be enabled at a time.
+In addition to the built-in local auth, only one external auth config provider can be enabled at a time, unless the `multiple-auth-providers` feature is enabled in Rancher.
 
 **Important:** for existing Azure AD setups created in versions of Rancher before v2.6.7,
 admins need to perform an update to the AuthConfig resource if they upgrade to Rancher v2.6.7+.
@@ -18,6 +18,8 @@ properly in the previous step, then Rancher will perform the configuration migra
 Finally, to avoid state drift in the Terraform configuration, admins need to look up the new values of the updated AuthConfig and
 update the corresponding values in their `rancher2_auth_config_azuread` resource. They can then run `terraform plan` and ensure that
 Terraform has nothing to change.
+
+Destroying this resource disables the auth config in Rancher, it does not delete it.
 
 ## Example Usage
 
@@ -49,6 +51,8 @@ The following arguments are supported:
 * `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
 * `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `azuread_user://<USER_ID>`  `azuread_group://<GROUP_ID>` (list)
 * `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
+* `name` - (Optional/ForceNew) The name of the auth config in Rancher. Changing this replaces the resource. Default `azuread` (string)
+* `display_name` - (Optional) Display name for the auth config in the Rancher UI. If unset, any display name set in Rancher is cleared (string)
 * `tls` - (Optional) Enable TLS connection. Default `true` (bool)
 * `annotations` - (Optional/Computed) Annotations of the resource (map)
 * `labels` - (Optional/Computed) Labels of the resource (map)
@@ -58,5 +62,4 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
-* `name` - (Computed) The name of the resource (string)
 * `type` - (Computed) The type of the resource (string)

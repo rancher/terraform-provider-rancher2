@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigOKTA(d *schema.ResourceData, in *managementClient.OKTAConfig) error {
-	d.SetId(AuthConfigOKTAName)
-	d.Set("name", AuthConfigOKTAName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.OKTAConfigType)
 	d.Set("access_mode", in.AccessMode)
 
@@ -21,6 +21,7 @@ func flattenAuthConfigOKTA(d *schema.ResourceData, in *managementClient.OKTAConf
 	}
 
 	d.Set("enabled", in.Enabled)
+	d.Set("display_name", in.DisplayName)
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -50,7 +51,7 @@ func expandAuthConfigOKTA(in *schema.ResourceData) (*managementClient.OKTAConfig
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigOKTAName)
 	}
 
-	obj.Name = AuthConfigOKTAName
+	obj.Name = expandAuthConfigName(in, AuthConfigOKTAName)
 	obj.Type = managementClient.OKTAConfigType
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
@@ -75,6 +76,10 @@ func expandAuthConfigOKTA(in *schema.ResourceData) (*managementClient.OKTAConfig
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		obj.DisplayName = v
 	}
 
 	if v, ok := in.Get("display_name_field").(string); ok && len(v) > 0 {
