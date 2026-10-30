@@ -34,16 +34,24 @@ export function isProductPrefix(message) {
   return PRODUCT_PREFIXES.some((prefix) => message.startsWith(prefix));
 }
 
-export function isProductFile(file) {
+export function isProductDirectory(file) {
   if (!file) {
     return false;
   }
-  const normalized = file.trim().replace(/^\.\//, '');
+  const normalized = file.trim().replace(/^\.\//, '').replace(/\\/g, '/');
   return (
     normalized.startsWith('rancher/') ||
     normalized.startsWith('rancher2/') ||
     normalized.startsWith('internal/')
   );
+}
+
+export function isProductFile(file) {
+  if (!file) {
+    return false;
+  }
+  const normalized = file.trim().replace(/^\.\//, '').replace(/\\/g, '/');
+  return isProductDirectory(normalized) && !normalized.endsWith('_test.go');
 }
 
 export function validateEmpty(message) {
@@ -102,10 +110,26 @@ export function validateProductImpact(message, changedFiles = []) {
   if (!changedFiles || changedFiles.length === 0) {
     return true;
   }
-  const hasProductChanges = changedFiles.some(isProductFile);
-  const isProduct = isProductPrefix(message);
 
-  if (hasProductChanges && !isProduct) {
+  const isProduct = isProductPrefix(message);
+  const isTest = message.startsWith('test: ');
+  const hasProductFiles = changedFiles.some(isProductFile);
+  const hasProductDirectoryFiles = changedFiles.some(isProductDirectory);
+
+  if (isTest) {
+    if (hasProductFiles) {
+      const errorMsg = [
+        '...Commit message cannot use "test:" prefix because files in ./rancher or ./internal that are not tests were modified.',
+        'The "test:" prefix is allowed only if all files are outside of end user product directories or only contain "_test.go" files.',
+        'Please use one of the following product prefixes: "fix:", "feat:", "feature:", "refactor:", "refactor!:", "feature!:", or "feat!:".',
+        message,
+      ].join('\n');
+      throw new Error(errorMsg);
+    }
+    return true;
+  }
+
+  if (hasProductFiles && !isProduct) {
     const errorMsg = [
       '...Commit message does not indicate a product change, but files in ./rancher or ./internal were modified.',
       'Please use one of the following product prefixes: "fix:", "feat:", "feature:", "refactor:", "refactor!:", "feature!:", or "feat!:".',
@@ -114,7 +138,16 @@ export function validateProductImpact(message, changedFiles = []) {
     throw new Error(errorMsg);
   }
 
-  if (!hasProductChanges && isProduct) {
+  if (!isProduct && hasProductDirectoryFiles) {
+    const errorMsg = [
+      '...Commit message does not indicate a product change, but files in ./rancher or ./internal were modified.',
+      'Please use "test:" if modifying tests or one of the product prefixes for product code.',
+      message,
+    ].join('\n');
+    throw new Error(errorMsg);
+  }
+
+  if (!hasProductFiles && isProduct) {
     const errorMsg = [
       '...Commit message cannot use a product prefix because no files in ./rancher or ./internal were modified.',
       'Please use one of the following non-product prefixes: "dev:", "env:", "docs:", "ci:", or "test:".',
@@ -165,6 +198,95 @@ export function getCommitMessages(prNumber, exec = execFileSync) {
     .filter((line) => line !== '');
 }
 
+export function getCommits(prNumber, exec = execFileSync) {
+  if (!prNumber) {
+    console.log('Notice: PR_NUMBER environment variable is not set.');
+    console.log('Falling back to checking local commits against origin/main...');
+    const output = exec('git', ['log', 'origin/main..HEAD', '--format=%H%x09%s'], { encoding: 'utf-8' });
+    return (output || '')
+      .split('\n')
+      .map((line) => line.replace(/\r$/, ''))
+      .filter((line) => line.trim() !== '')
+      .map((line) => {
+        const tabIdx = line.indexOf('\t');
+        if (tabIdx !== -1) {
+          const firstPart = line.slice(0, tabIdx).trim();
+          if (/^[0-9a-f]{40}$/i.test(firstPart)) {
+            return {
+              sha: firstPart,
+              message: line.slice(tabIdx + 1),
+            };
+          }
+        }
+        return {
+          sha: undefined,
+          message: line,
+        };
+      });
+  }
+
+  const output = exec(
+    'gh',
+    [
+      'api',
+      '--paginate',
+      `repos/{owner}/{repo}/pulls/${prNumber}/commits`,
+      '--jq',
+      '.[] | (.sha + "\\t" + (.commit.message | split("\\n")[0]))',
+    ],
+    { encoding: 'utf-8' }
+  );
+
+  return (output || '')
+    .split('\n')
+    .map((line) => line.replace(/\r$/, ''))
+    .filter((line) => line.trim() !== '')
+    .map((line) => {
+      const tabIdx = line.indexOf('\t');
+      if (tabIdx !== -1) {
+        const firstPart = line.slice(0, tabIdx).trim();
+        if (/^[0-9a-f]{40}$/i.test(firstPart)) {
+          return {
+            sha: firstPart,
+            message: line.slice(tabIdx + 1),
+          };
+        }
+      }
+      return {
+        sha: undefined,
+        message: line,
+      };
+    });
+}
+
+export function getCommitChangedFiles(sha, prNumber, exec = execFileSync) {
+  if (!sha) {
+    return [];
+  }
+  if (!prNumber) {
+    const output = exec('git', ['diff-tree', '--no-commit-id', '--name-only', '-r', '--root', sha], { encoding: 'utf-8' });
+    return (output || '')
+      .split('\n')
+      .map((line) => line.replace(/\r$/, '').trim())
+      .filter((line) => line !== '');
+  }
+
+  const output = exec(
+    'gh',
+    [
+      'api',
+      `repos/{owner}/{repo}/commits/${sha}`,
+      '--jq',
+      '.files[]?.filename // empty',
+    ],
+    { encoding: 'utf-8' }
+  );
+  return (output || '')
+    .split('\n')
+    .map((line) => line.replace(/\r$/, '').trim())
+    .filter((line) => line !== '');
+}
+
 export function getChangedFiles(prNumber, exec = execFileSync) {
   if (!prNumber) {
     console.log('Notice: PR_NUMBER environment variable is not set.');
@@ -197,22 +319,35 @@ export async function main({
   prNumber = process.env.PR_NUMBER,
   exec = execFileSync,
   messageExec = execSync,
+  commits,
   changedFiles,
 } = {}) {
-  const commitMessages = getCommitMessages(prNumber, exec);
-  const files = changedFiles !== undefined ? changedFiles : getChangedFiles(prNumber, exec);
+  const commitList = commits !== undefined ? commits : getCommits(prNumber, exec);
 
   console.log('Commit messages found:');
-  console.log(commitMessages.join('\n'));
+  console.log(commitList.map((c) => (typeof c === 'string' ? c : c.message)).join('\n'));
 
-  if (commitMessages.length === 0) {
+  if (commitList.length === 0) {
     console.log('No commit messages to check.');
     return;
   }
 
-  for (const message of commitMessages) {
+  for (const item of commitList) {
+    const message = typeof item === 'string' ? item : item.message;
+    const sha = typeof item === 'object' && item !== null ? item.sha : undefined;
+
     console.log(`checking message ^${message}$`);
-    validateMessage(message, messageExec, files);
+
+    let filesForCommit;
+    if (changedFiles !== undefined) {
+      filesForCommit = changedFiles;
+    } else if (sha) {
+      filesForCommit = getCommitChangedFiles(sha, prNumber, exec);
+    } else {
+      filesForCommit = getChangedFiles(prNumber, exec);
+    }
+
+    validateMessage(message, messageExec, filesForCommit);
     console.log(`message ^${message}$ passed all checks`);
   }
 }

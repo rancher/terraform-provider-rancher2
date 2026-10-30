@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   getChangedFiles,
+  getCommitChangedFiles,
   getCommitMessages,
+  getCommits,
+  isProductDirectory,
   isProductFile,
   isProductPrefix,
   main,
@@ -52,6 +55,29 @@ describe('validate-commit-message', () => {
     });
   });
 
+  describe('isProductDirectory', () => {
+    it('identifies files inside EU directories', () => {
+      assert.strictEqual(isProductDirectory('rancher/resource_cluster.go'), true);
+      assert.strictEqual(isProductDirectory('./rancher/resource_cluster.go'), true);
+      assert.strictEqual(isProductDirectory('rancher2/resource_cluster.go'), true);
+      assert.strictEqual(isProductDirectory('./rancher2/resource_cluster.go'), true);
+      assert.strictEqual(isProductDirectory('rancher2/resource_cluster_test.go'), true);
+      assert.strictEqual(isProductDirectory('internal/provider/provider.go'), true);
+      assert.strictEqual(isProductDirectory('./internal/provider/provider.go'), true);
+      assert.strictEqual(isProductDirectory('internal/provider/provider_test.go'), true);
+      assert.strictEqual(isProductDirectory('rancher2\\windows\\path.go'), true);
+    });
+
+    it('identifies files outside EU directories', () => {
+      assert.strictEqual(isProductDirectory('docs/resources/cluster.md'), false);
+      assert.strictEqual(isProductDirectory('.github/workflows/lint.yml'), false);
+      assert.strictEqual(isProductDirectory('examples/use-cases/one/main.tf'), false);
+      assert.strictEqual(isProductDirectory('test/helpers.go'), false);
+      assert.strictEqual(isProductDirectory('rancher_test.go'), false);
+      assert.strictEqual(isProductDirectory(null), false);
+    });
+  });
+
   describe('isProductFile', () => {
     it('identifies files in rancher or internal directories as product changes', () => {
       assert.strictEqual(isProductFile('rancher/resource_cluster.go'), true);
@@ -60,6 +86,13 @@ describe('validate-commit-message', () => {
       assert.strictEqual(isProductFile('./rancher2/resource_cluster.go'), true);
       assert.strictEqual(isProductFile('internal/provider/provider.go'), true);
       assert.strictEqual(isProductFile('./internal/provider/provider.go'), true);
+    });
+
+    it('excludes Go test files (_test.go) even if inside EU directories', () => {
+      assert.strictEqual(isProductFile('rancher2/resource_cluster_test.go'), false);
+      assert.strictEqual(isProductFile('./rancher2/resource_cluster_test.go'), false);
+      assert.strictEqual(isProductFile('internal/provider/provider_test.go'), false);
+      assert.strictEqual(isProductFile('rancher2\\cluster_test.go'), false);
     });
 
     it('identifies files outside rancher or internal as non-product changes', () => {
@@ -198,6 +231,13 @@ describe('validate-commit-message', () => {
         validateProductImpact('fix: fix token parsing', ['internal/auth/token.go']),
         true
       );
+      assert.strictEqual(
+        validateProductImpact('fix: fix token parsing', [
+          'internal/auth/token.go',
+          'internal/auth/token_test.go',
+        ]),
+        true
+      );
     });
 
     it('rejects non-product commit prefix when product files are changed', () => {
@@ -212,11 +252,83 @@ describe('validate-commit-message', () => {
         validateProductImpact('docs: update readme', ['docs/resources/cluster.md']),
         true
       );
+      assert.strictEqual(
+        validateProductImpact('ci: update workflow', ['.github/workflows/lint.yml']),
+        true
+      );
     });
 
     it('rejects product commit prefix when only non-product files are changed', () => {
       assert.throws(
         () => validateProductImpact('feat: add feature', ['docs/resources/cluster.md']),
+        /\.\.\.Commit message cannot use a product prefix because no files in \.\/rancher or \.\/internal were modified\./
+      );
+    });
+
+    it('allows test: prefix when all changed files are outside EU directories', () => {
+      assert.strictEqual(
+        validateProductImpact('test: add unit test', ['test/helpers.go', 'agent-scripts/tests/foo.test.js']),
+        true
+      );
+    });
+
+    it('allows test: prefix when files in EU directories only have _test.go suffix', () => {
+      assert.strictEqual(
+        validateProductImpact('test: add cluster test', ['rancher2/resource_cluster_test.go']),
+        true
+      );
+      assert.strictEqual(
+        validateProductImpact('test: add internal and rancher2 tests', [
+          'rancher2/resource_cluster_test.go',
+          'internal/provider/provider_test.go',
+        ]),
+        true
+      );
+    });
+
+    it('allows test: prefix when mixed with files outside EU directories and EU _test.go files', () => {
+      assert.strictEqual(
+        validateProductImpact('test: update test fixtures', [
+          'test/helpers.go',
+          'rancher2/resource_cluster_test.go',
+        ]),
+        true
+      );
+    });
+
+    it('denies test: prefix if changes include any EU directory file without _test.go suffix', () => {
+      assert.throws(
+        () =>
+          validateProductImpact('test: update cluster', [
+            'rancher2/resource_cluster.go',
+            'rancher2/resource_cluster_test.go',
+          ]),
+        /\.\.\.Commit message cannot use "test:" prefix because files in \.\/rancher or \.\/internal that are not tests were modified\./
+      );
+      assert.throws(
+        () =>
+          validateProductImpact('test: update cluster', ['internal/provider/provider.go']),
+        /\.\.\.Commit message cannot use "test:" prefix because files in \.\/rancher or \.\/internal that are not tests were modified\./
+      );
+    });
+
+    it('rejects non-test non-product prefixes if files in EU directory are modified', () => {
+      assert.throws(
+        () =>
+          validateProductImpact('docs: update docstrings', ['rancher2/resource_cluster_test.go']),
+        /\.\.\.Commit message does not indicate a product change, but files in \.\/rancher or \.\/internal were modified\./
+      );
+      assert.throws(
+        () =>
+          validateProductImpact('ci: run go tests', ['rancher2/resource_cluster_test.go']),
+        /\.\.\.Commit message does not indicate a product change, but files in \.\/rancher or \.\/internal were modified\./
+      );
+    });
+
+    it('rejects product commit prefix when only _test.go files in EU directory are changed', () => {
+      assert.throws(
+        () =>
+          validateProductImpact('fix: fix cluster test', ['rancher2/resource_cluster_test.go']),
         /\.\.\.Commit message cannot use a product prefix because no files in \.\/rancher or \.\/internal were modified\./
       );
     });
@@ -346,6 +458,79 @@ describe('validate-commit-message', () => {
     });
   });
 
+  describe('getCommits', () => {
+    it('falls back to git log when prNumber is not provided', () => {
+      const mockExec = (cmd, args) => {
+        assert.strictEqual(cmd, 'git');
+        assert.deepStrictEqual(args, ['log', 'origin/main..HEAD', '--format=%H%x09%s']);
+        return 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\tfeat: commit one\nbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\tfix: commit two\n';
+      };
+      const commits = getCommits(undefined, mockExec);
+      assert.deepStrictEqual(commits, [
+        { sha: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', message: 'feat: commit one' },
+        { sha: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', message: 'fix: commit two' },
+      ]);
+    });
+
+    it('calls gh api when prNumber is provided', () => {
+      const mockExec = (cmd, args) => {
+        assert.strictEqual(cmd, 'gh');
+        assert.deepStrictEqual(args, [
+          'api',
+          '--paginate',
+          'repos/{owner}/{repo}/pulls/42/commits',
+          '--jq',
+          '.[] | (.sha + "\\t" + (.commit.message | split("\\n")[0]))',
+        ]);
+        return 'cccccccccccccccccccccccccccccccccccccccc\tci: workflow commit\n';
+      };
+      const commits = getCommits('42', mockExec);
+      assert.deepStrictEqual(commits, [
+        { sha: 'cccccccccccccccccccccccccccccccccccccccc', message: 'ci: workflow commit' },
+      ]);
+    });
+
+    it('handles lines without 40-character sha gracefully', () => {
+      const mockExec = () => 'plain message without sha\n';
+      const commits = getCommits(undefined, mockExec);
+      assert.deepStrictEqual(commits, [
+        { sha: undefined, message: 'plain message without sha' },
+      ]);
+    });
+  });
+
+  describe('getCommitChangedFiles', () => {
+    it('returns empty array if sha is falsy', () => {
+      assert.deepStrictEqual(getCommitChangedFiles(null), []);
+      assert.deepStrictEqual(getCommitChangedFiles(''), []);
+    });
+
+    it('uses git diff-tree when prNumber is not provided', () => {
+      const mockExec = (cmd, args) => {
+        assert.strictEqual(cmd, 'git');
+        assert.deepStrictEqual(args, ['diff-tree', '--no-commit-id', '--name-only', '-r', '--root', 'abc1234']);
+        return 'rancher2/resource_cluster.go\n';
+      };
+      const files = getCommitChangedFiles('abc1234', undefined, mockExec);
+      assert.deepStrictEqual(files, ['rancher2/resource_cluster.go']);
+    });
+
+    it('calls gh api when prNumber is provided', () => {
+      const mockExec = (cmd, args) => {
+        assert.strictEqual(cmd, 'gh');
+        assert.deepStrictEqual(args, [
+          'api',
+          'repos/{owner}/{repo}/commits/abc1234',
+          '--jq',
+          '.files[]?.filename // empty',
+        ]);
+        return 'docs/README.md\n';
+      };
+      const files = getCommitChangedFiles('abc1234', '42', mockExec);
+      assert.deepStrictEqual(files, ['docs/README.md']);
+    });
+  });
+
   describe('main', () => {
     it('runs validation loop across all commits', async () => {
       const mockExec = (cmd, args) => {
@@ -385,6 +570,32 @@ describe('validate-commit-message', () => {
         },
         /\.\.\.Commit message cannot use a product prefix/
       );
+    });
+
+    it('validates each commit against its own changed files in a mixed PR', async () => {
+      const commits = [
+        { sha: '1111111111111111111111111111111111111111', message: 'feat: add cluster' },
+        { sha: '2222222222222222222222222222222222222222', message: 'test: add cluster test' },
+        { sha: '3333333333333333333333333333333333333333', message: 'docs: update cluster docs' },
+      ];
+      const mockExec = (cmd, args) => {
+        if (cmd === 'gh') {
+          const endpoint = args[1] || '';
+          if (endpoint.includes('1111111111111111111111111111111111111111')) {
+            return 'rancher2/resource_cluster.go\n';
+          }
+          if (endpoint.includes('2222222222222222222222222222222222222222')) {
+            return 'rancher2/resource_cluster_test.go\n';
+          }
+          if (endpoint.includes('3333333333333333333333333333333333333333')) {
+            return 'docs/resources/cluster.md\n';
+          }
+        }
+        return '';
+      };
+      await assert.doesNotReject(async () => {
+        await main({ prNumber: '100', commits, exec: mockExec, messageExec: () => '' });
+      });
     });
   });
 });
