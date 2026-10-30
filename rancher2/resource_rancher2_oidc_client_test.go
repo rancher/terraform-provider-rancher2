@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/rancher/norman/clientbase"
 	"github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
@@ -312,6 +313,7 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 
 	newResourceData := func() *schema.ResourceData {
 		d := schema.TestResourceDataRaw(t, oidcClientFields(), map[string]any{
+			"scopes":      []any{"openid", "profile"},
 			"description": "Updated description",
 			"redirect_uris": []any{
 				"http://127.0.0.1:5556/auth/rancher/callback",
@@ -351,6 +353,7 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 		wantPayload := map[string]any{
 			"labels":      map[string]string{},
 			"annotations": map[string]string{},
+			"scopes":      []string{"openid", "profile"},
 			"description": "Updated description",
 			"redirectURIs": []string{
 				"http://127.0.0.1:5556/auth/rancher/callback",
@@ -361,11 +364,12 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 		assert.Equal(t, wantPayload, ops.updateCalledWith)
 	})
 
-	t.Run("sends labels and annotations in update payload", func(t *testing.T) {
+	t.Run("preserves existing scopes when updating labels and annotations without scopes", func(t *testing.T) {
 		existing := &managementClient.OIDCClient{
 			Resource: types.Resource{
 				ID: "oidc-client-1",
 			},
+			Scopes: []string{"openid", "profile"},
 			Status: managementClient.OIDCClientStatus{
 				ClientID: "oidc-client-1",
 				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
@@ -416,6 +420,7 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 			"refreshTokenExpirationSeconds": 7200,
 		}
 		assert.Equal(t, wantPayload, ops.updateCalledWith)
+		assert.Equal(t, []any{"openid", "profile"}, d.Get("scopes"))
 	})
 
 	t.Run("updates resource and refreshes state on success", func(t *testing.T) {
@@ -523,6 +528,58 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, d.Id())
 	})
+}
+
+func TestResourceRancher2OIDCClientScopesDiff(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		configured bool
+		scopes     []any
+		want       []string
+	}{
+		{name: "omitted preserves allowlist", want: []string{"openid", "profile"}},
+		{name: "configured replaces allowlist", configured: true, scopes: []any{"openid"}, want: []string{"openid"}},
+		{name: "explicit empty clears allowlist", configured: true, scopes: []any{}, want: []string{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			resource := resourceRancher2OIDCClient()
+			prior := schema.TestResourceDataRaw(t, resource.Schema, map[string]any{
+				"description":   "Original description",
+				"redirect_uris": []any{"https://example.com/callback"},
+				"scopes":        []any{"openid", "profile"},
+			})
+			prior.SetId("oidc-client-1")
+			config := map[string]any{
+				"description":   "Updated description",
+				"redirect_uris": []any{"https://example.com/callback"},
+			}
+			if tc.configured {
+				config["scopes"] = tc.scopes
+			}
+			diff, err := resource.Diff(prior.State(), terraform.NewResourceConfigRaw(config), nil)
+			require.NoError(t, err)
+			require.NotNil(t, diff)
+			if !tc.configured {
+				assert.NotContains(t, diff.Attributes, "scopes.#")
+			}
+
+			existing := &managementClient.OIDCClient{
+				Resource: types.Resource{ID: "oidc-client-1"},
+				Scopes:   []string{"openid", "profile"},
+				Status: managementClient.OIDCClientStatus{
+					ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{"secret": {}},
+				},
+			}
+			ops := &fakeOIDCClientOperations{oidcClient: existing, updateResult: existing}
+			_, err = resource.Apply(prior.State(), diff, &fakeManagementClientGetter{
+				client: &managementClient.Client{OIDCClient: ops},
+			})
+			require.NoError(t, err)
+			payload, ok := ops.updateCalledWith.(map[string]any)
+			require.True(t, ok)
+			assert.Equal(t, tc.want, payload["scopes"])
+		})
+	}
 }
 
 func TestValidateRedirectURI(t *testing.T) {
