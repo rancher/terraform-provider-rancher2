@@ -12,6 +12,7 @@ This guide provides the necessary information for community members, developers,
 - [How to Participate](#how-to-participate)
   - [Reporting Issues & Bugs](#reporting-issues--bugs)
   - [Proposing Features & Enhancements](#proposing-features--enhancements)
+  - [Scope Boundaries](#scope-boundaries)
 - [Development Environment Setup](#development-environment-setup)
   - [Prerequisites](#prerequisites)
   - [Hermetic Environment with Nix (Recommended)](#hermetic-environment-with-nix-recommended)
@@ -73,7 +74,9 @@ If you wish to add a new resource, data source, or field to the provider:
 2. Reference the corresponding Rancher API endpoints or documentation.
 3. Discuss the architectural approach with repository maintainers before writing substantial code.
 
-**Node driver scope:** Native provider support is limited to node drivers bundled and shipped by default with Rancher. Third-party drivers versioned separately from Rancher (such as `docker-machine-driver-pve`) are outside the scope of built-in provider support because they introduce an unbundled dependency that the project cannot maintain and support. See [Rancher's machine-driver definitions](https://github.com/rancher/rancher/blob/main/pkg/data/management/machinedriver_data.go).
+### Scope Boundaries
+
+- **Node drivers:** Native provider support is limited to node drivers bundled and shipped by default with Rancher. Third-party drivers versioned separately from Rancher (such as `docker-machine-driver-pve`) are outside the scope of built-in provider support because they introduce an unbundled dependency that the project cannot maintain and support. See [Rancher's machine-driver definitions](https://github.com/rancher/rancher/blob/main/pkg/data/management/machinedriver_data.go).
 
 ---
 
