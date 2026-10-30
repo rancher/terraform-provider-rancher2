@@ -189,7 +189,7 @@ export function validateApprovalSignal(signal, pr, core) {
 /**
  * resolveTargetPr: Resolves the target pull request object from payload, PR number, or workflow_run commit fallback.
  */
-export async function resolveTargetPr({ github, context, core, process = globalThis.process }) {
+export async function resolveTargetPr({ github, context, core, process = globalThis.process, signal }) {
   if (context?.payload?.pull_request) {
     return context.payload.pull_request;
   }
@@ -213,6 +213,19 @@ export async function resolveTargetPr({ github, context, core, process = globalT
     }
   }
 
+  // Check approval signal for PR number (essential for fork PRs where workflow_run.pull_requests is empty)
+  if (!prNumber) {
+    const approvalSignal = signal !== undefined
+      ? signal
+      : await resolveApprovalSignal({ github, context, core, process });
+    if (approvalSignal?.pr_number) {
+      const parsed = Number.parseInt(approvalSignal.pr_number, 10);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        prNumber = parsed;
+      }
+    }
+  }
+
   if (prNumber) {
     core.info(`Fetching PR #${prNumber} from GitHub API...`);
     try {
@@ -229,7 +242,7 @@ export async function resolveTargetPr({ github, context, core, process = globalT
   }
 
   const headSha = parentRun?.head_sha || process?.env?.WORKFLOW_RUN_SHA || process?.env?.PR_HEAD_SHA;
-  if (headSha && typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function') {
+  if (headSha && (typeof github?.paginate === 'function' || typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function')) {
     core.info(`Attempting fallback PR resolution for commit SHA: ${headSha}...`);
     try {
       let associatedPrs = [];
@@ -263,7 +276,7 @@ export async function resolveTargetPr({ github, context, core, process = globalT
         if (parentRun?.head_repository?.full_name && p.head?.repo?.full_name?.toLowerCase() !== parentRun.head_repository.full_name.toLowerCase()) {
           return false;
         }
-        // Reject fallback PR matches with stale head SHA
+        // Reject fallback PR matches with missing or stale head SHA
         if (!p.head?.sha || p.head.sha !== headSha) {
           return false;
         }
@@ -271,7 +284,7 @@ export async function resolveTargetPr({ github, context, core, process = globalT
       });
 
       if (matched) {
-        core.info(`Resolved PR #${matched.number} via commit search fallback.`);
+        core.info(`Resolved PR #${matched.number} via commit lookup.`);
         if (matched.number && typeof github?.rest?.pulls?.get === 'function') {
           try {
             const fullPr = await github.rest.pulls.get({
@@ -279,15 +292,32 @@ export async function resolveTargetPr({ github, context, core, process = globalT
               repo,
               pull_number: matched.number,
             });
-            if (fullPr?.data) {
-              if (fullPr.data.head?.sha && fullPr.data.head.sha !== headSha) {
-                core.info(`PR #${matched.number} head (${fullPr.data.head.sha}) has changed since commit ${headSha}. Rejecting stale match.`);
+            const fullData = fullPr?.data;
+            if (fullData) {
+              if (!fullData.head?.sha || fullData.head.sha !== headSha) {
+                core.info(`PR #${matched.number} head (${fullData.head?.sha}) does not match required commit ${headSha}. Rejecting.`);
                 return null;
               }
-              return fullPr.data;
+              if (!fullData.state || fullData.state !== 'open') {
+                core.info(`PR #${matched.number} is not open (state: "${fullData.state}"). Rejecting.`);
+                return null;
+              }
+              const fullHeadRef = fullData.head?.ref ? fullData.head.ref.replace(/^refs\/heads\//, '') : null;
+              if (parentBranch && (!fullHeadRef || fullHeadRef !== parentBranch)) {
+                core.info(`PR #${matched.number} head ref "${fullHeadRef}" does not match triggering branch "${parentBranch}". Rejecting.`);
+                return null;
+              }
+              const fullRepo = fullData.head?.repo?.full_name ? fullData.head.repo.full_name.toLowerCase() : null;
+              if (parentRun?.head_repository?.full_name && (!fullRepo || fullRepo !== parentRun.head_repository.full_name.toLowerCase())) {
+                core.info(`PR #${matched.number} head repo "${fullRepo}" does not match triggering repository "${parentRun.head_repository.full_name}". Rejecting.`);
+                return null;
+              }
+              return fullData;
             }
+            return null;
           } catch (err) {
-            core.info(`Could not fetch full details for PR #${matched.number}, using commit-matched PR object: ${err.message}`);
+            core.info(`Could not fetch full details for PR #${matched.number}: ${err.message}`);
+            return null;
           }
         }
         return matched;
@@ -403,7 +433,7 @@ export function evaluateReviews(reviews, authorLogin, botLogin) {
 /**
  * checkReviewerPermission: Checks if a user has triage, write, or admin permission in the repository.
  */
-export async function checkReviewerPermission({ github, owner, repo, username, core, review }) {
+export async function checkReviewerPermission({ github, owner, repo, username, core }) {
   core.info('Querying collaborator permission level for @' + username + '...');
   const allowedRoles = ['triage', 'write', 'admin'];
   try {
@@ -445,7 +475,8 @@ export async function runAutoMerge({ github, context, core, process = globalThis
     return false;
   }
 
-  const pr = await resolveTargetPr({ github, context, core, process });
+  const signal = await resolveApprovalSignal({ github, context, core, process });
+  const pr = await resolveTargetPr({ github, context, core, process, signal });
   if (!pr) {
     core.setFailed('Could not resolve target PR for auto-merge.');
     return false;
@@ -564,7 +595,6 @@ export async function runAutoMerge({ github, context, core, process = globalThis
 
   // Gate 4: Verify Reviewer Permissions and Bind to Triggering Signal
   const parentRun = context?.payload?.workflow_run;
-  const signal = await resolveApprovalSignal({ github, context, core, process });
 
   let qualifyingReviewer = null;
 
@@ -778,10 +808,16 @@ export async function runPreflight({ github, context, core, process = globalThis
   }
 
   const parentRun = context?.payload?.workflow_run;
+  const signal = await resolveApprovalSignal({ github, context, core, process });
+  if (parentRun?.id && !signal) {
+    core.info(`Workflow run ${parentRun.id} lacks 'auto-merge-approval-signal' artifact (listener was skipped or event was not an approved review on main). Skipping auto-merge.`);
+    core.setOutput('eligible', 'false');
+    return false;
+  }
 
-  const pr = await resolveTargetPr({ github, context, core, process });
+  const pr = await resolveTargetPr({ github, context, core, process, signal });
   if (!pr) {
-    core.info('Could not resolve target PR for preflight auto-merge. Skipping.');
+    core.setFailed('Could not resolve target PR for preflight auto-merge.');
     core.setOutput('eligible', 'false');
     return false;
   }
@@ -865,14 +901,7 @@ export async function runPreflight({ github, context, core, process = globalThis
     return false;
   }
 
-  // Gate 4: Download, read, and validate Approval Signal
-  const signal = await resolveApprovalSignal({ github, context, core, process });
-  if (parentRun?.id && !signal) {
-    core.info(`Workflow run ${parentRun.id} lacks 'auto-merge-approval-signal' artifact (listener was skipped or event was not an approved review on main). Skipping auto-merge.`);
-    core.setOutput('eligible', 'false');
-    return false;
-  }
-
+  // Gate 4: Validate Approval Signal
   let qualifyingReviewer = null;
 
   if (signal) {
