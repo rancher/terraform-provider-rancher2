@@ -46,6 +46,6 @@ This allows the same configuration to work for a binary built from source as wel
 
 For local testing:
 - cp the binary to my repo's ./bin directory.  
-- Update your terraform rc file to the proper path, eg. `"Users/matttrach/go/src/github.com/rancher/terraform-provider-rancher2/bin"` (no file name)  
+- Update your terraform rc file to the absolute path, eg. `"/Users/matttrach/go/src/github.com/rancher/terraform-provider-rancher2/bin"` (no file name)
 - Make sure your 'TF_CLI_CONFIG_FILE' env variable is pointing to your terraform rc file.  
-- Then the `make test` command or `run_tests.sh` script should work properly using the local binary.  
+- Run `make test` to test the binary in `./bin`; do not use `run_tests.sh` for this downloaded RC because it runs `make build` first and overwrites the binary.
