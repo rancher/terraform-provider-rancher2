@@ -1,27 +1,91 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import {
+  getChangedFiles,
+  getCommitMessages,
+  isProductFile,
+  isProductPrefix,
+  main,
+  NON_PRODUCT_PREFIXES,
+  PRODUCT_PREFIXES,
   VALID_PREFIXES,
   validateEmpty,
-  validatePrefix,
   validateLength,
-  validateSpelling,
   validateMessage,
-  getCommitMessages,
-  main,
+  validatePrefix,
+  validateProductImpact,
+  validateSpelling,
 } from './validate-commit-message.js';
 
 describe('validate-commit-message', () => {
+  describe('PRODUCT_PREFIXES and NON_PRODUCT_PREFIXES', () => {
+    it('contains expected prefixes partitioned by impact', () => {
+      assert.ok(PRODUCT_PREFIXES.includes('fix: '));
+      assert.ok(PRODUCT_PREFIXES.includes('feat: '));
+      assert.ok(PRODUCT_PREFIXES.includes('feature: '));
+      assert.ok(PRODUCT_PREFIXES.includes('refactor: '));
+      assert.ok(PRODUCT_PREFIXES.includes('refactor!: '));
+      assert.ok(NON_PRODUCT_PREFIXES.includes('dev: '));
+      assert.ok(NON_PRODUCT_PREFIXES.includes('env: '));
+      assert.ok(NON_PRODUCT_PREFIXES.includes('docs: '));
+      assert.ok(NON_PRODUCT_PREFIXES.includes('ci: '));
+      assert.ok(NON_PRODUCT_PREFIXES.includes('test: '));
+    });
+  });
+
   describe('VALID_PREFIXES', () => {
     it('contains expected conventional commit prefixes', () => {
       assert.ok(VALID_PREFIXES.includes('fix: '));
       assert.ok(VALID_PREFIXES.includes('feat: '));
       assert.ok(VALID_PREFIXES.includes('feature: '));
+      assert.ok(VALID_PREFIXES.includes('refactor: '));
       assert.ok(VALID_PREFIXES.includes('refactor!: '));
       assert.ok(VALID_PREFIXES.includes('feature!: '));
       assert.ok(VALID_PREFIXES.includes('feat!: '));
       assert.ok(VALID_PREFIXES.includes('chore(main): '));
       assert.ok(VALID_PREFIXES.includes('Merge branch '));
+      assert.ok(VALID_PREFIXES.includes('dev: '));
+      assert.ok(VALID_PREFIXES.includes('env: '));
+      assert.ok(VALID_PREFIXES.includes('docs: '));
+      assert.ok(VALID_PREFIXES.includes('ci: '));
+      assert.ok(VALID_PREFIXES.includes('test: '));
+    });
+  });
+
+  describe('isProductFile', () => {
+    it('identifies files in rancher or internal directories as product changes', () => {
+      assert.strictEqual(isProductFile('rancher/resource_cluster.go'), true);
+      assert.strictEqual(isProductFile('./rancher/resource_cluster.go'), true);
+      assert.strictEqual(isProductFile('rancher2/resource_cluster.go'), true);
+      assert.strictEqual(isProductFile('./rancher2/resource_cluster.go'), true);
+      assert.strictEqual(isProductFile('internal/provider/provider.go'), true);
+      assert.strictEqual(isProductFile('./internal/provider/provider.go'), true);
+    });
+
+    it('identifies files outside rancher or internal as non-product changes', () => {
+      assert.strictEqual(isProductFile('docs/resources/cluster.md'), false);
+      assert.strictEqual(isProductFile('.github/workflows/lint.yml'), false);
+      assert.strictEqual(isProductFile('examples/use-cases/one/main.tf'), false);
+      assert.strictEqual(isProductFile('rancher_test.go'), false);
+      assert.strictEqual(isProductFile(null), false);
+    });
+  });
+
+  describe('isProductPrefix', () => {
+    it('identifies product prefixes correctly', () => {
+      assert.strictEqual(isProductPrefix('fix: resolve issue'), true);
+      assert.strictEqual(isProductPrefix('feat: new capability'), true);
+      assert.strictEqual(isProductPrefix('feature: new capability'), true);
+      assert.strictEqual(isProductPrefix('refactor: simplify code'), true);
+      assert.strictEqual(isProductPrefix('refactor!: breaking rewrite'), true);
+    });
+
+    it('returns false for non-product prefixes', () => {
+      assert.strictEqual(isProductPrefix('docs: update readme'), false);
+      assert.strictEqual(isProductPrefix('ci: update workflow'), false);
+      assert.strictEqual(isProductPrefix('test: add unit test'), false);
+      assert.strictEqual(isProductPrefix('dev: update scripts'), false);
+      assert.strictEqual(isProductPrefix('env: update nix flake'), false);
     });
   });
 
@@ -42,16 +106,22 @@ describe('validate-commit-message', () => {
       assert.strictEqual(validatePrefix('fix: resolve issue'), true);
       assert.strictEqual(validatePrefix('feat: new capability'), true);
       assert.strictEqual(validatePrefix('feature: new capability'), true);
+      assert.strictEqual(validatePrefix('refactor: rewrite logic'), true);
       assert.strictEqual(validatePrefix('refactor!: breaking change'), true);
       assert.strictEqual(validatePrefix('feature!: breaking change'), true);
       assert.strictEqual(validatePrefix('feat!: breaking change'), true);
       assert.strictEqual(validatePrefix('chore(main): update dependencies'), true);
       assert.strictEqual(validatePrefix('Merge branch main into dev'), true);
+      assert.strictEqual(validatePrefix('dev: update agent scripts'), true);
+      assert.strictEqual(validatePrefix('env: update nix flake'), true);
+      assert.strictEqual(validatePrefix('docs: update readme'), true);
+      assert.strictEqual(validatePrefix('ci: update workflow'), true);
+      assert.strictEqual(validatePrefix('test: add unit test'), true);
     });
 
     it('rejects disallowed prefixes', () => {
       assert.throws(
-        () => validatePrefix('docs: update readme'),
+        () => validatePrefix('style: format whitespace'),
         /\.\.\.Commit message does not start with the required prefix\./
       );
       assert.throws(
@@ -66,19 +136,19 @@ describe('validate-commit-message', () => {
   });
 
   describe('validateLength', () => {
-    it('accepts messages 100 characters or fewer', () => {
+    it('accepts messages 70 characters or fewer', () => {
       assert.strictEqual(validateLength('feat: short subject line'), true);
-      const exact100 = 'feat: ' + 'a'.repeat(94);
-      assert.strictEqual(exact100.length, 100);
-      assert.strictEqual(validateLength(exact100), true);
+      const exact70 = 'feat: ' + 'a'.repeat(64);
+      assert.strictEqual(exact70.length, 70);
+      assert.strictEqual(validateLength(exact70), true);
     });
 
-    it('rejects messages longer than 100 characters', () => {
-      const over100 = 'feat: ' + 'a'.repeat(95);
-      assert.strictEqual(over100.length, 101);
+    it('rejects messages longer than 70 characters', () => {
+      const over70 = 'feat: ' + 'a'.repeat(65);
+      assert.strictEqual(over70.length, 71);
       assert.throws(
-        () => validateLength(over100),
-        /\.\.\.Commit message subject line should be less than 100 characters, found 101\./
+        () => validateLength(over70),
+        /\.\.\.Commit message subject line should be less than 70 characters \(this is a GitHub constraint\), found 71\./
       );
     });
   });
@@ -118,6 +188,45 @@ describe('validate-commit-message', () => {
     });
   });
 
+  describe('validateProductImpact', () => {
+    it('accepts product commit prefix when product files are changed', () => {
+      assert.strictEqual(
+        validateProductImpact('feat: add cluster proxy', ['rancher/resource_cluster.go']),
+        true
+      );
+      assert.strictEqual(
+        validateProductImpact('fix: fix token parsing', ['internal/auth/token.go']),
+        true
+      );
+    });
+
+    it('rejects non-product commit prefix when product files are changed', () => {
+      assert.throws(
+        () => validateProductImpact('docs: update docstrings', ['rancher/resource_cluster.go']),
+        /\.\.\.Commit message does not indicate a product change, but files in \.\/rancher or \.\/internal were modified\./
+      );
+    });
+
+    it('accepts non-product commit prefix when only non-product files are changed', () => {
+      assert.strictEqual(
+        validateProductImpact('docs: update readme', ['docs/resources/cluster.md']),
+        true
+      );
+    });
+
+    it('rejects product commit prefix when only non-product files are changed', () => {
+      assert.throws(
+        () => validateProductImpact('feat: add feature', ['docs/resources/cluster.md']),
+        /\.\.\.Commit message cannot use a product prefix because no files in \.\/rancher or \.\/internal were modified\./
+      );
+    });
+
+    it('skips validation for merge commits or empty changed files', () => {
+      assert.strictEqual(validateProductImpact('Merge branch main into dev', ['rancher/foo.go']), true);
+      assert.strictEqual(validateProductImpact('feat: something', []), true);
+    });
+  });
+
   describe('validateMessage', () => {
     it('validates a completely valid commit message', () => {
       const mockExec = () => '';
@@ -127,6 +236,53 @@ describe('validate-commit-message', () => {
     it('fails if prefix is invalid', () => {
       const mockExec = () => '';
       assert.throws(() => validateMessage('invalid: prefix message', mockExec));
+    });
+
+    it('enforces product impact when changedFiles are passed', () => {
+      const mockExec = () => '';
+      assert.strictEqual(
+        validateMessage('feat: add cluster proxy', mockExec, ['rancher/resource_cluster.go']),
+        true
+      );
+      assert.throws(
+        () => validateMessage('docs: update readme', mockExec, ['rancher/resource_cluster.go']),
+        /\.\.\.Commit message does not indicate a product change/
+      );
+    });
+  });
+
+  describe('getChangedFiles', () => {
+    it('falls back to git diff when prNumber is not provided', () => {
+      const mockExec = (cmd, args) => {
+        assert.strictEqual(cmd, 'git');
+        assert.deepStrictEqual(args, ['diff', '--name-only', 'origin/main..HEAD']);
+        return 'rancher/resource_cluster.go\ndocs/cluster.md\n';
+      };
+      const files = getChangedFiles(undefined, mockExec);
+      assert.deepStrictEqual(files, ['rancher/resource_cluster.go', 'docs/cluster.md']);
+    });
+
+    it('calls gh api when prNumber is provided', () => {
+      const mockExec = (cmd, args) => {
+        assert.strictEqual(cmd, 'gh');
+        assert.deepStrictEqual(args, [
+          'api',
+          '--paginate',
+          'repos/{owner}/{repo}/pulls/42/files',
+          '--jq',
+          '.[].filename',
+        ]);
+        return 'internal/provider/provider.go\n';
+      };
+      const files = getChangedFiles('42', mockExec);
+      assert.deepStrictEqual(files, ['internal/provider/provider.go']);
+    });
+
+    it('propagates git diff failures without swallowing them', () => {
+      const mockExec = () => {
+        throw new Error('fatal: ambiguous argument origin/main');
+      };
+      assert.throws(() => getChangedFiles(undefined, mockExec), /fatal: ambiguous argument/);
     });
   });
 
@@ -192,8 +348,11 @@ describe('validate-commit-message', () => {
 
   describe('main', () => {
     it('runs validation loop across all commits', async () => {
-      const mockExec = (cmd) => {
+      const mockExec = (cmd, args) => {
         if (cmd === 'gh') {
+          if (args && args.some((arg) => typeof arg === 'string' && arg.includes('/files'))) {
+            return 'rancher/resource_cluster.go\n';
+          }
           return 'feat: first commit\nfix: second commit\n';
         }
         return '';
@@ -208,6 +367,24 @@ describe('validate-commit-message', () => {
       await assert.doesNotReject(async () => {
         await main({ prNumber: '100', exec: mockExec, messageExec: () => '' });
       });
+    });
+
+    it('rejects in main when commit prefix does not match file impact', async () => {
+      const mockExec = (cmd, args) => {
+        if (cmd === 'gh') {
+          if (args && args.some((arg) => typeof arg === 'string' && arg.includes('/files'))) {
+            return 'docs/README.md\n';
+          }
+          return 'feat: docs update\n';
+        }
+        return '';
+      };
+      await assert.rejects(
+        async () => {
+          await main({ prNumber: '100', exec: mockExec, messageExec: () => '' });
+        },
+        /\.\.\.Commit message cannot use a product prefix/
+      );
     });
   });
 });

@@ -1,17 +1,50 @@
-import { execSync, execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { execFileSync, execSync } from 'node:child_process';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export const VALID_PREFIXES = [
+export const PRODUCT_PREFIXES = [
   'fix: ',
   'feature: ',
   'feat: ',
+  'refactor: ',
   'refactor!: ',
   'feature!: ',
   'feat!: ',
+];
+
+export const NON_PRODUCT_PREFIXES = [
+  'dev: ', // representing changes to the development process (scripts/agentic framework changes)
+  'env: ', // representing changes to the unified dev/test environment (flake or env variable changes)
+  'docs: ', // representing changes only to documentation
+  'ci: ', // representing changes only to workflows and workflow scripts
+  'test: ', // representing changes only to tests
+];
+
+export const VALID_PREFIXES = [
+  // end user product updates
+  ...PRODUCT_PREFIXES,
+  // merge and release (automated) updates
   'chore(main): ',
   'Merge branch ',
+  // non product changes
+  ...NON_PRODUCT_PREFIXES,
 ];
+
+export function isProductPrefix(message) {
+  return PRODUCT_PREFIXES.some((prefix) => message.startsWith(prefix));
+}
+
+export function isProductFile(file) {
+  if (!file) {
+    return false;
+  }
+  const normalized = file.trim().replace(/^\.\//, '');
+  return (
+    normalized.startsWith('rancher/') ||
+    normalized.startsWith('rancher2/') ||
+    normalized.startsWith('internal/')
+  );
+}
 
 export function validateEmpty(message) {
   if (!message || message.trim() === '') {
@@ -25,7 +58,10 @@ export function validatePrefix(message) {
   if (!hasValidPrefix) {
     const errorMsg = [
       '...Commit message does not start with the required prefix.',
-      'Please use one of the following prefixes: "fix:", "feature:", "feat:", "refactor!:", "feature!:", or "feat!:".',
+      'Please use one of the following prefixes when making changes that change the product behavior: ',
+      '"fix:", "feature:", "feat:", "refactor:", "refactor!:", "feature!:", or "feat!:".',
+      'Please use one of the following prefixes when making changes that do not change the product behavior: ',
+      '"dev:", "env:", "docs:", "ci:", or "test:".',
       'This enables release-please to automatically format release notes based on the commit message.',
       message,
     ].join('\n');
@@ -35,8 +71,8 @@ export function validatePrefix(message) {
 }
 
 export function validateLength(message) {
-  if (message.length > 100) {
-    throw new Error(`...Commit message subject line should be less than 100 characters, found ${message.length}.`);
+  if (message.length > 70) {
+    throw new Error(`...Commit message subject line should be less than 70 characters (this is a GitHub constraint), found ${message.length}.`);
   }
   return true;
 }
@@ -59,11 +95,45 @@ export function validateSpelling(message, exec = execSync) {
   return true;
 }
 
-export function validateMessage(message, exec = execSync) {
+export function validateProductImpact(message, changedFiles = []) {
+  if (message.startsWith('Merge branch ') || message.startsWith('Merge ')) {
+    return true;
+  }
+  if (!changedFiles || changedFiles.length === 0) {
+    return true;
+  }
+  const hasProductChanges = changedFiles.some(isProductFile);
+  const isProduct = isProductPrefix(message);
+
+  if (hasProductChanges && !isProduct) {
+    const errorMsg = [
+      '...Commit message does not indicate a product change, but files in ./rancher or ./internal were modified.',
+      'Please use one of the following product prefixes: "fix:", "feat:", "feature:", "refactor:", "refactor!:", "feature!:", or "feat!:".',
+      message,
+    ].join('\n');
+    throw new Error(errorMsg);
+  }
+
+  if (!hasProductChanges && isProduct) {
+    const errorMsg = [
+      '...Commit message cannot use a product prefix because no files in ./rancher or ./internal were modified.',
+      'Please use one of the following non-product prefixes: "dev:", "env:", "docs:", "ci:", or "test:".',
+      message,
+    ].join('\n');
+    throw new Error(errorMsg);
+  }
+
+  return true;
+}
+
+export function validateMessage(message, exec = execSync, changedFiles = undefined) {
   validateEmpty(message);
   validatePrefix(message);
   validateLength(message);
   validateSpelling(message, exec);
+  if (changedFiles !== undefined) {
+    validateProductImpact(message, changedFiles);
+  }
   return true;
 }
 
@@ -95,12 +165,42 @@ export function getCommitMessages(prNumber, exec = execFileSync) {
     .filter((line) => line !== '');
 }
 
+export function getChangedFiles(prNumber, exec = execFileSync) {
+  if (!prNumber) {
+    console.log('Notice: PR_NUMBER environment variable is not set.');
+    console.log('Falling back to checking local changed files against origin/main...');
+    const output = exec('git', ['diff', '--name-only', 'origin/main..HEAD'], { encoding: 'utf-8' });
+    return (output || '')
+      .split('\n')
+      .map((line) => line.replace(/\r$/, '').trim())
+      .filter((line) => line !== '');
+  }
+
+  const output = exec(
+    'gh',
+    [
+      'api',
+      '--paginate',
+      `repos/{owner}/{repo}/pulls/${prNumber}/files`,
+      '--jq',
+      '.[].filename',
+    ],
+    { encoding: 'utf-8' }
+  );
+  return (output || '')
+    .split('\n')
+    .map((line) => line.replace(/\r$/, '').trim())
+    .filter((line) => line !== '');
+}
+
 export async function main({
   prNumber = process.env.PR_NUMBER,
   exec = execFileSync,
   messageExec = execSync,
+  changedFiles,
 } = {}) {
   const commitMessages = getCommitMessages(prNumber, exec);
+  const files = changedFiles !== undefined ? changedFiles : getChangedFiles(prNumber, exec);
 
   console.log('Commit messages found:');
   console.log(commitMessages.join('\n'));
@@ -112,7 +212,7 @@ export async function main({
 
   for (const message of commitMessages) {
     console.log(`checking message ^${message}$`);
-    validateMessage(message, messageExec);
+    validateMessage(message, messageExec, files);
     console.log(`message ^${message}$ passed all checks`);
   }
 }
