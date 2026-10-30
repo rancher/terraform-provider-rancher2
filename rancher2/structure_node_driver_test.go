@@ -16,26 +16,28 @@ var (
 
 func init() {
 	testNodeDriverConf = &managementClient.NodeDriver{
-		Active:           true,
-		Builtin:          true,
-		Checksum:         "XXXXXXXX",
-		Description:      "description",
-		ExternalID:       "external",
-		Name:             "name",
-		UIURL:            "ui_url",
-		URL:              "url",
-		WhitelistDomains: []string{"domain1", "domain2"},
+		Active:             true,
+		AddCloudCredential: true,
+		Builtin:            true,
+		Checksum:           "XXXXXXXX",
+		Description:        "description",
+		ExternalID:         "external",
+		Name:               "name",
+		UIURL:              "ui_url",
+		URL:                "url",
+		WhitelistDomains:   []string{"domain1", "domain2"},
 	}
 	testNodeDriverInterface = map[string]interface{}{
-		"active":            true,
-		"builtin":           true,
-		"checksum":          "XXXXXXXX",
-		"description":       "description",
-		"external_id":       "external",
-		"name":              "name",
-		"ui_url":            "ui_url",
-		"url":               "url",
-		"whitelist_domains": []interface{}{"domain1", "domain2"},
+		"active":               true,
+		"add_cloud_credential": true,
+		"builtin":              true,
+		"checksum":             "XXXXXXXX",
+		"description":          "description",
+		"external_id":          "external",
+		"name":                 "name",
+		"ui_url":               "ui_url",
+		"url":                  "url",
+		"whitelist_domains":    []interface{}{"domain1", "domain2"},
 	}
 }
 
