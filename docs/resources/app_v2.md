@@ -73,8 +73,8 @@ The following attributes are exported:
 `rancher2_app_v2` provides the following
 [Timeouts](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) configuration options:
 
-- `create` - (Default `10 minutes`) Used for creating Rancher v2 apps.
-- `update` - (Default `10 minutes`) Used for Rancher v2 app modifications.
+- `create` - (Default `10 minutes`) Used for creating Rancher v2 apps. Also used as the Helm timeout; transient Rancher API errors are retried while waiting for the install operation.
+- `update` - (Default `10 minutes`) Used for Rancher v2 app modifications. Also used as the Helm timeout; transient Rancher API errors are retried while waiting for the upgrade operation.
 - `delete` - (Default `10 minutes`) Used for deleting Rancher v2 apps.
 
 ## Import
