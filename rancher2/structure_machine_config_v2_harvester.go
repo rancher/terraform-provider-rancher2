@@ -15,24 +15,26 @@ const (
 //Types
 
 type machineConfigV2Harvester struct {
-	metav1.TypeMeta    `json:",inline"`
-	metav1.ObjectMeta  `json:"metadata,omitempty"`
-	VMNamespace        string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
-	VMAffinity         string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
-	CPUCount           string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
-	MemorySize         string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
-	ReservedMemorySize string `json:"reservedMemorySize,omitempty" yaml:"reservedMemorySize,omitempty"`
-	DiskSize           string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
-	DiskBus            string `json:"diskBus,omitempty" yaml:"diskBus,omitempty"`
-	ImageName          string `json:"imageName,omitempty" yaml:"imageName,omitempty"`
-	DiskInfo           string `json:"diskInfo,omitempty" yaml:"diskInfo,omitempty"`
-	SSHUser            string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
-	SSHPassword        string `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
-	NetworkName        string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
-	NetworkModel       string `json:"networkModel,omitempty" yaml:"networkModel,omitempty"`
-	NetworkInfo        string `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
-	UserData           string `json:"userData,omitempty" yaml:"userData,omitempty"`
-	NetworkData        string `json:"networkData,omitempty" yaml:"networkData,omitempty"`
+	metav1.TypeMeta       `json:",inline"`
+	metav1.ObjectMeta     `json:"metadata,omitempty"`
+	VMNamespace           string `json:"vmNamespace,omitempty" yaml:"vmNamespace,omitempty"`
+	VMAffinity            string `json:"vmAffinity,omitempty" yaml:"vmAffinity,omitempty"`
+	CPUCount              string `json:"cpuCount,omitempty" yaml:"cpuCount,omitempty"`
+	CPUPinning            bool   `json:"cpuPinning,omitempty" yaml:"cpuPinning,omitempty"`
+	IsolateEmulatorThread bool   `json:"isolateEmulatorThread,omitempty" yaml:"isolateEmulatorThread,omitempty"`
+	MemorySize            string `json:"memorySize,omitempty" yaml:"memorySize,omitempty"`
+	ReservedMemorySize    string `json:"reservedMemorySize,omitempty" yaml:"reservedMemorySize,omitempty"`
+	DiskSize              string `json:"diskSize,omitempty" yaml:"diskSize,omitempty"`
+	DiskBus               string `json:"diskBus,omitempty" yaml:"diskBus,omitempty"`
+	ImageName             string `json:"imageName,omitempty" yaml:"imageName,omitempty"`
+	DiskInfo              string `json:"diskInfo,omitempty" yaml:"diskInfo,omitempty"`
+	SSHUser               string `json:"sshUser,omitempty" yaml:"sshUser,omitempty"`
+	SSHPassword           string `json:"sshPassword,omitempty" yaml:"sshPassword,omitempty"`
+	NetworkName           string `json:"networkName,omitempty" yaml:"networkName,omitempty"`
+	NetworkModel          string `json:"networkModel,omitempty" yaml:"networkModel,omitempty"`
+	NetworkInfo           string `json:"networkInfo,omitempty" yaml:"networkInfo,omitempty"`
+	UserData              string `json:"userData,omitempty" yaml:"userData,omitempty"`
+	NetworkData           string `json:"networkData,omitempty" yaml:"networkData,omitempty"`
 }
 
 type MachineConfigV2Harvester struct {
@@ -59,6 +61,14 @@ func flattenMachineConfigV2Harvester(in *MachineConfigV2Harvester) []interface{}
 
 	if len(in.CPUCount) > 0 {
 		obj["cpu_count"] = in.CPUCount
+	}
+
+	if in.CPUPinning {
+		obj["cpu_pinning"] = in.CPUPinning
+	}
+
+	if in.IsolateEmulatorThread {
+		obj["isolate_emulator_thread"] = in.IsolateEmulatorThread
 	}
 
 	if len(in.MemorySize) > 0 {
@@ -146,6 +156,13 @@ func expandMachineConfigV2Harvester(p []interface{}, source *MachineConfigV2) *M
 		obj.CPUCount = v
 	}
 
+	if v, ok := in["cpu_pinning"].(bool); ok {
+		obj.CPUPinning = v
+	}
+
+	if v, ok := in["isolate_emulator_thread"].(bool); ok {
+		obj.IsolateEmulatorThread = v
+	}
 	if v, ok := in["memory_size"].(string); ok && len(v) > 0 {
 		obj.MemorySize = v
 	}
