@@ -2,6 +2,7 @@ name: Pull Request
 
 on:
   pull_request:
+  merge_group:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -170,6 +171,7 @@ jobs:
 
   validate-commit-message:
     name: 'Validate Commit Message'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
