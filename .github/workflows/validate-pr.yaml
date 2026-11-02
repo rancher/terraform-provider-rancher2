@@ -5,6 +5,7 @@ on:
     branches:
       - main
     types: [opened, edited, reopened, synchronize, ready_for_review]
+  merge_group:
 
 permissions: {}
 
@@ -16,19 +17,26 @@ jobs:
   validate-pr-description:
     name: 'Validate PR Description'
     runs-on: ubuntu-latest
-    if: github.event.pull_request.user.type != 'Bot' && !startsWith(github.head_ref, 'release-please') && !github.event.pull_request.draft
+    if: github.event_name == 'merge_group' || (github.event.pull_request.user.type != 'Bot' && !startsWith(github.head_ref, 'release-please') && !github.event.pull_request.draft)
     timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: read
       issues: read
     steps:
+      - name: Skip validation for merge_group
+        if: github.event_name == 'merge_group'
+        run: |
+          echo "PR metadata was already validated prior to entering the merge queue. Skipping."
+
       - name: Checkout Repository
         id: checkout-repository
+        if: github.event_name != 'merge_group'
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Check PR Description
         id: check-pr-description
+        if: github.event_name != 'merge_group'
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -39,6 +47,7 @@ jobs:
 
       - name: Save PR Signal
         id: save-pr-signal
+        if: github.event_name != 'merge_group'
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -60,6 +69,7 @@ jobs:
 
       - name: Upload PR Signal Artifact
         id: upload-pr-signal
+        if: github.event_name != 'merge_group'
         # https://github.com/actions/upload-artifact/releases
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
