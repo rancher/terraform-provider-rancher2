@@ -742,12 +742,11 @@ test('runAutoMerge - blocks when CHANGES_REQUESTED is active', async () => {
     },
   };
   const elevatedGithub = {
-    rest: {
-      users: {
-        getAuthenticated: async () => ({
-          data: { login: 'rancher-bot' },
-        }),
-      },
+    graphql: async (query) => {
+      if (query.includes('viewer')) {
+        return { viewer: { login: 'rancher-bot' } };
+      }
+      return {};
     },
   };
   const mockContext = {
@@ -793,12 +792,11 @@ test('runAutoMerge - does not allow bot approval to self-qualify without human a
     },
   };
   const elevatedGithub = {
-    rest: {
-      users: {
-        getAuthenticated: async () => ({
-          data: { login: 'rancher-bot' },
-        }),
-      },
+    graphql: async (query) => {
+      if (query.includes('viewer')) {
+        return { viewer: { login: 'rancher-bot' } };
+      }
+      return {};
     },
   };
   const mockContext = {
@@ -849,12 +847,11 @@ test('runAutoMerge - skips when reviewer lacks qualifying role', async () => {
     },
   };
   const elevatedGithub = {
-    rest: {
-      users: {
-        getAuthenticated: async () => ({
-          data: { login: 'rancher-bot' },
-        }),
-      },
+    graphql: async (query) => {
+      if (query.includes('viewer')) {
+        return { viewer: { login: 'rancher-bot' } };
+      }
+      return {};
     },
   };
   const mockContext = {
@@ -905,12 +902,11 @@ test('runAutoMerge - skips when qualifying review commit_id does not match PR he
     },
   };
   const elevatedGithub = {
-    rest: {
-      users: {
-        getAuthenticated: async () => ({
-          data: { login: 'rancher-bot' },
-        }),
-      },
+    graphql: async (query) => {
+      if (query.includes('viewer')) {
+        return { viewer: { login: 'rancher-bot' } };
+      }
+      return {};
     },
   };
   const mockContext = {
@@ -947,11 +943,6 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
 
   const elevatedGithub = {
     rest: {
-      users: {
-        getAuthenticated: async () => ({
-          data: { login: 'rancher-bot' },
-        }),
-      },
       pulls: {
         createReview: async ({ event, commit_id, body }) => {
           assert.strictEqual(event, 'APPROVE');
@@ -964,6 +955,9 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
       },
     },
     graphql: async (query, vars) => {
+      if (query.includes('viewer')) {
+        return { viewer: { login: 'rancher-bot' } };
+      }
       assert.ok(query.includes('enablePullRequestAutoMerge'));
       assert.strictEqual(vars.pullRequestId, 'PR_node_id_123');
       autoMergeMutationCalled = true;
@@ -1035,16 +1029,14 @@ test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', 
 
   const elevatedGithub = {
     rest: {
-      users: {
-        getAuthenticated: async () => ({
-          data: { login: 'rancher-bot' },
-        }),
-      },
       pulls: {
         createReview: async () => ({ data: { id: 123 } }),
       },
     },
-    graphql: async () => {
+    graphql: async (query) => {
+      if (query.includes('viewer')) {
+        return { viewer: { login: 'rancher-bot' } };
+      }
       throw new Error('Auto merge is already enabled for this pull request.');
     },
   };
@@ -1101,14 +1093,10 @@ test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', 
 test('runAutoMerge - fails closed when authenticated bot login cannot be resolved', async () => {
   const mockCore = createMockCore();
 
-  // Test case 1: getAuthenticated throws an error
+  // Test case 1: graphql viewer query throws an error
   const failingElevatedGithub = {
-    rest: {
-      users: {
-        getAuthenticated: async () => {
-          throw new Error('Bad credentials / token expired');
-        },
-      },
+    graphql: async () => {
+      throw new Error('Bad credentials / token expired');
     },
   };
 
@@ -1148,16 +1136,12 @@ test('runAutoMerge - fails closed when authenticated bot login cannot be resolve
   assert.strictEqual(result1, false);
   assert.match(mockCore.failedMessage, /Failed to resolve authenticated bot login/);
 
-  // Test case 2: getAuthenticated returns empty login
+  // Test case 2: graphql viewer query returns empty login
   const mockCore2 = createMockCore();
   const emptyLoginElevatedGithub = {
-    rest: {
-      users: {
-        getAuthenticated: async () => ({
-          data: { login: '' },
-        }),
-      },
-    },
+    graphql: async () => ({
+      viewer: { login: '' },
+    }),
   };
 
   const result2 = await runAutoMerge({
@@ -1170,6 +1154,76 @@ test('runAutoMerge - fails closed when authenticated bot login cannot be resolve
 
   assert.strictEqual(result2, false);
   assert.match(mockCore2.failedMessage, /Could not resolve authenticated bot identity from GITHUB_MERGE_TOKEN/);
+});
+
+test('runAutoMerge - resolves authenticated bot login via graphql viewer query', async () => {
+  const mockCore = createMockCore();
+  let botReviewCreated = false;
+
+  const appInstallationGithub = {
+    rest: {
+      pulls: {
+        createReview: async () => {
+          botReviewCreated = true;
+          return { data: { id: 456 } };
+        },
+      },
+    },
+    graphql: async (query) => {
+      if (query.includes('viewer')) {
+        return { viewer: { login: 'eio-github-actions-power-enhancer[bot]' } };
+      }
+      if (query.includes('enablePullRequestAutoMerge')) {
+        return { enablePullRequestAutoMerge: {} };
+      }
+      throw new Error(`Unexpected query: ${query}`);
+    },
+  };
+
+  let callCount = 0;
+  const mockGithub = {
+    paginate: async () => {
+      callCount++;
+      if (callCount === 1) {
+        return [{ filename: 'rancher2/config.go' }];
+      }
+      return [{ user: { login: 'triage-engineer' }, state: 'APPROVED', commit_id: 'sha1' }];
+    },
+    rest: {
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: 'triage', role_name: 'triage' },
+        }),
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'test' },
+    payload: {
+      pull_request: {
+        number: 1,
+        node_id: 'PR_node_id_123',
+        state: 'open',
+        draft: false,
+        base: { ref: 'main' },
+        head: { sha: 'sha1' },
+        user: { login: 'author' },
+      },
+    },
+  };
+
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: { GITHUB_MERGE_TOKEN: 'vault-merge-token-secret' } },
+    getOctokit: () => appInstallationGithub,
+  });
+
+  assert.strictEqual(result, true);
+  assert.strictEqual(botReviewCreated, true);
+  assert.strictEqual(mockCore.outputs.auto_merge_status, 'enabled');
 });
 
 test('runPreflight - succeeds for qualifying PR with valid approval signal', async () => {
@@ -1903,8 +1957,11 @@ test('runAutoMerge - binds to triggering review signal and rejects read-only use
   };
 
   const mockElevatedGithub = {
-    rest: {
-      users: { getAuthenticated: async () => ({ data: { login: 'rancher-bot' } }) },
+    graphql: async (query) => {
+      if (query.includes('viewer')) {
+        return { viewer: { login: 'rancher-bot' } };
+      }
+      return {};
     },
   };
 
@@ -1969,7 +2026,6 @@ test('runAutoMerge - binds to qualifying triage signal and succeeds', async () =
 
   const mockElevatedGithub = {
     rest: {
-      users: { getAuthenticated: async () => ({ data: { login: 'rancher-bot' } }) },
       pulls: {
         createReview: async ({ body }) => {
           assert.match(body, /Automated approval triggered by @triage-member \(role: triage\)/);
@@ -1979,6 +2035,9 @@ test('runAutoMerge - binds to qualifying triage signal and succeeds', async () =
       },
     },
     graphql: async (query) => {
+      if (query.includes('viewer')) {
+        return { viewer: { login: 'rancher-bot' } };
+      }
       assert.match(query, /enablePullRequestAutoMerge/);
       autoMergeEnabled = true;
       return { enablePullRequestAutoMerge: {} };
