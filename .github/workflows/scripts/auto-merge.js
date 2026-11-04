@@ -559,10 +559,6 @@ export async function runAutoMerge({ github, context, core, process = globalThis
     }
   }
 
-  if (!botLogin && process?.env?.BOT_LOGIN) {
-    botLogin = process.env.BOT_LOGIN.trim();
-  }
-
   if (!botLogin) {
     if (authError) {
       core.setFailed(`Failed to resolve authenticated bot login: ${authError.message}`);
