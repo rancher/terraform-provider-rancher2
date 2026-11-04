@@ -539,3 +539,80 @@ test('run - fails and reports message on unexpected API error', async () => {
   await run({ github: mockGithub, context: mockContext, core: mockCore });
   assert.strictEqual(failedMessage, 'Internal Server Error');
 });
+
+test('run - fails when none of the issues is in the same repo as the context', async () => {
+  let failedMessage = null;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 4321);
+          return { data: { id: 3, number: 4321, state: 'open' } };
+        }
+      }
+    }
+  };
+  const mockContext = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: '- Addresses: rancher/rancher#4321\n- Addresses: harvester/harvester#4321'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext, core: mockCore });
+  assert.strictEqual(
+    failedMessage,
+    'None of the referenced issues is located in rancher/terraform-provider-rancher2'
+  );
+});
+
+test('run - succeeds when at least one issue is in same repo as context', async () => {
+  let failedMessage = null;
+  const mockCore = {
+    setFailed: (msg) => { failedMessage = msg; }
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          assert.strictEqual(issue_number, 4321);
+          return { data: { id: 3, number: 4321, state: 'open' } };
+        }
+      }
+    }
+  };
+  const mockContext1 = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: '- Addresses: #4321\n- Addresses: harvester/harvester#4321'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext1, core: mockCore });
+  assert.strictEqual(
+    failedMessage,
+    null,
+  );
+
+  const mockContext2 = {
+    repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+    payload: {
+      pull_request: {
+        body: '- Addresses: harvester/harvester#4321\n- Addresses: rancher/terraform-provider-rancher2#4321'
+      }
+    }
+  };
+
+  await run({ github: mockGithub, context: mockContext2, core: mockCore });
+  assert.strictEqual(
+    failedMessage,
+    null,
+  );
+});

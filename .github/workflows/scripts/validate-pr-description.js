@@ -100,6 +100,17 @@ export default async function run({ github, context, core }) {
     if (errors.length > 0) {
       throw new Error(errors.join('\n'));
     }
+
+    // make sure at least one issue is in local context
+    const refs = uniqueIssues
+      .filter((r) =>
+        r.owner.toLowerCase() === owner.toLowerCase() &&
+        r.repo.toLowerCase() === repo.toLowerCase(),
+      );
+    if (refs.length === 0) {
+      throw new Error(`None of the referenced issues is located in ${owner}/${repo}`);
+    }
+
     core?.info?.(`Successfully validated issue reference(s): ${uniqueIssues.map((n) => `#${n}`).join(', ')}`);
   } catch (error) {
     core.setFailed(error?.message ?? String(error));
