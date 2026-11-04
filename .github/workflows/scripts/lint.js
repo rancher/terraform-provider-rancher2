@@ -20,7 +20,7 @@ export function runActionlint(exec = execSync) {
 }
 
 export function getShellcheckFiles(dir = '.', fsModule = fs) {
-  const ignoredDirs = new Set(['.git', '.terraform', '.agent', 'bin', 'node_modules']);
+  const ignoredDirs = new Set(['.git', '.terraform', '.agent', 'bin', 'node_modules', '.github-tools']);
   const files = [];
 
   function scan(currentDir) {
@@ -77,7 +77,7 @@ export function getJsFiles(dir = '.', fsModule = fs) {
   function scan(currentDir) {
     const entries = fsModule.readdirSync(currentDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.name === 'node_modules' || entry.name === '.git') {
+      if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === '.github-tools') {
         continue;
       }
       const fullPath = path.join(currentDir, entry.name);
@@ -114,7 +114,7 @@ export function getTestFiles(dir = '.', fsModule = fs) {
   function scan(currentDir) {
     const entries = fsModule.readdirSync(currentDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.name === 'node_modules' || entry.name === '.git') {
+      if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === '.github-tools') {
         continue;
       }
       const fullPath = path.join(currentDir, entry.name);
@@ -144,10 +144,13 @@ export function runNodeTest(exec = execFileSync, fsModule = fs) {
   exec('node', ['--test', ...files], { stdio: 'inherit' });
 }
 
-export function runEslint(exec = execSync) {
+export function runEslint(exec = execSync, fsModule = fs) {
   console.log('==> Running ESLint...');
   exec('npm ci', { stdio: 'inherit' });
-  exec('eslint .', { stdio: 'inherit' });
+  const configArg = !fsModule.existsSync('eslint.config.js') && fsModule.existsSync('.github-tools/eslint.config.js')
+    ? '--config .github-tools/eslint.config.js '
+    : '';
+  exec(`eslint ${configArg}.`, { stdio: 'inherit' });
 }
 
 export function runGitleaks(exec = execSync) {

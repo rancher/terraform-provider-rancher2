@@ -459,6 +459,16 @@ func analyzeTfContent(content string, filePath string, ignoreList *IgnoreList, k
 	return findings, nil
 }
 
+func resolveConfigPath(configuredPath, toolsRelativePath string) string {
+	if _, err := os.Stat(configuredPath); err == nil {
+		return configuredPath
+	}
+	if _, err := os.Stat(toolsRelativePath); err == nil {
+		return toolsRelativePath
+	}
+	return configuredPath
+}
+
 func main() {
 	ignoreFilePath := flag.String("ignore", ".github/workflows/scripts/check_sensitive_ignore.cfg", "Path to sensitive ignore file")
 	keywordsFilePath := flag.String("keywords", ".github/workflows/scripts/check_sensitive_keywords.cfg", "Path to sensitive keywords configuration file")
@@ -469,13 +479,15 @@ func main() {
 		args = []string{"rancher2", "examples"}
 	}
 
-	keywordsList, err := loadKeywords(*keywordsFilePath)
+	resolvedKeywordsPath := resolveConfigPath(*keywordsFilePath, filepath.Join(".github-tools", *keywordsFilePath))
+	keywordsList, err := loadKeywords(resolvedKeywordsPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading keywords file: %v\n", err)
 		os.Exit(1)
 	}
 
-	ignoreList, err := loadIgnoreList(*ignoreFilePath)
+	resolvedIgnorePath := resolveConfigPath(*ignoreFilePath, filepath.Join(".github-tools", *ignoreFilePath))
+	ignoreList, err := loadIgnoreList(resolvedIgnorePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading ignore file: %v\n", err)
 		os.Exit(1)

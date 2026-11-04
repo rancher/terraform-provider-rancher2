@@ -1,4 +1,5 @@
 import { execFileSync, execSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -87,12 +88,15 @@ export function validateLength(message) {
   return true;
 }
 
-export function validateSpelling(message, exec = execSync) {
+export function validateSpelling(message, exec = execSync, fsModule = fs) {
   if (message.startsWith('Merge ') || message.startsWith('Merge branch ')) {
     return true;
   }
+  const configArg = !fsModule.existsSync('cspell.json') && fsModule.existsSync('.github-tools/cspell.json')
+    ? '--config .github-tools/cspell.json '
+    : '';
   try {
-    exec('cspell stdin', { input: message, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
+    exec(`cspell ${configArg}stdin`, { input: message, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
   } catch (error) {
     const output = (error.stdout || error.stderr || error.message || '').toString();
     const errorMsg = [
