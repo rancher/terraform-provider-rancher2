@@ -543,20 +543,32 @@ export async function runAutoMerge({ github, context, core, process = globalThis
   const prGithub = octokitFactory(mergeToken);
 
   let botLogin = null;
+  let authError = null;
+
   try {
-    if (typeof prGithub?.rest?.users?.getAuthenticated === 'function') {
-      const { data: authUser } = await prGithub.rest.users.getAuthenticated();
-      if (authUser?.login && typeof authUser.login === 'string') {
-        botLogin = authUser.login.trim();
+    if (typeof prGithub?.graphql === 'function') {
+      const viewerData = await prGithub.graphql('query { viewer { login } }');
+      if (viewerData?.viewer?.login && typeof viewerData.viewer.login === 'string') {
+        botLogin = viewerData.viewer.login.trim();
       }
     }
   } catch (error) {
-    core.setFailed(`Failed to resolve authenticated bot login: ${error.message}`);
-    return false;
+    authError = error;
+    if (core && typeof core.info === 'function') {
+      core.info(`GraphQL viewer query failed: ${error.message}`);
+    }
+  }
+
+  if (!botLogin && process?.env?.BOT_LOGIN) {
+    botLogin = process.env.BOT_LOGIN.trim();
   }
 
   if (!botLogin) {
-    core.setFailed('Could not resolve authenticated bot identity from GITHUB_MERGE_TOKEN. Failing closed.');
+    if (authError) {
+      core.setFailed(`Failed to resolve authenticated bot login: ${authError.message}`);
+    } else {
+      core.setFailed('Could not resolve authenticated bot identity from GITHUB_MERGE_TOKEN. Failing closed.');
+    }
     return false;
   }
 
