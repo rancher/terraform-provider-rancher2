@@ -145,6 +145,7 @@
               awscli2
               bashInteractive
               cmctl
+              cspell
               curl
               eslint
               gh
