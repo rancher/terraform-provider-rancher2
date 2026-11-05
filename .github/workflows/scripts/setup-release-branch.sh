@@ -115,7 +115,7 @@ EOF
 # 6. Create Release caller stub referencing @main
 echo "Creating .github/workflows/release.yml stub calling @main..."
 cat << 'EOF' > .github/workflows/release.yml
-name: Release
+name: Release Please
 
 on:
   push:
