@@ -114,6 +114,8 @@ describe('setup-release-branch.sh', () => {
         /uses: rancher\/terraform-provider-rancher2\/\.github\/workflows\/pull_request\.yaml@main/
       );
       assert.match(prStub, /merge_group:/);
+      assert.match(prStub, /contents:\s+read/);
+      assert.match(prStub, /pull-requests:\s+read/);
 
       // 5. Verify release.yml caller stub
       const releaseStub = fs.readFileSync(
@@ -125,6 +127,23 @@ describe('setup-release-branch.sh', () => {
         /uses: rancher\/terraform-provider-rancher2\/\.github\/workflows\/release-please\.yml@main/
       );
       assert.match(releaseStub, /branches:\s+- 'release\/v\*'/);
+      assert.match(releaseStub, /contents:\s+write/);
+      assert.match(releaseStub, /id-token:\s+write/);
+      assert.match(releaseStub, /issues:\s+write/);
+      assert.match(releaseStub, /pull-requests:\s+write/);
+      assert.match(releaseStub, /actions:\s+read/);
+
+      // 6. Verify e2e-pr-listener.yml is created/preserved
+      assert.strictEqual(
+        fs.existsSync(path.join(workflowsDir, 'e2e-pr-listener.yml')),
+        true
+      );
+      const listenerContent = fs.readFileSync(
+        path.join(workflowsDir, 'e2e-pr-listener.yml'),
+        'utf8'
+      );
+      assert.match(listenerContent, /name:\s+PR Executor Listener/);
+      assert.match(listenerContent, /branches:\s+- 'release\/v\*'/);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }

@@ -81,13 +81,13 @@ cat <<EOF > "$MANIFEST_FILE"
 }
 EOF
 
-# 4. Clean up any existing workflows in .github/workflows except the standard stubs
+# 4. Clean up any existing workflows in .github/workflows except the standard stubs and listener
 echo "Cleaning up non-stub workflows in .github/workflows..."
 mkdir -p .github/workflows
 for file in .github/workflows/*.yml .github/workflows/*.yaml; do
   [[ -f "$file" ]] || continue
   filename=$(basename "$file")
-  if [[ "$filename" != "pull_request.yaml" && "$filename" != "release.yml" ]]; then
+  if [[ "$filename" != "pull_request.yaml" && "$filename" != "release.yml" && "$filename" != "e2e-pr-listener.yml" ]]; then
     rm -f "$file"
   fi
 done
@@ -105,6 +105,9 @@ permissions: {}
 
 jobs:
   pull-request:
+    permissions:
+      contents: read
+      pull-requests: read
     uses: rancher/terraform-provider-rancher2/.github/workflows/pull_request.yaml@main
     secrets: inherit
 EOF
@@ -123,13 +126,49 @@ permissions: {}
 
 jobs:
   release:
+    permissions:
+      contents: write
+      id-token: write
+      issues: write
+      pull-requests: write
+      actions: read
     uses: rancher/terraform-provider-rancher2/.github/workflows/release-please.yml@main
     secrets: inherit
 EOF
+
+# 7. Ensure e2e-pr-listener.yml is present to trigger privileged E2E tests from main
+LISTENER_FILE=".github/workflows/e2e-pr-listener.yml"
+if [[ ! -f "$LISTENER_FILE" ]]; then
+  echo "Creating $LISTENER_FILE to preserve E2E test triggering..."
+  cat << 'EOF' > "$LISTENER_FILE"
+name: PR Executor Listener
+# This unprivileged workflow acts as a middleman to securely trigger e2e tests.
+
+on:
+  pull_request:
+    branches:
+      - 'release/v*'
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  emit-event:
+    name: 'Emit E2E Workflow Run Event'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: 'Execute PR Listener'
+        run: echo "PR listener executed. The completion of this workflow will trigger the privileged E2E Tests (Release PRs) workflow safely from the base branch via the workflow_run event."
+EOF
+fi
 
 echo "=== Release branch setup complete for '$TARGET_BRANCH' ==="
 echo "Files ready to stage:"
 echo "  - .github/workflows/pull_request.yaml (caller stub -> @main)"
 echo "  - .github/workflows/release.yml (caller stub -> @main)"
+echo "  - $LISTENER_FILE (E2E test listener)"
 echo "  - $CONFIG_FILE (release-as: $RELEASE_VERSION)"
 echo "  - $MANIFEST_FILE (version: $MANIFEST_VERSION)"
