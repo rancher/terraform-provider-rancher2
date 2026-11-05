@@ -53,6 +53,27 @@ test('shouldRunE2E - qualifies automated backport PR from custom bot user', () =
   assert.strictEqual(result, true);
 });
 
+test('shouldRunE2E - qualifies automated backport PR from eio-github-actions-power-enhancer[bot]', () => {
+  const pr = {
+    number: 2626,
+    base: {
+      ref: 'release/v15',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    head: {
+      ref: 'backport-2622-release-v15',
+      repo: { full_name: 'rancher/terraform-provider-rancher2', fork: false },
+    },
+    user: {
+      login: 'eio-github-actions-power-enhancer[bot]',
+      type: 'Bot',
+    },
+  };
+
+  const result = shouldRunE2E(pr);
+  assert.strictEqual(result, true);
+});
+
 test('shouldRunE2E - qualifies automated release-please PR from bot', () => {
   const pr = {
     number: 201,

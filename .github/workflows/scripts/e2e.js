@@ -302,7 +302,14 @@ function shouldRunE2E(pr, core = { info: () => {}, warning: () => {} }) {
   const userType = pr.user?.type;
   const userLogin = pr.user?.login;
   const normalizedLogin = typeof userLogin === 'string' ? userLogin.toLowerCase() : '';
-  const authorizedBots = ['github-actions[bot]', 'rancher-merge-bot[bot]'];
+  const authorizedBots = [
+    'github-actions[bot]',
+    'github-actions',
+    'rancher-merge-bot[bot]',
+    'rancher-merge-bot',
+    'eio-github-actions-power-enhancer[bot]',
+    'eio-github-actions-power-enhancer',
+  ];
   const isBot = authorizedBots.includes(normalizedLogin);
 
   const isBackport = isBot && /^backport-\d+-(?:release-)?v\d+$/.test(cleanHeadRef);

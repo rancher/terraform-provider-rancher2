@@ -150,6 +150,8 @@ describe('validate-commit-message', () => {
       assert.strictEqual(validatePrefix('feature!: breaking change'), true);
       assert.strictEqual(validatePrefix('feat!: breaking change'), true);
       assert.strictEqual(validatePrefix('chore(main): update dependencies'), true);
+      assert.strictEqual(validatePrefix('chore(release/v14): release 14.7.0'), true);
+      assert.strictEqual(validatePrefix('chore(release/v13): release 13.11.0'), true);
       assert.strictEqual(validatePrefix('Merge branch main into dev'), true);
       assert.strictEqual(validatePrefix('dev: update agent scripts'), true);
       assert.strictEqual(validatePrefix('env: update nix flake'), true);

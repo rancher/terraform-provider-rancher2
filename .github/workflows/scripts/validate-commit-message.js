@@ -26,6 +26,7 @@ export const VALID_PREFIXES = [
   ...PRODUCT_PREFIXES,
   // merge and release (automated) updates
   'chore(main): ',
+  'chore(release/',
   'Merge branch ',
   // non product changes
   ...NON_PRODUCT_PREFIXES,
@@ -89,7 +90,12 @@ export function validateLength(message) {
 }
 
 export function validateSpelling(message, exec = execSync, fsModule = fs) {
-  if (message.startsWith('Merge ') || message.startsWith('Merge branch ')) {
+  if (
+    message.startsWith('Merge ') ||
+    message.startsWith('Merge branch ') ||
+    message.startsWith('chore(release/') ||
+    message.startsWith('chore(main): ')
+  ) {
     return true;
   }
   const configArg = !fsModule.existsSync('cspell.json') && fsModule.existsSync('.github-tools/cspell.json')
@@ -110,7 +116,12 @@ export function validateSpelling(message, exec = execSync, fsModule = fs) {
 }
 
 export function validateProductImpact(message, changedFiles = []) {
-  if (message.startsWith('Merge branch ') || message.startsWith('Merge ')) {
+  if (
+    message.startsWith('Merge branch ') ||
+    message.startsWith('Merge ') ||
+    message.startsWith('chore(release/') ||
+    message.startsWith('chore(main): ')
+  ) {
     return true;
   }
   if (!changedFiles || changedFiles.length === 0) {
