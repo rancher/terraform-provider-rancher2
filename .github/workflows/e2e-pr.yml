@@ -115,7 +115,7 @@ jobs:
       - name: 'Sync Test Suite from main'
         id: sync-test-suite
         run: |
-          rm -rf examples test
+          rm -rf examples test .github/workflows/scripts
           cp -r .main-tools/.github/workflows/scripts .github/workflows/
           cp -r .main-tools/examples .
           cp -r .main-tools/test .
