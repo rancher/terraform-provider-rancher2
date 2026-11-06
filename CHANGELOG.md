@@ -1,5 +1,21 @@
 # Changelog
 
+## [14.7.0](https://github.com/rancher/terraform-provider-rancher2/compare/v14.2.2...v14.7.0) (2026-11-06)
+
+
+### Features
+
+* add release channel support ([#2493](https://github.com/rancher/terraform-provider-rancher2/issues/2493)) ([#2515](https://github.com/rancher/terraform-provider-rancher2/issues/2515)) ([2b7d462](https://github.com/rancher/terraform-provider-rancher2/commit/2b7d46248b3ceb0d936cd9866c6f2909cbae44a2))
+
+
+### Bug Fixes
+
+* add merge group trigger to pr workflows ([#2612](https://github.com/rancher/terraform-provider-rancher2/issues/2612)) ([2cc9ad9](https://github.com/rancher/terraform-provider-rancher2/commit/2cc9ad9e39e65c95f81e9db3b7377e38d071387e))
+* remove deprecated catalog v1 resources ([#2316](https://github.com/rancher/terraform-provider-rancher2/issues/2316)) ([#2328](https://github.com/rancher/terraform-provider-rancher2/issues/2328)) ([#2490](https://github.com/rancher/terraform-provider-rancher2/issues/2490)) ([8c4df45](https://github.com/rancher/terraform-provider-rancher2/commit/8c4df45f05632cdf97a14111f1784a574af6d4ce))
+* trivial change to exercise workflows ([#2633](https://github.com/rancher/terraform-provider-rancher2/issues/2633)) ([#2636](https://github.com/rancher/terraform-provider-rancher2/issues/2636)) ([74780ae](https://github.com/rancher/terraform-provider-rancher2/commit/74780aee3f9ca71dcc1ca62c4ff544cf789094dc))
+* update provider comment for workflow validation ([#2622](https://github.com/rancher/terraform-provider-rancher2/issues/2622)) ([#2628](https://github.com/rancher/terraform-provider-rancher2/issues/2628)) ([cb72994](https://github.com/rancher/terraform-provider-rancher2/commit/cb729944f24cafcccbd4ca73cfca6d67ad9c8ea4))
+* update v14 release numbers ([#2608](https://github.com/rancher/terraform-provider-rancher2/issues/2608)) ([30b2b79](https://github.com/rancher/terraform-provider-rancher2/commit/30b2b799b75ef99cdb255f3199a2f3158e68812c))
+
 ## [14.2.2](https://github.com/rancher/terraform-provider-rancher2/compare/v14.2.2...v14.2.2) (2026-09-10)
 
 
