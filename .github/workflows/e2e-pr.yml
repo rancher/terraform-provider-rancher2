@@ -97,12 +97,31 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ needs.filter.outputs.sha }}
-      - name: 'Checkout Workflow Scripts from main'
-        id: checkout-scripts-main
+      - name: 'Checkout Test Suite and Scripts from main'
+        id: checkout-main-tools
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: ${{ github.repository }}
+          ref: 'main'
+          path: .main-tools
+          sparse-checkout: |
+            .github/workflows/scripts
+            examples
+            test
+            run_tests.sh
+            cleanup.sh
+          sparse-checkout-cone-mode: false
+      - name: 'Sync Test Suite from main'
+        id: sync-test-suite
         run: |
-          git config --global --add safe.directory "$PWD"
-          git fetch origin main:refs/remotes/origin/main || git fetch origin main
-          git checkout origin/main -- .github/workflows/scripts 2>/dev/null || git checkout FETCH_HEAD -- .github/workflows/scripts
+          rm -rf examples test
+          cp -r .main-tools/.github/workflows/scripts .github/workflows/
+          cp -r .main-tools/examples .
+          cp -r .main-tools/test .
+          cp .main-tools/run_tests.sh .
+          cp .main-tools/cleanup.sh .
+          rm -rf .main-tools
       - name: 'Clear out GitHub Runner'
         id: clear-runner
         # https://github.com/actions/github-script/releases
@@ -306,12 +325,6 @@ jobs:
         with:
           fetch-depth: 0
           ref: 'main'
-      - name: 'Checkout Workflow Scripts from main'
-        id: checkout-scripts-main
-        run: |
-          git config --global --add safe.directory "$PWD"
-          git fetch origin main:refs/remotes/origin/main || git fetch origin main
-          git checkout origin/main -- .github/workflows/scripts 2>/dev/null || git checkout FETCH_HEAD -- .github/workflows/scripts
       - name: 'Clear out GitHub Runner'
         id: clear-runner
         # https://github.com/actions/github-script/releases
