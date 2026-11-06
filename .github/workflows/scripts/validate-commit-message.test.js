@@ -8,6 +8,7 @@ import {
   isProductDirectory,
   isProductFile,
   isProductPrefix,
+  isReleaseChore,
   main,
   NON_PRODUCT_PREFIXES,
   PRODUCT_PREFIXES,
@@ -173,6 +174,37 @@ describe('validate-commit-message', () => {
         () => validatePrefix(' feat: leading space prefix'),
         /\.\.\.Commit message does not start with the required prefix\./
       );
+      assert.throws(
+        () => validatePrefix('chore(release/not-a-branch): invalid release'),
+        /\.\.\.Commit message does not start with the required prefix\./
+      );
+      assert.throws(
+        () => validatePrefix('chore(release/): missing branch digits'),
+        /\.\.\.Commit message does not start with the required prefix\./
+      );
+      assert.throws(
+        () => validatePrefix('chore(release/v): missing version number'),
+        /\.\.\.Commit message does not start with the required prefix\./
+      );
+    });
+  });
+
+  describe('isReleaseChore', () => {
+    it('accepts valid release-please generated prefixes', () => {
+      assert.strictEqual(isReleaseChore('chore(main): release 1.0.0'), true);
+      assert.strictEqual(isReleaseChore('chore(release/v15): release 15.3.0'), true);
+      assert.strictEqual(isReleaseChore('chore(release/v14): release 14.7.0'), true);
+      assert.strictEqual(isReleaseChore('chore(release/v13): release 13.11.0'), true);
+    });
+
+    it('rejects malformed or non-release chore prefixes', () => {
+      assert.strictEqual(isReleaseChore('chore(release/not-a-branch): release 1.0.0'), false);
+      assert.strictEqual(isReleaseChore('chore(release/): release 1.0.0'), false);
+      assert.strictEqual(isReleaseChore('chore(release/v): release 1.0.0'), false);
+      assert.strictEqual(isReleaseChore('chore(other): release 1.0.0'), false);
+      assert.strictEqual(isReleaseChore('chore: release 1.0.0'), false);
+      assert.strictEqual(isReleaseChore(null), false);
+      assert.strictEqual(isReleaseChore(123), false);
     });
   });
 

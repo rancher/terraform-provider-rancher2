@@ -26,11 +26,15 @@ export const VALID_PREFIXES = [
   ...PRODUCT_PREFIXES,
   // merge and release (automated) updates
   'chore(main): ',
-  'chore(release/',
   'Merge branch ',
   // non product changes
   ...NON_PRODUCT_PREFIXES,
 ];
+
+export function isReleaseChore(message) {
+  if (typeof message !== 'string') return false;
+  return /^chore\((main|release\/v[0-9]+)\):\s+/.test(message);
+}
 
 export function isProductPrefix(message) {
   return PRODUCT_PREFIXES.some((prefix) => message.startsWith(prefix));
@@ -66,7 +70,9 @@ export function validateEmpty(message) {
 }
 
 export function validatePrefix(message) {
-  const hasValidPrefix = VALID_PREFIXES.some((prefix) => message.startsWith(prefix));
+  const hasValidPrefix =
+    isReleaseChore(message) ||
+    VALID_PREFIXES.some((prefix) => message.startsWith(prefix));
   if (!hasValidPrefix) {
     const errorMsg = [
       '...Commit message does not start with the required prefix.',
@@ -93,8 +99,7 @@ export function validateSpelling(message, exec = execSync, fsModule = fs) {
   if (
     message.startsWith('Merge ') ||
     message.startsWith('Merge branch ') ||
-    message.startsWith('chore(release/') ||
-    message.startsWith('chore(main): ')
+    isReleaseChore(message)
   ) {
     return true;
   }
@@ -119,8 +124,7 @@ export function validateProductImpact(message, changedFiles = []) {
   if (
     message.startsWith('Merge branch ') ||
     message.startsWith('Merge ') ||
-    message.startsWith('chore(release/') ||
-    message.startsWith('chore(main): ')
+    isReleaseChore(message)
   ) {
     return true;
   }
