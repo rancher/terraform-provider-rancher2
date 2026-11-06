@@ -889,7 +889,17 @@ export async function runTriggerRcRelease({ github, context, core, process = glo
             })
             : (await github.rest?.actions?.listJobsForWorkflowRun({ owner, repo, run_id: runId }))?.data?.jobs || [];
           const jobList = Array.isArray(jobs) ? jobs : (Array.isArray(jobs?.jobs) ? jobs.jobs : []);
-          const fullReleaseJob = jobList.find(j => j?.name === 'Generate Full Release' || j?.name?.toLowerCase().includes('full release') || j?.name?.toLowerCase() === 'publish' || j?.name?.toLowerCase() === 'release');
+          const isFullReleaseJob = (j) => {
+            const name = (j?.name || '').toLowerCase();
+            return (
+              name === 'generate release' ||
+              name === 'generate full release' ||
+              name.includes('full release') ||
+              name === 'publish' ||
+              name === 'release'
+            );
+          };
+          const fullReleaseJob = jobList.find(isFullReleaseJob);
           if (fullReleaseJob && fullReleaseJob.conclusion !== 'skipped') {
             if (core && typeof core.info === 'function') {
               core.info(`Workflow run #${workflowRunId} attempted a full release (conclusion: ${fullReleaseJob.conclusion}); skipping RC release.`);
@@ -902,6 +912,14 @@ export async function runTriggerRcRelease({ github, context, core, process = glo
           }
         }
       }
+    }
+
+    const workflowRunEvent = context?.payload?.workflow_run?.event || process?.env?.WORKFLOW_RUN_EVENT || '';
+    if (workflowRunEvent === 'workflow_dispatch') {
+      if (core && typeof core.info === 'function') {
+        core.info(`Parent workflow run #${workflowRunId} was triggered by workflow_dispatch; skipping automated RC release.`);
+      }
+      return null;
     }
 
     let releasePleasePr = isReleasePleasePr(pr) ? pr : null;

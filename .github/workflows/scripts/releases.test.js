@@ -886,6 +886,80 @@ test('runTriggerRcRelease - skips RC release when workflow run job matches relea
   assert.match(loggedInfo, /attempted a full release/);
 });
 
+test('runTriggerRcRelease - skips RC release when workflow run job matches Generate Release job name', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async () => [
+      { name: 'Generate Release', conclusion: 'success' }
+    ],
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: { workflow_run: { id: 12345 } }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha123', WORKFLOW_RUN_ID: '12345' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /attempted a full release/);
+});
+
+test('runTriggerRcRelease - skips RC release when parent workflow run event was workflow_dispatch', async () => {
+  let dispatched = false;
+  let loggedInfo = null;
+  const mockGithub = {
+    paginate: async () => [],
+    rest: {
+      actions: {
+        listJobsForWorkflowRun: () => {},
+        createWorkflowDispatch: async () => {
+          dispatched = true;
+        }
+      }
+    }
+  };
+
+  const mockCore = {
+    info: (msg) => { loggedInfo = msg; },
+    warning: () => {},
+    setFailed: () => {}
+  };
+
+  const result = await runTriggerRcRelease({
+    github: mockGithub,
+    context: {
+      repo: { owner: 'rancher', repo: 'terraform-provider-rancher2' },
+      payload: { workflow_run: { id: 12345, event: 'workflow_dispatch' } }
+    },
+    core: mockCore,
+    process: { env: { BRANCH: 'release/v15', SHA: 'sha123', WORKFLOW_RUN_ID: '12345' } }
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(dispatched, false);
+  assert.match(loggedInfo, /triggered by workflow_dispatch; skipping automated RC release/);
+});
+
 test('runTriggerRcRelease - skips RC release when target branch starts with release-please', async () => {
   let dispatched = false;
   let loggedInfo = null;

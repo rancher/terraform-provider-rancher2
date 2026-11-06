@@ -31,6 +31,11 @@ export const VALID_PREFIXES = [
   ...NON_PRODUCT_PREFIXES,
 ];
 
+export function isReleaseChore(message) {
+  if (typeof message !== 'string') return false;
+  return /^chore\((main|release\/v[0-9]+)\):\s+release\s+[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$/.test(message);
+}
+
 export function isProductPrefix(message) {
   return PRODUCT_PREFIXES.some((prefix) => message.startsWith(prefix));
 }
@@ -65,7 +70,11 @@ export function validateEmpty(message) {
 }
 
 export function validatePrefix(message) {
-  const hasValidPrefix = VALID_PREFIXES.some((prefix) => message.startsWith(prefix));
+  const isReleasePrefix =
+    isReleaseChore(message) || /^chore\(release\/v[0-9]+\):\s+/.test(message);
+  const hasValidPrefix =
+    isReleasePrefix ||
+    VALID_PREFIXES.some((prefix) => message.startsWith(prefix));
   if (!hasValidPrefix) {
     const errorMsg = [
       '...Commit message does not start with the required prefix.',
@@ -89,7 +98,11 @@ export function validateLength(message) {
 }
 
 export function validateSpelling(message, exec = execSync, fsModule = fs) {
-  if (message.startsWith('Merge ') || message.startsWith('Merge branch ')) {
+  if (
+    message.startsWith('Merge ') ||
+    message.startsWith('Merge branch ') ||
+    isReleaseChore(message)
+  ) {
     return true;
   }
   const configArg = !fsModule.existsSync('cspell.json') && fsModule.existsSync('.github-tools/cspell.json')
@@ -110,7 +123,11 @@ export function validateSpelling(message, exec = execSync, fsModule = fs) {
 }
 
 export function validateProductImpact(message, changedFiles = []) {
-  if (message.startsWith('Merge branch ') || message.startsWith('Merge ')) {
+  if (
+    message.startsWith('Merge branch ') ||
+    message.startsWith('Merge ') ||
+    isReleaseChore(message)
+  ) {
     return true;
   }
   if (!changedFiles || changedFiles.length === 0) {
