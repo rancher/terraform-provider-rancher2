@@ -27,6 +27,10 @@ func expandOIDCClient(in *schema.ResourceData) (*managementClient.OIDCClient, er
 	v := in.Get("redirect_uris")
 	obj.RedirectURIs = toArrayString(v.([]any))
 
+	if v, ok := in.GetOk("scopes"); ok {
+		obj.Scopes = toArrayString(v.([]any))
+	}
+
 	v, ok := in.GetOk("token_expiration_seconds")
 	if ok {
 		// This should be safe because the field is declared as an integer.
@@ -80,6 +84,7 @@ func flattenOIDCClient(d *schema.ResourceData, in *managementClient.OIDCClient, 
 		d.Set("client_secret", clientSecret),
 		d.Set("description", in.Description),
 		d.Set("redirect_uris", in.RedirectURIs),
+		d.Set("scopes", in.Scopes),
 		d.Set("token_expiration_seconds", int(in.TokenExpirationSeconds)),
 		d.Set("refresh_token_expiration_seconds", int(in.RefreshTokenExpirationSeconds)),
 		d.Set("client_id", in.Status.ClientID),

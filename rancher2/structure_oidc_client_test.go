@@ -17,7 +17,8 @@ func TestFlattenOIDCClient(t *testing.T) {
 		Resource: types.Resource{
 			ID: "test-client-id",
 		},
-		Name: "testing-client",
+		Name:   "testing-client",
+		Scopes: []string{"openid", "profile"},
 		Annotations: map[string]string{
 			"example.com/testing": "annotation",
 		},
@@ -50,6 +51,7 @@ func TestFlattenOIDCClient(t *testing.T) {
 			"https://vscode.dev/redirect",
 		},
 		"client_id": "test-client-id",
+		"scopes":    []any{"openid", "profile"},
 		"annotations": map[string]any{
 			"example.com/testing": "annotation",
 		},
@@ -62,6 +64,22 @@ func TestFlattenOIDCClient(t *testing.T) {
 	assert.Equal(t, "test-client-id", flattened.Id(), "unexpected ID from flattenOIDCClient")
 	for key, want := range want {
 		assert.Equal(t, want, flattened.Get(key), "unexpected output from flattenOIDCClient")
+	}
+}
+
+func TestFlattenOIDCClientClearsStaleScopes(t *testing.T) {
+	for name, scopes := range map[string][]string{
+		"nil scopes":   nil,
+		"empty scopes": {},
+	} {
+		t.Run(name, func(t *testing.T) {
+			flattened := schema.TestResourceDataRaw(t, oidcClientFields(), map[string]any{
+				"scopes": []any{"openid", "profile"},
+			})
+			err := flattenOIDCClient(flattened, &client.OIDCClient{Scopes: scopes}, nil)
+			require.NoError(t, err)
+			assert.Empty(t, flattened.Get("scopes"))
+		})
 	}
 }
 
@@ -191,6 +209,7 @@ func TestExpandOIDCClient(t *testing.T) {
 	}{
 		"all fields populated": {
 			data: map[string]any{
+				"scopes":                           []any{"openid", "profile"},
 				"token_expiration_seconds":         6000,
 				"refresh_token_expiration_seconds": 12000,
 				"redirect_uris": []any{
@@ -207,6 +226,7 @@ func TestExpandOIDCClient(t *testing.T) {
 				},
 			},
 			want: &client.OIDCClient{
+				Scopes:                        []string{"openid", "profile"},
 				TokenExpirationSeconds:        6000,
 				RefreshTokenExpirationSeconds: 12000,
 				RedirectURIs: []string{
