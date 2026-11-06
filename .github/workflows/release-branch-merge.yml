@@ -101,6 +101,7 @@ jobs:
           BRANCH: ${{ github.event.inputs.branch || github.event.workflow_run.head_branch }}
           SHA: ${{ github.event.inputs.sha || github.event.workflow_run.head_sha }}
           WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id || '' }}
+          WORKFLOW_RUN_EVENT: ${{ github.event.workflow_run.event || '' }}
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;

@@ -198,6 +198,8 @@ describe('validate-commit-message', () => {
     });
 
     it('rejects malformed or non-release chore prefixes', () => {
+      assert.strictEqual(isReleaseChore('chore(main): update dependencies'), false);
+      assert.strictEqual(isReleaseChore('chore(release/v15): fix typo'), false);
       assert.strictEqual(isReleaseChore('chore(release/not-a-branch): release 1.0.0'), false);
       assert.strictEqual(isReleaseChore('chore(release/): release 1.0.0'), false);
       assert.strictEqual(isReleaseChore('chore(release/v): release 1.0.0'), false);
@@ -292,6 +294,21 @@ describe('validate-commit-message', () => {
       assert.throws(
         () => validateProductImpact('docs: update entrypoint docs', ['main.go']),
         /\.\.\.Commit message does not indicate a product change, but files in \.\/rancher or \.\/internal were modified\./
+      );
+      assert.throws(
+        () => validateProductImpact('chore(main): modify provider logic', ['rancher2/provider.go']),
+        /\.\.\.Commit message does not indicate a product change, but files in \.\/rancher or \.\/internal were modified\./
+      );
+    });
+
+    it('bypasses product impact check only for true release chores', () => {
+      assert.strictEqual(
+        validateProductImpact('chore(main): release 1.2.3', ['rancher2/provider.go']),
+        true
+      );
+      assert.strictEqual(
+        validateProductImpact('chore(release/v15): release 15.3.0', ['rancher2/provider.go']),
+        true
       );
     });
 
