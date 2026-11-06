@@ -195,6 +195,7 @@ describe('validate-commit-message', () => {
       assert.strictEqual(isReleaseChore('chore(release/v15): release 15.3.0'), true);
       assert.strictEqual(isReleaseChore('chore(release/v14): release 14.7.0'), true);
       assert.strictEqual(isReleaseChore('chore(release/v13): release 13.11.0'), true);
+      assert.strictEqual(isReleaseChore('chore(release/v13): release 13.11.0-rc.1'), true);
     });
 
     it('rejects malformed or non-release chore prefixes', () => {
@@ -205,6 +206,11 @@ describe('validate-commit-message', () => {
       assert.strictEqual(isReleaseChore('chore(release/v): release 1.0.0'), false);
       assert.strictEqual(isReleaseChore('chore(other): release 1.0.0'), false);
       assert.strictEqual(isReleaseChore('chore: release 1.0.0'), false);
+      assert.strictEqual(isReleaseChore(' chore(main): release 1.0.0'), false);
+      assert.strictEqual(isReleaseChore('CHORE(main): RELEASE 1.0.0'), false);
+      assert.strictEqual(isReleaseChore('chore(release/v15): release 1; modify provider'), false);
+      assert.strictEqual(isReleaseChore('chore(main): release 1oops'), false);
+      assert.strictEqual(isReleaseChore('chore(main): release 1'), false);
       assert.strictEqual(isReleaseChore(null), false);
       assert.strictEqual(isReleaseChore(123), false);
     });

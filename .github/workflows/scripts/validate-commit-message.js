@@ -33,7 +33,7 @@ export const VALID_PREFIXES = [
 
 export function isReleaseChore(message) {
   if (typeof message !== 'string') return false;
-  return /^chore\((main|release\/v[0-9]+)\):\s+release\s+[0-9]+/i.test(message.trim());
+  return /^chore\((main|release\/v[0-9]+)\):\s+release\s+[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$/.test(message);
 }
 
 export function isProductPrefix(message) {
