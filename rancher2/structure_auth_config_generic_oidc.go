@@ -11,8 +11,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigGenericOIDC(d *schema.ResourceData, in *managementClient.GenericOIDCConfig) error {
-	d.SetId(AuthConfigGenericOIDCName)
-	d.Set("name", AuthConfigGenericOIDCName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.GenericOIDCConfigType)
 
 	if err := flattenOIDCConfig(d, in); err != nil {
@@ -30,7 +30,7 @@ func expandAuthConfigGenericOIDC(in *schema.ResourceData) (*managementClient.Gen
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigGenericOIDCName)
 	}
 
-	obj.Name = AuthConfigGenericOIDCName
+	obj.Name = expandAuthConfigName(in, AuthConfigGenericOIDCName)
 	obj.Type = managementClient.GenericOIDCConfigType
 
 	return expandOIDCConfig(in, obj)
@@ -65,6 +65,7 @@ func flattenOIDCConfig(d *schema.ResourceData, in any) error {
 	}
 
 	d.Set("client_id", oidcData["ClientID"])
+	d.Set("display_name", oidcData["DisplayName"])
 	d.Set("issuer", oidcData["Issuer"])
 	d.Set("rancher_url", oidcData["RancherURL"])
 	d.Set("auth_endpoint", oidcData["AuthEndpoint"])
@@ -128,6 +129,10 @@ func expandOIDCConfig[T *Q, Q any](in *schema.ResourceData, obj T) (T, error) {
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		objData["Labels"] = toMapString(v)
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		objData["DisplayName"] = v
 	}
 
 	if v, ok := in.Get("client_id").(string); ok && v != "" {

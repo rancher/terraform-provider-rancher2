@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"maps"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
@@ -13,11 +15,14 @@ var (
 
 //Schemas
 
-func authConfigFields() map[string]*schema.Schema {
+func authConfigFields(defaultName string) map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
+		// The name identifies the AuthConfig in Rancher, so renaming requires a new one.
 		"name": {
 			Type:     schema.TypeString,
-			Computed: true,
+			Optional: true,
+			ForceNew: true,
+			Default:  defaultName,
 		},
 		"type": {
 			Type:     schema.TypeString,
@@ -41,10 +46,13 @@ func authConfigFields() map[string]*schema.Schema {
 			Optional: true,
 			Default:  true,
 		},
+		"display_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 	}
 
-	for k, v := range commonAnnotationLabelFields() {
-		s[k] = v
-	}
+	maps.Copy(s, commonAnnotationLabelFields())
+
 	return s
 }

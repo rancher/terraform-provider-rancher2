@@ -56,7 +56,7 @@ func authConfigGithubAppFields() map[string]*schema.Schema {
 		},
 	}
 
-	maps.Copy(s, authConfigFields())
+	maps.Copy(s, authConfigFields(AuthConfigGithubAppName))
 
 	return s
 }

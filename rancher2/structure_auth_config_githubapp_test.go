@@ -58,6 +58,7 @@ var (
 		AppID:               "12345",
 		InstallationID:      "2345678",
 		PrivateKey:          testPrivateKeyPKCS8,
+		DisplayName:         "Login via GitHub app",
 	}
 	testAuthConfigGithubAppInterface = map[string]interface{}{
 		"name":                  AuthConfigGithubAppName,
@@ -71,6 +72,7 @@ var (
 		"app_id":                "12345",
 		"installation_id":       "2345678",
 		"private_key":           testPrivateKeyPKCS8,
+		"display_name":          "Login via GitHub app",
 	}
 )
 

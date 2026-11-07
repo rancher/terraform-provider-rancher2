@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigPing(d *schema.ResourceData, in *managementClient.PingConfig) error {
-	d.SetId(AuthConfigPingName)
-	d.Set("name", AuthConfigPingName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.PingConfigType)
 	d.Set("access_mode", in.AccessMode)
 
@@ -21,6 +21,7 @@ func flattenAuthConfigPing(d *schema.ResourceData, in *managementClient.PingConf
 	}
 
 	d.Set("enabled", in.Enabled)
+	d.Set("display_name", in.DisplayName)
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -51,7 +52,7 @@ func expandAuthConfigPing(in *schema.ResourceData) (*managementClient.PingConfig
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigPingName)
 	}
 
-	obj.Name = AuthConfigPingName
+	obj.Name = expandAuthConfigName(in, AuthConfigPingName)
 	obj.Type = managementClient.PingConfigType
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
@@ -76,6 +77,10 @@ func expandAuthConfigPing(in *schema.ResourceData) (*managementClient.PingConfig
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		obj.DisplayName = v
 	}
 
 	if v, ok := in.Get("display_name_field").(string); ok && len(v) > 0 {

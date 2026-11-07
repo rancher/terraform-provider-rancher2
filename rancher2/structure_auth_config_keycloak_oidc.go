@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigKeyCloakOIDC(d *schema.ResourceData, in *managementClient.KeyCloakOIDCConfig) error {
-	d.SetId(AuthConfigKeyCloakOIDCName)
-	d.Set("name", AuthConfigKeyCloakOIDCName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.KeyCloakOIDCConfigType)
 
 	if err := flattenOIDCConfig(d, in); err != nil {
@@ -29,7 +29,7 @@ func expandAuthConfigKeyCloakOIDC(in *schema.ResourceData) (*managementClient.Ke
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigGenericOIDCName)
 	}
 
-	obj.Name = AuthConfigKeyCloakOIDCName
+	obj.Name = expandAuthConfigName(in, AuthConfigKeyCloakOIDCName)
 	obj.Type = managementClient.KeyCloakOIDCConfigType
 
 	return expandOIDCConfig(in, obj)

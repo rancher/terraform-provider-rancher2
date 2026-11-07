@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigCognito(d *schema.ResourceData, in *managementClient.CognitoConfig) error {
-	d.SetId(AuthConfigCognitoName)
-	d.Set("name", AuthConfigCognitoName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.CognitoConfigType)
 
 	if err := flattenOIDCConfig(d, in); err != nil {
@@ -29,7 +29,7 @@ func expandAuthConfigCognito(in *schema.ResourceData) (*managementClient.Cognito
 		return nil, fmt.Errorf("expanding :%s Auth Config: Input ResourceData is nil", AuthConfigCognitoName)
 	}
 
-	obj.Name = AuthConfigCognitoName
+	obj.Name = expandAuthConfigName(in, AuthConfigCognitoName)
 	obj.Type = managementClient.CognitoConfigType
 
 	return expandOIDCConfig(in, obj)

@@ -20,56 +20,37 @@ func resourceRancher2AuthConfigGithub() *schema.Resource {
 }
 
 func resourceRancher2AuthConfigGithubCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).ManagementClient()
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get ManagementClient %s", err)
-	}
-
-	auth, err := client.AuthConfig.ByID(AuthConfigGithubName)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigGithubName, err)
-	}
-
-	log.Printf("[INFO] Creating Auth Config %s %s", AuthConfigGithubName, auth.Name)
-
 	authGithub, err := expandAuthConfigGithub(d)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigGithubName, err)
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config: %s", err)
 	}
 
-	// Checking if other auth config is enabled
-	if authGithub.Enabled {
-		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigGithubName)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigGithubName, err)
-		}
-	}
-
-	// Updated auth config
 	newAuth := &managementClient.GithubConfig{}
-	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authGithub, newAuth)
+	err = meta.(*Config).CreateOrUpdateAuthConfig(authGithub.Name, authGithub, newAuth, managementClient.AuthConfigFieldDisplayName)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigGithubName, err)
+		return err
 	}
+
+	d.SetId(authGithub.Name)
 
 	return resourceRancher2AuthConfigGithubRead(d, meta)
 }
 
 func resourceRancher2AuthConfigGithubRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigGithubName)
+	log.Printf("[INFO] Refreshing Auth Config %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get ManagementClient %s", err)
+		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigGithubName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigGithubName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
 	authGithub, err := meta.(*Config).GetAuthConfig(auth)
@@ -86,33 +67,42 @@ func resourceRancher2AuthConfigGithubRead(d *schema.ResourceData, meta interface
 }
 
 func resourceRancher2AuthConfigGithubUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config %s", AuthConfigGithubName)
+	authGithub, err := expandAuthConfigGithub(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", d.Id(), err)
+	}
 
-	return resourceRancher2AuthConfigGithubCreate(d, meta)
+	newAuth := &managementClient.GithubConfig{}
+	err = meta.(*Config).UpdateAuthConfigByName(d.Id(), authGithub, newAuth, managementClient.AuthConfigFieldDisplayName)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigGithubRead(d, meta)
 }
 
 func resourceRancher2AuthConfigGithubDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigGithubName)
+	log.Printf("[INFO] Disabling Auth Config %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get ManagementClient %s", err)
+		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigGithubName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigGithubName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("[ERROR] Getting the %s AuthConfig: %w", AuthConfigGithubName, err)
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	if auth.Enabled == true {
+	if auth.Enabled {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigGithubName, err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 		}
 	}
 

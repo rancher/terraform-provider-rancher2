@@ -21,30 +21,51 @@ func resourceRancher2AuthConfigOpenLdap() *schema.Resource {
 }
 
 func resourceRancher2AuthConfigOpenLdapCreate(d *schema.ResourceData, meta interface{}) error {
+	authOpenLdap, err := expandAuthConfigOpenLdap(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config: %s", err)
+	}
+
+	// Create the Auth Config disabled, so that enabling it goes through testAndApply.
+	disabled := *authOpenLdap
+	disabled.Enabled = false
+	_, err = meta.(*Config).CreateAuthConfigIfMissing(authOpenLdap.Name, &disabled, &managementClient.OpenLdapConfig{})
+	if err != nil {
+		return err
+	}
+
+	d.SetId(authOpenLdap.Name)
+
+	err = resourceRancher2AuthConfigOpenLdapApply(d, meta, authOpenLdap)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigOpenLdapRead(d, meta)
+}
+
+func resourceRancher2AuthConfigOpenLdapApply(d *schema.ResourceData, meta interface{}, authOpenLdap *managementClient.LdapConfig) error {
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigOpenLdapName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigOpenLdapName, err)
+		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", d.Id(), err)
 	}
 
-	log.Printf("[INFO] Creating Auth Config %s", AuthConfigOpenLdapName)
-
-	authOpenLdap, err := expandAuthConfigOpenLdap(d)
+	err = checkAuthConfigType(d.Id(), auth, authOpenLdap)
 	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigOpenLdapName, err)
+		return err
 	}
 
-	// Checking if other auth config is enabled
+	err = meta.(*Config).CheckAuthConfigCanBeEnabled(d.Id(), authOpenLdap)
+	if err != nil {
+		return err
+	}
+
 	if authOpenLdap.Enabled {
-		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigOpenLdapName)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigOpenLdapName, err)
-		}
-		// Updated auth config
 		authResource := &norman.Resource{
 			ID:      auth.ID,
 			Type:    auth.Type,
@@ -64,34 +85,34 @@ func resourceRancher2AuthConfigOpenLdapCreate(d *schema.ResourceData, meta inter
 		if len(auth.Actions["disable"]) > 0 {
 			err = client.Post(auth.Actions["disable"], nil, nil)
 			if err != nil {
-				return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigOpenLdapName, err)
+				return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 			}
 		}
 		newAuth := &managementClient.OpenLdapConfig{}
-		err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOpenLdap, newAuth)
+		err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOpenLdap, newAuth, managementClient.AuthConfigFieldDisplayName)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigOpenLdapName, err)
+			return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", d.Id(), err)
 		}
 	}
 
-	return resourceRancher2AuthConfigOpenLdapRead(d, meta)
+	return nil
 }
 
 func resourceRancher2AuthConfigOpenLdapRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigOpenLdapName)
+	log.Printf("[INFO] Refreshing Auth Config %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigOpenLdapName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigOpenLdapName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
 	authOpenLdap, err := meta.(*Config).GetAuthConfig(auth)
@@ -108,33 +129,43 @@ func resourceRancher2AuthConfigOpenLdapRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceRancher2AuthConfigOpenLdapUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config %s", AuthConfigOpenLdapName)
+	log.Printf("[INFO] Updating Auth Config %s", d.Id())
 
-	return resourceRancher2AuthConfigOpenLdapCreate(d, meta)
+	authOpenLdap, err := expandAuthConfigOpenLdap(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", d.Id(), err)
+	}
+
+	err = resourceRancher2AuthConfigOpenLdapApply(d, meta, authOpenLdap)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigOpenLdapRead(d, meta)
 }
 
 func resourceRancher2AuthConfigOpenLdapDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigOpenLdapName)
+	log.Printf("[INFO] Disabling Auth Config %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigOpenLdapName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigOpenLdapName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	if auth.Enabled == true {
+	if auth.Enabled {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigOpenLdapName, err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 		}
 	}
 

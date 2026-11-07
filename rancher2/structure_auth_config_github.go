@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigGithub(d *schema.ResourceData, in *managementClient.GithubConfig) error {
-	d.SetId(AuthConfigGithubName)
-	d.Set("name", AuthConfigGithubName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.GithubConfigType)
 	d.Set("access_mode", in.AccessMode)
 
@@ -34,6 +34,7 @@ func flattenAuthConfigGithub(d *schema.ResourceData, in *managementClient.Github
 	d.Set("client_id", in.ClientID)
 	d.Set("hostname", in.Hostname)
 	d.Set("tls", in.TLS)
+	d.Set("display_name", in.DisplayName)
 
 	return nil
 }
@@ -46,7 +47,8 @@ func expandAuthConfigGithub(in *schema.ResourceData) (*managementClient.GithubCo
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigGithubName)
 	}
 
-	obj.Name = AuthConfigGithubName
+	obj.Name = expandAuthConfigName(in, AuthConfigGithubName)
+
 	obj.Type = managementClient.GithubConfigType
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
@@ -71,6 +73,10 @@ func expandAuthConfigGithub(in *schema.ResourceData) (*managementClient.GithubCo
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		obj.DisplayName = v
 	}
 
 	if v, ok := in.Get("client_id").(string); ok && len(v) > 0 {

@@ -18,6 +18,7 @@ func flattenAuthConfigLdap(d *schema.ResourceData, in *managementClient.LdapConf
 	}
 
 	d.Set("enabled", in.Enabled)
+	d.Set("display_name", in.DisplayName)
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -90,6 +91,10 @@ func expandAuthConfigLdap(in *schema.ResourceData) (*managementClient.LdapConfig
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		obj.DisplayName = v
 	}
 
 	if v, ok := in.Get("servers").([]interface{}); ok && len(v) > 0 {

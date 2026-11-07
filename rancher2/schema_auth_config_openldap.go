@@ -9,5 +9,5 @@ const AuthConfigOpenLdapName = "openldap"
 //Schemas
 
 func authConfigOpenLdapFields() map[string]*schema.Schema {
-	return authConfigLdapFields()
+	return authConfigLdapFields(AuthConfigOpenLdapName)
 }

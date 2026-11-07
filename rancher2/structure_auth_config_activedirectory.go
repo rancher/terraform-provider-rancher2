@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigActiveDirectory(d *schema.ResourceData, in *managementClient.ActiveDirectoryConfig) error {
-	d.SetId(AuthConfigActiveDirectoryName)
-	d.Set("name", AuthConfigActiveDirectoryName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.ActiveDirectoryConfigType)
 	d.Set("access_mode", in.AccessMode)
 
@@ -21,6 +21,7 @@ func flattenAuthConfigActiveDirectory(d *schema.ResourceData, in *managementClie
 	}
 
 	d.Set("enabled", in.Enabled)
+	d.Set("display_name", in.DisplayName)
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -70,7 +71,7 @@ func expandAuthConfigActiveDirectory(in *schema.ResourceData) (*managementClient
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigActiveDirectoryName)
 	}
 
-	obj.Name = AuthConfigActiveDirectoryName
+	obj.Name = expandAuthConfigName(in, AuthConfigActiveDirectoryName)
 	obj.Type = managementClient.ActiveDirectoryConfigType
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
@@ -95,6 +96,10 @@ func expandAuthConfigActiveDirectory(in *schema.ResourceData) (*managementClient
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		obj.DisplayName = v
 	}
 
 	if v, ok := in.Get("servers").([]interface{}); ok && len(v) > 0 {

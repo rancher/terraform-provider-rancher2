@@ -20,56 +20,37 @@ func resourceRancher2AuthConfigOKTA() *schema.Resource {
 }
 
 func resourceRancher2AuthConfigOKTACreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).ManagementClient()
+	authOKTA, err := expandAuthConfigOKTA(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config: %s", err)
+	}
+
+	newAuth := &managementClient.OKTAConfig{}
+	err = meta.(*Config).CreateOrUpdateAuthConfig(authOKTA.Name, authOKTA, newAuth, managementClient.AuthConfigFieldDisplayName)
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigOKTAName)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigOKTAName, err)
-	}
-
-	log.Printf("[INFO] Creating Auth Config %s", AuthConfigOKTAName)
-
-	authOKTA, err := expandAuthConfigOKTA(d)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigOKTAName, err)
-	}
-
-	// Checking if other auth config is enabled
-	if authOKTA.Enabled {
-		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigOKTAName)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigOKTAName, err)
-		}
-	}
-
-	// Updated auth config
-	newAuth := &managementClient.OKTAConfig{}
-	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authOKTA, newAuth)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigOKTAName, err)
-	}
+	d.SetId(authOKTA.Name)
 
 	return resourceRancher2AuthConfigOKTARead(d, meta)
 }
 
 func resourceRancher2AuthConfigOKTARead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigOKTAName)
+	log.Printf("[INFO] Refreshing Auth Config %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigOKTAName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigOKTAName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
 	authOKTA, err := meta.(*Config).GetAuthConfig(auth)
@@ -86,33 +67,42 @@ func resourceRancher2AuthConfigOKTARead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceRancher2AuthConfigOKTAUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config %s", AuthConfigOKTAName)
+	authOKTA, err := expandAuthConfigOKTA(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", d.Id(), err)
+	}
 
-	return resourceRancher2AuthConfigOKTACreate(d, meta)
+	newAuth := &managementClient.OKTAConfig{}
+	err = meta.(*Config).UpdateAuthConfigByName(d.Id(), authOKTA, newAuth, managementClient.AuthConfigFieldDisplayName)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigOKTARead(d, meta)
 }
 
 func resourceRancher2AuthConfigOKTADelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigOKTAName)
+	log.Printf("[INFO] Disabling Auth Config %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigOKTAName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigOKTAName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	if auth.Enabled == true {
+	if auth.Enabled {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigOKTAName, err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 		}
 	}
 

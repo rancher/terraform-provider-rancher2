@@ -20,56 +20,37 @@ func resourceRancher2AuthConfigAzureAD() *schema.Resource {
 }
 
 func resourceRancher2AuthConfigAzureADCreate(d *schema.ResourceData, meta interface{}) error {
-	client, err := meta.(*Config).ManagementClient()
+	authAzureAD, err := expandAuthConfigAzureAD(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config: %s", err)
+	}
+
+	newAuth := &managementClient.AzureADConfig{}
+	err = meta.(*Config).CreateOrUpdateAuthConfig(authAzureAD.Name, authAzureAD, newAuth, managementClient.AuthConfigFieldDisplayName)
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigAzureADName)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed to get Auth Config %s: %s", AuthConfigAzureADName, err)
-	}
-
-	log.Printf("[INFO] Creating Auth Config AzureAD %s", auth.Name)
-
-	authAzureAD, err := expandAuthConfigAzureAD(d)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", AuthConfigAzureADName, err)
-	}
-
-	// Checking if other auth config is enabled
-	if authAzureAD.Enabled {
-		err = meta.(*Config).CheckAuthConfigEnabled(AuthConfigAzureADName)
-		if err != nil {
-			return fmt.Errorf("[ERROR] Checking to enable Auth Config %s: %s", AuthConfigAzureADName, err)
-		}
-	}
-
-	// Updated auth config
-	newAuth := &managementClient.AzureADConfig{}
-	err = meta.(*Config).UpdateAuthConfig(auth.Links["self"], authAzureAD, newAuth)
-	if err != nil {
-		return fmt.Errorf("[ERROR] Updating Auth Config %s: %s", AuthConfigAzureADName, err)
-	}
+	d.SetId(authAzureAD.Name)
 
 	return resourceRancher2AuthConfigAzureADRead(d, meta)
 }
 
 func resourceRancher2AuthConfigAzureADRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Refreshing Auth Config %s", AuthConfigAzureADName)
+	log.Printf("[INFO] Refreshing Auth Config %s", d.Id())
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigAzureADName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigAzureADName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
 	authAzureAD, err := meta.(*Config).GetAuthConfig(auth)
@@ -86,33 +67,42 @@ func resourceRancher2AuthConfigAzureADRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceRancher2AuthConfigAzureADUpdate(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Updating Auth Config %s", AuthConfigAzureADName)
+	authAzureAD, err := expandAuthConfigAzureAD(d)
+	if err != nil {
+		return fmt.Errorf("[ERROR] Failed expanding Auth Config %s: %s", d.Id(), err)
+	}
 
-	return resourceRancher2AuthConfigAzureADCreate(d, meta)
+	newAuth := &managementClient.AzureADConfig{}
+	err = meta.(*Config).UpdateAuthConfigByName(d.Id(), authAzureAD, newAuth, managementClient.AuthConfigFieldDisplayName)
+	if err != nil {
+		return err
+	}
+
+	return resourceRancher2AuthConfigAzureADRead(d, meta)
 }
 
 func resourceRancher2AuthConfigAzureADDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[INFO] Disabling Auth Config %s", AuthConfigAzureADName)
+	log.Printf("[INFO] Disabling Auth Config %s", d.Id())
 
 	client, err := meta.(*Config).ManagementClient()
 	if err != nil {
 		return err
 	}
 
-	auth, err := client.AuthConfig.ByID(AuthConfigAzureADName)
+	auth, err := client.AuthConfig.ByID(d.Id())
 	if err != nil {
 		if IsNotFound(err) {
-			log.Printf("[INFO] Auth Config %s not found.", AuthConfigAzureADName)
+			log.Printf("[INFO] Auth Config %s not found.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("[ERROR] Getting Auth Config %s: %w", d.Id(), err)
 	}
 
-	if auth.Enabled == true {
+	if auth.Enabled {
 		err = client.Post(auth.Actions["disable"], nil, nil)
 		if err != nil {
-			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", AuthConfigAzureADName, err)
+			return fmt.Errorf("[ERROR] Disabling Auth Config %s: %s", d.Id(), err)
 		}
 	}
 

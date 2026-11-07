@@ -6,7 +6,9 @@ page_title: "rancher2_auth_config_openldap Resource"
 
 Provides a Rancher v2 Auth Config OpenLdap resource. This can be used to configure and enable Auth Config OpenLdap for Rancher v2 RKE clusters and retrieve their information.
 
-In addition to the built-in local auth, only one external auth config provider can be enabled at a time.
+In addition to the built-in local auth, only one external auth config provider can be enabled at a time, unless the `multiple-auth-providers` feature is enabled in Rancher.
+
+Destroying this resource disables the auth config in Rancher, it does not delete it.
 
 ## Example Usage
 
@@ -38,6 +40,8 @@ The following arguments are supported:
 * `certificate` - (Optional/Sensitive) Base64 encoded CA certificate for TLS if self-signed. Use filebase64(<FILE>) for encoding file (string)
 * `connection_timeout` - (Optional) OpenLdap connection timeout. Default `5000` (int)
 * `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
+* `name` - (Optional/ForceNew) The name of the auth config in Rancher. Changing this replaces the resource. Default `openldap` (string)
+* `display_name` - (Optional) Display name for the auth config in the Rancher UI. If unset, any display name set in Rancher is cleared (string)
 * `group_dn_attribute` - (Optional/Computed) Group DN attribute. Default `entryDN` (string)
 * `group_member_mapping_attribute` - (Optional/Computed) Group member mapping attribute. Default `member` (string)
 * `group_member_user_attribute` - (Optional/Computed) Group member user attribute. Default `entryDN` (string)
@@ -63,5 +67,4 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - (Computed) The ID of the resource (string)
-* `name` - (Computed) The name of the resource (string)
 * `type` - (Computed) The type of the resource (string)

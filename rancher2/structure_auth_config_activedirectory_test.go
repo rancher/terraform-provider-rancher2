@@ -106,7 +106,6 @@ func TestFlattenAuthConfigActiveDirectory(t *testing.T) {
 }
 
 func TestExpandAuthConfigActiveDirectory(t *testing.T) {
-
 	cases := []struct {
 		Input          map[string]interface{}
 		ExpectedOutput *managementClient.ActiveDirectoryConfig

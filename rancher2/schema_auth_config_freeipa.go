@@ -9,5 +9,5 @@ const AuthConfigFreeIpaName = "freeipa"
 //Schemas
 
 func authConfigFreeIpaFields() map[string]*schema.Schema {
-	return authConfigLdapFields()
+	return authConfigLdapFields(AuthConfigFreeIpaName)
 }
