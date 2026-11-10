@@ -55,4 +55,3 @@ I like to set my AWS credentials in environment variables:
 - TF_VAR_aws_secret_access_key -> secret key, this will make it into the state, please secure it properly
 - TF_VAR_aws_session_token -> used with temporary AWS credentials, this will make it into the state, please secure it properly
 - TF_VAR_aws_region -> AWS region to deploy to, make sure there are multiple availability zones when needing HA
-

@@ -18,11 +18,11 @@ This guide provides the necessary information for community members, developers,
   - [Hermetic Environment with Nix (Recommended)](#hermetic-environment-with-nix-recommended)
   - [Forking and Setting Up Remotes](#forking-and-setting-up-remotes)
 - [Branching Strategy & Value Stream](#branching-strategy--value-stream)
-    - [Value Flow](#value-flow)
-    - [Developer Flow](#developer-flow)
-    - [Trunk-Based Development (`main`)](#trunk-based-development-main)
-    - [Release Branches & Rancher Version Alignment](#release-branches--rancher-version-alignment)
-    - [Automated Backport Orchestration](#automated-backport-orchestration)
+  - [Value Flow](#value-flow)
+  - [Developer Flow](#developer-flow)
+  - [Trunk-Based Development (`main`)](#trunk-based-development-main)
+  - [Release Branches & Rancher Version Alignment](#release-branches--rancher-version-alignment)
+  - [Automated Backport Orchestration](#automated-backport-orchestration)
 - [The Issue-First Requirement](#the-issue-first-requirement)
   - [Linking Issues in PR Descriptions](#linking-issues-in-pr-descriptions)
   - [Target Release Labels & Sub-Issues](#target-release-labels--sub-issues)
@@ -60,6 +60,7 @@ We are committed to providing a welcoming, inclusive, and harassment-free experi
 Before filing a new bug report, search the [open issues](https://github.com/rancher/terraform-provider-rancher2/issues) to verify whether the problem has already been reported.
 
 When creating a new bug report, provide a detailed description including:
+
 - **Terraform Provider Version**: The exact version of `terraform-provider-rancher2` in use.
 - **Terraform Version**: The output of `terraform version`.
 - **Rancher Version**: The specific Rancher Server version (e.g., `v2.14.0`).
@@ -70,6 +71,7 @@ When creating a new bug report, provide a detailed description including:
 ### Proposing Features & Enhancements
 
 If you wish to add a new resource, data source, or field to the provider:
+
 1. Open an enhancement issue outlining the proposed change and its use case.
 2. Reference the corresponding Rancher API endpoints or documentation.
 3. Discuss the architectural approach with repository maintainers before writing substantial code.
@@ -85,6 +87,7 @@ If you wish to add a new resource, data source, or field to the provider:
 ### Prerequisites
 
 To build and test the provider locally, your machine requires:
+
 - **Go**: Version 1.26.5 or later.
 - **Terraform**: Version 1.5.0 or later.
 - **Git**: Configured with a GPG signing key for commits.
@@ -124,7 +127,7 @@ All external contributions must be submitted from your own fork:
    ```
    - this step helps if you need to make more than one PR at a time to the repo
 
-*Note: Direct pushes to the `upstream` repository are restricted. Always push your changes to branches on your personal fork.*
+_Note: Direct pushes to the `upstream` repository are restricted. Always push your changes to branches on your personal fork._
 
 ---
 
@@ -165,7 +168,6 @@ All external contributions must be submitted from your own fork:
    3. QA Engineers will close sub-issues when they are approved for release
    4. Issue (from step 1) will close when the code is released
 
-
 ### Trunk-Based Development (`main`)
 
 All enhancements, bug fixes, and maintenance work **must target the `main` branch**. Do not open pull requests directly against release maintenance branches (such as `release/v14` or `release/v15`) unless explicitly requested by maintainers to resolve cherry-pick merge conflicts.
@@ -175,17 +177,18 @@ All enhancements, bug fixes, and maintenance work **must target the `main` branc
 The Rancher2 Terraform Provider major versions correspond to Rancher minor release lines:
 
 | Terraform Provider Branch | Provider Major Version | Target Rancher Minor Version |
-| :--- | :--- | :--- |
-| `release/v13` | `v13.x` | Rancher `2.13.x` |
-| `release/v14` | `v14.x` | Rancher `2.14.x` |
-| `release/v15` | `v15.x` | Rancher `2.15.x` |
-| `release/v16` | `v16.x` | Rancher `2.16.x` |
+| :------------------------ | :--------------------- | :--------------------------- |
+| `release/v13`             | `v13.x`                | Rancher `2.13.x`             |
+| `release/v14`             | `v14.x`                | Rancher `2.14.x`             |
+| `release/v15`             | `v15.x`                | Rancher `2.15.x`             |
+| `release/v16`             | `v16.x`                | Rancher `2.16.x`             |
 
 See [docs/compatibility-matrix.md](docs/compatibility-matrix.md) for full version alignment details.
 
 ### Automated Backport Orchestration
 
 Our goal is for all backports to happen automatically:
+
 1. When your PR merges into `main`, automation automatically cherry-picks the commit into target `release/v<major>` branches.
 2. Automated backport pull requests are opened and verified through acceptance test suites on each target release branch.
 3. Once tests pass, the backport PRs merge automatically.
@@ -203,12 +206,15 @@ In your pull request description, you must explicitly link the tracking issue us
 ```markdown
 - Addresses: #1234
 ```
+
 or
+
 ```markdown
-* Addresses: #1234
+- Addresses: #1234
 ```
 
 Automated PR validation (`validate-pr.yaml`) validates that:
+
 - The referenced issue exists in the repository.
 - The reference points to a GitHub issue (not another pull request).
 - The referenced issue is currently **open**.
@@ -216,6 +222,7 @@ Automated PR validation (`validate-pr.yaml`) validates that:
 ### Target Release Labels & Sub-Issues
 
 Before merging a pull request on `main`, assign release labels to the linked issue (e.g., `release/v15`, `release/v14`) to identify which release branches to port the changes to:
+
 - Automation adds the latest release branch label to the linked issue.
 - Automation creates child sub-issues for each targeted release line.
 - Once merged, the automation cherry-picks the change into the respective branches.
@@ -258,6 +265,7 @@ node .github/workflows/scripts/lint.js all
 ```
 
 Individual linting suites can also be run via `lint.js`:
+
 - `node .github/workflows/scripts/lint.js terraform`: Runs `terraform fmt` and `tflint`.
 - `node .github/workflows/scripts/lint.js shellcheck`: Scans shell scripts with `shellcheck -x`.
 - `node .github/workflows/scripts/lint.js eslint`: Runs ESLint on JavaScript files.
@@ -320,6 +328,7 @@ make clean -- i=<identifier>
 ### Go Guidelines
 
 Adhere strictly to standard Go practices and project conventions:
+
 - **Error Handling**:
   - Always check errors immediately. Never ignore errors with `_` unless explicitly documented.
   - Wrap errors to preserve context using `fmt.Errorf("...: %w", err)`.
@@ -339,8 +348,6 @@ Adhere strictly to standard Go practices and project conventions:
 - **Test Module Structure**:
   - The `./test` directory is a standalone Go module. Tests must maintain clean fixtures and independent scopes.
 
-Detailed Go rules can be found in [docs/development/CodingStandards/Go.md](docs/development/CodingStandards/Go.md).
-
 ### Terraform Schema Guidelines
 
 - **Attribute Naming**: Follow snake_case naming consistent with the upstream Rancher API.
@@ -348,7 +355,6 @@ Detailed Go rules can be found in [docs/development/CodingStandards/Go.md](docs/
   - Use `variable` validations for simple regex matches on single attributes.
   - Use `check` blocks for multi-variable validations.
   - Use `terraform_data` preconditions for complex validations evaluating output attributes of dependent resources.
-- Detailed Terraform rules can be found in [docs/development/CodingStandards/Terraform.md](docs/development/CodingStandards/Terraform.md).
 
 ### Security & Sensitive Data Standards
 
@@ -365,6 +371,7 @@ This repository enforces Conventional Commits to support automated changelog gen
 ### Format Requirements
 
 Commit subject lines must:
+
 1. Start with an approved prefix:
    - `fix: ` — Bug fixes (generates a patch release).
    - `feat: ` or `feature: ` — New features (generates a minor release).
@@ -387,6 +394,7 @@ fix: resolve nil pointer when parsing custom user tokens
 ### Pre-Flight Checklist
 
 Before opening your pull request, verify that:
+
 1. [ ] Your changes are based on the latest `upstream/main`.
 2. [ ] An open GitHub issue exists and is referenced in your PR description (`- Addresses: #<issue>`).
 3. [ ] Code is formatted (`make fmt`).
@@ -398,6 +406,7 @@ Before opening your pull request, verify that:
 ### Hermetic Nix CI Matrix (11 Jobs)
 
 When you open a PR targeting `main`, GitHub Actions runs an 11-job CI matrix inside hermetic Nix containers:
+
 1. **`build`**: Cross-platform binary compilation for Linux, Darwin, and Windows (AMD64 & ARM64).
 2. **`test`**: Go unit tests via `gotestsum`.
 3. **`terraform`**: Terraform format and tflint checks.
@@ -421,14 +430,7 @@ When you open a PR targeting `main`, GitHub Actions runs an 11-job CI matrix ins
 
 ---
 
-## Additional Architectural References
+## Additional References
 
-For deeper insights into the provider's architecture and automation systems, consult the developer documentation:
-
-- **[Project Management & Delivery Guide](docs/development/ProjectManagementGuide.md)**: Overview of how work flows through issues, PRs, backports, QA, and releases.
-- **[Pull Request & Merge Lifecycle](docs/development/GitHubWorkflows/PullRequestLifecycle.md)**: Technical details on PR validation and CI workflows.
-- **[Backport Orchestration](docs/development/GitHubWorkflows/BackportOrchestration.md)**: Deep dive into automated cherry-picking and sub-issue trees.
-- **[Privileged AWS End-to-End Testing](docs/development/GitHubWorkflows/EndToEndTesting.md)**: Acceptance test execution, AWS OIDC, and distributed locks.
-- **[Release Process & Automation](docs/development/ReleaseProcess.md)**: Release candidate tagging, Vault GPG signing, and Release Please manifests.
-- **[Coding Standards Index](docs/development/CodingStandards.md)**: Central directory for Go, Terraform, Shell, and workflow standards.
+- **[Development Process](docs/development-process.md)**: Overview of the development workflow.
 - **[Version Compatibility Matrix](docs/compatibility-matrix.md)**: Compatibility between Rancher versions and provider releases.
