@@ -2,17 +2,6 @@
 
 Welcome to the development guide for the Rancher2 Terraform Provider.
 
-For the comprehensive architectural specifications, end-to-end delivery lifecycle, and automation blueprints, please consult the primary developer documentation under **[docs/development/](development/README.md)**:
-
-- **[Project Management & Delivery Guide](development/ProjectManagementGuide.md)**: High-level value stream navigation for PMs, release coordinators, and QA to follow work moving through the system.
-- **[End-to-End Value Stream Lifecycle](development/GitHubWorkflows/Overview.md)**: Complete guide to how changes move from pull requests through testing, backporting, RC staging, and production releases.
-- **[Pull Request & Merge Lifecycle](development/GitHubWorkflows/PullRequestLifecycle.md)**: PR description validation rules, Conventional Commits format, and the 11-job Nix container CI matrix.
-- **[Backport Orchestration & Issue Tracking](development/GitHubWorkflows/BackportOrchestration.md)**: Automated issue tracking adoption, GitHub Sub-Issues hierarchy, and cherry-picking to release branches.
-- **[Privileged AWS End-to-End Testing](development/GitHubWorkflows/EndToEndTesting.md)**: Pre-merge acceptance test matrix, AWS OIDC authentication, and distributed locking.
-- **[Release Process & Automation](development/ReleaseProcess.md)**: Release candidate generation, Vault GPG signing, and Google Release Please manifest automation.
-
----
-
 ### Quick Start for Contributors
 
 1. **Issue Association**: Every contribution targeting `main` must be associated with an open GitHub issue. In your PR description, include:

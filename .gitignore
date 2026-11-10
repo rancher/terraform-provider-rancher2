@@ -27,3 +27,4 @@ node_modules
 plans
 .github-tools
 .gemini/tmp
+!.gemini/.env

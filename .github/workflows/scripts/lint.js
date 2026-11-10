@@ -151,6 +151,14 @@ export function getTestFiles(dir = ".", fsModule = fs) {
 
 export function runNodeTest(exec = execFileSync, fsModule = fs) {
   console.log("==> Running Node Unit Tests...");
+  if (fsModule.existsSync?.(".gemini/package.json")) {
+    console.log("==> Installing .gemini dependencies...");
+    exec("npm", ["ci", "--prefix", ".gemini"], { stdio: "inherit" });
+    if (fsModule.existsSync?.(".gemini/orchestrator/install-sdk.js")) {
+      console.log("==> Installing @google/gemini-cli-sdk...");
+      exec("node", [".gemini/orchestrator/install-sdk.js"], { stdio: "inherit" });
+    }
+  }
   const files = getTestFiles(".", fsModule);
 
   if (files.length === 0) {

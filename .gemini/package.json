@@ -1,0 +1,19 @@
+{
+  "name": "gemini-workspace",
+  "version": "1.0.0",
+  "description": "Portable Gemini agent platform, orchestrator, skills, and hooks.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test \"orchestrator/lib/**/*.test.js\" \"hooks/**/*.test.js\" \"skills/**/tests/**/*.test.js\"",
+    "setup": "node orchestrator/install-sdk.js"
+  },
+  "dependencies": {
+    "@google/gemini-cli-core": "0.60.0",
+    "@iarna/toml": "^2.2.5",
+    "octokit": "^5.0.5",
+    "simple-git": "^4.0.2",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.1"
+  }
+}

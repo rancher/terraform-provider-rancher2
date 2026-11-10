@@ -15,6 +15,7 @@ The format for the tag must be `v<major>.<minor>.<patch>-rc.<rc number>`
 ### Configuring Terraform to use a Local Binary
 
 There are two configuration objects you need to configure Terraform to use a local binary.
+
 1. A `terraform.rc` or `terraform.tfrc` or `.terraformrc` file.
 2. An environment variable with the full path to that file.
 
@@ -41,11 +42,12 @@ This allows the same configuration to work for a binary built from source as wel
 
 - Download the proper archive for your hardware/OS from a release candidate release, eg. [v15.2.0-rc.4](https://github.com/rancher/terraform-provider-rancher2/releases/tag/v15.2.0-rc.4).  
   https://github.com/rancher/terraform-provider-rancher2/releases/download/v15.2.0-rc.4/terraform-provider-rancher2_15.2.0-rc.4_darwin_arm64.zip
-- Unzip the archive and the binary will be named something like this: `terraform-provider-rancher2_v15.2.0-rc.4`.  
-- Copy the binary to a trusted directory, make it executable, and rename it to `terraform-provider-rancher2`.  
+- Unzip the archive and the binary will be named something like this: `terraform-provider-rancher2_v15.2.0-rc.4`.
+- Copy the binary to a trusted directory, make it executable, and rename it to `terraform-provider-rancher2`.
 
 For local testing:
-- cp the binary to my repo's ./bin directory.  
+
+- cp the binary to my repo's ./bin directory.
 - Update your terraform rc file to the absolute path, eg. `"/Users/matttrach/go/src/github.com/rancher/terraform-provider-rancher2/bin"` (no file name)
-- Make sure your 'TF_CLI_CONFIG_FILE' env variable is pointing to your terraform rc file.  
+- Make sure your 'TF_CLI_CONFIG_FILE' env variable is pointing to your terraform rc file.
 - Run `make test` to test the binary in `./bin`; do not use `run_tests.sh` for this downloaded RC because it runs `make build` first and overwrites the binary.
