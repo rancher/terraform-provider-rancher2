@@ -37,7 +37,7 @@ while notReady; do
   if [[ $ATTEMPTS -lt $MAX ]]; then
     echo "Waiting for nodes to be ready..."
     ATTEMPTS=$((ATTEMPTS + 1))
-    sleep $INTERVAL;
+    sleep $INTERVAL
   else
     echo "Timeout reached. Nodes are not ready..."
     kubectl get nodes || true

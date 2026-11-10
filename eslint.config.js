@@ -1,5 +1,5 @@
 // Basic ESLint configuration file
-import eslintPluginJs from '@eslint/js';
+import eslintPluginJs from "@eslint/js";
 
 export default [
   {
@@ -10,11 +10,11 @@ export default [
     // Define rules specific to your project
     rules: {
       // Example: Require semicolons at the end of statements
-      'semi': ['error', 'always'],
+      semi: ["error", "always"],
       // Example: Enforce 2-space indentation
-      'indent': ['error', 2],
+      indent: ["error", 2],
       // Example: Prevent unused variables
-      'no-unused-vars': 'warn',
+      "no-unused-vars": "warn",
     },
   },
 ];

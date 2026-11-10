@@ -26,3 +26,4 @@ node_modules
 .DS_store
 plans
 .github-tools
+.gemini/tmp

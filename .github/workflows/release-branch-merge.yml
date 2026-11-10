@@ -4,16 +4,16 @@ on:
   workflow_run:
     workflows: ["Release", "Release Please"]
     types: [completed]
-    branches: 
-      - 'release/v*'
+    branches:
+      - "release/v*"
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Release branch to process (e.g. release/v15)'
+        description: "Release branch to process (e.g. release/v15)"
         required: true
         type: string
       sha:
-        description: 'Commit SHA to process (optional)'
+        description: "Commit SHA to process (optional)"
         required: false
         type: string
 
@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   label:
-    name: 'Label Related Issue'
+    name: "Label Related Issue"
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
@@ -34,16 +34,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: 'Checkout Repository'
+      - name: "Checkout Repository"
         id: checkout-repository
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-          ref: 'main'
+          ref: "main"
           persist-credentials: false
 
-      - name: 'Find and Label Related Issue'
+      - name: "Find and Label Related Issue"
         id: find-label-issue
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -58,7 +58,7 @@ jobs:
             await script({ github, context, core, process });
 
   trigger-rc-release:
-    name: 'Trigger RC Release'
+    name: "Trigger RC Release"
     needs:
       - label
     if: |
@@ -73,16 +73,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: 'Checkout Repository'
+      - name: "Checkout Repository"
         id: checkout-repository
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-          ref: 'main'
+          ref: "main"
           persist-credentials: false
 
-      - name: 'Get Merge Token'
+      - name: "Get Merge Token"
         id: get-merge-token
         # https://github.com/rancher-eio/read-vault-secrets/commits
         uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
@@ -91,7 +91,7 @@ jobs:
           secrets: |
             github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
 
-      - name: 'Trigger RC Release Workflow'
+      - name: "Trigger RC Release Workflow"
         id: trigger-rc-release-workflow
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

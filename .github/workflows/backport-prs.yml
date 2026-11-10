@@ -1,14 +1,14 @@
-name: 'Cherry-Pick to Release Branches'
+name: "Cherry-Pick to Release Branches"
 # This workflow generates PRs to release branches by cherry-picking commits on main
 
 on:
   push:
     branches:
-      - 'main'
+      - "main"
   workflow_dispatch:
     inputs:
       merge_commit_sha:
-        description: 'The sha of the merge commit from the main PR.'
+        description: "The sha of the merge commit from the main PR."
         required: true
 
 env:
@@ -18,7 +18,7 @@ permissions: {}
 
 jobs:
   create-cherry-pick-prs:
-    name: 'Cherry-Pick PRs'
+    name: "Cherry-Pick PRs"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -29,15 +29,15 @@ jobs:
       actions: write
 
     steps:
-      - name: 'Checkout Repository'
+      - name: "Checkout Repository"
         id: checkout-repository
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-          ref: 'main'
+          ref: "main"
           persist-credentials: false
-      - name: 'Wait for merge to settle'
+      - name: "Wait for merge to settle"
         id: wait-for-merge-settle
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -60,7 +60,7 @@ jobs:
           secrets: |
             github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
 
-      - name: 'Find Issues and Create Cherry-Pick PRs'
+      - name: "Find Issues and Create Cherry-Pick PRs"
         id: find-issues-create-prs
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

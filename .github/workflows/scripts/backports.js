@@ -1,5 +1,5 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
@@ -8,16 +8,23 @@ const execFileAsync = promisify(execFile);
  */
 async function runGit(args, options = {}) {
   try {
-    return await execFileAsync('git', args, { encoding: 'utf8', ...options });
+    return await execFileAsync("git", args, { encoding: "utf8", ...options });
   } catch (error) {
-    const rawDetails = error.stderr?.trim() || error.stdout?.trim() || error.message;
+    const rawDetails =
+      error.stderr?.trim() || error.stdout?.trim() || error.message;
     const details = rawDetails
-      ?.replace(/authorization:\s*basic\s+[^\s'"]+/gi, 'AUTHORIZATION: basic [REDACTED]')
-      ?.replace(/https:\/\/[^@\s]+@github\.com/gi, 'https://[REDACTED]@github.com');
-    const sanitizedArgs = args.map(arg =>
-      (arg.toLowerCase().includes('authorization:') ? '[REDACTED]' : arg)
+      ?.replace(
+        /authorization:\s*basic\s+[^\s'"]+/gi,
+        "AUTHORIZATION: basic [REDACTED]",
+      )
+      ?.replace(
+        /https:\/\/[^@\s]+@github\.com/gi,
+        "https://[REDACTED]@github.com",
+      );
+    const sanitizedArgs = args.map((arg) =>
+      arg.toLowerCase().includes("authorization:") ? "[REDACTED]" : arg,
     );
-    const sanitizedCommand = `git ${sanitizedArgs.join(' ')}`;
+    const sanitizedCommand = `git ${sanitizedArgs.join(" ")}`;
     throw new Error(`'${sanitizedCommand}' failed: ${details}`);
   }
 }
@@ -33,41 +40,63 @@ function parseMaintainers(core, envVar) {
     const parsed = JSON.parse(envVar);
     return Array.isArray(parsed) ? parsed : [];
   } catch (err) {
-    if (core && typeof core.warning === 'function') {
-      core.warning(`Could not parse TERRAFORM_MAINTAINERS: ${err.message}. Defaulting to no assignees.`);
+    if (core && typeof core.warning === "function") {
+      core.warning(
+        `Could not parse TERRAFORM_MAINTAINERS: ${err.message}. Defaulting to no assignees.`,
+      );
     }
     return [];
   }
 }
 
-export default async ({ github, context, core, process = globalThis.process, getOctokit }) => {
+export default async ({
+  github,
+  context,
+  core,
+  process = globalThis.process,
+  getOctokit,
+}) => {
   const mode = process?.env?.SCRIPT_MODE;
   switch (mode) {
-  case 'wait-for-settle':
-    return await runWaitForSettle({ github, context, core, process });
-  case 'backport-pr':
-    return await runBackportPr({ github, context, core, process, getOctokit });
-  case 'backport-issues':
-    return await runBackportIssues({ github, context, core, process });
-  case 'merge-label':
-    return await runMergeLabel({ github, context, core, process });
-  default:
-    throw new Error(`Unknown backport script mode: ${mode}`);
+    case "wait-for-settle":
+      return await runWaitForSettle({ github, context, core, process });
+    case "backport-pr":
+      return await runBackportPr({
+        github,
+        context,
+        core,
+        process,
+        getOctokit,
+      });
+    case "backport-issues":
+      return await runBackportIssues({ github, context, core, process });
+    case "merge-label":
+      return await runMergeLabel({ github, context, core, process });
+    default:
+      throw new Error(`Unknown backport script mode: ${mode}`);
   }
 };
 
 /**
  * wait-for-settle: Allows GitHub's API time to index merge commits and retrieve the PR list with exponential back-off.
  */
-async function runWaitForSettle({ github, context, core, process = globalThis.process }) {
+async function runWaitForSettle({
+  github,
+  context,
+  core,
+  process = globalThis.process,
+}) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
-  
+
   // Handle input from either manual dispatch or push
-  const mergeCommitSha = process?.env?.MERGE_COMMIT_SHA || context?.payload?.head_commit?.id;
-  
+  const mergeCommitSha =
+    process?.env?.MERGE_COMMIT_SHA || context?.payload?.head_commit?.id;
+
   if (!mergeCommitSha) {
-    core.setFailed("No merge commit SHA found in environment or context payload.");
+    core.setFailed(
+      "No merge commit SHA found in environment or context payload.",
+    );
     return;
   }
 
@@ -76,34 +105,49 @@ async function runWaitForSettle({ github, context, core, process = globalThis.pr
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const prs = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
-        owner,
-        repo,
-        commit_sha: mergeCommitSha
-      });
+      const prs = await github.paginate(
+        github.rest.repos.listPullRequestsAssociatedWithCommit,
+        {
+          owner,
+          repo,
+          commit_sha: mergeCommitSha,
+        },
+      );
 
-      const mergedMainPr = prs?.find(p => p.base?.ref === 'main' && p.merged_at);
+      const mergedMainPr = prs?.find(
+        (p) => p.base?.ref === "main" && p.merged_at,
+      );
       if (mergedMainPr) {
-        core.info(`Found merged PR #${mergedMainPr.number} associated with commit ${mergeCommitSha} targeting main on attempt ${attempt}.`);
-        core.setOutput('merge_commit_sha', mergeCommitSha);
+        core.info(
+          `Found merged PR #${mergedMainPr.number} associated with commit ${mergeCommitSha} targeting main on attempt ${attempt}.`,
+        );
+        core.setOutput("merge_commit_sha", mergeCommitSha);
         return;
       }
 
       if (attempt < maxAttempts) {
-        core.info(`Attempt ${attempt}/${maxAttempts}: Merged PR targeting main for commit ${mergeCommitSha} not found yet. Retrying in ${delayMs / 1000}s...`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        core.info(
+          `Attempt ${attempt}/${maxAttempts}: Merged PR targeting main for commit ${mergeCommitSha} not found yet. Retrying in ${delayMs / 1000}s...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
         delayMs *= 2;
       } else {
-        core.setFailed(`No merged PR targeting main associated with commit ${mergeCommitSha} found after ${maxAttempts} attempts.`);
+        core.setFailed(
+          `No merged PR targeting main associated with commit ${mergeCommitSha} found after ${maxAttempts} attempts.`,
+        );
         return;
       }
     } catch (error) {
       if (attempt < maxAttempts) {
-        core.warning(`Attempt ${attempt}/${maxAttempts} failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}. Retrying in ${delayMs / 1000}s...`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        core.warning(
+          `Attempt ${attempt}/${maxAttempts} failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}. Retrying in ${delayMs / 1000}s...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
         delayMs *= 2;
       } else {
-        core.setFailed(`Failed to retrieve PRs associated with commit ${mergeCommitSha} after ${maxAttempts} attempts: ${error.message}`);
+        core.setFailed(
+          `Failed to retrieve PRs associated with commit ${mergeCommitSha} after ${maxAttempts} attempts: ${error.message}`,
+        );
         return;
       }
     }
@@ -113,12 +157,19 @@ async function runWaitForSettle({ github, context, core, process = globalThis.pr
 /**
  * backport-pr: Cherry-picks a commit to the appropriate backport branches and creates PRs.
  */
-export async function runBackportPr({ github, context, core, process = globalThis.process, getOctokit, gitExec = runGit }) {
+export async function runBackportPr({
+  github,
+  context,
+  core,
+  process = globalThis.process,
+  getOctokit,
+  gitExec = runGit,
+}) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
   const mergeCommitSha = process?.env?.MERGE_COMMIT_SHA;
   const assignees = parseMaintainers(core, process?.env?.TERRAFORM_MAINTAINERS);
-  
+
   // GITHUB_MERGE_TOKEN permissions: contents: write, metadata: read, pull_requests: write, workflows: write
   // Using an injected client factory (getOctokit) to instantiate a dedicated `prGithub` client is the
   // recommended approach here:
@@ -127,21 +178,31 @@ export async function runBackportPr({ github, context, core, process = globalThi
   // 2. Instance safety: Octokit instance methods do not support re-scoping via `.defaults(...)` (which is a static constructor).
   // 3. Principle of least privilege: `github` retains the runner's default permissions for issues/labels/assignees,
   //    while `prGithub` is scoped specifically to operations requiring elevated PR/auto-merge privileges.
-  const mergeToken = process?.env?.GITHUB_MERGE_TOKEN ? process.env.GITHUB_MERGE_TOKEN.trim() : undefined;
-  const octokitFactory = (typeof getOctokit === 'function')
-    ? getOctokit
-    : (typeof github?.getOctokit === 'function' ? github.getOctokit.bind(github) : undefined);
-  const prGithub = (mergeToken && typeof octokitFactory === 'function') ? octokitFactory(mergeToken) : github;
+  const mergeToken = process?.env?.GITHUB_MERGE_TOKEN
+    ? process.env.GITHUB_MERGE_TOKEN.trim()
+    : undefined;
+  const octokitFactory =
+    typeof getOctokit === "function"
+      ? getOctokit
+      : typeof github?.getOctokit === "function"
+        ? github.getOctokit.bind(github)
+        : undefined;
+  const prGithub =
+    mergeToken && typeof octokitFactory === "function"
+      ? octokitFactory(mergeToken)
+      : github;
   let response;
 
   try {
     response = await github.rest.repos.listPullRequestsAssociatedWithCommit({
       owner,
       repo,
-      commit_sha: mergeCommitSha
+      commit_sha: mergeCommitSha,
     });
   } catch (error) {
-    throw new Error(`Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`);
+    throw new Error(
+      `Failed to retrieve PRs associated with commit ${mergeCommitSha}: ${error.message}`,
+    );
   }
   const associatedPrs = response.data;
   if (associatedPrs.length === 0) {
@@ -149,32 +210,40 @@ export async function runBackportPr({ github, context, core, process = globalThi
     return;
   }
 
-  const pr = associatedPrs.find(p => p.base.ref === 'main' && p.merged_at);
+  const pr = associatedPrs.find((p) => p.base.ref === "main" && p.merged_at);
   if (!pr) {
     core.info(`No merged PR found for commit ${mergeCommitSha}.`);
     return;
   }
   core.info(`Found associated PR: #${pr.number}`);
 
-  core.info(`Searching for 'internal/tracking' issue linked to PR #${pr.number}`);
+  core.info(
+    `Searching for 'internal/tracking' issue linked to PR #${pr.number}`,
+  );
   try {
-    response = await github.request('GET /search/issues', {
+    response = await github.request("GET /search/issues", {
       q: `repo:${owner}/${repo} is:issue state:open label:"internal/tracking" ${pr.number}`,
       advanced_search: true,
       headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      }
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
     });
   } catch (error) {
-    throw new Error(`Failed to search for internal/tracking issue for PR #${pr.number}: ${error.message}`);
+    throw new Error(
+      `Failed to search for internal/tracking issue for PR #${pr.number}: ${error.message}`,
+    );
   }
   const searchResults = response.data;
   const cleanBody = pr.body
-    ? pr.body.replace(/<!--[\s\S]*?-->/g, '').replace(/(~{3,}|`{3,})[\s\S]*?\1/g, '')
-    : '';
+    ? pr.body
+        .replace(/<!--[\s\S]*?-->/g, "")
+        .replace(/(~{3,}|`{3,})[\s\S]*?\1/g, "")
+    : "";
   const addressedNumbers = [];
-  for (const line of cleanBody.split('\n')) {
-    const match = line.trim().match(/^[-*]\s+Addresses:\s+(`?)#([0-9]+)\1\.?$/i);
+  for (const line of cleanBody.split("\n")) {
+    const match = line
+      .trim()
+      .match(/^[-*]\s+Addresses:\s+(`?)#([0-9]+)\1\.?$/i);
     if (match) {
       const num = parseInt(match[2], 10);
       if (!addressedNumbers.includes(num)) {
@@ -186,24 +255,41 @@ export async function runBackportPr({ github, context, core, process = globalThi
   let trackingIssue = null;
   if (searchResults?.items && searchResults.items.length > 0) {
     if (addressedNumbers.length > 0) {
-      trackingIssue = searchResults.items.find(item => addressedNumbers.includes(item.number));
+      trackingIssue = searchResults.items.find((item) =>
+        addressedNumbers.includes(item.number),
+      );
     }
 
     if (!trackingIssue) {
-      const trackingRegex = new RegExp(`<!--\\s*tracking-pr:\\s*#?${pr.number}\\s*-->`, 'i');
+      const trackingRegex = new RegExp(
+        `<!--\\s*tracking-pr:\\s*#?${pr.number}\\s*-->`,
+        "i",
+      );
       for (const item of searchResults.items) {
         try {
-          const comments = await github.paginate(github.rest.issues.listComments, {
-            owner,
-            repo,
-            issue_number: item.number,
-          });
-          if (comments.some(c => c.user?.login === 'github-actions[bot]' && c.body && trackingRegex.test(c.body))) {
+          const comments = await github.paginate(
+            github.rest.issues.listComments,
+            {
+              owner,
+              repo,
+              issue_number: item.number,
+            },
+          );
+          if (
+            comments.some(
+              (c) =>
+                c.user?.login === "github-actions[bot]" &&
+                c.body &&
+                trackingRegex.test(c.body),
+            )
+          ) {
             trackingIssue = item;
             break;
           }
         } catch (error) {
-          core.info(`Could not retrieve comments for issue #${item.number}: ${error.message}`);
+          core.info(
+            `Could not retrieve comments for issue #${item.number}: ${error.message}`,
+          );
         }
       }
     }
@@ -212,7 +298,9 @@ export async function runBackportPr({ github, context, core, process = globalThi
   // Fallback: If no tracking issue found via search, check if PR body references an open issue directly
   if (!trackingIssue && addressedNumbers.length > 0) {
     for (const fallbackNum of addressedNumbers) {
-      core.info(`No tracking issue found in search for PR #${pr.number}. Attempting direct lookup for referenced issue #${fallbackNum}...`);
+      core.info(
+        `No tracking issue found in search for PR #${pr.number}. Attempting direct lookup for referenced issue #${fallbackNum}...`,
+      );
       let directIssue;
       try {
         const directIssueRes = await github.rest.issues.get({
@@ -222,20 +310,36 @@ export async function runBackportPr({ github, context, core, process = globalThi
         });
         directIssue = directIssueRes?.data;
       } catch (directErr) {
-        const isNotFound = directErr?.status === 404 || directErr?.response?.status === 404;
+        const isNotFound =
+          directErr?.status === 404 || directErr?.response?.status === 404;
         if (isNotFound) {
-          core.info(`Referenced issue #${fallbackNum} was not found (404). Continuing search...`);
+          core.info(
+            `Referenced issue #${fallbackNum} was not found (404). Continuing search...`,
+          );
           continue;
         }
-        throw new Error(`Direct issue lookup for #${fallbackNum} failed with API error: ${directErr.message}`);
+        throw new Error(
+          `Direct issue lookup for #${fallbackNum} failed with API error: ${directErr.message}`,
+        );
       }
 
-      if (directIssue && !directIssue.pull_request && directIssue.state === 'open') {
-        const currentLabels = (directIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
+      if (
+        directIssue &&
+        !directIssue.pull_request &&
+        directIssue.state === "open"
+      ) {
+        const currentLabels = (directIssue.labels || []).map((l) =>
+          typeof l === "string" ? l : l?.name,
+        );
         const toAdd = [];
-        if (!currentLabels.includes('internal/tracking')) toAdd.push('internal/tracking');
-        if (!currentLabels.includes('internal/user')) toAdd.push('internal/user');
-        if (toAdd.length > 0 && typeof github?.rest?.issues?.addLabels === 'function') {
+        if (!currentLabels.includes("internal/tracking"))
+          toAdd.push("internal/tracking");
+        if (!currentLabels.includes("internal/user"))
+          toAdd.push("internal/user");
+        if (
+          toAdd.length > 0 &&
+          typeof github?.rest?.issues?.addLabels === "function"
+        ) {
           try {
             await github.rest.issues.addLabels({
               owner,
@@ -243,24 +347,34 @@ export async function runBackportPr({ github, context, core, process = globalThi
               issue_number: fallbackNum,
               labels: toAdd,
             });
-            core.info(`Added labels [${toAdd.join(', ')}] to issue #${fallbackNum}`);
+            core.info(
+              `Added labels [${toAdd.join(", ")}] to issue #${fallbackNum}`,
+            );
           } catch (labelErr) {
-            throw new Error(`Failed to add tracking labels to issue #${fallbackNum}: ${labelErr.message}`);
+            throw new Error(
+              `Failed to add tracking labels to issue #${fallbackNum}: ${labelErr.message}`,
+            );
           }
         }
         trackingIssue = directIssue;
         break;
       } else {
-        core.info(`Referenced item #${fallbackNum} is not an open issue (pull_request=${Boolean(directIssue?.pull_request)}, state=${directIssue?.state}).`);
+        core.info(
+          `Referenced item #${fallbackNum} is not an open issue (pull_request=${Boolean(directIssue?.pull_request)}, state=${directIssue?.state}).`,
+        );
       }
     }
   }
 
   if (!trackingIssue) {
     if (!searchResults?.items || searchResults.items.length === 0) {
-      core.info(`No 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
+      core.info(
+        `No 'internal/tracking' issue found for PR #${pr.number}. Exiting.`,
+      );
     } else {
-      core.info(`No verified 'internal/tracking' issue found for PR #${pr.number}. Exiting.`);
+      core.info(
+        `No verified 'internal/tracking' issue found for PR #${pr.number}. Exiting.`,
+      );
     }
     return;
   }
@@ -268,59 +382,87 @@ export async function runBackportPr({ github, context, core, process = globalThi
 
   core.info(`Fetching sub-issues for tracking issue #${trackingIssue.number}`);
   try {
-    response = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
-      owner: owner,
-      repo: repo,
-      issue_number: trackingIssue.number,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      }
-    });
+    response = await github.request(
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues",
+      {
+        owner: owner,
+        repo: repo,
+        issue_number: trackingIssue.number,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      },
+    );
   } catch (error) {
-    throw new Error(`Failed to fetch sub-issues for tracking issue #${trackingIssue.number}: ${error.message}`);
+    throw new Error(
+      `Failed to fetch sub-issues for tracking issue #${trackingIssue.number}: ${error.message}`,
+    );
   }
   let subIssues = response.data;
   core.info(`Sub-issues data: ${JSON.stringify(subIssues)}`);
   if (!Array.isArray(subIssues)) {
-    core.warning(`Unexpected sub-issues data format: ${JSON.stringify(subIssues)}`);
+    core.warning(
+      `Unexpected sub-issues data format: ${JSON.stringify(subIssues)}`,
+    );
     return;
   }
 
-  const currentLabels = (trackingIssue.labels || []).map(l => (typeof l === 'string' ? l : l?.name));
-  let releaseLabels = currentLabels.filter(l => /^release\/v\d+$/.test(l));
-  if (releaseLabels.length === 0 && typeof github?.rest?.repos?.listBranches === 'function') {
+  const currentLabels = (trackingIssue.labels || []).map((l) =>
+    typeof l === "string" ? l : l?.name,
+  );
+  let releaseLabels = currentLabels.filter((l) => /^release\/v\d+$/.test(l));
+  if (
+    releaseLabels.length === 0 &&
+    typeof github?.rest?.repos?.listBranches === "function"
+  ) {
     try {
-      const branches = typeof github.paginate === 'function'
-        ? await github.paginate(github.rest.repos.listBranches, { owner, repo })
-        : (await github.rest.repos.listBranches({ owner, repo }))?.data || [];
+      const branches =
+        typeof github.paginate === "function"
+          ? await github.paginate(github.rest.repos.listBranches, {
+              owner,
+              repo,
+            })
+          : (await github.rest.repos.listBranches({ owner, repo }))?.data || [];
       const releaseBranches = branches
-        .map(b => b.name)
-        .filter(name => /^release\/v\d+$/.test(name))
+        .map((b) => b.name)
+        .filter((name) => /^release\/v\d+$/.test(name))
         .sort((a, b) => {
-          const aVer = parseInt(a.replace('release/v', ''), 10);
-          const bVer = parseInt(b.replace('release/v', ''), 10);
+          const aVer = parseInt(a.replace("release/v", ""), 10);
+          const bVer = parseInt(b.replace("release/v", ""), 10);
           return bVer - aVer;
         });
       if (!releaseBranches || releaseBranches.length === 0) {
-        throw new Error('No release branches matching release/v<major> found in repository.');
+        throw new Error(
+          "No release branches matching release/v<major> found in repository.",
+        );
       }
       releaseLabels = [releaseBranches[0]];
     } catch (branchErr) {
-      core.error(`Failed to discover release branches for #${trackingIssue.number}: ${branchErr.message}`);
-      throw new Error(`Failed to determine target release branch for #${trackingIssue.number}: ${branchErr.message}`);
+      core.error(
+        `Failed to discover release branches for #${trackingIssue.number}: ${branchErr.message}`,
+      );
+      throw new Error(
+        `Failed to determine target release branch for #${trackingIssue.number}: ${branchErr.message}`,
+      );
     }
   }
 
   // Find any release labels that do not already have a sub-issue
   const existingSubIssueLabels = new Set(
     subIssues
-      .flatMap(sub => (sub.labels || []).map(l => (typeof l === 'string' ? l : l?.name)))
-      .filter(l => /^release\/v\d+$/.test(l))
+      .flatMap((sub) =>
+        (sub.labels || []).map((l) => (typeof l === "string" ? l : l?.name)),
+      )
+      .filter((l) => /^release\/v\d+$/.test(l)),
   );
-  const missingReleaseLabels = releaseLabels.filter(l => !existingSubIssueLabels.has(l));
+  const missingReleaseLabels = releaseLabels.filter(
+    (l) => !existingSubIssueLabels.has(l),
+  );
 
   if (missingReleaseLabels.length > 0) {
-    core.info(`Missing sub-issues for release labels [${missingReleaseLabels.join(', ')}] on tracking issue #${trackingIssue.number}. Attempting on-demand sub-issue generation...`);
+    core.info(
+      `Missing sub-issues for release labels [${missingReleaseLabels.join(", ")}] on tracking issue #${trackingIssue.number}. Attempting on-demand sub-issue generation...`,
+    );
     const creationErrors = [];
     for (const releaseLabel of missingReleaseLabels) {
       try {
@@ -338,86 +480,151 @@ export async function runBackportPr({ github, context, core, process = globalThi
             },
           },
         });
-        core.info(`Created sub-issue on demand for #${trackingIssue.number} on branch '${releaseLabel}'`);
+        core.info(
+          `Created sub-issue on demand for #${trackingIssue.number} on branch '${releaseLabel}'`,
+        );
       } catch (createErr) {
-        core.warning(`On-demand sub-issue generation failed for ${releaseLabel}: ${createErr.message}`);
+        core.warning(
+          `On-demand sub-issue generation failed for ${releaseLabel}: ${createErr.message}`,
+        );
         creationErrors.push(`${releaseLabel}: ${createErr.message}`);
       }
     }
 
     try {
-      const refetched = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
-        owner: owner,
-        repo: repo,
-        issue_number: trackingIssue.number,
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
-      });
+      const refetched = await github.request(
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues",
+        {
+          owner: owner,
+          repo: repo,
+          issue_number: trackingIssue.number,
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
+        },
+      );
       if (Array.isArray(refetched?.data)) {
         subIssues = refetched.data;
-        core.info(`Successfully refetched sub-issues on demand for #${trackingIssue.number} (found ${subIssues.length})`);
+        core.info(
+          `Successfully refetched sub-issues on demand for #${trackingIssue.number} (found ${subIssues.length})`,
+        );
       }
     } catch (refetchErr) {
-      throw new Error(`Failed to refetch sub-issues for #${trackingIssue.number}: ${refetchErr.message}`);
+      throw new Error(
+        `Failed to refetch sub-issues for #${trackingIssue.number}: ${refetchErr.message}`,
+      );
     }
 
     if (creationErrors.length > 0) {
-      throw new Error(`Failed to create on-demand sub-issue(s) for #${trackingIssue.number}:\n- ${creationErrors.join('\n- ')}`);
+      throw new Error(
+        `Failed to create on-demand sub-issue(s) for #${trackingIssue.number}:\n- ${creationErrors.join("\n- ")}`,
+      );
     }
 
     if (subIssues.length === 0) {
-      throw new Error(`Failed to verify created sub-issues on demand for #${trackingIssue.number}: sub-issue list is empty.`);
+      throw new Error(
+        `Failed to verify created sub-issues on demand for #${trackingIssue.number}: sub-issue list is empty.`,
+      );
     }
 
     const refetchedLabels = new Set(
       subIssues
-        .flatMap(sub => (sub.labels || []).map(l => (typeof l === 'string' ? l : l?.name)))
-        .filter(l => typeof l === 'string' && /^release\/v\d+$/.test(l))
+        .flatMap((sub) =>
+          (sub.labels || []).map((l) => (typeof l === "string" ? l : l?.name)),
+        )
+        .filter((l) => typeof l === "string" && /^release\/v\d+$/.test(l)),
     );
-    const unverifiedReleaseLabels = missingReleaseLabels.filter(l => !refetchedLabels.has(l));
+    const unverifiedReleaseLabels = missingReleaseLabels.filter(
+      (l) => !refetchedLabels.has(l),
+    );
     if (unverifiedReleaseLabels.length > 0) {
-      throw new Error(`Failed to verify created sub-issues on demand for #${trackingIssue.number}: missing sub-issue(s) for label(s) [${unverifiedReleaseLabels.join(', ')}].`);
+      throw new Error(
+        `Failed to verify created sub-issues on demand for #${trackingIssue.number}: missing sub-issue(s) for label(s) [${unverifiedReleaseLabels.join(", ")}].`,
+      );
     }
   }
 
   if (subIssues.length === 0) {
-    core.info(`No sub-issues found for issue #${trackingIssue.number}. Exiting.`);
+    core.info(
+      `No sub-issues found for issue #${trackingIssue.number}. Exiting.`,
+    );
     return;
   }
   core.info(`Found ${subIssues.length} sub-issues.`);
 
   const failedBackports = [];
+  const createdBackportPrs = [];
 
   try {
     try {
-      await gitExec(['config', '--local', 'user.name', 'github-actions[bot]']);
-      await gitExec(['config', '--local', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
+      await gitExec(["config", "--local", "user.name", "github-actions[bot]"]);
+      await gitExec([
+        "config",
+        "--local",
+        "user.email",
+        "github-actions[bot]@users.noreply.github.com",
+      ]);
       if (mergeToken) {
         try {
-          const includeConfig = await gitExec(['config', '--local', '--name-only', '--get-regexp', '^includeif\\.gitdir:']);
-          const includeKeys = [...new Set(includeConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean))];
+          const includeConfig = await gitExec([
+            "config",
+            "--local",
+            "--name-only",
+            "--get-regexp",
+            "^includeif\\.gitdir:",
+          ]);
+          const includeKeys = [
+            ...new Set(
+              includeConfig.stdout
+                .trim()
+                .split("\n")
+                .map((k) => k.trim())
+                .filter(Boolean),
+            ),
+          ];
           for (const key of includeKeys) {
-            await gitExec(['config', '--local', '--unset-all', key]);
+            await gitExec(["config", "--local", "--unset-all", key]);
           }
         } catch {
           // ignore if no includeif.gitdir keys exist
         }
 
         try {
-          const headerConfig = await gitExec(['config', '--local', '--name-only', '--get-regexp', 'http\\..*extraheader']);
-          const headerKeys = [...new Set(headerConfig.stdout.trim().split('\n').map(k => k.trim()).filter(Boolean))];
+          const headerConfig = await gitExec([
+            "config",
+            "--local",
+            "--name-only",
+            "--get-regexp",
+            "http\\..*extraheader",
+          ]);
+          const headerKeys = [
+            ...new Set(
+              headerConfig.stdout
+                .trim()
+                .split("\n")
+                .map((k) => k.trim())
+                .filter(Boolean),
+            ),
+          ];
           for (const key of headerKeys) {
-            await gitExec(['config', '--local', '--unset-all', key]);
+            await gitExec(["config", "--local", "--unset-all", key]);
           }
         } catch {
           // ignore if no extraheader keys exist
         }
 
         core.setSecret(mergeToken);
-        const b64Token = Buffer.from(`x-access-token:${mergeToken}`).toString('base64');
+        const b64Token = Buffer.from(`x-access-token:${mergeToken}`).toString(
+          "base64",
+        );
         core.setSecret(b64Token);
-        await gitExec(['config', '--local', '--replace-all', 'http.https://github.com/.extraheader', `AUTHORIZATION: basic ${b64Token}`]);
+        await gitExec([
+          "config",
+          "--local",
+          "--replace-all",
+          "http.https://github.com/.extraheader",
+          `AUTHORIZATION: basic ${b64Token}`,
+        ]);
       }
     } catch (error) {
       throw new Error(`Failed to configure git credentials: ${error.message}`);
@@ -427,10 +634,14 @@ export async function runBackportPr({ github, context, core, process = globalThi
       const subIssueNumber = subIssue.number;
       core.info(`Processing sub-issue #${subIssueNumber}...`);
 
-      const releaseLabel = subIssue.labels?.find(label => label.name?.startsWith('release/v'));
+      const releaseLabel = subIssue.labels?.find((label) =>
+        label.name?.startsWith("release/v"),
+      );
 
       if (!releaseLabel) {
-        core.warning(`Sub-issue #${subIssueNumber} has no 'release/v...' label. Skipping.`);
+        core.warning(
+          `Sub-issue #${subIssueNumber} has no 'release/v...' label. Skipping.`,
+        );
         continue;
       }
 
@@ -444,16 +655,32 @@ export async function runBackportPr({ github, context, core, process = globalThi
         continue;
       }
 
-      core.info(`Processing sub-issue #${subIssueNumber} for target branch: ${targetBranch}`);
-      const newBranchName = `backport-${pr.number}-${targetBranch.replace(/\//g, '-')}`;
+      core.info(
+        `Processing sub-issue #${subIssueNumber} for target branch: ${targetBranch}`,
+      );
+      const newBranchName = `backport-${pr.number}-${targetBranch.replace(/\//g, "-")}`;
 
       try {
-        await gitExec(['fetch', 'origin', targetBranch]);
-        await gitExec(['checkout', '-B', newBranchName, `origin/${targetBranch}`]);
-        await gitExec(['cherry-pick', '--allow-empty', '-x', mergeCommitSha, '-X', 'theirs']);
-        await gitExec(['push', 'origin', newBranchName]);
+        await gitExec(["fetch", "origin", targetBranch]);
+        await gitExec([
+          "checkout",
+          "-B",
+          newBranchName,
+          `origin/${targetBranch}`,
+        ]);
+        await gitExec([
+          "cherry-pick",
+          "--allow-empty",
+          "-x",
+          mergeCommitSha,
+          "-X",
+          "theirs",
+        ]);
+        await gitExec(["push", "origin", newBranchName]);
 
-        core.info(`Creating pull request for branch ${newBranchName} targeting ${targetBranch}...`);
+        core.info(
+          `Creating pull request for branch ${newBranchName} targeting ${targetBranch}...`,
+        );
         response = await prGithub.rest.pulls.create({
           owner,
           repo,
@@ -466,16 +693,18 @@ export async function runBackportPr({ github, context, core, process = globalThi
             `**WARNING!**: to avoid having to resolve merge conflicts this PR is generated with 'git cherry-pick -X theirs'.`,
             `Please make sure to carefully inspect this PR so that you don't accidentally revert anything!`,
             `Copied from main PR:`,
-            `${pr.body}`
-          ].join("\n\n")
+            `${pr.body}`,
+          ].join("\n\n"),
         });
 
         const newPR = response.data;
         core.info(`Created backport PR data: ${JSON.stringify(newPR)}`);
         const prNumber = newPR.number;
+        createdBackportPrs.push({ prNumber, targetBranch, subIssueNumber });
 
         try {
-          await prGithub.graphql(`
+          await prGithub.graphql(
+            `
             mutation EnableAutoMerge($pullRequestId: ID!) {
               enablePullRequestAutoMerge(input: {
                 pullRequestId: $pullRequestId,
@@ -484,10 +713,14 @@ export async function runBackportPr({ github, context, core, process = globalThi
                 pullRequest { id }
               }
             }
-          `, { pullRequestId: newPR.node_id });
+          `,
+            { pullRequestId: newPR.node_id },
+          );
           core.info(`Auto-merge enabled for PR #${prNumber}`);
         } catch (error) {
-          core.warning(`Failed to enable auto-merge on PR #${prNumber}: ${error.message}`);
+          core.warning(
+            `Failed to enable auto-merge on PR #${prNumber}: ${error.message}`,
+          );
         }
 
         if (assignees.length > 0) {
@@ -496,10 +729,12 @@ export async function runBackportPr({ github, context, core, process = globalThi
               owner,
               repo,
               issue_number: prNumber,
-              assignees: assignees
+              assignees: assignees,
             });
           } catch (error) {
-            throw new Error(`Failed to assign PR #${prNumber}: ${error.message}`);
+            throw new Error(
+              `Failed to assign PR #${prNumber}: ${error.message}`,
+            );
           }
         }
 
@@ -508,21 +743,29 @@ export async function runBackportPr({ github, context, core, process = globalThi
             owner,
             repo,
             issue_number: prNumber,
-            labels: ["internal/pr-backport", targetBranch]
+            labels: ["internal/pr-backport", targetBranch],
           });
         } catch (error) {
-          throw new Error(`Failed to add backport label to PR #${prNumber}: ${error.message}`);
+          throw new Error(
+            `Failed to add backport label to PR #${prNumber}: ${error.message}`,
+          );
         }
       } catch (error) {
-        core.error(`Failed to backport to ${targetBranch} for sub-issue #${subIssueNumber}: ${error.message}`);
-        failedBackports.push({ subIssueNumber, targetBranch, error: error.message });
+        core.error(
+          `Failed to backport to ${targetBranch} for sub-issue #${subIssueNumber}: ${error.message}`,
+        );
+        failedBackports.push({
+          subIssueNumber,
+          targetBranch,
+          error: error.message,
+        });
         try {
-          await gitExec(['cherry-pick', '--abort']);
+          await gitExec(["cherry-pick", "--abort"]);
         } catch {
           // ignore if cherry-pick was not active
         }
         try {
-          await gitExec(['checkout', 'main', '-f']);
+          await gitExec(["checkout", "main", "-f"]);
         } catch {
           // ignore fallback checkout failure
         }
@@ -531,42 +774,104 @@ export async function runBackportPr({ github, context, core, process = globalThi
   } finally {
     if (mergeToken) {
       try {
-        await gitExec(['config', '--local', '--unset-all', 'http.https://github.com/.extraheader']);
+        await gitExec([
+          "config",
+          "--local",
+          "--unset-all",
+          "http.https://github.com/.extraheader",
+        ]);
       } catch {
         // ignore if unsetting extraheader fails or key was not present
       }
     }
   }
 
+  if (
+    createdBackportPrs.length > 0 &&
+    trackingIssue?.number &&
+    github?.rest?.issues?.createComment
+  ) {
+    const tableHeader =
+      "| Target Branch | Backport PR | CI Checks |\n| --- | --- | --- |";
+    const tableRows = createdBackportPrs
+      .map((b) => {
+        const prLink = `[#${b.prNumber}](https://github.com/${owner}/${repo}/pull/${b.prNumber})`;
+        const checksLink = `[View CI Checks](https://github.com/${owner}/${repo}/pull/${b.prNumber}/checks)`;
+        return `| \`${b.targetBranch}\` | ${prLink} | ${checksLink} |`;
+      })
+      .join("\n");
+
+    const commentBody = `### Automated Backport PRs Created\n\n${tableHeader}\n${tableRows}`;
+    try {
+      await github.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: trackingIssue.number,
+        body: commentBody,
+      });
+      core.info(
+        `Successfully posted backport summary comment to tracking issue #${trackingIssue.number}`,
+      );
+    } catch (commentErr) {
+      core.warning(
+        `Failed to post backport comment to tracking issue #${trackingIssue.number}: ${commentErr.message}`,
+      );
+    }
+  }
+
   if (failedBackports.length > 0) {
     const errorSummary = failedBackports
-      .map(f => `Sub-issue #${f.subIssueNumber} (${f.targetBranch}): ${f.error}`)
-      .join('\n');
-    throw new Error(`Failed to complete ${failedBackports.length} backport(s):\n${errorSummary}`);
+      .map(
+        (f) => `Sub-issue #${f.subIssueNumber} (${f.targetBranch}): ${f.error}`,
+      )
+      .join("\n");
+    throw new Error(
+      `Failed to complete ${failedBackports.length} backport(s):\n${errorSummary}`,
+    );
   }
 }
 
 /**
  * backport-issues: Creates sub-issues for tracking backports.
  */
-export async function runBackportIssues({ github, context, core, process = globalThis.process }) {
+export async function runBackportIssues({
+  github,
+  context,
+  core,
+  process = globalThis.process,
+}) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
 
-  const envLabel = process?.env?.RELEASE_LABEL ? process.env.RELEASE_LABEL.trim() : '';
+  const envLabel = process?.env?.RELEASE_LABEL
+    ? process.env.RELEASE_LABEL.trim()
+    : "";
   const releaseLabel = envLabel || context?.payload?.label?.name;
   if (!releaseLabel) {
-    throw new Error('Release label must be provided via env (RELEASE_LABEL) or label event payload.');
+    throw new Error(
+      "Release label must be provided via env (RELEASE_LABEL) or label event payload.",
+    );
   }
   if (!/^release\/v\d+$/.test(releaseLabel)) {
-    throw new Error(`Invalid release label: "${releaseLabel}". It must match the pattern release/v<major> (e.g. release/v15).`);
+    throw new Error(
+      `Invalid release label: "${releaseLabel}". It must match the pattern release/v<major> (e.g. release/v15).`,
+    );
   }
 
   let parentIssue = context?.payload?.issue;
-  const envIssue = process?.env?.ISSUE_NUMBER ? String(process.env.ISSUE_NUMBER).replace(/^["']|["']$/g, '').trim().replace(/^#/, '') : '';
-  const rawIssueNumber = envIssue || (parentIssue?.number !== undefined ? String(parentIssue.number) : '');
+  const envIssue = process?.env?.ISSUE_NUMBER
+    ? String(process.env.ISSUE_NUMBER)
+        .replace(/^["']|["']$/g, "")
+        .trim()
+        .replace(/^#/, "")
+    : "";
+  const rawIssueNumber =
+    envIssue ||
+    (parentIssue?.number !== undefined ? String(parentIssue.number) : "");
   if (!rawIssueNumber || !/^[1-9]\d*$/.test(rawIssueNumber)) {
-    throw new Error(`Invalid issue number: ${process?.env?.ISSUE_NUMBER ?? parentIssue?.number}`);
+    throw new Error(
+      `Invalid issue number: ${process?.env?.ISSUE_NUMBER ?? parentIssue?.number}`,
+    );
   }
   const parentIssueNumber = parseInt(rawIssueNumber, 10);
 
@@ -579,47 +884,66 @@ export async function runBackportIssues({ github, context, core, process = globa
       });
       parentIssue = issueRes.data;
     } catch (error) {
-      throw new Error(`Failed to retrieve parent issue #${parentIssueNumber}: ${error.message}`);
+      throw new Error(
+        `Failed to retrieve parent issue #${parentIssueNumber}: ${error.message}`,
+      );
     }
   }
 
   if (parentIssue?.pull_request) {
-    throw new Error(`Issue #${parentIssueNumber} is a pull request, not an issue.`);
+    throw new Error(
+      `Issue #${parentIssueNumber} is a pull request, not an issue.`,
+    );
   }
 
   const parentIssueTitle = parentIssue.title;
 
   // Check if a sub-issue for this release branch already exists on the parent issue to ensure idempotency
-  if (typeof github?.request === 'function') {
+  if (typeof github?.request === "function") {
     try {
-      const existingSubIssuesRes = await github.request('GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
-        owner,
-        repo,
-        issue_number: parentIssueNumber,
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28',
+      const existingSubIssuesRes = await github.request(
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues",
+        {
+          owner,
+          repo,
+          issue_number: parentIssueNumber,
+          headers: {
+            "X-GitHub-Api-Version": "2022-11-28",
+          },
         },
-      });
+      );
       const existingSubIssues = existingSubIssuesRes?.data;
       if (Array.isArray(existingSubIssues)) {
-        const alreadyExists = existingSubIssues.some(si =>
-          si?.labels?.some(l => (typeof l === 'string' ? l : l?.name) === releaseLabel) ||
-          (si?.title && si.title.startsWith(`[${releaseLabel}]`))
+        const alreadyExists = existingSubIssues.some(
+          (si) =>
+            si?.labels?.some(
+              (l) => (typeof l === "string" ? l : l?.name) === releaseLabel,
+            ) ||
+            (si?.title && si.title.startsWith(`[${releaseLabel}]`)),
         );
         if (alreadyExists) {
-          if (core && typeof core.info === 'function') {
-            core.info(`Sub-issue for release label '${releaseLabel}' already exists on tracking issue #${parentIssueNumber}. Skipping creation.`);
+          if (core && typeof core.info === "function") {
+            core.info(
+              `Sub-issue for release label '${releaseLabel}' already exists on tracking issue #${parentIssueNumber}. Skipping creation.`,
+            );
           }
           return;
         }
       }
     } catch (checkError) {
-      throw new Error(`Failed to check existing sub-issues for #${parentIssueNumber}: ${checkError.message}`);
+      throw new Error(
+        `Failed to check existing sub-issues for #${parentIssueNumber}: ${checkError.message}`,
+      );
     }
   }
 
   const assignees = parseMaintainers(core, process?.env?.TERRAFORM_MAINTAINERS);
-  const rawPr = process?.env?.PR ? String(process.env.PR).replace(/^["']|["']$/g, '').trim().replace(/^#/, '') : '';
+  const rawPr = process?.env?.PR
+    ? String(process.env.PR)
+        .replace(/^["']|["']$/g, "")
+        .trim()
+        .replace(/^#/, "")
+    : "";
   if (!rawPr || !/^[1-9]\d*$/.test(rawPr)) {
     throw new Error(`Invalid PR number: ${process?.env?.PR}`);
   }
@@ -630,10 +954,12 @@ export async function runBackportIssues({ github, context, core, process = globa
     response = await github.rest.issues.get({
       owner: owner,
       repo: repo,
-      issue_number: extractedPrNumber
+      issue_number: extractedPrNumber,
     });
   } catch (error) {
-    throw new Error(`Failed to retrieve PR #${extractedPrNumber}: ${error.message}`);
+    throw new Error(
+      `Failed to retrieve PR #${extractedPrNumber}: ${error.message}`,
+    );
   }
   const pr = response.data;
   const prNumber = pr.number;
@@ -647,7 +973,7 @@ export async function runBackportIssues({ github, context, core, process = globa
         `Backport #${prNumber} to ${releaseLabel} for #${parentIssueNumber}`,
         `Please add this issue to the proper milestone.`,
         `Copied from PR:`,
-        `${pr.body}`
+        `${pr.body}`,
       ].join("\n\n"),
       labels: [releaseLabel, "internal/backport"],
     };
@@ -659,67 +985,129 @@ export async function runBackportIssues({ github, context, core, process = globa
     throw new Error(`Failed to create backport issue: ${error.message}`);
   }
   const newIssue = response.data;
-  if (core && typeof core.info === 'function') {
+  if (core && typeof core.info === "function") {
     core.info(`New backport issue data: ${JSON.stringify(newIssue)}`);
   }
   const subIssueId = newIssue.id;
 
   try {
-    await github.request('POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues', {
-      owner: owner,
-      repo: repo,
-      issue_number: parentIssueNumber,
-      sub_issue_id: subIssueId,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      }
-    });
+    await github.request(
+      "POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues",
+      {
+        owner: owner,
+        repo: repo,
+        issue_number: parentIssueNumber,
+        sub_issue_id: subIssueId,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      },
+    );
   } catch (error) {
-    throw new Error(`Failed to link backport issue to tracking issue: ${error.message}`);
+    throw new Error(
+      `Failed to link backport issue to tracking issue: ${error.message}`,
+    );
   }
 }
 
 /**
  * merge-label: Adds internal/merged label to issues referenced in a merged PR body.
  */
-export async function runMergeLabel({ github, context, core, process = globalThis.process }) {
+export async function runMergeLabel({
+  github,
+  context,
+  core,
+  process = globalThis.process,
+}) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
   let pr = context?.payload?.pull_request;
 
-  const normalizeBranch = b => (b || '').toString().trim().replace(/^refs\/heads\//, '').replace(/^origin\//, '').replace(/\/+$/, '');
+  const normalizeBranch = (b) =>
+    (b || "")
+      .toString()
+      .trim()
+      .replace(/^refs\/heads\//, "")
+      .replace(/^origin\//, "")
+      .replace(/\/+$/, "");
 
   if (!pr) {
-    const sha = (process?.env?.SHA || context?.payload?.workflow_run?.head_sha || '').trim();
-    if (sha && (typeof github?.paginate === 'function' || typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit === 'function')) {
+    const sha = (
+      process?.env?.SHA ||
+      context?.payload?.workflow_run?.head_sha ||
+      ""
+    ).trim();
+    if (
+      sha &&
+      (typeof github?.paginate === "function" ||
+        typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit ===
+          "function")
+    ) {
       try {
-        const pulls = typeof github?.paginate === 'function'
-          ? await github.paginate(github.rest?.repos?.listPullRequestsAssociatedWithCommit, {
-            owner,
-            repo,
-            commit_sha: sha
-          })
-          : (await github.rest?.repos?.listPullRequestsAssociatedWithCommit({ owner, repo, commit_sha: sha }))?.data || [];
-        const rawBranch = (process?.env?.BRANCH || context?.payload?.workflow_run?.head_branch || '').trim();
+        const pulls =
+          typeof github?.paginate === "function"
+            ? await github.paginate(
+                github.rest?.repos?.listPullRequestsAssociatedWithCommit,
+                {
+                  owner,
+                  repo,
+                  commit_sha: sha,
+                },
+              )
+            : (
+                await github.rest?.repos?.listPullRequestsAssociatedWithCommit({
+                  owner,
+                  repo,
+                  commit_sha: sha,
+                })
+              )?.data || [];
+        const rawBranch = (
+          process?.env?.BRANCH ||
+          context?.payload?.workflow_run?.head_branch ||
+          ""
+        ).trim();
         const branch = normalizeBranch(rawBranch);
-        pr = pulls.find(p => p?.state === 'closed' && Boolean(p?.merged_at) && (!branch || normalizeBranch(p?.base?.ref) === branch))
-          || pulls.find(p => p?.state === 'closed' && Boolean(p?.merged_at));
+        pr =
+          pulls.find(
+            (p) =>
+              p?.state === "closed" &&
+              Boolean(p?.merged_at) &&
+              (!branch || normalizeBranch(p?.base?.ref) === branch),
+          ) ||
+          pulls.find((p) => p?.state === "closed" && Boolean(p?.merged_at));
       } catch (err) {
-        if (core && typeof core.warning === 'function') {
-          core.warning(`Could not fetch PR associated with SHA ${sha}: ${err.message}`);
+        if (core && typeof core.warning === "function") {
+          core.warning(
+            `Could not fetch PR associated with SHA ${sha}: ${err.message}`,
+          );
         }
       }
     }
   }
 
   if (!pr && Array.isArray(context?.payload?.workflow_run?.pull_requests)) {
-    const rawBranch = (process?.env?.BRANCH || context?.payload?.workflow_run?.head_branch || '').trim();
+    const rawBranch = (
+      process?.env?.BRANCH ||
+      context?.payload?.workflow_run?.head_branch ||
+      ""
+    ).trim();
     const branch = normalizeBranch(rawBranch);
-    const candidates = context.payload.workflow_run.pull_requests.filter(p => p && (!branch || !p.base?.ref || normalizeBranch(p.base?.ref) === branch));
-    const pool = candidates.length > 0 ? candidates : context.payload.workflow_run.pull_requests;
+    const candidates = context.payload.workflow_run.pull_requests.filter(
+      (p) =>
+        p &&
+        (!branch || !p.base?.ref || normalizeBranch(p.base?.ref) === branch),
+    );
+    const pool =
+      candidates.length > 0
+        ? candidates
+        : context.payload.workflow_run.pull_requests;
     for (const candidate of pool) {
       if (candidate?.number) {
-        if (candidate.body && candidate.state === 'closed' && Boolean(candidate.merged_at)) {
+        if (
+          candidate.body &&
+          candidate.state === "closed" &&
+          Boolean(candidate.merged_at)
+        ) {
           pr = candidate;
           break;
         }
@@ -728,15 +1116,17 @@ export async function runMergeLabel({ github, context, core, process = globalThi
             const { data: fullPr } = await github.rest.pulls.get({
               owner,
               repo,
-              pull_number: candidate.number
+              pull_number: candidate.number,
             });
-            if (fullPr?.state === 'closed' && Boolean(fullPr?.merged_at)) {
+            if (fullPr?.state === "closed" && Boolean(fullPr?.merged_at)) {
               pr = fullPr;
               break;
             }
           } catch (err) {
-            if (core && typeof core.warning === 'function') {
-              core.warning(`Could not fetch PR #${candidate.number} details: ${err.message}`);
+            if (core && typeof core.warning === "function") {
+              core.warning(
+                `Could not fetch PR #${candidate.number} details: ${err.message}`,
+              );
             }
           }
         }
@@ -745,7 +1135,7 @@ export async function runMergeLabel({ github, context, core, process = globalThi
   }
 
   if (!pr) {
-    if (core && typeof core.info === 'function') {
+    if (core && typeof core.info === "function") {
       core.info("No pull request found for merge-label; skipping.");
     }
     return;
@@ -753,21 +1143,24 @@ export async function runMergeLabel({ github, context, core, process = globalThi
 
   const rawBody = pr.body ?? "";
   const cleanBody = rawBody
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/(~{3,}|`{3,})[\s\S]*?\1/g, '');
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/(~{3,}|`{3,})[\s\S]*?\1/g, "");
 
   const issueRegex = /(?:^|[^\w])#(\d+)\b/g;
   const hashMatches = cleanBody.matchAll(issueRegex);
-  const hashNumbers = Array.from(hashMatches, m => parseInt(m[1], 10));
+  const hashNumbers = Array.from(hashMatches, (m) => parseInt(m[1], 10));
 
-  const escapeRegex = s => (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const issueUrlRegex = new RegExp(`https?:\\/\\/github\\.com\\/${escapeRegex(owner)}\\/${escapeRegex(repo)}\\/issues\\/(\\d+)\\b`, 'gi');
+  const escapeRegex = (s) => (s || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const issueUrlRegex = new RegExp(
+    `https?:\\/\\/github\\.com\\/${escapeRegex(owner)}\\/${escapeRegex(repo)}\\/issues\\/(\\d+)\\b`,
+    "gi",
+  );
   const urlMatches = cleanBody.matchAll(issueUrlRegex);
-  const urlNumbers = Array.from(urlMatches, m => parseInt(m[1], 10));
+  const urlNumbers = Array.from(urlMatches, (m) => parseInt(m[1], 10));
 
   const issueNumbers = [...new Set([...hashNumbers, ...urlNumbers])];
 
-  if (core && typeof core.info === 'function') {
+  if (core && typeof core.info === "function") {
     core.info(`Found issue numbers in PR body: ${issueNumbers}`);
   }
 
@@ -779,35 +1172,117 @@ export async function runMergeLabel({ github, context, core, process = globalThi
         issue_number: issueNumber,
       });
 
-      const hasBackport = issueData.labels?.some(l => (typeof l === 'string' ? l : l?.name) === 'internal/backport');
-      const alreadyMerged = issueData.labels?.some(l => (typeof l === 'string' ? l : l?.name) === 'internal/merged');
+      const hasBackport = issueData.labels?.some(
+        (l) => (typeof l === "string" ? l : l?.name) === "internal/backport",
+      );
+      const alreadyMerged = issueData.labels?.some(
+        (l) => (typeof l === "string" ? l : l?.name) === "internal/merged",
+      );
 
       if (!issueData.pull_request && hasBackport && !alreadyMerged) {
-        if (core && typeof core.info === 'function') {
+        if (core && typeof core.info === "function") {
           core.info(`Adding 'internal/merged' label to issue #${issueNumber}`);
         }
         await github.rest.issues.addLabels({
           owner,
           repo,
           issue_number: issueNumber,
-          labels: ["internal/merged"]
+          labels: ["internal/merged"],
         });
       } else if (!issueData.pull_request && hasBackport && alreadyMerged) {
-        if (core && typeof core.info === 'function') {
-          core.info(`Issue #${issueNumber} already has 'internal/merged' label; skipping.`);
+        if (core && typeof core.info === "function") {
+          core.info(
+            `Issue #${issueNumber} already has 'internal/merged' label; skipping.`,
+          );
         }
       } else if (!issueData.pull_request && !hasBackport) {
-        if (core && typeof core.info === 'function') {
-          core.info(`Issue #${issueNumber} does not have 'internal/backport' label; skipping.`);
+        if (core && typeof core.info === "function") {
+          core.info(
+            `Issue #${issueNumber} does not have 'internal/backport' label; skipping.`,
+          );
         }
       } else if (issueData.pull_request) {
-        if (core && typeof core.info === 'function') {
-          core.info(`Issue #${issueNumber} is a pull request, not an issue; skipping.`);
+        if (core && typeof core.info === "function") {
+          core.info(
+            `Issue #${issueNumber} is a pull request, not an issue; skipping.`,
+          );
         }
       }
     } catch (error) {
-      if (core && typeof core.setFailed === 'function') {
-        core.setFailed(`Could not process issue #${issueNumber}: ${error.message}`);
+      if (core && typeof core.setFailed === "function") {
+        core.setFailed(
+          `Could not process issue #${issueNumber}: ${error.message}`,
+        );
+      }
+    }
+  }
+
+  const baseBranch = pr.base?.ref;
+  const trackingMatch = cleanBody.match(/Addresses\s+#?\d+\s+for\s+#?(\d+)/i);
+  const trackingIssueNumber = trackingMatch
+    ? parseInt(trackingMatch[1], 10)
+    : null;
+
+  if (
+    trackingIssueNumber &&
+    baseBranch &&
+    github?.rest?.issues?.createComment
+  ) {
+    try {
+      const pulls =
+        typeof github?.paginate === "function"
+          ? await github.paginate(github.rest.pulls.list, {
+              owner,
+              repo,
+              state: "open",
+              base: baseBranch,
+            })
+          : (
+              await github.rest.pulls.list({
+                owner,
+                repo,
+                state: "open",
+                base: baseBranch,
+              })
+            )?.data || [];
+
+      const isReleasePlease = (p) => {
+        const headRef = (p?.head?.ref || "").replace(/^refs\/heads\//, "");
+        return (
+          headRef.startsWith("release-please--branches--") ||
+          (Array.isArray(p?.labels) &&
+            p.labels.some((l) =>
+              (typeof l === "string" ? l : l?.name)?.startsWith("autorelease"),
+            )) ||
+          (typeof p?.title === "string" &&
+            /^chore(?:\([^)]*\))?:\s*release/i.test(p.title))
+        );
+      };
+
+      const releasePleasePr = pulls.find(isReleasePlease);
+      let commentBody = `### Backport Merged: \`${baseBranch}\`\n\nBackport PR #${pr.number} has merged into \`${baseBranch}\`.`;
+      if (releasePleasePr) {
+        const rpPrLink = `[#${releasePleasePr.number}](https://github.com/${owner}/${repo}/pull/${releasePleasePr.number})`;
+        const rpChecksLink = `[View CI Checks](https://github.com/${owner}/${repo}/pull/${releasePleasePr.number}/checks)`;
+        commentBody += `\n\nRelease staging is progressing in Release-Please PR ${rpPrLink} (${rpChecksLink}).`;
+      }
+
+      await github.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: trackingIssueNumber,
+        body: commentBody,
+      });
+      if (core && typeof core.info === "function") {
+        core.info(
+          `Posted release progression comment to tracking issue #${trackingIssueNumber}`,
+        );
+      }
+    } catch (err) {
+      if (core && typeof core.warning === "function") {
+        core.warning(
+          `Failed to post release comment to tracking issue #${trackingIssueNumber}: ${err.message}`,
+        );
       }
     }
   }

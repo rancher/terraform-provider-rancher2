@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   build:
-    name: 'Build'
+    name: "Build"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Build Binaries
         id: build-binaries
@@ -59,7 +59,7 @@ jobs:
           "$SCRIPT_DIR/nix-run.sh" make build
 
   test:
-    name: 'Test'
+    name: "Test"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -80,7 +80,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Run make test
         id: run-make-test
@@ -93,7 +93,7 @@ jobs:
           "$SCRIPT_DIR/nix-run.sh" make test
 
   terraform:
-    name: 'Terraform'
+    name: "Terraform"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -114,7 +114,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Lint Terraform
         id: lint-terraform
@@ -127,7 +127,7 @@ jobs:
           "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" terraform
 
   actionlint:
-    name: 'Lint Workflows'
+    name: "Lint Workflows"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -148,7 +148,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Action Lint
         id: action-lint
@@ -161,7 +161,7 @@ jobs:
           "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" actionlint
 
   node-check:
-    name: 'Node Check'
+    name: "Node Check"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -182,7 +182,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Node Syntax Check
         id: node-syntax-check
@@ -195,7 +195,7 @@ jobs:
           "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" node-check
 
   node-test:
-    name: 'Node Tests'
+    name: "Node Tests"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -216,7 +216,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Node Unit Tests
         id: node-unit-tests
@@ -229,7 +229,7 @@ jobs:
           "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" node-test
 
   eslint:
-    name: 'ESLint'
+    name: "ESLint"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -250,7 +250,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: ESLint Check
         id: eslint-check
@@ -263,7 +263,7 @@ jobs:
           "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" eslint
 
   shellcheck:
-    name: 'Shellcheck'
+    name: "Shellcheck"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -284,7 +284,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Shell Check
         id: shell-check
@@ -297,7 +297,7 @@ jobs:
           "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" shellcheck
 
   validate-commit-message:
-    name: 'Validate Commit Message'
+    name: "Validate Commit Message"
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     container:
@@ -320,7 +320,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Check Commit Message
         id: check-commit-message
@@ -335,7 +335,7 @@ jobs:
           "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/validate-commit-message.js"
 
   gitleaks:
-    name: 'Scan for Secrets'
+    name: "Scan for Secrets"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -356,7 +356,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Check for Secrets
         id: check-for-secrets
@@ -370,7 +370,7 @@ jobs:
         continue-on-error: true
 
   sensitive-checks:
-    name: 'Sensitive Checks'
+    name: "Sensitive Checks"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -391,7 +391,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: rancher/terraform-provider-rancher2
-          ref: 'main'
+          ref: "main"
           path: .github-tools
       - name: Test Check Sensitive
         id: test-check-sensitive
