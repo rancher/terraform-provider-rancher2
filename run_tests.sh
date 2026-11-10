@@ -411,8 +411,11 @@ else
     echo "=== Running Tests (Attempt $attempt of $max_attempts) ==="
     rm -f "/tmp/${IDENTIFIER}_failed_tests.txt"
 
-    run_tests false "$slow_mode"
-    test_exit_code=$?
+    if run_tests false "$slow_mode"; then
+      test_exit_code=0
+    else
+      test_exit_code=$?
+    fi
 
     if [ $test_exit_code -eq 0 ] && [ ! -f "/tmp/${IDENTIFIER}_failed_tests.txt" ]; then
       echo "✓ Tests passed on attempt $attempt"
