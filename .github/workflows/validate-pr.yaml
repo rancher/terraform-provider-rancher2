@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   validate-pr-description:
-    name: 'Validate PR Description'
+    name: "Validate PR Description"
     runs-on: ubuntu-latest
     if: github.event_name == 'merge_group' || (github.event.pull_request.user.type != 'Bot' && !startsWith(github.head_ref, 'release-please') && !github.event.pull_request.draft)
     timeout-minutes: 5
@@ -76,4 +76,3 @@ jobs:
           name: validate-pr-signal
           path: signal/pr-signal.json
           retention-days: 1
-

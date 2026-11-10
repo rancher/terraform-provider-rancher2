@@ -6,15 +6,15 @@ on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'Tracking Issue Number'
+        description: "Tracking Issue Number"
         required: true
         type: string
       release_label:
-        description: 'Release branch label (e.g. release/v15)'
+        description: "Release branch label (e.g. release/v15)"
         required: true
         type: string
       pr_number:
-        description: 'Pull Request Number'
+        description: "Pull Request Number"
         required: false
         type: string
 
@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   create-issue:
-    name: 'Create Backport Issue'
+    name: "Create Backport Issue"
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || (startsWith(github.event.label.name, 'release/v') && !github.event.issue.pull_request)
     timeout-minutes: 10

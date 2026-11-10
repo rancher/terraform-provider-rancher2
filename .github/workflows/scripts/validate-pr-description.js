@@ -8,23 +8,29 @@
  */
 export function validatePrDescription(prBody) {
   if (!prBody) {
-    throw new Error('Please add a description line that matches this format: - Addresses: #<issue number>');
+    throw new Error(
+      "Please add a description line that matches this format: - Addresses: #<issue number>",
+    );
   }
 
   const cleanBody = prBody
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/(~{3,}|`{3,})[\s\S]*?\1/g, '');
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/(~{3,}|`{3,})[\s\S]*?\1/g, "");
   const issueNumbers = [];
-  const lines = cleanBody.split('\n');
+  const lines = cleanBody.split("\n");
   for (const line of lines) {
-    const match = line.trim().match(/^[-*]\s+Addresses:\s+(`?)#([0-9]+)\1\.?$/i);
+    const match = line
+      .trim()
+      .match(/^[-*]\s+Addresses:\s+(`?)#([0-9]+)\1\.?$/i);
     if (match) {
       issueNumbers.push(match[2]);
     }
   }
 
   if (issueNumbers.length === 0) {
-    throw new Error('Please add a description line that matches this format: - Addresses: #<issue number>');
+    throw new Error(
+      "Please add a description line that matches this format: - Addresses: #<issue number>",
+    );
   }
 
   return issueNumbers;
@@ -51,7 +57,9 @@ export async function validateIssueExists(github, context, issueNumber) {
     }));
   } catch (error) {
     if (error.status === 404) {
-      throw new Error(`Issue #${issueNumber} not found in ${owner}/${repo} repo.`);
+      throw new Error(
+        `Issue #${issueNumber} not found in ${owner}/${repo} repo.`,
+      );
     }
     throw error;
   }
@@ -60,7 +68,7 @@ export async function validateIssueExists(github, context, issueNumber) {
     throw new Error(`Issue #${issueNumber} is a pull request, not an issue.`);
   }
 
-  if (issue.state !== 'open') {
+  if (issue.state !== "open") {
     throw new Error(`Issue #${issueNumber} is already closed.`);
   }
 
@@ -77,19 +85,23 @@ export async function validateIssueExists(github, context, issueNumber) {
  */
 export default async function run({ github, context, core }) {
   try {
-    const prBody = context.payload?.pull_request?.body ?? '';
+    const prBody = context.payload?.pull_request?.body ?? "";
     const issueNumbers = validatePrDescription(prBody);
     const uniqueIssues = [...new Set(issueNumbers)];
     const results = await Promise.allSettled(
-      uniqueIssues.map((issueNumber) => validateIssueExists(github, context, issueNumber))
+      uniqueIssues.map((issueNumber) =>
+        validateIssueExists(github, context, issueNumber),
+      ),
     );
     const errors = results
-      .filter((r) => r.status === 'rejected')
+      .filter((r) => r.status === "rejected")
       .map((r) => r.reason?.message ?? String(r.reason));
     if (errors.length > 0) {
-      throw new Error(errors.join('\n'));
+      throw new Error(errors.join("\n"));
     }
-    core?.info?.(`Successfully validated issue reference(s): ${uniqueIssues.map((n) => `#${n}`).join(', ')}`);
+    core?.info?.(
+      `Successfully validated issue reference(s): ${uniqueIssues.map((n) => `#${n}`).join(", ")}`,
+    );
   } catch (error) {
     core.setFailed(error?.message ?? String(error));
   }

@@ -1,9 +1,9 @@
-name: 'Release Please'
+name: "Release Please"
 
 on:
   push:
     branches:
-      - 'release/v*'
+      - "release/v*"
   workflow_call:
 
 env:
@@ -13,7 +13,7 @@ permissions: {}
 
 jobs:
   release-please-release:
-    name: 'Release Please (Release Only)'
+    name: "Release Please (Release Only)"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -24,7 +24,7 @@ jobs:
       tag_name: ${{ steps.release-please-release.outputs.tag_name }}
       release_created: ${{ steps.release-please-release.outputs.release_created }}
     steps:
-      - name: 'Release Please (Release Only)'
+      - name: "Release Please (Release Only)"
         id: release-please-release
         # https://github.com/googleapis/release-please-action/releases
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
@@ -35,7 +35,7 @@ jobs:
           skip-github-pull-request: true
 
   release:
-    name: 'Generate Full Release'
+    name: "Generate Full Release"
     needs:
       - release-please-release
     if: needs.release-please-release.outputs.release_created == 'true'
@@ -52,7 +52,7 @@ jobs:
     secrets: inherit
 
   release-please-pr:
-    name: 'Release Please (PR Only)'
+    name: "Release Please (PR Only)"
     needs:
       - release-please-release
       - release
@@ -70,7 +70,7 @@ jobs:
       prs_created: ${{ steps.release-please-pr.outputs.prs_created }}
       pr: ${{ steps.release-please-pr.outputs.pr }}
     steps:
-      - name: 'Get Merge Token'
+      - name: "Get Merge Token"
         id: get-merge-token
         # https://github.com/rancher-eio/read-vault-secrets/commits
         uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
@@ -78,7 +78,7 @@ jobs:
           # Token permissions: contents: write, metadata: read, pull_requests: write, workflows: write
           secrets: |
             github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
-      - name: 'Release Please (PR Only)'
+      - name: "Release Please (PR Only)"
         id: release-please-pr
         # https://github.com/googleapis/release-please-action/releases
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0

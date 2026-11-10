@@ -1,8 +1,8 @@
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import test from 'node:test';
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
 import defaultHandler, {
   checkReviewerPermission,
   checkWorkflowModifications,
@@ -12,7 +12,7 @@ import defaultHandler, {
   runAutoMerge,
   runPreflight,
   validateApprovalSignal,
-} from './auto-merge.js';
+} from "./auto-merge.js";
 
 function createMockCore() {
   return {
@@ -39,9 +39,9 @@ function createMockCore() {
   };
 }
 
-test('resolveTargetPr - resolves directly from context.payload.pull_request', async () => {
+test("resolveTargetPr - resolves directly from context.payload.pull_request", async () => {
   const mockCore = createMockCore();
-  const pr = { number: 10, title: 'Test PR' };
+  const pr = { number: 10, title: "Test PR" };
   const result = await resolveTargetPr({
     context: { payload: { pull_request: pr } },
     core: mockCore,
@@ -49,33 +49,33 @@ test('resolveTargetPr - resolves directly from context.payload.pull_request', as
   assert.strictEqual(result.number, 10);
 });
 
-test('resolveTargetPr - resolves via PR_NUMBER env var', async () => {
+test("resolveTargetPr - resolves via PR_NUMBER env var", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
       pulls: {
         get: async ({ pull_number }) => ({
-          data: { number: pull_number, title: 'From API' },
+          data: { number: pull_number, title: "From API" },
         }),
       },
     },
   };
   const result = await resolveTargetPr({
     github: mockGithub,
-    context: { repo: { owner: 'rancher', repo: 'test' } },
+    context: { repo: { owner: "rancher", repo: "test" } },
     core: mockCore,
-    process: { env: { PR_NUMBER: '42' } },
+    process: { env: { PR_NUMBER: "42" } },
   });
   assert.strictEqual(result.number, 42);
 });
 
-test('resolveTargetPr - resolves via workflow_run.pull_requests', async () => {
+test("resolveTargetPr - resolves via workflow_run.pull_requests", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
       pulls: {
         get: async ({ pull_number }) => ({
-          data: { number: pull_number, title: 'From Workflow Run' },
+          data: { number: pull_number, title: "From Workflow Run" },
         }),
       },
     },
@@ -83,7 +83,7 @@ test('resolveTargetPr - resolves via workflow_run.pull_requests', async () => {
   const result = await resolveTargetPr({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: {
           pull_requests: [{ number: 99 }],
@@ -96,14 +96,18 @@ test('resolveTargetPr - resolves via workflow_run.pull_requests', async () => {
   assert.strictEqual(result.number, 99);
 });
 
-test('resolveTargetPr - resolves via commit SHA fallback', async () => {
+test("resolveTargetPr - resolves via commit SHA fallback", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     paginate: async (fn, params) => fn(params),
     rest: {
       repos: {
         listPullRequestsAssociatedWithCommit: async () => [
-          { number: 55, state: 'open', head: { ref: 'feature-branch', sha: 'commit-sha-123' } },
+          {
+            number: 55,
+            state: "open",
+            head: { ref: "feature-branch", sha: "commit-sha-123" },
+          },
         ],
       },
     },
@@ -111,11 +115,11 @@ test('resolveTargetPr - resolves via commit SHA fallback', async () => {
   const result = await resolveTargetPr({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: {
-          head_sha: 'commit-sha-123',
-          head_branch: 'feature-branch',
+          head_sha: "commit-sha-123",
+          head_branch: "feature-branch",
         },
       },
     },
@@ -125,14 +129,18 @@ test('resolveTargetPr - resolves via commit SHA fallback', async () => {
   assert.strictEqual(result.number, 55);
 });
 
-test('resolveTargetPr - rejects fallback PR when head SHA does not match triggering SHA', async () => {
+test("resolveTargetPr - rejects fallback PR when head SHA does not match triggering SHA", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     paginate: async (fn, params) => fn(params),
     rest: {
       repos: {
         listPullRequestsAssociatedWithCommit: async () => [
-          { number: 55, state: 'open', head: { ref: 'feature-branch', sha: 'different-newer-sha' } },
+          {
+            number: 55,
+            state: "open",
+            head: { ref: "feature-branch", sha: "different-newer-sha" },
+          },
         ],
       },
     },
@@ -140,11 +148,11 @@ test('resolveTargetPr - rejects fallback PR when head SHA does not match trigger
   const result = await resolveTargetPr({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: {
-          head_sha: 'commit-sha-123',
-          head_branch: 'feature-branch',
+          head_sha: "commit-sha-123",
+          head_branch: "feature-branch",
         },
       },
     },
@@ -154,13 +162,13 @@ test('resolveTargetPr - rejects fallback PR when head SHA does not match trigger
   assert.strictEqual(result, null);
 });
 
-test('resolveTargetPr - resolves via signal parameter when workflow_run.pull_requests is empty (fork PR)', async () => {
+test("resolveTargetPr - resolves via signal parameter when workflow_run.pull_requests is empty (fork PR)", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
       pulls: {
         get: async ({ pull_number }) => ({
-          data: { number: pull_number, title: 'From Signal Parameter' },
+          data: { number: pull_number, title: "From Signal Parameter" },
         }),
       },
     },
@@ -168,25 +176,25 @@ test('resolveTargetPr - resolves via signal parameter when workflow_run.pull_req
   const result = await resolveTargetPr({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: {
           id: 1234,
           pull_requests: [],
-          head_sha: 'commit-sha',
+          head_sha: "commit-sha",
         },
       },
     },
     core: mockCore,
-    process: { env: { PR_NUMBER: '' } },
+    process: { env: { PR_NUMBER: "" } },
     signal: { pr_number: 2588 },
   });
   assert.strictEqual(result.number, 2588);
 });
 
-test('resolveTargetPr - resolves via approval signal file on disk when signal parameter is omitted', async () => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-signal-test-'));
-  const signalPath = path.join(tempDir, 'approval-signal.json');
+test("resolveTargetPr - resolves via approval signal file on disk when signal parameter is omitted", async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "pr-signal-test-"));
+  const signalPath = path.join(tempDir, "approval-signal.json");
   fs.writeFileSync(signalPath, JSON.stringify({ pr_number: 777 }));
 
   const mockCore = createMockCore();
@@ -194,7 +202,7 @@ test('resolveTargetPr - resolves via approval signal file on disk when signal pa
     rest: {
       pulls: {
         get: async ({ pull_number }) => ({
-          data: { number: pull_number, title: 'From Signal File' },
+          data: { number: pull_number, title: "From Signal File" },
         }),
       },
     },
@@ -204,17 +212,17 @@ test('resolveTargetPr - resolves via approval signal file on disk when signal pa
     const result = await resolveTargetPr({
       github: mockGithub,
       context: {
-        repo: { owner: 'rancher', repo: 'test' },
+        repo: { owner: "rancher", repo: "test" },
         payload: {
           workflow_run: {
             id: 1234,
             pull_requests: [],
-            head_sha: 'commit-sha',
+            head_sha: "commit-sha",
           },
         },
       },
       core: mockCore,
-      process: { env: { PR_NUMBER: '', APPROVAL_SIGNAL_PATH: signalPath } },
+      process: { env: { PR_NUMBER: "", APPROVAL_SIGNAL_PATH: signalPath } },
     });
     assert.strictEqual(result.number, 777);
   } finally {
@@ -222,14 +230,14 @@ test('resolveTargetPr - resolves via approval signal file on disk when signal pa
   }
 });
 
-test('resolveTargetPr - rejects fallback candidate when head.sha is missing or mismatched', async () => {
+test("resolveTargetPr - rejects fallback candidate when head.sha is missing or mismatched", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     paginate: async (fn, params) => fn(params),
     rest: {
       repos: {
         listPullRequestsAssociatedWithCommit: async () => [
-          { number: 88, state: 'open', head: { ref: 'fork-branch' } }, // missing head.sha
+          { number: 88, state: "open", head: { ref: "fork-branch" } }, // missing head.sha
         ],
       },
     },
@@ -237,11 +245,11 @@ test('resolveTargetPr - rejects fallback candidate when head.sha is missing or m
   const result = await resolveTargetPr({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: {
-          head_sha: 'commit-sha-456',
-          head_branch: 'fork-branch',
+          head_sha: "commit-sha-456",
+          head_branch: "fork-branch",
           pull_requests: [],
         },
       },
@@ -252,19 +260,27 @@ test('resolveTargetPr - rejects fallback candidate when head.sha is missing or m
   assert.strictEqual(result, null);
 });
 
-test('resolveTargetPr - rejects fallback candidate when fetched PR branch or repository mismatches', async () => {
+test("resolveTargetPr - rejects fallback candidate when fetched PR branch or repository mismatches", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     paginate: async (fn, params) => fn(params),
     rest: {
       repos: {
         listPullRequestsAssociatedWithCommit: async () => [
-          { number: 88, state: 'open', head: { ref: 'fork-branch', sha: 'commit-sha-456' } },
+          {
+            number: 88,
+            state: "open",
+            head: { ref: "fork-branch", sha: "commit-sha-456" },
+          },
         ],
       },
       pulls: {
         get: async ({ pull_number }) => ({
-          data: { number: pull_number, state: 'open', head: { ref: 'other-branch', sha: 'commit-sha-456' } },
+          data: {
+            number: pull_number,
+            state: "open",
+            head: { ref: "other-branch", sha: "commit-sha-456" },
+          },
         }),
       },
     },
@@ -272,11 +288,11 @@ test('resolveTargetPr - rejects fallback candidate when fetched PR branch or rep
   const result = await resolveTargetPr({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: {
-          head_sha: 'commit-sha-456',
-          head_branch: 'fork-branch',
+          head_sha: "commit-sha-456",
+          head_branch: "fork-branch",
           pull_requests: [],
         },
       },
@@ -287,19 +303,27 @@ test('resolveTargetPr - rejects fallback candidate when fetched PR branch or rep
   assert.strictEqual(result, null);
 });
 
-test('resolveTargetPr - rejects fallback candidate when fetched PR lacks head.sha or pulls.get fails', async () => {
+test("resolveTargetPr - rejects fallback candidate when fetched PR lacks head.sha or pulls.get fails", async () => {
   const mockCoreMissingSha = createMockCore();
   const mockGithubMissingSha = {
     paginate: async (fn, params) => fn(params),
     rest: {
       repos: {
         listPullRequestsAssociatedWithCommit: async () => [
-          { number: 88, state: 'open', head: { ref: 'fork-branch', sha: 'commit-sha-456' } },
+          {
+            number: 88,
+            state: "open",
+            head: { ref: "fork-branch", sha: "commit-sha-456" },
+          },
         ],
       },
       pulls: {
         get: async ({ pull_number }) => ({
-          data: { number: pull_number, state: 'open', head: { ref: 'fork-branch' } }, // lacks sha
+          data: {
+            number: pull_number,
+            state: "open",
+            head: { ref: "fork-branch" },
+          }, // lacks sha
         }),
       },
     },
@@ -307,11 +331,11 @@ test('resolveTargetPr - rejects fallback candidate when fetched PR lacks head.sh
   const resultMissingSha = await resolveTargetPr({
     github: mockGithubMissingSha,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: {
-          head_sha: 'commit-sha-456',
-          head_branch: 'fork-branch',
+          head_sha: "commit-sha-456",
+          head_branch: "fork-branch",
           pull_requests: [],
         },
       },
@@ -327,12 +351,16 @@ test('resolveTargetPr - rejects fallback candidate when fetched PR lacks head.sh
     rest: {
       repos: {
         listPullRequestsAssociatedWithCommit: async () => [
-          { number: 88, state: 'open', head: { ref: 'fork-branch', sha: 'commit-sha-456' } },
+          {
+            number: 88,
+            state: "open",
+            head: { ref: "fork-branch", sha: "commit-sha-456" },
+          },
         ],
       },
       pulls: {
         get: async () => {
-          throw new Error('API failure');
+          throw new Error("API failure");
         },
       },
     },
@@ -340,11 +368,11 @@ test('resolveTargetPr - rejects fallback candidate when fetched PR lacks head.sh
   const resultThrow = await resolveTargetPr({
     github: mockGithubThrow,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: {
-          head_sha: 'commit-sha-456',
-          head_branch: 'fork-branch',
+          head_sha: "commit-sha-456",
+          head_branch: "fork-branch",
           pull_requests: [],
         },
       },
@@ -355,7 +383,7 @@ test('resolveTargetPr - rejects fallback candidate when fetched PR lacks head.sh
   assert.strictEqual(resultThrow, null);
 });
 
-test('checkWorkflowModifications - flags changes in .github/', async () => {
+test("checkWorkflowModifications - flags changes in .github/", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
@@ -364,22 +392,24 @@ test('checkWorkflowModifications - flags changes in .github/', async () => {
       },
     },
     paginate: async () => [
-      { filename: 'rancher2/resource_cluster.go' },
-      { filename: '.github/workflows/pull_request.yaml' },
+      { filename: "rancher2/resource_cluster.go" },
+      { filename: ".github/workflows/pull_request.yaml" },
     ],
   };
   const res = await checkWorkflowModifications({
     github: mockGithub,
-    owner: 'rancher',
-    repo: 'test',
+    owner: "rancher",
+    repo: "test",
     prNumber: 1,
     core: mockCore,
   });
   assert.strictEqual(res.modifiesWorkflows, true);
-  assert.deepStrictEqual(res.workflowFiles, ['.github/workflows/pull_request.yaml']);
+  assert.deepStrictEqual(res.workflowFiles, [
+    ".github/workflows/pull_request.yaml",
+  ]);
 });
 
-test('checkWorkflowModifications - flags changes when previous_filename is in .github/ (rename protection)', async () => {
+test("checkWorkflowModifications - flags changes when previous_filename is in .github/ (rename protection)", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
@@ -388,21 +418,24 @@ test('checkWorkflowModifications - flags changes when previous_filename is in .g
       },
     },
     paginate: async () => [
-      { filename: 'scripts/moved_workflow.sh', previous_filename: '.github/workflows/old.yml' },
+      {
+        filename: "scripts/moved_workflow.sh",
+        previous_filename: ".github/workflows/old.yml",
+      },
     ],
   };
   const res = await checkWorkflowModifications({
     github: mockGithub,
-    owner: 'rancher',
-    repo: 'test',
+    owner: "rancher",
+    repo: "test",
     prNumber: 1,
     core: mockCore,
   });
   assert.strictEqual(res.modifiesWorkflows, true);
-  assert.deepStrictEqual(res.workflowFiles, ['.github/workflows/old.yml']);
+  assert.deepStrictEqual(res.workflowFiles, [".github/workflows/old.yml"]);
 });
 
-test('checkWorkflowModifications - allows PRs without changes in .github/', async () => {
+test("checkWorkflowModifications - allows PRs without changes in .github/", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
@@ -411,102 +444,102 @@ test('checkWorkflowModifications - allows PRs without changes in .github/', asyn
       },
     },
     paginate: async () => [
-      { filename: 'rancher2/resource_cluster.go' },
-      { filename: 'docs/resources/cluster.md' },
+      { filename: "rancher2/resource_cluster.go" },
+      { filename: "docs/resources/cluster.md" },
     ],
   };
   const res = await checkWorkflowModifications({
     github: mockGithub,
-    owner: 'rancher',
-    repo: 'test',
+    owner: "rancher",
+    repo: "test",
     prNumber: 1,
     core: mockCore,
   });
   assert.strictEqual(res.modifiesWorkflows, false);
 });
 
-test('evaluateReviews - handles CHANGES_REQUESTED and author exclusions', () => {
+test("evaluateReviews - handles CHANGES_REQUESTED and author exclusions", () => {
   const reviews = [
-    { user: { login: 'reviewer1' }, state: 'CHANGES_REQUESTED' },
-    { user: { login: 'reviewer2' }, state: 'APPROVED' },
-    { user: { login: 'author' }, state: 'APPROVED' },
+    { user: { login: "reviewer1" }, state: "CHANGES_REQUESTED" },
+    { user: { login: "reviewer2" }, state: "APPROVED" },
+    { user: { login: "author" }, state: "APPROVED" },
   ];
-  const res = evaluateReviews(reviews, 'author');
+  const res = evaluateReviews(reviews, "author");
   assert.strictEqual(res.hasChangesRequested, true);
-  assert.deepStrictEqual(res.approvedReviewers, ['reviewer2']);
+  assert.deepStrictEqual(res.approvedReviewers, ["reviewer2"]);
 });
 
-test('evaluateReviews - supersedes older reviews with latest state', () => {
+test("evaluateReviews - supersedes older reviews with latest state", () => {
   const reviews = [
-    { user: { login: 'reviewer1' }, state: 'CHANGES_REQUESTED' },
-    { user: { login: 'reviewer1' }, state: 'APPROVED' },
+    { user: { login: "reviewer1" }, state: "CHANGES_REQUESTED" },
+    { user: { login: "reviewer1" }, state: "APPROVED" },
   ];
-  const res = evaluateReviews(reviews, 'author');
+  const res = evaluateReviews(reviews, "author");
   assert.strictEqual(res.hasChangesRequested, false);
-  assert.deepStrictEqual(res.approvedReviewers, ['reviewer1']);
+  assert.deepStrictEqual(res.approvedReviewers, ["reviewer1"]);
 });
 
-test('evaluateReviews - subsequent COMMENTED review does not overwrite CHANGES_REQUESTED', () => {
+test("evaluateReviews - subsequent COMMENTED review does not overwrite CHANGES_REQUESTED", () => {
   const reviews = [
-    { user: { login: 'reviewer1' }, state: 'CHANGES_REQUESTED' },
-    { user: { login: 'reviewer1' }, state: 'COMMENTED' },
+    { user: { login: "reviewer1" }, state: "CHANGES_REQUESTED" },
+    { user: { login: "reviewer1" }, state: "COMMENTED" },
   ];
-  const res = evaluateReviews(reviews, 'author');
+  const res = evaluateReviews(reviews, "author");
   assert.strictEqual(res.hasChangesRequested, true);
   assert.deepStrictEqual(res.approvedReviewers, []);
 });
 
-test('evaluateReviews - subsequent COMMENTED review does not overwrite APPROVED', () => {
+test("evaluateReviews - subsequent COMMENTED review does not overwrite APPROVED", () => {
   const reviews = [
-    { user: { login: 'reviewer1' }, state: 'APPROVED' },
-    { user: { login: 'reviewer1' }, state: 'COMMENTED' },
+    { user: { login: "reviewer1" }, state: "APPROVED" },
+    { user: { login: "reviewer1" }, state: "COMMENTED" },
   ];
-  const res = evaluateReviews(reviews, 'author');
+  const res = evaluateReviews(reviews, "author");
   assert.strictEqual(res.hasChangesRequested, false);
-  assert.deepStrictEqual(res.approvedReviewers, ['reviewer1']);
+  assert.deepStrictEqual(res.approvedReviewers, ["reviewer1"]);
 });
 
-test('evaluateReviews - DISMISSED review clears prior CHANGES_REQUESTED and APPROVED states', () => {
+test("evaluateReviews - DISMISSED review clears prior CHANGES_REQUESTED and APPROVED states", () => {
   const reviewsChangesRequested = [
-    { user: { login: 'reviewer1' }, state: 'CHANGES_REQUESTED' },
-    { user: { login: 'reviewer1' }, state: 'DISMISSED' },
+    { user: { login: "reviewer1" }, state: "CHANGES_REQUESTED" },
+    { user: { login: "reviewer1" }, state: "DISMISSED" },
   ];
-  const res1 = evaluateReviews(reviewsChangesRequested, 'author');
+  const res1 = evaluateReviews(reviewsChangesRequested, "author");
   assert.strictEqual(res1.hasChangesRequested, false);
   assert.deepStrictEqual(res1.approvedReviewers, []);
 
   const reviewsApproved = [
-    { user: { login: 'reviewer2' }, state: 'APPROVED' },
-    { user: { login: 'reviewer2' }, state: 'DISMISSED' },
+    { user: { login: "reviewer2" }, state: "APPROVED" },
+    { user: { login: "reviewer2" }, state: "DISMISSED" },
   ];
-  const res2 = evaluateReviews(reviewsApproved, 'author');
+  const res2 = evaluateReviews(reviewsApproved, "author");
   assert.strictEqual(res2.hasChangesRequested, false);
   assert.deepStrictEqual(res2.approvedReviewers, []);
 });
 
-test('evaluateReviews - case-insensitive user logins and author comparison', () => {
+test("evaluateReviews - case-insensitive user logins and author comparison", () => {
   const reviews = [
-    { user: { login: 'ReviewerOne' }, state: 'APPROVED' },
-    { user: { login: 'Author' }, state: 'APPROVED' },
+    { user: { login: "ReviewerOne" }, state: "APPROVED" },
+    { user: { login: "Author" }, state: "APPROVED" },
   ];
-  const res = evaluateReviews(reviews, 'author');
+  const res = evaluateReviews(reviews, "author");
   assert.strictEqual(res.hasChangesRequested, false);
-  assert.deepStrictEqual(res.approvedReviewers, ['ReviewerOne']);
+  assert.deepStrictEqual(res.approvedReviewers, ["ReviewerOne"]);
 });
 
-test('evaluateReviews - excludes authenticated bot from approvedReviewers', () => {
+test("evaluateReviews - excludes authenticated bot from approvedReviewers", () => {
   const reviews = [
-    { user: { login: 'rancher-bot' }, state: 'APPROVED' },
-    { user: { login: 'triage-reviewer' }, state: 'APPROVED' },
+    { user: { login: "rancher-bot" }, state: "APPROVED" },
+    { user: { login: "triage-reviewer" }, state: "APPROVED" },
   ];
-  const res = evaluateReviews(reviews, 'author', 'rancher-bot');
+  const res = evaluateReviews(reviews, "author", "rancher-bot");
   assert.strictEqual(res.hasChangesRequested, false);
-  assert.deepStrictEqual(res.approvedReviewers, ['triage-reviewer']);
+  assert.deepStrictEqual(res.approvedReviewers, ["triage-reviewer"]);
 });
 
-test('checkReviewerPermission - authorizes triage, write, and admin', async () => {
+test("checkReviewerPermission - authorizes triage, write, and admin", async () => {
   const mockCore = createMockCore();
-  for (const role of ['triage', 'write', 'admin']) {
+  for (const role of ["triage", "write", "admin"]) {
     const mockGithub = {
       rest: {
         repos: {
@@ -518,9 +551,9 @@ test('checkReviewerPermission - authorizes triage, write, and admin', async () =
     };
     const res = await checkReviewerPermission({
       github: mockGithub,
-      owner: 'rancher',
-      repo: 'test',
-      username: 'user1',
+      owner: "rancher",
+      repo: "test",
+      username: "user1",
       core: mockCore,
     });
     assert.strictEqual(res.isAuthorized, true);
@@ -530,28 +563,28 @@ test('checkReviewerPermission - authorizes triage, write, and admin', async () =
     rest: {
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'read', role_name: 'read' },
+          data: { permission: "read", role_name: "read" },
         }),
       },
     },
   };
   const resRead = await checkReviewerPermission({
     github: mockGithubRead,
-    owner: 'rancher',
-    repo: 'test',
-    username: 'userRead',
+    owner: "rancher",
+    repo: "test",
+    username: "userRead",
     core: mockCore,
   });
   assert.strictEqual(resRead.isAuthorized, false);
 });
 
-test('runAutoMerge - skips non-open PR', async () => {
+test("runAutoMerge - skips non-open PR", async () => {
   const mockCore = createMockCore();
   const mockGithub = {};
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
-      pull_request: { number: 1, state: 'closed', base: { ref: 'main' } },
+      pull_request: { number: 1, state: "closed", base: { ref: "main" } },
     },
   };
   const result = await runAutoMerge({
@@ -560,57 +593,20 @@ test('runAutoMerge - skips non-open PR', async () => {
     core: mockCore,
   });
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'skipped_not_open');
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "skipped_not_open");
 });
 
-test('runAutoMerge - skips draft PR', async () => {
+test("runAutoMerge - skips draft PR", async () => {
   const mockCore = createMockCore();
   const mockGithub = {};
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
-    payload: {
-      pull_request: { number: 1, state: 'open', draft: true, base: { ref: 'main' } },
-    },
-  };
-  const result = await runAutoMerge({
-    github: mockGithub,
-    context: mockContext,
-    core: mockCore,
-  });
-  assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'skipped_draft');
-});
-
-test('runAutoMerge - skips PR targeting branch other than main', async () => {
-  const mockCore = createMockCore();
-  const mockGithub = {};
-  const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
-    payload: {
-      pull_request: { number: 1, state: 'open', draft: false, base: { ref: 'release/v15' } },
-    },
-  };
-  const result = await runAutoMerge({
-    github: mockGithub,
-    context: mockContext,
-    core: mockCore,
-  });
-  assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'skipped_not_main');
-});
-
-test('runAutoMerge - skips superseded PR when PR_HEAD_SHA mismatches', async () => {
-  const mockCore = createMockCore();
-  const mockGithub = {};
-  const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        state: 'open',
-        draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'new-sha' },
+        state: "open",
+        draft: true,
+        base: { ref: "main" },
       },
     },
   };
@@ -618,13 +614,60 @@ test('runAutoMerge - skips superseded PR when PR_HEAD_SHA mismatches', async () 
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { PR_HEAD_SHA: 'old-sha' } },
   });
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'skipped_superseded');
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "skipped_draft");
 });
 
-test('runAutoMerge - skips PR modifying .github/**', async () => {
+test("runAutoMerge - skips PR targeting branch other than main", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {};
+  const mockContext = {
+    repo: { owner: "rancher", repo: "test" },
+    payload: {
+      pull_request: {
+        number: 1,
+        state: "open",
+        draft: false,
+        base: { ref: "release/v15" },
+      },
+    },
+  };
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+  });
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "skipped_not_main");
+});
+
+test("runAutoMerge - skips superseded PR when PR_HEAD_SHA mismatches", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {};
+  const mockContext = {
+    repo: { owner: "rancher", repo: "test" },
+    payload: {
+      pull_request: {
+        number: 1,
+        state: "open",
+        draft: false,
+        base: { ref: "main" },
+        head: { sha: "new-sha" },
+      },
+    },
+  };
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: { PR_HEAD_SHA: "old-sha" } },
+  });
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "skipped_superseded");
+});
+
+test("runAutoMerge - skips PR modifying .github/**", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
@@ -632,17 +675,17 @@ test('runAutoMerge - skips PR modifying .github/**', async () => {
         listFiles: async () => {},
       },
     },
-    paginate: async () => [{ filename: '.github/workflows/auto-merge.yml' }],
+    paginate: async () => [{ filename: ".github/workflows/auto-merge.yml" }],
   };
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        state: 'open',
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
       },
     },
   };
@@ -653,10 +696,13 @@ test('runAutoMerge - skips PR modifying .github/**', async () => {
     process: { env: {} },
   });
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'skipped_workflow_files');
+  assert.strictEqual(
+    mockCore.outputs.auto_merge_status,
+    "skipped_workflow_files",
+  );
 });
 
-test('runAutoMerge - fails when GITHUB_MERGE_TOKEN is missing', async () => {
+test("runAutoMerge - fails when GITHUB_MERGE_TOKEN is missing", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
@@ -664,17 +710,17 @@ test('runAutoMerge - fails when GITHUB_MERGE_TOKEN is missing', async () => {
         listFiles: async () => {},
       },
     },
-    paginate: async () => [{ filename: 'rancher2/config.go' }],
+    paginate: async () => [{ filename: "rancher2/config.go" }],
   };
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        state: 'open',
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
       },
     },
   };
@@ -688,7 +734,7 @@ test('runAutoMerge - fails when GITHUB_MERGE_TOKEN is missing', async () => {
   assert.match(mockCore.failedMessage, /GITHUB_MERGE_TOKEN is required/);
 });
 
-test('runAutoMerge - fails when getOctokit is unavailable', async () => {
+test("runAutoMerge - fails when getOctokit is unavailable", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
@@ -696,17 +742,17 @@ test('runAutoMerge - fails when getOctokit is unavailable', async () => {
         listFiles: async () => {},
       },
     },
-    paginate: async () => [{ filename: 'rancher2/config.go' }],
+    paginate: async () => [{ filename: "rancher2/config.go" }],
   };
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        state: 'open',
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
       },
     },
   };
@@ -714,13 +760,13 @@ test('runAutoMerge - fails when getOctokit is unavailable', async () => {
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    process: { env: { GITHUB_MERGE_TOKEN: "mock-token" } },
   });
   assert.strictEqual(result, false);
   assert.match(mockCore.failedMessage, /getOctokit is unavailable/);
 });
 
-test('runAutoMerge - blocks when CHANGES_REQUESTED is active', async () => {
+test("runAutoMerge - blocks when CHANGES_REQUESTED is active", async () => {
   const mockCore = createMockCore();
   let callCount = 0;
   const mockGithub = {
@@ -733,32 +779,32 @@ test('runAutoMerge - blocks when CHANGES_REQUESTED is active', async () => {
     paginate: async () => {
       callCount++;
       if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
+        return [{ filename: "rancher2/config.go" }];
       }
       return [
-        { user: { login: 'reviewer' }, state: 'CHANGES_REQUESTED' },
-        { user: { login: 'approver' }, state: 'APPROVED' },
+        { user: { login: "reviewer" }, state: "CHANGES_REQUESTED" },
+        { user: { login: "approver" }, state: "APPROVED" },
       ];
     },
   };
   const elevatedGithub = {
     graphql: async (query) => {
-      if (query.includes('viewer')) {
-        return { viewer: { login: 'rancher-bot' } };
+      if (query.includes("viewer")) {
+        return { viewer: { login: "rancher-bot" } };
       }
       return {};
     },
   };
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        state: 'open',
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
-        user: { login: 'author' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
+        user: { login: "author" },
       },
     },
   };
@@ -766,14 +812,17 @@ test('runAutoMerge - blocks when CHANGES_REQUESTED is active', async () => {
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    process: { env: { GITHUB_MERGE_TOKEN: "mock-token" } },
     getOctokit: () => elevatedGithub,
   });
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'blocked_changes_requested');
+  assert.strictEqual(
+    mockCore.outputs.auto_merge_status,
+    "blocked_changes_requested",
+  );
 });
 
-test('runAutoMerge - does not allow bot approval to self-qualify without human approval', async () => {
+test("runAutoMerge - does not allow bot approval to self-qualify without human approval", async () => {
   const mockCore = createMockCore();
   let callCount = 0;
   const mockGithub = {
@@ -786,29 +835,29 @@ test('runAutoMerge - does not allow bot approval to self-qualify without human a
     paginate: async () => {
       callCount++;
       if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
+        return [{ filename: "rancher2/config.go" }];
       }
-      return [{ user: { login: 'rancher-bot' }, state: 'APPROVED' }];
+      return [{ user: { login: "rancher-bot" }, state: "APPROVED" }];
     },
   };
   const elevatedGithub = {
     graphql: async (query) => {
-      if (query.includes('viewer')) {
-        return { viewer: { login: 'rancher-bot' } };
+      if (query.includes("viewer")) {
+        return { viewer: { login: "rancher-bot" } };
       }
       return {};
     },
   };
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        state: 'open',
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
-        user: { login: 'author' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
+        user: { login: "author" },
       },
     },
   };
@@ -816,69 +865,14 @@ test('runAutoMerge - does not allow bot approval to self-qualify without human a
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    process: { env: { GITHUB_MERGE_TOKEN: "mock-token" } },
     getOctokit: () => elevatedGithub,
   });
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'no_approvals');
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "no_approvals");
 });
 
-test('runAutoMerge - skips when reviewer lacks qualifying role', async () => {
-  const mockCore = createMockCore();
-  let callCount = 0;
-  const mockGithub = {
-    rest: {
-      pulls: {
-        listFiles: async () => {},
-        listReviews: async () => {},
-      },
-      repos: {
-        getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'read', role_name: 'read' },
-        }),
-      },
-    },
-    paginate: async () => {
-      callCount++;
-      if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
-      }
-      return [{ user: { login: 'guest' }, state: 'APPROVED' }];
-    },
-  };
-  const elevatedGithub = {
-    graphql: async (query) => {
-      if (query.includes('viewer')) {
-        return { viewer: { login: 'rancher-bot' } };
-      }
-      return {};
-    },
-  };
-  const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
-    payload: {
-      pull_request: {
-        number: 1,
-        state: 'open',
-        draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
-        user: { login: 'author' },
-      },
-    },
-  };
-  const result = await runAutoMerge({
-    github: mockGithub,
-    context: mockContext,
-    core: mockCore,
-    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
-    getOctokit: () => elevatedGithub,
-  });
-  assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'no_qualifying_permission');
-});
-
-test('runAutoMerge - skips when qualifying review commit_id does not match PR head', async () => {
+test("runAutoMerge - skips when reviewer lacks qualifying role", async () => {
   const mockCore = createMockCore();
   let callCount = 0;
   const mockGithub = {
@@ -889,36 +883,36 @@ test('runAutoMerge - skips when qualifying review commit_id does not match PR he
       },
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
+          data: { permission: "read", role_name: "read" },
         }),
       },
     },
     paginate: async () => {
       callCount++;
       if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
+        return [{ filename: "rancher2/config.go" }];
       }
-      return [{ user: { login: 'triage-reviewer' }, state: 'APPROVED', commit_id: 'old-sha' }];
+      return [{ user: { login: "guest" }, state: "APPROVED" }];
     },
   };
   const elevatedGithub = {
     graphql: async (query) => {
-      if (query.includes('viewer')) {
-        return { viewer: { login: 'rancher-bot' } };
+      if (query.includes("viewer")) {
+        return { viewer: { login: "rancher-bot" } };
       }
       return {};
     },
   };
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        state: 'open',
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'new-sha' },
-        user: { login: 'author' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
+        user: { login: "author" },
       },
     },
   };
@@ -926,14 +920,78 @@ test('runAutoMerge - skips when qualifying review commit_id does not match PR he
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    process: { env: { GITHUB_MERGE_TOKEN: "mock-token" } },
     getOctokit: () => elevatedGithub,
   });
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'skipped_superseded');
+  assert.strictEqual(
+    mockCore.outputs.auto_merge_status,
+    "no_qualifying_permission",
+  );
 });
 
-test('runAutoMerge - successfully submits bot approval and enables auto-merge for triage approver', async () => {
+test("runAutoMerge - skips when qualifying review commit_id does not match PR head", async () => {
+  const mockCore = createMockCore();
+  let callCount = 0;
+  const mockGithub = {
+    rest: {
+      pulls: {
+        listFiles: async () => {},
+        listReviews: async () => {},
+      },
+      repos: {
+        getCollaboratorPermissionLevel: async () => ({
+          data: { permission: "triage", role_name: "triage" },
+        }),
+      },
+    },
+    paginate: async () => {
+      callCount++;
+      if (callCount === 1) {
+        return [{ filename: "rancher2/config.go" }];
+      }
+      return [
+        {
+          user: { login: "triage-reviewer" },
+          state: "APPROVED",
+          commit_id: "old-sha",
+        },
+      ];
+    },
+  };
+  const elevatedGithub = {
+    graphql: async (query) => {
+      if (query.includes("viewer")) {
+        return { viewer: { login: "rancher-bot" } };
+      }
+      return {};
+    },
+  };
+  const mockContext = {
+    repo: { owner: "rancher", repo: "test" },
+    payload: {
+      pull_request: {
+        number: 1,
+        state: "open",
+        draft: false,
+        base: { ref: "main" },
+        head: { sha: "new-sha" },
+        user: { login: "author" },
+      },
+    },
+  };
+  const result = await runAutoMerge({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: { GITHUB_MERGE_TOKEN: "mock-token" } },
+    getOctokit: () => elevatedGithub,
+  });
+  assert.strictEqual(result, false);
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "skipped_superseded");
+});
+
+test("runAutoMerge - successfully submits bot approval and enables auto-merge for triage approver", async () => {
   const mockCore = createMockCore();
   let callCount = 0;
   let botReviewCreated = false;
@@ -945,8 +1003,8 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
     rest: {
       pulls: {
         createReview: async ({ event, commit_id, body }) => {
-          assert.strictEqual(event, 'APPROVE');
-          assert.strictEqual(commit_id, 'sha1');
+          assert.strictEqual(event, "APPROVE");
+          assert.strictEqual(commit_id, "sha1");
           assert.match(body, /@triage-engineer/);
           botReviewCreated = true;
           elevatedClientUsedForReview = true;
@@ -955,16 +1013,16 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
       },
     },
     graphql: async (query, vars) => {
-      if (query.includes('viewer')) {
-        return { viewer: { login: 'rancher-bot' } };
+      if (query.includes("viewer")) {
+        return { viewer: { login: "rancher-bot" } };
       }
-      assert.ok(query.includes('enablePullRequestAutoMerge'));
-      assert.strictEqual(vars.pullRequestId, 'PR_node_id_123');
+      assert.ok(query.includes("enablePullRequestAutoMerge"));
+      assert.strictEqual(vars.pullRequestId, "PR_node_id_123");
       autoMergeMutationCalled = true;
       elevatedClientUsedForMutation = true;
       return {
         enablePullRequestAutoMerge: {
-          pullRequest: { id: 'PR_node_id_123' },
+          pullRequest: { id: "PR_node_id_123" },
         },
       };
     },
@@ -974,35 +1032,41 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
     paginate: async () => {
       callCount++;
       if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
+        return [{ filename: "rancher2/config.go" }];
       }
-      return [{ user: { login: 'triage-engineer' }, state: 'APPROVED', commit_id: 'sha1' }];
+      return [
+        {
+          user: { login: "triage-engineer" },
+          state: "APPROVED",
+          commit_id: "sha1",
+        },
+      ];
     },
     rest: {
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
+          data: { permission: "triage", role_name: "triage" },
         }),
       },
     },
   };
 
   const mockGetOctokit = (token) => {
-    assert.strictEqual(token, 'vault-merge-token-secret');
+    assert.strictEqual(token, "vault-merge-token-secret");
     return elevatedGithub;
   };
 
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        node_id: 'PR_node_id_123',
-        state: 'open',
+        node_id: "PR_node_id_123",
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
-        user: { login: 'author' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
+        user: { login: "author" },
       },
     },
   };
@@ -1011,7 +1075,7 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { GITHUB_MERGE_TOKEN: 'vault-merge-token-secret' } },
+    process: { env: { GITHUB_MERGE_TOKEN: "vault-merge-token-secret" } },
     getOctokit: mockGetOctokit,
   });
 
@@ -1020,10 +1084,10 @@ test('runAutoMerge - successfully submits bot approval and enables auto-merge fo
   assert.strictEqual(elevatedClientUsedForReview, true);
   assert.strictEqual(autoMergeMutationCalled, true);
   assert.strictEqual(elevatedClientUsedForMutation, true);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'enabled');
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "enabled");
 });
 
-test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', async () => {
+test("runAutoMerge - handles already enabled auto-merge in GraphQL gracefully", async () => {
   const mockCore = createMockCore();
   let callCount = 0;
 
@@ -1034,10 +1098,10 @@ test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', 
       },
     },
     graphql: async (query) => {
-      if (query.includes('viewer')) {
-        return { viewer: { login: 'rancher-bot' } };
+      if (query.includes("viewer")) {
+        return { viewer: { login: "rancher-bot" } };
       }
-      throw new Error('Auto merge is already enabled for this pull request.');
+      throw new Error("Auto merge is already enabled for this pull request.");
     },
   };
 
@@ -1045,35 +1109,41 @@ test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', 
     paginate: async () => {
       callCount++;
       if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
+        return [{ filename: "rancher2/config.go" }];
       }
-      return [{ user: { login: 'triage-engineer' }, state: 'APPROVED', commit_id: 'sha1' }];
+      return [
+        {
+          user: { login: "triage-engineer" },
+          state: "APPROVED",
+          commit_id: "sha1",
+        },
+      ];
     },
     rest: {
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
+          data: { permission: "triage", role_name: "triage" },
         }),
       },
     },
   };
 
   const mockGetOctokit = (token) => {
-    assert.strictEqual(token, 'vault-merge-token-secret');
+    assert.strictEqual(token, "vault-merge-token-secret");
     return elevatedGithub;
   };
 
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        node_id: 'PR_node_id_123',
-        state: 'open',
+        node_id: "PR_node_id_123",
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
-        user: { login: 'author' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
+        user: { login: "author" },
       },
     },
   };
@@ -1082,21 +1152,21 @@ test('runAutoMerge - handles already enabled auto-merge in GraphQL gracefully', 
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { GITHUB_MERGE_TOKEN: 'vault-merge-token-secret' } },
+    process: { env: { GITHUB_MERGE_TOKEN: "vault-merge-token-secret" } },
     getOctokit: mockGetOctokit,
   });
 
   assert.strictEqual(result, true);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'already_enabled');
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "already_enabled");
 });
 
-test('runAutoMerge - fails closed when authenticated bot login cannot be resolved', async () => {
+test("runAutoMerge - fails closed when authenticated bot login cannot be resolved", async () => {
   const mockCore = createMockCore();
 
   // Test case 1: graphql viewer query throws an error
   const failingElevatedGithub = {
     graphql: async () => {
-      throw new Error('Bad credentials / token expired');
+      throw new Error("Bad credentials / token expired");
     },
   };
 
@@ -1105,22 +1175,22 @@ test('runAutoMerge - fails closed when authenticated bot login cannot be resolve
     rest: {
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'write', role_name: 'write' },
+          data: { permission: "write", role_name: "write" },
         }),
       },
     },
   };
 
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        state: 'open',
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
-        user: { login: 'author' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
+        user: { login: "author" },
       },
     },
   };
@@ -1129,18 +1199,21 @@ test('runAutoMerge - fails closed when authenticated bot login cannot be resolve
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    process: { env: { GITHUB_MERGE_TOKEN: "mock-token" } },
     getOctokit: () => failingElevatedGithub,
   });
 
   assert.strictEqual(result1, false);
-  assert.match(mockCore.failedMessage, /Failed to resolve authenticated bot login/);
+  assert.match(
+    mockCore.failedMessage,
+    /Failed to resolve authenticated bot login/,
+  );
 
   // Test case 2: graphql viewer query returns empty login
   const mockCore2 = createMockCore();
   const emptyLoginElevatedGithub = {
     graphql: async () => ({
-      viewer: { login: '' },
+      viewer: { login: "" },
     }),
   };
 
@@ -1148,15 +1221,18 @@ test('runAutoMerge - fails closed when authenticated bot login cannot be resolve
     github: mockGithub,
     context: mockContext,
     core: mockCore2,
-    process: { env: { GITHUB_MERGE_TOKEN: 'mock-token' } },
+    process: { env: { GITHUB_MERGE_TOKEN: "mock-token" } },
     getOctokit: () => emptyLoginElevatedGithub,
   });
 
   assert.strictEqual(result2, false);
-  assert.match(mockCore2.failedMessage, /Could not resolve authenticated bot identity from GITHUB_MERGE_TOKEN/);
+  assert.match(
+    mockCore2.failedMessage,
+    /Could not resolve authenticated bot identity from GITHUB_MERGE_TOKEN/,
+  );
 });
 
-test('runAutoMerge - resolves authenticated bot login via graphql viewer query', async () => {
+test("runAutoMerge - resolves authenticated bot login via graphql viewer query", async () => {
   const mockCore = createMockCore();
   let botReviewCreated = false;
 
@@ -1170,10 +1246,10 @@ test('runAutoMerge - resolves authenticated bot login via graphql viewer query',
       },
     },
     graphql: async (query) => {
-      if (query.includes('viewer')) {
-        return { viewer: { login: 'eio-github-actions-power-enhancer[bot]' } };
+      if (query.includes("viewer")) {
+        return { viewer: { login: "eio-github-actions-power-enhancer[bot]" } };
       }
-      if (query.includes('enablePullRequestAutoMerge')) {
+      if (query.includes("enablePullRequestAutoMerge")) {
         return { enablePullRequestAutoMerge: {} };
       }
       throw new Error(`Unexpected query: ${query}`);
@@ -1185,30 +1261,36 @@ test('runAutoMerge - resolves authenticated bot login via graphql viewer query',
     paginate: async () => {
       callCount++;
       if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
+        return [{ filename: "rancher2/config.go" }];
       }
-      return [{ user: { login: 'triage-engineer' }, state: 'APPROVED', commit_id: 'sha1' }];
+      return [
+        {
+          user: { login: "triage-engineer" },
+          state: "APPROVED",
+          commit_id: "sha1",
+        },
+      ];
     },
     rest: {
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
+          data: { permission: "triage", role_name: "triage" },
         }),
       },
     },
   };
 
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       pull_request: {
         number: 1,
-        node_id: 'PR_node_id_123',
-        state: 'open',
+        node_id: "PR_node_id_123",
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'sha1' },
-        user: { login: 'author' },
+        base: { ref: "main" },
+        head: { sha: "sha1" },
+        user: { login: "author" },
       },
     },
   };
@@ -1217,16 +1299,16 @@ test('runAutoMerge - resolves authenticated bot login via graphql viewer query',
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { GITHUB_MERGE_TOKEN: 'vault-merge-token-secret' } },
+    process: { env: { GITHUB_MERGE_TOKEN: "vault-merge-token-secret" } },
     getOctokit: () => appInstallationGithub,
   });
 
   assert.strictEqual(result, true);
   assert.strictEqual(botReviewCreated, true);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'enabled');
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "enabled");
 });
 
-test('runPreflight - succeeds for qualifying PR with valid approval signal', async () => {
+test("runPreflight - succeeds for qualifying PR with valid approval signal", async () => {
   const mockCore = createMockCore();
   let callCount = 0;
 
@@ -1234,55 +1316,64 @@ test('runPreflight - succeeds for qualifying PR with valid approval signal', asy
     paginate: async (_fn, params) => {
       if (params?.run_id) {
         // Artifacts lookup
-        return [{ id: 101, name: 'auto-merge-approval-signal' }];
+        return [{ id: 101, name: "auto-merge-approval-signal" }];
       }
       callCount++;
       if (callCount === 1) {
         // Changed files lookup
-        return [{ filename: 'rancher2/resource_cluster.go' }];
+        return [{ filename: "rancher2/resource_cluster.go" }];
       }
       // Reviews lookup
-      return [{ id: 'rev-1', user: { login: 'triage-reviewer' }, state: 'APPROVED', commit_id: 'commit-sha' }];
+      return [
+        {
+          id: "rev-1",
+          user: { login: "triage-reviewer" },
+          state: "APPROVED",
+          commit_id: "commit-sha",
+        },
+      ];
     },
     rest: {
       actions: {
         listWorkflowRunArtifacts: async () => ({
-          data: { artifacts: [{ id: 101, name: 'auto-merge-approval-signal' }] },
+          data: {
+            artifacts: [{ id: 101, name: "auto-merge-approval-signal" }],
+          },
         }),
         downloadArtifact: async () => ({
           data: {
             pr_number: 42,
-            review_id: 'rev-1',
-            review_user: 'triage-reviewer',
-            review_commit_id: 'commit-sha',
-            head_sha: 'commit-sha',
-            review_state: 'APPROVED',
-            base_ref: 'main',
+            review_id: "rev-1",
+            review_user: "triage-reviewer",
+            review_commit_id: "commit-sha",
+            head_sha: "commit-sha",
+            review_state: "APPROVED",
+            base_ref: "main",
           },
         }),
       },
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
+          data: { permission: "triage", role_name: "triage" },
         }),
       },
     },
   };
 
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       workflow_run: {
         id: 9999,
-        pull_requests: [{ number: 42, head: { sha: 'commit-sha' } }],
+        pull_requests: [{ number: 42, head: { sha: "commit-sha" } }],
       },
       pull_request: {
         number: 42,
-        state: 'open',
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'commit-sha' },
-        user: { login: 'author' },
+        base: { ref: "main" },
+        head: { sha: "commit-sha" },
+        user: { login: "author" },
       },
     },
   };
@@ -1291,47 +1382,47 @@ test('runPreflight - succeeds for qualifying PR with valid approval signal', asy
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { PR_NUMBER: '42', PR_HEAD_SHA: 'commit-sha' } },
+    process: { env: { PR_NUMBER: "42", PR_HEAD_SHA: "commit-sha" } },
   });
 
   assert.strictEqual(result, true);
-  assert.strictEqual(mockCore.outputs.eligible, 'true');
-  assert.strictEqual(mockCore.outputs.pr_number, '42');
-  assert.strictEqual(mockCore.outputs.pr_head_sha, 'commit-sha');
-  assert.strictEqual(mockCore.outputs.review_id, 'rev-1');
-  assert.strictEqual(mockCore.outputs.review_user, 'triage-reviewer');
-  assert.strictEqual(mockCore.outputs.review_commit_id, 'commit-sha');
+  assert.strictEqual(mockCore.outputs.eligible, "true");
+  assert.strictEqual(mockCore.outputs.pr_number, "42");
+  assert.strictEqual(mockCore.outputs.pr_head_sha, "commit-sha");
+  assert.strictEqual(mockCore.outputs.review_id, "rev-1");
+  assert.strictEqual(mockCore.outputs.review_user, "triage-reviewer");
+  assert.strictEqual(mockCore.outputs.review_commit_id, "commit-sha");
 });
 
-test('runPreflight - fails when auto-merge-approval-signal artifact is missing in workflow_run', async () => {
+test("runPreflight - fails when auto-merge-approval-signal artifact is missing in workflow_run", async () => {
   const mockCore = createMockCore();
 
   const mockGithub = {
     paginate: async () => {
-      return [{ name: 'other-unrelated-artifact' }];
+      return [{ name: "other-unrelated-artifact" }];
     },
     rest: {
       actions: {
         listWorkflowRunArtifacts: async () => ({
-          data: { artifacts: [{ name: 'other-unrelated-artifact' }] },
+          data: { artifacts: [{ name: "other-unrelated-artifact" }] },
         }),
       },
     },
   };
 
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       workflow_run: {
         id: 8888,
       },
       pull_request: {
         number: 42,
-        state: 'open',
+        state: "open",
         draft: false,
-        base: { ref: 'main' },
-        head: { sha: 'commit-sha' },
-        user: { login: 'author' },
+        base: { ref: "main" },
+        head: { sha: "commit-sha" },
+        user: { login: "author" },
       },
     },
   };
@@ -1344,17 +1435,21 @@ test('runPreflight - fails when auto-merge-approval-signal artifact is missing i
   });
 
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.eligible, 'false');
-  assert.ok(mockCore.infoMessages.some(m => m.includes("lacks 'auto-merge-approval-signal' artifact")));
+  assert.strictEqual(mockCore.outputs.eligible, "false");
+  assert.ok(
+    mockCore.infoMessages.some((m) =>
+      m.includes("lacks 'auto-merge-approval-signal' artifact"),
+    ),
+  );
 });
 
-test('runPreflight - fails when target PR cannot be resolved', async () => {
+test("runPreflight - fails when target PR cannot be resolved", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
       pulls: {
         get: async () => {
-          throw new Error('Not found');
+          throw new Error("Not found");
         },
       },
     },
@@ -1363,47 +1458,59 @@ test('runPreflight - fails when target PR cannot be resolved', async () => {
   const result = await runPreflight({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {},
     },
     core: mockCore,
-    process: { env: { PR_NUMBER: '99999' } },
+    process: { env: { PR_NUMBER: "99999" } },
   });
 
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.eligible, 'false');
-  assert.strictEqual(mockCore.failedMessage, 'Could not resolve target PR for preflight auto-merge.');
+  assert.strictEqual(mockCore.outputs.eligible, "false");
+  assert.strictEqual(
+    mockCore.failedMessage,
+    "Could not resolve target PR for preflight auto-merge.",
+  );
 });
 
-test('runPreflight - succeeds for fork PR when workflow_run.pull_requests is empty by reading PR from signal artifact', async () => {
+test("runPreflight - succeeds for fork PR when workflow_run.pull_requests is empty by reading PR from signal artifact", async () => {
   const mockCore = createMockCore();
   let callCount = 0;
 
   const mockGithub = {
     paginate: async (_fn, params) => {
       if (params?.run_id) {
-        return [{ id: 101, name: 'auto-merge-approval-signal' }];
+        return [{ id: 101, name: "auto-merge-approval-signal" }];
       }
       callCount++;
       if (callCount === 1) {
-        return [{ filename: 'rancher2/resource_cluster.go' }];
+        return [{ filename: "rancher2/resource_cluster.go" }];
       }
-      return [{ id: 'rev-fork-1', user: { login: 'triage-reviewer' }, state: 'APPROVED', commit_id: 'fork-sha' }];
+      return [
+        {
+          id: "rev-fork-1",
+          user: { login: "triage-reviewer" },
+          state: "APPROVED",
+          commit_id: "fork-sha",
+        },
+      ];
     },
     rest: {
       actions: {
         listWorkflowRunArtifacts: async () => ({
-          data: { artifacts: [{ id: 101, name: 'auto-merge-approval-signal' }] },
+          data: {
+            artifacts: [{ id: 101, name: "auto-merge-approval-signal" }],
+          },
         }),
         downloadArtifact: async () => ({
           data: {
             pr_number: 2588,
-            review_id: 'rev-fork-1',
-            review_user: 'triage-reviewer',
-            review_commit_id: 'fork-sha',
-            head_sha: 'fork-sha',
-            review_state: 'APPROVED',
-            base_ref: 'main',
+            review_id: "rev-fork-1",
+            review_user: "triage-reviewer",
+            review_commit_id: "fork-sha",
+            head_sha: "fork-sha",
+            review_state: "APPROVED",
+            base_ref: "main",
           },
         }),
       },
@@ -1411,30 +1518,30 @@ test('runPreflight - succeeds for fork PR when workflow_run.pull_requests is emp
         get: async ({ pull_number }) => ({
           data: {
             number: pull_number,
-            state: 'open',
+            state: "open",
             draft: false,
-            base: { ref: 'main' },
-            head: { sha: 'fork-sha', ref: 'trivial-docs' },
-            user: { login: 'fork-author' },
+            base: { ref: "main" },
+            head: { sha: "fork-sha", ref: "trivial-docs" },
+            user: { login: "fork-author" },
           },
         }),
       },
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
+          data: { permission: "triage", role_name: "triage" },
         }),
       },
     },
   };
 
   const mockContext = {
-    repo: { owner: 'rancher', repo: 'test' },
+    repo: { owner: "rancher", repo: "test" },
     payload: {
       workflow_run: {
         id: 9999,
         pull_requests: [], // Empty for fork PRs!
-        head_sha: 'fork-sha',
-        head_branch: 'trivial-docs',
+        head_sha: "fork-sha",
+        head_branch: "trivial-docs",
       },
     },
   };
@@ -1443,18 +1550,24 @@ test('runPreflight - succeeds for fork PR when workflow_run.pull_requests is emp
     github: mockGithub,
     context: mockContext,
     core: mockCore,
-    process: { env: { PR_NUMBER: '', PR_HEAD_SHA: 'fork-sha', WORKFLOW_RUN_SHA: 'fork-sha' } },
+    process: {
+      env: {
+        PR_NUMBER: "",
+        PR_HEAD_SHA: "fork-sha",
+        WORKFLOW_RUN_SHA: "fork-sha",
+      },
+    },
   });
 
   assert.strictEqual(result, true);
-  assert.strictEqual(mockCore.outputs.eligible, 'true');
-  assert.strictEqual(mockCore.outputs.pr_number, '2588');
-  assert.strictEqual(mockCore.outputs.pr_head_sha, 'fork-sha');
-  assert.strictEqual(mockCore.outputs.review_id, 'rev-fork-1');
-  assert.strictEqual(mockCore.outputs.review_user, 'triage-reviewer');
+  assert.strictEqual(mockCore.outputs.eligible, "true");
+  assert.strictEqual(mockCore.outputs.pr_number, "2588");
+  assert.strictEqual(mockCore.outputs.pr_head_sha, "fork-sha");
+  assert.strictEqual(mockCore.outputs.review_id, "rev-fork-1");
+  assert.strictEqual(mockCore.outputs.review_user, "triage-reviewer");
 });
 
-test('runPreflight - skips non-open or draft PR', async () => {
+test("runPreflight - skips non-open or draft PR", async () => {
   const mockCoreClosed = createMockCore();
   const mockGithub = {
     paginate: async () => [],
@@ -1470,14 +1583,14 @@ test('runPreflight - skips non-open or draft PR', async () => {
   const resultClosed = await runPreflight({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         pull_request: {
           number: 10,
-          state: 'closed',
+          state: "closed",
           draft: false,
-          base: { ref: 'main' },
-          head: { sha: 'sha1' },
+          base: { ref: "main" },
+          head: { sha: "sha1" },
         },
       },
     },
@@ -1485,20 +1598,20 @@ test('runPreflight - skips non-open or draft PR', async () => {
   });
 
   assert.strictEqual(resultClosed, false);
-  assert.strictEqual(mockCoreClosed.outputs.eligible, 'false');
+  assert.strictEqual(mockCoreClosed.outputs.eligible, "false");
 
   const mockCoreDraft = createMockCore();
   const resultDraft = await runPreflight({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         pull_request: {
           number: 11,
-          state: 'open',
+          state: "open",
           draft: true,
-          base: { ref: 'main' },
-          head: { sha: 'sha1' },
+          base: { ref: "main" },
+          head: { sha: "sha1" },
         },
       },
     },
@@ -1506,26 +1619,26 @@ test('runPreflight - skips non-open or draft PR', async () => {
   });
 
   assert.strictEqual(resultDraft, false);
-  assert.strictEqual(mockCoreDraft.outputs.eligible, 'false');
+  assert.strictEqual(mockCoreDraft.outputs.eligible, "false");
 });
 
-test('runPreflight - skips PR modifying .github/**', async () => {
+test("runPreflight - skips PR modifying .github/**", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
-    paginate: async () => [{ filename: '.github/workflows/ci.yml' }],
+    paginate: async () => [{ filename: ".github/workflows/ci.yml" }],
   };
 
   const result = await runPreflight({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         pull_request: {
           number: 12,
-          state: 'open',
+          state: "open",
           draft: false,
-          base: { ref: 'main' },
-          head: { sha: 'sha1' },
+          base: { ref: "main" },
+          head: { sha: "sha1" },
         },
       },
     },
@@ -1533,22 +1646,24 @@ test('runPreflight - skips PR modifying .github/**', async () => {
   });
 
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.eligible, 'false');
-  assert.ok(mockCore.infoMessages.some(m => m.includes('modifies files in .github/')));
+  assert.strictEqual(mockCore.outputs.eligible, "false");
+  assert.ok(
+    mockCore.infoMessages.some((m) => m.includes("modifies files in .github/")),
+  );
 });
 
-test('runPreflight - skips PR with active CHANGES_REQUESTED', async () => {
+test("runPreflight - skips PR with active CHANGES_REQUESTED", async () => {
   const mockCore = createMockCore();
   let callCount = 0;
   const mockGithub = {
     paginate: async () => {
       callCount++;
       if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
+        return [{ filename: "rancher2/config.go" }];
       }
       return [
-        { user: { login: 'reviewer1' }, state: 'CHANGES_REQUESTED' },
-        { user: { login: 'reviewer2' }, state: 'APPROVED' },
+        { user: { login: "reviewer1" }, state: "CHANGES_REQUESTED" },
+        { user: { login: "reviewer2" }, state: "APPROVED" },
       ];
     },
   };
@@ -1556,14 +1671,14 @@ test('runPreflight - skips PR with active CHANGES_REQUESTED', async () => {
   const result = await runPreflight({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         pull_request: {
           number: 13,
-          state: 'open',
+          state: "open",
           draft: false,
-          base: { ref: 'main' },
-          head: { sha: 'sha1' },
+          base: { ref: "main" },
+          head: { sha: "sha1" },
         },
       },
     },
@@ -1571,25 +1686,33 @@ test('runPreflight - skips PR with active CHANGES_REQUESTED', async () => {
   });
 
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.eligible, 'false');
-  assert.ok(mockCore.infoMessages.some(m => m.includes('active CHANGES_REQUESTED')));
+  assert.strictEqual(mockCore.outputs.eligible, "false");
+  assert.ok(
+    mockCore.infoMessages.some((m) => m.includes("active CHANGES_REQUESTED")),
+  );
 });
 
-test('runPreflight - skips PR when reviewer lacks qualifying role', async () => {
+test("runPreflight - skips PR when reviewer lacks qualifying role", async () => {
   const mockCore = createMockCore();
   let callCount = 0;
   const mockGithub = {
     paginate: async () => {
       callCount++;
       if (callCount === 1) {
-        return [{ filename: 'rancher2/config.go' }];
+        return [{ filename: "rancher2/config.go" }];
       }
-      return [{ user: { login: 'read-only-user' }, state: 'APPROVED', commit_id: 'sha1' }];
+      return [
+        {
+          user: { login: "read-only-user" },
+          state: "APPROVED",
+          commit_id: "sha1",
+        },
+      ];
     },
     rest: {
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'read', role_name: 'read' },
+          data: { permission: "read", role_name: "read" },
         }),
       },
     },
@@ -1598,14 +1721,14 @@ test('runPreflight - skips PR when reviewer lacks qualifying role', async () => 
   const result = await runPreflight({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         pull_request: {
           number: 14,
-          state: 'open',
+          state: "open",
           draft: false,
-          base: { ref: 'main' },
-          head: { sha: 'sha1' },
+          base: { ref: "main" },
+          head: { sha: "sha1" },
         },
       },
     },
@@ -1613,65 +1736,83 @@ test('runPreflight - skips PR when reviewer lacks qualifying role', async () => 
   });
 
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.eligible, 'false');
-  assert.ok(mockCore.infoMessages.some(m => m.includes('does not have an approved review from a user with triage, write, or admin')));
+  assert.strictEqual(mockCore.outputs.eligible, "false");
+  assert.ok(
+    mockCore.infoMessages.some((m) =>
+      m.includes(
+        "does not have an approved review from a user with triage, write, or admin",
+      ),
+    ),
+  );
 });
 
-test('default export - routes preflight mode and execute mode', async () => {
+test("default export - routes preflight mode and execute mode", async () => {
   const mockCorePreflight = createMockCore();
   const mockGithub = {
-    paginate: async () => [{ filename: 'rancher2/config.go' }],
+    paginate: async () => [{ filename: "rancher2/config.go" }],
   };
 
   const preflightRes = await defaultHandler({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         pull_request: {
           number: 20,
-          state: 'closed',
+          state: "closed",
           draft: false,
-          base: { ref: 'main' },
+          base: { ref: "main" },
         },
       },
     },
     core: mockCorePreflight,
-    process: { env: { SCRIPT_MODE: 'preflight' } },
+    process: { env: { SCRIPT_MODE: "preflight" } },
   });
 
   assert.strictEqual(preflightRes, false);
-  assert.strictEqual(mockCorePreflight.outputs.eligible, 'false');
+  assert.strictEqual(mockCorePreflight.outputs.eligible, "false");
 
   const mockCoreExecute = createMockCore();
   const executeRes = await defaultHandler({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         pull_request: {
           number: 21,
-          state: 'closed',
+          state: "closed",
           draft: false,
-          base: { ref: 'main' },
+          base: { ref: "main" },
         },
       },
     },
     core: mockCoreExecute,
-    process: { env: { SCRIPT_MODE: 'execute' } },
+    process: { env: { SCRIPT_MODE: "execute" } },
   });
 
   assert.strictEqual(executeRes, false);
-  assert.strictEqual(mockCoreExecute.outputs.auto_merge_status, 'skipped_not_open');
+  assert.strictEqual(
+    mockCoreExecute.outputs.auto_merge_status,
+    "skipped_not_open",
+  );
 });
 
-test('resolveApprovalSignal - resolves from pull_request_review event payload', async () => {
+test("resolveApprovalSignal - resolves from pull_request_review event payload", async () => {
   const mockCore = createMockCore();
   const signal = await resolveApprovalSignal({
     context: {
       payload: {
-        pull_request: { number: 10, head: { sha: 'sha-head' }, base: { ref: 'main' } },
-        review: { id: 777, state: 'approved', user: { login: 'reviewer-alice' }, commit_id: 'sha-head' },
+        pull_request: {
+          number: 10,
+          head: { sha: "sha-head" },
+          base: { ref: "main" },
+        },
+        review: {
+          id: 777,
+          state: "approved",
+          user: { login: "reviewer-alice" },
+          commit_id: "sha-head",
+        },
       },
     },
     core: mockCore,
@@ -1680,24 +1821,24 @@ test('resolveApprovalSignal - resolves from pull_request_review event payload', 
   assert.deepStrictEqual(signal, {
     pr_number: 10,
     review_id: 777,
-    review_state: 'approved',
-    review_user: 'reviewer-alice',
-    review_commit_id: 'sha-head',
-    head_sha: 'sha-head',
-    base_ref: 'main',
+    review_state: "approved",
+    review_user: "reviewer-alice",
+    review_commit_id: "sha-head",
+    head_sha: "sha-head",
+    base_ref: "main",
   });
 });
 
-test('resolveApprovalSignal - resolves from APPROVAL_SIGNAL env var', async () => {
+test("resolveApprovalSignal - resolves from APPROVAL_SIGNAL env var", async () => {
   const mockCore = createMockCore();
   const rawSignal = {
     pr_number: 15,
-    review_id: 'rev-88',
-    review_user: 'bob',
-    review_commit_id: 'sha-15',
-    head_sha: 'sha-15',
-    review_state: 'APPROVED',
-    base_ref: 'main',
+    review_id: "rev-88",
+    review_user: "bob",
+    review_commit_id: "sha-15",
+    head_sha: "sha-15",
+    review_state: "APPROVED",
+    base_ref: "main",
   };
 
   const signal = await resolveApprovalSignal({
@@ -1708,18 +1849,18 @@ test('resolveApprovalSignal - resolves from APPROVAL_SIGNAL env var', async () =
   assert.deepStrictEqual(signal, rawSignal);
 });
 
-test('resolveApprovalSignal - resolves from signal file on disk', async () => {
+test("resolveApprovalSignal - resolves from signal file on disk", async () => {
   const mockCore = createMockCore();
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'signal-test-'));
-  const signalPath = path.join(tmpDir, 'approval-signal.json');
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "signal-test-"));
+  const signalPath = path.join(tmpDir, "approval-signal.json");
   const expectedSignal = {
     pr_number: 22,
-    review_id: 'rev-99',
-    review_user: 'carol',
-    review_commit_id: 'sha-22',
-    head_sha: 'sha-22',
-    review_state: 'APPROVED',
-    base_ref: 'main',
+    review_id: "rev-99",
+    review_user: "carol",
+    review_commit_id: "sha-22",
+    head_sha: "sha-22",
+    review_state: "APPROVED",
+    base_ref: "main",
   };
   fs.writeFileSync(signalPath, JSON.stringify(expectedSignal));
 
@@ -1732,44 +1873,46 @@ test('resolveApprovalSignal - resolves from signal file on disk', async () => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
-test('resolveApprovalSignal - resolves from TRIGGER_REVIEW_* env vars', async () => {
+test("resolveApprovalSignal - resolves from TRIGGER_REVIEW_* env vars", async () => {
   const mockCore = createMockCore();
   const signal = await resolveApprovalSignal({
     core: mockCore,
     process: {
       env: {
-        PR_NUMBER: '33',
-        PR_HEAD_SHA: 'sha-33',
-        TRIGGER_REVIEW_ID: 'rev-33',
-        TRIGGER_REVIEW_USER: 'dan',
-        TRIGGER_REVIEW_COMMIT_ID: 'sha-33',
+        PR_NUMBER: "33",
+        PR_HEAD_SHA: "sha-33",
+        TRIGGER_REVIEW_ID: "rev-33",
+        TRIGGER_REVIEW_USER: "dan",
+        TRIGGER_REVIEW_COMMIT_ID: "sha-33",
       },
     },
   });
 
   assert.strictEqual(signal.pr_number, 33);
-  assert.strictEqual(signal.review_id, 'rev-33');
-  assert.strictEqual(signal.review_user, 'dan');
-  assert.strictEqual(signal.review_commit_id, 'sha-33');
+  assert.strictEqual(signal.review_id, "rev-33");
+  assert.strictEqual(signal.review_user, "dan");
+  assert.strictEqual(signal.review_commit_id, "sha-33");
 });
 
-test('resolveApprovalSignal - resolves from downloadArtifact API', async () => {
+test("resolveApprovalSignal - resolves from downloadArtifact API", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     rest: {
       actions: {
         listWorkflowRunArtifacts: async () => ({
-          data: { artifacts: [{ id: 456, name: 'auto-merge-approval-signal' }] },
+          data: {
+            artifacts: [{ id: 456, name: "auto-merge-approval-signal" }],
+          },
         }),
         downloadArtifact: async () => ({
           data: {
             pr_number: 55,
-            review_id: 'rev-55',
-            review_user: 'erin',
-            review_commit_id: 'sha-55',
-            head_sha: 'sha-55',
-            review_state: 'APPROVED',
-            base_ref: 'main',
+            review_id: "rev-55",
+            review_user: "erin",
+            review_commit_id: "sha-55",
+            head_sha: "sha-55",
+            review_state: "APPROVED",
+            base_ref: "main",
           },
         }),
       },
@@ -1779,72 +1922,97 @@ test('resolveApprovalSignal - resolves from downloadArtifact API', async () => {
   const signal = await resolveApprovalSignal({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: { workflow_run: { id: 1234 } },
     },
     core: mockCore,
   });
 
-  assert.strictEqual(signal.review_user, 'erin');
-  assert.strictEqual(signal.review_id, 'rev-55');
+  assert.strictEqual(signal.review_user, "erin");
+  assert.strictEqual(signal.review_id, "rev-55");
 });
 
-test('validateApprovalSignal - validates structure and rejects invalid signals', () => {
+test("validateApprovalSignal - validates structure and rejects invalid signals", () => {
   const mockCore = createMockCore();
   const validSignal = {
     pr_number: 100,
     review_id: 1,
-    review_user: 'user1',
-    review_commit_id: 'sha-100',
-    head_sha: 'sha-100',
-    review_state: 'APPROVED',
-    base_ref: 'main',
+    review_user: "user1",
+    review_commit_id: "sha-100",
+    head_sha: "sha-100",
+    review_state: "APPROVED",
+    base_ref: "main",
   };
-  const pr = { number: 100, head: { sha: 'sha-100' } };
+  const pr = { number: 100, head: { sha: "sha-100" } };
 
   const validRes = validateApprovalSignal(validSignal, pr, mockCore);
   assert.strictEqual(validRes.isValid, true);
-  assert.strictEqual(validRes.signal.review_user, 'user1');
+  assert.strictEqual(validRes.signal.review_user, "user1");
 
   // Rejects missing fields
-  const missingRes = validateApprovalSignal({ ...validSignal, review_user: '' }, pr, mockCore);
+  const missingRes = validateApprovalSignal(
+    { ...validSignal, review_user: "" },
+    pr,
+    mockCore,
+  );
   assert.strictEqual(missingRes.isValid, false);
-  assert.strictEqual(missingRes.reason, 'incomplete_signal');
+  assert.strictEqual(missingRes.reason, "incomplete_signal");
 
   // Rejects non-APPROVED state
-  const stateRes = validateApprovalSignal({ ...validSignal, review_state: 'CHANGES_REQUESTED' }, pr, mockCore);
+  const stateRes = validateApprovalSignal(
+    { ...validSignal, review_state: "CHANGES_REQUESTED" },
+    pr,
+    mockCore,
+  );
   assert.strictEqual(stateRes.isValid, false);
-  assert.strictEqual(stateRes.reason, 'not_approved_state');
+  assert.strictEqual(stateRes.reason, "not_approved_state");
 
   // Rejects base branch other than main
-  const baseRes = validateApprovalSignal({ ...validSignal, base_ref: 'release/v1' }, pr, mockCore);
+  const baseRes = validateApprovalSignal(
+    { ...validSignal, base_ref: "release/v1" },
+    pr,
+    mockCore,
+  );
   assert.strictEqual(baseRes.isValid, false);
-  assert.strictEqual(baseRes.reason, 'not_main_base');
+  assert.strictEqual(baseRes.reason, "not_main_base");
 
   // Rejects mismatched PR number
-  const prRes = validateApprovalSignal({ ...validSignal, pr_number: 999 }, pr, mockCore);
+  const prRes = validateApprovalSignal(
+    { ...validSignal, pr_number: 999 },
+    pr,
+    mockCore,
+  );
   assert.strictEqual(prRes.isValid, false);
-  assert.strictEqual(prRes.reason, 'pr_mismatch');
+  assert.strictEqual(prRes.reason, "pr_mismatch");
 
   // Rejects stale commit SHA
-  const staleRes = validateApprovalSignal({ ...validSignal, review_commit_id: 'old-sha' }, pr, mockCore);
+  const staleRes = validateApprovalSignal(
+    { ...validSignal, review_commit_id: "old-sha" },
+    pr,
+    mockCore,
+  );
   assert.strictEqual(staleRes.isValid, false);
-  assert.strictEqual(staleRes.reason, 'stale_signal');
+  assert.strictEqual(staleRes.reason, "stale_signal");
 });
 
-test('runPreflight - rejects when triggering review commit does not match PR head', async () => {
+test("runPreflight - rejects when triggering review commit does not match PR head", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     paginate: async () => {
       // Changed files then reviews
       return [
-        { id: 'rev-stale', user: { login: 'triage-user' }, state: 'APPROVED', commit_id: 'old-commit' },
+        {
+          id: "rev-stale",
+          user: { login: "triage-user" },
+          state: "APPROVED",
+          commit_id: "old-commit",
+        },
       ];
     },
     rest: {
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
+          data: { permission: "triage", role_name: "triage" },
         }),
       },
     },
@@ -1852,26 +2020,26 @@ test('runPreflight - rejects when triggering review commit does not match PR hea
 
   const signal = {
     pr_number: 70,
-    review_id: 'rev-stale',
-    review_user: 'triage-user',
-    review_commit_id: 'sha-current',
-    head_sha: 'sha-current',
-    review_state: 'APPROVED',
-    base_ref: 'main',
+    review_id: "rev-stale",
+    review_user: "triage-user",
+    review_commit_id: "sha-current",
+    head_sha: "sha-current",
+    review_state: "APPROVED",
+    base_ref: "main",
   };
 
   const result = await runPreflight({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         pull_request: {
           number: 70,
-          state: 'open',
+          state: "open",
           draft: false,
-          base: { ref: 'main' },
-          head: { sha: 'sha-current' },
-          user: { login: 'author-user' },
+          base: { ref: "main" },
+          head: { sha: "sha-current" },
+          user: { login: "author-user" },
         },
       },
     },
@@ -1880,11 +2048,13 @@ test('runPreflight - rejects when triggering review commit does not match PR hea
   });
 
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.eligible, 'false');
-  assert.ok(mockCore.infoMessages.some(m => m.includes('Skipping stale review')));
+  assert.strictEqual(mockCore.outputs.eligible, "false");
+  assert.ok(
+    mockCore.infoMessages.some((m) => m.includes("Skipping stale review")),
+  );
 });
 
-test('runPreflight - rejects when triggering review is from PR author', async () => {
+test("runPreflight - rejects when triggering review is from PR author", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     paginate: async () => [],
@@ -1892,26 +2062,26 @@ test('runPreflight - rejects when triggering review is from PR author', async ()
 
   const signal = {
     pr_number: 80,
-    review_id: 'rev-author',
-    review_user: 'author-user',
-    review_commit_id: 'sha-80',
-    head_sha: 'sha-80',
-    review_state: 'APPROVED',
-    base_ref: 'main',
+    review_id: "rev-author",
+    review_user: "author-user",
+    review_commit_id: "sha-80",
+    head_sha: "sha-80",
+    review_state: "APPROVED",
+    base_ref: "main",
   };
 
   const result = await runPreflight({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         pull_request: {
           number: 80,
-          state: 'open',
+          state: "open",
           draft: false,
-          base: { ref: 'main' },
-          head: { sha: 'sha-80' },
-          user: { login: 'author-user' },
+          base: { ref: "main" },
+          head: { sha: "sha-80" },
+          user: { login: "author-user" },
         },
       },
     },
@@ -1920,26 +2090,40 @@ test('runPreflight - rejects when triggering review is from PR author', async ()
   });
 
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.eligible, 'false');
-  assert.ok(mockCore.infoMessages.some(m => m.includes('Self-approvals are not permitted')));
+  assert.strictEqual(mockCore.outputs.eligible, "false");
+  assert.ok(
+    mockCore.infoMessages.some((m) =>
+      m.includes("Self-approvals are not permitted"),
+    ),
+  );
 });
 
-test('runAutoMerge - binds to triggering review signal and rejects read-only user even with existing write approval on PR', async () => {
+test("runAutoMerge - binds to triggering review signal and rejects read-only user even with existing write approval on PR", async () => {
   const mockCore = createMockCore();
   const mockGithub = {
     paginate: async () => {
       return [
-        { id: 'rev-write', user: { login: 'write-user' }, state: 'APPROVED', commit_id: 'sha-90' },
-        { id: 'rev-read', user: { login: 'read-contributor' }, state: 'APPROVED', commit_id: 'sha-90' },
+        {
+          id: "rev-write",
+          user: { login: "write-user" },
+          state: "APPROVED",
+          commit_id: "sha-90",
+        },
+        {
+          id: "rev-read",
+          user: { login: "read-contributor" },
+          state: "APPROVED",
+          commit_id: "sha-90",
+        },
       ];
     },
     rest: {
       repos: {
         getCollaboratorPermissionLevel: async ({ username }) => {
-          if (username === 'read-contributor') {
-            return { data: { permission: 'read', role_name: 'read' } };
+          if (username === "read-contributor") {
+            return { data: { permission: "read", role_name: "read" } };
           }
-          return { data: { permission: 'write', role_name: 'write' } };
+          return { data: { permission: "write", role_name: "write" } };
         },
       },
     },
@@ -1948,18 +2132,18 @@ test('runAutoMerge - binds to triggering review signal and rejects read-only use
   // Signal was produced by read-contributor's review
   const signal = {
     pr_number: 90,
-    review_id: 'rev-read',
-    review_user: 'read-contributor',
-    review_commit_id: 'sha-90',
-    head_sha: 'sha-90',
-    review_state: 'APPROVED',
-    base_ref: 'main',
+    review_id: "rev-read",
+    review_user: "read-contributor",
+    review_commit_id: "sha-90",
+    head_sha: "sha-90",
+    review_state: "APPROVED",
+    base_ref: "main",
   };
 
   const mockElevatedGithub = {
     graphql: async (query) => {
-      if (query.includes('viewer')) {
-        return { viewer: { login: 'rancher-bot' } };
+      if (query.includes("viewer")) {
+        return { viewer: { login: "rancher-bot" } };
       }
       return {};
     },
@@ -1968,23 +2152,23 @@ test('runAutoMerge - binds to triggering review signal and rejects read-only use
   const result = await runAutoMerge({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: { id: 9991 },
         pull_request: {
           number: 90,
-          state: 'open',
+          state: "open",
           draft: false,
-          base: { ref: 'main' },
-          head: { sha: 'sha-90' },
-          user: { login: 'author-user' },
+          base: { ref: "main" },
+          head: { sha: "sha-90" },
+          user: { login: "author-user" },
         },
       },
     },
     core: mockCore,
     process: {
       env: {
-        GITHUB_MERGE_TOKEN: 'mock-token',
+        GITHUB_MERGE_TOKEN: "mock-token",
         APPROVAL_SIGNAL: JSON.stringify(signal),
       },
     },
@@ -1992,23 +2176,35 @@ test('runAutoMerge - binds to triggering review signal and rejects read-only use
   });
 
   assert.strictEqual(result, false);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'no_qualifying_permission');
-  assert.ok(mockCore.infoMessages.some(m => m.includes('does not have triage, write, or admin permissions')));
+  assert.strictEqual(
+    mockCore.outputs.auto_merge_status,
+    "no_qualifying_permission",
+  );
+  assert.ok(
+    mockCore.infoMessages.some((m) =>
+      m.includes("does not have triage, write, or admin permissions"),
+    ),
+  );
 });
 
-test('runAutoMerge - binds to qualifying triage signal and succeeds', async () => {
+test("runAutoMerge - binds to qualifying triage signal and succeeds", async () => {
   const mockCore = createMockCore();
   let reviewCreated = false;
   let autoMergeEnabled = false;
 
   const mockGithub = {
     paginate: async () => [
-      { id: 'rev-triage', user: { login: 'triage-member' }, state: 'APPROVED', commit_id: 'sha-95' },
+      {
+        id: "rev-triage",
+        user: { login: "triage-member" },
+        state: "APPROVED",
+        commit_id: "sha-95",
+      },
     ],
     rest: {
       repos: {
         getCollaboratorPermissionLevel: async () => ({
-          data: { permission: 'triage', role_name: 'triage' },
+          data: { permission: "triage", role_name: "triage" },
         }),
       },
     },
@@ -2016,27 +2212,30 @@ test('runAutoMerge - binds to qualifying triage signal and succeeds', async () =
 
   const signal = {
     pr_number: 95,
-    review_id: 'rev-triage',
-    review_user: 'triage-member',
-    review_commit_id: 'sha-95',
-    head_sha: 'sha-95',
-    review_state: 'APPROVED',
-    base_ref: 'main',
+    review_id: "rev-triage",
+    review_user: "triage-member",
+    review_commit_id: "sha-95",
+    head_sha: "sha-95",
+    review_state: "APPROVED",
+    base_ref: "main",
   };
 
   const mockElevatedGithub = {
     rest: {
       pulls: {
         createReview: async ({ body }) => {
-          assert.match(body, /Automated approval triggered by @triage-member \(role: triage\)/);
+          assert.match(
+            body,
+            /Automated approval triggered by @triage-member \(role: triage\)/,
+          );
           reviewCreated = true;
           return { data: { id: 888 } };
         },
       },
     },
     graphql: async (query) => {
-      if (query.includes('viewer')) {
-        return { viewer: { login: 'rancher-bot' } };
+      if (query.includes("viewer")) {
+        return { viewer: { login: "rancher-bot" } };
       }
       assert.match(query, /enablePullRequestAutoMerge/);
       autoMergeEnabled = true;
@@ -2047,24 +2246,24 @@ test('runAutoMerge - binds to qualifying triage signal and succeeds', async () =
   const result = await runAutoMerge({
     github: mockGithub,
     context: {
-      repo: { owner: 'rancher', repo: 'test' },
+      repo: { owner: "rancher", repo: "test" },
       payload: {
         workflow_run: { id: 9992 },
         pull_request: {
           number: 95,
-          node_id: 'PR_node_95',
-          state: 'open',
+          node_id: "PR_node_95",
+          state: "open",
           draft: false,
-          base: { ref: 'main' },
-          head: { sha: 'sha-95' },
-          user: { login: 'author-user' },
+          base: { ref: "main" },
+          head: { sha: "sha-95" },
+          user: { login: "author-user" },
         },
       },
     },
     core: mockCore,
     process: {
       env: {
-        GITHUB_MERGE_TOKEN: 'mock-token',
+        GITHUB_MERGE_TOKEN: "mock-token",
         APPROVAL_SIGNAL: JSON.stringify(signal),
       },
     },
@@ -2074,5 +2273,5 @@ test('runAutoMerge - binds to qualifying triage signal and succeeds', async () =
   assert.strictEqual(result, true);
   assert.strictEqual(reviewCreated, true);
   assert.strictEqual(autoMergeEnabled, true);
-  assert.strictEqual(mockCore.outputs.auto_merge_status, 'enabled');
+  assert.strictEqual(mockCore.outputs.auto_merge_status, "enabled");
 });
