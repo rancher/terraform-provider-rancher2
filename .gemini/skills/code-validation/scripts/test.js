@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { getRepoRoot, runCommand } from "./utils.js";
@@ -173,11 +174,22 @@ export async function runTest({
   }
 
   if (mode === "workflow-scripts") {
-    const workflowTestDir = path.join(
-      repoRoot,
-      ".github/workflows/scripts/tests",
-    );
-    const testFiles = await findTestFiles(workflowTestDir);
+    const candidateDirs = [
+      path.join(repoRoot, ".github/workflows/scripts/tests"),
+      path.join(repoRoot, ".github/workflows/scripts"),
+    ];
+    let testFiles = [];
+    for (const dir of candidateDirs) {
+      try {
+        const files = await findTestFiles(dir);
+        if (files.length > 0) {
+          testFiles = files;
+          break;
+        }
+      } catch {
+        // Continue searching fallback directories
+      }
+    }
     if (testFiles.length === 0) {
       return {
         success: false,
@@ -187,10 +199,14 @@ export async function runTest({
         mode,
       };
     }
+    const testEnv = { ...process.env };
+    if (testEnv.GIT_CONFIG_GLOBAL === "/dev/null") {
+      testEnv.GIT_CONFIG_GLOBAL = path.join(os.tmpdir(), ".gitconfig");
+    }
     const result = await commandRunner(
       process.execPath,
       ["--test", ...testFiles],
-      { cwd: workingDir, stdio },
+      { cwd: workingDir, stdio, env: testEnv },
     );
     return { ...result, mode };
   }
