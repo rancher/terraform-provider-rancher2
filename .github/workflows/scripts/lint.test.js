@@ -174,6 +174,35 @@ describe("lint.js", () => {
       assert.strictEqual(calls[0].cmd, "node");
       assert.deepStrictEqual(calls[0].args, ["--test", "sample.test.js"]);
     });
+
+    it("installs .gemini dependencies when .gemini/package.json exists", () => {
+      const calls = [];
+      const mockFs = {
+        existsSync: (p) =>
+          p === ".gemini/package.json" ||
+          p === ".gemini/orchestrator/install-sdk.js",
+        readdirSync: () => [
+          {
+            name: "sample.test.js",
+            isDirectory: () => false,
+            isFile: () => true,
+          },
+        ],
+      };
+      const mockExec = (cmd, args) => {
+        calls.push({ cmd, args });
+      };
+      runNodeTest(mockExec, mockFs);
+      assert.strictEqual(calls.length, 3);
+      assert.strictEqual(calls[0].cmd, "npm");
+      assert.deepStrictEqual(calls[0].args, ["ci", "--prefix", ".gemini"]);
+      assert.strictEqual(calls[1].cmd, "node");
+      assert.deepStrictEqual(calls[1].args, [
+        ".gemini/orchestrator/install-sdk.js",
+      ]);
+      assert.strictEqual(calls[2].cmd, "node");
+      assert.deepStrictEqual(calls[2].args, ["--test", "sample.test.js"]);
+    });
   });
 
   describe("runEslint", () => {
