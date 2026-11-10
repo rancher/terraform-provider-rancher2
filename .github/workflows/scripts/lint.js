@@ -1,26 +1,35 @@
-import { execSync, execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
-import fs from 'node:fs';
-import path from 'node:path';
+import { execSync, execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import fs from "node:fs";
+import path from "node:path";
 
 export function runTerraform(exec = execSync) {
-  console.log('==> Linting Terraform files...');
+  console.log("==> Linting Terraform files...");
   try {
-    exec('terraform fmt -check -recursive -diff', { stdio: 'inherit' });
+    exec("terraform fmt -check -recursive -diff", { stdio: "inherit" });
   } catch (error) {
-    console.error("terraform format error, please run 'terraform fmt -recursive'");
+    console.error(
+      "terraform format error, please run 'terraform fmt -recursive'",
+    );
     throw error;
   }
-  exec('tflint --recursive', { stdio: 'inherit' });
+  exec("tflint --recursive", { stdio: "inherit" });
 }
 
 export function runActionlint(exec = execSync) {
-  console.log('==> Linting GitHub workflows...');
-  exec('actionlint', { stdio: 'inherit' });
+  console.log("==> Linting GitHub workflows...");
+  exec("actionlint", { stdio: "inherit" });
 }
 
-export function getShellcheckFiles(dir = '.', fsModule = fs) {
-  const ignoredDirs = new Set(['.git', '.terraform', '.agent', 'bin', 'node_modules', '.github-tools']);
+export function getShellcheckFiles(dir = ".", fsModule = fs) {
+  const ignoredDirs = new Set([
+    ".git",
+    ".terraform",
+    ".agent",
+    "bin",
+    "node_modules",
+    ".github-tools",
+  ]);
   const files = [];
 
   function scan(currentDir) {
@@ -33,15 +42,15 @@ export function getShellcheckFiles(dir = '.', fsModule = fs) {
       if (entry.isDirectory()) {
         scan(fullPath);
       } else if (entry.isFile()) {
-        if (entry.name.endsWith('.md') || entry.name.endsWith('.js')) {
+        if (entry.name.endsWith(".md") || entry.name.endsWith(".js")) {
           continue;
         }
         try {
-          const fd = fsModule.openSync(fullPath, 'r');
+          const fd = fsModule.openSync(fullPath, "r");
           const buffer = Buffer.alloc(2);
           fsModule.readSync(fd, buffer, 0, 2, 0);
           fsModule.closeSync(fd);
-          if (buffer.toString('utf-8') === '#!') {
+          if (buffer.toString("utf-8") === "#!") {
             files.push(fullPath);
           }
         } catch {
@@ -56,34 +65,38 @@ export function getShellcheckFiles(dir = '.', fsModule = fs) {
 }
 
 export function runShellcheck(exec = execFileSync, fsModule = fs) {
-  console.log('==> Running shellcheck...');
-  const files = getShellcheckFiles('.', fsModule);
+  console.log("==> Running shellcheck...");
+  const files = getShellcheckFiles(".", fsModule);
 
   if (files.length === 0) {
-    console.log('No shell scripts found to check.');
+    console.log("No shell scripts found to check.");
     return;
   }
 
   for (const file of files) {
     if (fsModule.existsSync(file)) {
       console.log(`Checking ${file}...`);
-      exec('shellcheck', ['-x', file], { stdio: 'inherit' });
+      exec("shellcheck", ["-x", file], { stdio: "inherit" });
     }
   }
 }
 
-export function getJsFiles(dir = '.', fsModule = fs) {
+export function getJsFiles(dir = ".", fsModule = fs) {
   const files = [];
   function scan(currentDir) {
     const entries = fsModule.readdirSync(currentDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === '.github-tools') {
+      if (
+        entry.name === "node_modules" ||
+        entry.name === ".git" ||
+        entry.name === ".github-tools"
+      ) {
         continue;
       }
       const fullPath = path.join(currentDir, entry.name);
       if (entry.isDirectory()) {
         scan(fullPath);
-      } else if (entry.isFile() && entry.name.endsWith('.js')) {
+      } else if (entry.isFile() && entry.name.endsWith(".js")) {
         files.push(fullPath);
       }
     }
@@ -93,28 +106,32 @@ export function getJsFiles(dir = '.', fsModule = fs) {
 }
 
 export function runNodeCheck(exec = execFileSync, fsModule = fs) {
-  console.log('==> Running Node Syntax Check...');
-  const files = getJsFiles('.', fsModule);
+  console.log("==> Running Node Syntax Check...");
+  const files = getJsFiles(".", fsModule);
 
   if (files.length === 0) {
-    console.log('No Node files found to check.');
+    console.log("No Node files found to check.");
     return;
   }
 
   for (const file of files) {
     if (fsModule.existsSync(file)) {
       console.log(`Checking ${file}...`);
-      exec('node', ['--check', file], { stdio: 'inherit' });
+      exec("node", ["--check", file], { stdio: "inherit" });
     }
   }
 }
 
-export function getTestFiles(dir = '.', fsModule = fs) {
+export function getTestFiles(dir = ".", fsModule = fs) {
   const files = [];
   function scan(currentDir) {
     const entries = fsModule.readdirSync(currentDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === '.github-tools') {
+      if (
+        entry.name === "node_modules" ||
+        entry.name === ".git" ||
+        entry.name === ".github-tools"
+      ) {
         continue;
       }
       const fullPath = path.join(currentDir, entry.name);
@@ -122,7 +139,7 @@ export function getTestFiles(dir = '.', fsModule = fs) {
         scan(fullPath);
       } else if (
         entry.isFile() &&
-        (entry.name.endsWith('.test.js') || entry.name.endsWith('.test.mjs'))
+        (entry.name.endsWith(".test.js") || entry.name.endsWith(".test.mjs"))
       ) {
         files.push(fullPath);
       }
@@ -133,33 +150,39 @@ export function getTestFiles(dir = '.', fsModule = fs) {
 }
 
 export function runNodeTest(exec = execFileSync, fsModule = fs) {
-  console.log('==> Running Node Unit Tests...');
-  const files = getTestFiles('.', fsModule);
+  console.log("==> Running Node Unit Tests...");
+  const files = getTestFiles(".", fsModule);
 
   if (files.length === 0) {
-    console.log('No test files found to run.');
+    console.log("No test files found to run.");
     return;
   }
 
-  exec('node', ['--test', ...files], { stdio: 'inherit' });
+  exec("node", ["--test", ...files], { stdio: "inherit" });
 }
 
 export function runEslint(exec = execSync, fsModule = fs) {
-  console.log('==> Running ESLint...');
-  exec('npm ci', { stdio: 'inherit' });
-  const configArg = !fsModule.existsSync('eslint.config.js') && fsModule.existsSync('.github-tools/eslint.config.js')
-    ? '--config .github-tools/eslint.config.js '
-    : '';
-  exec(`eslint ${configArg}.`, { stdio: 'inherit' });
+  console.log("==> Running ESLint...");
+  exec("npm ci", { stdio: "inherit" });
+  const configArg =
+    !fsModule.existsSync("eslint.config.js") &&
+    fsModule.existsSync(".github-tools/eslint.config.js")
+      ? "--config .github-tools/eslint.config.js "
+      : "";
+  exec(`eslint ${configArg}.`, { stdio: "inherit" });
 }
 
 export function runGitleaks(exec = execSync) {
-  console.log('==> Scanning for secrets with gitleaks...');
-  exec('gitleaks detect --no-banner -v --no-git', { stdio: 'inherit' });
-  exec('gitleaks detect --no-banner -v', { stdio: 'inherit' });
+  console.log("==> Scanning for secrets with gitleaks...");
+  exec("gitleaks detect --no-banner -v --no-git", { stdio: "inherit" });
+  exec("gitleaks detect --no-banner -v", { stdio: "inherit" });
 }
 
-export function runAll(exec = execSync, fsModule = fs, fileExec = execFileSync) {
+export function runAll(
+  exec = execSync,
+  fsModule = fs,
+  fileExec = execFileSync,
+) {
   runTerraform(exec);
   runActionlint(exec);
   runShellcheck(fileExec, fsModule);
@@ -170,47 +193,55 @@ export function runAll(exec = execSync, fsModule = fs, fileExec = execFileSync) 
 }
 
 export function main(
-  mode = process.argv[2] || 'all',
+  mode = process.argv[2] || "all",
   exec = execSync,
   fsModule = fs,
-  fileExec = execFileSync
+  fileExec = execFileSync,
 ) {
-  const activeFileExec = fileExec !== execFileSync ? fileExec : (exec !== execSync ? exec : execFileSync);
+  const activeFileExec =
+    fileExec !== execFileSync
+      ? fileExec
+      : exec !== execSync
+        ? exec
+        : execFileSync;
 
   switch (mode) {
-  case 'terraform':
+  case "terraform":
     runTerraform(exec);
     break;
-  case 'actionlint':
+  case "actionlint":
     runActionlint(exec);
     break;
-  case 'shellcheck':
+  case "shellcheck":
     runShellcheck(activeFileExec, fsModule);
     break;
-  case 'node-check':
+  case "node-check":
     runNodeCheck(activeFileExec, fsModule);
     break;
-  case 'node-test':
+  case "node-test":
     runNodeTest(activeFileExec, fsModule);
     break;
-  case 'eslint':
+  case "eslint":
     runEslint(exec);
     break;
-  case 'gitleaks':
+  case "gitleaks":
     runGitleaks(exec);
     break;
-  case 'all':
+  case "all":
     runAll(exec, fsModule, activeFileExec);
     break;
   default:
     console.error(`Error: Unknown lint mode: ${mode}`);
     console.error(
-      'Usage: lint.js [terraform|actionlint|shellcheck|node-check|node-test|eslint|gitleaks|all]'
+      "Usage: lint.js [terraform|actionlint|shellcheck|node-check|node-test|eslint|gitleaks|all]",
     );
     process.exit(1);
   }
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
+) {
   main();
 }

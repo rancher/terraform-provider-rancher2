@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'Specific PR number to adopt and track (optional)'
+        description: "Specific PR number to adopt and track (optional)"
         required: false
 
 env:
@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   generate-issue:
-    name: 'Create Tracking Issue'
+    name: "Create Tracking Issue"
     if: |
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request')
@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-          ref: 'main'
+          ref: "main"
       - name: Read Vault Secrets
         id: read-vault-secrets
         # https://github.com/rancher-eio/read-vault-secrets/commits

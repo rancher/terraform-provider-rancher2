@@ -3,10 +3,10 @@ set -euo pipefail
 
 if [[ -z "${NIX_SSL_CERT_FILE:-}" ]]; then
   for cert in /etc/ssl/certs/ca-certificates.crt \
-              /etc/ssl/certs/ca-bundle.crt \
-              /etc/pki/tls/certs/ca-bundle.crt \
-              /etc/ssl/ca-bundle.pem \
-              /var/lib/ca-certificates/ca-bundle.pem; do
+    /etc/ssl/certs/ca-bundle.crt \
+    /etc/pki/tls/certs/ca-bundle.crt \
+    /etc/ssl/ca-bundle.pem \
+    /var/lib/ca-certificates/ca-bundle.pem; do
     if [[ -f "${cert}" ]]; then
       export NIX_SSL_CERT_FILE="${cert}"
       break
@@ -22,7 +22,7 @@ export CURL_CA_BUNDLE="${NIX_SSL_CERT_FILE:-}"
   printf "exec "
   printf "%q " "$@"
   printf "\n"
-} > .nix-script.sh
+} >.nix-script.sh
 
 trap 'rm -f .nix-script.sh' EXIT
 

@@ -1,24 +1,24 @@
-name: 'Release'
+name: "Release"
 
 on:
   workflow_call:
     inputs:
       tag:
-        description: 'The tag to release'
+        description: "The tag to release"
         required: true
         type: string
   workflow_dispatch:
     inputs:
       tag:
-        description: 'The tag to create (e.g. v1.2.3 or v1.2.3-rc.1)'
+        description: "The tag to create (e.g. v1.2.3 or v1.2.3-rc.1)"
         required: true
         type: string
       branch:
-        description: 'The branch where the sha exists (Required for RC releases, optional for stable releases)'
+        description: "The branch where the sha exists (Required for RC releases, optional for stable releases)"
         required: false
         type: string
       sha:
-        description: 'The commit SHA to create the tag from, defaults to HEAD of the selected branch'
+        description: "The commit SHA to create the tag from, defaults to HEAD of the selected branch"
         required: false
         type: string
 
@@ -26,7 +26,7 @@ permissions: {}
 
 jobs:
   release:
-    name: 'Generate Release'
+    name: "Generate Release"
     runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
@@ -39,15 +39,15 @@ jobs:
       pull-requests: write
       actions: read
     steps:
-      - name: 'Checkout Repository'
+      - name: "Checkout Repository"
         id: checkout-repository
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-          ref: 'main'
+          ref: "main"
 
-      - name: 'Check Author'
+      - name: "Check Author"
         id: check-user-in-maintainers
         if: github.event_name == 'workflow_dispatch' && !contains(inputs.tag, 'rc')
         # https://github.com/actions/github-script/releases
@@ -65,7 +65,7 @@ jobs:
               core.setFailed(`User ${context.actor} is not authorized to trigger this workflow.`);
             }
 
-      - name: 'Verify Tag'
+      - name: "Verify Tag"
         id: verify-tag
         env:
           TAG: ${{ inputs.tag }}
@@ -88,7 +88,7 @@ jobs:
             fi
           fi
 
-      - name: 'Create and Push Tag with Git'
+      - name: "Create and Push Tag with Git"
         id: create-push-tag
         if: github.event_name == 'workflow_dispatch'
         env:
@@ -149,7 +149,7 @@ jobs:
             git push origin "$TAG"
           fi
 
-      - name: 'Check out new tag into a new directory'
+      - name: "Check out new tag into a new directory"
         id: checkout-new-tag
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -157,7 +157,7 @@ jobs:
           ref: ${{ inputs.tag }}
           path: tags/${{ inputs.tag }}
 
-      - name: 'Prepare Registry Manifest'
+      - name: "Prepare Registry Manifest"
         id: prepare-registry-manifest
         env:
           TAG: ${{ inputs.tag }}
@@ -176,7 +176,7 @@ jobs:
           fi
           cd "$DIR"
 
-      - name: 'Retrieve GPG Credentials'
+      - name: "Retrieve GPG Credentials"
         id: retrieve-gpg-credentials
         # https://github.com/rancher-eio/read-vault-secrets/commits
         uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
@@ -186,7 +186,7 @@ jobs:
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKeyId | GPG_KEY_ID ;
             secret/data/github/repo/${{ github.repository }}/signing/gpg privateKey | GPG_KEY
 
-      - name: 'Run GoReleaser'
+      - name: "Run GoReleaser"
         id: run-goreleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -198,12 +198,12 @@ jobs:
           # having to name the workspace, whose path differs inside the container.
           WORKING_DIR: tags/${{ inputs.tag }}
           GORELEASER_CONFIG: ${{ contains(inputs.tag, 'rc') && '../../.goreleaser_rc.yml' || '../../.goreleaser.yml' }}
-          SKIP_VALIDATE: 'true'
+          SKIP_VALIDATE: "true"
         # The key must be imported by the same 'suse' user that nix-run.sh drops to,
         # so goreleaser.sh does the import itself rather than a separate step as root.
         run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/goreleaser.sh
 
-      - name: 'Publish Stable Release'
+      - name: "Publish Stable Release"
         id: publish-release
         if: "!contains(inputs.tag, 'rc')"
         # https://github.com/actions/github-script/releases
@@ -218,7 +218,7 @@ jobs:
             const { default: script } = await import(scriptPath);
             await script({ github, context, core, process });
 
-      - name: 'Find Issues and Create Comments'
+      - name: "Find Issues and Create Comments"
         id: find-issues-create-comments
         if: "contains(inputs.tag, 'rc')"
         # https://github.com/actions/github-script/releases

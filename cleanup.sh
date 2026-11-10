@@ -75,12 +75,12 @@ for id in $resources_ids; do
       echo "   removing s3 bucket $id..."
       echo "   clearing out versions..."
       while read -r v; do
-        if [ -z "$v" ]; then continue; fi;
-        aws s3api delete-object --bucket "$id" --key "tfstate" --version-id="$v" > /dev/null 2>&1;
+        if [ -z "$v" ]; then continue; fi
+        aws s3api delete-object --bucket "$id" --key "tfstate" --version-id="$v" >/dev/null 2>&1
       done <<<"$(aws s3api list-object-versions --bucket "$id" | jq -r '.DeleteMarkers[]?.VersionId' || true)"
       while read -r v; do
-        if [ -z "$v" ]; then continue; fi;
-        aws s3api delete-object --bucket "$id" --key "tfstate" --version-id="$v" > /dev/null 2>&1;
+        if [ -z "$v" ]; then continue; fi
+        aws s3api delete-object --bucket "$id" --key "tfstate" --version-id="$v" >/dev/null 2>&1
       done <<<"$(aws s3api list-object-versions --bucket "$id" | jq -r '.Versions[]?.VersionId' || true)"
       echo "   removing bucket..."
       aws s3 rb "s3://$id" --force
@@ -113,7 +113,7 @@ for id in $resources_ids; do
       if [ -z "$name" ]; then
         continue
       fi
-      if aws iam list-server-certificate-tags --server-certificate-name "$name" | jq -e --arg ID "$IDENTIFIER" '.Tags[] | select(.Key=="Id" and (.Value | contains($ID)))' > /dev/null; then
+      if aws iam list-server-certificate-tags --server-certificate-name "$name" | jq -e --arg ID "$IDENTIFIER" '.Tags[] | select(.Key=="Id" and (.Value | contains($ID)))' >/dev/null; then
         echo "   removing iam server certificate $name..."
         aws iam delete-server-certificate --server-certificate-name "$name" || true
       fi
@@ -131,7 +131,7 @@ for id in $resources_ids; do
         continue
       fi
       echo "   removing load balancer target group $arn..."
-      aws elbv2 delete-target-group --target-group-arn "$arn" || true;
+      aws elbv2 delete-target-group --target-group-arn "$arn" || true
     done <<<"$(aws resourcegroupstaggingapi get-resources --no-cli-pager --resource-type-filters "elasticloadbalancing:targetgroup" --tag-filters "Key=Id,Values=$IDENTIFIER" | jq -r '.ResourceTagMappingList[]?.ResourceARN')"
     sleep $((attempts * 10))
     attempts=$((attempts + 1))
@@ -155,7 +155,7 @@ for id in $resources_ids; do
         record_type=$(echo "$record" | jq -r '.Type')
         echo "   removing route 53 record $record_name of type $record_type from zone $hz..."
         change_batch=$(jq -n --argjson rec "$record" '{"Changes": [{"Action": "DELETE", "ResourceRecordSet": $rec}]}')
-        aws route53 change-resource-record-sets --hosted-zone-id "$hz" --change-batch "$change_batch" > /dev/null 2>&1 || true
+        aws route53 change-resource-record-sets --hosted-zone-id "$hz" --change-batch "$change_batch" >/dev/null 2>&1 || true
       done <<<"$(aws route53 list-resource-record-sets --hosted-zone-id "$hz" | jq -c --arg ID "$LOWER_IDENTIFIER" '.ResourceRecordSets[]? | select(.Name | contains($ID))')"
     done <<<"$(aws route53 list-hosted-zones | jq -r '.HostedZones[]?.Id')"
     sleep $((attempts * 10))

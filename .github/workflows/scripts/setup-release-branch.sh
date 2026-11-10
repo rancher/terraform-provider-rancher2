@@ -52,7 +52,7 @@ if [[ -f "$CONFIG_FILE" ]]; then
   ' "$CONFIG_FILE" "$RELEASE_VERSION"
 else
   echo "Creating $CONFIG_FILE (release-as: $RELEASE_VERSION)..."
-  cat <<EOF > "$CONFIG_FILE"
+  cat <<EOF >"$CONFIG_FILE"
 {
   "release-as": "$RELEASE_VERSION",
   "always-update": true,
@@ -75,7 +75,7 @@ fi
 # 3. Update .release-please-manifest.json
 MANIFEST_FILE=".release-please-manifest.json"
 echo "Updating $MANIFEST_FILE ($MANIFEST_VERSION)..."
-cat <<EOF > "$MANIFEST_FILE"
+cat <<EOF >"$MANIFEST_FILE"
 {
   ".": "$MANIFEST_VERSION"
 }
@@ -94,7 +94,7 @@ done
 
 # 5. Create Pull Request caller stub referencing @main
 echo "Creating .github/workflows/pull_request.yaml stub calling @main..."
-cat << 'EOF' > .github/workflows/pull_request.yaml
+cat <<'EOF' >.github/workflows/pull_request.yaml
 name: Pull Request
 
 on:
@@ -114,7 +114,7 @@ EOF
 
 # 6. Create Release caller stub referencing @main
 echo "Creating .github/workflows/release.yml stub calling @main..."
-cat << 'EOF' > .github/workflows/release.yml
+cat <<'EOF' >.github/workflows/release.yml
 name: Release Please
 
 on:
@@ -140,7 +140,7 @@ EOF
 LISTENER_FILE=".github/workflows/e2e-pr-listener.yml"
 if [[ ! -f "$LISTENER_FILE" ]]; then
   echo "Creating $LISTENER_FILE to preserve E2E test triggering..."
-  cat << 'EOF' > "$LISTENER_FILE"
+  cat <<'EOF' >"$LISTENER_FILE"
 name: PR Executor Listener
 # This unprivileged workflow acts as a middleman to securely trigger e2e tests.
 
