@@ -12,30 +12,30 @@ export default async ({
 }) => {
   const mode = process?.env?.SCRIPT_MODE;
   switch (mode) {
-    case "check-maintainer":
-      return await runCheckMaintainer({ github, context, core, process });
-    case "rc-notify":
-      return await runRcNotify({ github, context, core, process });
-    case "publish-release":
-      return await runPublishRelease({ github, context, core, process });
-    case "tracking-issue":
-      return await runTrackingIssue({
-        github,
-        context,
-        core,
-        process,
-        getOctokit,
-      });
-    case "trigger-rc-release":
-      return await runTriggerRcRelease({
-        github,
-        context,
-        core,
-        process,
-        getOctokit,
-      });
-    default:
-      throw new Error(`Unknown release script mode: ${mode}`);
+  case "check-maintainer":
+    return await runCheckMaintainer({ github, context, core, process });
+  case "rc-notify":
+    return await runRcNotify({ github, context, core, process });
+  case "publish-release":
+    return await runPublishRelease({ github, context, core, process });
+  case "tracking-issue":
+    return await runTrackingIssue({
+      github,
+      context,
+      core,
+      process,
+      getOctokit,
+    });
+  case "trigger-rc-release":
+    return await runTriggerRcRelease({
+      github,
+      context,
+      core,
+      process,
+      getOctokit,
+    });
+  default:
+    throw new Error(`Unknown release script mode: ${mode}`);
   }
 };
 
@@ -945,12 +945,12 @@ export async function computeNextRcTag({ github, owner, repo, branch, core }) {
   const tags =
     typeof github?.paginate === "function"
       ? await github.paginate(github.rest?.repos?.listTags, {
-          owner,
-          repo,
-          per_page: 100,
-        })
+        owner,
+        repo,
+        per_page: 100,
+      })
       : (await github.rest?.repos?.listTags({ owner, repo, per_page: 100 }))
-          ?.data || [];
+        ?.data || [];
 
   const branchTags = tags
     .map((t) => t?.name)
@@ -1222,20 +1222,20 @@ export async function runTriggerRcRelease({
           const jobs =
             typeof github?.paginate === "function"
               ? await github.paginate(
-                  github.rest?.actions?.listJobsForWorkflowRun,
-                  {
-                    owner,
-                    repo,
-                    run_id: runId,
-                  },
-                )
+                github.rest?.actions?.listJobsForWorkflowRun,
+                {
+                  owner,
+                  repo,
+                  run_id: runId,
+                },
+              )
               : (
-                  await github.rest?.actions?.listJobsForWorkflowRun({
-                    owner,
-                    repo,
-                    run_id: runId,
-                  })
-                )?.data?.jobs || [];
+                await github.rest?.actions?.listJobsForWorkflowRun({
+                  owner,
+                  repo,
+                  run_id: runId,
+                })
+              )?.data?.jobs || [];
           const jobList = Array.isArray(jobs)
             ? jobs
             : Array.isArray(jobs?.jobs)
@@ -1308,20 +1308,20 @@ export async function runTriggerRcRelease({
         const pulls =
           typeof github?.paginate === "function"
             ? await github.paginate(
-                github.rest?.repos?.listPullRequestsAssociatedWithCommit,
-                {
-                  owner,
-                  repo,
-                  commit_sha: sha,
-                },
-              )
+              github.rest?.repos?.listPullRequestsAssociatedWithCommit,
+              {
+                owner,
+                repo,
+                commit_sha: sha,
+              },
+            )
             : (
-                await github.rest?.repos?.listPullRequestsAssociatedWithCommit({
-                  owner,
-                  repo,
-                  commit_sha: sha,
-                })
-              )?.data || [];
+              await github.rest?.repos?.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: sha,
+              })
+            )?.data || [];
         releasePleasePr =
           pulls.find(
             (p) =>

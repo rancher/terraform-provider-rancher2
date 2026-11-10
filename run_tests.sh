@@ -429,7 +429,7 @@ else
       fi
       echo "Running intermediate cleanup for ID '$IDENTIFIER' before attempt $((attempt + 1))..."
       if [ -n "$IDENTIFIER" ] && [ -f "$REPO_ROOT/cleanup.sh" ]; then
-        bash "$REPO_ROOT/cleanup.sh" -i "$IDENTIFIER" || true
+        bash "$REPO_ROOT/cleanup.sh" "$IDENTIFIER" || true
       fi
       if [ -n "$IDENTIFIER" ]; then
         rm -rf "$REPO_ROOT/test/data/${IDENTIFIER}"* 2>/dev/null || true

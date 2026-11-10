@@ -3,18 +3,18 @@ import { execSync } from "child_process";
 export default async ({ github, context, core, process }) => {
   const mode = process.env.SCRIPT_MODE;
   switch (mode) {
-    case "filter-pr":
-      return await runFilterPr({ github, context, core, process });
-    case "e2e-status":
-      return await runE2EStatus({ github, context, core, process });
-    case "clear-runner":
-      return await runClearRunner({ github, context, core, process });
-    case "wait-for-e2e":
-      return await runWaitForE2E({ github, context, core, process });
-    case "report-e2e-status":
-      return await runReportE2EStatus({ github, context, core, process });
-    default:
-      throw new Error(`Unknown E2E script mode: ${mode}`);
+  case "filter-pr":
+    return await runFilterPr({ github, context, core, process });
+  case "e2e-status":
+    return await runE2EStatus({ github, context, core, process });
+  case "clear-runner":
+    return await runClearRunner({ github, context, core, process });
+  case "wait-for-e2e":
+    return await runWaitForE2E({ github, context, core, process });
+  case "report-e2e-status":
+    return await runReportE2EStatus({ github, context, core, process });
+  default:
+    throw new Error(`Unknown E2E script mode: ${mode}`);
   }
 };
 

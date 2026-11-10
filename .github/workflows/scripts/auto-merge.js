@@ -196,8 +196,8 @@ export function validateApprovalSignal(signal, pr, core) {
     : "";
   const baseRef = signal.base_ref
     ? String(signal.base_ref)
-        .trim()
-        .replace(/^refs\/heads\//, "")
+      .trim()
+      .replace(/^refs\/heads\//, "")
     : "";
   const prNum =
     signal.pr_number !== undefined && signal.pr_number !== null
@@ -1024,18 +1024,18 @@ export async function runAutoMerge({
           const currentReviews = await (typeof github.paginate === "function" &&
           typeof github.rest?.pulls?.listReviews === "function"
             ? github.paginate(github.rest.pulls.listReviews, {
-                owner,
-                repo,
-                pull_number: prNumber,
-              })
+              owner,
+              repo,
+              pull_number: prNumber,
+            })
             : github.rest?.pulls?.listReviews
               ? (
-                  await github.rest.pulls.listReviews({
-                    owner,
-                    repo,
-                    pull_number: prNumber,
-                  })
-                )?.data || []
+                await github.rest.pulls.listReviews({
+                  owner,
+                  repo,
+                  pull_number: prNumber,
+                })
+              )?.data || []
               : []);
           const { latestReviews: freshReviews } = evaluateReviews(
             currentReviews,

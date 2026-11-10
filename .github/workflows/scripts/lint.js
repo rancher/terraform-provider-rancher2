@@ -206,36 +206,36 @@ export function main(
         : execFileSync;
 
   switch (mode) {
-    case "terraform":
-      runTerraform(exec);
-      break;
-    case "actionlint":
-      runActionlint(exec);
-      break;
-    case "shellcheck":
-      runShellcheck(activeFileExec, fsModule);
-      break;
-    case "node-check":
-      runNodeCheck(activeFileExec, fsModule);
-      break;
-    case "node-test":
-      runNodeTest(activeFileExec, fsModule);
-      break;
-    case "eslint":
-      runEslint(exec);
-      break;
-    case "gitleaks":
-      runGitleaks(exec);
-      break;
-    case "all":
-      runAll(exec, fsModule, activeFileExec);
-      break;
-    default:
-      console.error(`Error: Unknown lint mode: ${mode}`);
-      console.error(
-        "Usage: lint.js [terraform|actionlint|shellcheck|node-check|node-test|eslint|gitleaks|all]",
-      );
-      process.exit(1);
+  case "terraform":
+    runTerraform(exec);
+    break;
+  case "actionlint":
+    runActionlint(exec);
+    break;
+  case "shellcheck":
+    runShellcheck(activeFileExec, fsModule);
+    break;
+  case "node-check":
+    runNodeCheck(activeFileExec, fsModule);
+    break;
+  case "node-test":
+    runNodeTest(activeFileExec, fsModule);
+    break;
+  case "eslint":
+    runEslint(exec);
+    break;
+  case "gitleaks":
+    runGitleaks(exec);
+    break;
+  case "all":
+    runAll(exec, fsModule, activeFileExec);
+    break;
+  default:
+    console.error(`Error: Unknown lint mode: ${mode}`);
+    console.error(
+      "Usage: lint.js [terraform|actionlint|shellcheck|node-check|node-test|eslint|gitleaks|all]",
+    );
+    process.exit(1);
   }
 }
 

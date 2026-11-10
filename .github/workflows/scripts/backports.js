@@ -58,22 +58,22 @@ export default async ({
 }) => {
   const mode = process?.env?.SCRIPT_MODE;
   switch (mode) {
-    case "wait-for-settle":
-      return await runWaitForSettle({ github, context, core, process });
-    case "backport-pr":
-      return await runBackportPr({
-        github,
-        context,
-        core,
-        process,
-        getOctokit,
-      });
-    case "backport-issues":
-      return await runBackportIssues({ github, context, core, process });
-    case "merge-label":
-      return await runMergeLabel({ github, context, core, process });
-    default:
-      throw new Error(`Unknown backport script mode: ${mode}`);
+  case "wait-for-settle":
+    return await runWaitForSettle({ github, context, core, process });
+  case "backport-pr":
+    return await runBackportPr({
+      github,
+      context,
+      core,
+      process,
+      getOctokit,
+    });
+  case "backport-issues":
+    return await runBackportIssues({ github, context, core, process });
+  case "merge-label":
+    return await runMergeLabel({ github, context, core, process });
+  default:
+    throw new Error(`Unknown backport script mode: ${mode}`);
   }
 };
 
@@ -236,8 +236,8 @@ export async function runBackportPr({
   const searchResults = response.data;
   const cleanBody = pr.body
     ? pr.body
-        .replace(/<!--[\s\S]*?-->/g, "")
-        .replace(/(~{3,}|`{3,})[\s\S]*?\1/g, "")
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/(~{3,}|`{3,})[\s\S]*?\1/g, "")
     : "";
   const addressedNumbers = [];
   for (const line of cleanBody.split("\n")) {
@@ -419,9 +419,9 @@ export async function runBackportPr({
       const branches =
         typeof github.paginate === "function"
           ? await github.paginate(github.rest.repos.listBranches, {
-              owner,
-              repo,
-            })
+            owner,
+            repo,
+          })
           : (await github.rest.repos.listBranches({ owner, repo }))?.data || [];
       const releaseBranches = branches
         .map((b) => b.name)
@@ -861,9 +861,9 @@ export async function runBackportIssues({
   let parentIssue = context?.payload?.issue;
   const envIssue = process?.env?.ISSUE_NUMBER
     ? String(process.env.ISSUE_NUMBER)
-        .replace(/^["']|["']$/g, "")
-        .trim()
-        .replace(/^#/, "")
+      .replace(/^["']|["']$/g, "")
+      .trim()
+      .replace(/^#/, "")
     : "";
   const rawIssueNumber =
     envIssue ||
@@ -940,9 +940,9 @@ export async function runBackportIssues({
   const assignees = parseMaintainers(core, process?.env?.TERRAFORM_MAINTAINERS);
   const rawPr = process?.env?.PR
     ? String(process.env.PR)
-        .replace(/^["']|["']$/g, "")
-        .trim()
-        .replace(/^#/, "")
+      .replace(/^["']|["']$/g, "")
+      .trim()
+      .replace(/^#/, "")
     : "";
   if (!rawPr || !/^[1-9]\d*$/.test(rawPr)) {
     throw new Error(`Invalid PR number: ${process?.env?.PR}`);
@@ -1047,20 +1047,20 @@ export async function runMergeLabel({
         const pulls =
           typeof github?.paginate === "function"
             ? await github.paginate(
-                github.rest?.repos?.listPullRequestsAssociatedWithCommit,
-                {
-                  owner,
-                  repo,
-                  commit_sha: sha,
-                },
-              )
+              github.rest?.repos?.listPullRequestsAssociatedWithCommit,
+              {
+                owner,
+                repo,
+                commit_sha: sha,
+              },
+            )
             : (
-                await github.rest?.repos?.listPullRequestsAssociatedWithCommit({
-                  owner,
-                  repo,
-                  commit_sha: sha,
-                })
-              )?.data || [];
+              await github.rest?.repos?.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: sha,
+              })
+            )?.data || [];
         const rawBranch = (
           process?.env?.BRANCH ||
           context?.payload?.workflow_run?.head_branch ||
@@ -1232,19 +1232,19 @@ export async function runMergeLabel({
       const pulls =
         typeof github?.paginate === "function"
           ? await github.paginate(github.rest.pulls.list, {
+            owner,
+            repo,
+            state: "open",
+            base: baseBranch,
+          })
+          : (
+            await github.rest.pulls.list({
               owner,
               repo,
               state: "open",
               base: baseBranch,
             })
-          : (
-              await github.rest.pulls.list({
-                owner,
-                repo,
-                state: "open",
-                base: baseBranch,
-              })
-            )?.data || [];
+          )?.data || [];
 
       const isReleasePlease = (p) => {
         const headRef = (p?.head?.ref || "").replace(/^refs\/heads\//, "");

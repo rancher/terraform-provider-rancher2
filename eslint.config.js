@@ -3,6 +3,15 @@ import eslintPluginJs from "@eslint/js";
 
 export default [
   {
+    ignores: [
+      "test/data/**",
+      "node_modules/**",
+      "bin/**",
+      "dist/**",
+      ".terraform/**",
+    ],
+  },
+  {
     // Applies to all files by default
     // Recommended rules from ESLint itself
     ...eslintPluginJs.configs.recommended,
