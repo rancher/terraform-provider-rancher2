@@ -204,11 +204,34 @@ test("github-ci skill - getRepoDetails unit tests", async (t) => {
       t.mock.method(sys, "execFileAsync", async () => {
         throw new Error("git failure");
       });
+      t.mock.method(
+        process,
+        "cwd",
+        () =>
+          "/home/user/go/src/github.com/rancher/terraform-provider-rancher2",
+      );
       const dirDetails = await getRepoFromDirectory();
       assert.deepStrictEqual(dirDetails, {
         owner: "rancher",
         repo: "terraform-provider-rancher2",
       });
+    },
+  );
+
+  await t.test(
+    "getRepoFromDirectory returns null when cwd has no Go workspace convention",
+    async () => {
+      t.mock.method(sys, "execFileAsync", async () => {
+        throw new Error("git failure");
+      });
+      t.mock.method(
+        process,
+        "cwd",
+        () =>
+          "/home/runner/work/terraform-provider-rancher2/terraform-provider-rancher2",
+      );
+      const dirDetails = await getRepoFromDirectory();
+      assert.strictEqual(dirDetails, null);
     },
   );
 });
