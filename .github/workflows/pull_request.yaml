@@ -199,7 +199,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
-    timeout-minutes: 10
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
