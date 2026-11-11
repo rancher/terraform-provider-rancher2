@@ -16,10 +16,10 @@ data "rancher2_cloud_credential" "test" {
 
 ## Argument Reference
 
- * `name` - (Required) The Cloud Credential name.
+- `name` - (Required) The Cloud Credential name.
 
 ## Attributes Reference
 
-* `id` - (Computed) The ID of the resource (string)
-* `annotations` - (Computed) Annotations for the Cloud Credential (map)
-* `labels` - (Computed) Labels for the Cloud Credential (map)
+- `id` - (Computed) The ID of the resource (string)
+- `annotations` - (Computed) Annotations for the Cloud Credential (map)
+- `labels` - (Computed) Labels for the Cloud Credential (map)

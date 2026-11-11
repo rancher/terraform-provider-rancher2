@@ -12,6 +12,7 @@ export const SUPPORTED_MODES = [
   "acc-relay",
   "workflow-scripts",
   "agent-scripts",
+  "release-scripts",
   "all",
 ];
 
@@ -54,7 +55,7 @@ export async function findTestFiles(dir) {
   } catch {
     // Ignore unreadable or missing directories
   }
-  return testFiles;
+  return testFiles.sort();
 }
 
 /**
@@ -73,6 +74,7 @@ Modes:
   acc-relay         Run AWS Test Relay acceptance tests (executes 'make testaccrelay')
   workflow-scripts  Run workflow script unit tests via Node test runner
   agent-scripts     Run agent script unit tests via Node test runner
+  release-scripts   Run release automation script unit tests via Node test runner
   all               Run full test suite across all languages (executes 'make test-all')
 
 Options:
@@ -126,6 +128,38 @@ export function parseTestArgs(rawArgs = []) {
 }
 
 /**
+ * Executes a callback with an isolated git config environment when GIT_CONFIG_GLOBAL is '/dev/null'.
+ * Creates a temporary directory and sets GIT_CONFIG_GLOBAL to a temporary .gitconfig,
+ * guaranteeing cleanup in a finally block.
+ * @param {Function} callback - Async or sync callback accepting (testEnv)
+ * @returns {Promise<any>}
+ */
+export async function withIsolatedGitConfig(callback) {
+  const testEnv = { ...process.env };
+  let tempGitConfigDir = null;
+  if (testEnv.GIT_CONFIG_GLOBAL === "/dev/null") {
+    tempGitConfigDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), "gemini-gitconfig-"),
+    );
+    testEnv.GIT_CONFIG_GLOBAL = path.join(tempGitConfigDir, ".gitconfig");
+    await fs.writeFile(testEnv.GIT_CONFIG_GLOBAL, "", "utf8");
+  }
+  try {
+    return await callback(testEnv);
+  } finally {
+    if (tempGitConfigDir) {
+      try {
+        await fs.rm(tempGitConfigDir, { recursive: true, force: true });
+      } catch (err) {
+        console.warn(
+          `⚠️ Failed to clean up temporary git config directory ${tempGitConfigDir}: ${err.message}`,
+        );
+      }
+    }
+  }
+}
+
+/**
  * Executes the test harness asynchronously using standard GNUmakefile targets.
  *
  * @param {object} [options]
@@ -165,10 +199,12 @@ export async function runTest({
         mode,
       };
     }
-    const result = await commandRunner(
-      process.execPath,
-      ["--test", ...testFiles],
-      { cwd: workingDir, stdio },
+    const result = await withIsolatedGitConfig((testEnv) =>
+      commandRunner(process.execPath, ["--test", ...testFiles], {
+        cwd: workingDir,
+        stdio,
+        env: testEnv,
+      }),
     );
     return { ...result, mode };
   }
@@ -199,14 +235,38 @@ export async function runTest({
         mode,
       };
     }
-    const testEnv = { ...process.env };
-    if (testEnv.GIT_CONFIG_GLOBAL === "/dev/null") {
-      testEnv.GIT_CONFIG_GLOBAL = path.join(os.tmpdir(), ".gitconfig");
+    const result = await withIsolatedGitConfig((testEnv) =>
+      commandRunner(process.execPath, ["--test", ...testFiles], {
+        cwd: workingDir,
+        stdio,
+        env: testEnv,
+      }),
+    );
+    return { ...result, mode };
+  }
+
+  if (mode === "release-scripts") {
+    let testFiles = [];
+    try {
+      testFiles = await findTestFiles(path.join(repoRoot, "scripts"));
+    } catch {
+      // ignore
     }
-    const result = await commandRunner(
-      process.execPath,
-      ["--test", ...testFiles],
-      { cwd: workingDir, stdio, env: testEnv },
+    if (testFiles.length === 0) {
+      return {
+        success: false,
+        code: 1,
+        stdout: "",
+        stderr: "No release script test files found",
+        mode,
+      };
+    }
+    const result = await withIsolatedGitConfig((testEnv) =>
+      commandRunner(process.execPath, ["--test", ...testFiles], {
+        cwd: workingDir,
+        stdio,
+        env: testEnv,
+      }),
     );
     return { ...result, mode };
   }

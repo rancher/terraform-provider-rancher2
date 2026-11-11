@@ -34,11 +34,13 @@ export async function stageFiles({
       .split("\n")
       .map((l) => l.trim().replace(/^"(.*)"$/, "$1"))
       .filter(Boolean);
-    targets = [...new Set([...targets, ...listed])];
+    targets = [...targets, ...listed];
     if (targets.length === 0) {
       return [];
     }
   }
+
+  targets = [...new Set(targets)];
 
   if (targets.length === 0) {
     throw new Error("No files specified to stage.");
@@ -56,7 +58,10 @@ export async function stageFiles({
     }),
   );
 
-  await git.add(targets);
+  for (let i = 0; i < targets.length; i += 100) {
+    const chunk = targets.slice(i, i + 100);
+    await git.add(["--", ...chunk]);
+  }
   return targets;
 }
 
@@ -79,8 +84,7 @@ async function main() {
   const rawArgs = process.argv.slice(2);
   const dashDashIdx = rawArgs.indexOf("--");
   const optArgs = dashDashIdx !== -1 ? rawArgs.slice(0, dashDashIdx) : rawArgs;
-  const postDashArgs =
-    dashDashIdx !== -1 ? rawArgs.slice(dashDashIdx + 1) : [];
+  const postDashArgs = dashDashIdx !== -1 ? rawArgs.slice(dashDashIdx + 1) : [];
 
   if (optArgs.includes("-h") || optArgs.includes("--help")) {
     printHelp();
@@ -99,10 +103,7 @@ async function main() {
     optArgs.includes("--include-untracked") || optArgs.includes("-u");
   const preDashFiles = optArgs.filter(
     (a) =>
-      a !== "--all" &&
-      a !== "-A" &&
-      a !== "--include-untracked" &&
-      a !== "-u",
+      a !== "--all" && a !== "-A" && a !== "--include-untracked" && a !== "-u",
   );
   const files = [...preDashFiles, ...postDashArgs];
 

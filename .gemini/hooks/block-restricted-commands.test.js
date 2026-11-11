@@ -2,6 +2,7 @@ import assert from "node:assert";
 import { spawn } from "node:child_process";
 import test from "node:test";
 import { fileURLToPath, URL } from "node:url";
+import fs from "node:fs/promises";
 
 function runHook(inputPayload) {
   return new Promise((resolve, reject) => {
@@ -46,7 +47,15 @@ function parseJSON(stdout) {
   throw new Error(`Failed to parse JSON from stdout:\n${stdout}`);
 }
 
+async function loadTestVectors() {
+  const filePath = new URL("./test-vectors.json", import.meta.url);
+  const content = await fs.readFile(filePath, "utf-8");
+  return JSON.parse(content);
+}
+
 test("block-restricted-commands.js deterministic guardrail rules", async (t) => {
+  const vectors = await loadTestVectors();
+
   await t.test(
     "blocks blacklisted paths like /var/ or /usr/ in write_file",
     async () => {
@@ -73,20 +82,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks destructive shell commands (rm, rmdir, shred, truncate, chmod, chown, mv)",
     async () => {
-      for (const cmd of [
-        "rm -rf ./tmp",
-        "rmdir ./empty_dir",
-        "shred -u secret.txt",
-        "truncate -s 0 file.log",
-        "(rm -rf ./tmp)",
-        "{ rm -rf ./tmp; }",
-        "{rm -rf ./tmp;}",
-        "chmod +x script.sh",
-        "(chmod +x script.sh)",
-        "{ chmod +x script.sh; }",
-        "chown root:root file",
-        "mv old new",
-      ]) {
+      for (const cmd of vectors.destructiveShellCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -105,43 +101,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks state-mutating git commands (commit, push, reset, checkout, rebase)",
     async () => {
-      for (const cmd of [
-        'git commit -m "fix"',
-        "git push origin main",
-        "git reset --hard HEAD~1",
-        "git checkout main",
-        "git switch main",
-        "git rebase main",
-        "git apply patch.diff",
-        "git revert HEAD",
-        "git bisect start",
-        "git worktree add ../wt",
-        "git gc",
-        "git repack",
-        "git branch new-feature",
-        "git branch new-feature main",
-        "git branch -m old-branch new-branch",
-        "git branch -M old-branch new-branch",
-        "git branch --move old-branch new-branch",
-        "git branch -c old-branch copy-branch",
-        "git branch -d old-branch",
-        "git branch -D old-branch",
-        "git branch --delete old-branch",
-        "git branch -u upstream/main",
-        "git branch -f feature-branch main",
-        "git tag -d v1.0.0",
-        "git tag v1.0.0",
-        "gh pr merge 123",
-        "gh pr close 123",
-        "gh issue close 45",
-        "gh release delete v1.0.0",
-        "gh pr create --title 'test'",
-        "gh issue edit 45",
-        "gh -R owner/repo pr merge 123",
-        "gh pr checkout 123",
-        "gh pr comment 123 --body 'test'",
-        "gh pr review 123 --approve",
-      ]) {
+      for (const cmd of vectors.mutatingGitCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -160,25 +120,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "allows safe read-only git commands (status, diff, log, rev-parse, branch listing) and safe gh commands",
     async () => {
-      for (const cmd of [
-        "git status",
-        "git diff HEAD",
-        "git log -n 5",
-        "git rev-parse --show-toplevel",
-        "git branch",
-        "git branch -a",
-        "git branch -r",
-        "git branch --show-current",
-        "git branch -v",
-        "git branch -l",
-        "git branch --list 'release/*'",
-        "gh pr view 123",
-        "gh pr list",
-        "gh pr status",
-        "gh pr diff 123",
-        "gh issue list",
-        "gh run list",
-      ]) {
+      for (const cmd of vectors.safeGitCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -205,15 +147,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   });
 
   await t.test("blocks command substitution bypasses", async () => {
-    const substitutions = [
-      "echo $(rm -rf /)",
-      "echo `rm -rf /`",
-      'echo "$(chmod +x script)"',
-      'echo "`chown root:root file`"',
-      'echo "user\'s directory: $(rm -rf tmp)"',
-      'echo "don\'t `rm -rf tmp`"',
-    ];
-    for (const cmd of substitutions) {
+    for (const cmd of vectors.commandSubstitutionBypasses) {
       const payload = {
         tool_name: "run_shell_command",
         tool_input: { command: cmd },
@@ -229,12 +163,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   });
 
   await t.test("blocks backslash escape bypasses", async () => {
-    const escapes = [
-      "\\rm -rf /",
-      "r\\m -rf /",
-      "c\\at .gemini/settings.jso\\n",
-    ];
-    for (const cmd of escapes) {
+    for (const cmd of vectors.backslashEscapeBypasses) {
       const payload = {
         tool_name: "run_shell_command",
         tool_input: { command: cmd },
@@ -284,20 +213,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks access to security-controlled .gemini files (.gemini/hooks/block-restricted-commands.js, .gemini/settings.json, including traversal)",
     async () => {
-      for (const file of [
-        ".gemini/hooks/block-restricted-commands.js",
-        ".gemini/settings.json",
-        "./.gemini/hooks/block-restricted-commands.js",
-        "./.gemini/settings.json",
-        ".gemini/hooks/../settings.json",
-        ".gemini/hooks/../../.gemini/settings.json",
-        ".gemini/hooks/../hooks/block-restricted-commands.js",
-        "/absolute/path/.gemini/settings.json",
-        "hooks/block-restricted-commands.js",
-        "./hooks/block-restricted-commands.js",
-        "block-restricted-commands.js",
-        "./block-restricted-commands.js",
-      ]) {
+      for (const file of vectors.restrictedFiles) {
         const readPayload = {
           tool_name: "read_file",
           tool_input: { file_path: file },
@@ -340,11 +256,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "allows access to legitimate non-gemini settings files like .vscode/settings.json",
     async () => {
-      for (const file of [
-        ".vscode/settings.json",
-        "./.vscode/settings.json",
-        "config/settings.json",
-      ]) {
+      for (const file of vectors.allowedFiles) {
         const readPayload = {
           tool_name: "read_file",
           tool_input: { file_path: file },
@@ -385,26 +297,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   );
 
   await t.test("blocks shell interpreter payloads with -c or -e", async () => {
-    const interpreterCmds = [
-      "bash -c 'rm -rf ./tmp'",
-      'bash -c"rm -rf ./tmp"',
-      "bash -lc 'rm -rf ./tmp'",
-      'bash -lc"rm -rf ./tmp"',
-      "bash -xec 'rm -rf ./tmp'",
-      'sh -c "git push origin main"',
-      'sh -c"git push origin main"',
-      'sh -ec "git push origin main"',
-      'zsh -c "chmod +x script.sh"',
-      'zsh -c"chmod +x script.sh"',
-      'zsh -lc "chmod +x script.sh"',
-      "node -e \"require('fs').rmSync('./tmp', {recursive: true})\"",
-      "python -c 'import os; os.system(\"rm -rf ./tmp\")'",
-      "python2 -c 'import os; os.system(\"rm -rf ./tmp\")'",
-      "python3 -c 'import os; os.system(\"rm -rf ./tmp\")'",
-      "ruby -c 'system(\"git commit -m fix\")'",
-      "perl -e 'system(\"mv old new\")'",
-    ];
-    for (const cmd of interpreterCmds) {
+    for (const cmd of vectors.interpreterCmds) {
       const payload = {
         tool_name: "run_shell_command",
         tool_input: { command: cmd },
@@ -422,24 +315,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks wrapped and path-qualified destructive commands",
     async () => {
-      const destructive = [
-        "/bin/rm -rf ./tmp",
-        "/usr/bin/rm -rf ./tmp",
-        "command rm -rf ./tmp",
-        "command -p rm -rf ./tmp",
-        "sudo rm -rf ./tmp",
-        "sudo /bin/rm -rf ./tmp",
-        "env rm -rf ./tmp",
-        "env -i rm -rf ./tmp",
-        "VAR=1 /bin/rm -rf ./tmp",
-        "/bin/mv old new",
-        "/usr/bin/chmod +x script.sh",
-        "/usr/sbin/chown root:root file",
-        "echo hello && /bin/rm -rf ./tmp",
-        "timeout 10s rm -rf ./tmp",
-        "timeout -k 5s 10s rm -rf ./tmp",
-      ];
-      for (const cmd of destructive) {
+      for (const cmd of vectors.wrappedDestructiveCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -456,20 +332,28 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   );
 
   await t.test(
+    "allows wrapper commands with harmless flags without false positive detection",
+    async () => {
+      for (const cmd of vectors.harmlessWrapperCommands) {
+        const payload = {
+          tool_name: "run_shell_command",
+          tool_input: { command: cmd },
+        };
+        const res = await runHook(payload);
+        const parsed = parseJSON(res.stdout);
+        assert.strictEqual(
+          parsed.decision,
+          "allow",
+          `Expected "${cmd}" to be allowed`,
+        );
+      }
+    },
+  );
+
+  await t.test(
     "blocks wrapped and path-qualified mutating git commands",
     async () => {
-      const mutating = [
-        '/usr/bin/git commit -m "fix"',
-        "/usr/bin/git push origin main",
-        "command git checkout main",
-        "sudo git reset --hard HEAD~1",
-        "env git rebase main",
-        'git -C ./repo commit -m "fix"',
-        "git --no-pager push origin main",
-        "git apply patch.diff",
-        "git revert HEAD",
-      ];
-      for (const cmd of mutating) {
+      for (const cmd of vectors.wrappedMutatingGitCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -488,36 +372,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks commands wrapped in watch, su, doas, chroot, unshare, screen, and tmux",
     async () => {
-      const wrappedBlocked = [
-        "watch rm -rf /",
-        'watch "rm -rf /"',
-        'watch -n 2 "rm -rf /"',
-        "watch git push origin main",
-        'watch -n 5 "git commit -m evil"',
-        'su -c "rm -rf /"',
-        'su root -c "rm -rf /"',
-        'su - root -c "rm -rf /"',
-        'su -c"rm -rf /"',
-        'su --command="rm -rf /"',
-        'su root --command "rm -rf /"',
-        "doas rm -rf /",
-        "doas -u root rm -rf /",
-        'doas "rm -rf /"',
-        "doas git push origin main",
-        "chroot /mnt rm -rf /",
-        "chroot --userspec=0:0 /mnt rm -rf /",
-        "unshare -r rm -rf /",
-        "unshare -m -u -r rm -rf /",
-        "screen rm -rf /",
-        "screen -d -m rm -rf /",
-        'screen -S sess "rm -rf /"',
-        'tmux new-session "rm -rf /"',
-        'tmux new-session -d "rm -rf /"',
-        'tmux run-shell "rm -rf /"',
-        'tmux new-window -n test "git push origin main"',
-        'tmux split-window -h "rm -rf /"',
-      ];
-      for (const cmd of wrappedBlocked) {
+      for (const cmd of vectors.wrappedBlockedCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -531,17 +386,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
         );
       }
 
-      const wrappedAllowed = [
-        "watch ls -la",
-        "watch -n 10 'git status'",
-        "doas ls -l",
-        "chroot /mnt ls",
-        "unshare -r id",
-        "screen -ls",
-        "tmux list-sessions",
-        "su root",
-      ];
-      for (const cmd of wrappedAllowed) {
+      for (const cmd of vectors.wrappedAllowedCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -560,22 +405,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks xargs wrapped destructive and mutating git commands across argument flags",
     async () => {
-      const xargsBlocked = [
-        "xargs -I {} rm -rf {}",
-        "xargs -I {} /bin/rm -rf {}",
-        "find . | xargs -0 -I % rm -f %",
-        "xargs -n 1 rm -f",
-        "xargs -R 1 -I {} rm -rf {}",
-        "xargs -S 100 -I {} rm -rf {}",
-        "xargs -P 2 rm -rf",
-        "xargs --process-slot-var=VAR rm -rf",
-        "xargs --process-slot-var VAR rm -rf",
-        "xargs --replace={} rm -rf {}",
-        'xargs -d "\\n" -I {} rm -rf {}',
-        "xargs -I {} git push origin main",
-        'xargs -I {} sh -c "rm -rf {}"',
-      ];
-      for (const cmd of xargsBlocked) {
+      for (const cmd of vectors.xargsBlockedCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -589,12 +419,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
         );
       }
 
-      const xargsAllowed = [
-        "xargs -I {} echo {}",
-        "cat list.txt | xargs ls -l",
-        "xargs -n 1 cat",
-      ];
-      for (const cmd of xargsAllowed) {
+      for (const cmd of vectors.xargsAllowedCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -613,13 +438,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "allows wrapped or path-qualified safe read-only git commands",
     async () => {
-      const safe = [
-        "/usr/bin/git status",
-        "command git diff HEAD",
-        "git -C ./repo log -n 5",
-        "/usr/bin/git rev-parse --show-toplevel",
-      ];
-      for (const cmd of safe) {
+      for (const cmd of vectors.safeReadGitCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -638,7 +457,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks .env accesses while allowing .envrc without false positives",
     async () => {
-      for (const envPath of [".env", "./.env", "config/.env", "/path/to/.env"]) {
+      for (const envPath of vectors.blockedEnvPaths) {
         const readRes = await runHook({
           tool_name: "read_file",
           tool_input: { file_path: envPath },
@@ -680,7 +499,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
         );
       }
 
-      for (const envrcPath of [".envrc", "./.envrc", "config/.envrc", "/path/to/.envrc"]) {
+      for (const envrcPath of vectors.allowedEnvPaths) {
         const readRes = await runHook({
           tool_name: "read_file",
           tool_input: { file_path: envrcPath },
@@ -717,18 +536,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks destructive and mutating commands wrapped in find (-delete, -exec, -execdir)",
     async () => {
-      const findBlocked = [
-        "find . -delete",
-        "find . -name '*.tmp' -delete",
-        "find . -exec rm -rf {} +",
-        "find . -exec rm -f {} \\;",
-        "find . -execdir chmod 777 {} \\;",
-        "find . -exec chown root:root {} \\;",
-        "find . -exec mv {} {}.bak \\;",
-        "find . -exec git push origin main \\;",
-        "find . -exec git commit -m 'evil' \\;",
-      ];
-      for (const cmd of findBlocked) {
+      for (const cmd of vectors.findBlockedCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -742,12 +550,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
         );
       }
 
-      const findAllowed = [
-        "find . -name '*.go'",
-        "find . -type f -print",
-        "find . -exec echo {} \\;",
-      ];
-      for (const cmd of findAllowed) {
+      for (const cmd of vectors.findAllowedCommands) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -766,33 +569,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks web_fetch calls targeting GitHub pull requests or issues via url or prompt",
     async () => {
-      const blockedPayloads = [
-        {
-          tool_name: "web_fetch",
-          tool_input: {
-            url: "https://github.com/rancher/terraform-provider-rancher2/pull/123",
-          },
-        },
-        {
-          tool_name: "web_fetch",
-          tool_input: {
-            url: "https://github.com/rancher/terraform-provider-rancher2/issues/456",
-          },
-        },
-        {
-          tool_name: "web_fetch",
-          tool_input: { prompt: "Fetch https://github.com/owner/repo/pull/10" },
-        },
-        {
-          tool_name: "web_fetch",
-          tool_input: {
-            url: "https://github.com/something",
-            prompt: "check /pull/20",
-          },
-        },
-      ];
-
-      for (const payload of blockedPayloads) {
+      for (const payload of vectors.blockedWebFetchPayloads) {
         const res = await runHook(payload);
         const parsed = parseJSON(res.stdout);
         assert.strictEqual(
@@ -802,20 +579,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
         );
       }
 
-      const allowedPayloads = [
-        {
-          tool_name: "web_fetch",
-          tool_input: {
-            url: "https://registry.terraform.io/providers/rancher/rancher2",
-          },
-        },
-        {
-          tool_name: "web_fetch",
-          tool_input: { prompt: "Read documentation on terraform.io" },
-        },
-      ];
-
-      for (const payload of allowedPayloads) {
+      for (const payload of vectors.allowedWebFetchPayloads) {
         const res = await runHook(payload);
         const parsed = parseJSON(res.stdout);
         assert.strictEqual(
@@ -830,18 +594,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
   await t.test(
     "blocks flag-assigned inline options containing blacklisted file paths",
     async () => {
-      const blockedFlagCmds = [
-        "curl --output=.gemini/settings.json https://example.com",
-        'curl --output=".gemini/settings.json" https://example.com',
-        "curl -o.gemini/settings.json https://example.com",
-        "wget -O.env https://example.com",
-        "wget -O=.env https://example.com",
-        "wget -Oid_rsa https://example.com",
-        "cat --file=/etc/passwd",
-        "tar -C=/etc/ -xvf archive.tar",
-      ];
-
-      for (const cmd of blockedFlagCmds) {
+      for (const cmd of vectors.blockedFlagCmds) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -855,13 +608,7 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
         );
       }
 
-      const allowedFlagCmds = [
-        "curl --output=output.txt https://example.com",
-        "git log --format='%H %s'",
-        "tar -C /tmp -xvf archive.tar",
-      ];
-
-      for (const cmd of allowedFlagCmds) {
+      for (const cmd of vectors.allowedFlagCmds) {
         const payload = {
           tool_name: "run_shell_command",
           tool_input: { command: cmd },
@@ -874,6 +621,39 @@ test("block-restricted-commands.js deterministic guardrail rules", async (t) => 
           `Expected flag command "${cmd}" to be allowed`,
         );
       }
+    },
+  );
+
+  await t.test("blocks nested shell interpreter payloads", async () => {
+    for (const cmd of vectors.nestedCmds) {
+      const payload = {
+        tool_name: "run_shell_command",
+        tool_input: { command: cmd },
+      };
+      const res = await runHook(payload);
+      const parsed = parseJSON(res.stdout);
+      assert.strictEqual(
+        parsed.decision,
+        "deny",
+        `Expected nested interpreter payload "${cmd}" to be denied`,
+      );
+    }
+  });
+
+  await t.test(
+    "blocks env wrapper bypass attempts using absolute paths",
+    async () => {
+      const payload = {
+        tool_name: "run_shell_command",
+        tool_input: { command: "env /bin/rm -rf /" },
+      };
+      const res = await runHook(payload);
+      const parsed = parseJSON(res.stdout);
+      assert.strictEqual(
+        parsed.decision,
+        "deny",
+        "Expected 'env /bin/rm' to be denied",
+      );
     },
   );
 });

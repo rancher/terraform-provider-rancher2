@@ -11,7 +11,7 @@ The static analysis suite wraps `.github/workflows/scripts/lint.sh` and supports
 | `all`           | All tools                 | Executes all static analysis suites sequentially               | Yes (`--fix`) |
 | `terraform`     | `terraform fmt`, `tflint` | Verifies Terraform configuration formatting and best practices | No            |
 | `actionlint`    | `actionlint`              | Validates GitHub Actions workflow YAML files                   | No            |
-| `eslint`        | `eslint`                  | Checks JavaScript and MJS codebase files and catch statements  | No            |
+| `eslint`        | `eslint`                  | Checks JavaScript and MJS codebase files and catch statements  | Yes (`--fix`) |
 | `shellcheck`    | `shellcheck`              | Lints POSIX and Bash shell scripts for syntax and safety       | No            |
 | `shfmt`         | `shfmt`                   | Validates shell script indentation and layout                  | Yes (`--fix`) |
 | `prettier`      | `prettier`                | Formats Markdown, JSON, and JavaScript files                   | Yes (`--fix`) |
@@ -25,15 +25,16 @@ The static analysis suite wraps `.github/workflows/scripts/lint.sh` and supports
 
 The test suite wraps `.github/workflows/scripts/test.sh` and supports the following modes:
 
-| Mode               | Description                                                                | Command Executed                                                              |
-| :----------------- | :------------------------------------------------------------------------- | :---------------------------------------------------------------------------- |
-| `unit`             | Runs Go unit tests across root modules (default)                           | `gotestsum` with coverage                                                     |
-| `compile`          | Verifies test binaries compile cleanly                                     | `go test -c` in `test/`                                                       |
-| `workflow-scripts` | Runs Node unit tests for workflow automation                               | `node --test .github/workflows/scripts/tests/**/*.test.js`                    |
+| Mode               | Description                                                                | Command Executed                                                                         |
+| :----------------- | :------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- |
+| `unit`             | Runs Go unit tests across root modules (default)                           | `gotestsum` with coverage                                                                |
+| `compile`          | Verifies test binaries compile cleanly                                     | `go test -c` in `test/`                                                                  |
+| `workflow-scripts` | Runs Node unit tests for workflow automation                               | `node --test .github/workflows/scripts/tests/**/*.test.js`                               |
 | `agent-scripts`    | Runs Node unit tests for agents, hooks, and skills                         | `node --test .gemini/orchestrator/lib/**/*.test.js .gemini/skills/**/tests/**/*.test.js` |
-| `acc`              | Runs standard acceptance tests (requires credentials)                      | `make testacc`                                                                |
-| `acc-relay`        | Runs AWS Test Relay acceptance tests                                       | `make testaccrelay`                                                           |
-| `all`              | Executes compile check, unit tests, workflow tests, and agent script tests | Full local verification pipeline                                              |
+| `release-scripts`  | Runs Node unit tests for release automation scripts                        | `node --test scripts/tests/**/*.test.js`                                                 |
+| `acc`              | Runs standard acceptance tests (requires credentials)                      | `make testacc`                                                                           |
+| `acc-relay`        | Runs AWS Test Relay acceptance tests                                       | `make testaccrelay`                                                                      |
+| `all`              | Executes compile check, unit tests, workflow tests, and agent script tests | Full local verification pipeline                                                         |
 
 ## Automatic Code Formatters (`format.js`)
 

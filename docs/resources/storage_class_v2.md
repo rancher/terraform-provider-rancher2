@@ -27,24 +27,23 @@ resource "rancher2_storage_class_v2" "foo" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required/ForceNew) The cluster id of the storageClass V2 (string)
-* `name` - (Required/ForceNew) The name of the storageClass v2 (string)
-* `k8s_provisioner` - (Required/ForceNew) The provisioner of the storageClass v2 (string)
-* `allow_volume_expansion` - (Optional/Computed) Is the provisioner of the storageClass v2 allowing volume expansion? (bool)
-* `mount_options` - (Optional/Computed) The mount options for storageClass v2 (list)
-* `parameters` - (Optional) The parameters for storageClass v2 (string)
-* `reclaim_policy` - (Optional/ForceNew) The reclaim policy for storageClass v2. `Delete`, `Recycle` and `Retain` values are allowed. Default: `Delete` (string)
-* `volume_binding_mode` - (Optional/ForceNew) The volume binding mode for storageClass v2. `Immediate` and `WaitForFirstConsumer` values are allowed. Default: `Immediate` (string)
-* `annotations` - (Optional/Computed) Annotations for the storageClass v2 (map)
-* `labels` - (Optional/Computed) Labels for the storageClass v2 (map)
-
+- `cluster_id` - (Required/ForceNew) The cluster id of the storageClass V2 (string)
+- `name` - (Required/ForceNew) The name of the storageClass v2 (string)
+- `k8s_provisioner` - (Required/ForceNew) The provisioner of the storageClass v2 (string)
+- `allow_volume_expansion` - (Optional/Computed) Is the provisioner of the storageClass v2 allowing volume expansion? (bool)
+- `mount_options` - (Optional/Computed) The mount options for storageClass v2 (list)
+- `parameters` - (Optional) The parameters for storageClass v2 (string)
+- `reclaim_policy` - (Optional/ForceNew) The reclaim policy for storageClass v2. `Delete`, `Recycle` and `Retain` values are allowed. Default: `Delete` (string)
+- `volume_binding_mode` - (Optional/ForceNew) The volume binding mode for storageClass v2. `Immediate` and `WaitForFirstConsumer` values are allowed. Default: `Immediate` (string)
+- `annotations` - (Optional/Computed) Annotations for the storageClass v2 (map)
+- `labels` - (Optional/Computed) Labels for the storageClass v2 (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `resource_version` - (Computed) The k8s resource version (string)
+- `id` - (Computed) The ID of the resource (string)
+- `resource_version` - (Computed) The k8s resource version (string)
 
 ## Timeouts
 

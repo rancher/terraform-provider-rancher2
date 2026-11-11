@@ -42,7 +42,7 @@ Modes:
   cspell          Verify spelling across codebase files
 
 Options:
-  -f, --fix       Auto-format code where supported (Prettier, shfmt, golangci-lint)
+  -f, --fix       Auto-format code where supported (Prettier, shfmt, golangci-lint, eslint)
   -m, --mode      Explicitly specify linting mode
   -h, --help      Show this help message
 `);
@@ -156,10 +156,12 @@ export async function runLint({
       "npx",
       [
         "eslint",
+        ...(fix ? ["--fix"] : []),
         ".github/workflows/scripts/",
         ".gemini/hooks/",
         ".gemini/orchestrator/",
         ".gemini/skills/",
+        "scripts/",
       ],
       { cwd: workingDir, stdio },
     );

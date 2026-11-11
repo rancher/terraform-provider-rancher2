@@ -123,100 +123,114 @@ test("stripDiffMetadata", async (t) => {
 });
 
 test("getGitDiff and affectsProductFiles", async (t) => {
-  await t.test("getGitDiff returns a string and passes repoRoot cwd", async () => {
-    let capturedOptions = null;
-    t.mock.method(sys, "execAsync", async (cmd, options) => {
-      capturedOptions = options;
-      return { stdout: "diff --git a/test b/test\n" };
-    });
+  await t.test(
+    "getGitDiff returns a string and passes repoRoot cwd",
+    async () => {
+      let capturedOptions = null;
+      t.mock.method(sys, "spawnAsync", async (cmd, args, options) => {
+        capturedOptions = options;
+        return { stdout: "diff --git a/test b/test\n" };
+      });
 
-    const diff = await getGitDiff();
-    assert.strictEqual(typeof diff, "string");
-    const repoRoot = await getRepoRoot();
-    assert.strictEqual(capturedOptions?.cwd, repoRoot);
-    assert.strictEqual(capturedOptions?.maxBuffer, 10 * 1024 * 1024);
-  });
+      const diff = await getGitDiff();
+      assert.strictEqual(typeof diff, "string");
+      const repoRoot = await getRepoRoot();
+      assert.strictEqual(capturedOptions?.cwd, repoRoot);
+    },
+  );
 
-  await t.test("affectsProductFiles returns a boolean and passes repoRoot cwd", async () => {
-    let capturedOptions = null;
-    t.mock.method(sys, "execAsync", async (cmd, options) => {
-      capturedOptions = options;
-      return { stdout: "test/file.go\0" };
-    });
+  await t.test(
+    "affectsProductFiles returns a boolean and passes repoRoot cwd",
+    async () => {
+      let capturedOptions = null;
+      t.mock.method(sys, "spawnAsync", async (cmd, args, options) => {
+        capturedOptions = options;
+        return { stdout: "test/file.go\0" };
+      });
 
-    const isProduct = await affectsProductFiles();
-    assert.strictEqual(typeof isProduct, "boolean");
-    const repoRoot = await getRepoRoot();
-    assert.strictEqual(capturedOptions?.cwd, repoRoot);
-    assert.strictEqual(capturedOptions?.maxBuffer, 10 * 1024 * 1024);
-  });
+      const isProduct = await affectsProductFiles();
+      assert.strictEqual(typeof isProduct, "boolean");
+      const repoRoot = await getRepoRoot();
+      assert.strictEqual(capturedOptions?.cwd, repoRoot);
+    },
+  );
 
-  await t.test("affectsProductFiles detects untracked product files when tracked diff is empty", async () => {
-    t.mock.method(sys, "execAsync", async (cmd) => {
-      if (cmd.includes("ls-files")) {
-        return { stdout: "internal/resource_rancher2_new.go\0" };
-      }
-      return { stdout: "" };
-    });
+  await t.test(
+    "affectsProductFiles detects untracked product files when tracked diff is empty",
+    async () => {
+      t.mock.method(sys, "spawnAsync", async (cmd, args) => {
+        if (args.includes("ls-files")) {
+          return { stdout: "internal/resource_rancher2_new.go\0" };
+        }
+        return { stdout: "" };
+      });
 
-    const isProduct = await affectsProductFiles();
-    assert.strictEqual(isProduct, true);
-  });
+      const isProduct = await affectsProductFiles();
+      assert.strictEqual(isProduct, true);
+    },
+  );
 });
 
 test("stageAndCommit execution and process.execPath", async (t) => {
-  await t.test("throws error when attempting to commit on main branch", async () => {
-    t.mock.method(sys, "execAsync", async (cmd) => {
-      if (cmd.includes("rev-parse")) {
-        return { stdout: "main\n" };
-      }
-      return { stdout: "" };
-    });
+  await t.test(
+    "throws error when attempting to commit on main branch",
+    async () => {
+      t.mock.method(sys, "spawnAsync", async (cmd, args) => {
+        if (args.includes("rev-parse")) {
+          return { stdout: "main\n" };
+        }
+        return { stdout: "" };
+      });
 
-    await assert.rejects(
-      async () => {
-        await stageAndCommit("docs: update readme");
-      },
-      {
-        message: 'Commits directly to the "main" or "master" branch are not allowed.',
-      },
-    );
-  });
+      await assert.rejects(
+        async () => {
+          await stageAndCommit("docs: update readme");
+        },
+        {
+          message:
+            'Commits directly to the "main" or "master" branch are not allowed.',
+        },
+      );
+    },
+  );
 
-  await t.test("throws error when no modified or untracked paths are found", async () => {
-    t.mock.method(sys, "execAsync", async (cmd) => {
-      if (cmd.includes("rev-parse")) {
-        return { stdout: "feature-branch\n" };
-      }
-      return { stdout: "" };
-    });
+  await t.test(
+    "throws error when no modified or untracked paths are found",
+    async () => {
+      t.mock.method(sys, "spawnAsync", async (cmd, args) => {
+        if (args.includes("rev-parse")) {
+          return { stdout: "feature-branch\n" };
+        }
+        return { stdout: "" };
+      });
 
-    t.mock.method(sys, "execFileAsync", async () => {
-      return { stdout: "" };
-    });
+      t.mock.method(sys, "execFileAsync", async () => {
+        return { stdout: "" };
+      });
 
-    await assert.rejects(
-      async () => {
-        await stageAndCommit("docs: update readme");
-      },
-      {
-        message: "No modified or untracked paths found to commit.",
-      },
-    );
-  });
+      await assert.rejects(
+        async () => {
+          await stageAndCommit("docs: update readme");
+        },
+        {
+          message: "No modified or untracked paths found to commit.",
+        },
+      );
+    },
+  );
 
   await t.test(
     "executes get_modified_paths.js, stage-files.js, and commit.js with process.execPath",
     async () => {
       const execFileCalls = [];
-      const execAsyncCalls = [];
+      const spawnAsyncCalls = [];
 
-      t.mock.method(sys, "execAsync", async (cmd, options) => {
-        execAsyncCalls.push({ cmd, options });
-        if (cmd.includes("rev-parse")) {
+      t.mock.method(sys, "spawnAsync", async (cmd, args, options) => {
+        spawnAsyncCalls.push({ cmd, args, options });
+        if (args.includes("rev-parse")) {
           return { stdout: "feature-branch\n" };
         }
-        if (cmd.includes("diff -z")) {
+        if (args.includes("diff") && args.includes("-z")) {
           return { stdout: "docs/readme.md\0" };
         }
         return { stdout: "" };
@@ -244,8 +258,8 @@ test("stageAndCommit execution and process.execPath", async (t) => {
       assert.ok(res.stdout.includes("[feature-branch 1234567]"));
 
       const repoRoot = await getRepoRoot();
-      assert.strictEqual(execAsyncCalls.length >= 1, true);
-      assert.strictEqual(execAsyncCalls[0].options?.cwd, repoRoot);
+      assert.strictEqual(spawnAsyncCalls.length >= 1, true);
+      assert.strictEqual(spawnAsyncCalls[0].options?.cwd, repoRoot);
       assert.strictEqual(execFileCalls.length, 3);
       assert.strictEqual(execFileCalls[0].file, process.execPath);
       assert.ok(execFileCalls[0].args[0].endsWith("get_modified_paths.js"));
@@ -272,11 +286,11 @@ test("stageAndCommit execution and process.execPath", async (t) => {
     async () => {
       const execFileCalls = [];
 
-      t.mock.method(sys, "execAsync", async (cmd) => {
-        if (cmd.includes("rev-parse")) {
+      t.mock.method(sys, "spawnAsync", async (cmd, args) => {
+        if (args.includes("rev-parse")) {
           return { stdout: "feature-branch\n" };
         }
-        if (cmd.includes("diff -z")) {
+        if (args.includes("diff") && args.includes("-z")) {
           return { stdout: "-f\0" };
         }
         return { stdout: "" };
@@ -312,12 +326,56 @@ test("stageAndCommit execution and process.execPath", async (t) => {
       assert.strictEqual(stageCall.args[3], "-file.txt");
     },
   );
+
+  await t.test(
+    "validates commit message and aborts prior to staging when message is invalid",
+    async () => {
+      const execFileCalls = [];
+
+      t.mock.method(sys, "spawnAsync", async (cmd, args) => {
+        if (args.includes("rev-parse")) {
+          return { stdout: "feature-branch\n" };
+        }
+        if (args.includes("diff") && args.includes("-z")) {
+          return { stdout: "docs/readme.md\0" };
+        }
+        return { stdout: "" };
+      });
+
+      t.mock.method(sys, "execFileAsync", async (file, args, options) => {
+        execFileCalls.push({ file, args, options });
+        const script = args[0] || "";
+        if (script.includes("get_modified_paths.js")) {
+          return { stdout: "docs/readme.md\n" };
+        }
+        if (script.includes("stage-files.js")) {
+          return { stdout: "staged docs/readme.md\n" };
+        }
+        return { stdout: "", stderr: "" };
+      });
+
+      await assert.rejects(
+        async () => {
+          await stageAndCommit("invalid commit title without conventional type");
+        },
+        /Commit message validation failed/,
+      );
+
+      // Verify that get_modified_paths.js was checked, but stage-files.js was NEVER invoked
+      assert.strictEqual(execFileCalls.length, 1);
+      assert.ok(execFileCalls[0].args[0].endsWith("get_modified_paths.js"));
+      const stageCall = execFileCalls.find((c) =>
+        c.args[0].endsWith("stage-files.js"),
+      );
+      assert.strictEqual(stageCall, undefined);
+    },
+  );
 });
 
 test("validateMessage", async (t) => {
   await t.test("strips commit message body and validates title", async () => {
-    t.mock.method(sys, "execAsync", async (cmd) => {
-      if (cmd.includes("diff -z")) {
+    t.mock.method(sys, "spawnAsync", async (cmd, args) => {
+      if (args && args.includes("diff") && args.includes("-z")) {
         return { stdout: "docs/readme.md\0" };
       }
       return { stdout: "" };
@@ -334,4 +392,3 @@ test("validateMessage", async (t) => {
     assert.strictEqual(result.valid, true);
   });
 });
-

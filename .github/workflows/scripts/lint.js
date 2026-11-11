@@ -156,7 +156,9 @@ export function runNodeTest(exec = execFileSync, fsModule = fs) {
     exec("npm", ["ci", "--prefix", ".gemini"], { stdio: "inherit" });
     if (fsModule.existsSync?.(".gemini/orchestrator/install-sdk.js")) {
       console.log("==> Installing @google/gemini-cli-sdk...");
-      exec("node", [".gemini/orchestrator/install-sdk.js"], { stdio: "inherit" });
+      exec("node", [".gemini/orchestrator/install-sdk.js"], {
+        stdio: "inherit",
+      });
     }
   }
   const files = getTestFiles(".", fsModule);

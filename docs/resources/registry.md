@@ -7,6 +7,7 @@ page_title: "rancher2_registry Resource"
 Provides a Rancher v2 Registry resource. This resource creates Kubernetes secrets with the type `kubernetes.io/dockerconfigjson` for authenticating against Docker registries for Rancher v2 environments and retrieving their information.
 
 Depending on the availability, there are 2 types of Rancher v2 Docker registry resources:
+
 - Project registry resource: Available to all namespaces in the `project_id`.
 - Namespaced registry resource: Available to `namespace_id` in the `project_id`.
 
@@ -45,19 +46,19 @@ resource "rancher2_registry" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required/ForceNew) The name of the registry (string)
-* `project_id` - (Required/ForceNew) The project id where to assign the registry (string)
-* `registries` - (Required) Registries data for registry (list)
-* `description` - (Optional) A registry description (string)
-* `namespace_id` - (Optional) The namespace id where to assign the namespaced registry (string)
-* `annotations` - (Optional/Computed) Annotations for Registry object (map)
-* `labels` - (Optional/Computed) Labels for Registry object (map)
+- `name` - (Required/ForceNew) The name of the registry (string)
+- `project_id` - (Required/ForceNew) The project id where to assign the registry (string)
+- `registries` - (Required) Registries data for registry (list)
+- `description` - (Optional) A registry description (string)
+- `namespace_id` - (Optional) The namespace id where to assign the namespaced registry (string)
+- `annotations` - (Optional/Computed) Annotations for Registry object (map)
+- `labels` - (Optional/Computed) Labels for Registry object (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
+- `id` - (Computed) The ID of the resource (string)
 
 ## Nested blocks
 
@@ -65,9 +66,9 @@ The following attributes are exported:
 
 #### Arguments
 
-* `address` - (Required) Address for registry.
-* `password` - (Optional) Password for the registry (string)
-* `username` - (Optional) Username for the registry (string)
+- `address` - (Required) Address for registry.
+- `password` - (Optional) Password for the registry (string)
+- `username` - (Optional) Username for the registry (string)
 
 ## Timeouts
 

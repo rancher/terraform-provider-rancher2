@@ -31,20 +31,19 @@ resource "rancher2_global_role_binding" "foo" {
 
 The following arguments are supported:
 
-* `username` - (Required/ForceNew) The user username (string)
-* `password` - (Required/ForceNew) The user password (string)
-* `name` - (Optional) The user full name (string)
-* `must_change_password` - (Optional)The user must change password at first login (bool)
-* `annotations` - (Optional/Computed) Annotations for global role binding (map)
-* `labels` - (Optional/Computed) Labels for global role binding (map)
-
+- `username` - (Required/ForceNew) The user username (string)
+- `password` - (Required/ForceNew) The user password (string)
+- `name` - (Optional) The user full name (string)
+- `must_change_password` - (Optional)The user must change password at first login (bool)
+- `annotations` - (Optional/Computed) Annotations for global role binding (map)
+- `labels` - (Optional/Computed) Labels for global role binding (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `principal_ids` - (Computed) The user principal IDs (list)
+- `id` - (Computed) The ID of the resource (string)
+- `principal_ids` - (Computed) The user principal IDs (list)
 
 ## Timeouts
 

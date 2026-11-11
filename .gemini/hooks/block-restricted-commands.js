@@ -3,6 +3,16 @@
 import { Buffer } from "node:buffer";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  DESTRUCTIVE_BINS,
+  SHELL_WRAPPERS,
+  MUTATING_GIT_SUBCOMMANDS,
+  MUTATING_GH_VERBS,
+  GH_FLAGS_CONSUMING_ARG,
+  BLACKLIST_PATHS,
+  TMUX_EXEC_SUBCOMMANDS,
+  MUTATING_REMOTE_SUBCOMMANDS,
+} from "./constants.js";
 
 const originalWrite = process.stdout.write;
 console.log = () => {};
@@ -20,104 +30,6 @@ process.stdout.write = function (chunk, encoding, callback) {
 function outputResult(obj) {
   originalWrite.call(process.stdout, JSON.stringify(obj) + "\n");
 }
-
-const DESTRUCTIVE_BINS = new Set([
-  "rm",
-  "rmdir",
-  "shred",
-  "truncate",
-  "mv",
-  "chmod",
-  "chown",
-  "eval",
-]);
-const SHELL_WRAPPERS = new Set([
-  "command",
-  "builtin",
-  "exec",
-  "sudo",
-  "env",
-  "nohup",
-  "xargs",
-  "time",
-  "timeout",
-  "nice",
-  "bash",
-  "sh",
-  "zsh",
-  "node",
-  "python",
-  "python2",
-  "python3",
-  "ruby",
-  "perl",
-  "find",
-  "watch",
-  "su",
-  "doas",
-  "chroot",
-  "unshare",
-  "screen",
-  "tmux",
-]);
-const MUTATING_GIT_SUBCOMMANDS = new Set([
-  "push",
-  "commit",
-  "reset",
-  "checkout",
-  "rebase",
-  "clean",
-  "restore",
-  "add",
-  "rm",
-  "mv",
-  "merge",
-  "stash",
-  "pull",
-  "cherry-pick",
-  "switch",
-  "apply",
-  "revert",
-  "bisect",
-  "worktree",
-  "gc",
-  "repack",
-]);
-const MUTATING_GH_VERBS = new Set([
-  "merge",
-  "close",
-  "create",
-  "delete",
-  "edit",
-  "reopen",
-  "comment",
-  "review",
-  "api",
-]);
-const GH_FLAGS_CONSUMING_ARG = new Set([
-  "-R",
-  "--repo",
-  "-B",
-  "--base",
-  "-H",
-  "--head",
-  "-t",
-  "--title",
-  "-b",
-  "--body",
-  "-a",
-  "--assignee",
-  "-l",
-  "--label",
-  "-m",
-  "--milestone",
-  "-p",
-  "--project",
-  "-r",
-  "--reviewer",
-  "-F",
-  "--body-file"
-]);
 
 function isFlagConsumingArg(wrapper, flag) {
   if (wrapper === "xargs") {
@@ -157,10 +69,7 @@ function isFlagConsumingArg(wrapper, flag) {
   }
   if (wrapper === "env") {
     return (
-      flag === "-u" ||
-      flag === "-C" ||
-      flag === "--chdir" ||
-      flag === "--unset"
+      flag === "-u" || flag === "-C" || flag === "--chdir" || flag === "--unset"
     );
   }
   if (wrapper === "exec") {
@@ -178,7 +87,12 @@ function isFlagConsumingArg(wrapper, flag) {
     return flag === "-n" || flag === "--adjustment";
   }
   if (wrapper === "time") {
-    return flag === "-f" || flag === "--format" || flag === "-o" || flag === "--output";
+    return (
+      flag === "-f" ||
+      flag === "--format" ||
+      flag === "-o" ||
+      flag === "--output"
+    );
   }
   if (wrapper === "watch") {
     return flag === "-n" || flag === "--interval";
@@ -242,7 +156,7 @@ function splitStatements(cmdStr) {
     const char = cmdStr[i];
 
     if (escape) {
-      if (char === '\n') {
+      if (char === "\n") {
         escape = false;
         continue;
       }
@@ -319,7 +233,7 @@ function tokenize(statement) {
     const char = statement[i];
 
     if (escape) {
-      if (char === '\n') {
+      if (char === "\n") {
         escape = false;
         continue;
       }
@@ -349,7 +263,16 @@ function tokenize(statement) {
         i++;
         continue;
       }
-      if (/\s/.test(char) || char === '(' || char === ')' || char === '<' || char === '>' || char === '{' || char === '}') {
+      if (
+        /\s/.test(char) ||
+        char === "(" ||
+        char === ")" ||
+        char === "<" ||
+        char === ">" ||
+        char === "{" ||
+        char === "}" ||
+        char === ","
+      ) {
         if (current) {
           tokens.push(current);
           current = "";
@@ -373,7 +296,10 @@ function tokenize(statement) {
  * shell interpreters (-c, -e) and command wrappers (command, sudo, env, etc.).
  * Returns a list of all identified executables to check.
  */
-function extractExecutables(tokens) {
+function extractExecutables(tokens, depth = 0) {
+  if (depth > 5) {
+    throw new Error("Recursion depth exceeded");
+  }
   const executables = [];
   let idx = 0;
 
@@ -388,6 +314,11 @@ function extractExecutables(tokens) {
 
     const baseName = path.basename(token).toLowerCase();
 
+    if (baseName.includes("$")) {
+      executables.push({ executable: "rm", baseName: "rm", args: [] });
+      return executables;
+    }
+
     // If it's a wrapper like sudo, env, command, exec, bash -c, etc.
     if (SHELL_WRAPPERS.has(baseName)) {
       executables.push({
@@ -397,7 +328,13 @@ function extractExecutables(tokens) {
       });
 
       idx++;
-      let foundPayload = false;
+      /**
+       * Indicates whether a command payload was successfully found and unwrapped
+       * from within the current wrapper's arguments. When true, the parser can safely
+       * exit the inner argument loop and recursively process the unwrapped payload,
+       * preventing the wrapper's own flags from being misidentified as bare executables.
+       */
+      let payloadFoundInWrapper = false;
       while (idx < tokens.length) {
         const flag = tokens[idx];
         if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(flag)) {
@@ -419,7 +356,14 @@ function extractExecutables(tokens) {
           }
         }
         const isShell =
-          baseName === "bash" || baseName === "sh" || baseName === "zsh" || baseName === "su";
+          baseName === "bash" ||
+          baseName === "sh" ||
+          baseName === "zsh" ||
+          baseName === "su" ||
+          baseName === "dash" ||
+          baseName === "ash" ||
+          baseName === "fish" ||
+          baseName === "ksh";
         const isNonShellInterpreter =
           baseName === "node" ||
           baseName === "python" ||
@@ -427,7 +371,8 @@ function extractExecutables(tokens) {
           baseName === "python3" ||
           baseName === "ruby" ||
           baseName === "perl";
-        const shellClusterMatch = isShell && flag.match(/^-[a-zA-Z]*?c([\s\S]*)$/);
+        const shellClusterMatch =
+          isShell && flag.match(/^-[a-zA-Z]*?c([\s\S]*)$/);
         const isSuCommand =
           baseName === "su" &&
           (flag === "--command" || flag.startsWith("--command="));
@@ -437,8 +382,15 @@ function extractExecutables(tokens) {
             flag.startsWith("-e") ||
             flag.startsWith("--eval") ||
             flag.startsWith("-p"));
-        const isEnvSplit = baseName === "env" && (flag.startsWith("-S") || flag.startsWith("--split-string"));
-        if (Boolean(shellClusterMatch) || isNonShellEval || isEnvSplit || isSuCommand) {
+        const isEnvSplit =
+          baseName === "env" &&
+          (flag.startsWith("-S") || flag.startsWith("--split-string"));
+        if (
+          Boolean(shellClusterMatch) ||
+          isNonShellEval ||
+          isEnvSplit ||
+          isSuCommand
+        ) {
           const isAttached = shellClusterMatch
             ? shellClusterMatch[1].length > 0
             : isEnvSplit
@@ -473,7 +425,7 @@ function extractExecutables(tokens) {
               }
               const payloadStmts = splitStatements(payloadText);
               for (const stmt of payloadStmts) {
-                const subExecs = extractExecutables(tokenize(stmt));
+                const subExecs = extractExecutables(tokenize(stmt), depth + 1);
                 executables.push(...subExecs);
               }
             } else {
@@ -482,25 +434,11 @@ function extractExecutables(tokens) {
               // We add a synthetic "rm" executable to ensure it is denied.
               executables.push({ executable: "rm", baseName: "rm", args: [] });
             }
-            foundPayload = true;
+            payloadFoundInWrapper = true;
           }
           break; // Stop processing flags for this wrapper
         }
-        const TMUX_EXEC_SUBCOMMANDS = new Set([
-          "new",
-          "new-session",
-          "neww",
-          "new-window",
-          "split",
-          "splitw",
-          "split-window",
-          "run",
-          "run-shell",
-          "send",
-          "send-keys",
-          "respawn-pane",
-          "respawn-window",
-        ]);
+
         if (baseName === "tmux" && TMUX_EXEC_SUBCOMMANDS.has(flag)) {
           idx++;
           continue;
@@ -511,23 +449,109 @@ function extractExecutables(tokens) {
             const fToken = tokens[findIdx];
             if (fToken === "-delete") {
               executables.push({ executable: "rm", baseName: "rm", args: [] });
-            } else if (fToken === "-exec" || fToken === "-execdir" || fToken === "-ok" || fToken === "-okdir") {
-              if (findIdx + 1 < tokens.length) {
-                const subExecs = extractExecutables(tokens.slice(findIdx + 1));
+            } else if (
+              fToken === "-exec" ||
+              fToken === "-execdir" ||
+              fToken === "-ok" ||
+              fToken === "-okdir"
+            ) {
+              const terminatorIdx = tokens
+                .slice(findIdx + 1)
+                .findIndex((t) => t === ";" || t === "+");
+              if (terminatorIdx !== -1) {
+                // Ensure we only process the payload up to the terminator
+                const subExecs = extractExecutables(
+                  tokens.slice(findIdx + 1, findIdx + 1 + terminatorIdx),
+                  depth + 1,
+                );
                 executables.push(...subExecs);
+                findIdx += terminatorIdx + 1;
+              } else {
+                // No terminator found, treat as invalid/denied to prevent payload bypass
+                executables.push({
+                  executable: "rm",
+                  baseName: "rm",
+                  args: [],
+                });
+                findIdx = tokens.length;
               }
             }
             findIdx++;
           }
-          foundPayload = true;
+          payloadFoundInWrapper = true;
           break;
         }
 
-        if (isFlagConsumingArg(baseName, flag)) {
-          idx += 2;
-          continue;
-        }
+        // Check if it's a combined flag and argument, e.g., -Oid_rsa
+        // We must check if the flag is a known consuming flag.
         if (flag.startsWith("-")) {
+          // 1. Handle explicitly assigned flags like --output=file or -O=file
+          if (flag.includes("=")) {
+            const assignment = flag
+              .slice(flag.indexOf("=") + 1)
+              .replace(/^["']|["']$/g, "");
+            const canonicalToken = path.posix.normalize(
+              assignment.replace(/\\/g, "/").toLowerCase(),
+            );
+            if (isPathBlacklisted(canonicalToken)) {
+              executables.push({ executable: "rm", baseName: "rm", args: [] });
+              payloadFoundInWrapper = true;
+              break;
+            }
+            idx++;
+            continue;
+          }
+
+          // 2. Handle cases like -Oid_rsa where O is the flag and id_rsa is the argument
+          // Check if it's a single-letter flag followed by an argument without space
+          if (/^-[a-zA-Z](.+)$/.test(flag)) {
+            const flagName = flag.slice(0, 2);
+            const arg = flag.slice(2).replace(/^["']|["']$/g, "");
+
+            // If the flag is one that consumes an argument, check the argument
+            if (isFlagConsumingArg(baseName, flagName)) {
+              const canonicalToken = path.posix.normalize(
+                arg.replace(/\\/g, "/").toLowerCase(),
+              );
+              if (isPathBlacklisted(canonicalToken)) {
+                executables.push({
+                  executable: "rm",
+                  baseName: "rm",
+                  args: [],
+                });
+                payloadFoundInWrapper = true;
+                break;
+              }
+              idx++;
+              continue;
+            }
+          }
+
+          // 3. Handle standard consuming flags with space (idx += 2)
+          if (isFlagConsumingArg(baseName, flag)) {
+            if (idx + 1 < tokens.length) {
+              const arg = tokens[idx + 1].replace(/^["']|["']$/g, "");
+              const canonicalToken = path.posix.normalize(
+                arg.replace(/\\/g, "/").toLowerCase(),
+              );
+              if (isPathBlacklisted(canonicalToken)) {
+                executables.push({
+                  executable: "rm",
+                  baseName: "rm",
+                  args: [],
+                });
+                payloadFoundInWrapper = true;
+                break;
+              }
+            }
+            idx += 2;
+            continue;
+          }
+
+          // Check if it is a flag that consumes argument, if so, we should consume the next token
+          // Check if it is a flag that *might* be a blacklist path.
+          // This seems to be the problematic part causing false negatives?
+          // If flag starts with -, skip it but don't just increment idx once.
           idx++;
           continue;
         }
@@ -538,16 +562,16 @@ function extractExecutables(tokens) {
           const remaining = tokens.slice(idx).join(" ");
           const payloadStmts = splitStatements(remaining);
           for (const stmt of payloadStmts) {
-            const subExecs = extractExecutables(tokenize(stmt));
+            const subExecs = extractExecutables(tokenize(stmt), depth + 1);
             executables.push(...subExecs);
           }
-          foundPayload = true;
+          payloadFoundInWrapper = true;
           break;
         }
         break; // Reached next executable token
       }
 
-      if (foundPayload) {
+      if (payloadFoundInWrapper) {
         return executables;
       }
       continue; // Continue unwrapping outer shell wrapper
@@ -556,16 +580,49 @@ function extractExecutables(tokens) {
     if (/\s/.test(token)) {
       const subTokens = tokenize(token);
       if (subTokens.length > 0) {
-        executables.push(...extractExecutables(subTokens));
+        executables.push(...extractExecutables(subTokens, depth + 1));
         break;
       }
     }
 
     // Standard executable found
+    const args = tokens.slice(idx + 1);
+    for (const rawToken of args) {
+      let argToken = rawToken;
+      if (argToken.startsWith("-")) {
+        if (argToken.includes("=")) {
+          argToken = argToken
+            .slice(argToken.indexOf("=") + 1)
+            .replace(/^["']|["']$/g, "");
+        } else if (/^-[a-zA-Z](.+)$/.test(argToken)) {
+          const candidate = argToken.slice(2).replace(/^["']|["']$/g, "");
+          const candidateNormalized = path.posix
+            .normalize(candidate.replace(/\\/g, "/").toLowerCase());
+          if (isPathBlacklisted(candidateNormalized)) {
+            argToken = candidate;
+          } else {
+            continue;
+          }
+        } else {
+          continue;
+        }
+      }
+      if (!argToken || argToken.startsWith("-")) {
+        continue;
+      }
+      const canonicalToken = path.posix.normalize(
+        argToken.replace(/\\/g, "/").toLowerCase(),
+      );
+      if (isPathBlacklisted(canonicalToken)) {
+        executables.push({ executable: "rm", baseName: "rm", args: [] });
+        return executables;
+      }
+    }
+
     executables.push({
       executable: token,
       baseName,
-      args: tokens.slice(idx + 1),
+      args,
     });
     break;
   }
@@ -578,8 +635,12 @@ function isStatementDestructive(statement) {
   if (tokens.length === 0) {
     return false;
   }
-  const execs = extractExecutables(tokens);
-  return execs.some((exec) => DESTRUCTIVE_BINS.has(exec.baseName));
+  try {
+    const execs = extractExecutables(tokens);
+    return execs.some((exec) => DESTRUCTIVE_BINS.has(exec.baseName));
+  } catch {
+    return true; // Deny if recursion depth exceeded
+  }
 }
 
 function isStatementMutatingGit(statement) {
@@ -587,7 +648,12 @@ function isStatementMutatingGit(statement) {
   if (tokens.length === 0) {
     return false;
   }
-  const execs = extractExecutables(tokens);
+  let execs;
+  try {
+    execs = extractExecutables(tokens);
+  } catch {
+    return true; // Deny if recursion depth exceeded
+  }
 
   for (const { baseName, args } of execs) {
     if (baseName !== "git" && baseName !== "gh") {
@@ -607,7 +673,11 @@ function isStatementMutatingGit(statement) {
           continue;
         }
         const verb = arg.toLowerCase();
-        if (MUTATING_GH_VERBS.has(verb) || MUTATING_GIT_SUBCOMMANDS.has(verb)) {
+        if (
+          verb.includes("$") ||
+          MUTATING_GH_VERBS.has(verb) ||
+          MUTATING_GIT_SUBCOMMANDS.has(verb)
+        ) {
           return true;
         }
         ghIdx++;
@@ -636,9 +706,33 @@ function isStatementMutatingGit(statement) {
 
     if (subCmdIdx < args.length) {
       const subCmd = args[subCmdIdx].toLowerCase();
-      if (MUTATING_GIT_SUBCOMMANDS.has(subCmd)) {
+
+      if (subCmd === "config") {
+        const subArgs = args.slice(subCmdIdx + 1);
+        const isQuery = subArgs.some(
+          (a) =>
+            a === "-l" ||
+            a === "--list" ||
+            a === "--get" ||
+            a === "--get-all" ||
+            a === "--get-regexp",
+        );
+        if (!isQuery) {
+          return true;
+        }
+      } else if (subCmd === "remote") {
+        const subArgs = args.slice(subCmdIdx + 1);
+        const firstNonFlag = subArgs.find((a) => !a.startsWith("-"));
+        if (
+          firstNonFlag &&
+          MUTATING_REMOTE_SUBCOMMANDS.has(firstNonFlag.toLowerCase())
+        ) {
+          return true;
+        }
+      } else if (subCmd.includes("$") || MUTATING_GIT_SUBCOMMANDS.has(subCmd)) {
         return true;
       }
+
       if (subCmd === "branch") {
         const subArgs = args.slice(subCmdIdx + 1);
         if (
@@ -661,6 +755,7 @@ function isStatementMutatingGit(statement) {
               a.startsWith("-C") ||
               a === "-u" ||
               a === "--set-upstream-to" ||
+              a.startsWith("--set-upstream-to=") ||
               a === "--unset-upstream" ||
               a === "--edit-description" ||
               a === "-f" ||
@@ -670,28 +765,34 @@ function isStatementMutatingGit(statement) {
           return true;
         }
 
-        const isList = subArgs.some((a) => a === "-l" || a === "--list");
-        if (!isList) {
-          const BRANCH_OPTION_WITH_ARG = new Set([
-            "--sort",
-            "--format",
-            "--points-at",
-            "--merged",
-            "--no-merged",
-            "--contains",
-            "--no-contains",
-            "--abbrev",
-          ]);
-          for (let i = 0; i < subArgs.length; i++) {
-            const arg = subArgs[i];
-            if (arg.startsWith("-")) {
-              if (BRANCH_OPTION_WITH_ARG.has(arg)) {
-                i++;
-              }
-              continue;
+        const hasExplicitList = subArgs.some(
+          (a) => a === "--list" || a.startsWith("--list="),
+        );
+        const BRANCH_OPTION_WITH_ARG = new Set([
+          "--sort",
+          "--format",
+          "--points-at",
+          "--merged",
+          "--no-merged",
+          "--contains",
+          "--no-contains",
+          "--abbrev",
+        ]);
+        let hasPositional = false;
+        for (let i = 0; i < subArgs.length; i++) {
+          const arg = subArgs[i];
+          if (arg.startsWith("-")) {
+            if (BRANCH_OPTION_WITH_ARG.has(arg)) {
+              i++;
             }
-            return true;
+            continue;
           }
+          hasPositional = true;
+          break;
+        }
+
+        if (hasPositional && !hasExplicitList) {
+          return true;
         }
       }
       if (subCmd === "tag") {
@@ -722,34 +823,57 @@ function isStatementMutatingGit(statement) {
   return false;
 }
 
-const BLACKLIST_PATHS = [
-  ".gemini/hooks/block-restricted-commands.js",
-  ".gemini/settings.json",
-  ".ssh/",
-  "id_rsa",
-  "/etc/",
-  "/private/",
-  "/var/",
-  "/usr/",
-];
+const ALLOWED_ENV_FILES = new Set([".envrc"]);
 
 function isPathBlacklisted(target) {
   if (!target) {
     return false;
   }
-  const normalized = target.endsWith("/") ? target : target + "/";
-  if (BLACKLIST_PATHS.some((b) => normalized.includes(b))) {
+  const canonicalTarget = path.posix.normalize(target);
+  const normalizedTarget = canonicalTarget.endsWith("/")
+    ? canonicalTarget
+    : canonicalTarget + "/";
+
+  // Check for exact match or sub-directory match
+  for (const b of BLACKLIST_PATHS) {
+    const canonicalBlacklist = path.posix.normalize(b);
+    const normalizedBlacklist = canonicalBlacklist.endsWith("/")
+      ? canonicalBlacklist
+      : canonicalBlacklist + "/";
+
+    if (
+      normalizedTarget === normalizedBlacklist ||
+      normalizedTarget.startsWith(normalizedBlacklist) ||
+      (!normalizedBlacklist.startsWith("/") &&
+        normalizedTarget.includes("/" + normalizedBlacklist))
+    ) {
+      return true;
+    }
+  }
+
+  if (/(?:^|\/)\.git(?:$|\/)/.test(canonicalTarget)) {
     return true;
   }
+
+  if (/(?:^|\/)\.ssh(?:$|\/)/.test(canonicalTarget)) {
+    return true;
+  }
+
+  if (/(?:^|\/)id_(?:rsa|dsa|ecdsa|ed25519)(?:$|[._-])/.test(path.basename(canonicalTarget))) {
+    return true;
+  }
+
   if (
-    /(?:^|\/)\.gemini\/settings\.json(?:$|\/)/.test(target) ||
-    /(?:^|\/)block-restricted-commands\.js(?:$|\/)/.test(target)
+    /(?:^|\/)\.gemini\/settings\.json(?:$|\/)/.test(canonicalTarget) ||
+    /(?:^|\/)block-restricted-commands\.js(?:$|\/)/.test(canonicalTarget)
   ) {
     return true;
   }
-  // Check for ".env" as an exact filename or path segment (e.g. .env, dir/.env, .env/file)
-  // so that legitimate files like .envrc or .environment are not inadvertently blocked.
-  if (/(?:^|\/)\.env(?:$|\/)/.test(target)) {
+  // Check for ".env" as an exact filename or path segment (e.g. .env, dir/.env, .env/file, .env.local).
+  if (/(?:^|\/)\.env(?:\.[^/]*|-[^/]*)*(?:$|\/)/.test(canonicalTarget)) {
+    if (ALLOWED_ENV_FILES.has(path.basename(canonicalTarget))) {
+      return false;
+    }
     return true;
   }
   return false;
@@ -794,7 +918,11 @@ function evaluateRules(tool_name, tool_input) {
       }
       if (!inSingleQuote) {
         if (char === "`") return "deny";
-        if ((char === "$" || char === "<" || char === ">") && cmdStr[i + 1] === "(") return "deny";
+        if (
+          (char === "$" || char === "<" || char === ">") &&
+          cmdStr[i + 1] === "("
+        )
+          return "deny";
       }
     }
   }
@@ -831,40 +959,53 @@ function evaluateRules(tool_name, tool_input) {
   }
 
   if (cmdStr) {
-    const tokens = tokenize(cmdStr);
-    for (const rawToken of tokens) {
-      let token = rawToken;
-      if (token.startsWith("-")) {
-        if (token.includes("=")) {
-          token = token
-            .slice(token.indexOf("=") + 1)
-            .replace(/^["']|["']$/g, "");
-        } else if (/^-[a-zA-Z](.+)$/.test(token)) {
-          const candidate = token.slice(2).replace(/^["']|["']$/g, "");
-          const candidateNormalized = path.posix.normalize(
-            candidate.replace(/\\/g, "/").toLowerCase(),
-          ).replace(/\/usr\/(?:local\/)?(?:bin|sbin)\//g, "");
-          if (isPathBlacklisted(candidateNormalized)) {
-            token = candidate;
+    let execs;
+    try {
+      execs = splitStatements(cmdStr).flatMap((stmt) =>
+        extractExecutables(tokenize(stmt)),
+      );
+    } catch {
+      return "deny";
+    }
+    for (const exec of execs) {
+      const canonicalExec = path.posix.normalize(
+        exec.executable.replace(/\\/g, "/").toLowerCase(),
+      );
+      const execStripped = canonicalExec.replace(
+        /^\/usr\/(?:local\/)?(?:bin|sbin)\//,
+        "",
+      );
+      if (isPathBlacklisted(execStripped)) {
+        return "deny";
+      }
+      for (const rawArg of exec.args) {
+        let arg = rawArg;
+        if (arg.startsWith("-")) {
+          if (arg.includes("=")) {
+            arg = arg.slice(arg.indexOf("=") + 1).replace(/^["']|["']$/g, "");
+          } else if (/^-[a-zA-Z](.+)$/.test(arg)) {
+            const candidate = arg.slice(2).replace(/^["']|["']$/g, "");
+            const candidateNormalized = path.posix.normalize(
+              candidate.replace(/\\/g, "/").toLowerCase(),
+            );
+            if (isPathBlacklisted(candidateNormalized)) {
+              arg = candidate;
+            } else {
+              continue;
+            }
           } else {
             continue;
           }
-        } else {
+        }
+        if (!arg || arg.startsWith("-")) {
           continue;
         }
-      }
-      if (!token || token.startsWith("-")) {
-        continue;
-      }
-      const canonicalToken = path.posix.normalize(
-        token.replace(/\\/g, "/").toLowerCase(),
-      );
-      const normalizedCmdForPaths = canonicalToken.replace(
-        /\/usr\/(?:local\/)?(?:bin|sbin)\//g,
-        "",
-      );
-      if (isPathBlacklisted(normalizedCmdForPaths)) {
-        return "deny";
+        const canonicalArg = path.posix.normalize(
+          arg.replace(/\\/g, "/").toLowerCase(),
+        );
+        if (isPathBlacklisted(canonicalArg)) {
+          return "deny";
+        }
       }
     }
   }
@@ -876,7 +1017,8 @@ function evaluateRules(tool_name, tool_input) {
 
   // 5. Block external GitHub PR/issue web fetches
   if (tool_name === "web_fetch" && tool_input) {
-    const targetStr = `${tool_input.url || ""} ${tool_input.prompt || ""}`.toLowerCase();
+    const targetStr =
+      `${tool_input.url || ""} ${tool_input.prompt || ""}`.toLowerCase();
     if (
       targetStr.includes("github.com") &&
       (targetStr.includes("/pull") || targetStr.includes("/issues"))

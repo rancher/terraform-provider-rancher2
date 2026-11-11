@@ -1,5 +1,6 @@
 import assert from "node:assert";
 import { Buffer } from "node:buffer";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import {
@@ -13,6 +14,7 @@ import { findFailedRuns, parseRunArgs } from "../scripts/find_failed_runs.js";
 import { getFailedLog, parseFailedLogArgs } from "../scripts/get_failed_log.js";
 import { listRuns } from "../scripts/list_runs.js";
 import { parseSearchArgs, searchLogs } from "../scripts/search_logs.js";
+import { parseRunId } from "../scripts/constants.js";
 
 test("github-ci skill - getRepoDetails unit tests", async (t) => {
   await t.test(
@@ -238,6 +240,74 @@ test("github-ci skill - getFailedLog unit tests", async (t) => {
     assert.match(
       failedJobs[0].errorLines[0],
       /Error: TestLocalDirectory failed with exit status 1/,
+    );
+  });
+
+  await t.test("throws descriptive error when runId is invalid", async () => {
+    const mockOctokit = { rest: { actions: {} } };
+    for (const invalidRunId of [0, -1, "abc", null, undefined, NaN, 1e20]) {
+      await assert.rejects(
+        async () => {
+          await getFailedLog({
+            octokit: mockOctokit,
+            owner: "rancher",
+            repo: "terraform-provider-file",
+            runId: invalidRunId,
+          });
+        },
+        {
+          message: `Invalid workflow run ID: ${invalidRunId}`,
+        },
+      );
+    }
+  });
+
+  await t.test("extracts failure lines from cancelled jobs", async () => {
+    const mockOctokit = {
+      rest: {
+        actions: {
+          getWorkflowRun: async () => ({
+            data: {
+              id: 205,
+              name: "Cancelled Run",
+              status: "completed",
+              conclusion: "cancelled",
+            },
+          }),
+          listJobsForWorkflowRun: async () => ({
+            data: {
+              jobs: [
+                { id: 305, name: "Build", conclusion: "success" },
+                { id: 306, name: "Integration Test", conclusion: "cancelled" },
+              ],
+            },
+          }),
+          downloadJobLogsForWorkflowRun: async ({ job_id }) => {
+            if (job_id === 306) {
+              return {
+                data: "Running integration test\nError: timed out waiting for condition\nProcess terminated",
+              };
+            }
+            return { data: "Success" };
+          },
+        },
+      },
+    };
+
+    const { run, failedJobs } = await getFailedLog({
+      octokit: mockOctokit,
+      owner: "rancher",
+      repo: "terraform-provider-file",
+      runId: 205,
+    });
+
+    assert.strictEqual(run.id, 205);
+    assert.strictEqual(failedJobs.length, 1);
+    assert.strictEqual(failedJobs[0].job.name, "Integration Test");
+    assert.strictEqual(failedJobs[0].errorLines.length, 1);
+    assert.match(
+      failedJobs[0].errorLines[0],
+      /Error: timed out waiting for condition/,
     );
   });
 
@@ -632,6 +702,26 @@ test("github-ci skill - downloadLogs unit tests", async (t) => {
     },
   );
 
+  await t.test("throws descriptive error when runId is invalid", async () => {
+    const mockOctokit = { rest: { actions: {} } };
+    for (const invalidRunId of [0, -1, "abc", null, undefined, NaN, 1e20]) {
+      await assert.rejects(
+        async () => {
+          await downloadLogs({
+            octokit: mockOctokit,
+            owner: "rancher",
+            repo: "terraform-provider-file",
+            runId: invalidRunId,
+            outputDir: "/tmp/ci-logs-invalid",
+          });
+        },
+        {
+          message: `Invalid workflow run ID: ${invalidRunId}`,
+        },
+      );
+    }
+  });
+
   await t.test(
     "filters to failed jobs only when failedOnly is true",
     async () => {
@@ -662,6 +752,88 @@ test("github-ci skill - downloadLogs unit tests", async (t) => {
         });
 
         assert.strictEqual(result.jobsCount, 2);
+      } finally {
+        await (
+          await import("node:fs/promises")
+        ).rm(tempDir, { recursive: true, force: true });
+      }
+    },
+  );
+
+  await t.test(
+    "truncates safeJobName to 100 characters to prevent ENAMETOOLONG errors",
+    async () => {
+      const longJobName = "A".repeat(250);
+      const mockOctokit = {
+        paginate: async () => [{ id: 701, name: longJobName }],
+        rest: {
+          actions: {
+            downloadJobLogsForWorkflowRun: async () => ({
+              data: "Sample log content for long job name",
+            }),
+          },
+        },
+      };
+
+      const tempDir = path.join("/tmp", `test-ci-logs-long-${Date.now()}`);
+      try {
+        const result = await downloadLogs({
+          octokit: mockOctokit,
+          owner: "rancher",
+          repo: "terraform-provider-file",
+          runId: 1001,
+          outputDir: tempDir,
+        });
+
+        assert.strictEqual(result.jobsCount, 1);
+        const files = await (await import("node:fs/promises")).readdir(tempDir);
+        assert.strictEqual(files.length, 1);
+        const hash = (await import("node:crypto"))
+          .createHash("sha256")
+          .update(longJobName)
+          .digest("hex")
+          .slice(0, 8);
+        assert.strictEqual(files[0], `job-701-${"A".repeat(100)}-${hash}.log`);
+      } finally {
+        await (
+          await import("node:fs/promises")
+        ).rm(tempDir, { recursive: true, force: true });
+      }
+    },
+  );
+
+  await t.test(
+    "gracefully falls back when job.name is null or missing",
+    async () => {
+      const mockOctokit = {
+        paginate: async () => [
+          { id: 801, name: null, conclusion: "success" },
+          { id: 802, conclusion: "success" },
+        ],
+        rest: {
+          actions: {
+            downloadJobLogsForWorkflowRun: async () => ({
+              data: "Log content for nameless job",
+            }),
+          },
+        },
+      };
+
+      const tempDir = path.join("/tmp", `test-ci-logs-null-${Date.now()}`);
+      try {
+        const result = await downloadLogs({
+          octokit: mockOctokit,
+          owner: "rancher",
+          repo: "terraform-provider-file",
+          runId: 1002,
+          outputDir: tempDir,
+        });
+
+        assert.strictEqual(result.jobsCount, 2);
+        const files = await (await import("node:fs/promises")).readdir(tempDir);
+        assert.strictEqual(files.length, 2);
+        assert.ok(files.some((f) => f.startsWith("job-801-job_801-")));
+        assert.ok(files.some((f) => f.startsWith("job-802-job_802-")));
       } finally {
         await (
           await import("node:fs/promises")
@@ -1053,12 +1225,12 @@ test("github-ci skill - parseRunArgs and parseDownloadArgs CLI parsing unit test
       });
       assert.deepStrictEqual(parseDownloadArgs(["12345"]), {
         runId: 12345,
-        outputDir: "/tmp/ci-logs-12345",
+        outputDir: path.join(os.tmpdir(), "ci-logs-12345"),
         failedOnly: false,
       });
       assert.deepStrictEqual(parseDownloadArgs(["#12345"]), {
         runId: 12345,
-        outputDir: "/tmp/ci-logs-12345",
+        outputDir: path.join(os.tmpdir(), "ci-logs-12345"),
         failedOnly: false,
       });
       assert.deepStrictEqual(parseDownloadArgs(["12345", "/custom/path"]), {
@@ -1096,12 +1268,12 @@ test("github-ci skill - parseRunArgs and parseDownloadArgs CLI parsing unit test
       });
       assert.deepStrictEqual(parseDownloadArgs(["12345", "--failed-only"]), {
         runId: 12345,
-        outputDir: "/tmp/ci-logs-12345",
+        outputDir: path.join(os.tmpdir(), "ci-logs-12345"),
         failedOnly: true,
       });
       assert.deepStrictEqual(parseDownloadArgs(["12345", "-f"]), {
         runId: 12345,
-        outputDir: "/tmp/ci-logs-12345",
+        outputDir: path.join(os.tmpdir(), "ci-logs-12345"),
         failedOnly: true,
       });
     },
@@ -1136,5 +1308,18 @@ test("github-ci skill - parseRunArgs and parseDownloadArgs CLI parsing unit test
       pattern: undefined,
       limit: 50,
     });
+  });
+
+  await t.test("parseRunId validates safe integer bounds", () => {
+    assert.strictEqual(parseRunId(12345), 12345);
+    assert.strictEqual(parseRunId("12345"), 12345);
+    assert.strictEqual(parseRunId("#12345"), 12345);
+    assert.strictEqual(parseRunId(0), null);
+    assert.strictEqual(parseRunId(-10), null);
+    assert.strictEqual(parseRunId("abc"), null);
+    assert.strictEqual(parseRunId("12a34"), null);
+    assert.strictEqual(parseRunId(null), null);
+    assert.strictEqual(parseRunId(undefined), null);
+    assert.strictEqual(parseRunId(1e16), null);
   });
 });

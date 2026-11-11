@@ -1,9 +1,10 @@
 #!/usr/bin/env node
+import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-
-const DEFAULT_PATTERN =
-  /\b(error|fail|failure|exception|exit status|fatal|panic)\b/i;
+import readline from "node:readline";
+import { logError } from "../../../orchestrator/lib/logger.js";
+import { DEFAULT_PATTERN } from "./constants.js";
 
 /**
  * Strips ANSI escape codes from terminal output.
@@ -11,7 +12,6 @@ const DEFAULT_PATTERN =
  * @returns {string}
  */
 export function stripAnsi(str) {
-   
   return str ? str.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "") : "";
 }
 
@@ -58,7 +58,13 @@ export async function searchLogs({
     if (limit && results.length >= limit) {
       return;
     }
-    const entries = await fs.readdir(dir, { withFileTypes: true });
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch (err) {
+      logError(`Error listing directory ${dir}: ${err.message}`);
+      return;
+    }
     for (const entry of entries) {
       if (limit && results.length >= limit) {
         return;
@@ -68,23 +74,32 @@ export async function searchLogs({
         await walk(fullPath);
       } else if (entry.isFile()) {
         try {
-          const content = await fs.readFile(fullPath, "utf8");
-          const lines = content.split("\n");
-          for (let i = 0; i < lines.length; i++) {
+          const fileStream = createReadStream(fullPath, { encoding: "utf8" });
+          const rl = readline.createInterface({
+            input: fileStream,
+            crlfDelay: Infinity,
+          });
+
+          let lineNum = 0;
+          for await (const line of rl) {
+            lineNum++;
             if (limit && results.length >= limit) {
+              rl.close();
+              fileStream.destroy();
               break;
             }
-            const cleanLine = stripAnsi(lines[i]);
-            if (regex.test(cleanLine) || regex.test(lines[i])) {
+            const cleanLine = stripAnsi(line);
+            if (regex.test(cleanLine) || regex.test(line)) {
               results.push({
                 file: path.relative(logsDir, fullPath),
-                line: i + 1,
+                line: lineNum,
                 text: cleanLine.trim(),
               });
             }
           }
-        } catch {
-          // Ignore binary or unreadable files
+        } catch (err) {
+          // Log errors for better observability, but continue walking to avoid total failure
+          logError(`Error processing file ${fullPath}: ${err.message}`);
         }
       }
     }
@@ -154,7 +169,7 @@ async function main() {
   const { logsDir, pattern: customPattern, limit } = parseSearchArgs(args);
 
   if (!logsDir) {
-    console.error(
+    logError(
       "Usage: search_logs.js <logs_directory> [regex_pattern] [-n limit]",
     );
     process.exit(1);
@@ -163,11 +178,11 @@ async function main() {
   try {
     const stat = await fs.stat(logsDir);
     if (!stat.isDirectory()) {
-      console.error(`❌ Error: '${logsDir}' is not a directory.`);
+      logError(`'${logsDir}' is not a directory.`);
       process.exit(1);
     }
   } catch {
-    console.error(`❌ Error: Directory '${logsDir}' not found.`);
+    logError(`Directory '${logsDir}' not found.`);
     process.exit(1);
   }
 
@@ -188,7 +203,7 @@ async function main() {
       console.log(`[${m.file}:${m.line}] ${m.text}`);
     }
   } catch (err) {
-    console.error(`❌ Error searching logs: ${err.message}`);
+    logError(`Error searching logs: ${err.message}`);
     process.exit(1);
   }
 }
