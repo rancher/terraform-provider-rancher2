@@ -2092,10 +2092,35 @@ test("git skill - getProductRoots and fileAffectsProduct", async (t) => {
         productRoots: ["custom/"],
       });
       assert.strictEqual(resCustomDocs.valid, false);
-      assert.match(
-        resCustomDocs.reason,
-        /does not indicate a product change/,
-      );
+      assert.match(resCustomDocs.reason, /does not indicate a product change/);
+    },
+  );
+
+  await t.test(
+    "validateCommitMessage preserves product-directory test file boundaries and enforces test: prefix",
+    () => {
+      // Editing product directory test files requires test: prefix
+      const resTest = validateCommitMessage({
+        message: "test: update unit test for cluster",
+        changedFiles: ["rancher2/resource_cluster_test.go"],
+      });
+      assert.strictEqual(resTest.valid, true);
+
+      // docs: or ci: on product directory test file is rejected
+      const resDocs = validateCommitMessage({
+        message: "docs: update docstrings",
+        changedFiles: ["rancher2/resource_cluster_test.go"],
+      });
+      assert.strictEqual(resDocs.valid, false);
+      assert.match(resDocs.reason, /does not indicate a product change/);
+
+      // fix: or feat: on product directory test file without product code is rejected
+      const resFix = validateCommitMessage({
+        message: "fix: update cluster test",
+        changedFiles: ["rancher2/resource_cluster_test.go"],
+      });
+      assert.strictEqual(resFix.valid, false);
+      assert.match(resFix.reason, /cannot use a product prefix/);
     },
   );
 

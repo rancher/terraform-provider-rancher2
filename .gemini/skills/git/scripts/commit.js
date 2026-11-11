@@ -179,6 +179,48 @@ export function checkSpelling(text, repoRoot = process.cwd()) {
  * @param {boolean} [params.isMerge]
  * @returns {{valid: boolean, reason?: string}}
  */
+/**
+ * Normalizes changed files for CI validation while preserving product directory and test file boundaries.
+ * @param {Array<string>} changedFiles - List of changed file paths
+ * @param {Array<string>} [productRoots] - Product directory roots
+ * @returns {Array<string>}
+ */
+export function mapFilesForValidation(
+  changedFiles,
+  productRoots = DEFAULT_PRODUCT_ROOTS,
+) {
+  if (!Array.isArray(changedFiles)) {
+    return [];
+  }
+  return changedFiles.map((file) => {
+    if (isProductDirectory(file)) {
+      return file;
+    }
+    const normalized = file.replace(/^[./]+/, "");
+    const matchesCustomRoot = productRoots.some((root) => {
+      const cleanRoot = root.endsWith("/") ? root : `${root}/`;
+      return normalized.startsWith(cleanRoot);
+    });
+    if (matchesCustomRoot) {
+      return normalized.endsWith("_test.go")
+        ? "rancher2/custom_test.go"
+        : "rancher2/custom.go";
+    }
+    return file;
+  });
+}
+
+/**
+ * Validates a candidate commit message against conventional commit format and repository boundaries.
+ * Enforces strict alignment with CI validate-commit-message rules.
+ * @param {object} params
+ * @param {string} params.message
+ * @param {boolean} [params.affectsProduct]
+ * @param {Array<string>} [params.changedFiles]
+ * @param {boolean} [params.isMerge]
+ * @param {Array<string>} [params.productRoots]
+ * @returns {{valid: boolean, reason?: string}}
+ */
 export function validateCommitMessage({
   message,
   affectsProduct,
@@ -200,14 +242,12 @@ export function validateCommitMessage({
     validatePrefix(subject);
     validateLength(subject);
 
-    const hasProductChanges =
+    const files =
       changedFiles !== undefined
-        ? changedFiles.some((f) => fileAffectsProduct(f, productRoots))
-        : Boolean(affectsProduct);
-
-    const files = hasProductChanges
-      ? ["rancher2/provider.go"]
-      : ["docs/README.md"];
+        ? mapFilesForValidation(changedFiles, productRoots)
+        : affectsProduct
+          ? ["rancher2/provider.go"]
+          : ["docs/README.md"];
 
     validateProductImpact(subject, files);
     return { valid: true };
