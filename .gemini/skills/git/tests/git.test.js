@@ -1935,6 +1935,31 @@ test("git skill - createCommit unit tests", async (t) => {
 });
 
 test("git skill - resolveGlobalGitConfig and createGitClient hermeticity", async (t) => {
+  await t.test(
+    "resolveGlobalGitConfig respects explicit non-devnull GIT_CONFIG_GLOBAL",
+    () => {
+      const res = resolveGlobalGitConfig({
+        env: { GIT_CONFIG_GLOBAL: "/custom/isolated/.gitconfig" },
+      });
+      assert.strictEqual(res, "/custom/isolated/.gitconfig");
+    },
+  );
+
+  await t.test(
+    "resolveGlobalGitConfig falls back to userConfigPath when GIT_CONFIG_GLOBAL is /dev/null",
+    () => {
+      const mockFs = {
+        existsSync: (p) => p === "/mock/home/.gitconfig",
+      };
+      const res = resolveGlobalGitConfig({
+        userConfigPath: "/mock/home/.gitconfig",
+        fsModule: mockFs,
+        env: { GIT_CONFIG_GLOBAL: "/dev/null" },
+      });
+      assert.strictEqual(res, "/mock/home/.gitconfig");
+    },
+  );
+
   await t.test("resolveGlobalGitConfig returns path when exists", () => {
     const mockFs = {
       existsSync: (p) => p === "/mock/home/.gitconfig",
@@ -1963,7 +1988,11 @@ test("git skill - resolveGlobalGitConfig and createGitClient hermeticity", async
   await t.test(
     "createCommit uses mock git and does not call resolveGlobalGitConfig",
     async () => {
-      let globalConfigChecked = false;
+      let resolverCalled = false;
+      const mockResolver = () => {
+        resolverCalled = true;
+        return "/mock/home/.gitconfig";
+      };
       const mockGit = {
         branch: async () => ({ current: "feature/test-branch" }),
         diffSummary: async (args) => {
@@ -1982,10 +2011,11 @@ test("git skill - resolveGlobalGitConfig and createGitClient hermeticity", async
         git: mockGit,
         message: "fix: resolve issue",
         checkSpellingFn: async () => ({ valid: true }),
+        resolveGlobalConfigFn: mockResolver,
       });
 
       assert.strictEqual(result.commit, "abc1234");
-      assert.strictEqual(globalConfigChecked, false);
+      assert.strictEqual(resolverCalled, false);
     },
   );
 
@@ -2028,8 +2058,12 @@ test("git skill - getProductRoots and fileAffectsProduct", async (t) => {
   await t.test(
     "fileAffectsProduct matches standard and custom roots correctly",
     () => {
+      assert.strictEqual(fileAffectsProduct("rancher2/provider.go"), true);
       assert.strictEqual(fileAffectsProduct("internal/provider.go"), true);
-      assert.strictEqual(fileAffectsProduct("src/index.ts"), true);
+      assert.strictEqual(
+        fileAffectsProduct("rancher2/provider_test.go"),
+        false,
+      );
       assert.strictEqual(fileAffectsProduct("docs/README.md"), false);
       assert.strictEqual(
         fileAffectsProduct("custom/app.py", ["custom/"]),
@@ -2038,6 +2072,29 @@ test("git skill - getProductRoots and fileAffectsProduct", async (t) => {
       assert.strictEqual(
         fileAffectsProduct("other/app.py", ["custom/"]),
         false,
+      );
+    },
+  );
+
+  await t.test(
+    "validateCommitMessage uses shared productRoots and agrees with fileAffectsProduct",
+    () => {
+      const resCustomFeat = validateCommitMessage({
+        message: "feat: add feature",
+        changedFiles: ["custom/module.go"],
+        productRoots: ["custom/"],
+      });
+      assert.strictEqual(resCustomFeat.valid, true);
+
+      const resCustomDocs = validateCommitMessage({
+        message: "docs: update docs",
+        changedFiles: ["custom/module.go"],
+        productRoots: ["custom/"],
+      });
+      assert.strictEqual(resCustomDocs.valid, false);
+      assert.match(
+        resCustomDocs.reason,
+        /does not indicate a product change/,
       );
     },
   );

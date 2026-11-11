@@ -27,25 +27,26 @@ export {
   VALID_PREFIXES,
 };
 
-export const DEFAULT_PRODUCT_ROOTS = [
-  "internal/",
-  "src/",
-  "lib/",
-  "pkg/",
-  "cmd/",
-];
+export const DEFAULT_PRODUCT_ROOTS = ["rancher/", "rancher2/", "internal/"];
 
 /**
  * Resolves the user's global Git configuration file path if present.
+ * Respects explicit custom GIT_CONFIG_GLOBAL environments (like test isolation),
+ * falling back to user's config when unset or pointing to /dev/null.
  * @param {object} [options]
  * @param {string} [options.userConfigPath] - Override path to check
  * @param {object} [options.fsModule] - File system module to use
+ * @param {object} [options.env] - Environment variables object
  * @returns {string|null} Resolved config path or null if absent
  */
 export function resolveGlobalGitConfig({
   userConfigPath = path.join(os.homedir(), ".gitconfig"),
   fsModule = nodeFs,
+  env = process.env,
 } = {}) {
+  if (env.GIT_CONFIG_GLOBAL && env.GIT_CONFIG_GLOBAL !== "/dev/null") {
+    return env.GIT_CONFIG_GLOBAL;
+  }
   try {
     if (fsModule.existsSync(userConfigPath)) {
       return userConfigPath;
@@ -116,6 +117,9 @@ export function fileAffectsProduct(
     return true;
   }
   const normalized = filePath.replace(/^[./]+/, "");
+  if (normalized.endsWith("_test.go")) {
+    return false;
+  }
   for (const root of productRoots) {
     const cleanRoot = root.endsWith("/") ? root : `${root}/`;
     if (normalized.startsWith(cleanRoot)) {
@@ -180,6 +184,7 @@ export function validateCommitMessage({
   affectsProduct,
   changedFiles,
   isMerge = false,
+  productRoots = DEFAULT_PRODUCT_ROOTS,
 }) {
   if (!message || !message.trim()) {
     return { valid: false, reason: "Missing commit message." };
@@ -195,12 +200,14 @@ export function validateCommitMessage({
     validatePrefix(subject);
     validateLength(subject);
 
-    const files =
+    const hasProductChanges =
       changedFiles !== undefined
-        ? changedFiles
-        : affectsProduct
-          ? ["rancher2/provider.go"]
-          : ["docs/README.md"];
+        ? changedFiles.some((f) => fileAffectsProduct(f, productRoots))
+        : Boolean(affectsProduct);
+
+    const files = hasProductChanges
+      ? ["rancher2/provider.go"]
+      : ["docs/README.md"];
 
     validateProductImpact(subject, files);
     return { valid: true };
@@ -226,6 +233,7 @@ export function validateCommitTitle(title, affectsProduct, isMerge = false) {
  * @param {string} params.message
  * @param {boolean} [params.affectsProduct]
  * @param {Array<string>} [params.changedFiles]
+ * @param {Array<string>} [params.productRoots]
  * @param {Function} [params.checkSpellingFn]
  * @returns {Promise<{valid: boolean, reason?: string}>}
  */
@@ -233,12 +241,14 @@ export async function validateCommit({
   message,
   affectsProduct,
   changedFiles,
+  productRoots = DEFAULT_PRODUCT_ROOTS,
   checkSpellingFn = checkSpelling,
 }) {
   const syncResult = validateCommitMessage({
     message,
     affectsProduct,
     changedFiles,
+    productRoots,
   });
   if (!syncResult.valid) {
     return syncResult;
@@ -264,6 +274,7 @@ export async function validateCommit({
  * @param {string} params.message
  * @param {Function} [params.checkSpellingFn]
  * @param {string|null} [params.globalConfigPath]
+ * @param {Function} [params.resolveGlobalConfigFn]
  * @returns {Promise<object>} Commit summary
  */
 export async function createCommit({
@@ -271,6 +282,7 @@ export async function createCommit({
   message,
   checkSpellingFn = checkSpelling,
   globalConfigPath = undefined,
+  resolveGlobalConfigFn = resolveGlobalGitConfig,
 }) {
   const gitClient =
     git ||
@@ -278,7 +290,7 @@ export async function createCommit({
       globalConfigPath:
         globalConfigPath !== undefined
           ? globalConfigPath
-          : resolveGlobalGitConfig(),
+          : resolveGlobalConfigFn(),
     });
 
   const currentBranch = (await gitClient.branch()).current;
@@ -318,6 +330,7 @@ export async function createCommit({
     message,
     affectsProduct,
     changedFiles,
+    productRoots: roots,
     checkSpellingFn,
   });
   if (!validation.valid) {
