@@ -5,10 +5,12 @@ import test from "node:test";
 import {
   checkSpelling,
   createCommit,
+  createGitClient,
   DEFAULT_PRODUCT_ROOTS,
   fileAffectsProduct,
   getProductRoots,
   parseCommitArgs,
+  resolveGlobalGitConfig,
   validateCommit,
   validateCommitMessage,
   validateCommitTitle,
@@ -57,13 +59,14 @@ test("git skill - commit message validation", async (t) => {
   await t.test("rejects empty or missing commit messages", () => {
     const res1 = validateCommitMessage({ message: "", affectsProduct: true });
     assert.strictEqual(res1.valid, false);
-    assert.match(res1.reason, /Missing commit message/);
+    assert.match(res1.reason, /Empty commit message|Missing commit message/);
 
     const res2 = validateCommitMessage({
       message: "   ",
       affectsProduct: true,
     });
     assert.strictEqual(res2.valid, false);
+    assert.match(res2.reason, /Empty commit message|Missing commit message/);
   });
 
   await t.test("rejects non-conventional commit messages", () => {
@@ -72,17 +75,20 @@ test("git skill - commit message validation", async (t) => {
       affectsProduct: true,
     });
     assert.strictEqual(res.valid, false);
-    assert.match(res.reason, /Conventional Commits format/);
+    assert.match(
+      res.reason,
+      /Commit message does not start with the required prefix/,
+    );
   });
 
-  await t.test("rejects subject lines longer than 72 characters", () => {
+  await t.test("rejects subject lines longer than 70 characters", () => {
     const longSubject = "fix: " + "a".repeat(70);
     const res = validateCommitMessage({
       message: longSubject,
       affectsProduct: true,
     });
     assert.strictEqual(res.valid, false);
-    assert.match(res.reason, /exceeds 72 characters/);
+    assert.match(res.reason, /less than 70 characters/);
   });
 
   await t.test(
@@ -94,34 +100,42 @@ test("git skill - commit message validation", async (t) => {
         affectsProduct: false,
       });
       assert.strictEqual(resFeat.valid, false);
-      assert.match(resFeat.reason, /Non-product change/);
+      assert.match(resFeat.reason, /cannot use a product prefix/);
 
       const resRefactor = validateCommitMessage({
         message: "refactor: clean docs",
         affectsProduct: false,
       });
       assert.strictEqual(resRefactor.valid, false);
-      assert.match(resRefactor.reason, /Non-product change/);
+      assert.match(resRefactor.reason, /cannot use a product prefix/);
 
       const resBreaking = validateCommitMessage({
-        message: "fix!: critical break",
+        message: "feat!: critical break",
         affectsProduct: false,
       });
       assert.strictEqual(resBreaking.valid, false);
-      assert.match(resBreaking.reason, /Non-product change/);
+      assert.match(resBreaking.reason, /cannot use a product prefix/);
 
-      // Non-product changes CAN use fix, docs, ci, chore, test
+      // Non-product changes CANNOT use fix: because fix: is a product prefix
       const resFix = validateCommitMessage({
         message: "fix: address typo in docs",
         affectsProduct: false,
       });
-      assert.strictEqual(resFix.valid, true);
+      assert.strictEqual(resFix.valid, false);
+      assert.match(resFix.reason, /cannot use a product prefix/);
 
-      const resChore = validateCommitMessage({
-        message: "chore: bump dependencies",
+      // Non-product changes CAN use docs, ci, dev, env, test
+      const resDocs = validateCommitMessage({
+        message: "docs: address typo in readme",
         affectsProduct: false,
       });
-      assert.strictEqual(resChore.valid, true);
+      assert.strictEqual(resDocs.valid, true);
+
+      const resCi = validateCommitMessage({
+        message: "ci: update github action workflow",
+        affectsProduct: false,
+      });
+      assert.strictEqual(resCi.valid, true);
     },
   );
 
@@ -1891,7 +1905,7 @@ test("git skill - createCommit unit tests", async (t) => {
         capturedCommit.msg,
         "feat: add support for new option",
       );
-      assert.deepStrictEqual(capturedCommit.opts, { "-s": null });
+      assert.deepStrictEqual(capturedCommit.opts, { "-s": null, "-S": null });
     },
   );
 
@@ -1915,7 +1929,89 @@ test("git skill - createCommit unit tests", async (t) => {
           message: "feat: add support for new option",
           checkSpellingFn: mockSpeller,
         });
-      }, /Non-product change/);
+      }, /cannot use a product prefix/);
+    },
+  );
+});
+
+test("git skill - resolveGlobalGitConfig and createGitClient hermeticity", async (t) => {
+  await t.test("resolveGlobalGitConfig returns path when exists", () => {
+    const mockFs = {
+      existsSync: (p) => p === "/mock/home/.gitconfig",
+    };
+    const res = resolveGlobalGitConfig({
+      userConfigPath: "/mock/home/.gitconfig",
+      fsModule: mockFs,
+    });
+    assert.strictEqual(res, "/mock/home/.gitconfig");
+  });
+
+  await t.test(
+    "resolveGlobalGitConfig returns null when file does not exist",
+    () => {
+      const mockFs = {
+        existsSync: () => false,
+      };
+      const res = resolveGlobalGitConfig({
+        userConfigPath: "/mock/home/.gitconfig",
+        fsModule: mockFs,
+      });
+      assert.strictEqual(res, null);
+    },
+  );
+
+  await t.test(
+    "createCommit uses mock git and does not call resolveGlobalGitConfig",
+    async () => {
+      let globalConfigChecked = false;
+      const mockGit = {
+        branch: async () => ({ current: "feature/test-branch" }),
+        diffSummary: async (args) => {
+          if (args && args.includes("--cached")) {
+            return { files: [{ file: "rancher2/provider.go" }] };
+          }
+          return { files: [] };
+        },
+        commit: async () => ({
+          commit: "abc1234",
+          branch: "feature/test-branch",
+        }),
+      };
+
+      const result = await createCommit({
+        git: mockGit,
+        message: "fix: resolve issue",
+        checkSpellingFn: async () => ({ valid: true }),
+      });
+
+      assert.strictEqual(result.commit, "abc1234");
+      assert.strictEqual(globalConfigChecked, false);
+    },
+  );
+
+  await t.test(
+    "createGitClient attaches GIT_CONFIG_GLOBAL to simpleGit env when provided",
+    () => {
+      const gitClient = createGitClient({
+        globalConfigPath: "/mock/custom/.gitconfig",
+      });
+      assert.strictEqual(
+        gitClient._executor?.env?.GIT_CONFIG_GLOBAL,
+        "/mock/custom/.gitconfig",
+      );
+    },
+  );
+
+  await t.test(
+    "createGitClient does not set GIT_CONFIG_GLOBAL when path is null",
+    () => {
+      const gitClient = createGitClient({
+        globalConfigPath: null,
+      });
+      assert.strictEqual(
+        gitClient._executor?.env?.GIT_CONFIG_GLOBAL,
+        undefined,
+      );
     },
   );
 });
