@@ -29,4 +29,15 @@ The central execution engine using the official `@google/gemini-cli-sdk` SDK. It
 - **`inspect-prompts.js`**: Inspection utility for orchestrator prompts and agent declarations.
 - **`exercise-agents.js`**: Automated multi-model quota check and daily smoke test.
 - **`exercise-cron.sh`**: Headless runner for agent health checks.
-- **`lib/`**: Deterministic modular libraries supporting agent execution, Ralph review loop, and QA pipeline.
+
+---
+
+## 3. Logging Conventions
+
+Orchestrator utilities and scripts MUST use the unified logging interface provided by `.gemini/orchestrator/lib/logger.js`.
+
+- `import { log, logError } from "./lib/logger.js";`
+- Use `log(msg)` for standard informational output.
+- Use `logError(msg)` for error conditions.
+
+This ensures consistent log formatting and easier integration with centralized log analysis tools.

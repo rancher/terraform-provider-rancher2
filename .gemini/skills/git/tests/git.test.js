@@ -308,8 +308,28 @@ test("git skill - stageFiles unit tests", async (t) => {
 
     const staged = await stageFiles({ git: mockGit, files: ["package.json"] });
     assert.deepStrictEqual(staged, ["package.json"]);
-    assert.deepStrictEqual(capturedAdd, ["package.json"]);
+    assert.deepStrictEqual(capturedAdd, ["--", "package.json"]);
   });
+
+  await t.test(
+    "deduplicates explicit file arguments when all is false",
+    async () => {
+      let capturedAdd = null;
+      const mockGit = {
+        revparse: async () => process.cwd(),
+        add: async (files) => {
+          capturedAdd = files;
+        },
+      };
+
+      const staged = await stageFiles({
+        git: mockGit,
+        files: ["package.json", "package.json", "main.go", "package.json"],
+      });
+      assert.deepStrictEqual(staged, ["package.json", "main.go"]);
+      assert.deepStrictEqual(capturedAdd, ["--", "package.json", "main.go"]);
+    },
+  );
 
   await t.test(
     "stages all tracked modified files when all is true",
@@ -334,7 +354,7 @@ test("git skill - stageFiles unit tests", async (t) => {
 
       const staged = await stageFiles({ git: mockGit, all: true });
       assert.deepStrictEqual(staged, ["package.json"]);
-      assert.deepStrictEqual(capturedAdd, ["package.json"]);
+      assert.deepStrictEqual(capturedAdd, ["--", "package.json"]);
     },
   );
 
@@ -367,7 +387,11 @@ test("git skill - stageFiles unit tests", async (t) => {
         includeUntracked: true,
       });
       assert.deepStrictEqual(staged, ["package.json", "newfile.txt"]);
-      assert.deepStrictEqual(capturedAdd, ["package.json", "newfile.txt"]);
+      assert.deepStrictEqual(capturedAdd, [
+        "--",
+        "package.json",
+        "newfile.txt",
+      ]);
     },
   );
 });

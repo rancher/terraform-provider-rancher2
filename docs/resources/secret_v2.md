@@ -36,21 +36,21 @@ resource "rancher2_secret_v2" "foo" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required/ForceNew) The cluster id of the secret V2 (string)
-* `data` - (Required/Sensitive) The data of the secret v2 (map)
-* `name` - (Required) The name of the secret v2 (string)
-* `namespace` - (Optional/ForceNew) The namespaces of the secret v2. Default: `default` (string)
-* `type` - (Optional) The type of the k8s secret, used to facilitate programmatic handling of secret data, [More info](https://github.com/kubernetes/api/blob/release-1.20/core/v1/types.go#L5772) about k8s secret types and expected format.  Default: `Opaque` (string)
-* `immutable` - (Optional) If set to true, any secret update will remove and recreate the secret. This is a beta field enabled by k8s `ImmutableEphemeralVolumes` feature gate. Default: `false` (bool)
-* `annotations` - (Optional/Computed) Annotations for the secret v2 (map)
-* `labels` - (Optional/Computed) Labels for the secret v2 (map)
+- `cluster_id` - (Required/ForceNew) The cluster id of the secret V2 (string)
+- `data` - (Required/Sensitive) The data of the secret v2 (map)
+- `name` - (Required) The name of the secret v2 (string)
+- `namespace` - (Optional/ForceNew) The namespaces of the secret v2. Default: `default` (string)
+- `type` - (Optional) The type of the k8s secret, used to facilitate programmatic handling of secret data, [More info](https://github.com/kubernetes/api/blob/release-1.20/core/v1/types.go#L5772) about k8s secret types and expected format. Default: `Opaque` (string)
+- `immutable` - (Optional) If set to true, any secret update will remove and recreate the secret. This is a beta field enabled by k8s `ImmutableEphemeralVolumes` feature gate. Default: `false` (bool)
+- `annotations` - (Optional/Computed) Annotations for the secret v2 (map)
+- `labels` - (Optional/Computed) Labels for the secret v2 (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `resource_version` - (Computed) The k8s resource version (string)
+- `id` - (Computed) The ID of the resource (string)
+- `resource_version` - (Computed) The k8s resource version (string)
 
 ## Timeouts
 

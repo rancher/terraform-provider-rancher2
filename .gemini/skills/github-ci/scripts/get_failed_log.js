@@ -2,6 +2,10 @@
 import { Buffer } from "node:buffer";
 import { getCurrentBranch, getOctokit, getRepoDetails } from "./auth.js";
 import { findFailedRuns } from "./find_failed_runs.js";
+import { DEFAULT_PATTERN, parseRunId } from "./constants.js";
+import { logError } from "../../../orchestrator/lib/logger.js";
+
+export { parseRunId };
 
 /**
  * Strips ANSI escape codes from terminal output.
@@ -9,7 +13,6 @@ import { findFailedRuns } from "./find_failed_runs.js";
  * @returns {string}
  */
 export function stripAnsi(str) {
-   
   return str ? str.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "") : "";
 }
 
@@ -20,13 +23,18 @@ export function stripAnsi(str) {
  * @param {string} params.owner
  * @param {string} params.repo
  * @param {number} params.runId
- * @returns {Promise<{run: object, failedJobs: Array<{job: object, errorLines: Array<string>}>}>}
+ * @returns {Promise<{run: object, failedJobs: Array<{job: object, errorLines: Array<string>, tailLines: Array<string>, logsUnavailable?: boolean}>}>}
  */
 export async function getFailedLog({ octokit, owner, repo, runId }) {
+  const validRunId = parseRunId(runId);
+  if (!validRunId) {
+    throw new Error(`Invalid workflow run ID: ${runId}`);
+  }
+
   const { data: run } = await octokit.rest.actions.getWorkflowRun({
     owner,
     repo,
-    run_id: runId,
+    run_id: validRunId,
   });
 
   // List all jobs for the workflow run across all pages
@@ -34,29 +42,31 @@ export async function getFailedLog({ octokit, owner, repo, runId }) {
     ? await octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
       owner,
       repo,
-      run_id: runId,
+      run_id: validRunId,
       per_page: 100,
     })
     : (
       await octokit.rest.actions.listJobsForWorkflowRun({
         owner,
         repo,
-        run_id: runId,
+        run_id: validRunId,
+        per_page: 100,
       })
     ).data.jobs || [];
 
   const failedJobs = [];
-  const failureRegex =
-    /\b(error|failed|failure|fatal|panic|exit code [1-9]|exit status [1-9]|undefined|cannot find|timed out)\b|##\[error\]/i;
+  const failureRegex = DEFAULT_PATTERN;
 
   for (const job of jobs) {
     const isFailed =
       job.conclusion === "failure" ||
       job.conclusion === "timed_out" ||
       job.conclusion === "startup_failure" ||
+      job.conclusion === "cancelled" ||
       job.status === "in_progress";
     if (isFailed) {
       let logText = "";
+      let logsUnavailable = false;
       try {
         const logRes = await octokit.rest.actions.downloadJobLogsForWorkflowRun(
           {
@@ -74,10 +84,23 @@ export async function getFailedLog({ octokit, owner, repo, runId }) {
           logText = Buffer.from(logRes.data).toString("utf8");
         } else {
           logText =
-            typeof logRes.data === "string" ? logRes.data : String(logRes.data);
+            typeof logRes.data === "string"
+              ? logRes.data
+              : logRes.data != null
+                ? String(logRes.data)
+                : "";
         }
-      } catch {
-        // Logs might not be available
+      } catch (err) {
+        if (err.status === 401 || err.status === 403) {
+          throw err;
+        }
+        if (err.status !== 404 && err.status !== 410) {
+          logError(
+            `Error fetching logs for failed job ${job.id}: ${err.message}`,
+          );
+        }
+        logsUnavailable = true;
+        job.logsUnavailable = true;
       }
 
       const lines = logText.split("\n");
@@ -95,6 +118,7 @@ export async function getFailedLog({ octokit, owner, repo, runId }) {
         job,
         errorLines,
         tailLines,
+        logsUnavailable,
       });
     }
   }
@@ -126,24 +150,15 @@ export function parseFailedLogArgs(args = []) {
       (a === "-r" || a === "--run" || a === "--run-id") &&
       i + 1 < args.length
     ) {
-      const parsed = parseInt(args[++i].replace(/^#/, ""), 10);
-      if (!isNaN(parsed)) {
-        runId = parsed;
-      }
+      runId = parseRunId(args[++i]) ?? runId;
     } else if (
       a.startsWith("-r=") ||
       a.startsWith("--run=") ||
       a.startsWith("--run-id=")
     ) {
-      const parsed = parseInt(
-        a.slice(a.indexOf("=") + 1).replace(/^#/, ""),
-        10,
-      );
-      if (!isNaN(parsed)) {
-        runId = parsed;
-      }
+      runId = parseRunId(a.slice(a.indexOf("=") + 1)) ?? runId;
     } else if (/^#?\d+$/.test(a)) {
-      runId = parseInt(a.replace(/^#/, ""), 10);
+      runId = parseRunId(a) ?? runId;
     } else if (a !== "current" && !a.startsWith("-")) {
       targetBranch = a;
     }
@@ -250,7 +265,11 @@ async function main() {
           `   Failed Step: ${step.name} (Step #${step.number}, conclusion: ${step.conclusion})`,
         );
       }
-      if (item.errorLines.length === 0) {
+      if (item.job?.logsUnavailable || item.logsUnavailable) {
+        console.log(
+          "   (Logs could not be retrieved from GitHub: expired or not yet generated)",
+        );
+      } else if (item.errorLines.length === 0) {
         if (item.tailLines && item.tailLines.length > 0) {
           console.log("   Recent job output lines before exit:");
           for (const line of item.tailLines) {
@@ -269,7 +288,7 @@ async function main() {
       }
     }
   } catch (err) {
-    console.error(`❌ Error inspecting failed run: ${err.message}`);
+    logError(`Error inspecting failed run: ${err.message}`);
     process.exit(1);
   }
 }

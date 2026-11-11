@@ -1,5 +1,6 @@
 import assert from "node:assert";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
@@ -14,9 +15,11 @@ import {
   SUPPORTED_MODES as LINT_MODES,
 } from "../scripts/lint.js";
 import {
+  findTestFiles,
   parseTestArgs,
   runTest,
   SUPPORTED_MODES as TEST_MODES,
+  withIsolatedGitConfig,
 } from "../scripts/test.js";
 import { getRepoRoot, runCommand } from "../scripts/utils.js";
 import {
@@ -248,6 +251,33 @@ test("code-validation skill - parseTestArgs", async (t) => {
     const res = parseTestArgs(["--unknown-flag"]);
     assert.ok(res.error?.includes("Unknown option"));
   });
+});
+
+test("code-validation skill - findTestFiles", async (t) => {
+  await t.test(
+    "returns discovered test files in deterministic sorted order",
+    async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "find-test-files-"),
+      );
+      try {
+        await fs.writeFile(path.join(tmpDir, "z.test.js"), "");
+        await fs.writeFile(path.join(tmpDir, "a.test.js"), "");
+        await fs.writeFile(path.join(tmpDir, "m.spec.js"), "");
+        await fs.writeFile(path.join(tmpDir, "not-a-test.txt"), "");
+
+        const files = await findTestFiles(tmpDir);
+        assert.strictEqual(files.length, 3);
+        assert.deepStrictEqual(files, [
+          path.join(tmpDir, "a.test.js"),
+          path.join(tmpDir, "m.spec.js"),
+          path.join(tmpDir, "z.test.js"),
+        ]);
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
+    },
+  );
 });
 
 test("code-validation skill - parseFormatArgs", async (t) => {
@@ -556,6 +586,392 @@ test("code-validation skill - execution integration", async (t) => {
     assert.strictEqual(executed[0].cmd, "make");
     assert.deepStrictEqual(executed[0].args, ["acc"]);
   });
+
+  await t.test(
+    "runTest mode workflow-scripts isolates GIT_CONFIG_GLOBAL to unique temp file when /dev/null",
+    async () => {
+      const origGitConfig = process.env.GIT_CONFIG_GLOBAL;
+      try {
+        process.env.GIT_CONFIG_GLOBAL = "/dev/null";
+        const executed = [];
+        const mockRunner = async (cmd, args, opts) => {
+          executed.push({ cmd, args, opts });
+          return {
+            success: true,
+            code: 0,
+            stdout: "workflow tests passed",
+            stderr: "",
+          };
+        };
+        const res = await runTest({
+          mode: "workflow-scripts",
+          commandRunner: mockRunner,
+        });
+        assert.strictEqual(res.mode, "workflow-scripts");
+        assert.strictEqual(res.success, true);
+        assert.ok(executed[0].opts?.env?.GIT_CONFIG_GLOBAL);
+        assert.notStrictEqual(
+          executed[0].opts.env.GIT_CONFIG_GLOBAL,
+          "/dev/null",
+        );
+        assert.match(
+          executed[0].opts.env.GIT_CONFIG_GLOBAL,
+          /gemini-gitconfig-[^/]+\/\.gitconfig$/,
+        );
+      } finally {
+        if (origGitConfig !== undefined) {
+          process.env.GIT_CONFIG_GLOBAL = origGitConfig;
+        } else {
+          delete process.env.GIT_CONFIG_GLOBAL;
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "runTest mode workflow-scripts unlinks temporary .gitconfig if created by runner",
+    async () => {
+      const origGitConfig = process.env.GIT_CONFIG_GLOBAL;
+      let tempPath = null;
+      try {
+        process.env.GIT_CONFIG_GLOBAL = "/dev/null";
+        const mockRunner = async (cmd, args, opts) => {
+          tempPath = opts?.env?.GIT_CONFIG_GLOBAL;
+          if (tempPath) {
+            await fs.writeFile(tempPath, "[user]\n  name = Test\n", "utf8");
+          }
+          return {
+            success: true,
+            code: 0,
+            stdout: "workflow tests passed",
+            stderr: "",
+          };
+        };
+        const res = await runTest({
+          mode: "workflow-scripts",
+          commandRunner: mockRunner,
+        });
+        assert.strictEqual(res.mode, "workflow-scripts");
+        assert.strictEqual(res.success, true);
+        assert.ok(tempPath);
+        await assert.rejects(async () => fs.stat(tempPath));
+      } finally {
+        if (origGitConfig !== undefined) {
+          process.env.GIT_CONFIG_GLOBAL = origGitConfig;
+        } else {
+          delete process.env.GIT_CONFIG_GLOBAL;
+        }
+        if (tempPath) {
+          try {
+            await fs.unlink(tempPath);
+          } catch {
+            // Ignore
+          }
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "runTest mode agent-scripts isolates GIT_CONFIG_GLOBAL to unique temp file when /dev/null",
+    async () => {
+      const origGitConfig = process.env.GIT_CONFIG_GLOBAL;
+      try {
+        process.env.GIT_CONFIG_GLOBAL = "/dev/null";
+        const executed = [];
+        const mockRunner = async (cmd, args, opts) => {
+          executed.push({ cmd, args, opts });
+          return {
+            success: true,
+            code: 0,
+            stdout: "agent tests passed",
+            stderr: "",
+          };
+        };
+        const res = await runTest({
+          mode: "agent-scripts",
+          commandRunner: mockRunner,
+        });
+        assert.strictEqual(res.mode, "agent-scripts");
+        assert.strictEqual(res.success, true);
+        assert.ok(executed[0].opts?.env?.GIT_CONFIG_GLOBAL);
+        assert.notStrictEqual(
+          executed[0].opts.env.GIT_CONFIG_GLOBAL,
+          "/dev/null",
+        );
+        assert.match(
+          executed[0].opts.env.GIT_CONFIG_GLOBAL,
+          /gemini-gitconfig-[^/]+\/\.gitconfig$/,
+        );
+      } finally {
+        if (origGitConfig !== undefined) {
+          process.env.GIT_CONFIG_GLOBAL = origGitConfig;
+        } else {
+          delete process.env.GIT_CONFIG_GLOBAL;
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "runTest mode agent-scripts unlinks temporary .gitconfig if created by runner",
+    async () => {
+      const origGitConfig = process.env.GIT_CONFIG_GLOBAL;
+      let tempPath = null;
+      try {
+        process.env.GIT_CONFIG_GLOBAL = "/dev/null";
+        const mockRunner = async (cmd, args, opts) => {
+          tempPath = opts?.env?.GIT_CONFIG_GLOBAL;
+          if (tempPath) {
+            await fs.writeFile(tempPath, "[user]\n  name = Test\n", "utf8");
+          }
+          return {
+            success: true,
+            code: 0,
+            stdout: "agent tests passed",
+            stderr: "",
+          };
+        };
+        const res = await runTest({
+          mode: "agent-scripts",
+          commandRunner: mockRunner,
+        });
+        assert.strictEqual(res.mode, "agent-scripts");
+        assert.strictEqual(res.success, true);
+        assert.ok(tempPath);
+        await assert.rejects(async () => fs.stat(tempPath));
+      } finally {
+        if (origGitConfig !== undefined) {
+          process.env.GIT_CONFIG_GLOBAL = origGitConfig;
+        } else {
+          delete process.env.GIT_CONFIG_GLOBAL;
+        }
+        if (tempPath) {
+          try {
+            await fs.unlink(tempPath);
+          } catch {
+            // Ignore
+          }
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "runTest mode release-scripts executes test files directly via process.execPath",
+    async () => {
+      const executed = [];
+      const mockRunner = async (cmd, args) => {
+        executed.push({ cmd, args });
+        return { success: true, code: 0, stdout: "tests passed", stderr: "" };
+      };
+      const res = await runTest({
+        mode: "release-scripts",
+        commandRunner: mockRunner,
+      });
+      assert.strictEqual(res.mode, "release-scripts");
+      assert.strictEqual(res.success, true);
+      assert.strictEqual(executed[0].cmd, process.execPath);
+      assert.strictEqual(executed[0].args[0], "--test");
+      assert.ok(executed[0].args.length > 1);
+      assert.ok(executed[0].args.some((f) => f.includes("scripts")));
+    },
+  );
+
+  await t.test(
+    "runTest mode release-scripts isolates GIT_CONFIG_GLOBAL to unique temp file when /dev/null",
+    async () => {
+      const origGitConfig = process.env.GIT_CONFIG_GLOBAL;
+      try {
+        process.env.GIT_CONFIG_GLOBAL = "/dev/null";
+        const executed = [];
+        const mockRunner = async (cmd, args, opts) => {
+          executed.push({ cmd, args, opts });
+          return {
+            success: true,
+            code: 0,
+            stdout: "release tests passed",
+            stderr: "",
+          };
+        };
+        const res = await runTest({
+          mode: "release-scripts",
+          commandRunner: mockRunner,
+        });
+        assert.strictEqual(res.mode, "release-scripts");
+        assert.strictEqual(res.success, true);
+        assert.ok(executed[0].opts?.env?.GIT_CONFIG_GLOBAL);
+        assert.notStrictEqual(
+          executed[0].opts.env.GIT_CONFIG_GLOBAL,
+          "/dev/null",
+        );
+        assert.match(
+          executed[0].opts.env.GIT_CONFIG_GLOBAL,
+          /gemini-gitconfig-[^/]+\/\.gitconfig$/,
+        );
+      } finally {
+        if (origGitConfig !== undefined) {
+          process.env.GIT_CONFIG_GLOBAL = origGitConfig;
+        } else {
+          delete process.env.GIT_CONFIG_GLOBAL;
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "runTest mode release-scripts unlinks temporary .gitconfig if created by runner",
+    async () => {
+      const origGitConfig = process.env.GIT_CONFIG_GLOBAL;
+      let tempPath = null;
+      try {
+        process.env.GIT_CONFIG_GLOBAL = "/dev/null";
+        const mockRunner = async (cmd, args, opts) => {
+          tempPath = opts?.env?.GIT_CONFIG_GLOBAL;
+          if (tempPath) {
+            await fs.writeFile(tempPath, "[user]\n  name = Test\n", "utf8");
+          }
+          return {
+            success: true,
+            code: 0,
+            stdout: "release tests passed",
+            stderr: "",
+          };
+        };
+        const res = await runTest({
+          mode: "release-scripts",
+          commandRunner: mockRunner,
+        });
+        assert.strictEqual(res.mode, "release-scripts");
+        assert.strictEqual(res.success, true);
+        assert.ok(tempPath);
+        await assert.rejects(async () => fs.stat(tempPath));
+      } finally {
+        if (origGitConfig !== undefined) {
+          process.env.GIT_CONFIG_GLOBAL = origGitConfig;
+        } else {
+          delete process.env.GIT_CONFIG_GLOBAL;
+        }
+        if (tempPath) {
+          try {
+            await fs.unlink(tempPath);
+          } catch {
+            // Ignore
+          }
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "withIsolatedGitConfig preserves environment when GIT_CONFIG_GLOBAL is not /dev/null",
+    async () => {
+      const origGitConfig = process.env.GIT_CONFIG_GLOBAL;
+      try {
+        process.env.GIT_CONFIG_GLOBAL = "/custom/path/.gitconfig";
+        let capturedEnv = null;
+        const result = await withIsolatedGitConfig(async (testEnv) => {
+          capturedEnv = testEnv;
+          return "custom-success";
+        });
+        assert.strictEqual(result, "custom-success");
+        assert.strictEqual(
+          capturedEnv?.GIT_CONFIG_GLOBAL,
+          "/custom/path/.gitconfig",
+        );
+      } finally {
+        if (origGitConfig !== undefined) {
+          process.env.GIT_CONFIG_GLOBAL = origGitConfig;
+        } else {
+          delete process.env.GIT_CONFIG_GLOBAL;
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "withIsolatedGitConfig creates isolated temp directory and cleans up on completion",
+    async () => {
+      const origGitConfig = process.env.GIT_CONFIG_GLOBAL;
+      let tempConfigPath = null;
+      try {
+        process.env.GIT_CONFIG_GLOBAL = "/dev/null";
+        const result = await withIsolatedGitConfig(async (testEnv) => {
+          tempConfigPath = testEnv.GIT_CONFIG_GLOBAL;
+          assert.match(tempConfigPath, /gemini-gitconfig-[^/]+\/\.gitconfig$/);
+          const initialStat = await fs.stat(tempConfigPath);
+          assert.strictEqual(initialStat.isFile(), true);
+          assert.strictEqual(await fs.readFile(tempConfigPath, "utf8"), "");
+          await fs.writeFile(tempConfigPath, "[user]\n  name = Test\n", "utf8");
+          const stat = await fs.stat(tempConfigPath);
+          assert.strictEqual(stat.isFile(), true);
+          return "isolated-ok";
+        });
+        assert.strictEqual(result, "isolated-ok");
+        assert.ok(tempConfigPath);
+        await assert.rejects(async () => fs.stat(tempConfigPath));
+      } finally {
+        if (origGitConfig !== undefined) {
+          process.env.GIT_CONFIG_GLOBAL = origGitConfig;
+        } else {
+          delete process.env.GIT_CONFIG_GLOBAL;
+        }
+        if (tempConfigPath) {
+          try {
+            await fs.rm(path.dirname(tempConfigPath), {
+              recursive: true,
+              force: true,
+            });
+          } catch {
+            // Ignore
+          }
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "withIsolatedGitConfig cleans up temporary directory even if callback throws",
+    async () => {
+      const origGitConfig = process.env.GIT_CONFIG_GLOBAL;
+      let tempConfigPath = null;
+      try {
+        process.env.GIT_CONFIG_GLOBAL = "/dev/null";
+        await assert.rejects(
+          async () => {
+            await withIsolatedGitConfig(async (testEnv) => {
+              tempConfigPath = testEnv.GIT_CONFIG_GLOBAL;
+              await fs.writeFile(
+                tempConfigPath,
+                "[user]\n  name = Test\n",
+                "utf8",
+              );
+              throw new Error("Callback failure");
+            });
+          },
+          { message: "Callback failure" },
+        );
+        assert.ok(tempConfigPath);
+        await assert.rejects(async () => fs.stat(tempConfigPath));
+      } finally {
+        if (origGitConfig !== undefined) {
+          process.env.GIT_CONFIG_GLOBAL = origGitConfig;
+        } else {
+          delete process.env.GIT_CONFIG_GLOBAL;
+        }
+        if (tempConfigPath) {
+          try {
+            await fs.rm(path.dirname(tempConfigPath), {
+              recursive: true,
+              force: true,
+            });
+          } catch {
+            // Ignore
+          }
+        }
+      }
+    },
+  );
 
   await t.test(
     "runFormat normalizes gofmt target to go with mock commandRunner",

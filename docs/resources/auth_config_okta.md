@@ -28,24 +28,24 @@ resource "rancher2_auth_config_okta" "okta" {
 
 The following arguments are supported:
 
-* `display_name_field` - (Required) OKTA display name field (string)
-* `groups_field` - (Required) OKTA group field (string)
-* `idp_metadata_content` - (Required/Sensitive) OKTA IDP metadata content (string)
-* `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
-* `sp_cert` - (Required/Sensitive) OKTA SP cert (string)
-* `sp_key` - (Required/Sensitive) OKTA SP key (string)
-* `uid_field` - (Required) OKTA UID field (string)
-* `user_name_field` - (Required) OKTA user name field (string)
-* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
-* `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `okta_user://<USER_ID>`  `okta_group://<GROUP_ID>` (list)
-* `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
-* `annotations` - (Optional/Computed) Annotations of the resource (map)
-* `labels` - (Optional/Computed) Labels of the resource (map)
+- `display_name_field` - (Required) OKTA display name field (string)
+- `groups_field` - (Required) OKTA group field (string)
+- `idp_metadata_content` - (Required/Sensitive) OKTA IDP metadata content (string)
+- `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
+- `sp_cert` - (Required/Sensitive) OKTA SP cert (string)
+- `sp_key` - (Required/Sensitive) OKTA SP key (string)
+- `uid_field` - (Required) OKTA UID field (string)
+- `user_name_field` - (Required) OKTA user name field (string)
+- `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
+- `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `okta_user://<USER_ID>` `okta_group://<GROUP_ID>` (list)
+- `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
+- `annotations` - (Optional/Computed) Annotations of the resource (map)
+- `labels` - (Optional/Computed) Labels of the resource (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `name` - (Computed) The name of the resource (string)
-* `type` - (Computed) The type of the resource (string)
+- `id` - (Computed) The ID of the resource (string)
+- `name` - (Computed) The name of the resource (string)
+- `type` - (Computed) The type of the resource (string)

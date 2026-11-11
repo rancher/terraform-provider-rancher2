@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 import { Buffer } from "node:buffer";
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
-import { getCurrentBranch, getOctokit, getRepoDetails } from "./auth.js";
+import { logError } from "../../../orchestrator/lib/logger.js";
 import { findFailedRuns } from "./find_failed_runs.js";
+import { getCurrentBranch, getOctokit, getRepoDetails } from "./auth.js";
+import { parseRunId } from "./constants.js";
 
 /**
  * Downloads logs for a workflow run and saves them locally.
@@ -24,6 +28,12 @@ export async function downloadLogs({
   outputDir,
   failedOnly = false,
 }) {
+  const validRunId = parseRunId(runId);
+  if (!validRunId) {
+    throw new Error(`Invalid workflow run ID: ${runId}`);
+  }
+
+  outputDir = outputDir || path.join(os.tmpdir(), `ci-logs-${validRunId}`);
   await fs.mkdir(outputDir, { recursive: true });
 
   // List all jobs for the workflow run across all pages
@@ -31,14 +41,15 @@ export async function downloadLogs({
     ? await octokit.paginate(octokit.rest.actions.listJobsForWorkflowRun, {
       owner,
       repo,
-      run_id: runId,
+      run_id: validRunId,
       per_page: 100,
     })
     : (
       await octokit.rest.actions.listJobsForWorkflowRun({
         owner,
         repo,
-        run_id: runId,
+        run_id: validRunId,
+        per_page: 100,
       })
     ).data.jobs || [];
 
@@ -47,13 +58,17 @@ export async function downloadLogs({
       (j) =>
         j.conclusion === "failure" ||
           j.conclusion === "timed_out" ||
-          j.conclusion === "startup_failure",
+          j.conclusion === "startup_failure" ||
+          j.conclusion === "cancelled" ||
+          j.status === "in_progress",
     )
-    : jobs;
+    : jobs.filter((j) => j.status !== "queued" && j.conclusion !== "skipped");
 
   let savedCount = 0;
 
   for (const job of targetJobs) {
+    let logText;
+    let filePath;
     try {
       const response = await octokit.rest.actions.downloadJobLogsForWorkflowRun(
         {
@@ -63,7 +78,6 @@ export async function downloadLogs({
         },
       );
 
-      let logText;
       if (Buffer.isBuffer(response.data)) {
         logText = response.data.toString("utf8");
       } else if (
@@ -75,15 +89,36 @@ export async function downloadLogs({
         logText =
           typeof response.data === "string"
             ? response.data
-            : String(response.data);
+            : response.data != null
+              ? String(response.data)
+              : "";
       }
-      const safeJobName = job.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const filePath = path.join(outputDir, `job-${job.id}-${safeJobName}.log`);
-      await fs.writeFile(filePath, logText, "utf8");
-      savedCount++;
-    } catch {
+      const rawJobName = job.name || `job_${job.id}`;
+      const safeJobName = rawJobName
+        .replace(/[^a-zA-Z0-9._-]/g, "_")
+        .slice(0, 100);
+      const hash = crypto
+        .createHash("sha256")
+        .update(rawJobName)
+        .digest("hex")
+        .slice(0, 8);
+      filePath = path.join(
+        outputDir,
+        `job-${job.id}-${safeJobName}-${hash}.log`,
+      );
+    } catch (err) {
+      if (err.status === 401 || err.status === 403) {
+        throw err;
+      }
+      if (err.status !== 404 && err.status !== 410) {
+        logError(`Error downloading logs for job ${job.id}: ${err.message}`);
+      }
       // Some jobs might not have logs available yet
+      continue;
     }
+
+    await fs.writeFile(filePath, logText, "utf8");
+    savedCount++;
   }
 
   return { outputDir, jobsCount: savedCount };
@@ -115,6 +150,17 @@ export function parseDownloadArgs(args = []) {
       outputDir = args[++i];
     } else if (arg.startsWith("--output=") || arg.startsWith("-o=")) {
       outputDir = arg.slice(arg.indexOf("=") + 1);
+    } else if (
+      (arg === "-r" || arg === "--run" || arg === "--run-id") &&
+      i + 1 < args.length
+    ) {
+      runId = parseRunId(args[++i]) ?? runId;
+    } else if (
+      arg.startsWith("-r=") ||
+      arg.startsWith("--run=") ||
+      arg.startsWith("--run-id=")
+    ) {
+      runId = parseRunId(arg.slice(arg.indexOf("=") + 1)) ?? runId;
     } else if (arg && !arg.startsWith("-")) {
       positional.push(arg);
     }
@@ -122,8 +168,9 @@ export function parseDownloadArgs(args = []) {
 
   if (positional.length > 0) {
     const first = positional[0];
-    if (/^#?\d+$/.test(first)) {
-      runId = parseInt(first.replace(/^#/, ""), 10);
+    const parsedFirst = parseRunId(first);
+    if (parsedFirst !== null) {
+      runId = runId ?? parsedFirst;
       if (positional.length > 1 && !outputDir) {
         outputDir = positional[1];
       }
@@ -136,14 +183,17 @@ export function parseDownloadArgs(args = []) {
       if (!outputDir) {
         outputDir = first;
       }
-      if (positional.length > 1 && /^#?\d+$/.test(positional[1])) {
-        runId = parseInt(positional[1].replace(/^#/, ""), 10);
+      if (positional.length > 1) {
+        const parsedSecond = parseRunId(positional[1]);
+        if (parsedSecond !== null) {
+          runId = runId ?? parsedSecond;
+        }
       }
     }
   }
 
   if (runId && !outputDir) {
-    outputDir = `/tmp/ci-logs-${runId}`;
+    outputDir = path.join(os.tmpdir(), `ci-logs-${runId}`);
   }
 
   return { runId, outputDir, failedOnly };
@@ -204,7 +254,7 @@ async function main() {
     }
     runId = failedRuns[0].id;
     if (!outputDir) {
-      outputDir = `/tmp/ci-logs-${runId}`;
+      outputDir = path.join(os.tmpdir(), `ci-logs-${runId}`);
     }
   }
 
@@ -225,7 +275,7 @@ async function main() {
       `✅ Successfully saved ${result.jobsCount} job log(s) to: ${result.outputDir}`,
     );
   } catch (err) {
-    console.error(`❌ Error downloading logs: ${err.message}`);
+    logError(`Error downloading logs: ${err.message}`);
     process.exit(1);
   }
 }

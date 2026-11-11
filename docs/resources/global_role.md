@@ -38,21 +38,21 @@ resource "rancher2_global_role" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) Global role name (string)
-* `description` - (Optional/Computed) Global role description (string)
-* `new_user_default` - (Optional) Whether or not this role should be added to new users. Default `false` (bool)
-* `rules` - (Optional/Computed) Global role policy rules (list)
-* `annotations` - (Optional/Computed) Annotations for global role object (map)
-* `labels` - (Optional/Computed) Labels for global role object (map)
-* `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
-* `inherited_namespaced_rules` - (Optional/Computed) Policy rules granted in matching namespaces of every cluster besides the local cluster (set)
+- `name` - (Required) Global role name (string)
+- `description` - (Optional/Computed) Global role description (string)
+- `new_user_default` - (Optional) Whether or not this role should be added to new users. Default `false` (bool)
+- `rules` - (Optional/Computed) Global role policy rules (list)
+- `annotations` - (Optional/Computed) Annotations for global role object (map)
+- `labels` - (Optional/Computed) Labels for global role object (map)
+- `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
+- `inherited_namespaced_rules` - (Optional/Computed) Policy rules granted in matching namespaces of every cluster besides the local cluster (set)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `builtin` - (Computed) Builtin global role (bool)
+- `id` - (Computed) The ID of the resource (string)
+- `builtin` - (Computed) Builtin global role (bool)
 
 ## Nested blocks
 
@@ -60,18 +60,18 @@ The following attributes are exported:
 
 #### Arguments
 
-* `api_groups` - (Optional) Policy rule api groups (list)
-* `non_resource_urls` - (Optional) Policy rule non resource urls (list)
-* `resource_names` - (Optional) Policy rule resource names (list)
-* `resources` - (Optional) Policy rule resources (list)
-* `verbs` - (Optional) Policy rule verbs. `bind`, `create`, `delete`, `deletecollection`, `escalate`, `get`, `impersonate`, `list`, `manage-namespaces`, `patch`, `update`, `updatepsa`, `use`, `view`, `watch`, `own` and `*` values are supported (list)
+- `api_groups` - (Optional) Policy rule api groups (list)
+- `non_resource_urls` - (Optional) Policy rule non resource urls (list)
+- `resource_names` - (Optional) Policy rule resource names (list)
+- `resources` - (Optional) Policy rule resources (list)
+- `verbs` - (Optional) Policy rule verbs. `bind`, `create`, `delete`, `deletecollection`, `escalate`, `get`, `impersonate`, `list`, `manage-namespaces`, `patch`, `update`, `updatepsa`, `use`, `view`, `watch`, `own` and `*` values are supported (list)
 
 ### `inherited_namespaced_rules`
 
 #### Arguments
 
-* `namespace` - (Required) Namespace in each downstream cluster where these rules apply. Each namespace may be specified only once (string)
-* `rules` - (Optional/Computed) Policy rules granted in the namespace (list)
+- `namespace` - (Required) Namespace in each downstream cluster where these rules apply. Each namespace may be specified only once (string)
+- `rules` - (Optional/Computed) Policy rules granted in the namespace (list)
 
 ## Timeouts
 

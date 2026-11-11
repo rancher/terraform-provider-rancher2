@@ -43,27 +43,27 @@ resource "rancher2_cloud_credential" "foo-harvester" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Cloud Credential (string)
-* `amazonec2_credential_config` - (Optional) AWS config for the Cloud Credential (list maxitems:1)
-* `azure_credential_config` - (Optional) Azure config for the Cloud Credential (list maxitems:1)
-* `description` - (Optional) Description for the Cloud Credential (string)
-* `digitalocean_credential_config` - (Optional) DigitalOcean config for the Cloud Credential (list maxitems:1)
-* `google_credential_config` - (Optional) Google config for the Cloud Credential (list maxitems:1)
-* `harvester_credential_config` - (Optional) Harvester config for the Cloud Credential (list maxitems:1)
-* `linode_credential_config` - (Optional) Linode config for the Cloud Credential (list maxitems:1)
-* `nutanix_credential_config` - (Optional) Nutanix config for the Cloud Credential (list maxitems:1)
-* `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
-* `s3_credential_config` - (Optional) S3 config for the Cloud Credential. For Rancher 2.6.0 and above (list maxitems:1)
-* `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
-* `annotations` - (Optional) Annotations for Cloud Credential object (map)
-* `labels` - (Optional/Computed) Labels for Cloud Credential object (map)
+- `name` - (Required) The name of the Cloud Credential (string)
+- `amazonec2_credential_config` - (Optional) AWS config for the Cloud Credential (list maxitems:1)
+- `azure_credential_config` - (Optional) Azure config for the Cloud Credential (list maxitems:1)
+- `description` - (Optional) Description for the Cloud Credential (string)
+- `digitalocean_credential_config` - (Optional) DigitalOcean config for the Cloud Credential (list maxitems:1)
+- `google_credential_config` - (Optional) Google config for the Cloud Credential (list maxitems:1)
+- `harvester_credential_config` - (Optional) Harvester config for the Cloud Credential (list maxitems:1)
+- `linode_credential_config` - (Optional) Linode config for the Cloud Credential (list maxitems:1)
+- `nutanix_credential_config` - (Optional) Nutanix config for the Cloud Credential (list maxitems:1)
+- `openstack_credential_config` - (Optional) OpenStack config for the Cloud Credential (list maxitems:1)
+- `s3_credential_config` - (Optional) S3 config for the Cloud Credential. For Rancher 2.6.0 and above (list maxitems:1)
+- `vsphere_credential_config` - (Optional) vSphere config for the Cloud Credential (list maxitems:1)
+- `annotations` - (Optional) Annotations for Cloud Credential object (map)
+- `labels` - (Optional/Computed) Labels for Cloud Credential object (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `driver` - (Computed) The driver of the Cloud Credential (string)
+- `id` - (Computed) The ID of the resource (string)
+- `driver` - (Computed) The driver of the Cloud Credential (string)
 
 ## Nested blocks
 
@@ -71,82 +71,82 @@ The following attributes are exported:
 
 #### Arguments
 
-* `access_key` - (Required/Sensitive) AWS access key (string)
-* `secret_key` - (Required/Sensitive) AWS secret key (string)
-* `default_region` - (Optional) AWS default region (string)
+- `access_key` - (Required/Sensitive) AWS access key (string)
+- `secret_key` - (Required/Sensitive) AWS secret key (string)
+- `default_region` - (Optional) AWS default region (string)
 
 ### `azure_credential_config`
 
 #### Arguments
 
-* `client_id` - (Required/Sensitive) Azure Service Principal Account ID (string)
-* `client_secret` - (Required/Sensitive) Azure Service Principal Account password (string)
-* `subscription_id` - (Required/Sensitive) Azure Subscription ID (string)
-* `environment` - (Optional/Computed) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud) (string)
-* `tenant_id` - (Optional/Computed) Azure Tenant ID (string)
+- `client_id` - (Required/Sensitive) Azure Service Principal Account ID (string)
+- `client_secret` - (Required/Sensitive) Azure Service Principal Account password (string)
+- `subscription_id` - (Required/Sensitive) Azure Subscription ID (string)
+- `environment` - (Optional/Computed) Azure environment (e.g. AzurePublicCloud, AzureChinaCloud) (string)
+- `tenant_id` - (Optional/Computed) Azure Tenant ID (string)
 
 ### `digitalocean_credential_config`
 
 #### Arguments
 
-* `access_token` - (Required/Sensitive) DigitalOcean access token (string)
+- `access_token` - (Required/Sensitive) DigitalOcean access token (string)
 
 ### `google_credential_config`
 
 #### Arguments
 
-* `auth_encoded_json` - (Required/Sensitive) Google auth encoded json (string)
+- `auth_encoded_json` - (Required/Sensitive) Google auth encoded json (string)
 
 ### `harvester_credential_config`
 
 #### Arguments
 
-* `cluster_id` - (Optional) Imported Harvester Cluster ID (string)
-* `cluster_type` - (Required) Harvester Cluster Type. Supported values : `"imported" | "external"` (string)
-* `kubeconfig_content` - (Required/Sensitive) Harvester Cluster KubeConfig Content (string)
+- `cluster_id` - (Optional) Imported Harvester Cluster ID (string)
+- `cluster_type` - (Required) Harvester Cluster Type. Supported values : `"imported" | "external"` (string)
+- `kubeconfig_content` - (Required/Sensitive) Harvester Cluster KubeConfig Content (string)
 
 ### `linode_credential_config`
 
 #### Arguments
 
-* `token` - (Required/Sensitive) Linode API token (string)
+- `token` - (Required/Sensitive) Linode API token (string)
 
 ### `nutanix_credential_config`
 
 #### Arguments
 
-* `endpoint` - (Required) Nutanix management endpoint IP address/FQDN (string)
-* `username` - (Required) Nutanix management username (string)
-* `password` - (Required/Sensitive) Nutanix management password (string)
-* `port` - (Optional) Nutanix management endpoint port. Default `9440` (string)
+- `endpoint` - (Required) Nutanix management endpoint IP address/FQDN (string)
+- `username` - (Required) Nutanix management username (string)
+- `password` - (Required/Sensitive) Nutanix management password (string)
+- `port` - (Optional) Nutanix management endpoint port. Default `9440` (string)
 
 ### `openstack_credential_config`
 
 #### Arguments
 
-* `password` - (Required/Sensitive) OpenStack password (string)
+- `password` - (Required/Sensitive) OpenStack password (string)
 
 ### `s3_credential_config`
 
 #### Arguments
 
-* `access_key` - (Required/Sensitive) AWS access key (string)
-* `secret_key` - (Required/Sensitive) AWS secret key (string)
-* `default_bucket` - (Optional) AWS default bucket (string)
-* `default_endpoint` - (Optional) AWS default endpoint (string)
-* `default_endpoint_ca` - (Optional/Sensitive) AWS default endpoint CA (string)
-* `default_folder` - (Optional) AWS default folder (string)
-* `default_region` - (Optional) AWS default region (string)
-* `default_skip_ssl_verify` - (Optional) AWS default skip ssl verify. Default: `false` (bool)
+- `access_key` - (Required/Sensitive) AWS access key (string)
+- `secret_key` - (Required/Sensitive) AWS secret key (string)
+- `default_bucket` - (Optional) AWS default bucket (string)
+- `default_endpoint` - (Optional) AWS default endpoint (string)
+- `default_endpoint_ca` - (Optional/Sensitive) AWS default endpoint CA (string)
+- `default_folder` - (Optional) AWS default folder (string)
+- `default_region` - (Optional) AWS default region (string)
+- `default_skip_ssl_verify` - (Optional) AWS default skip ssl verify. Default: `false` (bool)
 
 ### `vsphere_credential_config`
 
 #### Arguments
 
-* `password` - (Required/Sensitive) vSphere password (string)
-* `username` - (Required) vSphere username (string)
-* `vcenter` - (Required) vSphere IP/hostname for vCenter (string)
-* `vcenter_port` - (Optional) vSphere Port for vCenter. Default `443` (string)
+- `password` - (Required/Sensitive) vSphere password (string)
+- `username` - (Required) vSphere username (string)
+- `vcenter` - (Required) vSphere IP/hostname for vCenter (string)
+- `vcenter_port` - (Optional) vSphere Port for vCenter. Default `443` (string)
 
 ## Timeouts
 
@@ -167,12 +167,12 @@ terraform import rancher2_cloud_credential.foo &lt;CLOUD_CREDENTIAL_ID&gt;.&lt;D
 
 The following drivers are supported:
 
-* amazonec2
-* azure
-* digitalocean
-* googlekubernetesengine
-* linode
-* nutanix
-* openstack
-* s3
-* vmwarevsphere
+- amazonec2
+- azure
+- digitalocean
+- googlekubernetesengine
+- linode
+- nutanix
+- openstack
+- s3
+- vmwarevsphere
