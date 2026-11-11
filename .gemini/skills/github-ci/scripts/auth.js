@@ -126,11 +126,43 @@ export async function getOctokit(tokenOverride) {
 }
 
 /**
+ * Attempts to deduce the repository from the Go workspace path convention
+ * (e.g. '.../github.com/<owner>/<repo>').
+ * @returns {Promise<{owner: string, repo: string}|null>}
+ */
+export async function getRepoFromDirectory() {
+  let cwdPath = process.cwd();
+  try {
+    const { stdout } = await sys.execFileAsync("git", [
+      "rev-parse",
+      "--show-toplevel",
+    ]);
+    if (stdout && stdout.trim()) {
+      cwdPath = stdout.trim();
+    }
+  } catch {
+    // Fall back to process.cwd()
+  }
+
+  const match = cwdPath.match(
+    /(?:^|[/\\])github\.com[/\\]([^/\\]+)[/\\]([^/\\]+)/,
+  );
+  if (match && match[1] && match[2]) {
+    return {
+      owner: match[1],
+      repo: match[2].replace(/\.git$/, ""),
+    };
+  }
+  return null;
+}
+
+/**
  * Resolves the owner and repo for the current workspace.
  * Precedence:
  * 1. process.env.GH_REPO or process.env.GITHUB_REPOSITORY (e.g. 'owner/repo')
- * 2. Git remote 'upstream'
- * 3. Git remote 'origin'
+ * 2. Git remote 'upstream' or 'rancher'
+ * 3. Go workspace path convention (e.g. '.../github.com/<owner>/<repo>')
+ * 4. Git remote 'origin'
  * Throws an error if owner and repo cannot be determined.
  * @returns {Promise<{owner: string, repo: string}>}
  */
@@ -143,7 +175,7 @@ export async function getRepoDetails() {
     }
   }
 
-  for (const remote of ["upstream", "origin"]) {
+  for (const remote of ["upstream", "rancher"]) {
     try {
       const { stdout } = await sys.execFileAsync("git", [
         "remote",
@@ -158,6 +190,26 @@ export async function getRepoDetails() {
     } catch {
       // Remote does not exist or git failed, try next
     }
+  }
+
+  const dirRepo = await getRepoFromDirectory();
+  if (dirRepo) {
+    return dirRepo;
+  }
+
+  try {
+    const { stdout } = await sys.execFileAsync("git", [
+      "remote",
+      "get-url",
+      "origin",
+    ]);
+    const url = stdout.trim();
+    const match = url.match(/[:/]([^/]+)\/([^/.]+)(?:\.git)?$/);
+    if (match) {
+      return { owner: match[1], repo: match[2] };
+    }
+  } catch {
+    // Origin does not exist
   }
 
   throw new Error(
