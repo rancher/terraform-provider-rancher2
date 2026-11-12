@@ -147,6 +147,24 @@ describe("setup-release-branch.sh", () => {
       );
       assert.match(listenerContent, /name:\s+PR Executor Listener/);
       assert.match(listenerContent, /branches:\s+- 'release\/v\*'/);
+
+      // 7. Verify sync-release-manifest.yml caller stub
+      assert.strictEqual(
+        fs.existsSync(path.join(workflowsDir, "sync-release-manifest.yml")),
+        true,
+      );
+      const syncStub = fs.readFileSync(
+        path.join(workflowsDir, "sync-release-manifest.yml"),
+        "utf8",
+      );
+      assert.match(
+        syncStub,
+        /uses: rancher\/terraform-provider-rancher2\/\.github\/workflows\/sync-release-manifest\.yml@main/,
+      );
+      assert.match(syncStub, /workflow_dispatch:/);
+      assert.match(syncStub, /branch:\s+\${{\s*inputs\.branch\s*}}/);
+      assert.match(syncStub, /version:\s+\${{\s*inputs\.version\s*}}/);
+      assert.match(syncStub, /secrets:\s+inherit/);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }

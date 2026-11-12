@@ -11,6 +11,9 @@ import {
   runNodeTest,
   runEslint,
   runGitleaks,
+  compareSemver,
+  checkManifestDowngrade,
+  runManifestCheck,
   runAll,
   main,
 } from "./lint.js";
@@ -239,12 +242,25 @@ describe("lint.js", () => {
       const mockFs = {
         readdirSync: () => [],
       };
-      runAll(mockExec, mockFs);
+      runAll(mockExec, mockFs, mockExec, {});
       assert.ok(commands.includes("terraform fmt -check -recursive -diff"));
       assert.ok(commands.includes("actionlint"));
       assert.ok(commands.includes("npm ci"));
       assert.ok(commands.includes("eslint ."));
       assert.ok(commands.includes("gitleaks detect --no-banner -v --no-git"));
+    });
+
+    it("runAll handles release branch environment with partial mockFs safely", () => {
+      const commands = [];
+      const mockExec = (cmd) => {
+        commands.push(cmd);
+      };
+      const mockFs = {
+        readdirSync: () => [],
+      };
+      assert.doesNotThrow(() => {
+        runAll(mockExec, mockFs, mockExec, { GITHUB_BASE_REF: "release/v15" });
+      });
     });
 
     it("main dispatches correctly for specific modes", () => {
@@ -264,6 +280,139 @@ describe("lint.js", () => {
 
       main("eslint", mockExec, mockFs);
       assert.ok(commands.includes("eslint ."));
+    });
+  });
+
+  describe("compareSemver", () => {
+    it("correctly compares semver versions including prereleases", () => {
+      assert.strictEqual(compareSemver("15.1.2", "15.0.0"), 1);
+      assert.strictEqual(compareSemver("15.0.0", "15.1.2"), -1);
+      assert.strictEqual(compareSemver("15.1.2", "15.1.2"), 0);
+      assert.strictEqual(compareSemver("v16.0.0", "15.3.0"), 1);
+      assert.strictEqual(compareSemver("15.1.2", "15.1.3"), -1);
+
+      // Pre-release comparisons (SemVer 2.0.0 Rule 11)
+      assert.strictEqual(compareSemver("15.3.0", "15.3.0-rc.1"), 1);
+      assert.strictEqual(compareSemver("15.3.0-rc.1", "15.3.0"), -1);
+      assert.strictEqual(compareSemver("15.3.0-rc.2", "15.3.0-rc.1"), 1);
+      assert.strictEqual(compareSemver("15.3.0-rc.1", "15.3.0-rc.2"), -1);
+      assert.strictEqual(compareSemver("15.3.0-rc.1", "15.3.0-rc.1"), 0);
+    });
+  });
+
+  describe("checkManifestDowngrade", () => {
+    it("skips non-release branches cleanly", () => {
+      const res = checkManifestDowngrade({
+        baseBranch: "main",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.0.0" }),
+      });
+      assert.strictEqual(res.skipped, true);
+      assert.strictEqual(res.valid, true);
+    });
+
+    it("passes when PR proposes equal or higher manifest version", () => {
+      const res = checkManifestDowngrade({
+        baseBranch: "release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.1.2" }),
+      });
+      assert.strictEqual(res.valid, true);
+      assert.strictEqual(res.headVersion, "15.1.2");
+      assert.strictEqual(res.baseVersion, "15.1.2");
+
+      const resBump = checkManifestDowngrade({
+        baseBranch: "release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.2.0" }),
+      });
+      assert.strictEqual(resBump.valid, true);
+    });
+
+    it("normalizes refs/heads/ prefix on base branch", () => {
+      const res = checkManifestDowngrade({
+        baseBranch: "refs/heads/release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.1.2" }),
+      });
+      assert.strictEqual(res.valid, true);
+      assert.strictEqual(res.skipped, undefined);
+    });
+
+    it("fails when PR proposes lower manifest version including prerelease downgrade", () => {
+      const res = checkManifestDowngrade({
+        baseBranch: "release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.0.0" }),
+      });
+      assert.strictEqual(res.valid, false);
+      assert.match(res.error, /Manifest version downgrade detected/);
+      assert.match(res.error, /proposes '15\.0\.0'/);
+      assert.match(res.error, /base branch is '15\.1\.2'/);
+
+      const resRcDowngrade = checkManifestDowngrade({
+        baseBranch: "release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.3.0" }),
+        headManifestContent: JSON.stringify({ ".": "15.3.0-rc.1" }),
+      });
+      assert.strictEqual(resRcDowngrade.valid, false);
+      assert.match(resRcDowngrade.error, /Manifest version downgrade detected/);
+      assert.match(resRcDowngrade.error, /proposes '15\.3\.0-rc\.1'/);
+      assert.match(resRcDowngrade.error, /base branch is '15\.3\.0'/);
+    });
+  });
+
+  describe("runManifestCheck", () => {
+    it("skips when not targeting release/v* branch", () => {
+      let execCalled = false;
+      const mockExec = () => {
+        execCalled = true;
+      };
+      runManifestCheck(mockExec, {}, { GITHUB_BASE_REF: "main" });
+      assert.strictEqual(execCalled, false);
+    });
+
+    it("throws error when manifest downgrade is detected", () => {
+      const mockFs = {
+        existsSync: () => true,
+        readFileSync: () => JSON.stringify({ ".": "15.0.0" }),
+      };
+      const mockExec = () => JSON.stringify({ ".": "15.1.2" });
+
+      assert.throws(
+        () =>
+          runManifestCheck(mockExec, mockFs, {
+            GITHUB_BASE_REF: "release/v15",
+          }),
+        /Manifest version downgrade detected/,
+      );
+    });
+
+    it("succeeds when manifest version is equal or higher", () => {
+      const mockFs = {
+        existsSync: () => true,
+        readFileSync: () => JSON.stringify({ ".": "15.1.2" }),
+      };
+      const mockExec = () => JSON.stringify({ ".": "15.1.2" });
+
+      assert.doesNotThrow(() =>
+        runManifestCheck(mockExec, mockFs, {
+          GITHUB_BASE_REF: "release/v15",
+        }),
+      );
+    });
+
+    it("respects cliBaseBranch override even when env is empty", () => {
+      const mockFs = {
+        existsSync: () => true,
+        readFileSync: () => JSON.stringify({ ".": "15.0.0" }),
+      };
+      const mockExec = () => JSON.stringify({ ".": "15.1.2" });
+
+      assert.throws(
+        () => runManifestCheck(mockExec, mockFs, {}, "release/v15"),
+        /Manifest version downgrade detected/,
+      );
     });
   });
 });
