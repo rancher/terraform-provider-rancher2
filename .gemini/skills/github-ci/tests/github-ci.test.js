@@ -7,6 +7,7 @@ import {
   getCurrentBranch,
   getGhCliToken,
   getRepoDetails,
+  getRepoFromDirectory,
   sys,
 } from "../scripts/auth.js";
 import { downloadLogs, parseDownloadArgs } from "../scripts/download_logs.js";
@@ -91,6 +92,148 @@ test("github-ci skill - getRepoDetails unit tests", async (t) => {
       }
     }
   });
+
+  await t.test(
+    "resolves owner and repo from rancher remote when upstream is missing",
+    async () => {
+      const originalGhRepo = process.env.GH_REPO;
+      const originalGithubRepo = process.env.GITHUB_REPOSITORY;
+      try {
+        delete process.env.GH_REPO;
+        delete process.env.GITHUB_REPOSITORY;
+
+        t.mock.method(sys, "execFileAsync", async (cmd, args) => {
+          if (cmd === "git" && args.includes("rancher")) {
+            return {
+              stdout:
+                "https://github.com/rancher/terraform-provider-rancher2.git\n",
+            };
+          }
+          throw new Error("Not found");
+        });
+
+        const details = await getRepoDetails();
+        assert.deepStrictEqual(details, {
+          owner: "rancher",
+          repo: "terraform-provider-rancher2",
+        });
+      } finally {
+        if (originalGhRepo !== undefined) {
+          process.env.GH_REPO = originalGhRepo;
+        }
+        if (originalGithubRepo !== undefined) {
+          process.env.GITHUB_REPOSITORY = originalGithubRepo;
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "resolves owner and repo from Go directory convention when upstream and rancher remotes are missing",
+    async () => {
+      const originalGhRepo = process.env.GH_REPO;
+      const originalGithubRepo = process.env.GITHUB_REPOSITORY;
+      try {
+        delete process.env.GH_REPO;
+        delete process.env.GITHUB_REPOSITORY;
+
+        t.mock.method(sys, "execFileAsync", async (cmd, args) => {
+          if (cmd === "git" && args.includes("--show-toplevel")) {
+            return {
+              stdout:
+                "/Users/test/go/src/github.com/rancher/terraform-provider-rancher2\n",
+            };
+          }
+          throw new Error("Not found");
+        });
+
+        const details = await getRepoDetails();
+        assert.deepStrictEqual(details, {
+          owner: "rancher",
+          repo: "terraform-provider-rancher2",
+        });
+      } finally {
+        if (originalGhRepo !== undefined) {
+          process.env.GH_REPO = originalGhRepo;
+        }
+        if (originalGithubRepo !== undefined) {
+          process.env.GITHUB_REPOSITORY = originalGithubRepo;
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "falls back to origin when upstream, rancher, and Go directory convention fail",
+    async () => {
+      const originalGhRepo = process.env.GH_REPO;
+      const originalGithubRepo = process.env.GITHUB_REPOSITORY;
+      try {
+        delete process.env.GH_REPO;
+        delete process.env.GITHUB_REPOSITORY;
+
+        t.mock.method(sys, "execFileAsync", async (cmd, args) => {
+          if (cmd === "git" && args.includes("--show-toplevel")) {
+            return { stdout: "/tmp/non-go-workspace\n" };
+          }
+          if (cmd === "git" && args.includes("origin")) {
+            return { stdout: "git@github.com:fork-owner/fork-repo.git\n" };
+          }
+          throw new Error("Not found");
+        });
+
+        const details = await getRepoDetails();
+        assert.deepStrictEqual(details, {
+          owner: "fork-owner",
+          repo: "fork-repo",
+        });
+      } finally {
+        if (originalGhRepo !== undefined) {
+          process.env.GH_REPO = originalGhRepo;
+        }
+        if (originalGithubRepo !== undefined) {
+          process.env.GITHUB_REPOSITORY = originalGithubRepo;
+        }
+      }
+    },
+  );
+
+  await t.test(
+    "getRepoFromDirectory handles git failure and process.cwd() fallback",
+    async () => {
+      t.mock.method(sys, "execFileAsync", async () => {
+        throw new Error("git failure");
+      });
+      t.mock.method(
+        process,
+        "cwd",
+        () =>
+          "/home/user/go/src/github.com/rancher/terraform-provider-rancher2",
+      );
+      const dirDetails = await getRepoFromDirectory();
+      assert.deepStrictEqual(dirDetails, {
+        owner: "rancher",
+        repo: "terraform-provider-rancher2",
+      });
+    },
+  );
+
+  await t.test(
+    "getRepoFromDirectory returns null when cwd has no Go workspace convention",
+    async () => {
+      t.mock.method(sys, "execFileAsync", async () => {
+        throw new Error("git failure");
+      });
+      t.mock.method(
+        process,
+        "cwd",
+        () =>
+          "/home/runner/work/terraform-provider-rancher2/terraform-provider-rancher2",
+      );
+      const dirDetails = await getRepoFromDirectory();
+      assert.strictEqual(dirDetails, null);
+    },
+  );
 });
 
 test("github-ci skill - getCurrentBranch and getGhCliToken unit tests", async (t) => {

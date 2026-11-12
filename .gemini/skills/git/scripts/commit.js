@@ -1,19 +1,84 @@
 #!/usr/bin/env node
 import { execFile } from "node:child_process";
+import nodeFs from "node:fs";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { simpleGit } from "simple-git";
+import {
+  isProductDirectory,
+  isProductFile,
+  isProductPrefix,
+  NON_PRODUCT_PREFIXES,
+  PRODUCT_PREFIXES,
+  VALID_PREFIXES,
+  validateEmpty,
+  validateLength,
+  validatePrefix,
+  validateProductImpact,
+} from "../../../../.github/workflows/scripts/validate-commit-message.js";
 
-const CONVENTIONAL_COMMIT_REGEX =
-  /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|env|dev)(?:\([^)]+\))?(!?): .+/i;
+export {
+  isProductDirectory,
+  isProductFile,
+  isProductPrefix,
+  NON_PRODUCT_PREFIXES,
+  PRODUCT_PREFIXES,
+  VALID_PREFIXES,
+};
 
-export const DEFAULT_PRODUCT_ROOTS = [
-  "internal/",
-  "src/",
-  "lib/",
-  "pkg/",
-  "cmd/",
-];
+export const DEFAULT_PRODUCT_ROOTS = ["rancher/", "rancher2/", "internal/"];
+
+/**
+ * Resolves the user's global Git configuration file path if present.
+ * Respects explicit custom GIT_CONFIG_GLOBAL environments (like test isolation),
+ * falling back to user's config when unset or pointing to /dev/null.
+ * @param {object} [options]
+ * @param {string} [options.userConfigPath] - Override path to check
+ * @param {object} [options.fsModule] - File system module to use
+ * @param {object} [options.env] - Environment variables object
+ * @returns {string|null} Resolved config path or null if absent
+ */
+export function resolveGlobalGitConfig({
+  userConfigPath = path.join(os.homedir(), ".gitconfig"),
+  fsModule = nodeFs,
+  env = process.env,
+} = {}) {
+  if (env.GIT_CONFIG_GLOBAL && env.GIT_CONFIG_GLOBAL !== "/dev/null") {
+    return env.GIT_CONFIG_GLOBAL;
+  }
+  try {
+    if (fsModule.existsSync(userConfigPath)) {
+      return userConfigPath;
+    }
+  } catch {
+    // Ignore access or stat errors
+  }
+  return null;
+}
+
+/**
+ * Creates an isolated simpleGit client with scoped access to the global Git config.
+ * @param {object} [options]
+ * @param {string|null} [options.globalConfigPath] - Optional global config path
+ * @param {string} [options.baseDir] - Repository base directory
+ * @returns {import('simple-git').SimpleGit}
+ */
+export function createGitClient({
+  globalConfigPath = resolveGlobalGitConfig(),
+  baseDir = process.cwd(),
+} = {}) {
+  const options = {
+    baseDir,
+    unsafe: { allowUnsafeConfigPaths: true },
+    allowEnvironment: ["GIT_CONFIG_GLOBAL"],
+  };
+  const git = simpleGit(options);
+  if (globalConfigPath) {
+    git.env("GIT_CONFIG_GLOBAL", globalConfigPath);
+  }
+  return git;
+}
 
 /**
  * Loads configured product path roots from .gemini/settings.json, falling back to DEFAULT_PRODUCT_ROOTS.
@@ -48,7 +113,13 @@ export function fileAffectsProduct(
   filePath,
   productRoots = DEFAULT_PRODUCT_ROOTS,
 ) {
+  if (isProductFile(filePath)) {
+    return true;
+  }
   const normalized = filePath.replace(/^[./]+/, "");
+  if (normalized.endsWith("_test.go")) {
+    return false;
+  }
   for (const root of productRoots) {
     const cleanRoot = root.endsWith("/") ? root : `${root}/`;
     if (normalized.startsWith(cleanRoot)) {
@@ -100,16 +171,62 @@ export function checkSpelling(text, repoRoot = process.cwd()) {
 
 /**
  * Validates a candidate commit message against conventional commit format and repository boundaries.
+ * Enforces strict alignment with CI validate-commit-message rules.
  * @param {object} params
  * @param {string} params.message
- * @param {boolean} params.affectsProduct
+ * @param {boolean} [params.affectsProduct]
+ * @param {Array<string>} [params.changedFiles]
  * @param {boolean} [params.isMerge]
+ * @returns {{valid: boolean, reason?: string}}
+ */
+/**
+ * Normalizes changed files for CI validation while preserving product directory and test file boundaries.
+ * @param {Array<string>} changedFiles - List of changed file paths
+ * @param {Array<string>} [productRoots] - Product directory roots
+ * @returns {Array<string>}
+ */
+export function mapFilesForValidation(
+  changedFiles,
+  productRoots = DEFAULT_PRODUCT_ROOTS,
+) {
+  if (!Array.isArray(changedFiles)) {
+    return [];
+  }
+  return changedFiles.map((file) => {
+    if (isProductDirectory(file)) {
+      return file;
+    }
+    const normalized = file.replace(/^[./]+/, "");
+    const matchesCustomRoot = productRoots.some((root) => {
+      const cleanRoot = root.endsWith("/") ? root : `${root}/`;
+      return normalized.startsWith(cleanRoot);
+    });
+    if (matchesCustomRoot) {
+      return normalized.endsWith("_test.go")
+        ? "rancher2/custom_test.go"
+        : "rancher2/custom.go";
+    }
+    return file;
+  });
+}
+
+/**
+ * Validates a candidate commit message against conventional commit format and repository boundaries.
+ * Enforces strict alignment with CI validate-commit-message rules.
+ * @param {object} params
+ * @param {string} params.message
+ * @param {boolean} [params.affectsProduct]
+ * @param {Array<string>} [params.changedFiles]
+ * @param {boolean} [params.isMerge]
+ * @param {Array<string>} [params.productRoots]
  * @returns {{valid: boolean, reason?: string}}
  */
 export function validateCommitMessage({
   message,
   affectsProduct,
+  changedFiles,
   isMerge = false,
+  productRoots = DEFAULT_PRODUCT_ROOTS,
 }) {
   if (!message || !message.trim()) {
     return { valid: false, reason: "Missing commit message." };
@@ -120,40 +237,27 @@ export function validateCommitMessage({
     return { valid: true };
   }
 
-  if (!CONVENTIONAL_COMMIT_REGEX.test(subject)) {
-    return {
-      valid: false,
-      reason: `Commit message title does not follow Conventional Commits format: '${subject}'. Expected 'type: description' or 'type(scope): description'.`,
-    };
+  try {
+    validateEmpty(subject);
+    validatePrefix(subject);
+    validateLength(subject);
+
+    const files =
+      changedFiles !== undefined
+        ? mapFilesForValidation(changedFiles, productRoots)
+        : affectsProduct
+          ? ["rancher2/provider.go"]
+          : ["docs/README.md"];
+
+    validateProductImpact(subject, files);
+    return { valid: true };
+  } catch (err) {
+    return { valid: false, reason: err.message };
   }
-
-  if (subject.length > 72) {
-    return {
-      valid: false,
-      reason: `Commit subject line exceeds 72 characters (${subject.length}): '${subject}'`,
-    };
-  }
-
-  const match = subject.match(/^([a-z]+)(?:\([^)]+\))?(!?):/i);
-  const type = match[1].toLowerCase();
-  const hasBreakingIndicator =
-    match[2] === "!" || /(^|\s)BREAKING[ -]CHANGE:/m.test(message);
-
-  if (!affectsProduct) {
-    if (type === "feat" || type === "refactor" || hasBreakingIndicator) {
-      return {
-        valid: false,
-        reason:
-          "Non-product change (outside 'internal/') must NOT use 'feat', 'refactor', or '!' breaking-change indicators.",
-      };
-    }
-  }
-
-  return { valid: true };
 }
 
 /**
- * Validates a single commit title against Conventional Commits.
+ * Validates a single commit title against Conventional Commits and CI rules.
  * @param {string} title - Commit title
  * @param {boolean} affectsProduct - Whether commit touches product code
  * @param {boolean} [isMerge=false] - Whether commit is a merge commit
@@ -167,21 +271,30 @@ export function validateCommitTitle(title, affectsProduct, isMerge = false) {
  * Asynchronously validates all commit checks including spell-checking.
  * @param {object} params
  * @param {string} params.message
- * @param {boolean} params.affectsProduct
+ * @param {boolean} [params.affectsProduct]
+ * @param {Array<string>} [params.changedFiles]
+ * @param {Array<string>} [params.productRoots]
  * @param {Function} [params.checkSpellingFn]
  * @returns {Promise<{valid: boolean, reason?: string}>}
  */
 export async function validateCommit({
   message,
   affectsProduct,
+  changedFiles,
+  productRoots = DEFAULT_PRODUCT_ROOTS,
   checkSpellingFn = checkSpelling,
 }) {
-  const syncResult = validateCommitMessage({ message, affectsProduct });
+  const syncResult = validateCommitMessage({
+    message,
+    affectsProduct,
+    changedFiles,
+    productRoots,
+  });
   if (!syncResult.valid) {
     return syncResult;
   }
 
-  const subject = message.split("\n")[0].trim();
+  const subject = message.split("\n")[0].trim().replace(/\r$/, "");
   const isMerge = /^Merge\s+/i.test(subject);
 
   if (!isMerge && checkSpellingFn) {
@@ -200,14 +313,27 @@ export async function validateCommit({
  * @param {import('simple-git').SimpleGit} [params.git]
  * @param {string} params.message
  * @param {Function} [params.checkSpellingFn]
+ * @param {string|null} [params.globalConfigPath]
+ * @param {Function} [params.resolveGlobalConfigFn]
  * @returns {Promise<object>} Commit summary
  */
 export async function createCommit({
-  git = simpleGit(),
+  git = null,
   message,
   checkSpellingFn = checkSpelling,
+  globalConfigPath = undefined,
+  resolveGlobalConfigFn = resolveGlobalGitConfig,
 }) {
-  const currentBranch = (await git.branch()).current;
+  const gitClient =
+    git ||
+    createGitClient({
+      globalConfigPath:
+        globalConfigPath !== undefined
+          ? globalConfigPath
+          : resolveGlobalConfigFn(),
+    });
+
+  const currentBranch = (await gitClient.branch()).current;
   if (!currentBranch || currentBranch === "HEAD") {
     throw new Error("Cannot commit on a detached HEAD.");
   }
@@ -218,9 +344,12 @@ export async function createCommit({
     );
   }
 
-  const diffSummary = await git.diffSummary(["--no-ext-diff", "--cached"]);
+  const diffSummary = await gitClient.diffSummary([
+    "--no-ext-diff",
+    "--cached",
+  ]);
   if (diffSummary.files.length === 0) {
-    const unstaged = await git.diffSummary(["--no-ext-diff"]);
+    const unstaged = await gitClient.diffSummary(["--no-ext-diff"]);
     if (unstaged.files.length === 0) {
       throw new Error(
         "No changes to commit (working tree clean and staging area empty).",
@@ -232,6 +361,7 @@ export async function createCommit({
     }
   }
 
+  const changedFiles = diffSummary.files.map((f) => f.file);
   const roots = await getProductRoots();
   const affectsProduct = diffSummary.files.some((f) =>
     fileAffectsProduct(f.file, roots),
@@ -239,13 +369,18 @@ export async function createCommit({
   const validation = await validateCommit({
     message,
     affectsProduct,
+    changedFiles,
+    productRoots: roots,
     checkSpellingFn,
   });
   if (!validation.valid) {
     throw new Error(validation.reason);
   }
 
-  const result = await git.commit(message, undefined, { "-s": null });
+  const result = await gitClient.commit(message, undefined, {
+    "-s": null,
+    "-S": null,
+  });
   return { ...result, branch: result.branch || currentBranch };
 }
 
