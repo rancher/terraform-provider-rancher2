@@ -8,11 +8,15 @@ on:
         required: true
         type: string
       version:
-        description: "Release version without 'v' prefix (e.g. 15.1.2; auto-detected if empty)"
+        description: "Last published full release version without 'v' prefix (e.g. 15.1.2; do not enter upcoming version; auto-detected if empty)"
+        required: false
+        type: string
+      release_as:
+        description: "Target upcoming release version for release-as (e.g. v15.3.0; auto-detected as next minor if empty)"
         required: false
         type: string
       last_release_sha:
-        description: "Commit SHA of release tag (auto-detected if empty)"
+        description: "Commit SHA of last published release tag (auto-detected if empty)"
         required: false
         type: string
   workflow_call:
@@ -22,11 +26,15 @@ on:
         required: true
         type: string
       version:
-        description: "Release version without 'v' prefix (e.g. 15.1.2; auto-detected if empty)"
+        description: "Last published full release version without 'v' prefix (e.g. 15.1.2; do not enter upcoming version; auto-detected if empty)"
+        required: false
+        type: string
+      release_as:
+        description: "Target upcoming release version for release-as (e.g. v15.3.0; auto-detected as next minor if empty)"
         required: false
         type: string
       last_release_sha:
-        description: "Commit SHA of release tag (auto-detected if empty)"
+        description: "Commit SHA of last published release tag (auto-detected if empty)"
         required: false
         type: string
 
@@ -70,6 +78,7 @@ jobs:
           TARGET_BRANCH: ${{ inputs.branch || github.event.release.target_commitish }}
           RELEASE_TAG: ${{ inputs.version && format('v{0}', inputs.version) || github.event.release.tag_name }}
           RELEASE_SHA: ${{ inputs.last_release_sha || '' }}
+          RELEASE_AS: ${{ inputs.release_as || '' }}
         with:
           github-token: ${{ env.GITHUB_MERGE_TOKEN }}
           script: |

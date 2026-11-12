@@ -164,6 +164,7 @@ describe("setup-release-branch.sh", () => {
       assert.match(syncStub, /workflow_dispatch:/);
       assert.match(syncStub, /branch:\s+\${{\s*inputs\.branch\s*}}/);
       assert.match(syncStub, /version:\s+\${{\s*inputs\.version\s*}}/);
+      assert.match(syncStub, /release_as:\s+\${{\s*inputs\.release_as\s*}}/);
       assert.match(syncStub, /secrets:\s+inherit/);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });

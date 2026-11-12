@@ -3,6 +3,8 @@ import test from "node:test";
 import {
   isReleaseBranch,
   parseSemverTag,
+  calculateNextMinorVersion,
+  resolveReleaseAs,
   updateManifestContent,
   updateConfigContent,
   isSyncNeeded,
@@ -86,11 +88,48 @@ test("updateManifestContent - updates version and formatting", () => {
   );
 });
 
-test("updateConfigContent - updates last-release-sha and removes bootstrap-sha", () => {
+test("calculateNextMinorVersion - increments minor and resets patch", () => {
+  assert.deepStrictEqual(calculateNextMinorVersion("15.1.2"), {
+    version: "15.2.0",
+    tag: "v15.2.0",
+  });
+  assert.deepStrictEqual(calculateNextMinorVersion("v14.0.0"), {
+    version: "14.1.0",
+    tag: "v14.1.0",
+  });
+});
+
+test("resolveReleaseAs - resolves explicit input or computes next minor", () => {
+  // Explicit input without v
+  assert.strictEqual(
+    resolveReleaseAs({ process: { env: { RELEASE_AS: "15.3.0" } } }),
+    "v15.3.0",
+  );
+  // Explicit input with v
+  assert.strictEqual(
+    resolveReleaseAs({ process: { env: { RELEASE_AS: "v15.3.0" } } }),
+    "v15.3.0",
+  );
+  // From context payload
+  assert.strictEqual(
+    resolveReleaseAs({
+      context: { payload: { inputs: { release_as: "15.4.0" } } },
+    }),
+    "v15.4.0",
+  );
+  // Computed next minor from targetVersion
+  assert.strictEqual(
+    resolveReleaseAs({ targetVersion: "15.1.2" }),
+    "v15.2.0",
+  );
+});
+
+test("updateConfigContent - updates last-release-sha, release-as, and removes bootstrap-sha", () => {
   const initial =
     JSON.stringify(
       {
         "bootstrap-sha": "ab77bd40ab77bd40ab77bd40ab77bd40ab77bd40",
+        "release-as": "v15.0.0",
         "release-type": "go",
         packages: { ".": {} },
       },
@@ -100,6 +139,7 @@ test("updateConfigContent - updates last-release-sha and removes bootstrap-sha",
 
   const updated = updateConfigContent(initial, {
     lastReleaseSha: "1111222233334444555566667777888899990000",
+    releaseAs: "v15.3.0",
   });
 
   const parsed = JSON.parse(updated);
@@ -107,6 +147,7 @@ test("updateConfigContent - updates last-release-sha and removes bootstrap-sha",
     parsed["last-release-sha"],
     "1111222233334444555566667777888899990000",
   );
+  assert.strictEqual(parsed["release-as"], "v15.3.0");
   assert.strictEqual("bootstrap-sha" in parsed, false);
   assert.strictEqual(parsed["release-type"], "go");
 });
@@ -169,6 +210,21 @@ test("isSyncNeeded - identifies whether synchronization is required", () => {
       }),
       targetVersion: "15.1.2",
       releaseSha: "1111222233334444555566667777888899990000",
+    }),
+    true,
+  );
+
+  // release-as mismatch
+  assert.strictEqual(
+    isSyncNeeded({
+      manifestContent: manifestSynced,
+      configContent: JSON.stringify({
+        "last-release-sha": "1111222233334444555566667777888899990000",
+        "release-as": "v15.2.0",
+      }),
+      targetVersion: "15.1.2",
+      releaseSha: "1111222233334444555566667777888899990000",
+      releaseAs: "v15.3.0",
     }),
     true,
   );
@@ -260,6 +316,46 @@ test("resolveReleaseTag - resolves tag from inputs, env, or git tags", async () 
     gitExec: mockGit,
   });
   assert.strictEqual(tag4, "v15.1.2");
+
+  // Filters out -rc.* pre-release tags and selects latest stable release tag
+  const mockGitWithRc = async (args) => {
+    if (args[0] === "tag") {
+      return {
+        stdout: "v15.3.0-rc.0\nv15.2.0-rc.4\nv15.1.2\nv15.1.1\nv15.1.0\n",
+      };
+    }
+    return { stdout: "" };
+  };
+  const tag5 = await resolveReleaseTag({
+    targetBranch: "release/v15",
+    gitExec: mockGitWithRc,
+  });
+  assert.strictEqual(tag5, "v15.1.2");
+
+  // Rejects manual inputs with a pre-release version
+  await assert.rejects(
+    () =>
+      resolveReleaseTag({
+        process: { env: { INPUT_VERSION: "15.3.0-rc.0" } },
+      }),
+    /manifest synchronization only targets full stable releases/,
+  );
+
+  // Rejects branches where only pre-release tags exist
+  const mockGitOnlyRc = async (args) => {
+    if (args[0] === "tag") {
+      return { stdout: "v15.3.0-rc.0\nv15.2.0-rc.4\n" };
+    }
+    return { stdout: "" };
+  };
+  await assert.rejects(
+    () =>
+      resolveReleaseTag({
+        targetBranch: "release/v15",
+        gitExec: mockGitOnlyRc,
+      }),
+    /Could not resolve release tag from environment/,
+  );
 });
 
 test("resolveReleaseSha - resolves commit SHA from env or git", async () => {
@@ -284,6 +380,15 @@ test("resolveReleaseSha - resolves commit SHA from env or git", async () => {
     gitExec: mockGit,
   });
   assert.strictEqual(sha2, sha);
+
+  // Fails with clear diagnostic when tag does not exist
+  const mockGitFail = async () => {
+    throw new Error("unknown revision");
+  };
+  await assert.rejects(
+    () => resolveReleaseSha({ releaseTag: "v15.3.0", gitExec: mockGitFail }),
+    /Release tag 'v15\.3\.0' does not exist in the repository/,
+  );
 });
 
 test("runSyncManifest - skips non-release branches cleanly", async () => {
@@ -308,6 +413,35 @@ test("runSyncManifest - skips non-release branches cleanly", async () => {
   );
 });
 
+test("runSyncManifest - skips pre-release tags cleanly without creating PR", async () => {
+  const logged = [];
+  const core = {
+    info: (msg) => logged.push(msg),
+    warning: () => {},
+    error: () => {},
+  };
+  const mockGit = async () => ({ stdout: "" });
+
+  const result = await runSyncManifest({
+    process: {
+      env: {
+        TARGET_BRANCH: "release/v15",
+        RELEASE_TAG: "v15.3.0-rc.0",
+      },
+    },
+    core,
+    gitExec: mockGit,
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "prerelease-tag",
+    tag: "v15.3.0-rc.0",
+    branch: "release/v15",
+  });
+  assert.ok(logged.some((m) => m.includes("is a pre-release")));
+});
+
 test("runSyncManifest - detects already synchronized branch and exits without PR", async () => {
   const targetBranch = "release/v15";
   const releaseTag = "v15.1.2";
@@ -316,7 +450,7 @@ test("runSyncManifest - detects already synchronized branch and exits without PR
   const files = {
     ".release-please-manifest.json": JSON.stringify({ ".": "15.1.2" }, null, 2),
     "release-please-config.json": JSON.stringify(
-      { "last-release-sha": releaseSha },
+      { "last-release-sha": releaseSha, "release-as": "v15.2.0" },
       null,
       2,
     ),
@@ -464,6 +598,7 @@ test("runSyncManifest - performs synchronization, commits, pushes and opens PR",
 
   const updatedConfig = JSON.parse(writtenFiles["release-please-config.json"]);
   assert.strictEqual(updatedConfig["last-release-sha"], releaseSha);
+  assert.strictEqual(updatedConfig["release-as"], "v15.2.0");
   assert.strictEqual("bootstrap-sha" in updatedConfig, false);
 
   // Verify git operations

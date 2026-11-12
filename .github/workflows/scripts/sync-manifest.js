@@ -78,9 +78,21 @@ export function updateManifestContent(rawJson, version) {
 }
 
 /**
- * Updates release-please-config.json with last-release-sha and removes obsolete bootstrap-sha.
+ * Calculates the next minor version (e.g. "15.1.2" -> { version: "15.2.0", tag: "v15.2.0" }).
  */
-export function updateConfigContent(rawJson, { lastReleaseSha }) {
+export function calculateNextMinorVersion(version) {
+  const parsed = parseSemverTag(version);
+  const nextMinorVersion = `${parsed.major}.${parsed.minor + 1}.0`;
+  return {
+    version: nextMinorVersion,
+    tag: `v${nextMinorVersion}`,
+  };
+}
+
+/**
+ * Updates release-please-config.json with last-release-sha, release-as, and removes obsolete bootstrap-sha.
+ */
+export function updateConfigContent(rawJson, { lastReleaseSha, releaseAs }) {
   if (!lastReleaseSha) {
     throw new Error(
       "lastReleaseSha is required to update release-please-config.json",
@@ -91,6 +103,9 @@ export function updateConfigContent(rawJson, { lastReleaseSha }) {
     parsed = JSON.parse(rawJson);
   }
   parsed["last-release-sha"] = lastReleaseSha;
+  if (releaseAs) {
+    parsed["release-as"] = releaseAs;
+  }
   if ("bootstrap-sha" in parsed) {
     delete parsed["bootstrap-sha"];
   }
@@ -105,6 +120,7 @@ export function isSyncNeeded({
   configContent,
   targetVersion,
   releaseSha,
+  releaseAs,
 }) {
   let manifest = {};
   let config = {};
@@ -126,6 +142,7 @@ export function isSyncNeeded({
   const manifestVersion = manifest["."];
   const configReleaseSha = config["last-release-sha"];
   const hasBootstrapSha = "bootstrap-sha" in config;
+  const configReleaseAs = config["release-as"];
 
   if (manifestVersion !== targetVersion) {
     return true;
@@ -134,6 +151,9 @@ export function isSyncNeeded({
     return true;
   }
   if (hasBootstrapSha) {
+    return true;
+  }
+  if (releaseAs && configReleaseAs !== releaseAs) {
     return true;
   }
 
@@ -148,21 +168,34 @@ export function formatPrBody({
   version,
   releaseTag,
   releaseSha,
+  releaseAs,
   oldManifestVersion,
   oldReleaseSha,
+  oldReleaseAs,
   removedBootstrapSha,
 }) {
+  const changes = [
+    `- **Manifest Version**: \`${oldManifestVersion || "unknown"}\` -> \`${version}\``,
+    `- **Last Release SHA**: \`${oldReleaseSha || "none"}\` -> \`${releaseSha}\``,
+  ];
+
+  if (releaseAs && oldReleaseAs !== releaseAs) {
+    changes.push(
+      `- **Release As Anchor**: \`${oldReleaseAs || "none"}\` -> \`${releaseAs}\``,
+    );
+  }
+
+  if (removedBootstrapSha) {
+    changes.push("- **Config Anchor**: Removed obsolete `bootstrap-sha`");
+  }
+
   return [
     "## Automated Release Please Manifest & Config Synchronization",
     "",
     `This pull request aligns \`.release-please-manifest.json\` and \`release-please-config.json\` on \`${branch}\` with published release tag \`${releaseTag}\`.`,
     "",
     "### Changes",
-    `- **Manifest Version**: \`${oldManifestVersion || "unknown"}\` -> \`${version}\``,
-    `- **Last Release SHA**: \`${oldReleaseSha || "none"}\` -> \`${releaseSha}\``,
-    ...(removedBootstrapSha
-      ? ["- **Config Anchor**: Removed obsolete `bootstrap-sha`"]
-      : []),
+    ...changes,
     "",
     "### Purpose",
     "Prevents Release Please from re-adding historical release notes or regressing changelogs following backport PRs.",
@@ -192,10 +225,25 @@ export async function resolveReleaseTag({
   targetBranch,
   gitExec = runGit,
 }) {
+  const manualInput =
+    process?.env?.INPUT_VERSION || context?.payload?.inputs?.version || "";
+
+  if (manualInput && manualInput.trim()) {
+    let clean = manualInput.trim();
+    if (!clean.startsWith("v")) {
+      clean = `v${clean}`;
+    }
+    const parsed = parseSemverTag(clean);
+    if (parsed.prerelease) {
+      throw new Error(
+        `Invalid release version '${manualInput}': manifest synchronization only targets full stable releases (e.g. '15.1.2'). Pre-release versions cannot be used as manifest anchors.`,
+      );
+    }
+    return clean;
+  }
+
   let tag =
     process?.env?.RELEASE_TAG ||
-    process?.env?.INPUT_VERSION ||
-    context?.payload?.inputs?.version ||
     context?.payload?.release?.tag_name ||
     "";
 
@@ -232,8 +280,9 @@ export async function resolveReleaseTag({
           .split("\n")
           .map((t) => t.trim())
           .filter(Boolean);
-        if (tags.length > 0) {
-          return tags[0];
+        const stableTags = tags.filter((t) => /^v?\d+\.\d+\.\d+$/.test(t));
+        if (stableTags.length > 0) {
+          return stableTags[0];
         }
       } catch {
         // try next candidate ref
@@ -244,6 +293,33 @@ export async function resolveReleaseTag({
   throw new Error(
     `Could not resolve release tag from environment, workflow inputs, release payload, or git history for branch '${targetBranch}'.`,
   );
+}
+
+/**
+ * Resolves the desired release-as version tag.
+ * If explicitly provided via environment or inputs, normalizes it with a leading 'v'.
+ * If not provided, computes the next minor version tag based on targetVersion.
+ */
+export function resolveReleaseAs({ context, process, targetVersion }) {
+  const rawInput =
+    process?.env?.RELEASE_AS ||
+    process?.env?.INPUT_RELEASE_AS ||
+    context?.payload?.inputs?.release_as ||
+    "";
+
+  if (rawInput && rawInput.trim()) {
+    const clean = rawInput.trim();
+    const tag = clean.startsWith("v") ? clean : `v${clean}`;
+    parseSemverTag(tag);
+    return tag;
+  }
+
+  if (targetVersion) {
+    const { tag: nextMinorTag } = calculateNextMinorVersion(targetVersion);
+    return nextMinorTag;
+  }
+
+  return "";
 }
 
 /**
@@ -272,10 +348,18 @@ export async function resolveReleaseSha({
     }
   } catch {
     // try rev-list fallback
-    const revListOutput = await gitExec(["rev-list", "-n", "1", releaseTag]);
-    const sha = revListOutput.stdout.trim();
-    if (/^[0-9a-f]{40}$/i.test(sha)) {
-      return sha;
+    try {
+      const revListOutput = await gitExec(["rev-list", "-n", "1", releaseTag]);
+      const sha = revListOutput.stdout.trim();
+      if (/^[0-9a-f]{40}$/i.test(sha)) {
+        return sha;
+      }
+    } catch {
+      throw new Error(
+        `Release tag '${releaseTag}' does not exist in the repository or cannot be resolved to a commit SHA. ` +
+        `The sync workflow aligns the manifest with an already published release tag (e.g. 'v15.1.2'). ` +
+        `Leave the version input empty to auto-detect the latest published release tag.`,
+      );
     }
   }
 
@@ -354,16 +438,37 @@ export async function runSyncManifest({
     targetBranch,
     gitExec,
   });
-  const { version: targetVersion } = parseSemverTag(releaseTag);
+  const { version: targetVersion, prerelease } = parseSemverTag(releaseTag);
+
+  if (prerelease) {
+    core?.info?.(
+      `Release tag '${releaseTag}' is a pre-release (${prerelease}). Release Please manifests only track full stable releases. Skipping manifest synchronization.`,
+    );
+    return {
+      skipped: true,
+      reason: "prerelease-tag",
+      tag: releaseTag,
+      branch: targetBranch,
+    };
+  }
+
   const releaseSha = await resolveReleaseSha({
     releaseTag,
     process,
     context,
     gitExec,
   });
+  const releaseAs = resolveReleaseAs({
+    context,
+    process,
+    targetVersion,
+  });
 
   core?.info?.(`Release tag: ${releaseTag} (version: ${targetVersion})`);
   core?.info?.(`Release commit SHA: ${releaseSha}`);
+  if (releaseAs) {
+    core?.info?.(`Target release-as: ${releaseAs}`);
+  }
 
   const manifestPath = path.join(workspaceDir, ".release-please-manifest.json");
   const configPath = path.join(workspaceDir, "release-please-config.json");
@@ -398,6 +503,7 @@ export async function runSyncManifest({
 
   const oldManifestVersion = oldManifest["."];
   const oldReleaseSha = oldConfig["last-release-sha"];
+  const oldReleaseAs = oldConfig["release-as"];
   const removedBootstrapSha = "bootstrap-sha" in oldConfig;
 
   const syncNeeded = isSyncNeeded({
@@ -405,11 +511,12 @@ export async function runSyncManifest({
     configContent,
     targetVersion,
     releaseSha,
+    releaseAs,
   });
 
   if (!syncNeeded) {
     core?.info?.(
-      `Branch '${targetBranch}' is already synchronized (manifest version ${targetVersion}, last-release-sha ${releaseSha}). No PR needed.`,
+      `Branch '${targetBranch}' is already synchronized (manifest version ${targetVersion}, last-release-sha ${releaseSha}, release-as ${releaseAs}). No PR needed.`,
     );
     return {
       synced: true,
@@ -417,6 +524,7 @@ export async function runSyncManifest({
       branch: targetBranch,
       version: targetVersion,
       sha: releaseSha,
+      releaseAs,
     };
   }
 
@@ -426,6 +534,7 @@ export async function runSyncManifest({
   );
   const newConfigContent = updateConfigContent(configContent, {
     lastReleaseSha: releaseSha,
+    releaseAs,
   });
 
   const cleanBranch = targetBranch.replace(/\//g, "-");
@@ -517,8 +626,10 @@ export async function runSyncManifest({
     version: targetVersion,
     releaseTag,
     releaseSha,
+    releaseAs,
     oldManifestVersion,
     oldReleaseSha,
+    oldReleaseAs,
     removedBootstrapSha,
   });
 
