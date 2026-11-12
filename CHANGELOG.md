@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.11.1](https://github.com/rancher/terraform-provider-rancher2/compare/v13.11.0...v13.11.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* update provider comment for release workflow validation ([#2661](https://github.com/rancher/terraform-provider-rancher2/issues/2661)) ([c167d74](https://github.com/rancher/terraform-provider-rancher2/commit/c167d74aef69f52806703ba20480655e0a70a109))
+
 ## [13.11.0](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.11.0) (2026-11-06)
 
 
