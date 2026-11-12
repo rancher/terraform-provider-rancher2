@@ -287,8 +287,14 @@ export function runManifestCheck(
   exec = execFileSync,
   fsModule = fs,
   env = process.env,
+  cliBaseBranch = "",
 ) {
-  const rawBranch = (env.GITHUB_BASE_REF || env.BASE_BRANCH || "").trim();
+  const rawBranch = (
+    cliBaseBranch ||
+    env.GITHUB_BASE_REF ||
+    env.BASE_BRANCH ||
+    ""
+  ).trim();
   const baseBranch = rawBranch.replace(/^refs\/heads\//, "");
   if (!baseBranch || !/^release\/v\d+$/.test(baseBranch)) {
     console.log(
@@ -369,6 +375,7 @@ export function main(
   fsModule = fs,
   fileExec = execFileSync,
   env = process.env,
+  cliArg = process.argv[3] || "",
 ) {
   const activeFileExec =
     fileExec !== execFileSync
@@ -400,7 +407,7 @@ export function main(
     runGitleaks(exec);
     break;
   case "manifest":
-    runManifestCheck(activeFileExec, fsModule, env);
+    runManifestCheck(activeFileExec, fsModule, env, cliArg);
     break;
   case "all":
     runAll(exec, fsModule, activeFileExec, env);

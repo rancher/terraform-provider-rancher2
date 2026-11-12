@@ -401,5 +401,18 @@ describe("lint.js", () => {
         }),
       );
     });
+
+    it("respects cliBaseBranch override even when env is empty", () => {
+      const mockFs = {
+        existsSync: () => true,
+        readFileSync: () => JSON.stringify({ ".": "15.0.0" }),
+      };
+      const mockExec = () => JSON.stringify({ ".": "15.1.2" });
+
+      assert.throws(
+        () => runManifestCheck(mockExec, mockFs, {}, "release/v15"),
+        /Manifest version downgrade detected/,
+      );
+    });
   });
 });

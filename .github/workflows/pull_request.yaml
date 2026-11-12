@@ -204,7 +204,8 @@ jobs:
           else
             SCRIPT_DIR=".github/workflows/scripts"
           fi
-          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" manifest
+          TARGET_BASE="${GITHUB_BASE_REF:-${BASE_BRANCH:-}}"
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" manifest "$TARGET_BASE"
 
   node-test:
     name: "Node Tests"
