@@ -12,6 +12,31 @@ ENHANCEMENTS:
 BUGFIXES:
 
 
+## [15.3.0](https://github.com/rancher/terraform-provider-rancher2/compare/v15.1.2...v15.3.0) (2026-11-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* add sensitive field attributes and sensitive testing ([#2499](https://github.com/rancher/terraform-provider-rancher2/issues/2499)) (#2532)
+
+### Features
+
+* add release channel support ([#2493](https://github.com/rancher/terraform-provider-rancher2/issues/2493)) ([#2504](https://github.com/rancher/terraform-provider-rancher2/issues/2504)) ([b001311](https://github.com/rancher/terraform-provider-rancher2/commit/b001311441330f876da4b0661b308aa9b0a8581e))
+* add schema versioning for Terraform state migration ([#2514](https://github.com/rancher/terraform-provider-rancher2/issues/2514)) ([#2529](https://github.com/rancher/terraform-provider-rancher2/issues/2529)) ([33d5ed8](https://github.com/rancher/terraform-provider-rancher2/commit/33d5ed840803d3e7ff43f9e632ee3cdb2bff0e7c))
+* expand authenticated registry support ([#2497](https://github.com/rancher/terraform-provider-rancher2/issues/2497)) ([04d54ae](https://github.com/rancher/terraform-provider-rancher2/commit/04d54ae382a23954ad20a671ee2d47f03ea68807))
+
+
+### Bug Fixes
+
+* add merge group trigger to pr workflows ([#2611](https://github.com/rancher/terraform-provider-rancher2/issues/2611)) ([0909091](https://github.com/rancher/terraform-provider-rancher2/commit/090909129907c44e0bf21ede7721d62ab5f75f0b))
+* add sensitive field attributes and sensitive testing ([#2499](https://github.com/rancher/terraform-provider-rancher2/issues/2499)) ([#2532](https://github.com/rancher/terraform-provider-rancher2/issues/2532)) ([38a7cdc](https://github.com/rancher/terraform-provider-rancher2/commit/38a7cdc1620d1fe5e18359a5f432348d8b6ad115))
+* Allow to set cluster grace period to unlimited ([#2472](https://github.com/rancher/terraform-provider-rancher2/issues/2472)) ([#2500](https://github.com/rancher/terraform-provider-rancher2/issues/2500)) ([53a333e](https://github.com/rancher/terraform-provider-rancher2/commit/53a333ed42a5c45ef7beee23e7f24cddef3ff077))
+* trivial change to exercise workflows ([#2633](https://github.com/rancher/terraform-provider-rancher2/issues/2633)) ([#2634](https://github.com/rancher/terraform-provider-rancher2/issues/2634)) ([cd950f7](https://github.com/rancher/terraform-provider-rancher2/commit/cd950f7b34edf0374d7d668fe38641cebd54a5a3))
+* update provider comment for workflow validation ([#2602](https://github.com/rancher/terraform-provider-rancher2/issues/2602)) ([#2610](https://github.com/rancher/terraform-provider-rancher2/issues/2610)) ([0904636](https://github.com/rancher/terraform-provider-rancher2/commit/090463677a7b41838e8c6670c2a1de5641a68d36))
+* update provider comment for workflow validation ([#2622](https://github.com/rancher/terraform-provider-rancher2/issues/2622)) ([#2626](https://github.com/rancher/terraform-provider-rancher2/issues/2626)) ([4a55a2e](https://github.com/rancher/terraform-provider-rancher2/commit/4a55a2e49023a531a703a3795cac7baa8a499e82))
+* update release version ([#2511](https://github.com/rancher/terraform-provider-rancher2/issues/2511)) ([5e3c446](https://github.com/rancher/terraform-provider-rancher2/commit/5e3c4467eb54aa12b1fe57169f1080548a30532f))
+* update testing docs and release version ([#2588](https://github.com/rancher/terraform-provider-rancher2/issues/2588)) ([#2595](https://github.com/rancher/terraform-provider-rancher2/issues/2595)) ([3f505bb](https://github.com/rancher/terraform-provider-rancher2/commit/3f505bb40173cd8f2c8f3e1a726b2985ea863bdc))
+
 ## [15.1.2](https://github.com/rancher/terraform-provider-rancher2/compare/v15.1.2...v15.1.2) (2026-09-10)
 
 
