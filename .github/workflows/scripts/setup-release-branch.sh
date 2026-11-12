@@ -178,7 +178,11 @@ on:
         required: true
         type: string
       version:
-        description: "Release version"
+        description: "Last published full release version"
+        required: false
+        type: string
+      release_as:
+        description: "Target upcoming release version for release-as"
         required: false
         type: string
 
@@ -194,6 +198,7 @@ jobs:
     with:
       branch: ${{ inputs.branch }}
       version: ${{ inputs.version }}
+      release_as: ${{ inputs.release_as }}
     secrets: inherit
 EOF
 
