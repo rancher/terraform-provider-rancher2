@@ -332,6 +332,15 @@ test("resolveReleaseTag - resolves tag from inputs, env, or git tags", async () 
   });
   assert.strictEqual(tag5, "v15.1.2");
 
+  // Rejects manual inputs with a pre-release version
+  await assert.rejects(
+    () =>
+      resolveReleaseTag({
+        process: { env: { INPUT_VERSION: "15.3.0-rc.0" } },
+      }),
+    /manifest synchronization only targets full stable releases/,
+  );
+
   // Rejects branches where only pre-release tags exist
   const mockGitOnlyRc = async (args) => {
     if (args[0] === "tag") {
@@ -402,6 +411,35 @@ test("runSyncManifest - skips non-release branches cleanly", async () => {
   assert.ok(
     logged.some((m) => m.includes("is not a maintenance release branch")),
   );
+});
+
+test("runSyncManifest - skips pre-release tags cleanly without creating PR", async () => {
+  const logged = [];
+  const core = {
+    info: (msg) => logged.push(msg),
+    warning: () => {},
+    error: () => {},
+  };
+  const mockGit = async () => ({ stdout: "" });
+
+  const result = await runSyncManifest({
+    process: {
+      env: {
+        TARGET_BRANCH: "release/v15",
+        RELEASE_TAG: "v15.3.0-rc.0",
+      },
+    },
+    core,
+    gitExec: mockGit,
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "prerelease-tag",
+    tag: "v15.3.0-rc.0",
+    branch: "release/v15",
+  });
+  assert.ok(logged.some((m) => m.includes("is a pre-release")));
 });
 
 test("runSyncManifest - detects already synchronized branch and exits without PR", async () => {

@@ -225,10 +225,25 @@ export async function resolveReleaseTag({
   targetBranch,
   gitExec = runGit,
 }) {
+  const manualInput =
+    process?.env?.INPUT_VERSION || context?.payload?.inputs?.version || "";
+
+  if (manualInput && manualInput.trim()) {
+    let clean = manualInput.trim();
+    if (!clean.startsWith("v")) {
+      clean = `v${clean}`;
+    }
+    const parsed = parseSemverTag(clean);
+    if (parsed.prerelease) {
+      throw new Error(
+        `Invalid release version '${manualInput}': manifest synchronization only targets full stable releases (e.g. '15.1.2'). Pre-release versions cannot be used as manifest anchors.`,
+      );
+    }
+    return clean;
+  }
+
   let tag =
     process?.env?.RELEASE_TAG ||
-    process?.env?.INPUT_VERSION ||
-    context?.payload?.inputs?.version ||
     context?.payload?.release?.tag_name ||
     "";
 
@@ -423,7 +438,20 @@ export async function runSyncManifest({
     targetBranch,
     gitExec,
   });
-  const { version: targetVersion } = parseSemverTag(releaseTag);
+  const { version: targetVersion, prerelease } = parseSemverTag(releaseTag);
+
+  if (prerelease) {
+    core?.info?.(
+      `Release tag '${releaseTag}' is a pre-release (${prerelease}). Release Please manifests only track full stable releases. Skipping manifest synchronization.`,
+    );
+    return {
+      skipped: true,
+      reason: "prerelease-tag",
+      tag: releaseTag,
+      branch: targetBranch,
+    };
+  }
+
   const releaseSha = await resolveReleaseSha({
     releaseTag,
     process,
