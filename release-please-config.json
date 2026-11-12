@@ -1,5 +1,4 @@
 {
-  "bootstrap-sha": "ab77bd4030512387b04480079c38aa54f8590eb9",
   "release-as": "v15.3.0",
   "always-update": true,
   "commit-search-depth": 100,
@@ -13,5 +12,6 @@
       "release-type": "go"
     }
   },
-  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "last-release-sha": "2710c8c52d1635d69f35e6c153ca987885d27b73"
 }
