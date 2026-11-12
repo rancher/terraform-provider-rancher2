@@ -1,13 +1,6 @@
 # Changelog
 
-## [13.11.1](https://github.com/rancher/terraform-provider-rancher2/compare/v13.11.0...v13.11.1) (2026-11-12)
-
-
-### Bug Fixes
-
-* update provider comment for release workflow validation ([#2661](https://github.com/rancher/terraform-provider-rancher2/issues/2661)) ([c167d74](https://github.com/rancher/terraform-provider-rancher2/commit/c167d74aef69f52806703ba20480655e0a70a109))
-
-## [13.11.0](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.11.0) (2026-11-06)
+## [13.11.1](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.11.1) (2026-11-12)
 
 
 ### Features
@@ -22,6 +15,7 @@
 * trivial change to exercise workflows ([#2633](https://github.com/rancher/terraform-provider-rancher2/issues/2633)) ([#2635](https://github.com/rancher/terraform-provider-rancher2/issues/2635)) ([d039b72](https://github.com/rancher/terraform-provider-rancher2/commit/d039b728ce795281d17c229ae0efafd6b1f0f9a2))
 * update docs on app_v2 import ([#2317](https://github.com/rancher/terraform-provider-rancher2/issues/2317)) ([#2331](https://github.com/rancher/terraform-provider-rancher2/issues/2331)) ([0bbfeaf](https://github.com/rancher/terraform-provider-rancher2/commit/0bbfeafeb248d1fa6d25bdcff2771ceac3a8ab00))
 * update provider comment for workflow validation ([#2622](https://github.com/rancher/terraform-provider-rancher2/issues/2622)) ([#2627](https://github.com/rancher/terraform-provider-rancher2/issues/2627)) ([df1032c](https://github.com/rancher/terraform-provider-rancher2/commit/df1032c533fced3e21419edcae49162915d6c2ca))
+* update provider comment for release workflow validation ([#2661](https://github.com/rancher/terraform-provider-rancher2/issues/2661)) ([c167d74](https://github.com/rancher/terraform-provider-rancher2/commit/c167d74aef69f52806703ba20480655e0a70a109))
 * update release version ([#2609](https://github.com/rancher/terraform-provider-rancher2/issues/2609)) ([bc6db18](https://github.com/rancher/terraform-provider-rancher2/commit/bc6db1829c30ac4c9a4c369f55e655d3fbf9a045))
 
 ## [13.5.0](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.5.0) (2026-05-08)
