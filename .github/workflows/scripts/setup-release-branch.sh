@@ -87,7 +87,7 @@ mkdir -p .github/workflows
 for file in .github/workflows/*.yml .github/workflows/*.yaml; do
   [[ -f "$file" ]] || continue
   filename=$(basename "$file")
-  if [[ "$filename" != "pull_request.yaml" && "$filename" != "release.yml" && "$filename" != "e2e-pr-listener.yml" ]]; then
+  if [[ "$filename" != "pull_request.yaml" && "$filename" != "release.yml" && "$filename" != "e2e-pr-listener.yml" && "$filename" != "sync-release-manifest.yml" ]]; then
     rm -f "$file"
   fi
 done
@@ -165,10 +165,43 @@ jobs:
 EOF
 fi
 
+# 8. Create Sync Release Manifest caller stub referencing @main
+echo "Creating .github/workflows/sync-release-manifest.yml stub calling @main..."
+cat <<'EOF' >.github/workflows/sync-release-manifest.yml
+name: "Sync Release Please Manifest Caller"
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Target release branch"
+        required: true
+        type: string
+      version:
+        description: "Release version"
+        required: false
+        type: string
+
+permissions: {}
+
+jobs:
+  sync:
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    uses: rancher/terraform-provider-rancher2/.github/workflows/sync-release-manifest.yml@main
+    with:
+      branch: ${{ inputs.branch }}
+      version: ${{ inputs.version }}
+    secrets: inherit
+EOF
+
 echo "=== Release branch setup complete for '$TARGET_BRANCH' ==="
 echo "Files ready to stage:"
 echo "  - .github/workflows/pull_request.yaml (caller stub -> @main)"
 echo "  - .github/workflows/release.yml (caller stub -> @main)"
+echo "  - .github/workflows/sync-release-manifest.yml (caller stub -> @main)"
 echo "  - $LISTENER_FILE (E2E test listener)"
 echo "  - $CONFIG_FILE (release-as: $RELEASE_VERSION)"
 echo "  - $MANIFEST_FILE (version: $MANIFEST_VERSION)"

@@ -188,6 +188,117 @@ export function runGitleaks(exec = execSync) {
   exec("gitleaks detect --no-banner -v", { stdio: "inherit" });
 }
 
+export function compareSemver(v1, v2) {
+  const p1 = String(v1).replace(/^v/, "").split("-")[0].split(".").map(Number);
+  const p2 = String(v2).replace(/^v/, "").split("-")[0].split(".").map(Number);
+  for (let i = 0; i < 3; i++) {
+    const num1 = p1[i] || 0;
+    const num2 = p2[i] || 0;
+    if (num1 > num2) return 1;
+    if (num1 < num2) return -1;
+  }
+  return 0;
+}
+
+export function checkManifestDowngrade({
+  baseBranch,
+  baseManifestContent,
+  headManifestContent,
+}) {
+  if (!baseBranch || !/^release\/v\d+$/.test(baseBranch.trim())) {
+    return { valid: true, skipped: true, reason: "not-release-branch" };
+  }
+  if (!baseManifestContent || !headManifestContent) {
+    return { valid: true, skipped: true, reason: "missing-manifest" };
+  }
+
+  let baseManifest = {};
+  let headManifest = {};
+  try {
+    baseManifest = JSON.parse(baseManifestContent);
+    headManifest = JSON.parse(headManifestContent);
+  } catch (e) {
+    throw new Error(`Failed to parse manifest JSON: ${e.message}`);
+  }
+
+  const baseVersion = baseManifest["."];
+  const headVersion = headManifest["."];
+
+  if (!baseVersion || !headVersion) {
+    return { valid: true, skipped: true, reason: "missing-version" };
+  }
+
+  if (compareSemver(headVersion, baseVersion) < 0) {
+    const error = `❌ Manifest version downgrade detected: PR proposes '${headVersion}' but base branch is '${baseVersion}'. Backport PRs must not downgrade release manifests.`;
+    return { valid: false, error, headVersion, baseVersion };
+  }
+
+  return { valid: true, headVersion, baseVersion };
+}
+
+export function runManifestCheck(
+  exec = execFileSync,
+  fsModule = fs,
+  env = process.env,
+) {
+  const baseBranch = (env.GITHUB_BASE_REF || env.BASE_BRANCH || "").trim();
+  if (!baseBranch || !/^release\/v\d+$/.test(baseBranch)) {
+    console.log(
+      "==> Skipping manifest downgrade check (not targeting release/v* branch)...",
+    );
+    return;
+  }
+
+  console.log(
+    `==> Checking manifest version downgrade against base branch '${baseBranch}'...`,
+  );
+
+  const manifestPath = ".release-please-manifest.json";
+  if (!fsModule.existsSync(manifestPath)) {
+    console.log("No .release-please-manifest.json found. Skipping.");
+    return;
+  }
+
+  const headManifestContent = fsModule.readFileSync(manifestPath, "utf8");
+
+  let baseManifestContent = "";
+  try {
+    baseManifestContent = exec(
+      "git",
+      ["show", `origin/${baseBranch}:${manifestPath}`],
+      { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
+    );
+  } catch {
+    try {
+      baseManifestContent = exec(
+        "git",
+        ["show", `${baseBranch}:${manifestPath}`],
+        { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
+      );
+    } catch {
+      console.log(
+        `Could not load ${manifestPath} from base branch '${baseBranch}'. Skipping.`,
+      );
+      return;
+    }
+  }
+
+  const result = checkManifestDowngrade({
+    baseBranch,
+    baseManifestContent,
+    headManifestContent,
+  });
+
+  if (!result.valid) {
+    console.error(result.error);
+    throw new Error(result.error);
+  }
+
+  console.log(
+    `✅ Manifest check passed: version '${result.headVersion}' >= '${result.baseVersion}' on ${baseBranch}.`,
+  );
+}
+
 export function runAll(
   exec = execSync,
   fsModule = fs,
@@ -200,6 +311,7 @@ export function runAll(
   runNodeTest(fileExec, fsModule);
   runEslint(exec);
   runGitleaks(exec);
+  runManifestCheck(fileExec, fsModule);
 }
 
 export function main(
@@ -237,13 +349,16 @@ export function main(
   case "gitleaks":
     runGitleaks(exec);
     break;
+  case "manifest":
+    runManifestCheck(activeFileExec, fsModule);
+    break;
   case "all":
     runAll(exec, fsModule, activeFileExec);
     break;
   default:
     console.error(`Error: Unknown lint mode: ${mode}`);
     console.error(
-      "Usage: lint.js [terraform|actionlint|shellcheck|node-check|node-test|eslint|gitleaks|all]",
+      "Usage: lint.js [terraform|actionlint|shellcheck|node-check|node-test|eslint|gitleaks|manifest|all]",
     );
     process.exit(1);
   }

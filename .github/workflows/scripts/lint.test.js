@@ -11,6 +11,9 @@ import {
   runNodeTest,
   runEslint,
   runGitleaks,
+  compareSemver,
+  checkManifestDowngrade,
+  runManifestCheck,
   runAll,
   main,
 } from "./lint.js";
@@ -264,6 +267,99 @@ describe("lint.js", () => {
 
       main("eslint", mockExec, mockFs);
       assert.ok(commands.includes("eslint ."));
+    });
+  });
+
+  describe("compareSemver", () => {
+    it("correctly compares semver versions", () => {
+      assert.strictEqual(compareSemver("15.1.2", "15.0.0"), 1);
+      assert.strictEqual(compareSemver("15.0.0", "15.1.2"), -1);
+      assert.strictEqual(compareSemver("15.1.2", "15.1.2"), 0);
+      assert.strictEqual(compareSemver("v16.0.0", "15.3.0"), 1);
+      assert.strictEqual(compareSemver("15.1.2", "15.1.3"), -1);
+    });
+  });
+
+  describe("checkManifestDowngrade", () => {
+    it("skips non-release branches cleanly", () => {
+      const res = checkManifestDowngrade({
+        baseBranch: "main",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.0.0" }),
+      });
+      assert.strictEqual(res.skipped, true);
+      assert.strictEqual(res.valid, true);
+    });
+
+    it("passes when PR proposes equal or higher manifest version", () => {
+      const res = checkManifestDowngrade({
+        baseBranch: "release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.1.2" }),
+      });
+      assert.strictEqual(res.valid, true);
+      assert.strictEqual(res.headVersion, "15.1.2");
+      assert.strictEqual(res.baseVersion, "15.1.2");
+
+      const resBump = checkManifestDowngrade({
+        baseBranch: "release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.2.0" }),
+      });
+      assert.strictEqual(resBump.valid, true);
+    });
+
+    it("fails when PR proposes lower manifest version", () => {
+      const res = checkManifestDowngrade({
+        baseBranch: "release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.0.0" }),
+      });
+      assert.strictEqual(res.valid, false);
+      assert.match(res.error, /Manifest version downgrade detected/);
+      assert.match(res.error, /proposes '15\.0\.0'/);
+      assert.match(res.error, /base branch is '15\.1\.2'/);
+    });
+  });
+
+  describe("runManifestCheck", () => {
+    it("skips when not targeting release/v* branch", () => {
+      let execCalled = false;
+      const mockExec = () => {
+        execCalled = true;
+      };
+      runManifestCheck(mockExec, {}, { GITHUB_BASE_REF: "main" });
+      assert.strictEqual(execCalled, false);
+    });
+
+    it("throws error when manifest downgrade is detected", () => {
+      const mockFs = {
+        existsSync: () => true,
+        readFileSync: () => JSON.stringify({ ".": "15.0.0" }),
+      };
+      const mockExec = () => JSON.stringify({ ".": "15.1.2" });
+
+      assert.throws(
+        () =>
+          runManifestCheck(mockExec, mockFs, {
+            GITHUB_BASE_REF: "release/v15",
+          }),
+        /Manifest version downgrade detected/,
+      );
+    });
+
+    it("succeeds when manifest version is equal or higher", () => {
+      const mockFs = {
+        existsSync: () => true,
+        readFileSync: () => JSON.stringify({ ".": "15.1.2" }),
+      };
+      const mockExec = () => JSON.stringify({ ".": "15.1.2" });
+
+      assert.doesNotThrow(() =>
+        runManifestCheck(mockExec, mockFs, {
+          GITHUB_BASE_REF: "release/v15",
+        }),
+      );
     });
   });
 });
