@@ -331,6 +331,22 @@ test("resolveReleaseTag - resolves tag from inputs, env, or git tags", async () 
     gitExec: mockGitWithRc,
   });
   assert.strictEqual(tag5, "v15.1.2");
+
+  // Rejects branches where only pre-release tags exist
+  const mockGitOnlyRc = async (args) => {
+    if (args[0] === "tag") {
+      return { stdout: "v15.3.0-rc.0\nv15.2.0-rc.4\n" };
+    }
+    return { stdout: "" };
+  };
+  await assert.rejects(
+    () =>
+      resolveReleaseTag({
+        targetBranch: "release/v15",
+        gitExec: mockGitOnlyRc,
+      }),
+    /Could not resolve release tag from environment/,
+  );
 });
 
 test("resolveReleaseSha - resolves commit SHA from env or git", async () => {

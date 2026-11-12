@@ -269,9 +269,6 @@ export async function resolveReleaseTag({
         if (stableTags.length > 0) {
           return stableTags[0];
         }
-        if (tags.length > 0) {
-          return tags[0];
-        }
       } catch {
         // try next candidate ref
       }
