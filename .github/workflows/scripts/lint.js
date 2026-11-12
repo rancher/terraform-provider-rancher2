@@ -302,7 +302,7 @@ export function runManifestCheck(
   );
 
   const manifestPath = ".release-please-manifest.json";
-  if (!fsModule.existsSync(manifestPath)) {
+  if (!fsModule?.existsSync?.(manifestPath)) {
     console.log("No .release-please-manifest.json found. Skipping.");
     return;
   }
@@ -351,6 +351,7 @@ export function runAll(
   exec = execSync,
   fsModule = fs,
   fileExec = execFileSync,
+  env = process.env,
 ) {
   runTerraform(exec);
   runActionlint(exec);
@@ -359,7 +360,7 @@ export function runAll(
   runNodeTest(fileExec, fsModule);
   runEslint(exec);
   runGitleaks(exec);
-  runManifestCheck(fileExec, fsModule);
+  runManifestCheck(fileExec, fsModule, env);
 }
 
 export function main(
@@ -367,6 +368,7 @@ export function main(
   exec = execSync,
   fsModule = fs,
   fileExec = execFileSync,
+  env = process.env,
 ) {
   const activeFileExec =
     fileExec !== execFileSync
@@ -398,10 +400,10 @@ export function main(
     runGitleaks(exec);
     break;
   case "manifest":
-    runManifestCheck(activeFileExec, fsModule);
+    runManifestCheck(activeFileExec, fsModule, env);
     break;
   case "all":
-    runAll(exec, fsModule, activeFileExec);
+    runAll(exec, fsModule, activeFileExec, env);
     break;
   default:
     console.error(`Error: Unknown lint mode: ${mode}`);

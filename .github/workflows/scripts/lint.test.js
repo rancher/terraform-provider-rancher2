@@ -242,12 +242,25 @@ describe("lint.js", () => {
       const mockFs = {
         readdirSync: () => [],
       };
-      runAll(mockExec, mockFs);
+      runAll(mockExec, mockFs, mockExec, {});
       assert.ok(commands.includes("terraform fmt -check -recursive -diff"));
       assert.ok(commands.includes("actionlint"));
       assert.ok(commands.includes("npm ci"));
       assert.ok(commands.includes("eslint ."));
       assert.ok(commands.includes("gitleaks detect --no-banner -v --no-git"));
+    });
+
+    it("runAll handles release branch environment with partial mockFs safely", () => {
+      const commands = [];
+      const mockExec = (cmd) => {
+        commands.push(cmd);
+      };
+      const mockFs = {
+        readdirSync: () => [],
+      };
+      assert.doesNotThrow(() => {
+        runAll(mockExec, mockFs, mockExec, { GITHUB_BASE_REF: "release/v15" });
+      });
     });
 
     it("main dispatches correctly for specific modes", () => {

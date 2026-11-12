@@ -216,27 +216,14 @@ export async function resolveReleaseTag({
   if (targetBranch) {
     const match = targetBranch.match(/^release\/v(\d+)$/);
     const majorPrefix = match ? `v${match[1]}.` : "v";
-    try {
-      const tagOutput = await gitExec([
-        "tag",
-        "--merged",
-        targetBranch,
-        "--sort=-version:refname",
-        `${majorPrefix}*`,
-      ]);
-      const tags = tagOutput.stdout
-        .trim()
-        .split("\n")
-        .map((t) => t.trim())
-        .filter(Boolean);
-      if (tags.length > 0) {
-        return tags[0];
-      }
-    } catch {
-      // Fallback: try listing all tags sorted by version
+    const candidates = [targetBranch, `origin/${targetBranch}`, "HEAD"];
+
+    for (const ref of candidates) {
       try {
         const tagOutput = await gitExec([
           "tag",
+          "--merged",
+          ref,
           "--sort=-version:refname",
           `${majorPrefix}*`,
         ]);
@@ -249,13 +236,13 @@ export async function resolveReleaseTag({
           return tags[0];
         }
       } catch {
-        // ignore and let error below handle it
+        // try next candidate ref
       }
     }
   }
 
   throw new Error(
-    "Could not resolve release tag from environment, workflow inputs, release payload, or git history.",
+    `Could not resolve release tag from environment, workflow inputs, release payload, or git history for branch '${targetBranch}'.`,
   );
 }
 
@@ -325,23 +312,6 @@ export async function runSyncManifest({
 
   core?.info?.(`Target maintenance branch: ${targetBranch}`);
 
-  const releaseTag = await resolveReleaseTag({
-    context,
-    process,
-    targetBranch,
-    gitExec,
-  });
-  const { version: targetVersion } = parseSemverTag(releaseTag);
-  const releaseSha = await resolveReleaseSha({
-    releaseTag,
-    process,
-    context,
-    gitExec,
-  });
-
-  core?.info?.(`Release tag: ${releaseTag} (version: ${targetVersion})`);
-  core?.info?.(`Release commit SHA: ${releaseSha}`);
-
   // Configure git authentication if merge token is available
   const mergeToken =
     process?.env?.GITHUB_MERGE_TOKEN ||
@@ -369,7 +339,7 @@ export async function runSyncManifest({
     }
   }
 
-  // Ensure target branch is up-to-date locally
+  // Ensure target branch is up-to-date locally before resolving tags and sha
   try {
     await gitExec(["fetch", "origin", `${targetBranch}:${targetBranch}`]);
   } catch {
@@ -377,6 +347,23 @@ export async function runSyncManifest({
     await gitExec(["fetch", "origin", targetBranch]);
   }
   await gitExec(["checkout", targetBranch]);
+
+  const releaseTag = await resolveReleaseTag({
+    context,
+    process,
+    targetBranch,
+    gitExec,
+  });
+  const { version: targetVersion } = parseSemverTag(releaseTag);
+  const releaseSha = await resolveReleaseSha({
+    releaseTag,
+    process,
+    context,
+    gitExec,
+  });
+
+  core?.info?.(`Release tag: ${releaseTag} (version: ${targetVersion})`);
+  core?.info?.(`Release commit SHA: ${releaseSha}`);
 
   const manifestPath = path.join(workspaceDir, ".release-please-manifest.json");
   const configPath = path.join(workspaceDir, "release-please-config.json");
