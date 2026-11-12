@@ -31,7 +31,7 @@ type CLIConfig struct {
 	Path      string `json:"path,omitempty"`
 }
 
-// Provider returns a terraform.ResourceProvider instance for Rancher.
+// Provider returns a terraform.ResourceProvider instance for Rancher 2.
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
