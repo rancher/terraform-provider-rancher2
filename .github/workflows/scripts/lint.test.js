@@ -271,12 +271,19 @@ describe("lint.js", () => {
   });
 
   describe("compareSemver", () => {
-    it("correctly compares semver versions", () => {
+    it("correctly compares semver versions including prereleases", () => {
       assert.strictEqual(compareSemver("15.1.2", "15.0.0"), 1);
       assert.strictEqual(compareSemver("15.0.0", "15.1.2"), -1);
       assert.strictEqual(compareSemver("15.1.2", "15.1.2"), 0);
       assert.strictEqual(compareSemver("v16.0.0", "15.3.0"), 1);
       assert.strictEqual(compareSemver("15.1.2", "15.1.3"), -1);
+
+      // Pre-release comparisons (SemVer 2.0.0 Rule 11)
+      assert.strictEqual(compareSemver("15.3.0", "15.3.0-rc.1"), 1);
+      assert.strictEqual(compareSemver("15.3.0-rc.1", "15.3.0"), -1);
+      assert.strictEqual(compareSemver("15.3.0-rc.2", "15.3.0-rc.1"), 1);
+      assert.strictEqual(compareSemver("15.3.0-rc.1", "15.3.0-rc.2"), -1);
+      assert.strictEqual(compareSemver("15.3.0-rc.1", "15.3.0-rc.1"), 0);
     });
   });
 
@@ -309,7 +316,17 @@ describe("lint.js", () => {
       assert.strictEqual(resBump.valid, true);
     });
 
-    it("fails when PR proposes lower manifest version", () => {
+    it("normalizes refs/heads/ prefix on base branch", () => {
+      const res = checkManifestDowngrade({
+        baseBranch: "refs/heads/release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
+        headManifestContent: JSON.stringify({ ".": "15.1.2" }),
+      });
+      assert.strictEqual(res.valid, true);
+      assert.strictEqual(res.skipped, undefined);
+    });
+
+    it("fails when PR proposes lower manifest version including prerelease downgrade", () => {
       const res = checkManifestDowngrade({
         baseBranch: "release/v15",
         baseManifestContent: JSON.stringify({ ".": "15.1.2" }),
@@ -319,6 +336,16 @@ describe("lint.js", () => {
       assert.match(res.error, /Manifest version downgrade detected/);
       assert.match(res.error, /proposes '15\.0\.0'/);
       assert.match(res.error, /base branch is '15\.1\.2'/);
+
+      const resRcDowngrade = checkManifestDowngrade({
+        baseBranch: "release/v15",
+        baseManifestContent: JSON.stringify({ ".": "15.3.0" }),
+        headManifestContent: JSON.stringify({ ".": "15.3.0-rc.1" }),
+      });
+      assert.strictEqual(resRcDowngrade.valid, false);
+      assert.match(resRcDowngrade.error, /Manifest version downgrade detected/);
+      assert.match(resRcDowngrade.error, /proposes '15\.3\.0-rc\.1'/);
+      assert.match(resRcDowngrade.error, /base branch is '15\.3\.0'/);
     });
   });
 

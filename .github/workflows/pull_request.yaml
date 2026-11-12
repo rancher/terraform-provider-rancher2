@@ -193,6 +193,18 @@ jobs:
             SCRIPT_DIR=".github/workflows/scripts"
           fi
           "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" node-check
+      - name: Check Manifest Downgrade
+        id: check-manifest-downgrade
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          BASE_BRANCH: ${{ github.base_ref || github.event.merge_group.base_ref }}
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" manifest
 
   node-test:
     name: "Node Tests"

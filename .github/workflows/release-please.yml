@@ -100,6 +100,9 @@ jobs:
       (needs.release.result == 'success' || needs.release.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    concurrency:
+      group: sync-manifest-${{ github.ref_name }}
+      cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: write

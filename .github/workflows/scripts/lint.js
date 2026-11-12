@@ -189,14 +189,58 @@ export function runGitleaks(exec = execSync) {
 }
 
 export function compareSemver(v1, v2) {
-  const p1 = String(v1).replace(/^v/, "").split("-")[0].split(".").map(Number);
-  const p2 = String(v2).replace(/^v/, "").split("-")[0].split(".").map(Number);
+  const clean1 = String(v1).trim().replace(/^v/, "");
+  const clean2 = String(v2).trim().replace(/^v/, "");
+
+  const [core1, pre1] = clean1.split("-");
+  const [core2, pre2] = clean2.split("-");
+
+  const parts1 = core1.split(".").map(Number);
+  const parts2 = core2.split(".").map(Number);
+
   for (let i = 0; i < 3; i++) {
-    const num1 = p1[i] || 0;
-    const num2 = p2[i] || 0;
+    const num1 = parts1[i] || 0;
+    const num2 = parts2[i] || 0;
     if (num1 > num2) return 1;
     if (num1 < num2) return -1;
   }
+
+  // Same core version (major.minor.patch)
+  // SemVer Rule 11: Normal version has higher precedence than pre-release version
+  if (!pre1 && pre2) return 1;
+  if (pre1 && !pre2) return -1;
+  if (!pre1 && !pre2) return 0;
+
+  // Both have pre-releases: compare dot-separated identifiers
+  const idents1 = pre1.split(".");
+  const idents2 = pre2.split(".");
+
+  const len = Math.max(idents1.length, idents2.length);
+  for (let i = 0; i < len; i++) {
+    if (i >= idents1.length) return -1;
+    if (i >= idents2.length) return 1;
+
+    const id1 = idents1[i];
+    const id2 = idents2[i];
+
+    const isNum1 = /^\d+$/.test(id1);
+    const isNum2 = /^\d+$/.test(id2);
+
+    if (isNum1 && isNum2) {
+      const n1 = parseInt(id1, 10);
+      const n2 = parseInt(id2, 10);
+      if (n1 > n2) return 1;
+      if (n1 < n2) return -1;
+    } else if (isNum1 && !isNum2) {
+      return -1;
+    } else if (!isNum1 && isNum2) {
+      return 1;
+    } else {
+      if (id1 > id2) return 1;
+      if (id1 < id2) return -1;
+    }
+  }
+
   return 0;
 }
 
@@ -205,7 +249,10 @@ export function checkManifestDowngrade({
   baseManifestContent,
   headManifestContent,
 }) {
-  if (!baseBranch || !/^release\/v\d+$/.test(baseBranch.trim())) {
+  const cleanBranch = baseBranch
+    ? baseBranch.trim().replace(/^refs\/heads\//, "")
+    : "";
+  if (!cleanBranch || !/^release\/v\d+$/.test(cleanBranch)) {
     return { valid: true, skipped: true, reason: "not-release-branch" };
   }
   if (!baseManifestContent || !headManifestContent) {
@@ -241,7 +288,8 @@ export function runManifestCheck(
   fsModule = fs,
   env = process.env,
 ) {
-  const baseBranch = (env.GITHUB_BASE_REF || env.BASE_BRANCH || "").trim();
+  const rawBranch = (env.GITHUB_BASE_REF || env.BASE_BRANCH || "").trim();
+  const baseBranch = rawBranch.replace(/^refs\/heads\//, "");
   if (!baseBranch || !/^release\/v\d+$/.test(baseBranch)) {
     console.log(
       "==> Skipping manifest downgrade check (not targeting release/v* branch)...",
