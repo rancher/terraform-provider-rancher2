@@ -1,9 +1,11 @@
 {
   "last-release-sha": "e56015b71be53e42f44e3b74bbc172ea62b3cb87",
-  "release-as": "v13.11.1",
+  "release-as": "v13.11.2",
   "always-update": true,
   "commit-search-depth": 100,
   "prerelease": true,
+  "draft": true,
+  "force-tag-creation": true,
   "include-v-in-tag": true,
   "include-component-in-tag": false,
   "packages": {
