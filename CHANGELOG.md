@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.11.2](https://github.com/rancher/terraform-provider-rancher2/compare/v13.11.1...v13.11.2) (2026-11-13)
+
+
+### Bug Fixes
+
+* enable draft releases and advance version to v13.11.2 ([#2663](https://github.com/rancher/terraform-provider-rancher2/issues/2663)) ([820fb9d](https://github.com/rancher/terraform-provider-rancher2/commit/820fb9d7bd7127093b63dd06f0320a008e06e1ba))
+
 ## [13.11.1](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.11.1) (2026-11-12)
 
 
