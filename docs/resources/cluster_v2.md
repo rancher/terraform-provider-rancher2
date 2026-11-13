@@ -4,7 +4,7 @@ page_title: "rancher2_cluster_v2 Resource"
 
 # rancher2\_cluster\_v2 Resource
 
-Provides a Rancher v2 Cluster v2 resource. This can be used to create node-driver and custom RKE2 and K3s Clusters for Rancher v2 environments and retrieve their information. 
+Provides a Rancher v2 Cluster v2 resource. This can be used to create node-driver and custom RKE2 and K3s Clusters for Rancher v2 environments and retrieve their information.
 
 This resource is available in Rancher v2.6.0 and above.
 
@@ -119,7 +119,7 @@ resource "rancher2_cluster_v2" "foo-k3s" {
   kubernetes_version = "rke2/k3s-version"
   enable_network_policy = false
   rke_config {
-    # nodes in this pool have all roles 
+    # nodes in this pool have all roles
     machine_pools {
       name = "pool"
       cloud_credential_secret_name = rancher2_cloud_credential.foo.id
@@ -239,7 +239,7 @@ resource "rancher2_machine_config_v2" "foo-harvester-v2" {
   }
 }
 
-# Create a new cluster 
+# Create a new cluster
 resource "rancher2_cluster_v2" "foo-harvester-v2" {
   name = "foo-harvester-v2"
   kubernetes_version = "<rke2/k3s-version>"
@@ -278,11 +278,10 @@ EOF
 }
 ```
 
-### Create a node-driver cluster with Harvester as both the infrastructure provider and cloud provider 
+### Create a node-driver cluster with Harvester as both the infrastructure provider and cloud provider
 
 The example below utilizes the arguments such as `machine_selector_config`, `machine_global_config`, and `chart_values`.
 More explanations and examples for those arguments can be found on this page.
-
 
 ```hcl
 # Get imported harvester cluster info
@@ -306,7 +305,6 @@ curl -k -X POST ${RANCHER_SERVER_URL}/k8s/clusters/${HARVESTER_CLUSTER_ID}/v1/ha
    -u ${RANCHER_ACCESS_KEY}:${RANCHER_SECRET_KEY} \
    -d '{"clusterRoleName": "harvesterhci.io:cloudprovider", "namespace": "'${NAMESPACE}'", "serviceAccountName": "'${CLUSTER_NAME}'"}' | xargs | sed 's/\\n/\n/g' > ${CLUSTER_NAME}-kubeconfig
 ```
-
 
 ```hcl
 # Create a new Cloud Credential for an imported Harvester cluster
@@ -408,10 +406,11 @@ EOF
 Set `use_internal_ca_certs` to use the cluster's internally generated CA certificate instead of specifying `ca_certs`.
 
 This option:
-* Requires `fqdn` to be configured.
-* Is mutually exclusive with `ca_certs`.
-* Should only be used when the cluster is reachable through an endpoint, such as a load balancer.
-* Requires the endpoint FQDN to be included in the API server certificate's SANs.
+
+- Requires `fqdn` to be configured.
+- Is mutually exclusive with `ca_certs`.
+- Should only be used when the cluster is reachable through an endpoint, such as a load balancer.
+- Requires the endpoint FQDN to be included in the API server certificate's SANs.
 
 Configure the FQDN through `tls-san` in `machine_global_config` to ensure the API server certificate is valid for the endpoint.
 
@@ -494,7 +493,6 @@ resource "rancher2_cluster_v2" "foo" {
 }
 ```
 
-
 ### Customize the cluster agent and the fleet agent
 
 This argument is available in Rancher v2.7.5 and above.
@@ -545,7 +543,7 @@ EOF
       memory_request = "500Mi"
     }
   }
-  
+
   fleet_agent_deployment_customization {
     # The same format and requirement for values as the cluster_agent_deployment_customization argument
     # ...
@@ -555,7 +553,7 @@ EOF
     machine_pools {
       # ...
       }
-    } 
+    }
 }
 ```
 
@@ -563,10 +561,9 @@ EOF
 
 This argument is available in Rancher 2.11.0 and above for the cluster agent. Support for the fleet agent is available in Rancher 2.14.0 and above.
 
-You can configure a Priority Class and or Pod Disruption Budget to be automatically deployed for the cattle cluster agent and fleet agent when provisioning or updating downstream clusters. 
+You can configure a Priority Class and or Pod Disruption Budget to be automatically deployed for the cattle cluster agent and fleet agent when provisioning or updating downstream clusters.
 
-In order to use this field, you must ensure that the `cluster-agent-scheduling-customization` feature is enabled in the Rancher server. 
-
+In order to use this field, you must ensure that the `cluster-agent-scheduling-customization` feature is enabled in the Rancher server.
 
 The example below demonstrates how to set the `scheduling_customization` field to deploy a Priority Class and Pod Disruption Budget for both the cattle cluster agent and fleet agent.
 
@@ -577,18 +574,18 @@ resource "rancher2_cluster_v2" "foo" {
   cluster_agent_deployment_customization {
     scheduling_customization {
       priority_class {
-        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted. 
+        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted.
         # If omitted, the default of 'PreemptLowerPriority' is used.
         preemption_policy = "PreemptLowerPriority"
         # The value cannot be less than negative 1 billion, or greater than 1 billion
         value = 1000000000
       }
       pod_disruption_budget {
-        # min_available and max_unavailable must either be non-negative whole integers, 
+        # min_available and max_unavailable must either be non-negative whole integers,
         # or whole number percentages greater than 0 and less than or equal to 100 (e.g. "50%").
         # You cannot set both min_available and max_unavailable at the same time.
         min_available = "1"
-        
+
         # max_unavailable = "1"
       }
     }
@@ -597,18 +594,18 @@ resource "rancher2_cluster_v2" "foo" {
   fleet_agent_deployment_customization {
     scheduling_customization {
       priority_class {
-        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted. 
+        # The preemption_policy must be set to 'Never', 'PreemptLowerPriority', or omitted.
         # If omitted, the default of 'PreemptLowerPriority' is used.
         preemption_policy = "PreemptLowerPriority"
         # The value cannot be less than negative 1 billion, or greater than 1 billion
         value = 999999999
       }
       pod_disruption_budget {
-        # min_available and max_unavailable must either be non-negative whole integers, 
+        # min_available and max_unavailable must either be non-negative whole integers,
         # or whole number percentages greater than 0 and less than or equal to 100 (e.g. "50%").
         # You cannot set both min_available and max_unavailable at the same time.
         min_available = "1"
-        
+
         # max_unavailable = "1"
       }
     }
@@ -619,7 +616,7 @@ resource "rancher2_cluster_v2" "foo" {
     machine_pools {
       # ...
     }
-  } 
+  }
 }
 ```
 
@@ -659,7 +656,7 @@ resource "rancher2_cluster_v2" "foo" {
 
 ### Create a cluster that uses a cluster-level authenticated `system-default-registry`
 
-The `<auth-config-secret-name>` represents a generic Kubernetes secret that contains two keys with base64 encoded values: the `username` and `password` for the specified custom registry. If the `system-default-registry` is not authenticated, no secret is required and the section within the `rke_config` can be omitted if not otherwise needed. While the below example shows how to create a registry secret, storing plain text credentials in terraform files is never a good idea. Significant care should be taken to ensure that the username and password values are not committed or otherwise leaked. 
+The `<auth-config-secret-name>` represents a generic Kubernetes secret that contains two keys with base64 encoded values: the `username` and `password` for the specified custom registry. If the `system-default-registry` is not authenticated, no secret is required and the section within the `rke_config` can be omitted if not otherwise needed. While the below example shows how to create a registry secret, storing plain text credentials in terraform files is never a good idea. Significant care should be taken to ensure that the username and password values are not committed or otherwise leaked.
 
 Many registries may be specified in the `rke_config`s `registries` section, however, the `system-default-registry` from which core system images are pulled is always denoted via the `system-default-registry` key of the `machine_selector_config` or the `machine_global_config`. For more information on private registries, please refer to [the Rancher documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/global-default-private-registry#setting-a-private-registry-with-credentials-when-deploying-a-cluster).
 
@@ -675,7 +672,7 @@ resource "rancher2_cluster_v2" "foo_cluster_v2" {
     registries {
       configs {
         hostname = "registry_domain_name"
-        auth_config_secret_name = var.registry_secret_name 
+        auth_config_secret_name = var.registry_secret_name
         insecure = "<tls-insecure-bool>"
         tls_secret_name = ""
         ca_bundle = ""
@@ -701,7 +698,7 @@ resource "rancher2_secret_v2" "my_registry" {
 }
 ```
 
-### Creating Rancher V2 Cluster with Machine Selector Files 
+### Creating Rancher V2 Cluster with Machine Selector Files
 
 This argument is available in Rancher v2.7.2 and above.
 
@@ -714,7 +711,7 @@ resource "rancher2_cluster_v2" "foo" {
     machine_selector_files {
       machine_label_selector {
         match_labels = {
-          # You can specify multiple labels 
+          # You can specify multiple labels
           "rke.cattle.io/control-plane-role" = "true",
           "rke.cattle.io/etcd-role" = "true",
         }
@@ -763,7 +760,7 @@ resource "rancher2_cluster_v2" "foo" {
     machine_selector_config {
       machine_label_selector {
         match_labels = {
-          # You can specify multiple labels 
+          # You can specify multiple labels
           "rke.cattle.io/control-plane-role" = "true",
           "rke.cattle.io/etcd-role" = "true",
         }
@@ -839,7 +836,7 @@ EOF
 }
 ```
 
-### Customize the ETCD snapshot feature on the cluster 
+### Customize the ETCD snapshot feature on the cluster
 
 ```hcl
 resource "rancher2_cloud_credential" "credentials" {
@@ -873,7 +870,7 @@ resource "rancher2_cluster_v2" "foo" {
 
 ### Customize distribution-specified server configurations in a cluster
 
-You can customize all server configurations on the cluster by utilizing the `machine_global_config` argument. 
+You can customize all server configurations on the cluster by utilizing the `machine_global_config` argument.
 
 For the full list of server configurations, please refer to [RKE2 server configuration](https://docs.rke2.io/reference/server_config) and [K3s server configuration](https://docs.k3s.io/cli/server).
 
@@ -961,7 +958,7 @@ EOF
 
 ### Customize chart values in a cluster
 
-You can specify the values for the system charts installed by RKE2 or K3s. 
+You can specify the values for the system charts installed by RKE2 or K3s.
 
 For more information about how RKE2 or K3s manage packaged components, please refer to [RKE2 documentation](https://docs.rke2.io/helm) or [K3s documentation](https://docs.k3s.io/installation/packaged-components).
 
@@ -1032,31 +1029,31 @@ EOF
 
 The following arguments are supported:
 
-* `name` - (Required, forceNew, string) The name of the cluster.
-* `fleet_namespace` - (Optional, ForceNew, string, default: fleet-default) Fleet namespace is the namespace where the cluster is to create in the local cluster. It is recommended to leave it as the default value. 
-* `kubernetes_version` - (Required, string) The RKE2 or K3s version for the cluster.
-* `agent_env_vars` - (Optional, list) Agent env vars is a list of additional environment variables to be appended to the `cattle-cluster-agent` and `fleet-agent` deployment, and the plan for the [system upgrade controller](https://github.com/rancher/system-upgrade-controller) to upgrade nodes.
-* `cluster_agent_deployment_customization` - (Optional, list) Cluster agent deployment customization specifies the additional tolerations, new affinity rules, and new resource requirements on the `cattle-cluster-agent` deployment. This argument is available in Rancher v2.7.5 and above.
-* `fleet_agent_deployment_customization` - (Optional, list) Fleet agent deployment customization specifies the additional tolerations, new affinity rules, and new resource requirements on the `fleet-agent` deployment. The argument is available in Rancher v2.7.5 and above.
-* `rke_config` - (Optional/computed, list, max length: 1) The RKE configuration for the cluster.
-* `local_auth_endpoint` - (Optional, list, max length: 1) Local auth endpoint configures the Authorized Cluster Endpoint (ACE) which can be used to directly access the Kubernetes API server, without requiring communication through Rancher. For more information, please refer to [Rancher Documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/kubernetes-clusters-in-rancher-setup/register-existing-clusters#authorized-cluster-endpoint-support-for-rke2-and-k3s-clusters).
-* `cloud_credential_secret_name` - (Optional, string) Cloud credential secret name is the secret to be used when a cloud credential secret name is not specified at the machine pool level. 
-* `default_pod_security_admission_configuration_template_name` - (Optional, string) The name of the pre-defined pod security admission configuration template to be applied to the cluster. Rancher admins (or those with the right permissions) can create, manage, and edit those templates. For more information, please refer to [Rancher Documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/psa-config-templates). The argument is available in Rancher v2.7.2 and above.
-* `default_cluster_role_for_project_members` - (Optional, string) Default cluster role for project members.
-* `enable_network_policy` - (Optional, bool, default: false) Enable k8s network policy on the cluster.
-* `annotations` - (Optional/computed, map) Annotations for the Cluster.
-* `labels` - (Optional/computed, map) Labels for the Cluster.
+- `name` - (Required, forceNew, string) The name of the cluster.
+- `fleet_namespace` - (Optional, ForceNew, string, default: fleet-default) Fleet namespace is the namespace where the cluster is to create in the local cluster. It is recommended to leave it as the default value.
+- `kubernetes_version` - (Required, string) The RKE2 or K3s version for the cluster.
+- `agent_env_vars` - (Optional, list) Agent env vars is a list of additional environment variables to be appended to the `cattle-cluster-agent` and `fleet-agent` deployment, and the plan for the [system upgrade controller](https://github.com/rancher/system-upgrade-controller) to upgrade nodes.
+- `cluster_agent_deployment_customization` - (Optional, list) Cluster agent deployment customization specifies the additional tolerations, new affinity rules, and new resource requirements on the `cattle-cluster-agent` deployment. This argument is available in Rancher v2.7.5 and above.
+- `fleet_agent_deployment_customization` - (Optional, list) Fleet agent deployment customization specifies the additional tolerations, new affinity rules, and new resource requirements on the `fleet-agent` deployment. The argument is available in Rancher v2.7.5 and above.
+- `rke_config` - (Optional/computed, list, max length: 1) The RKE configuration for the cluster.
+- `local_auth_endpoint` - (Optional, list, max length: 1) Local auth endpoint configures the Authorized Cluster Endpoint (ACE) which can be used to directly access the Kubernetes API server, without requiring communication through Rancher. For more information, please refer to [Rancher Documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/kubernetes-clusters-in-rancher-setup/register-existing-clusters#authorized-cluster-endpoint-support-for-rke2-and-k3s-clusters).
+- `cloud_credential_secret_name` - (Optional, string) Cloud credential secret name is the secret to be used when a cloud credential secret name is not specified at the machine pool level.
+- `default_pod_security_admission_configuration_template_name` - (Optional, string) The name of the pre-defined pod security admission configuration template to be applied to the cluster. Rancher admins (or those with the right permissions) can create, manage, and edit those templates. For more information, please refer to [Rancher Documentation](https://ranchermanager.docs.rancher.com/how-to-guides/new-user-guides/authentication-permissions-and-global-configuration/psa-config-templates). The argument is available in Rancher v2.7.2 and above.
+- `default_cluster_role_for_project_members` - (Optional, string) Default cluster role for project members.
+- `enable_network_policy` - (Optional, bool, default: false) Enable k8s network policy on the cluster.
+- `annotations` - (Optional/computed, map) Annotations for the Cluster.
+- `labels` - (Optional/computed, map) Labels for the Cluster.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed, string) The ID of the resource.
-* `cluster_registration_token` - (Computed, sensitive, list, max length: 1) Cluster Registration Token generated for the cluster.
-* `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster. Note: When the cluster has `local_auth_endpoint` enabled, the kube_config will not be available until the cluster is `connected`.
-* `cluster_v1_id` - (Computed, string) Cluster v1 id for cluster v2. (e.g. to be used with `rancher2_sync`).
-* `local_auth_endpoint_ca_sync_required` - (Computed, bool) Whether the authorized cluster endpoint requires internal CA synchronization. Users cannot configure this field.
-* `resource_version` - (Computed, string) Cluster's k8s resource version.
+- `id` - (Computed, string) The ID of the resource.
+- `cluster_registration_token` - (Computed, sensitive, list, max length: 1) Cluster Registration Token generated for the cluster.
+- `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster. Note: When the cluster has `local_auth_endpoint` enabled, the kube_config will not be available until the cluster is `connected`.
+- `cluster_v1_id` - (Computed, string) Cluster v1 id for cluster v2. (e.g. to be used with `rancher2_sync`).
+- `local_auth_endpoint_ca_sync_required` - (Computed, bool) Whether the authorized cluster endpoint requires internal CA synchronization. Users cannot configure this field.
+- `resource_version` - (Computed, string) Cluster's k8s resource version.
 
 **Note:** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
 
@@ -1066,8 +1063,8 @@ The following attributes are exported:
 
 #### Arguments
 
-* `name` - (Required, string) Rancher agent env var name.
-* `value` - (Required, string) Rancher agent env var value.
+- `name` - (Required, string) Rancher agent env var name.
+- `value` - (Required, string) Rancher agent env var value.
 
 ### `cluster_agent_deployment_customization` and `fleet_agent_deployment_customization`
 
@@ -1075,161 +1072,162 @@ These arguments are available in Rancher v2.7.5 and above. The `scheduling_custo
 
 #### Arguments
 
-* `append_tolerations` - (Optional, list) A list of tolerations to be appended to the default tolerations.
-* `override_affinity` - (Optional, string, JSON format) Override affinity overrides the global default affinity setting.
-* `override_resource_requirements` - (Optional, list) Override resource requirements overrides the default value for requests and/or limits. 
-+ `scheduling_customization` - (Optional, list) Supported in Rancher 2.11.0 and above for `cluster_agent_deployment_customization`, and in Rancher 2.14.0 and above for `fleet_agent_deployment_customization`. Defines the configuration of a Priority Class and or Pod Disruption Budget, and requires the `cluster-agent-scheduling-customization` feature to be enabled.
+- `append_tolerations` - (Optional, list) A list of tolerations to be appended to the default tolerations.
+- `override_affinity` - (Optional, string, JSON format) Override affinity overrides the global default affinity setting.
+- `override_resource_requirements` - (Optional, list) Override resource requirements overrides the default value for requests and/or limits.
+
+* `scheduling_customization` - (Optional, list) Supported in Rancher 2.11.0 and above for `cluster_agent_deployment_customization`, and in Rancher 2.14.0 and above for `fleet_agent_deployment_customization`. Defines the configuration of a Priority Class and or Pod Disruption Budget, and requires the `cluster-agent-scheduling-customization` feature to be enabled.
 
 ### `append_tolerations`
 
 #### Arguments
 
-* `key` - (Required, string) The toleration key.
-* `effect` - (Optional, string) The toleration effect. Default: `\"NoSchedule\"`.
-* `operator` - (Optional, string) The toleration operator.
-* `seconds` - (Optional, int) The number of seconds a pod will stay bound to a node with a matching taint.
-* `value` - (Optional, string) The toleration value.
+- `key` - (Required, string) The toleration key.
+- `effect` - (Optional, string) The toleration effect. Default: `\"NoSchedule\"`.
+- `operator` - (Optional, string) The toleration operator.
+- `seconds` - (Optional, int) The number of seconds a pod will stay bound to a node with a matching taint.
+- `value` - (Optional, string) The toleration value.
 
 ### `override_resource_requirements`
 
 #### Arguments
 
-The resource units follow Kubernetes' standard, 
+The resource units follow Kubernetes' standard,
 see more information on [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes).
 
-* `cpu_limit` - (Optional, string) The maximum CPU limit for agent. 
-* `cpu_request` - (Optional, string) The minimum CPU required for agent.
-* `memory_limit` - (Optional, string) The maximum memory limit for agent.
-* `memory_request` - (Optional, string) The minimum memory required for agent.
+- `cpu_limit` - (Optional, string) The maximum CPU limit for agent.
+- `cpu_request` - (Optional, string) The minimum CPU required for agent.
+- `memory_limit` - (Optional, string) The maximum memory limit for agent.
+- `memory_request` - (Optional, string) The minimum memory required for agent.
 
 ### `scheduling_customization`
 
 #### Arguments
 
-* `pod_disruption_budget` - (Optional, list) The definition of a Pod Disruption Budget deployed for the cluster agent
-* `priority_class` - (Optional, list) The definition of a Priority Class deployed for the cluster agent
+- `pod_disruption_budget` - (Optional, list) The definition of a Pod Disruption Budget deployed for the cluster agent
+- `priority_class` - (Optional, list) The definition of a Priority Class deployed for the cluster agent
 
 ### `pod_disruption_budget`
 
 #### Arguments
 
-* `min_available` - (Optional, string) The minimum number of agent replicas that must be running at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `max_unavailable`.
-* `max_unavailable` - (Optional, string) The maximum number of agent replicas that can be unavailable at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `min_available`. 
+- `min_available` - (Optional, string) The minimum number of agent replicas that must be running at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `max_unavailable`.
+- `max_unavailable` - (Optional, string) The maximum number of agent replicas that can be unavailable at a given time. This can be a non-negative whole number or a whole number percentage (e.g. "1", "50%"). This field cannot be used at the same time as `min_available`.
 
 ### `priority_class`
 
 #### Arguments
 
-* `value` - (Optional, int) The priority value set for the Priority Class. Must be greater than or equal to negative 1 billion, and less than or equal to 1 billion. 
-* `preemption_policy` (Optional, string) The preemption policy set for the Priority Class. Must be set to either 'Never', 'PreemptLowerPriority', or omitted.
+- `value` - (Optional, int) The priority value set for the Priority Class. Must be greater than or equal to negative 1 billion, and less than or equal to 1 billion.
+- `preemption_policy` (Optional, string) The preemption policy set for the Priority Class. Must be set to either 'Never', 'PreemptLowerPriority', or omitted.
 
 ### `rke_config`
 
 #### Arguments
 
-* `additional_manifest` - (Optional, string, must be in YAML format) The value of the additional manifest is delivered to the path `/var/lib/rancher/rke2/server/manifests/rancher/addons.yaml` or `/var/lib/rancher/k3s/server/manifests/rancher/addons.yaml` on the control plane nodes.
-* `data_directories` - (Optional, list, max length: 1) Data directory configuration for the kubernetes distro, system-agent, and provisioning resources.
-* `local_auth_endpoint` - (Deprecated) Use rancher2_cluster_v2.local_auth_endpoint instead.
-* `upgrade_strategy` - (Optional, list, max length: 1) Cluster upgrade strategy.
-* `chart_values` - (Optional, string, must be in YAML format) The value for the system charts installed by the distribution. For more information about how RKE2 or K3s manage packaged components, please refer to [RKE2 documentation](https://docs.rke2.io/helm) or [K3s documentation](https://docs.k3s.io/installation/packaged-components).
-* `machine_global_config` - (Optional, string, must be in YAML format) Machine global config specifies the distribution-specified server configuration applied to all nodes. For the full list of server configurations, please refer to [RKE2 server configuration](https://docs.rke2.io/reference/server_config) or [K3s server configuration](https://docs.k3s.io/cli/server).
-* `machine_pools` - (Optional/computed, list) Cluster V2 machine pools.
-* `machine_selector_config` - (Optional/computed, list) Machine selector config is the same as machine_global_config except that a label selector can be specified with the configuration. The configuration will only be applied to nodes that match the provided label selector. The configuration from machine_selector_config takes precedence over the one from machine_global_config. This argument is available in Rancher v2.7.2 and later.
-* `machine_selector_files` - (Optional/computed, list) Machine selector files provide a means to deliver files to nodes so that the files can be in place before initiating RKE2/K3s server or agent processes. Please refer to Rancher documentation for [RKE2 Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/rke2-cluster-configuration#machineselectorfiles) and [K3s Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/k3s-cluster-configuration#machineselectorfiles). This argument is available in Rancher v2.7.2 and later.
-* `registries` - (Optional, list, max length: 1) Docker registries from which the cluster pulls images. 
-* `etcd` - (Optional/computed, list, max length: 1) Etcd configures the behavior of the automatic etcd snapshot feature.
-* `networking` - (Optional, list, max length: 1) The networking stack used by the cluster.
-* `rotate_certificates` (Optional, list, max length: 1) Cluster V2 certificate rotation.
-* `etcd_snapshot_create` (Optional, list, max length: 1) Cluster V2 etcd snapshot create.
-* `etcd_snapshot_restore` (Optional, list, max length: 1) Cluster V2 etcd snapshot restore.
+- `additional_manifest` - (Optional, string, must be in YAML format) The value of the additional manifest is delivered to the path `/var/lib/rancher/rke2/server/manifests/rancher/addons.yaml` or `/var/lib/rancher/k3s/server/manifests/rancher/addons.yaml` on the control plane nodes.
+- `data_directories` - (Optional, list, max length: 1) Data directory configuration for the kubernetes distro, system-agent, and provisioning resources.
+- `local_auth_endpoint` - (Deprecated) Use rancher2_cluster_v2.local_auth_endpoint instead.
+- `upgrade_strategy` - (Optional, list, max length: 1) Cluster upgrade strategy.
+- `chart_values` - (Optional, string, must be in YAML format) The value for the system charts installed by the distribution. For more information about how RKE2 or K3s manage packaged components, please refer to [RKE2 documentation](https://docs.rke2.io/helm) or [K3s documentation](https://docs.k3s.io/installation/packaged-components).
+- `machine_global_config` - (Optional, string, must be in YAML format) Machine global config specifies the distribution-specified server configuration applied to all nodes. For the full list of server configurations, please refer to [RKE2 server configuration](https://docs.rke2.io/reference/server_config) or [K3s server configuration](https://docs.k3s.io/cli/server).
+- `machine_pools` - (Optional/computed, list) Cluster V2 machine pools.
+- `machine_selector_config` - (Optional/computed, list) Machine selector config is the same as machine_global_config except that a label selector can be specified with the configuration. The configuration will only be applied to nodes that match the provided label selector. The configuration from machine_selector_config takes precedence over the one from machine_global_config. This argument is available in Rancher v2.7.2 and later.
+- `machine_selector_files` - (Optional/computed, list) Machine selector files provide a means to deliver files to nodes so that the files can be in place before initiating RKE2/K3s server or agent processes. Please refer to Rancher documentation for [RKE2 Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/rke2-cluster-configuration#machineselectorfiles) and [K3s Cluster Configuration Reference](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/k3s-cluster-configuration#machineselectorfiles). This argument is available in Rancher v2.7.2 and later.
+- `registries` - (Optional, list, max length: 1) Docker registries from which the cluster pulls images.
+- `etcd` - (Optional/computed, list, max length: 1) Etcd configures the behavior of the automatic etcd snapshot feature.
+- `networking` - (Optional, list, max length: 1) The networking stack used by the cluster.
+- `rotate_certificates` (Optional, list, max length: 1) Cluster V2 certificate rotation.
+- `etcd_snapshot_create` (Optional, list, max length: 1) Cluster V2 etcd snapshot create.
+- `etcd_snapshot_restore` (Optional, list, max length: 1) Cluster V2 etcd snapshot restore.
 
 #### `data_directories`
 
 ##### Arguments
 
-* `system_agent` - (Optional, string) System agent data directory path, used for all system agent data on provisioning v2 downstream  cluster nodes. If unspecified, the `rancher-system-agent` will use the default: `/var/lib/rancher/agent`.
-* `provisioning` - (Optional, string) Provisioning data directory path, used for all provisioning data on provisioning v2 downstream cluster nodes. If unspecified, Rancher will use the default: `/var/lib/rancher/provisioning`.
-* `k8s_distro` - (Optional, string) Kubernetes distro data directory path, rendered as the `data-dir` argument for provisioning v2 RKE2/K3s clusters. If unspecified, the distro will use the default: `/var/lib/rancher/rke2` for RKE2, and `/var/lib/rancher/k3s` for K3s.
+- `system_agent` - (Optional, string) System agent data directory path, used for all system agent data on provisioning v2 downstream cluster nodes. If unspecified, the `rancher-system-agent` will use the default: `/var/lib/rancher/agent`.
+- `provisioning` - (Optional, string) Provisioning data directory path, used for all provisioning data on provisioning v2 downstream cluster nodes. If unspecified, Rancher will use the default: `/var/lib/rancher/provisioning`.
+- `k8s_distro` - (Optional, string) Kubernetes distro data directory path, rendered as the `data-dir` argument for provisioning v2 RKE2/K3s clusters. If unspecified, the distro will use the default: `/var/lib/rancher/rke2` for RKE2, and `/var/lib/rancher/k3s` for K3s.
 
 #### `local_auth_endpoint`
 
 ##### Arguments
 
-* `enabled` - (Optional, bool, default: false) Enable the authorized cluster endpoint.
-* `fqdn` - (Optional, string) FQDN for the authorized cluster endpoint. If one is entered, it should point to the downstream cluster.
-* `ca_certs` - (Optional, string) CA certs for the authorized cluster endpoint. It is only needed if there is a load balancer in front of the downstream cluster that is using an untrusted certificate. If you have a valid certificate, then nothing needs to be added to the CA Certificates field.
-* `use_internal_ca_certs` - (Optional, bool, default: false) Use the cluster's internally generated CA certificate for the authorized cluster endpoint instead of manually specifying `ca_certs`. This option should only be used when the cluster is reachable through an endpoint, such as a load balancer, and the endpoint FQDN is included in the API server certificate's SANs (configured through `tls-san` in `machine_global_config`). Requires `fqdn` to be configured and is mutually exclusive with `ca_certs`. During refresh, the provider compares the internally generated CA with the CA configured on the authorized cluster endpoint without making any changes to Rancher. If the internal CA is non-empty and differs from the endpoint CA, Terraform will detect the difference and show an in-place synchronization update in the next plan. A subsequent `terraform apply` fetches the current internal CA and applies it to the endpoint. This behavior supports scenarios where the CA becomes available only after cluster creation, as well as cases where the cluster's root CA is replaced later. If the fetched CA is empty, the provider preserves any existing endpoint CA and does not schedule a synchronization update. An empty CA does not cause an error. Real API and network errors still cause the operation to fail.
+- `enabled` - (Optional, bool, default: false) Enable the authorized cluster endpoint.
+- `fqdn` - (Optional, string) FQDN for the authorized cluster endpoint. If one is entered, it should point to the downstream cluster.
+- `ca_certs` - (Optional, string) CA certs for the authorized cluster endpoint. It is only needed if there is a load balancer in front of the downstream cluster that is using an untrusted certificate. If you have a valid certificate, then nothing needs to be added to the CA Certificates field.
+- `use_internal_ca_certs` - (Optional, bool, default: false) Use the cluster's internally generated CA certificate for the authorized cluster endpoint instead of manually specifying `ca_certs`. This option should only be used when the cluster is reachable through an endpoint, such as a load balancer, and the endpoint FQDN is included in the API server certificate's SANs (configured through `tls-san` in `machine_global_config`). Requires `fqdn` to be configured and is mutually exclusive with `ca_certs`. During refresh, the provider compares the internally generated CA with the CA configured on the authorized cluster endpoint without making any changes to Rancher. If the internal CA is non-empty and differs from the endpoint CA, Terraform will detect the difference and show an in-place synchronization update in the next plan. A subsequent `terraform apply` fetches the current internal CA and applies it to the endpoint. This behavior supports scenarios where the CA becomes available only after cluster creation, as well as cases where the cluster's root CA is replaced later. If the fetched CA is empty, the provider preserves any existing endpoint CA and does not schedule a synchronization update. An empty CA does not cause an error. Real API and network errors still cause the operation to fail.
 
 #### `upgrade_strategy`
 
 ##### Arguments
 
-* `control_plane_concurrency` - (Optional, string) How many control plane nodes should be upgraded at a time, 0 is infinite. Percentages are also accepted.
-* `control_plane_drain_options` - (Optional, list, max length: 1) Controlplane nodes drain options.
-* `worker_concurrency` - (Optional, string) How many worker nodes should be upgraded at a time. Percentages are also accepted.
-* `worker_drain_options` - (Optional, list, max length: 1) Worker nodes drain options.
+- `control_plane_concurrency` - (Optional, string) How many control plane nodes should be upgraded at a time, 0 is infinite. Percentages are also accepted.
+- `control_plane_drain_options` - (Optional, list, max length: 1) Controlplane nodes drain options.
+- `worker_concurrency` - (Optional, string) How many worker nodes should be upgraded at a time. Percentages are also accepted.
+- `worker_drain_options` - (Optional, list, max length: 1) Worker nodes drain options.
 
 ##### `control_plane_drain_options`, `worker_drain_options`
 
 ###### Arguments
 
-* `enabled` - (Optional, bool, default: true) If `enabled` is set to true, nodes will be drained before upgrade.
-* `force` - (Optional, bool, default: false) If `force` is set to true, drain nodes even if there are standalone pods that are not managed by a ReplicationController, Job, or DaemonSet. Drain will not proceed without `force` set to true if there are such pods.
-* `ignore_daemon_sets` - (Optional, bool, default: true) If `ignore_daemon_sets` is set to false, drain will not proceed if there are DaemonSet-managed pods.
-* `ignore_errors` - (Optional, bool, default: false) If `ignore_errors` is set to true,  errors that occurred between drain nodes in group are ignored.
-* `delete_empty_dir_data` - (Optional, bool, default: false) if `delete_empty_dir_data` is set to true, continue draining even if there are pods using emptyDir (local storage).
-* `disable_eviction` - (Optional, bool, default: false) If `disable_eviction` is set to true, force drain to use delete rather than evict.
-* `grace_period` - (Optional/computed, int) Time in seconds given to each pod to terminate gracefully. `0` means "delete immediately"; a negative value (`-1`) uses the pod's `terminationGracePeriodSeconds`.
-* `timeout` - (Optional/computed, int) Time to wait (in seconds) before giving up for one try.
-* `skip_wait_for_delete_timeout_seconds` - (Optional/computed, int) Skip waiting for the pods that have a DeletionTimeStamp > N seconds to be deleted. Seconds must be greater than 0 to skip. Such pods will be force deleted. 
+- `enabled` - (Optional, bool, default: true) If `enabled` is set to true, nodes will be drained before upgrade.
+- `force` - (Optional, bool, default: false) If `force` is set to true, drain nodes even if there are standalone pods that are not managed by a ReplicationController, Job, or DaemonSet. Drain will not proceed without `force` set to true if there are such pods.
+- `ignore_daemon_sets` - (Optional, bool, default: true) If `ignore_daemon_sets` is set to false, drain will not proceed if there are DaemonSet-managed pods.
+- `ignore_errors` - (Optional, bool, default: false) If `ignore_errors` is set to true, errors that occurred between drain nodes in group are ignored.
+- `delete_empty_dir_data` - (Optional, bool, default: false) if `delete_empty_dir_data` is set to true, continue draining even if there are pods using emptyDir (local storage).
+- `disable_eviction` - (Optional, bool, default: false) If `disable_eviction` is set to true, force drain to use delete rather than evict.
+- `grace_period` - (Optional/computed, int) Time in seconds given to each pod to terminate gracefully. `0` means "delete immediately"; a negative value (`-1`) uses the pod's `terminationGracePeriodSeconds`.
+- `timeout` - (Optional/computed, int) Time to wait (in seconds) before giving up for one try.
+- `skip_wait_for_delete_timeout_seconds` - (Optional/computed, int) Skip waiting for the pods that have a DeletionTimeStamp > N seconds to be deleted. Seconds must be greater than 0 to skip. Such pods will be force deleted.
 
 #### `machine_pools`
 
 ##### Arguments
 
-* `name` - (Required, string) Machine pool name.
-* `cloud_credential_secret_name` - (Optional, string) Machine pool cloud credential secret name.
-* `machine_config` - (Required, list) Machine pool node config.
-* `control_plane_role` - (Optional, bool) Machine pool control plane role?
-* `etcd_role` - (Optional, bool) Machine pool etcd role?
-* `drain_before_delete` - (Optional, bool) Machine Pool Drain Before Delete?
-* `node_drain_timeout` - (Optional, int) Seconds a machine has to drain before deletion.
-* `paused` - (Optional, bool) Machine pool paused?
-* `quantity` - (Optional, int) Machine pool quantity.
-* `rolling_update` - (Optional, list, max length: 1) Machine pool rolling update.
-* `taints` - (Optional, list) Machine pool taints.
-* `worker_role` - (Optional, bool) Machine pool worker role?
-* `node_startup_timeout_seconds` - (Optional, int) Seconds a new node has to become active before it is replaced.
-* `unhealthy_node_timeout_seconds` - (Optional, int) Seconds an unhealthy node has to become active before it is replaced.
-* `max_unhealthy` - (Optional, string) Max unhealthy nodes for automated replacement to be allowed.
-* `unhealthy_range` - (Optional, string) Range of unhealthy nodes for automated replacement to be allowed.
-* `machine_labels` - (Optional, map) Labels for Machine pool nodes.
-* `machine_os` - (Optional) OS Type in machine pool. Default `linux`(string)
-* `labels` - (Optional, map) Labels for Machine Deployment Resource.
-* `annotations` - (Optional, map) Annotations for Machine Deployment Resource. 
+- `name` - (Required, string) Machine pool name.
+- `cloud_credential_secret_name` - (Optional, string) Machine pool cloud credential secret name.
+- `machine_config` - (Required, list) Machine pool node config.
+- `control_plane_role` - (Optional, bool) Machine pool control plane role?
+- `etcd_role` - (Optional, bool) Machine pool etcd role?
+- `drain_before_delete` - (Optional, bool) Machine Pool Drain Before Delete?
+- `node_drain_timeout` - (Optional, int) Seconds a machine has to drain before deletion.
+- `paused` - (Optional, bool) Machine pool paused?
+- `quantity` - (Optional, int) Machine pool quantity.
+- `rolling_update` - (Optional, list, max length: 1) Machine pool rolling update.
+- `taints` - (Optional, list) Machine pool taints.
+- `worker_role` - (Optional, bool) Machine pool worker role?
+- `node_startup_timeout_seconds` - (Optional, int) Seconds a new node has to become active before it is replaced.
+- `unhealthy_node_timeout_seconds` - (Optional, int) Seconds an unhealthy node has to become active before it is replaced.
+- `max_unhealthy` - (Optional, string) Max unhealthy nodes for automated replacement to be allowed.
+- `unhealthy_range` - (Optional, string) Range of unhealthy nodes for automated replacement to be allowed.
+- `machine_labels` - (Optional, map) Labels for Machine pool nodes.
+- `machine_os` - (Optional) OS Type in machine pool. Default `linux`(string)
+- `labels` - (Optional, map) Labels for Machine Deployment Resource.
+- `annotations` - (Optional, map) Annotations for Machine Deployment Resource.
 
 ##### `machine_config`
 
 ###### Arguments
 
-* `kind` - (Required, string) Machine config kind.
-* `name` - (Required, string) Machine config name.
-* `api_version` - (Optional, string) Api version of the machine_config.
+- `kind` - (Required, string) Machine config kind.
+- `name` - (Required, string) Machine config name.
+- `api_version` - (Optional, string) Api version of the machine_config.
 
 ##### `rolling_update`
 
 ###### Arguments
 
-* `max_unavailable` - (Optional, string) Rolling update max unavailable.
-* `max_surge` - (Optional, string) Rolling update max surge.
+- `max_unavailable` - (Optional, string) Rolling update max unavailable.
+- `max_surge` - (Optional, string) Rolling update max surge.
 
 ##### `taints`
 
 ###### Arguments
 
-* `key` - (Required, string) The taint key.
-* `value` - (Required, string) The taint value.
-* `effect` - (Optional, string) The taint effect. Default: `\"NoExecute\"`.
+- `key` - (Required, string) The taint key.
+- `value` - (Required, string) The taint value.
+- `effect` - (Optional, string) The taint effect. Default: `\"NoExecute\"`.
 
 #### `machine_selector_config`
 
@@ -1237,23 +1235,23 @@ This argument is available in Rancher v2.7.2 and later.
 
 ##### Arguments
 
-* `machine_label_selector` - (Optional, list, max length: 1) Machine selector label is a label query over a set of resources. The result of match_labels and match_expressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
-* `config` - (Optional, string, must be in YAML format) Config is the distribution-specify configuration to be applied to nodes that match the provided label selector. For more information, please refer to Rancher's documentation for [RKE2 Cluster Configuration](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/rke2-cluster-configuration#machineselectorconfig) or [K3s Cluster Configuration](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/k3s-cluster-configuration#machineselectorconfig)
+- `machine_label_selector` - (Optional, list, max length: 1) Machine selector label is a label query over a set of resources. The result of match_labels and match_expressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
+- `config` - (Optional, string, must be in YAML format) Config is the distribution-specify configuration to be applied to nodes that match the provided label selector. For more information, please refer to Rancher's documentation for [RKE2 Cluster Configuration](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/rke2-cluster-configuration#machineselectorconfig) or [K3s Cluster Configuration](https://ranchermanager.docs.rancher.com/reference-guides/cluster-configuration/rancher-server-configuration/k3s-cluster-configuration#machineselectorconfig)
 
 ##### `machine_label_selector`
 
 ###### Arguments
 
-* `match_expressions` - (Optional, list) Match expressions is a list of label selector requirements. The requirements are ANDed.
-* `match_labels` - (Optional, map) Machine selector label is a map of {key,value} pairs, the requirements are ANDed.
+- `match_expressions` - (Optional, list) Match expressions is a list of label selector requirements. The requirements are ANDed.
+- `match_labels` - (Optional, map) Machine selector label is a map of {key,value} pairs, the requirements are ANDed.
 
 ###### `match_expressions`
 
 ###### Arguments
 
-* `key` - (Optional, string) Key is the label key that the selector applies to.
-* `operator` - (Optional, string)  Operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
-* `values` - (Optional, string list) Values is a list of string values.
+- `key` - (Optional, string) Key is the label key that the selector applies to.
+- `operator` - (Optional, string) Operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
+- `values` - (Optional, string list) Values is a list of string values.
 
 #### `machine_selector_files`
 
@@ -1261,133 +1259,132 @@ This argument is available in Rancher v2.7.2 and later.
 
 ##### Arguments
 
-* `machine_label_selector` - (Optional, list, max length: 1) Machine selector label is a label query over a set of resources. The result of match_labels and match_expressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
-* `file_sources` - (Optional, list) File sources represents the source of the files. Multiple files can be delivered to nodes that match the provided label selector.
+- `machine_label_selector` - (Optional, list, max length: 1) Machine selector label is a label query over a set of resources. The result of match_labels and match_expressions are ANDed. An empty label selector matches all objects. A null label selector matches no objects.
+- `file_sources` - (Optional, list) File sources represents the source of the files. Multiple files can be delivered to nodes that match the provided label selector.
 
 #### `file_sources`
 
 ##### Arguments
 
-* `secret` - (Optional, list, max length: 1) Secret represents a K8s secret which is the source of files. It is mutually exclusive with configmap.
-* `configmap` - (Optional, list, max length: 1) Configmap represents a K8s configmap which is the source of files. It is mutually exclusive with secret.
+- `secret` - (Optional, list, max length: 1) Secret represents a K8s secret which is the source of files. It is mutually exclusive with configmap.
+- `configmap` - (Optional, list, max length: 1) Configmap represents a K8s configmap which is the source of files. It is mutually exclusive with secret.
 
 #### `secret`
 
 ##### Arguments
 
-* `name` - (Required, string) The name of the secret. 
-* `default_permissions` - (Optional, string) The numeric representation of the default file permissions for all files defined under the items. 
-* `items` - (Optional, list) Items is a list of configurations for files, such as where to retrieve the content from the source, where to put the file on nodes, and etc. 
+- `name` - (Required, string) The name of the secret.
+- `default_permissions` - (Optional, string) The numeric representation of the default file permissions for all files defined under the items.
+- `items` - (Optional, list) Items is a list of configurations for files, such as where to retrieve the content from the source, where to put the file on nodes, and etc.
 
 #### `configmap`
 
 ##### Arguments
 
-* `name` - (Required, string) The name of the configmap.
-* `default_permissions` - (Optional, string) The numeric representation of the default file permissions for all files defined under the items.
-* `items` - (Optional, list) Items is a list of configurations for files, such as where to retrieve the content from the source, where to put the file on nodes, etc.
+- `name` - (Required, string) The name of the configmap.
+- `default_permissions` - (Optional, string) The numeric representation of the default file permissions for all files defined under the items.
+- `items` - (Optional, list) Items is a list of configurations for files, such as where to retrieve the content from the source, where to put the file on nodes, etc.
 
 #### `items`
 
 ##### Arguments
 
-* `key` - (Required, string) Key is the name of the key of the item to retrieve.
-* `path` - (Required, string) Path is the absolute path to put the file in the target node.
-* `dynamic` - (Optional, boolean, default: true) If true, the file is ignored when determining whether the node should be drained before updating the node plan.
-* `permissions` - (Optional, string) Permissions is the numeric representation of the file permission. It takes precedence over the default permissions at the outer level.
-* `hash` - (Optional, string) Hash is the base64 encoded value of the SHA256 checksum of the file's content. If specified, it is used to validate the integrity of the file content.
-
+- `key` - (Required, string) Key is the name of the key of the item to retrieve.
+- `path` - (Required, string) Path is the absolute path to put the file in the target node.
+- `dynamic` - (Optional, boolean, default: true) If true, the file is ignored when determining whether the node should be drained before updating the node plan.
+- `permissions` - (Optional, string) Permissions is the numeric representation of the file permission. It takes precedence over the default permissions at the outer level.
+- `hash` - (Optional, string) Hash is the base64 encoded value of the SHA256 checksum of the file's content. If specified, it is used to validate the integrity of the file content.
 
 #### `registries`
 
 ##### Arguments
 
-* `configs` - (Optional, list) Cluster V2 docker registries config.
-* `mirrors` - (Optional, list) Cluster V2 docker registries mirror.
+- `configs` - (Optional, list) Cluster V2 docker registries config.
+- `mirrors` - (Optional, list) Cluster V2 docker registries mirror.
 
 ##### `configs`
 
 ###### Arguments
 
-* `hostname` - (Required, string) Registry hostname.
-* `auth_config_secret_name` - (Optional, string) Name of the secret that contains two keys with base64 encoded values: the username and password for the specified custom registry. No secret is required if the system-default-registry is not authenticated.
-* `tls_secret_name` - (Optional, sensitive, string) Registry TLS secret name. TLS is a pair of Cert/Key.
-* `ca_bundle` - (Optional, string) Registry CA bundle.
-* `insecure` - (Optional, bool) Registry insecure connectivity.
+- `hostname` - (Required, string) Registry hostname.
+- `auth_config_secret_name` - (Optional, string) Name of the secret that contains two keys with base64 encoded values: the username and password for the specified custom registry. No secret is required if the system-default-registry is not authenticated.
+- `tls_secret_name` - (Optional, sensitive, string) Registry TLS secret name. TLS is a pair of Cert/Key.
+- `ca_bundle` - (Optional, string) Registry CA bundle.
+- `insecure` - (Optional, bool) Registry insecure connectivity.
 
 ##### `mirrors`
 
 ###### Arguments
 
-* `hostname` - (Required, string) Registry hostname.
-* `endpoints` - (Optional, list) Registry mirror endpoints.
-* `rewrites` - (Optional, map) Registry mirror rewrites.
+- `hostname` - (Required, string) Registry hostname.
+- `endpoints` - (Optional, list) Registry mirror endpoints.
+- `rewrites` - (Optional, map) Registry mirror rewrites.
 
 #### `etcd`
 
 ##### Arguments
 
-* `disable_snapshots` - (Optional, bool, default: false) Disable ETCD snapshots.
-* `snapshot_schedule_cron` - (Optional, string) ETCD snapshot schedule cron (e.g `\"0 */5 * * *\"`).
-* `snapshot_retention` - (Optional, int) ETCD snapshot retention.
-* `s3_config` - (Optional, list, max length: 1) Creation option for etcd service.
+- `disable_snapshots` - (Optional, bool, default: false) Disable ETCD snapshots.
+- `snapshot_schedule_cron` - (Optional, string) ETCD snapshot schedule cron (e.g `\"0 */5 * * *\"`).
+- `snapshot_retention` - (Optional, int) ETCD snapshot retention.
+- `s3_config` - (Optional, list, max length: 1) Creation option for etcd service.
 
 ##### `s3_config`
 
 ###### Arguments
 
-* `bucket` - (Required, string) Bucket name for S3 service.
-* `endpoint` - (Required, string) ETCD snapshot S3 endpoint.
-* `cloud_credential_name` - (Optional, string) ETCD snapshot S3 cloud credential name.
-* `endpoint_ca` - (Optional, string) ETCD snapshot S3 endpoint CA.
-* `folder` - (Optional, string) ETCD snapshot S3 folder.
-* `region` - (Optional, string) ETCD snapshot S3 region.
-* `retention` - (Optional, int) Number of snapshots in S3 to retain. If not set, the `snapshot_retention` value is used.
-* `skip_ssl_verify` - (Optional, bool, default: false) Disable ETCD skip ssl verify.
+- `bucket` - (Required, string) Bucket name for S3 service.
+- `endpoint` - (Required, string) ETCD snapshot S3 endpoint.
+- `cloud_credential_name` - (Optional, string) ETCD snapshot S3 cloud credential name.
+- `endpoint_ca` - (Optional, string) ETCD snapshot S3 endpoint CA.
+- `folder` - (Optional, string) ETCD snapshot S3 folder.
+- `region` - (Optional, string) ETCD snapshot S3 region.
+- `retention` - (Optional, int) Number of snapshots in S3 to retain. If not set, the `snapshot_retention` value is used.
+- `skip_ssl_verify` - (Optional, bool, default: false) Disable ETCD skip ssl verify.
 
 ##### `rotate_certificates`
 
 ###### Arguments
 
-* `generation` - (Required, int) Desired certificate rotation generation.
-* `services` - (Optional, list of string) Service certificates to rotate with this generation.
+- `generation` - (Required, int) Desired certificate rotation generation.
+- `services` - (Optional, list of string) Service certificates to rotate with this generation.
 
 ##### `etcd_snapshot_create`
 
 ###### Arguments
 
-* `generation` - (Required, int) ETCD generation to initiate a snapshot.
+- `generation` - (Required, int) ETCD generation to initiate a snapshot.
 
 ##### `etcd_snapshot_restore`
 
 ###### Arguments
 
-* `name` - (Required, string) ETCD snapshot name to restore.
-* `generation` (Required, int) ETCD snapshot desired generation.
-* `restore_rke_config` (Optional, string) ETCD restore RKE config (set to none, all, or kubernetesVersion).
+- `name` - (Required, string) ETCD snapshot name to restore.
+- `generation` (Required, int) ETCD snapshot desired generation.
+- `restore_rke_config` (Optional, string) ETCD restore RKE config (set to none, all, or kubernetesVersion).
 
 #### `networking`
 
 ##### Arguments
 
-* `stack_preference` - (Optional, string) The networking stack used by the cluster. The selected value configures the address used for health and readiness probes of calico, etcd, kube-apiserver, kube-scheduler, kube-controller-manager, and kubelet. It also defines the server URL in the authentication-token-webhook-config-file for the Authorized Cluster Endpoint and the advertise-client-urls for etcd during snapshot restore.  When set to `dual`, the cluster uses `localhost`; when set to `ipv6`, it uses `[::1]`; when set to `ipv4`, it uses `127.0.0.1`.
+- `stack_preference` - (Optional, string) The networking stack used by the cluster. The selected value configures the address used for health and readiness probes of calico, etcd, kube-apiserver, kube-scheduler, kube-controller-manager, and kubelet. It also defines the server URL in the authentication-token-webhook-config-file for the Authorized Cluster Endpoint and the advertise-client-urls for etcd during snapshot restore. When set to `dual`, the cluster uses `localhost`; when set to `ipv6`, it uses `[::1]`; when set to `ipv4`, it uses `127.0.0.1`.
 
 ### `cluster_registration_token`
 
 #### Attributes
 
-* `cluster_id` - (Computed, string) Cluster ID.
-* `name` - (Computed, string) Name of cluster registration token.
-* `command` - (Computed, string) Command to execute in an imported k8s cluster.
-* `insecure_command` - (Computed, string) Insecure command to execute in an imported k8s cluster.
-* `insecure_node_command` - (Computed, string) Insecure node command to execute in an imported k8s cluster.
-* `insecure_windows_node_command` - (Computed, string) Insecure windows command to execute in an imported k8s cluster.
-* `manifest_url` - (Computed, string) K8s manifest url to execute with `kubectl` to import an existing k8s cluster.
-* `node_command` - (Computed, string) Node command to execute in Linux nodes for custom k8s cluster.
-* `token` - (Computed, string) Token for cluster registration token object.
-* `windows_node_command` - (Computed, string) Node command to execute in Windows nodes for custom k8s cluster.
-* `annotations` - (Computed, map) Annotations for cluster registration token object.
-* `labels` - (Computed, map) Labels for cluster registration token object.
+- `cluster_id` - (Computed, string) Cluster ID.
+- `name` - (Computed, string) Name of cluster registration token.
+- `command` - (Computed, string) Command to execute in an imported k8s cluster.
+- `insecure_command` - (Computed, string) Insecure command to execute in an imported k8s cluster.
+- `insecure_node_command` - (Computed, string) Insecure node command to execute in an imported k8s cluster.
+- `insecure_windows_node_command` - (Computed, string) Insecure windows command to execute in an imported k8s cluster.
+- `manifest_url` - (Computed, string) K8s manifest url to execute with `kubectl` to import an existing k8s cluster.
+- `node_command` - (Computed, string) Node command to execute in Linux nodes for custom k8s cluster.
+- `token` - (Computed, string) Token for cluster registration token object.
+- `windows_node_command` - (Computed, string) Node command to execute in Windows nodes for custom k8s cluster.
+- `annotations` - (Computed, map) Annotations for cluster registration token object.
+- `labels` - (Computed, map) Labels for cluster registration token object.
 
 ## Timeouts
 

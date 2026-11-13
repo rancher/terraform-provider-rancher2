@@ -17,16 +17,15 @@ data "rancher2_etcd_backup" "foo" {
 
 ## Argument Reference
 
-* `cluster_id` - (Required) Cluster ID to config Etcd Backup (string)
-* `name` - (Required) The name of the Etcd Backup (string)
-
+- `cluster_id` - (Required) Cluster ID to config Etcd Backup (string)
+- `name` - (Required) The name of the Etcd Backup (string)
 
 ## Attributes Reference
 
-* `id` - (Computed) The ID of the resource (string)
-* `backup_config` - (Computed) Backup config for etcd backup (list maxitems:1)
-* `filename` - (Computed) Filename of the Etcd Backup (string)
-* `manual` - (Computed) Manual execution of the Etcd Backup. Default `false` (bool)
-* `namespace_id` - (Computed) Description for the Etcd Backup (string)
-* `annotations` - (Computed) Annotations for Etcd Backup object (map)
-* `labels` - (Computed) Labels for Etcd Backup object (map)
+- `id` - (Computed) The ID of the resource (string)
+- `backup_config` - (Computed) Backup config for etcd backup (list maxitems:1)
+- `filename` - (Computed) Filename of the Etcd Backup (string)
+- `manual` - (Computed) Manual execution of the Etcd Backup. Default `false` (bool)
+- `namespace_id` - (Computed) Description for the Etcd Backup (string)
+- `annotations` - (Computed) Annotations for Etcd Backup object (map)
+- `labels` - (Computed) Labels for Etcd Backup object (map)

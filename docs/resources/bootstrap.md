@@ -7,6 +7,7 @@ page_title: "rancher2_bootstrap Resource"
 Provides a Rancher v2 bootstrap resource. This can be used to bootstrap Rancher v2 environments and output information. It just works if `bootstrap` provider config is added to the .tf file. More info at [rancher2 provider](../index.html)
 
 This resource bootstraps a Rancher system by performing the following tasks:
+
 - Updates the default admin password, provided by setting `password` or generating a random one.
 - Sets `server-url` setting, based on `api_url`.
 - Creates a token for admin user with concrete TTL.
@@ -69,21 +70,21 @@ resource "rancher2_bootstrap" "admin" {
 
 The following arguments are supported:
 
-* `initial_password` - (Optional/Computed/Sensitive) Initial password for Admin user. Default: `admin` (string)
-* `password` - (Optional/Computed/Sensitive) Password for Admin user or random generated if empty (string)
-* `token_ttl` - (Optional) TTL in seconds for generated admin token. Default: `0`  (int)
-* `token_update` - (Optional) Regenerate admin token. Default: `false` (bool)
-* `ui_default_landing` - (Optional) Default UI landing for k8s clusters. Available options: `ember` (cluster manager ui)  and `vue` (cluster explorer ui). Default: `ember` (string)
+- `initial_password` - (Optional/Computed/Sensitive) Initial password for Admin user. Default: `admin` (string)
+- `password` - (Optional/Computed/Sensitive) Password for Admin user or random generated if empty (string)
+- `token_ttl` - (Optional) TTL in seconds for generated admin token. Default: `0` (int)
+- `token_update` - (Optional) Regenerate admin token. Default: `false` (bool)
+- `ui_default_landing` - (Optional) Default UI landing for k8s clusters. Available options: `ember` (cluster manager ui) and `vue` (cluster explorer ui). Default: `ember` (string)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `current_password` - (Computed/Sensitive) Current password for Admin user (string)
-* `token` - (Computed) Generated API token for Admin User (string)
-* `token_id` - (Computed) Generated API token id for Admin User (string)
-* `url` - (Computed) URL set as server-url (string)
-* `user` - (Computed) Admin username (string)
-* `temp_token` - (Computed) Generated API temporary token as helper. Should be empty (string)
-* `temp_token_id` - (Computed) Generated API temporary token id as helper. Should be empty (string)
+- `id` - (Computed) The ID of the resource (string)
+- `current_password` - (Computed/Sensitive) Current password for Admin user (string)
+- `token` - (Computed) Generated API token for Admin User (string)
+- `token_id` - (Computed) Generated API token id for Admin User (string)
+- `url` - (Computed) URL set as server-url (string)
+- `user` - (Computed) Admin username (string)
+- `temp_token` - (Computed) Generated API temporary token as helper. Should be empty (string)
+- `temp_token_id` - (Computed) Generated API temporary token id as helper. Should be empty (string)

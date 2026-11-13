@@ -8,12 +8,12 @@ Provides a Rancher v2 Cluster Sync dummy resource. This can be used to create a 
 
 This dummy resource doesn't create anything at Rancher side. It's used to sync terraform resources that depends of Rancher v2 Cluster resource in `active` state. This resource will wait until `cluster_id` is `active` on `terraform apply`. It also helps to sync `terraform destroy` dependencies, specially useful if cluster is using node pools.
 
-This resource will also compute attributes with useful cluster related data (see Attributes Reference section). 
+This resource will also compute attributes with useful cluster related data (see Attributes Reference section).
 
 ## Example Usage
 
 ```hcl
-# Create a new rancher2 rke Cluster 
+# Create a new rancher2 rke Cluster
 resource "rancher2_cluster" "foo-custom" {
   name = "foo-custom"
   description = "Foo rancher2 custom cluster"
@@ -84,10 +84,10 @@ resource "rancher2_project" "foo" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required/ForceNew) The cluster ID that is syncing (string)
-* `node_pool_ids` - (Optional) The node pool IDs used by the cluster id (list)
-* `wait_catalogs` - (Optional) Wait until all catalogs are downloaded and active. Default: `false` (bool)
-* `state_confirm` - (Optional) Wait until active status is confirmed a number of times (wait interval of 5s). Default: `1` means no confirmation (int)
+- `cluster_id` - (Required/ForceNew) The cluster ID that is syncing (string)
+- `node_pool_ids` - (Optional) The node pool IDs used by the cluster id (list)
+- `wait_catalogs` - (Optional) Wait until all catalogs are downloaded and active. Default: `false` (bool)
+- `state_confirm` - (Optional) Wait until active status is confirmed a number of times (wait interval of 5s). Default: `1` means no confirmation (int)
 
 **Note:** `state_confirm` would be useful, if you have troubles for creating/updating custom clusters that eventually are reaching `active` state before they are fully installed. For example: setting `state_confirm = 2` will assure that the cluster has been in `active` state for at least 5 seconds, `state_confirm = 3` assure at least 10 seconds, etc
 
@@ -95,11 +95,11 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource. Same as `cluster_id` (string)
-* `default_project_id` - (Computed) Default project ID for the cluster sync (string)
-* `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster sync (string)
-* `nodes` - (Computed) The cluster nodes (list).
-* `system_project_id` - (Computed) System project ID for the cluster sync (string)
+- `id` - (Computed) The ID of the resource. Same as `cluster_id` (string)
+- `default_project_id` - (Computed) Default project ID for the cluster sync (string)
+- `kube_config` - (Computed/Sensitive) Kube Config generated for the cluster sync (string)
+- `nodes` - (Computed) The cluster nodes (list).
+- `system_project_id` - (Computed) System project ID for the cluster sync (string)
 
 **Note:** For Rancher 2.6.0 and above: if setting `kubeconfig-generate-token=false` then the generated `kube_config` will not contain any user token. `kubectl` will generate the user token executing the [rancher cli](https://github.com/rancher/cli/releases/tag/v2.6.0), so it should be installed previously.
 
@@ -109,30 +109,30 @@ The following attributes are exported:
 
 #### Arguments
 
-* `annotations` - (Computed) Annotations of the node (map).
-* `capacity` - (Computed) The total resources of a node (map).
-* `cluster_id` - (Computed) The Cluster ID of the node (string).
-* `external_ip_address` - (Computed)  The external IP address of the node (string).
-* `hostname` - (Computed) The hostname of the node (string).
-* `id` - (Computed) The ID of the node (string)
-* `ip_address` - (Computed) The private IP address of the node (string).
-* `labels` - (Computed) Labels of the node (map).
-* `name` - (Computed) The name of the node (string).
-* `node_pool_id` - (Computed) The Node Pool ID of the node (string).
-* `node_template_id` - (Computed) The Node Template ID of the node (string).
-* `provider_id` - (Computed) The Provider ID of the node (string).
-* `requested_hostname` - (Computed) The requested hostname (string).
-* `roles` - (Computed) Roles of the node. `controlplane`, `etcd` and `worker`. (list)
-* `ssh_user` - (Computed/Sensitive) The user to connect to the node (string).
-* `system_info` - (Computed) General information about the node, such as kernel version, kubelet and kube-proxy version, Docker version (if used), and OS name.
+- `annotations` - (Computed) Annotations of the node (map).
+- `capacity` - (Computed) The total resources of a node (map).
+- `cluster_id` - (Computed) The Cluster ID of the node (string).
+- `external_ip_address` - (Computed) The external IP address of the node (string).
+- `hostname` - (Computed) The hostname of the node (string).
+- `id` - (Computed) The ID of the node (string)
+- `ip_address` - (Computed) The private IP address of the node (string).
+- `labels` - (Computed) Labels of the node (map).
+- `name` - (Computed) The name of the node (string).
+- `node_pool_id` - (Computed) The Node Pool ID of the node (string).
+- `node_template_id` - (Computed) The Node Template ID of the node (string).
+- `provider_id` - (Computed) The Provider ID of the node (string).
+- `requested_hostname` - (Computed) The requested hostname (string).
+- `roles` - (Computed) Roles of the node. `controlplane`, `etcd` and `worker`. (list)
+- `ssh_user` - (Computed/Sensitive) The user to connect to the node (string).
+- `system_info` - (Computed) General information about the node, such as kernel version, kubelet and kube-proxy version, Docker version (if used), and OS name.
 
 ### `system_info`
 
-* `container_runtime_version` - (Computed) ContainerRuntime Version reported by the node through runtime remote API (e.g. docker://1.5.0).
-* `kernel_version` - (Computed) Kernel Version reported by the node from 'uname -r' (e.g. 3.16.0-0.bpo.4-amd64).
-* `kube_proxy_version` - (Computed) KubeProxy Version reported by the node.
-* `kubelet_version` - (Computed) Kubelet Version reported by the node.
-* `operating_system` - (Computed) The Operating System reported by the node.
+- `container_runtime_version` - (Computed) ContainerRuntime Version reported by the node through runtime remote API (e.g. docker://1.5.0).
+- `kernel_version` - (Computed) Kernel Version reported by the node from 'uname -r' (e.g. 3.16.0-0.bpo.4-amd64).
+- `kube_proxy_version` - (Computed) KubeProxy Version reported by the node.
+- `kubelet_version` - (Computed) Kubelet Version reported by the node.
+- `operating_system` - (Computed) The Operating System reported by the node.
 
 ## Timeouts
 

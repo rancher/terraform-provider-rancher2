@@ -9,7 +9,7 @@ Provides a Rancher v2 Node Pool resource. This can be used to create Node Pool, 
 ## Example Usage
 
 ```hcl
-# Create a new rancher2 RKE Cluster 
+# Create a new rancher2 RKE Cluster
 resource "rancher2_cluster" "foo-custom" {
   name = "foo-custom"
   description = "Foo rancher2 custom cluster"
@@ -60,19 +60,19 @@ resource "rancher2_node_pool" "foo" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required/ForceNew) The RKE cluster id to use Node Pool (string)
-* `name` - (Required/ForceNew) The name of the Node Pool (string)
-* `hostname_prefix` - (Required) The prefix for created nodes of the Node Pool (string)
-* `node_template_id` - (Required) The Node Template ID to use for node creation (string)
-* `delete_not_ready_after_secs` - (Optional) Delete not ready node after secs. For Rancher v2.3.3 and above. Default `0` (int)
-* `drain_before_delete` - (Optional) Drain nodes before delete. Default: `false` (bool)
-* `node_taints` - (Required) Node taints. For Rancher v2.3.3 and above (List)
-* `control_plane` - (Optional) RKE control plane role for created nodes (bool)
-* `etcd` - (Optional) RKE etcd role for created nodes (bool)
-* `quantity` - (Optional) The number of nodes to create on Node Pool. Default `1`. Only values >= 1 allowed (int)
-* `worker` - (Optional) RKE role role for created nodes (bool)
-* `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
-* `labels` - (Optional/Computed) Labels for Node Pool object (map)
+- `cluster_id` - (Required/ForceNew) The RKE cluster id to use Node Pool (string)
+- `name` - (Required/ForceNew) The name of the Node Pool (string)
+- `hostname_prefix` - (Required) The prefix for created nodes of the Node Pool (string)
+- `node_template_id` - (Required) The Node Template ID to use for node creation (string)
+- `delete_not_ready_after_secs` - (Optional) Delete not ready node after secs. For Rancher v2.3.3 and above. Default `0` (int)
+- `drain_before_delete` - (Optional) Drain nodes before delete. Default: `false` (bool)
+- `node_taints` - (Required) Node taints. For Rancher v2.3.3 and above (List)
+- `control_plane` - (Optional) RKE control plane role for created nodes (bool)
+- `etcd` - (Optional) RKE etcd role for created nodes (bool)
+- `quantity` - (Optional) The number of nodes to create on Node Pool. Default `1`. Only values >= 1 allowed (int)
+- `worker` - (Optional) RKE role role for created nodes (bool)
+- `annotations` - (Optional/Computed) Annotations for Node Pool object (map)
+- `labels` - (Optional/Computed) Labels for Node Pool object (map)
 
 ## Nested blocks
 
@@ -80,16 +80,16 @@ The following arguments are supported:
 
 #### Arguments
 
-* `key` - (Required) Taint key (string)
-* `value` - (Required) Taint value (string)
-* `effect` - (Optional) Taint effect. Supported values : `"NoExecute" | "NoSchedule" | "PreferNoSchedule"` (string)
-* `time_added` - (Optional) Taint time added (string)
+- `key` - (Required) Taint key (string)
+- `value` - (Required) Taint value (string)
+- `effect` - (Optional) Taint effect. Supported values : `"NoExecute" | "NoSchedule" | "PreferNoSchedule"` (string)
+- `time_added` - (Optional) Taint time added (string)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
+- `id` - (Computed) The ID of the resource (string)
 
 ## Timeouts
 
@@ -107,4 +107,3 @@ Node Pool can be imported using the Rancher Node Pool ID
 ```
 $ terraform import rancher2_node_pool.foo &lt;node_pool_id&gt;
 ```
-

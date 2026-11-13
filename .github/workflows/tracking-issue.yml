@@ -1,24 +1,38 @@
 name: TrackingIssue
 # This workflow generates a "tracking" issue when a PR is found targeting main and isn't already tracked.
 on:
-  schedule:
-    - cron: '0 */4 * * *' # Every 4 hours
-  workflow_dispatch: {} # Allows manual triggering
+  workflow_run:
+    workflows: ["Validate PR Description"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Specific PR number to adopt and track (optional)"
+        required: false
 
 env:
   TERRAFORM_MAINTAINERS: ${{ vars.TERRAFORM_MAINTAINERS }}
 
 permissions: {}
 
+concurrency:
+  group: tracking-issue-adoption
+  cancel-in-progress: false
+
 jobs:
   generate-issue:
-    name: 'Create Tracking Issue'
+    name: "Create Tracking Issue"
+    if: |
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       issues: write # To create issues and add labels
       pull-requests: read # To read PRs
       contents: read # To checkout the repo and get branch names
+      id-token: write # Required for Vault OIDC authentication
+      actions: write # To dispatch backport-issues workflow
     steps:
       - name: Checkout Code
         id: checkout-code
@@ -26,16 +40,40 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-          ref: 'main'
+          ref: "main"
+      - name: Read Vault Secrets
+        id: read-vault-secrets
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
+      - name: Download PR Signal
+        id: download-pr-signal
+        # https://github.com/actions/download-artifact/releases
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: github.event_name == 'workflow_run'
+        continue-on-error: true
+        with:
+          name: validate-pr-signal
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: signal
       - name: Create Tracking Issue
         id: create-tracking-issue
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TERRAFORM_MAINTAINERS: ${{ env.TERRAFORM_MAINTAINERS }}
+          GITHUB_MERGE_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
           SCRIPT_MODE: tracking-issue
+          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.workflow_run.pull_requests[0].number || '' }}
+          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha || '' }}
+          WORKFLOW_RUN_HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name || '' }}
+          WORKFLOW_RUN_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch || '' }}
+          PR_SIGNAL_PATH: signal/pr-signal.json
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
             const { default: script } = await import(scriptPath);
-            await script({github, context, core, process});
+            await script({github, context, core, process, getOctokit});

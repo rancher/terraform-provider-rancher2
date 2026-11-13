@@ -1,16 +1,20 @@
 #!/bin/bash
 set -x
 
-JSONPATH="'{range .items[*]}
-  {.metadata.name}{\"\\t\"} \
-  {.metadata.namespace}{\"\\t\"} \
-  {.status.phase}{\"\\n\"} \
-{end}'"
+JSONPATH='{range .items[*]}{.metadata.name}{"\t"}{.metadata.namespace}{"\t"}{.status.phase}{"\n"}{end}'
+
+ATTEMPTS="${ATTEMPTS:-0}"
+MAX="${1:-${MAX:-30}}"
+INTERVAL="${2:-${INTERVAL:-10}}"
+EXITCODE=1
 
 notReady() {
   PODS=$(kubectl get pods -A -o jsonpath="$JSONPATH")
-  # shellcheck disable=SC2060,SC2140
-  NOT_READY=$(echo "$PODS" | grep -v "Running" | grep -v "Succeeded"  | tr -d ["\t","\n"," ","'"] || true)
+  if [ -z "$PODS" ]; then
+    # No pods returned yet or API unreachable; continue waiting
+    return 0
+  fi
+  NOT_READY=$(echo "$PODS" | awk '$NF != "Running" && $NF != "Succeeded"' | tr -d " \t\n'" || true)
   if [ -n "$NOT_READY" ]; then
     # Some pods aren't running
     return 0
@@ -21,16 +25,14 @@ notReady() {
 }
 
 readyWait() {
-  TIMEOUT=10 # 10 minutes
-  TIMEOUT_MINUTES=$((TIMEOUT * 60))
-  INTERVAL=30 # 30 seconds
-  MAX=$((TIMEOUT_MINUTES / INTERVAL))
-  ATTEMPTS=0
+  ATTEMPTS="${ATTEMPTS:-0}"
+  MAX="${1:-${MAX:-30}}"
+  INTERVAL="${2:-${INTERVAL:-10}}"
 
   while notReady; do
     if [ "$ATTEMPTS" -lt "$MAX" ]; then
       ATTEMPTS=$((ATTEMPTS + 1))
-      sleep "$INTERVAL";
+      sleep "$INTERVAL"
     else
       return 1
     fi
@@ -41,19 +43,14 @@ readyWait() {
 SUCCESSES=0
 SUCCESSES_NEEDED=3 # require three successes to make sure everything is settled
 
-while readyWait && [ "$SUCCESSES" -lt "$SUCCESSES_NEEDED" ]; do
+while [ "$SUCCESSES" -lt "$SUCCESSES_NEEDED" ] && readyWait "$@"; do
+  ATTEMPTS=0
   SUCCESSES=$((SUCCESSES + 1))
-  echo "succeeeded $SUCCESSES times..."
-  sleep 30
+  echo "succeeded $SUCCESSES times..."
+  if [ "$SUCCESSES" -lt "$SUCCESSES_NEEDED" ]; then
+    sleep 30
+  fi
 done
-
-if [ "$SUCCESSES" -eq "$SUCCESSES_NEEDED" ]; then
-  echo "$SUCCESSES_NEEDED successes reached, passed.."
-  EXITCODE=0
-else
-  echo "$SUCCESSES_NEEDED successes not reached, failed.."
-  EXITCODE=1
-fi
 
 echo "nodes..."
 kubectl get nodes || true
@@ -64,4 +61,12 @@ kubectl get all -A || true
 echo "pods..."
 kubectl get pods -A || true
 
-exit $EXITCODE
+if [ "$SUCCESSES" -lt "$SUCCESSES_NEEDED" ]; then
+  echo "Error: Timeout reached waiting for pods to settle" >&2
+  exit 1
+fi
+
+echo "$SUCCESSES_NEEDED successes reached, passed.."
+EXITCODE=0
+
+exit "${EXITCODE:-0}"

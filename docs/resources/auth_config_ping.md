@@ -28,25 +28,25 @@ resource "rancher2_auth_config_ping" "ping" {
 
 The following arguments are supported:
 
-* `display_name_field` - (Required) Ping display name field (string)
-* `groups_field` - (Required) Ping group field (string)
-* `idp_metadata_content` - (Required/Sensitive) Ping IDP metadata content (string)
-* `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
-* `sp_cert` - (Required/Sensitive) Ping SP cert (string)
-* `sp_key` - (Required/Sensitive) Ping SP key (string)
-* `uid_field` - (Required) Ping UID field (string)
-* `user_name_field` - (Required) Ping user name field (string)
-* `entity_id_field` - (Optional) Ping entity ID field (string)
-* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
-* `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `ping_user://<USER_ID>`  `ping_group://<GROUP_ID>` (list)
-* `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
-* `annotations` - (Optional/Computed) Annotations of the resource (map)
-* `labels` - (Optional/Computed) Labels of the resource (map)
+- `display_name_field` - (Required) Ping display name field (string)
+- `groups_field` - (Required) Ping group field (string)
+- `idp_metadata_content` - (Required/Sensitive) Ping IDP metadata content (string)
+- `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
+- `sp_cert` - (Required/Sensitive) Ping SP cert (string)
+- `sp_key` - (Required/Sensitive) Ping SP key (string)
+- `uid_field` - (Required) Ping UID field (string)
+- `user_name_field` - (Required) Ping user name field (string)
+- `entity_id_field` - (Optional) Ping entity ID field (string)
+- `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
+- `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `ping_user://<USER_ID>` `ping_group://<GROUP_ID>` (list)
+- `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
+- `annotations` - (Optional/Computed) Annotations of the resource (map)
+- `labels` - (Optional/Computed) Labels of the resource (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `name` - (Computed) The name of the resource (string)
-* `type` - (Computed) The type of the resource (string)
+- `id` - (Computed) The ID of the resource (string)
+- `name` - (Computed) The name of the resource (string)
+- `type` - (Computed) The type of the resource (string)

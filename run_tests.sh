@@ -9,6 +9,7 @@ cleanup_id=""
 wait_time=""
 slow_mode=false
 dirty_mode=false
+max_attempts="${MAX_ATTEMPTS:-3}"
 
 # Track whether cleanup has run
 cleanup_has_run=false
@@ -59,7 +60,7 @@ run_cleanup() {
 trap run_cleanup EXIT INT TERM
 
 # Parse command line options
-while getopts ":rsdt:p:f:g:c:w:" opt; do
+while getopts ":rsdt:p:f:g:c:w:a:" opt; do
   case $opt in
     r) rerun_failed=true ;;
     t) specific_test="$OPTARG" ;;
@@ -68,9 +69,10 @@ while getopts ":rsdt:p:f:g:c:w:" opt; do
     g) fixture_group="$OPTARG" ;;
     c) cleanup_id="$OPTARG" ;;
     w) wait_time="$OPTARG" ;;
+    a) max_attempts="$OPTARG" ;;
     d) dirty_mode=true ;;
     s) slow_mode=true ;;
-    \?) cat <<EOT >&2 && exit 1
+    \?) cat <<EOT >&2 && exit 1 ;;
 Invalid option: -$OPTARG
 
 Usage: $0 [OPTIONS]
@@ -85,6 +87,7 @@ Options:
   -g GROUP        Run specific fixture group (eg. "necessary" or "extended")
   -c ID           Cleanup-only mode with the given identifier
   -w SECONDS      Wait time in seconds before cleanup on test failure (for investigation)
+  -a ATTEMPTS     Maximum test execution attempts (defaults to 3, or MAX_ATTEMPTS)
 
 Notes:
   - Only one of -c, -t, -p, -f, or -g can be used at a time
@@ -94,6 +97,16 @@ Notes:
 EOT
   esac
 done
+
+if ! [[ "$max_attempts" =~ ^[0-9]+$ ]] || [ "$max_attempts" -lt 1 ]; then
+  echo "Error: -a must be a positive integer, got: $max_attempts" >&2
+  exit 1
+fi
+
+if [ -n "$wait_time" ] && ! [[ "$wait_time" =~ ^[0-9]+$ ]]; then
+  echo "Error: -w must be a non-negative integer, got: $wait_time" >&2
+  exit 1
+fi
 
 # Validate mutually exclusive options
 exclusive_count=0
@@ -146,6 +159,8 @@ fi
 if [ -n "$fixture_group" ]; then
   echo "Fixture group: $fixture_group"
 fi
+
+echo "Max attempts: $max_attempts"
 
 if [ -n "$cleanup_id" ]; then
   echo "Cleanup-only mode: $cleanup_id"
@@ -216,19 +231,19 @@ run_tests() {
   cd "$REPO_ROOT" || exit 1
 
   # Setup test log and processor
-  echo "" > "/tmp/${IDENTIFIER}_test.log"
+  echo "" >"/tmp/${IDENTIFIER}_test.log"
 
-  cat <<'EOF' > "/tmp/${IDENTIFIER}_test-processor"
+  cat <<EOF >"/tmp/${IDENTIFIER}_test-processor"
 echo "Passed: "
-export PASS="$(jq -r '. | select(.Action == "pass") | select(.Test != null).Test' "/tmp/${IDENTIFIER}_test.log")"
-echo "$PASS" | tr ' ' '\n'
+export PASS="\$(jq -R -r 'fromjson? | select(.Action == "pass") | select(.Test != null).Test' "/tmp/${IDENTIFIER}_test.log")"
+echo "\$PASS" | tr ' ' '\n'
 echo " "
 echo "Failed: "
-export FAIL="$(jq -r '. | select(.Action == "fail") | select(.Test != null).Test' "/tmp/${IDENTIFIER}_test.log")"
-echo "$FAIL" | tr ' ' '\n'
+export FAIL="\$(jq -R -r 'fromjson? | select(.Action == "fail") | select(.Test != null).Test' "/tmp/${IDENTIFIER}_test.log")"
+echo "\$FAIL" | tr ' ' '\n'
 echo " "
-if [ -n "$FAIL" ]; then
-  echo "$FAIL" > "/tmp/${IDENTIFIER}_failed_tests.txt"
+if [ -n "\$FAIL" ]; then
+  echo "\$FAIL" | grep -v '^[[:space:]]*$' | sort -u > "/tmp/${IDENTIFIER}_failed_tests.txt"
   exit 1
 fi
 exit 0
@@ -388,24 +403,56 @@ else
   echo "============================"
   echo ""
 
-  # Clear failed tests before initial run
-  rm -f "/tmp/${IDENTIFIER}_failed_tests.txt"
+  # Run tests with retry loop and intermediate cleanup
+  attempt=1
+  test_exit_code=0
 
-  # Run tests initially
-  echo "=== Running Tests ==="
-  run_tests false "$slow_mode"
-  test_exit_code=$?
+  while [ "$attempt" -le "$max_attempts" ]; do
+    echo "=== Running Tests (Attempt $attempt of $max_attempts) ==="
+    rm -f "/tmp/${IDENTIFIER}_failed_tests.txt"
 
-  if [ $test_exit_code -ne 0 ]; then
-    echo "Tests failed with exit code: $test_exit_code"
-  else
-    echo "Tests passed"
+    if run_tests false "$slow_mode"; then
+      test_exit_code=0
+    else
+      test_exit_code=$?
+    fi
+
+    if [ $test_exit_code -eq 0 ] && [ ! -f "/tmp/${IDENTIFIER}_failed_tests.txt" ]; then
+      echo "✓ Tests passed on attempt $attempt"
+      break
+    fi
+
+    echo "Tests failed on attempt $attempt with exit code: $test_exit_code"
+
+    if [ "$attempt" -lt "$max_attempts" ]; then
+      echo ""
+      if [ -n "$wait_time" ] && [ "$wait_time" -gt 0 ]; then
+        echo "Waiting ${wait_time}s before intermediate cleanup..."
+        sleep "$wait_time"
+      fi
+      echo "Running intermediate cleanup for ID '$IDENTIFIER' before attempt $((attempt + 1))..."
+      if [ -n "$IDENTIFIER" ] && [ -f "$REPO_ROOT/cleanup.sh" ]; then
+        bash "$REPO_ROOT/cleanup.sh" "$IDENTIFIER" || true
+      fi
+      if [ -n "$IDENTIFIER" ]; then
+        rm -rf "$REPO_ROOT/test/data/${IDENTIFIER}"* 2>/dev/null || true
+      fi
+      echo "Waiting 15 seconds before retry..."
+      sleep 15
+    fi
+
+    attempt=$((attempt + 1))
+  done
+
+  if { [ $test_exit_code -ne 0 ] || [ -f "/tmp/${IDENTIFIER}_failed_tests.txt" ]; } && { [ "$rerun_failed" != true ] || [ ! -f "/tmp/${IDENTIFIER}_failed_tests.txt" ]; }; then
+    if [ $test_exit_code -ne 0 ]; then
+      exit $test_exit_code
+    else
+      exit 1
+    fi
   fi
 
-  # Brief pause between test runs
-  sleep 5
-
-  # Check if we need to rerun failed tests
+  # Check if we need to rerun failed tests (legacy dirty mode rerun)
   if [ "$rerun_failed" = true ] && [ -f "/tmp/${IDENTIFIER}_failed_tests.txt" ]; then
     echo ""
     echo "=== Rerunning Failed Tests ==="
@@ -414,8 +461,10 @@ else
 
     if [ $test_exit_code -ne 0 ]; then
       echo "Rerun failed with exit code: $test_exit_code"
+      exit $test_exit_code
     else
       echo "All tests passed on rerun"
+      rm -f "/tmp/${IDENTIFIER}_failed_tests.txt"
     fi
 
     sleep 5

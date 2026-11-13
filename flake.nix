@@ -1,5 +1,5 @@
 {
-  description = "A reliable testing and development environment";
+  description = "A reliable testing environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -23,7 +23,7 @@
             "url" = "https://github.com/genevieve/leftovers/releases/download/${leftovers-version.selected}/leftovers-${leftovers-version.selected}-linux-amd64";
             "sha" = "sha256-D2OPjLlV5xR3f+dVHu0ld6bQajD5Rv9GLCMCk9hXlu8=";
           };
-          # linux container running on darwin, actual arm linux isnt in the artifacts
+          # linux container running on darwin, actual arm linux isn't in the artifacts
           "aarch64-linux" = {
             "url" = "https://github.com/genevieve/leftovers/releases/download/${leftovers-version.selected}/leftovers-${leftovers-version.selected}-darwin-arm64";
             "sha" = "sha256-Tw7G538RYZrwIauN7kI68u6aKS4d/0Efh+dirL/kzoM=";
@@ -81,12 +81,47 @@
           '';
         };
 
+        gemini-cli = pkgs.gemini-cli-bin.overrideAttrs (oldAttrs: rec {
+          version = "0.62.0";
+          src = pkgs.fetchzip {
+            url = "https://github.com/google-gemini/gemini-cli/releases/download/v${version}/gemini-cli-bundle.zip";
+            hash = "sha256-OJx8+Lu/QPszslPzot3d3LgefU+XVR0uI7AWXIsLLhY=";
+            stripRoot = false;
+          };
+        });
+
         macVscode = pkgs.writeShellScriptBin "code" ''
           exec /usr/local/bin/code "$@"
         '';
 
         swVers = pkgs.writeShellScriptBin "sw_vers" ''
           exec /usr/bin/sw_vers "$@"
+        '';
+
+        initNodeEnv = pkgs.writeShellScriptBin "init-node-env" ''
+          echo "Setting up Node environment..."
+          if [ ! -f package.json ]; then
+            npm init -y
+          fi
+          if ls eslint.config.* 1> /dev/null 2>&1; then
+            echo "ESLint config already exists, skipping."
+          else
+            echo "Generating default eslint.config.mjs..."
+            cat <<'EOF' > eslint.config.mjs
+import eslintPluginJs from "@eslint/js";
+
+export default [
+  {
+    ...eslintPluginJs.configs.recommended,
+    rules: {
+      semi: ["error", "always"],
+      indent: ["error", 2],
+      "no-unused-vars": "warn",
+    },
+  },
+];
+EOF
+          fi
         '';
 
         unfreePkgs = import nixpkgs {
@@ -103,6 +138,8 @@
           # downloaded packages here
           leftovers
           terraform
+          initNodeEnv
+          gemini-cli
         ] ++ ([
           # unfree packages from the nix repository
           claude-code
@@ -119,7 +156,6 @@
           docker-client
           docker-compose
           eslint
-          gemini-cli
           gh
           git
           gitleaks
@@ -134,11 +170,14 @@
           kubectl
           kubernetes-helm
           less
-          nodejs_26
+          markdownlint-cli
+          nodejs_24
           openssh
           openssl
+          prettier
           ripgrep
           shellcheck
+          shfmt
           tflint
           tfsec
           time
@@ -149,11 +188,13 @@
           which
           xz
           yq-go
-        ]) ++ ( if pkgs.stdenv.isDarwin then [
+        ]) ++ ( if pkgs.stdenv.hostPlatform.isDarwin then [
           # mac only packages
           macVscode
           swVers
+          pkgs.pinentry_mac
           pkgs.colima
+          pkgs.age-plugin-se
         ] else []);
 
         devShellPackage = pkgs.symlinkJoin {
@@ -174,9 +215,6 @@
           devShells.default = pkgs.mkShell {
             buildInputs = [ devShellPackage ];
             shellHook = ''
-              export PS1="nix:# ";
-              install -d ~/.docker/cli-plugins/ || true;
-              ln -sfn $(which docker-compose) ~/.docker/cli-plugins/docker-compose || true;
             '';
           };
         }
