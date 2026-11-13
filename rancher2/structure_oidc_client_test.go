@@ -140,7 +140,7 @@ func TestFlattenOIDCClientWithSecret(t *testing.T) {
 		Status: client.OIDCClientStatus{
 			ClientID: "test-client-id",
 			ClientSecrets: map[string]client.OIDCClientSecretStatus{
-				"client-secret-1": client.OIDCClientSecretStatus{
+				"client-secret-1": {
 					CreatedAt:          "1785140629",
 					LastFiveCharacters: "gttjf",
 				},

@@ -22,7 +22,19 @@ func machineConfigV2HarvesterFields() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Default:     "2",
-			Description: "CPU count",
+			Description: "vCPU count",
+		},
+		"cpu_pinning": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "pin vCPUs to physical cores",
+		},
+		"isolate_emulator_thread": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "isolate emulator thread from VM vCPUs on separate CPU core",
 		},
 		"memory_size": {
 			Type:        schema.TypeString,

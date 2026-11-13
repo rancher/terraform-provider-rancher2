@@ -38,25 +38,25 @@ resource "rancher2_auth_config_azuread" "azuread" {
 
 The following arguments are supported:
 
-* `application_id` - (Required/Sensitive) AzureAD auth application ID (string)
-* `application_secret` - (Required/Sensitive) AzureAD auth application secret (string)
-* `auth_endpoint` - (Required) AzureAD auth endpoint (string)
-* `graph_endpoint` - (Required) AzureAD graph endpoint (string)
-* `rancher_url` - (Required) Rancher URL (string). "<rancher_url>/verify-auth-azure"
-* `tenant_id` - (Required) AzureAD tenant ID (string)
-* `token_endpoint` - (Required) AzureAD token endpoint (string)
-* `endpoint` - (Optional) AzureAD endpoint. Default `https://login.microsoftonline.com/` (string)
-* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
-* `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `azuread_user://<USER_ID>`  `azuread_group://<GROUP_ID>` (list)
-* `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
-* `tls` - (Optional) Enable TLS connection. Default `true` (bool)
-* `annotations` - (Optional/Computed) Annotations of the resource (map)
-* `labels` - (Optional/Computed) Labels of the resource (map)
+- `application_id` - (Required/Sensitive) AzureAD auth application ID (string)
+- `application_secret` - (Required/Sensitive) AzureAD auth application secret (string)
+- `auth_endpoint` - (Required) AzureAD auth endpoint (string)
+- `graph_endpoint` - (Required) AzureAD graph endpoint (string)
+- `rancher_url` - (Required) Rancher URL (string). "<rancher_url>/verify-auth-azure"
+- `tenant_id` - (Required) AzureAD tenant ID (string)
+- `token_endpoint` - (Required) AzureAD token endpoint (string)
+- `endpoint` - (Optional) AzureAD endpoint. Default `https://login.microsoftonline.com/` (string)
+- `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
+- `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `azuread_user://<USER_ID>` `azuread_group://<GROUP_ID>` (list)
+- `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
+- `tls` - (Optional) Enable TLS connection. Default `true` (bool)
+- `annotations` - (Optional/Computed) Annotations of the resource (map)
+- `labels` - (Optional/Computed) Labels of the resource (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `name` - (Computed) The name of the resource (string)
-* `type` - (Computed) The type of the resource (string)
+- `id` - (Computed) The ID of the resource (string)
+- `name` - (Computed) The name of the resource (string)
+- `type` - (Computed) The type of the resource (string)

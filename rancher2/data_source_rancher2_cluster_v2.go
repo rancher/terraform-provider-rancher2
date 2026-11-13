@@ -80,8 +80,8 @@ func dataSourceRancher2ClusterV2() *schema.Resource {
 			"generate_kube_config": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
-				Description: "Generate a kubeconfig for the cluster. Set to false to avoid creating a new API token on each plan/apply. Default will change to false in a future version.",
+				Default:     false,
+				Description: "Generate a kubeconfig for the cluster. Set to true to create a new API token on each plan/apply.",
 			},
 			"cluster_v1_id": {
 				Type:     schema.TypeString,

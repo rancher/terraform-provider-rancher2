@@ -18,14 +18,14 @@ data "rancher2_cluster_template" "foo" {
 
 ## Argument Reference
 
-* `name` - (Required) The cluster template name (string)
-* `decription` - (Optional/Computed) The cluster template description (string)
+- `name` - (Required) The cluster template name (string)
+- `decription` - (Optional/Computed) The cluster template description (string)
 
 ## Attributes Reference
 
-* `id` - (Computed) The ID of the resource (string)
-* `default_revision_id` - (Computed) Default cluster template revision ID (string)
-* `members` - (Computed) Cluster template members (list)
-* `template_revisions` - (Computed) Cluster template revisions (list)
-* `annotations` - (Computed) Annotations for the cluster template (map)
-* `labels` - (Computed) Labels for the cluster template (map)
+- `id` - (Computed) The ID of the resource (string)
+- `default_revision_id` - (Computed) Default cluster template revision ID (string)
+- `members` - (Computed) Cluster template members (list)
+- `template_revisions` - (Computed) Cluster template revisions (list)
+- `annotations` - (Computed) Annotations for the cluster template (map)
+- `labels` - (Computed) Labels for the cluster template (map)

@@ -22,15 +22,15 @@ resource "rancher2_project_role_template_binding" "foo" {
 
 The following arguments are supported:
 
-* `project_id` - (Required/ForceNew) The project id where bind project role template, in format `cluster_id:project_id`, e.g. `c-abc12:p-def34` (string)
-* `role_template_id` - (Required/ForceNew) The role template id from create project role template binding (string)
-* `name` - (Required/ForceNew) The name of the project role template binding (string)
-* `group_id` - (Optional/Computed/ForceNew) The group ID to assign project role template binding (string)
-* `group_principal_id` - (Optional/Computed/ForceNew) The group_principal ID to assign project role template binding (string)
-* `user_id` - (Optional/Computed/ForceNew) The user ID to assign project role template binding (string)
-* `user_principal_id` - (Optional/Computed/ForceNew) The user_principal ID to assign project role template binding (string)
-* `annotations` - (Optional/Computed) Annotations of the resource (map)
-* `labels` - (Optional/Computed) Labels of the resource (map)
+- `project_id` - (Required/ForceNew) The project id where bind project role template, in format `cluster_id:project_id`, e.g. `c-abc12:p-def34` (string)
+- `role_template_id` - (Required/ForceNew) The role template id from create project role template binding (string)
+- `name` - (Required/ForceNew) The name of the project role template binding (string)
+- `group_id` - (Optional/Computed/ForceNew) The group ID to assign project role template binding (string)
+- `group_principal_id` - (Optional/Computed/ForceNew) The group_principal ID to assign project role template binding (string)
+- `user_id` - (Optional/Computed/ForceNew) The user ID to assign project role template binding (string)
+- `user_principal_id` - (Optional/Computed/ForceNew) The user_principal ID to assign project role template binding (string)
+- `annotations` - (Optional/Computed) Annotations of the resource (map)
+- `labels` - (Optional/Computed) Labels of the resource (map)
 
 **Note:** user `user_id | user_principal_id` OR group `group_id | group_principal_id` must be defined
 
@@ -38,7 +38,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
+- `id` - (Computed) The ID of the resource (string)
 
 ## Timeouts
 
@@ -56,4 +56,3 @@ Project Role Template Bindings can be imported using the Rancher Project Role Te
 ```
 $ terraform import rancher2_project_role_template_binding.foo &lt;project_role_template_binding_id&gt;
 ```
-

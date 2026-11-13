@@ -3,10 +3,10 @@ set -euo pipefail
 
 if [[ -z "${NIX_SSL_CERT_FILE:-}" ]]; then
   for cert in /etc/ssl/certs/ca-certificates.crt \
-              /etc/ssl/certs/ca-bundle.crt \
-              /etc/pki/tls/certs/ca-bundle.crt \
-              /etc/ssl/ca-bundle.pem \
-              /var/lib/ca-certificates/ca-bundle.pem; do
+    /etc/ssl/certs/ca-bundle.crt \
+    /etc/pki/tls/certs/ca-bundle.crt \
+    /etc/ssl/ca-bundle.pem \
+    /var/lib/ca-certificates/ca-bundle.pem; do
     if [[ -f "${cert}" ]]; then
       export NIX_SSL_CERT_FILE="${cert}"
       break
@@ -18,11 +18,11 @@ export SSL_CERT_FILE="${NIX_SSL_CERT_FILE:-}"
 export CURL_CA_BUNDLE="${NIX_SSL_CERT_FILE:-}"
 
 {
-  echo "git config --global --add safe.directory \"$PWD\""
+  echo "git config --global --add safe.directory \"$PWD\" 2>/dev/null || true"
   printf "exec "
   printf "%q " "$@"
   printf "\n"
-} > .nix-script.sh
+} >.nix-script.sh
 
 trap 'rm -f .nix-script.sh' EXIT
 
@@ -67,4 +67,6 @@ sudo -E -u suse /home/suse/.nix-profile/bin/nix develop \
   --keep WORKING_DIR \
   --keep GORELEASER_CONFIG \
   --keep SKIP_VALIDATE \
+  --keep GITHUB_BASE_REF \
+  --keep BASE_BRANCH \
   --command bash -e .nix-script.sh

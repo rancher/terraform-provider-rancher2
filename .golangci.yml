@@ -1,4 +1,7 @@
 version: "2"
+run:
+  skip-dirs:
+    - rancher2
 linters:
   default: none
   enable:
@@ -28,6 +31,7 @@ linters:
       - third_party$
       - builtin$
       - examples$
+      - rancher2
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
@@ -40,3 +44,4 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+      - rancher2

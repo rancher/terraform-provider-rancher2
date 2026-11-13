@@ -7,6 +7,7 @@ page_title: "rancher2_custom_user_token Resource"
 Provides a Rancher v2 Token resource, specifically to create tokens for custom users (i.e. not the 'admin' user configured with the provider config). Custom user tokens can f.e. be used as service account tokens with the Rancher v2 API having limited permissions. To create a custom user token the username/password for the Rancher User must be known.
 
 There are 2 kind of tokens:
+
 - not scoped: valid for global system.
 - scoped: valid for just a specific cluster (`cluster_id` should be provided).
 
@@ -47,12 +48,12 @@ resource "rancher2_custom_user_token" "foo" {
 
 The following arguments are supported:
 
-* `username` - (Required/ForceNew) The user username (string)
-* `password` - (Required/ForceNew) The user password (string)
-* `cluster_id` - (Optional/ForceNew) Cluster ID for scoped token (string)
-* `description` - (Optional/ForceNew) Token description (string)
-* `renew` - (Optional/ForceNew) Renew token if expired or disabled. If `true`, a terraform diff would be generated to renew the token if it's disabled or expired. If `false`, the token will not be renewed. Default `true` (bool)
-* `ttl` - (Optional/ForceNew) Token time to live in seconds. Default `0` (int)
+- `username` - (Required/ForceNew) The user username (string)
+- `password` - (Required/ForceNew) The user password (string)
+- `cluster_id` - (Optional/ForceNew) Cluster ID for scoped token (string)
+- `description` - (Optional/ForceNew) Token description (string)
+- `renew` - (Optional/ForceNew) Renew token if expired or disabled. If `true`, a terraform diff would be generated to renew the token if it's disabled or expired. If `false`, the token will not be renewed. Default `true` (bool)
+- `ttl` - (Optional/ForceNew) Token time to live in seconds. Default `0` (int)
 
 From Rancher v2.4.6 `ttl` is read in minutes at Rancher API. To avoid breaking change on the provider, we still read in seconds but rounding up division if required.
 
@@ -60,18 +61,18 @@ From Rancher v2.4.6 `ttl` is read in minutes at Rancher API. To avoid breaking c
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `access_key` - (Computed) Token access key part (string)
-* `enabled` - (Computed) Token is enabled (bool)
-* `expired` - (Computed) Token is expired (bool)
-* `name` - (Computed) Token name (string)
-* `secret_key` - (Computed/Sensitive) Token secret key part (string)
-* `token` - (Computed/Sensitive) Token value (string)
-* `user_id` - (Computed) Token user ID (string)
-* `annotations` - (Computed) Annotations of the token (map)
-* `labels` - (Computed) Labels of the token (map)
-* `temp_token` - (Computed) Generated API temporary token as helper. Should be empty (string)
-* `temp_token_id` - (Computed) Generated API temporary token id as helper. Should be empty (string)
+- `id` - (Computed) The ID of the resource (string)
+- `access_key` - (Computed) Token access key part (string)
+- `enabled` - (Computed) Token is enabled (bool)
+- `expired` - (Computed) Token is expired (bool)
+- `name` - (Computed) Token name (string)
+- `secret_key` - (Computed/Sensitive) Token secret key part (string)
+- `token` - (Computed/Sensitive) Token value (string)
+- `user_id` - (Computed) Token user ID (string)
+- `annotations` - (Computed) Annotations of the token (map)
+- `labels` - (Computed) Labels of the token (map)
+- `temp_token` - (Computed) Generated API temporary token as helper. Should be empty (string)
+- `temp_token_id` - (Computed) Generated API temporary token id as helper. Should be empty (string)
 
 ## Timeouts
 

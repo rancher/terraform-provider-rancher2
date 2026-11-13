@@ -29,7 +29,7 @@ func clusterV2RKEConfigFieldsV0() map[string]*schema.Schema {
 			Deprecated:  "Use rancher2_cluster_v2.local_auth_endpoint instead",
 			Description: "Cluster V2 local auth endpoint",
 			Elem: &schema.Resource{
-				Schema: clusterV2LocalAuthEndpointFields(),
+				Schema: clusterV2RKEConfigLocalAuthEndpointFields(),
 			},
 		},
 		"upgrade_strategy": {
@@ -229,7 +229,7 @@ func clusterV2RKEConfigFields() map[string]*schema.Schema {
 			Deprecated:  "Use rancher2_cluster_v2.local_auth_endpoint instead",
 			Description: "Cluster V2 local auth endpoint",
 			Elem: &schema.Resource{
-				Schema: clusterV2LocalAuthEndpointFields(),
+				Schema: clusterV2RKEConfigLocalAuthEndpointFields(),
 			},
 		},
 		"upgrade_strategy": {

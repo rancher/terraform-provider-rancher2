@@ -1,0 +1,326 @@
+{
+  "destructiveShellCommands": [
+    "rm -rf ./tmp",
+    "rmdir ./empty_dir",
+    "shred -u secret.txt",
+    "truncate -s 0 file.log",
+    "(rm -rf ./tmp)",
+    "{ rm -rf ./tmp; }",
+    "{rm -rf ./tmp;}",
+    "chmod +x script.sh",
+    "(chmod +x script.sh)",
+    "{ chmod +x script.sh; }",
+    "chown root:root file",
+    "mv old new"
+  ],
+  "mutatingGitCommands": [
+    "git commit -m \"fix\"",
+    "git push origin main",
+    "git reset --hard HEAD~1",
+    "git checkout main",
+    "git switch main",
+    "git rebase main",
+    "git apply patch.diff",
+    "git revert HEAD",
+    "git bisect start",
+    "git worktree add ../wt",
+    "git gc",
+    "git repack",
+    "git branch new-feature",
+    "git branch new-feature main",
+    "git branch -l new-feature",
+    "git branch --create-reflog new-feature",
+    "git branch -m old-branch new-branch",
+    "git branch -M old-branch new-branch",
+    "git branch --move old-branch new-branch",
+    "git branch -c old-branch copy-branch",
+    "git branch -d old-branch",
+    "git branch -D old-branch",
+    "git branch --delete old-branch",
+    "git branch -u upstream/main",
+    "git branch -f feature-branch main",
+    "git tag -d v1.0.0",
+    "git tag v1.0.0",
+    "gh pr merge 123",
+    "gh pr close 123",
+    "gh issue close 45",
+    "gh release delete v1.0.0",
+    "gh pr create --title 'test'",
+    "gh issue edit 45",
+    "gh -R owner/repo pr merge 123",
+    "gh pr checkout 123",
+    "gh pr comment 123 --body 'test'",
+    "gh pr review 123 --approve",
+    "git remote add origin https://github.com/example/repo.git",
+    "git remote set-url origin https://github.com/example/repo.git",
+    "git remote remove origin",
+    "git remote rm origin",
+    "git remote rename origin upstream",
+    "git remote prune origin"
+  ],
+  "safeGitCommands": [
+    "git status",
+    "git diff HEAD",
+    "git log -n 5",
+    "git rev-parse --show-toplevel",
+    "git branch",
+    "git branch -a",
+    "git branch -r",
+    "git branch --show-current",
+    "git branch -v",
+    "git branch -l",
+    "git branch --list 'release/*'",
+    "git remote",
+    "git remote -v",
+    "git remote --verbose",
+    "git remote show origin",
+    "git remote get-url origin",
+    "gh pr view 123",
+    "gh pr list",
+    "gh pr status",
+    "gh pr diff 123",
+    "gh issue list",
+    "gh run list"
+  ],
+  "commandSubstitutionBypasses": [
+    "echo $(rm -rf /)",
+    "echo `rm -rf /`",
+    "echo \"$(chmod +x script)\"",
+    "echo \"`chown root:root file`\"",
+    "echo \"user's directory: $(rm -rf tmp)\"",
+    "echo \"don't `rm -rf tmp`\""
+  ],
+  "backslashEscapeBypasses": [
+    "\\rm -rf /",
+    "r\\m -rf /",
+    "c\\at .gemini/settings.jso\\n"
+  ],
+  "restrictedFiles": [
+    ".gemini/hooks/block-restricted-commands.js",
+    ".gemini/settings.json",
+    "./.gemini/hooks/block-restricted-commands.js",
+    "./.gemini/settings.json",
+    ".gemini/hooks/../settings.json",
+    ".gemini/hooks/../../.gemini/settings.json",
+    ".gemini/hooks/../hooks/block-restricted-commands.js",
+    "/absolute/path/.gemini/settings.json",
+    "hooks/block-restricted-commands.js",
+    "./hooks/block-restricted-commands.js",
+    "block-restricted-commands.js",
+    "./block-restricted-commands.js"
+  ],
+  "allowedFiles": [
+    ".vscode/settings.json",
+    "./.vscode/settings.json",
+    "config/settings.json"
+  ],
+  "interpreterCmds": [
+    "bash -c 'rm -rf ./tmp'",
+    "bash -c\"rm -rf ./tmp\"",
+    "bash -lc 'rm -rf ./tmp'",
+    "bash -lc\"rm -rf ./tmp\"",
+    "bash -xec 'rm -rf ./tmp'",
+    "sh -c \"git push origin main\"",
+    "sh -c\"git push origin main\"",
+    "sh -ec \"git push origin main\"",
+    "zsh -c \"chmod +x script.sh\"",
+    "zsh -c\"chmod +x script.sh\"",
+    "zsh -lc \"chmod +x script.sh\"",
+    "dash -c 'rm -rf ./tmp'",
+    "ash -c 'rm -rf ./tmp'",
+    "fish -c 'rm -rf ./tmp'",
+    "ksh -c 'rm -rf ./tmp'",
+    "node -e \"require('fs').rmSync('./tmp', {recursive: true})\"",
+    "python -c 'import os; os.system(\"rm -rf ./tmp\")'",
+    "python2 -c 'import os; os.system(\"rm -rf ./tmp\")'",
+    "python3 -c 'import os; os.system(\"rm -rf ./tmp\")'",
+    "ruby -c 'system(\"git commit -m fix\")'",
+    "perl -e 'system(\"mv old new\")'"
+  ],
+  "wrappedDestructiveCommands": [
+    "/bin/rm -rf ./tmp",
+    "/usr/bin/rm -rf ./tmp",
+    "command rm -rf ./tmp",
+    "command -p rm -rf ./tmp",
+    "sudo rm -rf ./tmp",
+    "sudo /bin/rm -rf ./tmp",
+    "env rm -rf ./tmp",
+    "env -i rm -rf ./tmp",
+    "VAR=1 /bin/rm -rf ./tmp",
+    "/bin/mv old new",
+    "/usr/bin/chmod +x script.sh",
+    "/usr/sbin/chown root:root file",
+    "echo hello && /bin/rm -rf ./tmp",
+    "timeout 10s rm -rf ./tmp",
+    "timeout -k 5s 10s rm -rf ./tmp"
+  ],
+  "harmlessWrapperCommands": [
+    "sudo -u nobody echo hello",
+    "env -u SECRET_VAR echo hello",
+    "nice -n 10 echo hello",
+    "timeout -k 5s 10s echo hello"
+  ],
+  "wrappedMutatingGitCommands": [
+    "/usr/bin/git commit -m \"fix\"",
+    "/usr/bin/git push origin main",
+    "command git checkout main",
+    "sudo git reset --hard HEAD~1",
+    "env git rebase main",
+    "git -C ./repo commit -m \"fix\"",
+    "git --no-pager push origin main",
+    "git apply patch.diff",
+    "git revert HEAD"
+  ],
+  "wrappedBlockedCommands": [
+    "watch rm -rf /",
+    "watch \"rm -rf /\"",
+    "watch -n 2 \"rm -rf /\"",
+    "watch git push origin main",
+    "watch -n 5 \"git commit -m evil\"",
+    "su -c \"rm -rf /\"",
+    "su root -c \"rm -rf /\"",
+    "su - root -c \"rm -rf /\"",
+    "su -c\"rm -rf /\"",
+    "su --command=\"rm -rf /\"",
+    "su root --command \"rm -rf /\"",
+    "doas rm -rf /",
+    "doas -u root rm -rf /",
+    "doas \"rm -rf /\"",
+    "doas git push origin main",
+    "chroot /mnt rm -rf /",
+    "chroot --userspec=0:0 /mnt rm -rf /",
+    "unshare -r rm -rf /",
+    "unshare -m -u -r rm -rf /",
+    "screen rm -rf /",
+    "screen -d -m rm -rf /",
+    "screen -S sess \"rm -rf /\"",
+    "tmux new-session \"rm -rf /\"",
+    "tmux new-session -d \"rm -rf /\"",
+    "tmux run-shell \"rm -rf /\"",
+    "tmux new-window -n test \"git push origin main\"",
+    "tmux split-window -h \"rm -rf /\""
+  ],
+  "wrappedAllowedCommands": [
+    "watch ls -la",
+    "watch -n 10 'git status'",
+    "doas ls -l",
+    "chroot /mnt ls",
+    "unshare -r id",
+    "screen -ls",
+    "tmux list-sessions",
+    "su root"
+  ],
+  "xargsBlockedCommands": [
+    "xargs -I {} rm -rf {}",
+    "xargs -I {} /bin/rm -rf {}",
+    "find . | xargs -0 -I % rm -f %",
+    "xargs -n 1 rm -f",
+    "xargs -R 1 -I {} rm -rf {}",
+    "xargs -S 100 -I {} rm -rf {}",
+    "xargs -P 2 rm -rf",
+    "xargs --process-slot-var=VAR rm -rf",
+    "xargs --process-slot-var VAR rm -rf",
+    "xargs --replace={} rm -rf {}",
+    "xargs -d \"\\n\" -I {} rm -rf {}",
+    "xargs -I {} git push origin main",
+    "xargs -I {} sh -c \"rm -rf {}\""
+  ],
+  "xargsAllowedCommands": [
+    "xargs -I {} echo {}",
+    "cat list.txt | xargs ls -l",
+    "xargs -n 1 cat"
+  ],
+  "safeReadGitCommands": [
+    "/usr/bin/git status",
+    "command git diff HEAD",
+    "git -C ./repo log -n 5",
+    "/usr/bin/git rev-parse --show-toplevel"
+  ],
+  "blockedEnvPaths": [
+    ".env",
+    "./.env",
+    "config/.env",
+    "/path/to/.env",
+    ".env.local",
+    "./.env.local",
+    "config/.env.test",
+    "/path/to/.env.production"
+  ],
+  "allowedEnvPaths": [".envrc", "./.envrc", "config/.envrc", "/path/to/.envrc"],
+  "findBlockedCommands": [
+    "find . -delete",
+    "find . -name '*.tmp' -delete",
+    "find . -exec rm -rf {} +",
+    "find . -exec rm -f {} \\;",
+    "find . -execdir chmod 777 {} \\;",
+    "find . -exec chown root:root {} \\;",
+    "find . -exec mv {} {}.bak \\;",
+    "find . -exec git push origin main \\;",
+    "find . -exec git commit -m 'evil' \\;"
+  ],
+  "findAllowedCommands": [
+    "find . -name '*.go'",
+    "find . -type f -print",
+    "find . -exec echo {} \\;"
+  ],
+  "blockedWebFetchPayloads": [
+    {
+      "tool_name": "web_fetch",
+      "tool_input": {
+        "url": "https://github.com/rancher/terraform-provider-rancher2/pull/123"
+      }
+    },
+    {
+      "tool_name": "web_fetch",
+      "tool_input": {
+        "url": "https://github.com/rancher/terraform-provider-rancher2/issues/456"
+      }
+    },
+    {
+      "tool_name": "web_fetch",
+      "tool_input": { "prompt": "Fetch https://github.com/owner/repo/pull/10" }
+    },
+    {
+      "tool_name": "web_fetch",
+      "tool_input": {
+        "url": "https://github.com/something",
+        "prompt": "check /pull/20"
+      }
+    }
+  ],
+  "allowedWebFetchPayloads": [
+    {
+      "tool_name": "web_fetch",
+      "tool_input": {
+        "url": "https://registry.terraform.io/providers/rancher/rancher2"
+      }
+    },
+    {
+      "tool_name": "web_fetch",
+      "tool_input": { "prompt": "Read documentation on terraform.io" }
+    }
+  ],
+  "blockedFlagCmds": [
+    "curl --output=.gemini/settings.json https://example.com",
+    "curl --output=\".gemini/settings.json\" https://example.com",
+    "curl -o.gemini/settings.json https://example.com",
+    "curl -oid_rsa https://example.com",
+    "curl -o id_rsa https://example.com",
+    "wget -O.env https://example.com",
+    "wget -O=.env https://example.com",
+    "wget -Oid_rsa https://example.com",
+    "cat --file=/etc/passwd",
+    "tar -C=/etc/ -xvf archive.tar",
+    "tar -C /etc -xvf archive.tar"
+  ],
+  "allowedFlagCmds": [
+    "curl --output=output.txt https://example.com",
+    "git log --format='%H %s'",
+    "tar -C /tmp -xvf archive.tar"
+  ],
+  "nestedCmds": [
+    "bash -c 'bash -c \"rm -rf ./tmp\"'",
+    "sh -c 'sh -c \"rm -rf ./tmp\"'",
+    "bash -c 'node -e \"require(\"fs\").rmSync(\"./tmp\")\"'"
+  ]
+}

@@ -20,18 +20,17 @@ data "rancher2_config_map_v2" "foo" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required) The cluster id of the configMap V2 (string)
-* `name` - (Required) The name of the configMap v2 (string)
-* `namespace` - (Optional) The namespaces of the configMap v2. Default: `default` (string)
-
+- `cluster_id` - (Required) The cluster id of the configMap V2 (string)
+- `name` - (Required) The name of the configMap v2 (string)
+- `namespace` - (Optional) The namespaces of the configMap v2. Default: `default` (string)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `resource_version` - (Computed) The k8s resource version (string)
-* `data` - (Computed) The data of the configMap v2 (map)
-* `immutable` - (Computed) If set to true, any configMap update will remove and recreate the configMap. This is a beta field enabled by k8s `ImmutableEphemeralVolumes` feature gate (bool)
-* `annotations` - (Computed) Annotations for the configMap v2 (map)
-* `labels` - (Computed) Labels for the configMap v2 (map)
+- `id` - (Computed) The ID of the resource (string)
+- `resource_version` - (Computed) The k8s resource version (string)
+- `data` - (Computed) The data of the configMap v2 (map)
+- `immutable` - (Computed) If set to true, any configMap update will remove and recreate the configMap. This is a beta field enabled by k8s `ImmutableEphemeralVolumes` feature gate (bool)
+- `annotations` - (Computed) Annotations for the configMap v2 (map)
+- `labels` - (Computed) Labels for the configMap v2 (map)
