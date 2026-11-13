@@ -1,133 +1,135 @@
-# Google Gemini CLI Directory Structure Standard
+# Portable `.gemini` Agent Platform & Repository Integration Contract
 
-This document outlines the official, standard directory structure and file layout for Google's Gemini CLI application at both the **User (Global)** and **Workspace (Project)** levels.
-
----
-
-## 📂 Overview of the `.gemini/` Architecture
-
-Gemini CLI uses a dual-tiered configuration model. Global preferences and personal tools reside in the user's home directory under `~/.gemini/`, while project-specific requirements, team-shared subagents, and automated skills are defined in the workspace root under `.gemini/`.
-
-### 1. User (Global) Directory Layout (`~/.gemini/`)
-
-Located in the user's home directory (`~` on Unix/macOS, `%USERPROFILE%` on Windows), this folder houses personal settings, authentication state, and global extensions:
-
-```text
-~/.gemini/
-├── settings.json               # Global CLI configuration, UI preferences, and default model routing
-├── trustedFolders.json         # Index of workspace directories that have been approved for local execution
-├── trusted_hooks.json          # Index of cryptographically signed and trusted project hooks
-├── oauth_creds.json            # Google OAuth / Gemini API personal credentials
-├── GEMINI.md                   # Global personal memory file (loaded automatically in every session)
-├── mcp-oauth-tokens.json       # Secure storage for MCP-associated OAuth access tokens
-├── keybindings.json            # Global custom keybindings
-│
-├── commands/                   # Global custom slash commands
-│   └── test.toml               # Registered globally as `/test`
-│
-├── agents/                     # Global personal custom subagents
-│   └── security-auditor.md     # Loaded across all sessions for personal code audits
-│
-├── skills/                     # Global personal agent skills
-│   └── my-skill/
-│       ├── SKILL.md            # Skill specification file
-│       └── scripts/            # Executable scripts/binaries
-│
-├── extensions/                 # Installed custom third-party extensions
-│
-└── tmp/                        # Local session logs, active chats, and system temporary state
-    └── <project_hash>/
-        ├── chats/              # Active and completed conversation history
-        ├── shell_history       # Local interactive shell command execution logs
-        └── otel/               # OpenTelemetry trace collector logs
-```
+This document defines the operating contract between the `.gemini/` directory and any host repository adopting it.
 
 ---
 
-### 2. Workspace (Project-level) Directory Layout (`your-project/.gemini/`)
+## 1. Overview & Architecture
 
-Located in the root of your Git repository, this directory contains team-shared automations, strict codebase-level constraints, and pipeline validations. To maintain security, project-level hooks and settings are **untrusted by default** until approved by the developer during session initialization:
+The `.gemini/` directory is a self-contained, language-agnostic agent orchestration platform. It houses:
 
-```text
-your-project/
-├── .geminiignore               # Gitignore-style patterns for excluding files from search/RAG indexing
-├── .gemini/
-│   ├── settings.json           # Workspace settings (overrides user-level settings)
-│   ├── .env                    # Workspace-specific, secure environment variables
-│   ├── system.md               # Workspace-level system prompt (overrides global CLI instructions)
-│   ├── sandbox.Dockerfile      # Custom Docker configuration for fully containerized tool sandboxing
-│   ├── sandbox-macos-*.sb      # Custom macOS sandbox profiles for localized secure execution
-│   │
-│   ├── hooks/                  # Synchronous lifecycle hooks triggered on CLI and tool events
-│   │   ├── startup-context.sh  # Runs on SessionStart to load local context
-│   │   ├── enforce-planning.js # Runs on BeforeTool to block unauthorized file writes
-│   │   └── security.sh         # Runs on BeforeTool (shell) to block unsafe Git remote pushes
-│   │
-│   ├── agents/                 # Team-shared specialized custom subagents
-│   │   └── review_agent.md     # Dedicated local PR review subagent
-│   │
-│   ├── skills/                 # Team-shared automation capabilities (tools)
-│   │   └── commit-push.sh      # Custom command to safely sign and push commits
-│   │
-│   └── commands/               # Workspace-specific custom slash commands
-│       └── changelog.toml      # Registered locally as `/changelog`
-```
+- The programmatic developer orchestrator and multi-agent Ralph review loop (`.gemini/orchestrator/`).
+- Deterministic lifecycle hooks and security guardrails (`.gemini/hooks/`).
+- Specialized skills for git, GitHub PRs, GitHub Actions CI, and code validation (`.gemini/skills/`).
+- Autonomous planning agents (`.gemini/agents/`).
+- Self-contained dependency definitions (`.gemini/package.json`).
+
+The platform interacts with the host repository exclusively through standard POSIX and `GNUmakefile` interfaces.
 
 ---
 
-## ⚙️ Core Configuration Files Reference
+## 2. Consolidation & Deletion Instructions for Migrating Repositories
 
-### A. Settings File (`settings.json`)
+When copying this `.gemini/` directory into a repository that previously used legacy agent scripts or legacy process documentation:
 
-The primary configuration engine for adjusting the CLI's behavior. Gemini CLI merges your home directory settings (`~/.gemini/settings.json`) with workspace settings (`.gemini/settings.json`), with workspace keys taking absolute precedence.
+### Safe to Delete from Host Repository
 
-**Workspace Example:**
+1. `agent-scripts/`: Delete the entire directory. All universal orchestrator tools and libraries now reside under `.gemini/orchestrator/`.
+2. `docs/development/`: Delete the entire directory. All legacy development process blueprints, Diátaxis TOML rulebooks, and documentation created to box agents into multi-step constraints are obsolete. The orchestrator drives agents on single scoped tasks with direct test and linter validation backpressure.
+3. Documentation around hooks: Delete all legacy documentation or guides attempting to box agents into manual hook workflows. Enforcer hooks are replaced by single-task orchestrator pipelines.
+4. `compile-docs.js` and `docs/docs-compiled.json`: Delete. The orchestrator now injects context and backpressure directly via the Ralph loop without compiling documentation to JSON indexes.
+5. Obsolete helper copies: Delete root or `agent-scripts` copies of `update-action-versions.sh`, `update-modules.sh`, `run-in-nix.sh`, and `cleanup-data.js`.
+6. Obsolete agent definitions: Delete `.gemini/agents/quality_assurance.toml`. Single-agent QA has been superseded by `runReviewRalphLoop`.
+7. Root `package.json` test commands: Remove any `compile-docs.js` invocation from the `"test"` script.
 
-```json
-{
-  "ui": {
-    "compactToolOutput": true,
-    "showLineNumbers": true
-  },
-  "security": {
-    "toolSandboxing": true,
-    "folderTrust": {
-      "enabled": true
-    }
-  },
-  "skills": {
-    "enabled": true
-  },
-  "hooksConfig": {
-    "enabled": true,
-    "notifications": true
-  }
-}
-```
+---
 
-### B. Environment Variables (`.gemini/.env`)
+## 3. Host Repository Contract (What the Repository Must Provide)
 
-A specialized file for storing API keys, GPG signing configurations, or other variables isolated to `gemini-cli`'s runtime.
+To function with `.gemini/`, the host repository must satisfy four standard contracts:
 
-- **Rule:** This file should contain developer-specific environment configurations and is automatically excluded from the AI's search context to prevent accidental leaks.
+### C1: `GNUmakefile` Standard Interface
 
-**Example:**
+The host repository must provide a `GNUmakefile` (or `Makefile`) implementing these core targets:
+
+- `make build`: Compiles workspace binaries or packages.
+- `make unit`: Executes unit test suites.
+- `make acc`: Executes acceptance or integration test suites.
+- `make test`: Executes the default test harness (e.g. unit tests or full test suite).
+- `make lint`: Executes all workspace static analysis tools across all codebase languages.
+- `make fmt`: Auto-formats code across all supported formatters.
+
+Optional extended targets (with automated fallback to core targets in `test.js` if omitted):
+
+- `make compile`: Compiles both product and test binaries (falls back to `make build`).
+- `make test-all`: Executes full test suites across all languages (falls back to `make test`).
+- `make testaccrelay`: Executes relay/cloud acceptance tests (falls back to `make acc`).
+
+### C2: Tooling & Environment Contract
+
+- `flake.nix` & `flake.lock`: Must supply `nodejs_24`, `gemini-cli`, `gh`, `git`, `make`, and repository-specific toolchains.
+- `.envrc`: Must activate the Nix shell and export `GEMINI_SYSTEM_MD=.gemini/system.md`.
+
+### C3: Git and Plan Management Contract
+
+- `plans/current.md`: Must be gitignored. The orchestrator tracks all execution plans and Ralph loop iterations in this file.
+- `.gemini/tmp/`: Must be gitignored. All orchestrator logs (`orchestrator.log`) and transient review diffs reside here.
+- Canonical Upstream Remote: The canonical upstream repository remote must be named `upstream`. The developer's fork remote must be named `origin`.
+
+### C4: Dependency Setup Contract
+
+To install the orchestrator SDK and dependencies, execute:
 
 ```bash
-GPG_TTY=$(tty)
-GEMINI_SYSTEM_MD=1
+npm --prefix .gemini ci && node .gemini/orchestrator/install-sdk.js
 ```
 
-### C. System Prompt (`.gemini/system.md`)
-
-A markdown document that injects repository-wide instructions, team conventions, and platform rules directly into the main model's system context, ensuring the AI behaves consistently with the project's standards.
+The host repository does NOT need to be a Node.js project. Dependencies can be isolated entirely inside `.gemini/node_modules/`.
 
 ---
 
-## 🔒 Security & Best Practices
+## 4. What `.gemini/` Does NOT Need from the Repository
 
-1. **Fingerprinting & Trust Gates**: Because workspace settings and hooks can run arbitrary shell commands, Gemini CLI automatically fingerprints `.gemini/settings.json` and `.gemini/hooks/` files. Any changes made to these files will prompt the developer with a trust gate warning before execution is allowed.
-2. **Generic Portability**: To make team automations portable, workspace-level scripts inside `.gemini/` should be repository-agnostic and refer to the standard environment variables:
-   - `GEMINI_PROJECT_DIR`: Absolute path to the active workspace.
-   - `GEMINI_CWD`: Current working directory of the developer.
-   - `GEMINI_SESSION_ID`: Unique conversation session identifier.
+- No root `package.json` requirement: Non-Node repositories (Go, Rust, Python, C) do not need root Node artifacts.
+- No `.github/workflows/scripts/test.sh` or `lint.sh` dependency: The `code-validation` skill calls `make` targets directly.
+- No hardcoded product directory assumptions: Product detection scans standard roots (`internal/`, `src/`, `lib/`, `pkg/`, `cmd/`) or custom paths in `.gemini/settings.json`.
+- Flexible test boundary detection: Orchestrator test boundary enforcement accepts standard conventions across languages (`*_test.go`, `*.test.*`, `*.spec.*`, `test_*.*`, and test directories), while host test execution delegates to standard make targets (`make test`, `make unit`, `make compile`, `make test-all`).
+
+---
+
+## 5. Execution Reference
+
+### Starting the Developer Orchestrator
+
+```bash
+node .gemini/orchestrator/orchestrator.js
+```
+
+### Running Code Validation Skill
+
+```bash
+# Full validation (make lint + make test)
+node .gemini/skills/code-validation/scripts/validate.js
+
+# Linting only (make lint)
+node .gemini/skills/code-validation/scripts/lint.js all
+
+# Unit tests only (make unit)
+node .gemini/skills/code-validation/scripts/test.js unit
+
+# Formatting (make fmt)
+node .gemini/skills/code-validation/scripts/format.js all
+```
+
+### Running Git Operations
+
+```bash
+# Branch creation synced with canonical upstream
+node .gemini/skills/git/scripts/create-branch.js <branch-name>
+
+# Conventional commit with spell-checking and boundary enforcement
+node .gemini/skills/git/scripts/commit.js -m "feat: descriptive title"
+```
+
+---
+
+## 6. Migration Checklist for Autonomous Agents
+
+When an agent enters a target repository to complete `.gemini/` consolidation:
+
+- [ ] Step 1: Ensure `GNUmakefile` defines `build`, `unit`, `acc`, `test`, `lint`, and `fmt`.
+- [ ] Step 2: Delete `agent-scripts/`, `docs/development/`, and legacy doc compilation scripts.
+- [ ] Step 3: Run dependency setup: `npm --prefix .gemini ci && node .gemini/orchestrator/install-sdk.js`.
+- [ ] Step 4: Verify test execution via `node .gemini/skills/code-validation/scripts/test.js unit`.
+- [ ] Step 5: Verify static analysis via `node .gemini/skills/code-validation/scripts/lint.js all`.
+- [ ] Step 6: Verify orchestrator dry-run via `node .gemini/orchestrator/inspect-prompts.js`.

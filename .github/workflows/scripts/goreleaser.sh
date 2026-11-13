@@ -29,16 +29,28 @@ if [[ -n "${WORKING_DIR:-}" ]]; then
 fi
 
 # sanitize variables
-if [[ -z "${GPG_PASSPHRASE:-}" ]]; then echo "Error: gpg passphrase empty" >&2; exit 1; fi
-if [[ -z "${GPG_KEY_ID:-}" ]]; then echo "Error: key id empty" >&2; exit 1; fi
-if [[ -z "${GPG_KEY:-}" ]]; then echo "Error: key contents empty" >&2; exit 1; fi
+if [[ -z "${GPG_PASSPHRASE:-}" ]]; then
+  echo "Error: gpg passphrase empty" >&2
+  exit 1
+fi
+if [[ -z "${GPG_KEY_ID:-}" ]]; then
+  echo "Error: key id empty" >&2
+  exit 1
+fi
+if [[ -z "${GPG_KEY:-}" ]]; then
+  echo "Error: key contents empty" >&2
+  exit 1
+fi
 
 # Trim whitespace/newlines so the key id matches what GPG reports
 export GPG_KEY_ID
 GPG_KEY_ID=$(echo -n "${GPG_KEY_ID}" | tr -d '[:space:]')
 
 echo "Importing gpg key"
-echo "${GPG_KEY}" | gpg --import --batch > /dev/null || { echo "Error: Failed to import GPG key" >&2; exit 1; }
+echo "${GPG_KEY}" | gpg --import --batch >/dev/null || {
+  echo "Error: Failed to import GPG key" >&2
+  exit 1
+}
 
 # Prefer the secret primary key id actually present in the keyring. Vault may hold
 # the id of an encryption subkey, which cannot sign. '|| true' avoids tripping

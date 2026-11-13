@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"maps"
-	"time"
 	"net/url"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"

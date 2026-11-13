@@ -17,18 +17,18 @@ data "rancher2_storage_class_v2" "foo" {
 
 ## Argument Reference
 
-* `cluster_id` - (Required) The cluster id of the storageClass V2 (string)
-* `name` - (Required) The name of the storageClass v2 (string)
+- `cluster_id` - (Required) The cluster id of the storageClass V2 (string)
+- `name` - (Required) The name of the storageClass v2 (string)
 
 ## Attributes Reference
 
-* `id` - (Computed) The ID of the resource (string)
-* `resource_version` - (Computed) The k8s resource version (string)
-* `k8s_provisioner` - (Computed) The provisioner of the storageClass v2 (string)
-* `allow_volume_expansion` - (Computed) Is the provisioner of the storageClass v2 allowing volume expansion? (bool)
-* `mount_options` - (Computed) The mount options for storageClass v2 (list)
-* `parameters` - (Computed) The parameters for storageClass v2 (string)
-* `reclaim_policy` - (Computed) The reclaim policy for storageClass v2 (string)
-* `volume_binding_mode` - (Computed) The volume binding mode for storageClass v2 (string)
-* `annotations` - (Computed) Annotations for the storageClass v2 (map)
-* `labels` - (Computed) Labels for the storageClass v2 (map)
+- `id` - (Computed) The ID of the resource (string)
+- `resource_version` - (Computed) The k8s resource version (string)
+- `k8s_provisioner` - (Computed) The provisioner of the storageClass v2 (string)
+- `allow_volume_expansion` - (Computed) Is the provisioner of the storageClass v2 allowing volume expansion? (bool)
+- `mount_options` - (Computed) The mount options for storageClass v2 (list)
+- `parameters` - (Computed) The parameters for storageClass v2 (string)
+- `reclaim_policy` - (Computed) The reclaim policy for storageClass v2 (string)
+- `volume_binding_mode` - (Computed) The volume binding mode for storageClass v2 (string)
+- `annotations` - (Computed) Annotations for the storageClass v2 (map)
+- `labels` - (Computed) Labels for the storageClass v2 (map)

@@ -46,6 +46,7 @@ func authConfigGithubAppFields() map[string]*schema.Schema {
 			Required:     true,
 			Description:  "PEM format private key for signing requests.",
 			ValidateFunc: isPEMEncodedPrivateKey,
+			Sensitive:    true,
 		},
 		"installation_id": {
 			Type:         schema.TypeString,

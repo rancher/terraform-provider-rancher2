@@ -6,7 +6,7 @@ page_title: "rancher2_auth_config_adfs Resource"
 
 Provides a Rancher v2 Auth Config ADFS resource. This can be used to configure and enable Auth Config ADFS for Rancher v2 RKE clusters and retrieve their information.
 
-In addition to the built-in local auth, only one external auth config provider can be enabled at a time. 
+In addition to the built-in local auth, only one external auth config provider can be enabled at a time.
 
 ## Example Usage
 
@@ -28,24 +28,24 @@ resource "rancher2_auth_config_adfs" "adfs" {
 
 The following arguments are supported:
 
-* `display_name_field` - (Required) ADFS display name field (string)
-* `groups_field` - (Required) ADFS group field (string)
-* `idp_metadata_content` - (Required/Sensitive) ADFS IDP metadata content (string)
-* `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
-* `sp_cert` - (Required/Sensitive) ADFS SP cert (string)
-* `sp_key` - (Required/Sensitive) ADFS SP key (string)
-* `uid_field` - (Required) ADFS UID field (string)
-* `user_name_field` - (Required) ADFS user name field (string)
-* `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
-* `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `adfs_user://<USER_ID>`  `adfs_group://<GROUP_ID>` (list)
-* `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
-* `annotations` - (Optional/Computed) Annotations of the resource (map)
-* `labels` - (Optional/Computed) Labels of the resource (map)
+- `display_name_field` - (Required) ADFS display name field (string)
+- `groups_field` - (Required) ADFS group field (string)
+- `idp_metadata_content` - (Required/Sensitive) ADFS IDP metadata content (string)
+- `rancher_api_host` - (Required) Rancher URL. URL scheme needs to be specified, `https://<RANCHER_API_HOST>` (string)
+- `sp_cert` - (Required/Sensitive) ADFS SP cert (string)
+- `sp_key` - (Required/Sensitive) ADFS SP key (string)
+- `uid_field` - (Required) ADFS UID field (string)
+- `user_name_field` - (Required) ADFS user name field (string)
+- `access_mode` - (Optional) Access mode for auth. `required`, `restricted`, `unrestricted` are supported. Default `unrestricted` (string)
+- `allowed_principal_ids` - (Optional) Allowed principal ids for auth. Required if `access_mode` is `required` or `restricted`. Ex: `adfs_user://<USER_ID>` `adfs_group://<GROUP_ID>` (list)
+- `enabled` - (Optional) Enable auth config provider. Default `true` (bool)
+- `annotations` - (Optional/Computed) Annotations of the resource (map)
+- `labels` - (Optional/Computed) Labels of the resource (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `name` - (Computed) The name of the resource (string)
-* `type` - (Computed) The type of the resource (string)
+- `id` - (Computed) The ID of the resource (string)
+- `name` - (Computed) The name of the resource (string)
+- `type` - (Computed) The type of the resource (string)
