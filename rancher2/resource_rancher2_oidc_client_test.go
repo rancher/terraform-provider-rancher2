@@ -525,6 +525,57 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 	})
 }
 
+func TestResourceRancher2OIDCClientImport(t *testing.T) {
+	newGetter := func(ops managementClient.OIDCClientOperations) *fakeManagementClientGetter {
+		return &fakeManagementClientGetter{
+			client: &managementClient.Client{OIDCClient: ops},
+		}
+	}
+
+	newResourceData := func(importID string) *schema.ResourceData {
+		d := schema.TestResourceDataRaw(t, oidcClientFields(), map[string]any{})
+		d.SetId(importID)
+		return d
+	}
+
+	t.Run("returns resource data when resource exists", func(t *testing.T) {
+		existing := &managementClient.OIDCClient{
+			Resource:     types.Resource{ID: "oidc-client-2"},
+			RedirectURIs: []string{"https://example.com/oidc"},
+		}
+		d := newResourceData("oidc-client-2")
+		result, err := resourceRancher2OIDCClientImport(d, newGetter(&fakeOIDCClientOperations{oidcClient: existing}))
+
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		assert.Equal(t, "oidc-client-2", result[0].Id())
+		assert.Equal(t, []any{"https://example.com/oidc"}, result[0].Get("redirect_uris").([]any))
+	})
+
+	notFoundTests := map[string]error{
+		"not found":            &clientbase.APIError{StatusCode: http.StatusNotFound},
+		"forbidden":            &clientbase.APIError{StatusCode: http.StatusForbidden},
+		"not accessible by ID": errors.New("can not be looked up by ID"),
+	}
+	for name, apiErr := range notFoundTests {
+		t.Run("returns error when resource is "+name, func(t *testing.T) {
+			d := newResourceData("oidc-client-1")
+			result, err := resourceRancher2OIDCClientImport(d, newGetter(&fakeOIDCClientOperations{err: apiErr}))
+
+			require.ErrorContains(t, err, "oidc-client-1")
+			assert.Empty(t, result)
+		})
+	}
+
+	t.Run("returns error on unexpected API error", func(t *testing.T) {
+		d := newResourceData("oidc-client-3")
+		result, err := resourceRancher2OIDCClientImport(d, newGetter(&fakeOIDCClientOperations{err: errors.New("internal server error")}))
+
+		require.Error(t, err)
+		assert.Empty(t, result)
+	})
+}
+
 func TestValidateRedirectURI(t *testing.T) {
 	tests := map[string]struct {
 		value   string
