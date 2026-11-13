@@ -1,194 +1,458 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, it } from "node:test";
+import run, {
+  ALLOWED_STUB_FILENAMES,
+  buildReleasePleaseConfig,
+  buildReleasePleaseManifest,
+  buildWorkflowStubs,
+  cleanupNonStubWorkflows,
+  formatPrBody,
+  parseReleaseBranch,
+  runGit,
+  runSetupReleaseBranch,
+} from "./setup-release-branch.js";
 
-describe("setup-release-branch.sh", () => {
-  const scriptPath = path.resolve(
-    process.cwd(),
-    ".github/workflows/scripts/setup-release-branch.sh",
-  );
+describe("setup-release-branch.js", () => {
+  describe("parseReleaseBranch", () => {
+    it("parses valid canonical release branch names", () => {
+      const res16 = parseReleaseBranch("release/v16");
+      assert.deepStrictEqual(res16, {
+        branch: "release/v16",
+        versionNumber: 16,
+        versionString: "16",
+        releaseAs: "v16.0.0",
+        manifestVersion: "16.0.0",
+      });
 
-  it("passes bash syntax check (bash -n)", () => {
-    assert.doesNotThrow(() => {
-      execFileSync("bash", ["-n", scriptPath], { stdio: "pipe" });
+      const res15 = parseReleaseBranch("release/v15");
+      assert.deepStrictEqual(res15, {
+        branch: "release/v15",
+        versionNumber: 15,
+        versionString: "15",
+        releaseAs: "v15.0.0",
+        manifestVersion: "15.0.0",
+      });
+
+      const res99 = parseReleaseBranch("  release/v99  ");
+      assert.strictEqual(res99.branch, "release/v99");
+      assert.strictEqual(res99.versionNumber, 99);
+    });
+
+    it("rejects shorthand branch names (v16, 16, release/16)", () => {
+      assert.throws(
+        () => parseReleaseBranch("v16"),
+        /Branch must strictly match 'release\/v<2-digit-version>'/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("16"),
+        /Branch must strictly match 'release\/v<2-digit-version>'/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("release/16"),
+        /Branch must strictly match 'release\/v<2-digit-version>'/,
+      );
+    });
+
+    it("rejects non-canonical or arbitrary branch names", () => {
+      assert.throws(() => parseReleaseBranch("main"), /Invalid branch format/);
+      assert.throws(
+        () => parseReleaseBranch("feature/release"),
+        /Invalid branch format/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("release/v1"),
+        /Invalid branch format/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("release/v160"),
+        /Invalid branch format/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("release/v16-rc1"),
+        /Invalid branch format/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("release/v16/test"),
+        /Invalid branch format/,
+      );
+      assert.throws(() => parseReleaseBranch(""), /Invalid branch format/);
+      assert.throws(() => parseReleaseBranch(null), /Invalid branch format/);
+      assert.throws(
+        () => parseReleaseBranch(undefined),
+        /Invalid branch format/,
+      );
     });
   });
 
-  it("fails with error message when branch argument is invalid", () => {
-    assert.throws(
-      () => {
-        execFileSync("bash", [scriptPath, "invalid-branch-name"], {
-          stdio: "pipe",
-        });
-      },
-      (error) => {
-        assert.match(
-          error.stderr.toString(),
-          /does not match a recognized release branch format/,
-        );
-        return true;
-      },
-    );
-  });
+  describe("buildReleasePleaseConfig", () => {
+    it("creates standard config from empty/null input", () => {
+      const configStr = buildReleasePleaseConfig(null, "v16.0.0");
+      const parsed = JSON.parse(configStr);
+      assert.strictEqual(parsed["release-as"], "v16.0.0");
+      assert.strictEqual(parsed["always-update"], true);
+      assert.strictEqual(parsed["commit-search-depth"], 100);
+      assert.strictEqual(parsed["prerelease"], true);
+      assert.strictEqual(parsed["draft"], true);
+      assert.strictEqual(parsed["force-tag-creation"], true);
+      assert.strictEqual(parsed["include-v-in-tag"], true);
+      assert.deepStrictEqual(parsed["packages"], {
+        ".": { "release-type": "go" },
+      });
+      assert.ok(parsed["$schema"]);
+      assert.strictEqual(configStr.endsWith("\n"), true);
+    });
 
-  it("configures stubs and release-please versions correctly in a target directory", () => {
-    const tmpDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "setup-release-branch-test-"),
-    );
-    try {
-      // Create test environment
-      const workflowsDir = path.join(tmpDir, ".github", "workflows");
-      fs.mkdirSync(workflowsDir, { recursive: true });
-
-      // Create dummy workflow files (both legacy and arbitrary future workflows)
-      fs.writeFileSync(path.join(workflowsDir, "manual-release.yml"), "legacy");
-      fs.writeFileSync(
-        path.join(workflowsDir, "manual-rc-release.yml"),
-        "legacy",
-      );
-      fs.writeFileSync(path.join(workflowsDir, "custom-ci.yml"), "future");
-      fs.writeFileSync(
-        path.join(workflowsDir, "arbitrary-workflow.yaml"),
-        "future",
-      );
-
-      // Create initial release-please-config.json
-      const initialConfig = {
-        "release-as": "v15.3.0",
+    it("updates existing config and strips obsolete sha keys", () => {
+      const initial = {
+        "release-as": "v15.2.0",
+        "bootstrap-sha": "abc1234",
+        "last-release-sha": "def5678",
         packages: { ".": { "release-type": "go" } },
       };
-      fs.writeFileSync(
-        path.join(tmpDir, "release-please-config.json"),
-        JSON.stringify(initialConfig, null, 2),
+      const updatedStr = buildReleasePleaseConfig(
+        JSON.stringify(initial),
+        "v16.0.0",
       );
+      const parsed = JSON.parse(updatedStr);
+      assert.strictEqual(parsed["release-as"], "v16.0.0");
+      assert.strictEqual("bootstrap-sha" in parsed, false);
+      assert.strictEqual("last-release-sha" in parsed, false);
+      assert.strictEqual(parsed["draft"], true);
+    });
 
-      // Run setup-release-branch.sh inside tmpDir with branch "release/v16"
-      execFileSync("bash", [scriptPath, "release/v16"], {
-        cwd: tmpDir,
-        stdio: "pipe",
-      });
+    it("throws when existing config string is invalid JSON", () => {
+      assert.throws(
+        () => buildReleasePleaseConfig("{ invalid json ", "v16.0.0"),
+        /Failed to parse existing release-please-config\.json/,
+      );
+    });
+  });
 
-      // 1. Verify release-please-config.json
-      const updatedConfig = JSON.parse(
-        fs.readFileSync(
-          path.join(tmpDir, "release-please-config.json"),
-          "utf8",
-        ),
-      );
-      assert.strictEqual(updatedConfig["release-as"], "v16.0.0");
+  describe("buildReleasePleaseManifest", () => {
+    it("generates correct manifest JSON with trailing newline", () => {
+      const manifestStr = buildReleasePleaseManifest("16.0.0");
+      const parsed = JSON.parse(manifestStr);
+      assert.deepStrictEqual(parsed, { ".": "16.0.0" });
+      assert.strictEqual(manifestStr.endsWith("\n"), true);
+    });
+  });
 
-      // 2. Verify .release-please-manifest.json
-      const updatedManifest = JSON.parse(
-        fs.readFileSync(
-          path.join(tmpDir, ".release-please-manifest.json"),
-          "utf8",
-        ),
-      );
-      assert.strictEqual(updatedManifest["."], "16.0.0");
+  describe("buildWorkflowStubs & ALLOWED_STUB_FILENAMES", () => {
+    it("returns expected caller stubs pointing strictly to @main", () => {
+      const stubs = buildWorkflowStubs();
+      assert.strictEqual(Object.keys(stubs).length, 4);
 
-      // 3. Verify non-stub workflows removed
-      assert.strictEqual(
-        fs.existsSync(path.join(workflowsDir, "manual-release.yml")),
-        false,
-      );
-      assert.strictEqual(
-        fs.existsSync(path.join(workflowsDir, "manual-rc-release.yml")),
-        false,
-      );
-      assert.strictEqual(
-        fs.existsSync(path.join(workflowsDir, "custom-ci.yml")),
-        false,
-      );
-      assert.strictEqual(
-        fs.existsSync(path.join(workflowsDir, "arbitrary-workflow.yaml")),
-        false,
-      );
-
-      // 4. Verify pull_request.yaml caller stub
-      const prStub = fs.readFileSync(
-        path.join(workflowsDir, "pull_request.yaml"),
-        "utf8",
-      );
+      const prStub = stubs[".github/workflows/pull_request.yaml"];
       assert.match(
         prStub,
         /uses: rancher\/terraform-provider-rancher2\/\.github\/workflows\/pull_request\.yaml@main/,
       );
-      assert.match(prStub, /merge_group:/);
-      assert.match(prStub, /contents:\s+read/);
-      assert.match(prStub, /pull-requests:\s+read/);
 
-      // 5. Verify release.yml caller stub
-      const releaseStub = fs.readFileSync(
-        path.join(workflowsDir, "release.yml"),
-        "utf8",
-      );
+      const releaseStub = stubs[".github/workflows/release.yml"];
       assert.match(
         releaseStub,
         /uses: rancher\/terraform-provider-rancher2\/\.github\/workflows\/release-please\.yml@main/,
       );
-      assert.match(releaseStub, /branches:\s+- 'release\/v\*'/);
-      assert.match(releaseStub, /contents:\s+write/);
-      assert.match(releaseStub, /id-token:\s+write/);
-      assert.match(releaseStub, /issues:\s+write/);
-      assert.match(releaseStub, /pull-requests:\s+write/);
-      assert.match(releaseStub, /actions:\s+read/);
 
-      // 6. Verify e2e-pr-listener.yml is created/preserved
-      assert.strictEqual(
-        fs.existsSync(path.join(workflowsDir, "e2e-pr-listener.yml")),
-        true,
-      );
-      const listenerContent = fs.readFileSync(
-        path.join(workflowsDir, "e2e-pr-listener.yml"),
-        "utf8",
-      );
-      assert.match(listenerContent, /name:\s+PR Executor Listener/);
-      assert.match(listenerContent, /branches:\s+- 'release\/v\*'/);
-
-      // 7. Verify sync-release-manifest.yml caller stub
-      assert.strictEqual(
-        fs.existsSync(path.join(workflowsDir, "sync-release-manifest.yml")),
-        true,
-      );
-      const syncStub = fs.readFileSync(
-        path.join(workflowsDir, "sync-release-manifest.yml"),
-        "utf8",
-      );
+      const syncStub = stubs[".github/workflows/sync-release-manifest.yml"];
       assert.match(
         syncStub,
         /uses: rancher\/terraform-provider-rancher2\/\.github\/workflows\/sync-release-manifest\.yml@main/,
       );
-      assert.match(syncStub, /workflow_dispatch:/);
-      assert.match(syncStub, /branch:\s+\${{\s*inputs\.branch\s*}}/);
-      assert.match(syncStub, /version:\s+\${{\s*inputs\.version\s*}}/);
-      assert.match(syncStub, /release_as:\s+\${{\s*inputs\.release_as\s*}}/);
-      assert.match(syncStub, /secrets:\s+inherit/);
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    }
+
+      const listenerStub = stubs[".github/workflows/e2e-pr-listener.yml"];
+      assert.match(listenerStub, /name: PR Executor Listener/);
+      assert.match(listenerStub, /branches:\s+- 'release\/v\*'/);
+
+      assert.strictEqual(ALLOWED_STUB_FILENAMES.size, 4);
+      assert.ok(ALLOWED_STUB_FILENAMES.has("pull_request.yaml"));
+      assert.ok(ALLOWED_STUB_FILENAMES.has("release.yml"));
+      assert.ok(ALLOWED_STUB_FILENAMES.has("sync-release-manifest.yml"));
+      assert.ok(ALLOWED_STUB_FILENAMES.has("e2e-pr-listener.yml"));
+    });
   });
 
-  it('normalizes bare version like "v17" to v17.0.0', () => {
-    const tmpDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), "setup-release-branch-test-"),
-    );
-    try {
-      execFileSync("bash", [scriptPath, "v17"], {
-        cwd: tmpDir,
-        stdio: "pipe",
+  describe("cleanupNonStubWorkflows", () => {
+    it("deletes arbitrary non-stub workflows and preserves allowed stubs", async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "cleanup-workflows-test-"),
+      );
+      try {
+        await fs.writeFile(
+          path.join(tmpDir, "pull_request.yaml"),
+          "stub",
+          "utf8",
+        );
+        await fs.writeFile(path.join(tmpDir, "release.yml"), "stub", "utf8");
+        await fs.writeFile(path.join(tmpDir, "arbitrary-ci.yml"), "ci", "utf8");
+        await fs.writeFile(
+          path.join(tmpDir, "legacy-release.yaml"),
+          "legacy",
+          "utf8",
+        );
+        await fs.writeFile(
+          path.join(tmpDir, "not-a-workflow.txt"),
+          "text",
+          "utf8",
+        );
+
+        await cleanupNonStubWorkflows(tmpDir);
+
+        const files = await fs.readdir(tmpDir);
+        assert.ok(files.includes("pull_request.yaml"));
+        assert.ok(files.includes("release.yml"));
+        assert.ok(files.includes("not-a-workflow.txt"));
+        assert.ok(!files.includes("arbitrary-ci.yml"));
+        assert.ok(!files.includes("legacy-release.yaml"));
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
+    });
+
+    it("handles non-existent directory safely without error", async () => {
+      const nonExistent = path.join(
+        os.tmpdir(),
+        "non-existent-dir-" + Date.now(),
+      );
+      await assert.doesNotReject(() => cleanupNonStubWorkflows(nonExistent));
+    });
+  });
+
+  describe("formatPrBody", () => {
+    it("includes branch, release-as, and manifest version details", () => {
+      const body = formatPrBody({
+        branch: "release/v16",
+        versionNumber: 16,
+        releaseAs: "v16.0.0",
+        manifestVersion: "16.0.0",
       });
-      const updatedConfig = JSON.parse(
-        fs.readFileSync(
+      assert.match(body, /release\/v16/);
+      assert.match(body, /v16\.0\.0/);
+      assert.match(body, /16\.0\.0/);
+      assert.match(body, /pull_request\.yaml/);
+      assert.match(body, /release\.yml/);
+    });
+  });
+
+  describe("runGit error sanitization", () => {
+    it("sanitizes authorization headers and tokens in error messages", async () => {
+      await assert.rejects(
+        () =>
+          runGit([
+            "subcommand-that-does-not-exist",
+            "Authorization: basic secrettoken12345",
+          ]),
+        (err) => {
+          assert.ok(!err.message.includes("secrettoken12345"));
+          assert.ok(err.message.includes("[REDACTED]"));
+          return true;
+        },
+      );
+    });
+  });
+
+  describe("runSetupReleaseBranch", () => {
+    it("strictly creates release branch from origin/main when not present on remote", async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "setup-release-branch-run-"),
+      );
+      try {
+        const gitCalls = [];
+        const mockGit = async (args) => {
+          gitCalls.push(args);
+          if (args[0] === "ls-remote") {
+            // Simulate branch does not exist on remote
+            return { stdout: "", stderr: "" };
+          }
+          if (args[0] === "status") {
+            return { stdout: "M release-please-config.json\n", stderr: "" };
+          }
+          return { stdout: "", stderr: "" };
+        };
+
+        const mockPulls = {
+          list: async () => ({ data: [] }),
+          create: async () => ({
+            data: {
+              number: 42,
+              html_url: "https://github.com/rancher/test/pull/42",
+            },
+          }),
+        };
+
+        const addedLabels = [];
+        const mockIssues = {
+          addLabels: async (params) => {
+            addedLabels.push(params);
+            return { data: [] };
+          },
+        };
+
+        const mockGithub = {
+          rest: {
+            pulls: mockPulls,
+            issues: mockIssues,
+          },
+        };
+
+        const infoLogs = [];
+        const mockCore = {
+          info: (msg) => infoLogs.push(msg),
+          warning: () => {},
+          setFailed: () => {},
+        };
+
+        const res = await runSetupReleaseBranch({
+          github: mockGithub,
+          context: {
+            repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          },
+          core: mockCore,
+          process: { env: { INPUT_BRANCH: "release/v16" }, cwd: () => tmpDir },
+          gitExec: mockGit,
+          workDir: tmpDir,
+        });
+
+        assert.strictEqual(res.branch, "release/v16");
+        assert.strictEqual(res.versionNumber, 16);
+        assert.strictEqual(res.choreBranch, "chore/setup-release-v16");
+        assert.strictEqual(res.prNumber, 42);
+        assert.strictEqual(res.prCreated, true);
+
+        // Verify invariant: branch was created strictly from origin/main
+        const pushCall = gitCalls.find(
+          (call) =>
+            call[0] === "push" &&
+            call[1] === "origin" &&
+            call[2] === "origin/main:refs/heads/release/v16",
+        );
+        assert.ok(
+          pushCall,
+          "Expected release branch to be created strictly and exclusively from 'origin/main'",
+        );
+
+        // Verify files were created in tmpDir
+        const configRaw = await fs.readFile(
           path.join(tmpDir, "release-please-config.json"),
           "utf8",
-        ),
+        );
+        const configJson = JSON.parse(configRaw);
+        assert.strictEqual(configJson["release-as"], "v16.0.0");
+
+        const manifestRaw = await fs.readFile(
+          path.join(tmpDir, ".release-please-manifest.json"),
+          "utf8",
+        );
+        const manifestJson = JSON.parse(manifestRaw);
+        assert.strictEqual(manifestJson["."], "16.0.0");
+
+        const prStub = await fs.readFile(
+          path.join(tmpDir, ".github", "workflows", "pull_request.yaml"),
+          "utf8",
+        );
+        assert.match(prStub, /uses:.*@main/);
+
+        // Verify label was added
+        assert.strictEqual(addedLabels.length, 1);
+        assert.deepStrictEqual(addedLabels[0].labels, [
+          "internal/pr-release-chore",
+        ]);
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
+    });
+
+    it("skips origin/main push if release branch already exists on remote", async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "setup-release-branch-existing-"),
       );
-      assert.strictEqual(updatedConfig["release-as"], "v17.0.0");
-    } finally {
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    }
+      try {
+        const gitCalls = [];
+        const mockGit = async (args) => {
+          gitCalls.push(args);
+          if (args[0] === "ls-remote") {
+            // Branch exists
+            return {
+              stdout: "abcd1234refs/heads/release/v16\n",
+              stderr: "",
+            };
+          }
+          if (args[0] === "status") {
+            return { stdout: "", stderr: "" }; // No changes
+          }
+          return { stdout: "", stderr: "" };
+        };
+
+        const mockGithub = {
+          rest: {
+            pulls: {
+              list: async () => ({
+                data: [
+                  {
+                    number: 99,
+                    html_url: "https://github.com/rancher/test/pull/99",
+                  },
+                ],
+              }),
+              create: async () => {
+                throw new Error("Should not be called when PR already exists");
+              },
+            },
+          },
+        };
+
+        const res = await runSetupReleaseBranch({
+          github: mockGithub,
+          context: {
+            repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          },
+          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
+          process: { env: { INPUT_BRANCH: "release/v16" }, cwd: () => tmpDir },
+          gitExec: mockGit,
+          workDir: tmpDir,
+        });
+
+        assert.strictEqual(res.prNumber, 99);
+        assert.strictEqual(res.prCreated, false);
+
+        // Verify origin/main was NOT pushed to release/v16 since it already existed
+        const pushNewBranchCall = gitCalls.find(
+          (call) =>
+            call[0] === "push" &&
+            call[2] === "origin/main:refs/heads/release/v16",
+        );
+        assert.strictEqual(pushNewBranchCall, undefined);
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
+    });
+
+    it("rejects invalid branch names and calls core.setFailed in default export", async () => {
+      let failedMessage = null;
+      const mockCore = {
+        info: () => {},
+        warning: () => {},
+        setFailed: (msg) => {
+          failedMessage = msg;
+        },
+      };
+
+      await assert.rejects(
+        () =>
+          run({
+            core: mockCore,
+            process: { env: { INPUT_BRANCH: "v16" } },
+          }),
+        /Branch must strictly match 'release\/v<2-digit-version>'/,
+      );
+
+      assert.match(
+        failedMessage,
+        /Branch must strictly match 'release\/v<2-digit-version>'/,
+      );
+    });
   });
 });

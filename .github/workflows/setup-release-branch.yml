@@ -1,0 +1,53 @@
+name: "Setup Release Branch"
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Exact canonical release branch name (e.g. release/v16). Shorthands like 'v16' or '16' are rejected."
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: setup-release-branch-${{ inputs.branch }}
+  cancel-in-progress: false
+
+jobs:
+  setup-release-branch:
+    name: "Create and Setup Release Branch"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: "Get Merge Token"
+        id: get-token
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
+
+      - name: "Checkout Repository (main)"
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ env.GITHUB_MERGE_TOKEN }}
+          ref: "main"
+          fetch-depth: 0
+
+      - name: "Execute Setup Release Branch Script"
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+        with:
+          github-token: ${{ env.GITHUB_MERGE_TOKEN }}
+          script: |
+            const script = await import('${{ github.workspace }}/.github/workflows/scripts/setup-release-branch.js');
+            await script.default({ github, context, core, process });
