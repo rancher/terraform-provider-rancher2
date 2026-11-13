@@ -365,7 +365,7 @@ describe("setup-release-branch.js", () => {
       }
     });
 
-    it("skips origin/main push if release branch already exists on remote", async () => {
+    it("skips origin/main push if release branch already exists on remote and ensures labels on rerun", async () => {
       const tmpDir = await fs.mkdtemp(
         path.join(os.tmpdir(), "setup-release-branch-existing-"),
       );
@@ -374,11 +374,19 @@ describe("setup-release-branch.js", () => {
         const mockGit = async (args) => {
           gitCalls.push(args);
           if (args[0] === "ls-remote") {
-            // Branch exists
-            return {
-              stdout: "abcd1234refs/heads/release/v16\n",
-              stderr: "",
-            };
+            if (args[3] === "refs/heads/release/v16") {
+              return {
+                stdout: "abcd1234refs/heads/release/v16\n",
+                stderr: "",
+              };
+            }
+            if (args[3] === "refs/heads/chore/setup-release-v16") {
+              return {
+                stdout: "ef01234refs/heads/chore/setup-release-v16\n",
+                stderr: "",
+              };
+            }
+            return { stdout: "", stderr: "" };
           }
           if (args[0] === "status") {
             return { stdout: "", stderr: "" }; // No changes
@@ -386,6 +394,7 @@ describe("setup-release-branch.js", () => {
           return { stdout: "", stderr: "" };
         };
 
+        const addedLabels = [];
         const mockGithub = {
           rest: {
             pulls: {
@@ -399,6 +408,12 @@ describe("setup-release-branch.js", () => {
               }),
               create: async () => {
                 throw new Error("Should not be called when PR already exists");
+              },
+            },
+            issues: {
+              addLabels: async (params) => {
+                addedLabels.push(params);
+                return { data: [] };
               },
             },
           },
@@ -418,6 +433,13 @@ describe("setup-release-branch.js", () => {
         assert.strictEqual(res.prNumber, 99);
         assert.strictEqual(res.prCreated, false);
 
+        // Verify label was ensured on existing PR during rerun
+        assert.strictEqual(addedLabels.length, 1);
+        assert.strictEqual(addedLabels[0].issue_number, 99);
+        assert.deepStrictEqual(addedLabels[0].labels, [
+          "internal/pr-release-chore",
+        ]);
+
         // Verify origin/main was NOT pushed to release/v16 since it already existed
         const pushNewBranchCall = gitCalls.find(
           (call) =>
@@ -425,6 +447,59 @@ describe("setup-release-branch.js", () => {
             call[2] === "origin/main:refs/heads/release/v16",
         );
         assert.strictEqual(pushNewBranchCall, undefined);
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
+    });
+
+    it("handles no-op cleanly without creating PR when branch is already configured and no chore branch exists", async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "setup-release-branch-noop-"),
+      );
+      try {
+        const mockGit = async (args) => {
+          if (args[0] === "ls-remote") {
+            if (args[3] === "refs/heads/release/v16") {
+              return {
+                stdout: "abcd1234refs/heads/release/v16\n",
+                stderr: "",
+              };
+            }
+            // Chore branch does not exist on remote
+            return { stdout: "", stderr: "" };
+          }
+          if (args[0] === "status") {
+            return { stdout: "", stderr: "" }; // No changes
+          }
+          return { stdout: "", stderr: "" };
+        };
+
+        const mockGithub = {
+          rest: {
+            pulls: {
+              list: async () => {
+                throw new Error("Should not call pulls.list on no-op");
+              },
+              create: async () => {
+                throw new Error("Should not call pulls.create on no-op");
+              },
+            },
+          },
+        };
+
+        const res = await runSetupReleaseBranch({
+          github: mockGithub,
+          context: {
+            repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          },
+          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
+          process: { env: { INPUT_BRANCH: "release/v16" }, cwd: () => tmpDir },
+          gitExec: mockGit,
+          workDir: tmpDir,
+        });
+
+        assert.strictEqual(res.prNumber, null);
+        assert.strictEqual(res.prCreated, false);
       } finally {
         await fs.rm(tmpDir, { recursive: true, force: true });
       }

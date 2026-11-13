@@ -396,6 +396,8 @@ export async function runSetupReleaseBranch({
     statusResult?.stdout && statusResult.stdout.trim().length > 0,
   );
 
+  let choreBranchPushed = hasChanges;
+
   if (hasChanges) {
     core?.info?.(`Committing and pushing changes to '${choreBranch}'...`);
     await git([
@@ -404,10 +406,38 @@ export async function runSetupReleaseBranch({
       `chore(${parsed.branch}): initialize release branch configuration`,
     ]);
     await git(["push", "-u", "origin", choreBranch, "--force"]);
+    choreBranchPushed = true;
   } else {
     core?.info?.(
       `No file modifications needed; setup files already match target configuration.`,
     );
+    // Check if chore branch exists on remote origin
+    const remoteChoreResult = await git([
+      "ls-remote",
+      "--heads",
+      "origin",
+      `refs/heads/${choreBranch}`,
+    ]);
+    choreBranchPushed = Boolean(
+      remoteChoreResult?.stdout &&
+      remoteChoreResult.stdout.includes(`refs/heads/${choreBranch}`),
+    );
+  }
+
+  // If there are no local changes and no remote chore branch exists, the release branch
+  // is already fully configured and up to date. No configuration PR is needed.
+  if (!choreBranchPushed) {
+    core?.info?.(
+      `Release branch '${parsed.branch}' already has target configuration applied and no chore branch exists. No setup PR needed.`,
+    );
+    return {
+      branch: parsed.branch,
+      versionNumber: parsed.versionNumber,
+      choreBranch,
+      prNumber: null,
+      prUrl: null,
+      prCreated: false,
+    };
   }
 
   // 5. Open pull request targeting release branch
@@ -451,23 +481,23 @@ export async function runSetupReleaseBranch({
       prUrl = createdPr.data.html_url;
       prCreated = true;
       core?.info?.(`Successfully opened PR #${prNumber}: ${prUrl}`);
+    }
 
-      if (github?.rest?.issues?.addLabels) {
-        try {
-          await github.rest.issues.addLabels({
-            owner,
-            repo,
-            issue_number: prNumber,
-            labels: ["internal/pr-release-chore"],
-          });
-          core?.info?.(
-            `Added 'internal/pr-release-chore' label to PR #${prNumber}`,
-          );
-        } catch (labelErr) {
-          core?.warning?.(
-            `Failed to add label 'internal/pr-release-chore': ${labelErr.message}`,
-          );
-        }
+    if (prNumber && github?.rest?.issues?.addLabels) {
+      try {
+        await github.rest.issues.addLabels({
+          owner,
+          repo,
+          issue_number: prNumber,
+          labels: ["internal/pr-release-chore"],
+        });
+        core?.info?.(
+          `Ensured 'internal/pr-release-chore' label on PR #${prNumber}`,
+        );
+      } catch (labelErr) {
+        core?.warning?.(
+          `Failed to add label 'internal/pr-release-chore': ${labelErr.message}`,
+        );
       }
     }
   }
