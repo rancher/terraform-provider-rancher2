@@ -1,13 +1,6 @@
 # Changelog
 
-## [13.11.2](https://github.com/rancher/terraform-provider-rancher2/compare/v13.11.1...v13.11.2) (2026-11-13)
-
-
-### Bug Fixes
-
-* enable draft releases and advance version to v13.11.2 ([#2663](https://github.com/rancher/terraform-provider-rancher2/issues/2663)) ([820fb9d](https://github.com/rancher/terraform-provider-rancher2/commit/820fb9d7bd7127093b63dd06f0320a008e06e1ba))
-
-## [13.11.1](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.11.1) (2026-11-12)
+## [13.11.2](https://github.com/rancher/terraform-provider-rancher2/compare/v13.5.0...v13.11.2) (2026-11-13)
 
 
 ### Features
@@ -18,6 +11,7 @@
 ### Bug Fixes
 
 * add merge group trigger to pr workflows ([#2613](https://github.com/rancher/terraform-provider-rancher2/issues/2613)) ([5e1e2ff](https://github.com/rancher/terraform-provider-rancher2/commit/5e1e2ff30267cf5415290f3356c0704e76a484ad))
+* enable draft releases and advance version to v13.11.2 ([#2663](https://github.com/rancher/terraform-provider-rancher2/issues/2663)) ([820fb9d](https://github.com/rancher/terraform-provider-rancher2/commit/820fb9d7bd7127093b63dd06f0320a008e06e1ba))
 * remove deprecated catalog v1 resources ([#2491](https://github.com/rancher/terraform-provider-rancher2/issues/2491)) ([2fd7dee](https://github.com/rancher/terraform-provider-rancher2/commit/2fd7dee538b43d976ba1968871fa9d589aa71afc))
 * trivial change to exercise workflows ([#2633](https://github.com/rancher/terraform-provider-rancher2/issues/2633)) ([#2635](https://github.com/rancher/terraform-provider-rancher2/issues/2635)) ([d039b72](https://github.com/rancher/terraform-provider-rancher2/commit/d039b728ce795281d17c229ae0efafd6b1f0f9a2))
 * update docs on app_v2 import ([#2317](https://github.com/rancher/terraform-provider-rancher2/issues/2317)) ([#2331](https://github.com/rancher/terraform-provider-rancher2/issues/2331)) ([0bbfeaf](https://github.com/rancher/terraform-provider-rancher2/commit/0bbfeafeb248d1fa6d25bdcff2771ceac3a8ab00))
