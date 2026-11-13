@@ -1,7 +1,13 @@
 name: Pull Request
 
+# This workflow runs both for PRs to main from forks and automated backport PRs in release branches.
+# When this is called in a context that isn't a PR to main we pull in the scripts from main to execute them.
+# This allows us to maintain a single set of workflows rather than having to maintain the workflows in every release branch.
+
 on:
   pull_request:
+  merge_group:
+  workflow_call:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -16,7 +22,7 @@ concurrency:
 
 jobs:
   build:
-    name: 'Build'
+    name: "Build"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -30,15 +36,30 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
       - name: Build Binaries
         id: build-binaries
         env:
           CROSS: 1
           VERSION: ${{ github.ref_name }}
-        run: .github/workflows/scripts/nix-run.sh make build
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" make build
 
   test:
-    name: 'Test'
+    name: "Test"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -52,12 +73,27 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
       - name: Run make test
         id: run-make-test
-        run: .github/workflows/scripts/nix-run.sh make test
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" make test
 
   terraform:
-    name: 'Terraform'
+    name: "Terraform"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -71,12 +107,27 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
       - name: Lint Terraform
         id: lint-terraform
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh terraform
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" terraform
 
   actionlint:
-    name: 'Lint Workflows'
+    name: "Lint Workflows"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -90,12 +141,27 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
       - name: Action Lint
         id: action-lint
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh actionlint
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" actionlint
 
   node-check:
-    name: 'Node Check'
+    name: "Node Check"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -109,12 +175,74 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
       - name: Node Syntax Check
         id: node-syntax-check
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh node-check
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" node-check
+      - name: Check Manifest Downgrade
+        id: check-manifest-downgrade
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          BASE_BRANCH: ${{ github.base_ref || github.event.merge_group.base_ref }}
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          TARGET_BASE="${GITHUB_BASE_REF:-${BASE_BRANCH:-}}"
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" manifest "$TARGET_BASE"
+
+  node-test:
+    name: "Node Tests"
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
+      - name: Node Unit Tests
+        id: node-unit-tests
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" node-test
 
   eslint:
-    name: 'ESLint'
+    name: "ESLint"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -128,12 +256,27 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
       - name: ESLint Check
         id: eslint-check
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh eslint
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" eslint
 
   shellcheck:
-    name: 'Shellcheck'
+    name: "Shellcheck"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -147,12 +290,28 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
       - name: Shell Check
         id: shell-check
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh shellcheck
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" shellcheck
 
   validate-commit-message:
-    name: 'Validate Commit Message'
+    name: "Validate Commit Message"
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -165,14 +324,31 @@ jobs:
         id: checkout-repository
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
       - name: Check Commit Message
         id: check-commit-message
         env:
           PR_NUMBER: ${{ github.event.number }}
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/validate-commit-message.sh
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/validate-commit-message.js"
 
   gitleaks:
-    name: 'Scan for Secrets'
+    name: "Scan for Secrets"
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -186,7 +362,65 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
       - name: Check for Secrets
         id: check-for-secrets
-        run: .github/workflows/scripts/nix-run.sh bash .github/workflows/scripts/lint.sh gitleaks
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" node "$SCRIPT_DIR/lint.js" gitleaks
         continue-on-error: true
+
+  sensitive-checks:
+    name: "Sensitive Checks"
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Checkout CI Tools from main
+        id: checkout-ci-tools
+        if: github.base_ref != 'main' && github.event.merge_group.base_ref != 'refs/heads/main'
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: rancher/terraform-provider-rancher2
+          ref: "main"
+          path: .github-tools
+      - name: Test Check Sensitive
+        id: test-check-sensitive
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" go test "$SCRIPT_DIR/check_sensitive.go" "$SCRIPT_DIR/check_sensitive_test.go"
+      - name: Check Schema Sensitivity
+        id: check-sensitive
+        run: |
+          if [ -d .github-tools/.github/workflows/scripts ]; then
+            SCRIPT_DIR=".github-tools/.github/workflows/scripts"
+          else
+            SCRIPT_DIR=".github/workflows/scripts"
+          fi
+          "$SCRIPT_DIR/nix-run.sh" go run "$SCRIPT_DIR/check_sensitive.go"

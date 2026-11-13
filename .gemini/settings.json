@@ -1,26 +1,114 @@
 {
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          { "type": "command", "command": "bash .agent/hooks/startup-context.sh" }
-        ]
-      }
-    ],
-    "BeforeTool": [
-      {
-        "matcher": "write_file|replace",
-        "hooks": [
-          { "type": "command", "command": "node .agent/hooks/enforce-planning.js" }
-        ]
+  "models": {
+    "pro": "gemini-3.1-pro-preview",
+    "flash": "gemini-3.8-flash",
+    "flash_lite": "gemini-3.1-flash-lite"
+  },
+  "ui": {
+    "compactToolOutputs": false
+  },
+  "agents": {
+    "overrides": {
+      "codebase_investigator": {
+        "runConfig": {
+          "maxTurns": 10
+        }
       },
+      "generic_subagent": {
+        "runConfig": {
+          "maxTurns": 10
+        }
+      },
+      "quality_assurance": {
+        "runConfig": {
+          "maxTurns": 5
+        }
+      },
+      "developer": {
+        "runConfig": {
+          "maxTurns": 10
+        }
+      },
+      "architect": {
+        "runConfig": {
+          "maxTurns": 10
+        }
+      },
+      "test_runner": {
+        "runConfig": {
+          "maxTurns": 5
+        }
+      }
+    }
+  },
+  "hooks": {
+    "SessionStart": [],
+    "BeforeTool": [
       {
         "matcher": "run_shell_command",
         "hooks": [
-          { "type": "command", "command": "node .agent/hooks/block-rancher-git.js" }
+          {
+            "name": "block-restricted-commands",
+            "type": "command",
+            "command": "node .gemini/hooks/block-restricted-commands.js",
+            "timeout": 5000,
+            "description": "Prevents running destructive commands."
+          }
+        ]
+      },
+      {
+        "matcher": "write_file",
+        "hooks": [
+          {
+            "name": "block-restricted-commands",
+            "type": "command",
+            "command": "node .gemini/hooks/block-restricted-commands.js",
+            "timeout": 5000,
+            "description": "Prevents running destructive commands."
+          }
+        ]
+      },
+      {
+        "matcher": "replace",
+        "hooks": [
+          {
+            "name": "block-restricted-commands",
+            "type": "command",
+            "command": "node .gemini/hooks/block-restricted-commands.js",
+            "timeout": 5000,
+            "description": "Prevents running destructive commands."
+          }
+        ]
+      },
+      {
+        "matcher": "read_file",
+        "hooks": [
+          {
+            "name": "block-restricted-commands",
+            "type": "command",
+            "command": "node .gemini/hooks/block-restricted-commands.js",
+            "timeout": 5000,
+            "description": "Prevents running destructive commands."
+          }
+        ]
+      },
+      {
+        "matcher": "web_fetch",
+        "hooks": [
+          {
+            "name": "block-restricted-commands",
+            "type": "command",
+            "command": "node .gemini/hooks/block-restricted-commands.js",
+            "timeout": 5000,
+            "description": "Prevents running destructive commands."
+          }
         ]
       }
-    ]
+    ],
+    "AfterTool": []
+  },
+  "hooksConfig": {
+    "disabled": [],
+    "enabled": true
   }
 }

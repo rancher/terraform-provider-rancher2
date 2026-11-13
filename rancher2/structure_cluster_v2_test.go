@@ -257,7 +257,7 @@ func init() {
 		"name":                                   "name",
 		"fleet_namespace":                        "fleet_namespace",
 		"kubernetes_version":                     "kubernetes_version",
-		"local_auth_endpoint":                    testClusterV2LocalAuthEndpointInterfaceWithFlag,
+		"local_auth_endpoint":                    testClusterV2LocalAuthEndpointInterface,
 		"rke_config":                             testClusterV2RKEConfigInterface,
 		"agent_env_vars":                         testClusterV2EnvVarInterface,
 		"cluster_agent_deployment_customization": testClusterV2ClusterAgentCustomizationInterface,
@@ -302,6 +302,18 @@ func TestFlattenClusterV2(t *testing.T) {
 				// This is a hack to remove the deprecated field because it is not being set.
 				rkeConfig := actualOutput[k].([]interface{})[0].(map[string]interface{})
 				delete(rkeConfig, "local_auth_endpoint")
+			}
+			if k == "local_auth_endpoint" {
+				// use_internal_ca_certs has no server-side representation and is
+				// intentionally not set by flattenClusterV2LocalAuthEndpoint (see
+				// resourceRancher2ClusterV2Read); remove the schema-default value
+				// before comparing against the expected fixture.
+				lae := actualOutput[k].([]interface{})
+				if len(lae) > 0 {
+					if m, ok := lae[0].(map[string]interface{}); ok {
+						delete(m, "use_internal_ca_certs")
+					}
+				}
 			}
 		}
 		assert.Equal(t, tc.ExpectedOutput, actualOutput)

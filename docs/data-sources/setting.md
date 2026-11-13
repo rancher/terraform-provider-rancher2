@@ -16,8 +16,8 @@ data "rancher2_setting" "server-image" {
 
 ## Argument Reference
 
- * `name` - (Required) The setting name.
+- `name` - (Required) The setting name.
 
 ## Attributes Reference
 
- * `value` - the settting's value.
+- `value` - the settting's value.

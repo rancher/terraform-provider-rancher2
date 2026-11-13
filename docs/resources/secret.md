@@ -7,6 +7,7 @@ page_title: "rancher2_secret Resource"
 Provides a Rancher v2 Secret resource. This can be used to create secrets for Rancher v2 environments and retrieve their information.
 
 Depending of the availability, there are 2 types of Rancher v2 secrets:
+
 - Project secret: Available to all namespaces in the `project_id`
 - Namespaced secret: Available to just `namespace_id` in the `project_id`
 
@@ -45,19 +46,19 @@ resource "rancher2_secret" "foo" {
 
 The following arguments are supported:
 
-* `data` - (Required/Sensitive) Secret key/value data. Base64 encoding required for values (map)
-* `project_id` - (Required/ForceNew) The project id where to assign the secret (string)
-* `description` - (Optional) A secret description (string)
-* `name` - (Optional/ForceNew) The name of the secret (string)
-* `namespace_id` - (Optional/ForceNew) The namespace id where to assign the namespaced secret (string)
-* `annotations` - (Optional/Computed) Annotations for secret object (map)
-* `labels` - (Optional/Computed) Labels for secret object (map)
+- `data` - (Required/Sensitive) Secret key/value data. Base64 encoding required for values (map)
+- `project_id` - (Required/ForceNew) The project id where to assign the secret (string)
+- `description` - (Optional) A secret description (string)
+- `name` - (Optional/ForceNew) The name of the secret (string)
+- `namespace_id` - (Optional/ForceNew) The namespace id where to assign the namespaced secret (string)
+- `annotations` - (Optional/Computed) Annotations for secret object (map)
+- `labels` - (Optional/Computed) Labels for secret object (map)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
+- `id` - (Computed) The ID of the resource (string)
 
 ## Timeouts
 

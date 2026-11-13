@@ -17,13 +17,45 @@ func resourceRancher2ClusterSync() *schema.Resource {
 		Update: resourceRancher2ClusterSyncUpdate,
 		Delete: resourceRancher2ClusterSyncDelete,
 
-		Schema: clusterSyncFields(),
+		Schema:        clusterSyncFields(),
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceRancher2ClusterSyncResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceRancher2ClusterSyncStateUpgradeV0,
+				Version: 0,
+			},
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 	}
+}
+
+func resourceRancher2ClusterSyncResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: clusterSyncFieldsV0(),
+	}
+}
+
+// resourceRancher2ClusterSyncStateUpgradeV0 removes the RKE1-only fields 
+// from the state when upgrading from v0 to v1 of the resource schema.
+func resourceRancher2ClusterSyncStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	delete(rawState, "node_pool_ids")
+
+	if nodes, ok := rawState["nodes"].([]interface{}); ok {
+		for _, node := range nodes {
+			if node, ok := node.(map[string]interface{}); ok {
+				delete(node, "node_pool_id")
+				delete(node, "node_template_id")
+				delete(node, "ssh_user")
+			}
+		}
+	}
+
+	return rawState, nil
 }
 
 func resourceRancher2ClusterSyncCreate(d *schema.ResourceData, meta interface{}) error {

@@ -42,31 +42,31 @@ resource "rancher2_app_v2" "cis_benchmark" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required/ForceNew) The cluster id of the app (string)
-* `name` - (Required/ForceNew) The name of the app v2 (string)
-* `namespace` - (Required/ForceNew) The namespace of the app v2 (string)
-* `repo_name` - (Required) Repo name (string)
-* `chart_name` - (Required) The app v2 chart name (string)
-* `chart_version` - (Optional/Computed) The app v2 chart version (string)
-* `project_id` - (Optional) Deploy the app v2 within project ID (string)
-* `values` - (Optional/Sensitive) The app v2 values yaml. Yaml format is required (string)
-* `cleanup_on_fail` - (Optional) Cleanup app v2 on failed chart upgrade. Default: `false` (bool)
-* `disable_hooks` - (Optional) Disable app v2 chart hooks. Default: `false` (bool)
-* `disable_open_api_validation` - (Optional) Disable app V2 Open API Validation. Default: `false` (bool)
-* `skip_schema_validation` - (Optional) Skip app V2 chart schema validation. Default: `false` (bool)
-* `force_upgrade` - (Optional) Force app V2 chart upgrade. Default: `false` (bool)
-* `wait` - (Optional) Wait until app is deployed. Default: `true` (bool)
-* `annotations` - (Optional/Computed) Annotations for the app v2 (map)
-* `labels` - (Optional/Computed) Labels for the app v2 (map)
-* `system_default_registry` - (Optional/Computed) System default registry providing images for app deployment (string)
+- `cluster_id` - (Required/ForceNew) The cluster id of the app (string)
+- `name` - (Required/ForceNew) The name of the app v2 (string)
+- `namespace` - (Required/ForceNew) The namespace of the app v2 (string)
+- `repo_name` - (Required) Repo name (string)
+- `chart_name` - (Required) The app v2 chart name (string)
+- `chart_version` - (Optional/Computed) The app v2 chart version (string)
+- `project_id` - (Optional) Deploy the app v2 within project ID (string)
+- `values` - (Optional/Sensitive) The app v2 values yaml. Yaml format is required (string)
+- `cleanup_on_fail` - (Optional) Cleanup app v2 on failed chart upgrade. Default: `false` (bool)
+- `disable_hooks` - (Optional) Disable app v2 chart hooks. Default: `false` (bool)
+- `disable_open_api_validation` - (Optional) Disable app V2 Open API Validation. Default: `false` (bool)
+- `skip_schema_validation` - (Optional) Skip app V2 chart schema validation. Default: `false` (bool)
+- `force_upgrade` - (Optional) Force app V2 chart upgrade. Default: `false` (bool)
+- `wait` - (Optional) Wait until app is deployed. Default: `true` (bool)
+- `annotations` - (Optional/Computed) Annotations for the app v2 (map)
+- `labels` - (Optional/Computed) Labels for the app v2 (map)
+- `system_default_registry` - (Optional/Computed) System default registry providing images for app deployment (string)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `cluster_name` - (Computed) The cluster name of the app (string)
-* `system_default_registry` - (Computed) The system default registry of the app (string)
+- `id` - (Computed) The ID of the resource (string)
+- `cluster_name` - (Computed) The cluster name of the app (string)
+- `system_default_registry` - (Computed) The system default registry of the app (string)
 
 ## Timeouts
 

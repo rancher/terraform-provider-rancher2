@@ -18,19 +18,19 @@ data "rancher2_global_role" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Global Role (string)
+- `name` - (Required) The name of the Global Role (string)
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - (Computed) The ID of the resource (string)
-* `builtin` - (Computed) Builtin global role (bool)
-* `description` - (Computed) Global role description (string)
-* `new_user_default` - (Computed) Whether or not this role should be added to new users (bool)
-* `rules` - (Computed) Global role policy rules (list)
-* `uuid` - (Computed) Global role uuid (string)
-* `annotations` - (Computed) Annotations for global role object (map)
-* `labels` - (Computed) Labels for global role object (map)
-* `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
-* `inherited_namespaced_rules` - (Computed) Policy rules granted in matching namespaces of every cluster besides the local cluster (set)
+- `id` - (Computed) The ID of the resource (string)
+- `builtin` - (Computed) Builtin global role (bool)
+- `description` - (Computed) Global role description (string)
+- `new_user_default` - (Computed) Whether or not this role should be added to new users (bool)
+- `rules` - (Computed) Global role policy rules (list)
+- `uuid` - (Computed) Global role uuid (string)
+- `annotations` - (Computed) Annotations for global role object (map)
+- `labels` - (Computed) Labels for global role object (map)
+- `inherited_cluster_roles` - (Optional) Names of role templates whose permissions are granted by this global role in every cluster besides the local cluster (list)
+- `inherited_namespaced_rules` - (Computed) Policy rules granted in matching namespaces of every cluster besides the local cluster (set)
