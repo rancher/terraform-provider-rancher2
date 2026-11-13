@@ -141,7 +141,7 @@ export async function runGit(args, options = {}) {
 /**
  * Validates and parses release branch input.
  * Strictly accepts canonical 'release/v<version>' (e.g. 'release/v16').
- * Rejects shorthands like 'v16', '16', 'release/16', surrounding whitespace, or arbitrary branch names.
+ * Rejects shorthands like 'v16', '16', 'release/16', leading zeros (e.g. 'release/v016'), surrounding whitespace, or arbitrary branch names.
  */
 export function parseReleaseBranch(input) {
   if (!input || typeof input !== "string") {
@@ -150,10 +150,10 @@ export function parseReleaseBranch(input) {
     );
   }
 
-  const match = input.match(/^release\/v(\d+)$/);
+  const match = input.match(/^release\/v([1-9]\d*)$/);
   if (!match) {
     throw new Error(
-      `Invalid branch format: '${input}'. Branch must strictly match 'release/v<version>' (e.g. 'release/v16'). Shorthands like 'v16' or '16' and surrounding whitespace are not permitted.`,
+      `Invalid branch format: '${input}'. Branch must strictly match 'release/v<version>' (e.g. 'release/v16'). Shorthands like 'v16' or '16', leading zeros, and surrounding whitespace are not permitted.`,
     );
   }
 

@@ -55,6 +55,25 @@ describe("setup-release-branch.js", () => {
       });
     });
 
+    it("rejects leading-zero versions (e.g. release/v016, release/v01, release/v00, release/v0)", () => {
+      assert.throws(
+        () => parseReleaseBranch("release/v016"),
+        /leading zeros.*are not permitted/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("release/v01"),
+        /leading zeros.*are not permitted/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("release/v00"),
+        /leading zeros.*are not permitted/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("release/v0"),
+        /leading zeros.*are not permitted/,
+      );
+    });
+
     it("rejects surrounding whitespace strictly", () => {
       assert.throws(
         () => parseReleaseBranch("  release/v16  "),
