@@ -1,86 +1,32 @@
-name: "Sync Release Please Manifest"
+name: "Sync Release Please Manifest Caller"
 
 on:
   workflow_dispatch:
     inputs:
       branch:
-        description: "Target release branch (e.g. release/v15)"
+        description: "Target release branch"
         required: true
         type: string
       version:
-        description: "Last published full release version without 'v' prefix (e.g. 15.1.2; do not enter upcoming version; auto-detected if empty)"
+        description: "Last published full release version"
         required: false
         type: string
       release_as:
-        description: "Target upcoming release version for release-as (e.g. v15.3.0; auto-detected as next minor if empty)"
-        required: false
-        type: string
-      last_release_sha:
-        description: "Commit SHA of last published release tag (auto-detected if empty)"
-        required: false
-        type: string
-  workflow_call:
-    inputs:
-      branch:
-        description: "Target release branch (e.g. release/v15)"
-        required: true
-        type: string
-      version:
-        description: "Last published full release version without 'v' prefix (e.g. 15.1.2; do not enter upcoming version; auto-detected if empty)"
-        required: false
-        type: string
-      release_as:
-        description: "Target upcoming release version for release-as (e.g. v15.3.0; auto-detected as next minor if empty)"
-        required: false
-        type: string
-      last_release_sha:
-        description: "Commit SHA of last published release tag (auto-detected if empty)"
+        description: "Target upcoming release version for release-as"
         required: false
         type: string
 
 permissions: {}
 
-concurrency:
-  group: sync-manifest-${{ inputs.branch || github.ref_name }}
-  cancel-in-progress: false
-
 jobs:
-  sync-manifest:
-    name: "Sync Manifest & Config"
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  sync:
     permissions:
       contents: write
       pull-requests: write
       id-token: write
-
-    steps:
-      - name: "Get Merge Token"
-        id: get-token
-        # https://github.com/rancher-eio/read-vault-secrets/commits
-        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
-        with:
-          secrets: |
-            github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
-
-      - name: "Checkout Repository"
-        # https://github.com/actions/checkout/releases
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          token: ${{ env.GITHUB_MERGE_TOKEN }}
-          ref: "main"
-          fetch-depth: 0
-
-      - name: "Run Manifest Sync Script"
-        # https://github.com/actions/github-script/releases
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        env:
-          TARGET_BRANCH: ${{ inputs.branch || github.event.release.target_commitish }}
-          RELEASE_TAG: ${{ inputs.version && format('v{0}', inputs.version) || github.event.release.tag_name }}
-          RELEASE_SHA: ${{ inputs.last_release_sha || '' }}
-          RELEASE_AS: ${{ inputs.release_as || '' }}
-        with:
-          github-token: ${{ env.GITHUB_MERGE_TOKEN }}
-          script: |
-            const script = await import('${{ github.workspace }}/.github/workflows/scripts/sync-manifest.js');
-            await script.default({ github, context, core, process });
+    uses: rancher/terraform-provider-rancher2/.github/workflows/sync-release-manifest.yml@main
+    with:
+      branch: ${{ inputs.branch }}
+      version: ${{ inputs.version }}
+      release_as: ${{ inputs.release_as }}
+    secrets: inherit
