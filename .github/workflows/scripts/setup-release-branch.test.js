@@ -74,19 +74,20 @@ describe("setup-release-branch.js", () => {
       );
     });
 
-    it("rejects surrounding whitespace strictly", () => {
-      assert.throws(
-        () => parseReleaseBranch("  release/v16  "),
-        /surrounding whitespace are not permitted/,
-      );
-      assert.throws(
-        () => parseReleaseBranch("release/v16 "),
-        /surrounding whitespace are not permitted/,
-      );
-      assert.throws(
-        () => parseReleaseBranch(" release/v16"),
-        /surrounding whitespace are not permitted/,
-      );
+    it("chomps surrounding whitespace cleanly", () => {
+      const resPadded = parseReleaseBranch("  release/v16  ");
+      assert.strictEqual(resPadded.branch, "release/v16");
+      assert.strictEqual(resPadded.versionNumber, 16);
+
+      const resLeading = parseReleaseBranch(" release/v16");
+      assert.strictEqual(resLeading.branch, "release/v16");
+
+      const resTrailing = parseReleaseBranch("release/v16 ");
+      assert.strictEqual(resTrailing.branch, "release/v16");
+
+      const resNewline = parseReleaseBranch("\n release/v99 \t");
+      assert.strictEqual(resNewline.branch, "release/v99");
+      assert.strictEqual(resNewline.versionNumber, 99);
     });
 
     it("rejects shorthand branch names (v16, 16, release/16)", () => {
