@@ -172,9 +172,9 @@ export function parseReleaseBranch(input) {
 
 /**
  * Resolves the commit SHA of the tag with the latest release history.
- * Strictly ignores pre-release / RC tags (e.g. -rc, -rc.1) and selects the highest stable semver tag (e.g. v15.3.0).
+ * Strictly ignores pre-release / RC tags (e.g. -rc, -rc.1) and selects the highest stable semver tag prior to maxMajor (e.g. v15.3.0 for v16).
  */
-export async function resolveLatestReleaseTagSha(git) {
+export async function resolveLatestReleaseTagSha(git, maxMajor = null) {
   try {
     const tagResult = await git(["tag", "-l", "v*"]);
     const tags = (tagResult?.stdout || "")
@@ -189,18 +189,28 @@ export async function resolveLatestReleaseTagSha(git) {
         (t) =>
           !t.includes("-rc") && !t.includes("-") && /^v?\d+\.\d+\.\d+$/.test(t),
       )
+      .map((t) => {
+        const match = t.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
+        return {
+          tag: t,
+          major: parseInt(match[1], 10),
+          minor: parseInt(match[2], 10),
+          patch: parseInt(match[3], 10),
+        };
+      })
+      .filter((item) =>
+        maxMajor !== null && maxMajor !== undefined
+          ? item.major < maxMajor
+          : true,
+      )
       .sort((a, b) => {
-        const matchA = a.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
-        const matchB = b.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
-        const majDiff = parseInt(matchB[1], 10) - parseInt(matchA[1], 10);
-        if (majDiff !== 0) return majDiff;
-        const minDiff = parseInt(matchB[2], 10) - parseInt(matchA[2], 10);
-        if (minDiff !== 0) return minDiff;
-        return parseInt(matchB[3], 10) - parseInt(matchA[3], 10);
+        if (b.major !== a.major) return b.major - a.major;
+        if (b.minor !== a.minor) return b.minor - a.minor;
+        return b.patch - a.patch;
       });
 
     if (stableTags.length > 0) {
-      const latestTag = stableTags[0];
+      const latestTag = stableTags[0].tag;
       const revResult = await git(["rev-list", "-n", "1", latestTag]);
       const sha = revResult?.stdout?.trim() || "";
       if (/^[0-9a-f]{40}$/i.test(sha)) {
@@ -410,11 +420,36 @@ export async function runSetupReleaseBranch({
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
   }
-  const lastReleaseSha =
-    proc?.env?.LAST_RELEASE_SHA || (await resolveLatestReleaseTagSha(git));
+
+  let parsedExisting = null;
+  if (existingConfig.trim()) {
+    try {
+      parsedExisting = JSON.parse(existingConfig);
+    } catch {
+      // ignore
+    }
+  }
+
+  let lastReleaseSha = null;
+  const envSha = proc?.env?.LAST_RELEASE_SHA?.trim();
+  if (envSha && /^[0-9a-f]{40}$/i.test(envSha)) {
+    lastReleaseSha = envSha;
+  } else if (
+    parsedExisting &&
+    typeof parsedExisting["last-release-sha"] === "string" &&
+    /^[0-9a-f]{40}$/i.test(parsedExisting["last-release-sha"].trim())
+  ) {
+    lastReleaseSha = parsedExisting["last-release-sha"].trim();
+  } else {
+    lastReleaseSha = await resolveLatestReleaseTagSha(
+      git,
+      parsed.versionNumber,
+    );
+  }
+
   if (lastReleaseSha) {
     core?.info?.(
-      `Resolved latest release SHA '${lastReleaseSha}' for release-please-config.json`,
+      `Resolved release anchor SHA '${lastReleaseSha}' for release-please-config.json`,
     );
   }
   const updatedConfig = buildReleasePleaseConfig(

@@ -240,6 +240,27 @@ describe("setup-release-branch.js", () => {
       assert.strictEqual(sha, "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
     });
 
+    it("filters out tags >= maxMajor when maxMajor is supplied", async () => {
+      const mockGit = async (args) => {
+        if (args[0] === "tag") {
+          return {
+            stdout: "v17.0.0\nv16.2.0\nv16.0.0\nv15.3.0\nv15.2.0\n",
+            stderr: "",
+          };
+        }
+        if (args[0] === "rev-list" && args[3] === "v15.3.0") {
+          return {
+            stdout: "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8\n",
+            stderr: "",
+          };
+        }
+        return { stdout: "", stderr: "" };
+      };
+
+      const sha = await resolveLatestReleaseTagSha(mockGit, 16);
+      assert.strictEqual(sha, "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8");
+    });
+
     it("returns null when only -rc / pre-release tags exist", async () => {
       const mockGitOnlyRc = async (args) => {
         if (args[0] === "tag") {
@@ -721,6 +742,185 @@ describe("setup-release-branch.js", () => {
 
         assert.strictEqual(res.prNumber, null);
         assert.strictEqual(res.prCreated, false);
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
+    });
+
+    it("normalizes valid LAST_RELEASE_SHA and falls back to tag lookup when malformed", async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "setup-release-branch-env-sha-"),
+      );
+      try {
+        const mockGit = async (args) => {
+          if (args[0] === "ls-remote") return { stdout: "", stderr: "" };
+          if (args[0] === "status") return { stdout: "M config\n", stderr: "" };
+          if (args[0] === "tag") return { stdout: "v15.3.0\n", stderr: "" };
+          if (args[0] === "rev-list" && args[3] === "v15.3.0") {
+            return {
+              stdout: "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8\n",
+              stderr: "",
+            };
+          }
+          return { stdout: "", stderr: "" };
+        };
+
+        const mockGithub = {
+          rest: {
+            pulls: {
+              list: async () => ({ data: [] }),
+              create: async () => ({
+                data: { number: 10, html_url: "https://pr/10" },
+              }),
+            },
+            issues: { addLabels: async () => ({}) },
+          },
+        };
+
+        // Test with padded valid SHA
+        await runSetupReleaseBranch({
+          github: mockGithub,
+          context: { repo: { owner: "rancher", repo: "test" } },
+          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
+          process: {
+            env: {
+              INPUT_BRANCH: "release/v16",
+              LAST_RELEASE_SHA: "  abcdefabcdefabcdefabcdefabcdefabcdefabcd  ",
+            },
+            cwd: () => tmpDir,
+          },
+          gitExec: mockGit,
+          workDir: tmpDir,
+        });
+
+        const configRaw = await fs.readFile(
+          path.join(tmpDir, "release-please-config.json"),
+          "utf8",
+        );
+        const configJson = JSON.parse(configRaw);
+        assert.strictEqual(
+          configJson["last-release-sha"],
+          "abcdefabcdefabcdefabcdefabcdefabcdefabcd",
+        );
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
+
+      const tmpDirFallback = await fs.mkdtemp(
+        path.join(os.tmpdir(), "setup-release-branch-env-fallback-"),
+      );
+      try {
+        const mockGit = async (args) => {
+          if (args[0] === "ls-remote") return { stdout: "", stderr: "" };
+          if (args[0] === "status") return { stdout: "M config\n", stderr: "" };
+          if (args[0] === "tag") return { stdout: "v15.3.0\n", stderr: "" };
+          if (args[0] === "rev-list" && args[3] === "v15.3.0") {
+            return {
+              stdout: "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8\n",
+              stderr: "",
+            };
+          }
+          return { stdout: "", stderr: "" };
+        };
+
+        const mockGithub = {
+          rest: {
+            pulls: {
+              list: async () => ({ data: [] }),
+              create: async () => ({
+                data: { number: 10, html_url: "https://pr/10" },
+              }),
+            },
+            issues: { addLabels: async () => ({}) },
+          },
+        };
+
+        // Test with malformed SHA: falls back to tag lookup
+        await runSetupReleaseBranch({
+          github: mockGithub,
+          context: { repo: { owner: "rancher", repo: "test" } },
+          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
+          process: {
+            env: {
+              INPUT_BRANCH: "release/v16",
+              LAST_RELEASE_SHA: "invalid-short-sha",
+            },
+            cwd: () => tmpDirFallback,
+          },
+          gitExec: mockGit,
+          workDir: tmpDirFallback,
+        });
+
+        const configRawFallback = await fs.readFile(
+          path.join(tmpDirFallback, "release-please-config.json"),
+          "utf8",
+        );
+        const configJsonFallback = JSON.parse(configRawFallback);
+        assert.strictEqual(
+          configJsonFallback["last-release-sha"],
+          "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8",
+        );
+      } finally {
+        await fs.rm(tmpDirFallback, { recursive: true, force: true });
+      }
+    });
+
+    it("preserves existing valid last-release-sha from config on rerun", async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "setup-release-branch-preserve-anchor-"),
+      );
+      try {
+        const initialConfig = {
+          "release-as": "v16.0.0",
+          "last-release-sha": "1111222233334444555566667777888899990000",
+        };
+        await fs.writeFile(
+          path.join(tmpDir, "release-please-config.json"),
+          JSON.stringify(initialConfig),
+          "utf8",
+        );
+
+        const mockGit = async (args) => {
+          if (args[0] === "ls-remote") return { stdout: "", stderr: "" };
+          if (args[0] === "status") return { stdout: "M config\n", stderr: "" };
+          // tag returns v17.0.0, which should NOT overwrite the preserved anchor
+          if (args[0] === "tag") return { stdout: "v17.0.0\n", stderr: "" };
+          return { stdout: "", stderr: "" };
+        };
+
+        const mockGithub = {
+          rest: {
+            pulls: {
+              list: async () => ({ data: [] }),
+              create: async () => ({
+                data: { number: 11, html_url: "https://pr/11" },
+              }),
+            },
+            issues: { addLabels: async () => ({}) },
+          },
+        };
+
+        await runSetupReleaseBranch({
+          github: mockGithub,
+          context: { repo: { owner: "rancher", repo: "test" } },
+          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
+          process: {
+            env: { INPUT_BRANCH: "release/v16" },
+            cwd: () => tmpDir,
+          },
+          gitExec: mockGit,
+          workDir: tmpDir,
+        });
+
+        const configRaw = await fs.readFile(
+          path.join(tmpDir, "release-please-config.json"),
+          "utf8",
+        );
+        const configJson = JSON.parse(configRaw);
+        assert.strictEqual(
+          configJson["last-release-sha"],
+          "1111222233334444555566667777888899990000",
+        );
       } finally {
         await fs.rm(tmpDir, { recursive: true, force: true });
       }
