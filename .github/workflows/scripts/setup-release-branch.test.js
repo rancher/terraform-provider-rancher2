@@ -416,6 +416,9 @@ describe("setup-release-branch.js", () => {
           if (args[0] === "status") {
             return { stdout: "", stderr: "" }; // No changes
           }
+          if (args[0] === "rev-list") {
+            return { stdout: "1\n", stderr: "" }; // 1 commit ahead
+          }
           return { stdout: "", stderr: "" };
         };
 
@@ -507,6 +510,71 @@ describe("setup-release-branch.js", () => {
               },
               create: async () => {
                 throw new Error("Should not call pulls.create on no-op");
+              },
+            },
+          },
+        };
+
+        const res = await runSetupReleaseBranch({
+          github: mockGithub,
+          context: {
+            repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          },
+          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
+          process: { env: { INPUT_BRANCH: "release/v16" }, cwd: () => tmpDir },
+          gitExec: mockGit,
+          workDir: tmpDir,
+        });
+
+        assert.strictEqual(res.prNumber, null);
+        assert.strictEqual(res.prCreated, false);
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
+    });
+
+    it("handles no-op cleanly when remote chore branch exists but is not ahead of release branch", async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), "setup-release-branch-zero-ahead-"),
+      );
+      try {
+        const mockGit = async (args) => {
+          if (args[0] === "ls-remote") {
+            if (args[3] === "refs/heads/release/v16") {
+              return {
+                stdout: "abcd1234refs/heads/release/v16\n",
+                stderr: "",
+              };
+            }
+            if (args[3] === "refs/heads/chore/setup-release-v16") {
+              return {
+                stdout: "abcd1234refs/heads/chore/setup-release-v16\n",
+                stderr: "",
+              };
+            }
+            return { stdout: "", stderr: "" };
+          }
+          if (args[0] === "status") {
+            return { stdout: "", stderr: "" }; // No changes
+          }
+          if (args[0] === "rev-list") {
+            return { stdout: "0\n", stderr: "" }; // 0 commits ahead
+          }
+          return { stdout: "", stderr: "" };
+        };
+
+        const mockGithub = {
+          rest: {
+            pulls: {
+              list: async () => {
+                throw new Error(
+                  "Should not call pulls.list when 0 commits ahead",
+                );
+              },
+              create: async () => {
+                throw new Error(
+                  "Should not call pulls.create when 0 commits ahead",
+                );
               },
             },
           },

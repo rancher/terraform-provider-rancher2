@@ -410,24 +410,44 @@ export async function runSetupReleaseBranch({
     core?.info?.(
       `No file modifications needed; setup files already match target configuration.`,
     );
-    // Check if chore branch exists on remote origin
+    // Check if chore branch exists on remote origin and is ahead of the release branch
     const remoteChoreResult = await git([
       "ls-remote",
       "--heads",
       "origin",
       `refs/heads/${choreBranch}`,
     ]);
-    choreBranchPushed = Boolean(
+    const choreExists = Boolean(
       remoteChoreResult?.stdout &&
       remoteChoreResult.stdout.includes(`refs/heads/${choreBranch}`),
     );
+
+    if (choreExists) {
+      try {
+        await git(["fetch", "origin", choreBranch]);
+        const revCountResult = await git([
+          "rev-list",
+          "--count",
+          `origin/${parsed.branch}..origin/${choreBranch}`,
+        ]);
+        const aheadCount = parseInt(revCountResult?.stdout?.trim() || "0", 10);
+        choreBranchPushed = aheadCount > 0;
+      } catch (fetchErr) {
+        core?.warning?.(
+          `Failed to inspect remote '${choreBranch}' commits: ${fetchErr.message}`,
+        );
+        choreBranchPushed = false;
+      }
+    } else {
+      choreBranchPushed = false;
+    }
   }
 
-  // If there are no local changes and no remote chore branch exists, the release branch
-  // is already fully configured and up to date. No configuration PR is needed.
+  // If there are no local changes and the remote chore branch is not ahead of the release branch,
+  // the release branch is already fully configured and up to date. No configuration PR is needed.
   if (!choreBranchPushed) {
     core?.info?.(
-      `Release branch '${parsed.branch}' already has target configuration applied and no chore branch exists. No setup PR needed.`,
+      `Release branch '${parsed.branch}' already has target configuration applied and no chore branch changes are pending. No setup PR needed.`,
     );
     return {
       branch: parsed.branch,
