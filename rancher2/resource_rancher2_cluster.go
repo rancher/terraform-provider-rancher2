@@ -11,8 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 func resourceRancher2Cluster() *schema.Resource {
@@ -571,19 +569,10 @@ func isKubeConfigValid(c *Config, config string) (string, bool, error) {
 	if !tokenValid {
 		return "", false, nil
 	}
-	kubeconfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(config))
-	if err != nil {
-		return "", false, fmt.Errorf("checking Kubeconfig: %v", err)
-	}
-	client, err := kubernetes.NewForConfig(kubeconfig)
-	if err != nil {
-		return token, false, nil
-	}
-	_, err = client.DiscoveryClient.ServerVersion()
-	if err != nil {
-		return token, false, nil
-	}
-
+	// Do not dial the Kubernetes API. Plan and refresh often run where the
+	// API server is unreachable. Treating that failure as an invalid
+	// kubeconfig falls through to generateKubeconfig and creates a new token
+	// on every plan, even when the stored token is still valid.
 	return token, true, nil
 }
 
@@ -654,7 +643,8 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 		}
 	}
 
-	// kubeconfig is not cached or invalid for other reasons, download a new one
+	// No cached kubeconfig. Download one. This creates a token, so it must not
+	// run when a kubeconfig is already stored.
 	client, err := c.ManagementClient()
 	if err != nil {
 		return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
