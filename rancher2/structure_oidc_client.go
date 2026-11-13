@@ -27,22 +27,16 @@ func expandOIDCClient(in *schema.ResourceData) (*managementClient.OIDCClient, er
 	v := in.Get("redirect_uris")
 	obj.RedirectURIs = toArrayString(v.([]any))
 
-	v, ok := in.GetOk("token_expiration_seconds")
-	if ok {
+	if v, ok := in.GetOk("token_expiration_seconds"); ok {
 		// This should be safe because the field is declared as an integer.
 		tokenExpirationSeconds := v.(int)
 		obj.TokenExpirationSeconds = int64(tokenExpirationSeconds)
-	} else {
-		obj.TokenExpirationSeconds = 0
 	}
 
-	v, ok = in.GetOk("refresh_token_expiration_seconds")
-	if ok {
-		// This should be safe because the field is declared as an integer.
+	if v, ok := in.GetOk("refresh_token_expiration_seconds"); ok {
 		refreshTokenExpirationSeconds := v.(int)
 		obj.RefreshTokenExpirationSeconds = int64(refreshTokenExpirationSeconds)
-	} else {
-		obj.RefreshTokenExpirationSeconds = 0
+
 	}
 
 	if v, ok := in.Get("annotations").(map[string]any); ok && len(v) > 0 {

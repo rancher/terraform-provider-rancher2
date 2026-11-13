@@ -418,6 +418,86 @@ func TestResourceRancher2OIDCClientUpdate(t *testing.T) {
 		assert.Equal(t, wantPayload, ops.updateCalledWith)
 	})
 
+	t.Run("omits token_expiration_seconds from payload when not set", func(t *testing.T) {
+		existing := &managementClient.OIDCClient{
+			Resource: types.Resource{ID: "oidc-client-1"},
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "oidc-client-1",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {LastFiveCharacters: "ecret"},
+				},
+			},
+		}
+		ops := &fakeOIDCClientOperations{oidcClient: existing, updateResult: existing}
+
+		d := schema.TestResourceDataRaw(t, oidcClientFields(), map[string]any{
+			"description":                      "Updated description",
+			"redirect_uris":                    []any{"http://127.0.0.1:5556/auth/rancher/callback"},
+			"refresh_token_expiration_seconds": 7200,
+		})
+		d.SetId("oidc-client-1")
+
+		err := resourceRancher2OIDCClientUpdate(d, newGetter(ops))
+
+		require.NoError(t, err)
+		payload := ops.updateCalledWith.(map[string]any)
+		assert.NotContains(t, payload, "tokenExpirationSeconds")
+		assert.Equal(t, 7200, payload["refreshTokenExpirationSeconds"])
+	})
+
+	t.Run("omits refresh_token_expiration_seconds from payload when not set", func(t *testing.T) {
+		existing := &managementClient.OIDCClient{
+			Resource: types.Resource{ID: "oidc-client-1"},
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "oidc-client-1",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {LastFiveCharacters: "ecret"},
+				},
+			},
+		}
+		ops := &fakeOIDCClientOperations{oidcClient: existing, updateResult: existing}
+
+		d := schema.TestResourceDataRaw(t, oidcClientFields(), map[string]any{
+			"description":              "Updated description",
+			"redirect_uris":            []any{"http://127.0.0.1:5556/auth/rancher/callback"},
+			"token_expiration_seconds": 3600,
+		})
+		d.SetId("oidc-client-1")
+
+		err := resourceRancher2OIDCClientUpdate(d, newGetter(ops))
+
+		require.NoError(t, err)
+		payload := ops.updateCalledWith.(map[string]any)
+		assert.Equal(t, 3600, payload["tokenExpirationSeconds"])
+		assert.NotContains(t, payload, "refreshTokenExpirationSeconds")
+	})
+
+	t.Run("omits both seconds fields from payload when neither is set", func(t *testing.T) {
+		existing := &managementClient.OIDCClient{
+			Resource: types.Resource{ID: "oidc-client-1"},
+			Status: managementClient.OIDCClientStatus{
+				ClientID: "oidc-client-1",
+				ClientSecrets: map[string]managementClient.OIDCClientSecretStatus{
+					"client-secret-1": {LastFiveCharacters: "ecret"},
+				},
+			},
+		}
+		ops := &fakeOIDCClientOperations{oidcClient: existing, updateResult: existing}
+
+		d := schema.TestResourceDataRaw(t, oidcClientFields(), map[string]any{
+			"description":   "Updated description",
+			"redirect_uris": []any{"http://127.0.0.1:5556/auth/rancher/callback"},
+		})
+		d.SetId("oidc-client-1")
+
+		err := resourceRancher2OIDCClientUpdate(d, newGetter(ops))
+
+		require.NoError(t, err)
+		payload := ops.updateCalledWith.(map[string]any)
+		assert.NotContains(t, payload, "tokenExpirationSeconds")
+		assert.NotContains(t, payload, "refreshTokenExpirationSeconds")
+	})
+
 	t.Run("updates resource and refreshes state on success", func(t *testing.T) {
 		existing := &managementClient.OIDCClient{
 			Resource: types.Resource{
