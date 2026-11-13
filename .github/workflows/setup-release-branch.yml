@@ -10,13 +10,39 @@ on:
 
 permissions: {}
 
-concurrency:
-  group: setup-release-branch-${{ inputs.branch }}
-  cancel-in-progress: false
-
 jobs:
+  parse:
+    name: "Parse and Normalize Branch"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    outputs:
+      canonical_branch: ${{ steps.parse.outputs.branch }}
+    steps:
+      - name: "Parse Canonical Branch"
+        id: parse
+        run: |
+          # shellcheck disable=SC2016
+          node -e '
+            const input = process.env.INPUT_BRANCH || "";
+            const clean = input.trim();
+            const match = clean.match(/^release\/v([1-9]\d*)$/);
+            if (!match) {
+              console.error(`::error::Invalid branch format: "${clean}". Branch must match release/v<version> without leading zeros (e.g. release/v16).`);
+              process.exit(1);
+            }
+            const fs = require("fs");
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `branch=release/v${match[1]}\n`);
+          '
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+
   setup-release-branch:
     name: "Create and Setup Release Branch"
+    needs: [parse]
+    concurrency:
+      group: setup-release-branch-${{ needs.parse.outputs.canonical_branch }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -45,7 +71,7 @@ jobs:
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
-          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_BRANCH: ${{ needs.parse.outputs.canonical_branch }}
         with:
           github-token: ${{ env.GITHUB_MERGE_TOKEN }}
           script: |
