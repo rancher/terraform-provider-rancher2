@@ -36,23 +36,52 @@ describe("setup-release-branch.js", () => {
         manifestVersion: "15.0.0",
       });
 
-      const res99 = parseReleaseBranch("  release/v99  ");
-      assert.strictEqual(res99.branch, "release/v99");
-      assert.strictEqual(res99.versionNumber, 99);
+      const res1 = parseReleaseBranch("release/v1");
+      assert.deepStrictEqual(res1, {
+        branch: "release/v1",
+        versionNumber: 1,
+        versionString: "1",
+        releaseAs: "v1.0.0",
+        manifestVersion: "1.0.0",
+      });
+
+      const res100 = parseReleaseBranch("release/v100");
+      assert.deepStrictEqual(res100, {
+        branch: "release/v100",
+        versionNumber: 100,
+        versionString: "100",
+        releaseAs: "v100.0.0",
+        manifestVersion: "100.0.0",
+      });
+    });
+
+    it("rejects surrounding whitespace strictly", () => {
+      assert.throws(
+        () => parseReleaseBranch("  release/v16  "),
+        /surrounding whitespace are not permitted/,
+      );
+      assert.throws(
+        () => parseReleaseBranch("release/v16 "),
+        /surrounding whitespace are not permitted/,
+      );
+      assert.throws(
+        () => parseReleaseBranch(" release/v16"),
+        /surrounding whitespace are not permitted/,
+      );
     });
 
     it("rejects shorthand branch names (v16, 16, release/16)", () => {
       assert.throws(
         () => parseReleaseBranch("v16"),
-        /Branch must strictly match 'release\/v<2-digit-version>'/,
+        /Branch must strictly match 'release\/v<version>'/,
       );
       assert.throws(
         () => parseReleaseBranch("16"),
-        /Branch must strictly match 'release\/v<2-digit-version>'/,
+        /Branch must strictly match 'release\/v<version>'/,
       );
       assert.throws(
         () => parseReleaseBranch("release/16"),
-        /Branch must strictly match 'release\/v<2-digit-version>'/,
+        /Branch must strictly match 'release\/v<version>'/,
       );
     });
 
@@ -63,11 +92,7 @@ describe("setup-release-branch.js", () => {
         /Invalid branch format/,
       );
       assert.throws(
-        () => parseReleaseBranch("release/v1"),
-        /Invalid branch format/,
-      );
-      assert.throws(
-        () => parseReleaseBranch("release/v160"),
+        () => parseReleaseBranch("release/v"),
         /Invalid branch format/,
       );
       assert.throws(
@@ -521,12 +546,12 @@ describe("setup-release-branch.js", () => {
             core: mockCore,
             process: { env: { INPUT_BRANCH: "v16" } },
           }),
-        /Branch must strictly match 'release\/v<2-digit-version>'/,
+        /Branch must strictly match 'release\/v<version>'/,
       );
 
       assert.match(
         failedMessage,
-        /Branch must strictly match 'release\/v<2-digit-version>'/,
+        /Branch must strictly match 'release\/v<version>'/,
       );
     });
   });
