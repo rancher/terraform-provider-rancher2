@@ -197,11 +197,12 @@ describe("setup-release-branch.js", () => {
   });
 
   describe("resolveLatestReleaseTagSha", () => {
-    it("resolves the SHA of the latest stable tag and ignores pre-releases", async () => {
+    it("resolves the SHA of the latest stable tag and strictly ignores -rc releases", async () => {
       const mockGit = async (args) => {
         if (args[0] === "tag") {
           return {
-            stdout: "v15.3.1-rc.1\nv15.3.0\nv15.2.0\nv15.1.0\n",
+            stdout:
+              "v16.0.0-rc.1\nv15.3.1-rc.1\nv15.3.0-rc.0\nv15.3.0-rc1\nv15.3.0\nv15.2.0-rc.2\nv15.2.0\nv15.1.0\n",
             stderr: "",
           };
         }
@@ -218,9 +219,45 @@ describe("setup-release-branch.js", () => {
       assert.strictEqual(sha, "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8");
     });
 
-    it("returns null when no stable tags exist or git command fails", async () => {
+    it("correctly sorts semver descending and ignores all variations of RC tags", async () => {
+      const mockGit = async (args) => {
+        if (args[0] === "tag") {
+          return {
+            stdout: "v15.2.0\nv15.10.0-rc.1\nv15.10.0\nv15.3.0\n",
+            stderr: "",
+          };
+        }
+        if (args[0] === "rev-list" && args[3] === "v15.10.0") {
+          return {
+            stdout: "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef\n",
+            stderr: "",
+          };
+        }
+        return { stdout: "", stderr: "" };
+      };
+
+      const sha = await resolveLatestReleaseTagSha(mockGit);
+      assert.strictEqual(sha, "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
+    });
+
+    it("returns null when only -rc / pre-release tags exist", async () => {
+      const mockGitOnlyRc = async (args) => {
+        if (args[0] === "tag") {
+          return {
+            stdout:
+              "v16.0.0-rc.1\nv15.3.1-rc.1\nv15.0.0-rc1\nv14.0.0-alpha.1\n",
+            stderr: "",
+          };
+        }
+        return { stdout: "", stderr: "" };
+      };
+      const sha = await resolveLatestReleaseTagSha(mockGitOnlyRc);
+      assert.strictEqual(sha, null);
+    });
+
+    it("returns null when git command fails or tags list is empty", async () => {
       const mockGitEmpty = async () => ({
-        stdout: "v16.0.0-rc.1\n",
+        stdout: "\n",
         stderr: "",
       });
       const shaEmpty = await resolveLatestReleaseTagSha(mockGitEmpty);

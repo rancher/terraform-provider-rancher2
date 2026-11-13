@@ -172,18 +172,33 @@ export function parseReleaseBranch(input) {
 
 /**
  * Resolves the commit SHA of the tag with the latest release history.
- * Searches git tags for the highest stable semver tag (e.g. v15.3.0) and returns its commit SHA.
+ * Strictly ignores pre-release / RC tags (e.g. -rc, -rc.1) and selects the highest stable semver tag (e.g. v15.3.0).
  */
 export async function resolveLatestReleaseTagSha(git) {
   try {
-    const tagResult = await git(["tag", "-l", "v*", "--sort=-v:refname"]);
+    const tagResult = await git(["tag", "-l", "v*"]);
     const tags = (tagResult?.stdout || "")
       .trim()
       .split("\n")
       .map((t) => t.trim())
       .filter(Boolean);
 
-    const stableTags = tags.filter((t) => /^v?\d+\.\d+\.\d+$/.test(t));
+    // Strictly filter out any -rc or pre-release tags, accepting only stable releases (e.g. v15.3.0)
+    const stableTags = tags
+      .filter(
+        (t) =>
+          !t.includes("-rc") && !t.includes("-") && /^v?\d+\.\d+\.\d+$/.test(t),
+      )
+      .sort((a, b) => {
+        const matchA = a.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
+        const matchB = b.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
+        const majDiff = parseInt(matchB[1], 10) - parseInt(matchA[1], 10);
+        if (majDiff !== 0) return majDiff;
+        const minDiff = parseInt(matchB[2], 10) - parseInt(matchA[2], 10);
+        if (minDiff !== 0) return minDiff;
+        return parseInt(matchB[3], 10) - parseInt(matchA[3], 10);
+      });
+
     if (stableTags.length > 0) {
       const latestTag = stableTags[0];
       const revResult = await git(["rev-list", "-n", "1", latestTag]);
