@@ -5,6 +5,7 @@ import (
 	"log"
 	"maps"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -265,12 +266,18 @@ func validateRedirectURI(val any, key string) (warnings []string, errs []error) 
 		return
 	}
 	u, err := url.Parse(v)
-	if err != nil || u.Scheme == "" || u.Host == "" {
+	if err != nil || u.Scheme == "" {
 		errs = append(errs, fmt.Errorf("%q must be a valid absolute URL with scheme and host, got: %q", key, v))
 		return
 	}
 	if u.Fragment != "" {
 		errs = append(errs, fmt.Errorf("%q must not contain a fragment, got: %q", key, v))
+		return
+	}
+	// RFC 8252 §7.1: private-use URI schemes (e.g. com.example.app:/path) have no host.
+	// RFC 8252 §8.4: schemes without a period must be rejected.
+	if u.Host == "" && !strings.Contains(u.Scheme, ".") {
+		errs = append(errs, fmt.Errorf("%q must be a valid absolute URL with scheme and host, got: %q", key, v))
 	}
 	return
 }
