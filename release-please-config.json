@@ -1,6 +1,6 @@
 {
-  "last-release-sha": "e56015b71be53e42f44e3b74bbc172ea62b3cb87",
-  "release-as": "v13.11.2",
+  "last-release-sha": "6ae409af94eb3fea399f80bfba7185020618a38b",
+  "release-as": "v13.12.0",
   "always-update": true,
   "commit-search-depth": 100,
   "prerelease": true,
