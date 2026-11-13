@@ -171,9 +171,66 @@ export function parseReleaseBranch(input) {
 }
 
 /**
+ * Resolves the commit SHA of the tag with the latest release history.
+ * Strictly ignores pre-release / RC tags (e.g. -rc, -rc.1) and selects the highest stable semver tag prior to maxMajor (e.g. v15.3.0 for v16).
+ */
+export async function resolveLatestReleaseTagSha(git, maxMajor = null) {
+  try {
+    const tagResult = await git(["tag", "-l", "v*"]);
+    const tags = (tagResult?.stdout || "")
+      .trim()
+      .split("\n")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    // Strictly filter out any -rc or pre-release tags, accepting only stable releases (e.g. v15.3.0)
+    const stableTags = tags
+      .filter(
+        (t) =>
+          !t.includes("-rc") && !t.includes("-") && /^v?\d+\.\d+\.\d+$/.test(t),
+      )
+      .map((t) => {
+        const match = t.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
+        return {
+          tag: t,
+          major: parseInt(match[1], 10),
+          minor: parseInt(match[2], 10),
+          patch: parseInt(match[3], 10),
+        };
+      })
+      .filter((item) =>
+        maxMajor !== null && maxMajor !== undefined
+          ? item.major < maxMajor
+          : true,
+      )
+      .sort((a, b) => {
+        if (b.major !== a.major) return b.major - a.major;
+        if (b.minor !== a.minor) return b.minor - a.minor;
+        return b.patch - a.patch;
+      });
+
+    if (stableTags.length > 0) {
+      const latestTag = stableTags[0].tag;
+      const revResult = await git(["rev-list", "-n", "1", latestTag]);
+      const sha = revResult?.stdout?.trim() || "";
+      if (/^[0-9a-f]{40}$/i.test(sha)) {
+        return sha;
+      }
+    }
+  } catch {
+    // Return null if tags cannot be queried or resolved
+  }
+  return null;
+}
+
+/**
  * Builds release-please-config.json content with release-as version and cleans obsolete sha keys.
  */
-export function buildReleasePleaseConfig(existingConfigOrJson, releaseAs) {
+export function buildReleasePleaseConfig(
+  existingConfigOrJson,
+  releaseAs,
+  lastReleaseSha = null,
+) {
   let config = {};
   if (typeof existingConfigOrJson === "string") {
     if (existingConfigOrJson.trim()) {
@@ -213,7 +270,11 @@ export function buildReleasePleaseConfig(existingConfigOrJson, releaseAs) {
   }
 
   delete config["bootstrap-sha"];
-  delete config["last-release-sha"];
+  if (lastReleaseSha) {
+    config["last-release-sha"] = lastReleaseSha;
+  } else {
+    delete config["last-release-sha"];
+  }
 
   return JSON.stringify(config, null, 2) + "\n";
 }
@@ -314,8 +375,8 @@ export async function runSetupReleaseBranch({
     "41898282+github-actions[bot]@users.noreply.github.com",
   ]);
 
-  // Ensure origin/main is fetched
-  await git(["fetch", "origin", "main"]);
+  // Ensure origin/main and tags are fetched
+  await git(["fetch", "origin", "main", "--tags"]);
 
   // Check if target release branch already exists on remote origin
   const lsRemoteResult = await git([
@@ -359,9 +420,42 @@ export async function runSetupReleaseBranch({
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
   }
+
+  let parsedExisting = null;
+  if (existingConfig.trim()) {
+    try {
+      parsedExisting = JSON.parse(existingConfig);
+    } catch {
+      // ignore
+    }
+  }
+
+  let lastReleaseSha = null;
+  const envSha = proc?.env?.LAST_RELEASE_SHA?.trim();
+  if (envSha && /^[0-9a-f]{40}$/i.test(envSha)) {
+    lastReleaseSha = envSha;
+  } else if (
+    parsedExisting &&
+    typeof parsedExisting["last-release-sha"] === "string" &&
+    /^[0-9a-f]{40}$/i.test(parsedExisting["last-release-sha"].trim())
+  ) {
+    lastReleaseSha = parsedExisting["last-release-sha"].trim();
+  } else {
+    lastReleaseSha = await resolveLatestReleaseTagSha(
+      git,
+      parsed.versionNumber,
+    );
+  }
+
+  if (lastReleaseSha) {
+    core?.info?.(
+      `Resolved release anchor SHA '${lastReleaseSha}' for release-please-config.json`,
+    );
+  }
   const updatedConfig = buildReleasePleaseConfig(
     existingConfig,
     parsed.releaseAs,
+    lastReleaseSha,
   );
   await fs.writeFile(configPath, updatedConfig, "utf8");
 
