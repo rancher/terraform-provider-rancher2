@@ -11,6 +11,7 @@ import run, {
   cleanupNonStubWorkflows,
   formatPrBody,
   parseReleaseBranch,
+  resolveBranchCreationSha,
   resolveLatestReleaseTagSha,
   runGit,
   runSetupReleaseBranch,
@@ -192,6 +193,65 @@ describe("setup-release-branch.js", () => {
       assert.throws(
         () => buildReleasePleaseConfig("{ invalid json ", "v16.0.0"),
         /Failed to parse existing release-please-config\.json/,
+      );
+    });
+  });
+
+  describe("resolveBranchCreationSha", () => {
+    it("resolves the merge-base SHA between origin/main and the release branch", async () => {
+      const mockGit = async (args) => {
+        if (
+          args[0] === "merge-base" &&
+          args[1] === "origin/main" &&
+          args[2] === "origin/release/v16"
+        ) {
+          return {
+            stdout: "96b10c94caf2dad853185325e586f1d9e7ed719e\n",
+            stderr: "",
+          };
+        }
+        return { stdout: "", stderr: "" };
+      };
+
+      const sha = await resolveBranchCreationSha(mockGit, "release/v16");
+      assert.strictEqual(sha, "96b10c94caf2dad853185325e586f1d9e7ed719e");
+    });
+
+    it("falls back to rev-parse on origin/<branch> when merge-base fails", async () => {
+      const mockGit = async (args) => {
+        if (args[0] === "merge-base") {
+          throw new Error("merge-base failed");
+        }
+        if (args[0] === "rev-parse" && args[1] === "origin/release/v16") {
+          return {
+            stdout: "96b10c94caf2dad853185325e586f1d9e7ed719e\n",
+            stderr: "",
+          };
+        }
+        return { stdout: "", stderr: "" };
+      };
+
+      const sha = await resolveBranchCreationSha(mockGit, "release/v16");
+      assert.strictEqual(sha, "96b10c94caf2dad853185325e586f1d9e7ed719e");
+    });
+
+    it("throws when git lookups fail or return invalid SHA", async () => {
+      const mockGit = async () => {
+        throw new Error("git failure");
+      };
+
+      await assert.rejects(
+        () => resolveBranchCreationSha(mockGit, "release/v16"),
+        /Failed to resolve branch creation SHA for 'release\/v16' against 'origin\/main'/,
+      );
+
+      const mockGitInvalid = async () => ({
+        stdout: "invalid-sha\n",
+        stderr: "",
+      });
+      await assert.rejects(
+        () => resolveBranchCreationSha(mockGitInvalid, "release/v16"),
+        /Failed to resolve branch creation SHA for 'release\/v16' against 'origin\/main'/,
       );
     });
   });
@@ -431,6 +491,12 @@ describe("setup-release-branch.js", () => {
           if (args[0] === "status") {
             return { stdout: "M release-please-config.json\n", stderr: "" };
           }
+          if (args[0] === "merge-base") {
+            return {
+              stdout: "96b10c94caf2dad853185325e586f1d9e7ed719e\n",
+              stderr: "",
+            };
+          }
           if (args[0] === "tag") {
             return { stdout: "v15.3.0\n", stderr: "" };
           }
@@ -513,7 +579,7 @@ describe("setup-release-branch.js", () => {
         assert.strictEqual(configJson["release-as"], "v16.0.0");
         assert.strictEqual(
           configJson["last-release-sha"],
-          "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8",
+          "96b10c94caf2dad853185325e586f1d9e7ed719e",
         );
 
         const manifestRaw = await fs.readFile(
@@ -539,14 +605,12 @@ describe("setup-release-branch.js", () => {
       }
     });
 
-    it("skips origin/main push if release branch already exists on remote and ensures labels on rerun", async () => {
+    it("fails when release branch already exists on remote origin", async () => {
       const tmpDir = await fs.mkdtemp(
         path.join(os.tmpdir(), "setup-release-branch-existing-"),
       );
       try {
-        const gitCalls = [];
         const mockGit = async (args) => {
-          gitCalls.push(args);
           if (args[0] === "ls-remote") {
             if (args[3] === "refs/heads/release/v16") {
               return {
@@ -554,200 +618,47 @@ describe("setup-release-branch.js", () => {
                 stderr: "",
               };
             }
-            if (args[3] === "refs/heads/chore/setup-release-v16") {
-              return {
-                stdout: "ef01234refs/heads/chore/setup-release-v16\n",
-                stderr: "",
-              };
-            }
             return { stdout: "", stderr: "" };
-          }
-          if (args[0] === "status") {
-            return { stdout: "", stderr: "" }; // No changes
-          }
-          if (args[0] === "rev-list") {
-            return { stdout: "1\n", stderr: "" }; // 1 commit ahead
           }
           return { stdout: "", stderr: "" };
         };
 
-        const addedLabels = [];
         const mockGithub = {
           rest: {
             pulls: {
-              list: async () => ({
-                data: [
-                  {
-                    number: 99,
-                    html_url: "https://github.com/rancher/test/pull/99",
-                  },
-                ],
-              }),
-              create: async () => {
-                throw new Error("Should not be called when PR already exists");
+              list: async () => {
+                throw new Error("Should not be called");
               },
-            },
-            issues: {
-              addLabels: async (params) => {
-                addedLabels.push(params);
-                return { data: [] };
+              create: async () => {
+                throw new Error("Should not be called");
               },
             },
           },
         };
 
-        const res = await runSetupReleaseBranch({
-          github: mockGithub,
-          context: {
-            repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
-          },
-          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
-          process: { env: { INPUT_BRANCH: "release/v16" }, cwd: () => tmpDir },
-          gitExec: mockGit,
-          workDir: tmpDir,
-        });
-
-        assert.strictEqual(res.prNumber, 99);
-        assert.strictEqual(res.prCreated, false);
-
-        // Verify label was ensured on existing PR during rerun
-        assert.strictEqual(addedLabels.length, 1);
-        assert.strictEqual(addedLabels[0].issue_number, 99);
-        assert.deepStrictEqual(addedLabels[0].labels, [
-          "internal/pr-release-chore",
-        ]);
-
-        // Verify origin/main was NOT pushed to release/v16 since it already existed
-        const pushNewBranchCall = gitCalls.find(
-          (call) =>
-            call[0] === "push" &&
-            call[2] === "origin/main:refs/heads/release/v16",
+        await assert.rejects(
+          () =>
+            runSetupReleaseBranch({
+              github: mockGithub,
+              context: {
+                repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+              },
+              core: { info: () => {}, warning: () => {}, setFailed: () => {} },
+              process: {
+                env: { INPUT_BRANCH: "release/v16" },
+                cwd: () => tmpDir,
+              },
+              gitExec: mockGit,
+              workDir: tmpDir,
+            }),
+          /Release branch 'release\/v16' already exists on remote origin/,
         );
-        assert.strictEqual(pushNewBranchCall, undefined);
       } finally {
         await fs.rm(tmpDir, { recursive: true, force: true });
       }
     });
 
-    it("handles no-op cleanly without creating PR when branch is already configured and no chore branch exists", async () => {
-      const tmpDir = await fs.mkdtemp(
-        path.join(os.tmpdir(), "setup-release-branch-noop-"),
-      );
-      try {
-        const mockGit = async (args) => {
-          if (args[0] === "ls-remote") {
-            if (args[3] === "refs/heads/release/v16") {
-              return {
-                stdout: "abcd1234refs/heads/release/v16\n",
-                stderr: "",
-              };
-            }
-            // Chore branch does not exist on remote
-            return { stdout: "", stderr: "" };
-          }
-          if (args[0] === "status") {
-            return { stdout: "", stderr: "" }; // No changes
-          }
-          return { stdout: "", stderr: "" };
-        };
-
-        const mockGithub = {
-          rest: {
-            pulls: {
-              list: async () => {
-                throw new Error("Should not call pulls.list on no-op");
-              },
-              create: async () => {
-                throw new Error("Should not call pulls.create on no-op");
-              },
-            },
-          },
-        };
-
-        const res = await runSetupReleaseBranch({
-          github: mockGithub,
-          context: {
-            repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
-          },
-          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
-          process: { env: { INPUT_BRANCH: "release/v16" }, cwd: () => tmpDir },
-          gitExec: mockGit,
-          workDir: tmpDir,
-        });
-
-        assert.strictEqual(res.prNumber, null);
-        assert.strictEqual(res.prCreated, false);
-      } finally {
-        await fs.rm(tmpDir, { recursive: true, force: true });
-      }
-    });
-
-    it("handles no-op cleanly when remote chore branch exists but is not ahead of release branch", async () => {
-      const tmpDir = await fs.mkdtemp(
-        path.join(os.tmpdir(), "setup-release-branch-zero-ahead-"),
-      );
-      try {
-        const mockGit = async (args) => {
-          if (args[0] === "ls-remote") {
-            if (args[3] === "refs/heads/release/v16") {
-              return {
-                stdout: "abcd1234refs/heads/release/v16\n",
-                stderr: "",
-              };
-            }
-            if (args[3] === "refs/heads/chore/setup-release-v16") {
-              return {
-                stdout: "abcd1234refs/heads/chore/setup-release-v16\n",
-                stderr: "",
-              };
-            }
-            return { stdout: "", stderr: "" };
-          }
-          if (args[0] === "status") {
-            return { stdout: "", stderr: "" }; // No changes
-          }
-          if (args[0] === "rev-list") {
-            return { stdout: "0\n", stderr: "" }; // 0 commits ahead
-          }
-          return { stdout: "", stderr: "" };
-        };
-
-        const mockGithub = {
-          rest: {
-            pulls: {
-              list: async () => {
-                throw new Error(
-                  "Should not call pulls.list when 0 commits ahead",
-                );
-              },
-              create: async () => {
-                throw new Error(
-                  "Should not call pulls.create when 0 commits ahead",
-                );
-              },
-            },
-          },
-        };
-
-        const res = await runSetupReleaseBranch({
-          github: mockGithub,
-          context: {
-            repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
-          },
-          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
-          process: { env: { INPUT_BRANCH: "release/v16" }, cwd: () => tmpDir },
-          gitExec: mockGit,
-          workDir: tmpDir,
-        });
-
-        assert.strictEqual(res.prNumber, null);
-        assert.strictEqual(res.prCreated, false);
-      } finally {
-        await fs.rm(tmpDir, { recursive: true, force: true });
-      }
-    });
-
-    it("normalizes valid LAST_RELEASE_SHA and falls back to tag lookup when malformed", async () => {
+    it("normalizes valid LAST_RELEASE_SHA and falls back to branch creation lookup when malformed", async () => {
       const tmpDir = await fs.mkdtemp(
         path.join(os.tmpdir(), "setup-release-branch-env-sha-"),
       );
@@ -755,6 +666,12 @@ describe("setup-release-branch.js", () => {
         const mockGit = async (args) => {
           if (args[0] === "ls-remote") return { stdout: "", stderr: "" };
           if (args[0] === "status") return { stdout: "M config\n", stderr: "" };
+          if (args[0] === "merge-base") {
+            return {
+              stdout: "96b10c94caf2dad853185325e586f1d9e7ed719e\n",
+              stderr: "",
+            };
+          }
           if (args[0] === "tag") return { stdout: "v15.3.0\n", stderr: "" };
           if (args[0] === "rev-list" && args[3] === "v15.3.0") {
             return {
@@ -813,6 +730,12 @@ describe("setup-release-branch.js", () => {
         const mockGit = async (args) => {
           if (args[0] === "ls-remote") return { stdout: "", stderr: "" };
           if (args[0] === "status") return { stdout: "M config\n", stderr: "" };
+          if (args[0] === "merge-base") {
+            return {
+              stdout: "96b10c94caf2dad853185325e586f1d9e7ed719e\n",
+              stderr: "",
+            };
+          }
           if (args[0] === "tag") return { stdout: "v15.3.0\n", stderr: "" };
           if (args[0] === "rev-list" && args[3] === "v15.3.0") {
             return {
@@ -835,7 +758,7 @@ describe("setup-release-branch.js", () => {
           },
         };
 
-        // Test with malformed SHA: falls back to tag lookup
+        // Test with malformed SHA: falls back to branch creation lookup
         await runSetupReleaseBranch({
           github: mockGithub,
           context: { repo: { owner: "rancher", repo: "test" } },
@@ -858,71 +781,10 @@ describe("setup-release-branch.js", () => {
         const configJsonFallback = JSON.parse(configRawFallback);
         assert.strictEqual(
           configJsonFallback["last-release-sha"],
-          "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8",
+          "96b10c94caf2dad853185325e586f1d9e7ed719e",
         );
       } finally {
         await fs.rm(tmpDirFallback, { recursive: true, force: true });
-      }
-    });
-
-    it("preserves existing valid last-release-sha from config on rerun", async () => {
-      const tmpDir = await fs.mkdtemp(
-        path.join(os.tmpdir(), "setup-release-branch-preserve-anchor-"),
-      );
-      try {
-        const initialConfig = {
-          "release-as": "v16.0.0",
-          "last-release-sha": "1111222233334444555566667777888899990000",
-        };
-        await fs.writeFile(
-          path.join(tmpDir, "release-please-config.json"),
-          JSON.stringify(initialConfig),
-          "utf8",
-        );
-
-        const mockGit = async (args) => {
-          if (args[0] === "ls-remote") return { stdout: "", stderr: "" };
-          if (args[0] === "status") return { stdout: "M config\n", stderr: "" };
-          // tag returns v17.0.0, which should NOT overwrite the preserved anchor
-          if (args[0] === "tag") return { stdout: "v17.0.0\n", stderr: "" };
-          return { stdout: "", stderr: "" };
-        };
-
-        const mockGithub = {
-          rest: {
-            pulls: {
-              list: async () => ({ data: [] }),
-              create: async () => ({
-                data: { number: 11, html_url: "https://pr/11" },
-              }),
-            },
-            issues: { addLabels: async () => ({}) },
-          },
-        };
-
-        await runSetupReleaseBranch({
-          github: mockGithub,
-          context: { repo: { owner: "rancher", repo: "test" } },
-          core: { info: () => {}, warning: () => {}, setFailed: () => {} },
-          process: {
-            env: { INPUT_BRANCH: "release/v16" },
-            cwd: () => tmpDir,
-          },
-          gitExec: mockGit,
-          workDir: tmpDir,
-        });
-
-        const configRaw = await fs.readFile(
-          path.join(tmpDir, "release-please-config.json"),
-          "utf8",
-        );
-        const configJson = JSON.parse(configRaw);
-        assert.strictEqual(
-          configJson["last-release-sha"],
-          "1111222233334444555566667777888899990000",
-        );
-      } finally {
-        await fs.rm(tmpDir, { recursive: true, force: true });
       }
     });
 
