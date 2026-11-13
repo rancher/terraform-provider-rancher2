@@ -171,9 +171,41 @@ export function parseReleaseBranch(input) {
 }
 
 /**
+ * Resolves the commit SHA of the tag with the latest release history.
+ * Searches git tags for the highest stable semver tag (e.g. v15.3.0) and returns its commit SHA.
+ */
+export async function resolveLatestReleaseTagSha(git) {
+  try {
+    const tagResult = await git(["tag", "-l", "v*", "--sort=-v:refname"]);
+    const tags = (tagResult?.stdout || "")
+      .trim()
+      .split("\n")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    const stableTags = tags.filter((t) => /^v?\d+\.\d+\.\d+$/.test(t));
+    if (stableTags.length > 0) {
+      const latestTag = stableTags[0];
+      const revResult = await git(["rev-list", "-n", "1", latestTag]);
+      const sha = revResult?.stdout?.trim() || "";
+      if (/^[0-9a-f]{40}$/i.test(sha)) {
+        return sha;
+      }
+    }
+  } catch {
+    // Return null if tags cannot be queried or resolved
+  }
+  return null;
+}
+
+/**
  * Builds release-please-config.json content with release-as version and cleans obsolete sha keys.
  */
-export function buildReleasePleaseConfig(existingConfigOrJson, releaseAs) {
+export function buildReleasePleaseConfig(
+  existingConfigOrJson,
+  releaseAs,
+  lastReleaseSha = null,
+) {
   let config = {};
   if (typeof existingConfigOrJson === "string") {
     if (existingConfigOrJson.trim()) {
@@ -213,7 +245,11 @@ export function buildReleasePleaseConfig(existingConfigOrJson, releaseAs) {
   }
 
   delete config["bootstrap-sha"];
-  delete config["last-release-sha"];
+  if (lastReleaseSha) {
+    config["last-release-sha"] = lastReleaseSha;
+  } else {
+    delete config["last-release-sha"];
+  }
 
   return JSON.stringify(config, null, 2) + "\n";
 }
@@ -314,8 +350,8 @@ export async function runSetupReleaseBranch({
     "41898282+github-actions[bot]@users.noreply.github.com",
   ]);
 
-  // Ensure origin/main is fetched
-  await git(["fetch", "origin", "main"]);
+  // Ensure origin/main and tags are fetched
+  await git(["fetch", "origin", "main", "--tags"]);
 
   // Check if target release branch already exists on remote origin
   const lsRemoteResult = await git([
@@ -359,9 +395,17 @@ export async function runSetupReleaseBranch({
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
   }
+  const lastReleaseSha =
+    proc?.env?.LAST_RELEASE_SHA || (await resolveLatestReleaseTagSha(git));
+  if (lastReleaseSha) {
+    core?.info?.(
+      `Resolved latest release SHA '${lastReleaseSha}' for release-please-config.json`,
+    );
+  }
   const updatedConfig = buildReleasePleaseConfig(
     existingConfig,
     parsed.releaseAs,
+    lastReleaseSha,
   );
   await fs.writeFile(configPath, updatedConfig, "utf8");
 

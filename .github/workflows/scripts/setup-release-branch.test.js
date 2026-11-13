@@ -11,6 +11,7 @@ import run, {
   cleanupNonStubWorkflows,
   formatPrBody,
   parseReleaseBranch,
+  resolveLatestReleaseTagSha,
   runGit,
   runSetupReleaseBranch,
 } from "./setup-release-branch.js";
@@ -168,11 +169,68 @@ describe("setup-release-branch.js", () => {
       assert.strictEqual(parsed["draft"], true);
     });
 
+    it("sets last-release-sha when provided and removes bootstrap-sha", () => {
+      const initial = {
+        "bootstrap-sha": "abc1234",
+        packages: { ".": { "release-type": "go" } },
+      };
+      const updatedStr = buildReleasePleaseConfig(
+        JSON.stringify(initial),
+        "v16.0.0",
+        "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8",
+      );
+      const parsed = JSON.parse(updatedStr);
+      assert.strictEqual(parsed["release-as"], "v16.0.0");
+      assert.strictEqual("bootstrap-sha" in parsed, false);
+      assert.strictEqual(
+        parsed["last-release-sha"],
+        "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8",
+      );
+    });
+
     it("throws when existing config string is invalid JSON", () => {
       assert.throws(
         () => buildReleasePleaseConfig("{ invalid json ", "v16.0.0"),
         /Failed to parse existing release-please-config\.json/,
       );
+    });
+  });
+
+  describe("resolveLatestReleaseTagSha", () => {
+    it("resolves the SHA of the latest stable tag and ignores pre-releases", async () => {
+      const mockGit = async (args) => {
+        if (args[0] === "tag") {
+          return {
+            stdout: "v15.3.1-rc.1\nv15.3.0\nv15.2.0\nv15.1.0\n",
+            stderr: "",
+          };
+        }
+        if (args[0] === "rev-list" && args[3] === "v15.3.0") {
+          return {
+            stdout: "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8\n",
+            stderr: "",
+          };
+        }
+        return { stdout: "", stderr: "" };
+      };
+
+      const sha = await resolveLatestReleaseTagSha(mockGit);
+      assert.strictEqual(sha, "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8");
+    });
+
+    it("returns null when no stable tags exist or git command fails", async () => {
+      const mockGitEmpty = async () => ({
+        stdout: "v16.0.0-rc.1\n",
+        stderr: "",
+      });
+      const shaEmpty = await resolveLatestReleaseTagSha(mockGitEmpty);
+      assert.strictEqual(shaEmpty, null);
+
+      const mockGitFails = async () => {
+        throw new Error("git error");
+      };
+      const shaFails = await resolveLatestReleaseTagSha(mockGitFails);
+      assert.strictEqual(shaFails, null);
     });
   });
 
@@ -315,6 +373,15 @@ describe("setup-release-branch.js", () => {
           if (args[0] === "status") {
             return { stdout: "M release-please-config.json\n", stderr: "" };
           }
+          if (args[0] === "tag") {
+            return { stdout: "v15.3.0\n", stderr: "" };
+          }
+          if (args[0] === "rev-list" && args[3] === "v15.3.0") {
+            return {
+              stdout: "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8\n",
+              stderr: "",
+            };
+          }
           return { stdout: "", stderr: "" };
         };
 
@@ -386,6 +453,10 @@ describe("setup-release-branch.js", () => {
         );
         const configJson = JSON.parse(configRaw);
         assert.strictEqual(configJson["release-as"], "v16.0.0");
+        assert.strictEqual(
+          configJson["last-release-sha"],
+          "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8",
+        );
 
         const manifestRaw = await fs.readFile(
           path.join(tmpDir, ".release-please-manifest.json"),
