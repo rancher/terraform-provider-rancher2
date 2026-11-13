@@ -171,6 +171,45 @@ export function parseReleaseBranch(input) {
 }
 
 /**
+ * Resolves the commit SHA where the release branch was created from origin/main.
+ * Computes 'git merge-base origin/main origin/<branch>' with fallback to 'git rev-parse origin/<branch>'.
+ * Throws if the SHA cannot be resolved.
+ */
+export async function resolveBranchCreationSha(
+  git,
+  branch,
+  baseRef = "origin/main",
+) {
+  try {
+    const mergeBaseResult = await git([
+      "merge-base",
+      baseRef,
+      `origin/${branch}`,
+    ]);
+    const sha = mergeBaseResult?.stdout?.trim() || "";
+    if (/^[0-9a-f]{40}$/i.test(sha)) {
+      return sha;
+    }
+  } catch {
+    // If merge-base fails, fallback to rev-parse on origin/<branch>
+  }
+
+  try {
+    const revResult = await git(["rev-parse", `origin/${branch}`]);
+    const sha = revResult?.stdout?.trim() || "";
+    if (/^[0-9a-f]{40}$/i.test(sha)) {
+      return sha;
+    }
+  } catch {
+    // ignore
+  }
+
+  throw new Error(
+    `Failed to resolve branch creation SHA for '${branch}' against '${baseRef}'.`,
+  );
+}
+
+/**
  * Resolves the commit SHA of the tag with the latest release history.
  * Strictly ignores pre-release / RC tags (e.g. -rc, -rc.1) and selects the highest stable semver tag prior to maxMajor (e.g. v15.3.0 for v16).
  */
@@ -390,17 +429,33 @@ export async function runSetupReleaseBranch({
     lsRemoteResult.stdout.includes(`refs/heads/${parsed.branch}`),
   );
 
-  if (!branchExistsOnOrigin) {
-    core?.info?.(
-      `Release branch '${parsed.branch}' does not exist on origin. Creating strictly from 'origin/main'...`,
-    );
-    // Invariant: New release branch must be branched strictly and exclusively from origin/main
-    await git(["push", "origin", `origin/main:refs/heads/${parsed.branch}`]);
-  } else {
-    core?.info?.(
-      `Release branch '${parsed.branch}' already exists on remote origin.`,
+  if (branchExistsOnOrigin) {
+    throw new Error(
+      `Release branch '${parsed.branch}' already exists on remote origin. Release branch setup workflow cannot be run on existing branches; configurations must be updated manually.`,
     );
   }
+
+  // Pre-calculate lastReleaseSha before pushing the remote branch so failures don't leave an unconfigured branch
+  let lastReleaseSha = null;
+  const envSha = proc?.env?.LAST_RELEASE_SHA?.trim();
+  if (envSha && /^[0-9a-f]{40}$/i.test(envSha)) {
+    lastReleaseSha = envSha;
+  } else {
+    // Determine the branching point from origin/main. For new branches, this is the current origin/main.
+    lastReleaseSha = await resolveBranchCreationSha(git, "main", "origin/main");
+  }
+
+  if (!lastReleaseSha || !/^[0-9a-f]{40}$/i.test(lastReleaseSha)) {
+    throw new Error(
+      `Failed to resolve required last-release-sha anchor for release branch '${parsed.branch}'.`,
+    );
+  }
+
+  core?.info?.(
+    `Release branch '${parsed.branch}' does not exist on origin. Creating strictly from 'origin/main'...`,
+  );
+  // Invariant: New release branch must be branched strictly and exclusively from origin/main
+  await git(["push", "origin", `origin/main:refs/heads/${parsed.branch}`]);
 
   // Fetch the release branch from origin
   await git(["fetch", "origin", parsed.branch]);
@@ -421,37 +476,9 @@ export async function runSetupReleaseBranch({
     if (err.code !== "ENOENT") throw err;
   }
 
-  let parsedExisting = null;
-  if (existingConfig.trim()) {
-    try {
-      parsedExisting = JSON.parse(existingConfig);
-    } catch {
-      // ignore
-    }
-  }
-
-  let lastReleaseSha = null;
-  const envSha = proc?.env?.LAST_RELEASE_SHA?.trim();
-  if (envSha && /^[0-9a-f]{40}$/i.test(envSha)) {
-    lastReleaseSha = envSha;
-  } else if (
-    parsedExisting &&
-    typeof parsedExisting["last-release-sha"] === "string" &&
-    /^[0-9a-f]{40}$/i.test(parsedExisting["last-release-sha"].trim())
-  ) {
-    lastReleaseSha = parsedExisting["last-release-sha"].trim();
-  } else {
-    lastReleaseSha = await resolveLatestReleaseTagSha(
-      git,
-      parsed.versionNumber,
-    );
-  }
-
-  if (lastReleaseSha) {
-    core?.info?.(
-      `Resolved release anchor SHA '${lastReleaseSha}' for release-please-config.json`,
-    );
-  }
+  core?.info?.(
+    `Resolved release anchor SHA '${lastReleaseSha}' for release-please-config.json`,
+  );
   const updatedConfig = buildReleasePleaseConfig(
     existingConfig,
     parsed.releaseAs,

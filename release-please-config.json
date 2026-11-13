@@ -13,5 +13,5 @@
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-  "last-release-sha": "2c006a36c2833ff9f07eb4bdcc370fcd201d15e8"
+  "last-release-sha": "96b10c94caf2dad853185325e586f1d9e7ed719e"
 }
