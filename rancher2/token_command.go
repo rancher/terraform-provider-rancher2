@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -22,30 +21,12 @@ const tokenCommandTimeout = 60 * time.Second
 // `sh -c`) would otherwise keep the provider waiting past the timeout.
 const tokenCommandWaitDelay = 2 * time.Second
 
-// maxTokenCommandStderr caps how much stderr is included in an error.
-const maxTokenCommandStderr = 512
-
-// tokenLikeRe matches Rancher tokens and other long secret-looking strings
-// (bearer tokens, JWT segments). Dots are excluded so hostnames in errors
-// such as "no such host" stay readable. This is best effort: short secrets
-// or ones split by other characters are not caught.
-var tokenLikeRe = regexp.MustCompile(`token-[a-z0-9]+:[A-Za-z0-9]+|[A-Za-z0-9_\-+=]{32,}`)
-
-// sanitizeTokenCommandStderr redacts secret-looking strings from stderr on a
-// best-effort basis and truncates it.
-func sanitizeTokenCommandStderr(stderr []byte) string {
-	s := tokenLikeRe.ReplaceAllString(strings.TrimSpace(string(stderr)), "[REDACTED]")
-	if len(s) > maxTokenCommandStderr {
-		s = s[:maxTokenCommandStderr] + "...(truncated)"
-	}
-	return s
-}
-
 // runTokenCommand runs command and returns the Rancher API token it prints on
 // stdout. The output can be a raw token or a Kubernetes ExecCredential JSON
 // (as printed by `rancher token`), in which case status.token is used.
-// The token from stdout is never included in errors; stderr is included with
-// secret-looking strings redacted on a best-effort basis.
+// Neither stdout nor stderr is included in errors or logs, because either
+// could contain the token; on failure the user is told to run the command in
+// a terminal to see its output.
 func runTokenCommand(command []string, timeout time.Duration) (string, error) {
 	if len(command) == 0 || command[0] == "" {
 		return "", errors.New("[ERROR] token_command must contain at least the program to run")
@@ -54,10 +35,10 @@ func runTokenCommand(command []string, timeout time.Duration) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var stdout, stderr bytes.Buffer
+	var stdout bytes.Buffer
 	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
 	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	// stderr is discarded (nil): it may contain the token.
 	cmd.WaitDelay = tokenCommandWaitDelay
 
 	err := cmd.Run()
@@ -65,7 +46,7 @@ func runTokenCommand(command []string, timeout time.Duration) (string, error) {
 		return "", fmt.Errorf("[ERROR] token_command %q timed out after %s. If it needs an interactive (browser) login, run it once in a terminal first so it can use a cached token", command[0], timeout)
 	}
 	if err != nil {
-		return "", fmt.Errorf("[ERROR] token_command %q failed: %v: %s", command[0], err, sanitizeTokenCommandStderr(stderr.Bytes()))
+		return "", fmt.Errorf("[ERROR] token_command %q failed: %v. Its output is not shown because it may contain the token; run the command in a terminal to see why it failed", command[0], err)
 	}
 
 	token, err := parseTokenCommandOutput(stdout.Bytes())

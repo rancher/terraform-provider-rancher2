@@ -48,30 +48,13 @@ func TestRunTokenCommand(t *testing.T) {
 		assert.Equal(t, testCmdToken, got)
 	})
 
-	t.Run("failure includes stderr", func(t *testing.T) {
-		_, err := runTokenCommand([]string{"sh", "-c", "echo login required >&2; exit 3"}, 5*time.Second)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "login required")
-	})
-
-	t.Run("failure redacts tokens in stderr", func(t *testing.T) {
-		_, err := runTokenCommand([]string{"sh", "-c", "echo got " + testCmdToken + " and abcdefghijklmnopqrstuvwxyz0123456789ABCD >&2; exit 1"}, 5*time.Second)
+	t.Run("failure never includes command output", func(t *testing.T) {
+		_, err := runTokenCommand([]string{"sh", "-c", "echo " + testCmdToken + "; echo login required " + testCmdToken + " >&2; exit 3"}, 5*time.Second)
 		require.Error(t, err)
 		assert.NotContains(t, err.Error(), testCmdToken)
-		assert.NotContains(t, err.Error(), "abcdefghijklmnopqrstuvwxyz0123456789ABCD")
-		assert.Contains(t, err.Error(), "[REDACTED]")
-	})
-
-	t.Run("failure keeps hostnames in stderr readable", func(t *testing.T) {
-		_, err := runTokenCommand([]string{"sh", "-c", "echo lookup rancher.platform-mgmt.internal.example.org: no such host >&2; exit 1"}, 5*time.Second)
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "rancher.platform-mgmt.internal.example.org")
-	})
-
-	t.Run("failure truncates long stderr", func(t *testing.T) {
-		_, err := runTokenCommand([]string{"sh", "-c", "i=0; while [ $i -lt 1000 ]; do printf 'x ' >&2; i=$((i+1)); done; exit 1"}, 5*time.Second)
-		require.Error(t, err)
-		assert.Less(t, len(err.Error()), 2*maxTokenCommandStderr)
+		assert.NotContains(t, err.Error(), "login required")
+		assert.Contains(t, err.Error(), "exit status 3")
+		assert.Contains(t, err.Error(), "run the command in a terminal")
 	})
 
 	t.Run("timeout", func(t *testing.T) {
