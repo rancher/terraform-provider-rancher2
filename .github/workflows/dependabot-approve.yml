@@ -31,4 +31,4 @@ jobs:
           GH_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
         run: |
           gh pr review "$PR_URL" --approve -b "Automated approval for Dependabot PR."
-          gh pr merge "$PR_URL" --auto --squash
+          gh pr merge "$PR_URL" --auto --squash || true
