@@ -21,6 +21,33 @@ const tokenCommandTimeout = 60 * time.Second
 // `sh -c`) would otherwise keep the provider waiting past the timeout.
 const tokenCommandWaitDelay = 2 * time.Second
 
+// maxTokenCommandOutput caps stdout. A token or ExecCredential JSON is a few
+// KiB at most; more means the command is misconfigured.
+const maxTokenCommandOutput = 64 * 1024
+
+// errTokenCommandOutputTooLarge stops the copy from the command's stdout.
+var errTokenCommandOutputTooLarge = errors.New("token_command output too large")
+
+// cappedBuffer collects up to max bytes. When more is written it kills the
+// command (via cancel) instead of growing without bound.
+type cappedBuffer struct {
+	buf      bytes.Buffer
+	max      int
+	cancel   context.CancelFunc
+	exceeded bool
+}
+
+func (b *cappedBuffer) Write(p []byte) (int, error) {
+	if b.buf.Len()+len(p) > b.max {
+		b.exceeded = true
+		b.cancel()
+		return 0, errTokenCommandOutputTooLarge
+	}
+	return b.buf.Write(p)
+}
+
+func (b *cappedBuffer) Bytes() []byte { return b.buf.Bytes() }
+
 // runTokenCommand runs command and returns the Rancher API token it prints on
 // stdout. The output can be a raw token or a Kubernetes ExecCredential JSON
 // (as printed by `rancher token`), in which case status.token is used.
@@ -35,13 +62,16 @@ func runTokenCommand(command []string, timeout time.Duration) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	var stdout bytes.Buffer
+	stdout := &cappedBuffer{max: maxTokenCommandOutput, cancel: cancel}
 	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
-	cmd.Stdout = &stdout
+	cmd.Stdout = stdout
 	// stderr is discarded (nil): it may contain the token.
 	cmd.WaitDelay = tokenCommandWaitDelay
 
 	err := cmd.Run()
+	if stdout.exceeded {
+		return "", fmt.Errorf("[ERROR] token_command %q printed more than %d bytes; it should print only a token or an ExecCredential JSON", command[0], maxTokenCommandOutput)
+	}
 	if ctx.Err() == context.DeadlineExceeded {
 		return "", fmt.Errorf("[ERROR] token_command %q timed out after %s. If it needs an interactive (browser) login, run it once in a terminal first so it can use a cached token", command[0], timeout)
 	}

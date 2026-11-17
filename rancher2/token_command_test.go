@@ -71,6 +71,15 @@ func TestRunTokenCommand(t *testing.T) {
 		assert.Less(t, time.Since(start), 10*time.Second)
 	})
 
+	t.Run("unbounded output is cut off", func(t *testing.T) {
+		start := time.Now()
+		_, err := runTokenCommand([]string{"yes"}, 30*time.Second)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "more than")
+		assert.NotContains(t, err.Error(), "timed out")
+		assert.Less(t, time.Since(start), 10*time.Second)
+	})
+
 	t.Run("empty command", func(t *testing.T) {
 		_, err := runTokenCommand(nil, time.Second)
 		require.Error(t, err)
@@ -96,6 +105,8 @@ func TestProviderConfigureTokenCommand(t *testing.T) {
 		wantErr   string
 	}{
 		{"token_command used when no static credentials", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "token_command": printToken}, testCmdToken, ""},
+		{"partial access_key is an error, not a token_command fallback", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "access_key": "token-static", "token_command": printToken}, "", "No token_key"},
+		{"partial secret_key is an error, not a token_command fallback", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "secret_key": "key", "token_command": printToken}, "", "No token_key"},
 		{"token_key wins over token_command", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "token_key": "token-static:key", "token_command": failing}, "token-static:key", ""},
 		{"access/secret key win over token_command", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "access_key": "token-static", "secret_key": "key", "token_command": failing}, "token-static:key", ""},
 		{"token_command error is returned", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "token_command": failing}, "", "token_command"},

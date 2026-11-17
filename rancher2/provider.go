@@ -225,8 +225,9 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	// Get the token from an external command (e.g. a cached SSO login) when no
-	// static credentials are given.
-	if tokenKey == providerDefaultEmptyString && !bootstrap {
+	// static credentials are given. A partial access_key/secret_key pair is
+	// left to fail validation instead of silently falling back.
+	if tokenKey == providerDefaultEmptyString && accessKey == providerDefaultEmptyString && secretKey == providerDefaultEmptyString && !bootstrap {
 		if raw, ok := d.GetOk("token_command"); ok {
 			command := make([]string, 0, len(raw.([]interface{})))
 			for _, arg := range raw.([]interface{}) {
