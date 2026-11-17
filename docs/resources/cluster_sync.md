@@ -88,6 +88,7 @@ The following arguments are supported:
 - `node_pool_ids` - (Optional) The node pool IDs used by the cluster id (list)
 - `wait_catalogs` - (Optional) Wait until all catalogs are downloaded and active. Default: `false` (bool)
 - `state_confirm` - (Optional) Wait until active status is confirmed a number of times (wait interval of 5s). Default: `1` means no confirmation (int)
+- `validate_kube_config` - (Optional) Contact the Kubernetes API during refresh to decide whether a stored kubeconfig is still usable. Default: `true` (bool). Set to `false` when Terraform cannot reach the cluster API. A stored kubeconfig is then reused while its Rancher token is enabled and unexpired, and refresh does not create a new kubeconfig token. Certificate updates in the kubeconfig are detected only when this remains `true`.
 
 **Note:** `state_confirm` would be useful, if you have troubles for creating/updating custom clusters that eventually are reaching `active` state before they are fully installed. For example: setting `state_confirm = 2` will assure that the cluster has been in `active` state for at least 5 seconds, `state_confirm = 3` assure at least 10 seconds, etc
 

@@ -135,7 +135,7 @@ func resourceRancher2ClusterSyncRead(d *schema.ResourceData, meta interface{}) e
 					return nil
 				}
 			}
-			kubeConfig, err := getClusterKubeconfig(meta.(*Config), clusterID, d.Get("kube_config").(string))
+			kubeConfig, err := getClusterKubeconfig(meta.(*Config), clusterID, d.Get("kube_config").(string), d.Get("validate_kube_config").(bool))
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}

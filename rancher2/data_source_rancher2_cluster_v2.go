@@ -124,7 +124,7 @@ func dataSourceRancher2ClusterV2Read(d *schema.ResourceData, meta interface{}) e
 	if generateKubeConfig {
 		log.Printf("[WARN] Generating kubeconfig for cluster %s creates a new API token. Set generate_kube_config = false if you don't need kube_config. The default will change to false in a future version.", d.Id())
 	}
-	err = setClusterV2LegacyData(d, meta.(*Config), generateKubeConfig)
+	err = setClusterV2LegacyData(d, meta.(*Config), generateKubeConfig, true)
 	if err != nil {
 		return err
 	}

@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	norman "github.com/rancher/norman/types"
 	managementClient "github.com/rancher/rancher/pkg/client/generated/management/v3"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func resourceRancher2Cluster() *schema.Resource {
@@ -275,7 +277,7 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 			return resource.NonRetryableError(err)
 		}
 
-		kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
+		kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string), d.Get("validate_kube_config").(bool))
 		if err != nil && !IsForbidden(err) {
 			return resource.NonRetryableError(err)
 		}
@@ -561,7 +563,7 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 	return newRegToken, nil
 }
 
-func isKubeConfigValid(c *Config, config string) (string, bool, error) {
+func isKubeConfigValid(c *Config, config string, validateKubeConfig bool) (string, bool, error) {
 	token, tokenValid, err := isKubeConfigTokenValid(c, config)
 	if err != nil {
 		return "", false, err
@@ -569,10 +571,22 @@ func isKubeConfigValid(c *Config, config string) (string, bool, error) {
 	if !tokenValid {
 		return "", false, nil
 	}
-	// Do not dial the Kubernetes API. Plan and refresh often run where the
-	// API server is unreachable. Treating that failure as an invalid
-	// kubeconfig falls through to generateKubeconfig and creates a new token
-	// on every plan, even when the stored token is still valid.
+	if !validateKubeConfig {
+		return token, true, nil
+	}
+	kubeconfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(config))
+	if err != nil {
+		return "", false, fmt.Errorf("checking Kubeconfig: %v", err)
+	}
+	client, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		return token, false, nil
+	}
+	_, err = client.DiscoveryClient.ServerVersion()
+	if err != nil {
+		return token, false, nil
+	}
+
 	return token, true, nil
 }
 
@@ -620,13 +634,13 @@ func replaceKubeConfigToken(c *Config, config string) (string, error) {
 	return getKubeConfigFromObj(kubeconfig)
 }
 
-func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.GenerateKubeConfigOutput, error) {
+func getClusterKubeconfig(c *Config, id, origconfig string, validateKubeConfig bool) (*managementClient.GenerateKubeConfigOutput, error) {
 	action := "generateKubeconfig"
 	cluster := &Cluster{}
 
 	// kubeconfig already exists in the cache
 	if len(origconfig) > 0 {
-		token, kubeValid, err := isKubeConfigValid(c, origconfig)
+		token, kubeValid, err := isKubeConfigValid(c, origconfig, validateKubeConfig)
 		if err != nil {
 			return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
 		}
@@ -643,8 +657,7 @@ func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.G
 		}
 	}
 
-	// No cached kubeconfig. Download one. This creates a token, so it must not
-	// run when a kubeconfig is already stored.
+	// kubeconfig is not cached or invalid for other reasons, download a new one
 	client, err := c.ManagementClient()
 	if err != nil {
 		return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)

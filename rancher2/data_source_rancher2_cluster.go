@@ -210,7 +210,7 @@ func dataSourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) err
 		generateKubeConfig := d.Get("generate_kube_config").(bool)
 		if generateKubeConfig {
 			log.Printf("[WARN] Generating kubeconfig for cluster %s creates a new API token. Set generate_kube_config = false if you don't need kube_config. The default will change to false in a future version.", cluster.ID)
-			kubeConfig, err = getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
+			kubeConfig, err = getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string), true)
 			if err != nil && !IsForbidden(err) {
 				return resource.NonRetryableError(err)
 			}

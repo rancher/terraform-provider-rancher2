@@ -395,6 +395,15 @@ func clusterFieldsV2() map[string]*schema.Schema {
 }
 
 // Current schema
+func validateKubeConfigField() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     true,
+		Description: "Contact the Kubernetes API during refresh to decide whether a stored kubeconfig is still usable. Defaults to true. Set to false when Terraform cannot reach the cluster API. A stored kubeconfig is then reused while its Rancher token is enabled and unexpired, and refresh does not create a new kubeconfig token. Certificate updates in the kubeconfig are detected only when this remains true.",
+	}
+}
+
 func clusterFields() map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"name": {
@@ -436,6 +445,7 @@ func clusterFields() map[string]*schema.Schema {
 			Computed:  true,
 			Sensitive: true,
 		},
+		"validate_kube_config": validateKubeConfigField(),
 		"ca_cert": {
 			Type:      schema.TypeString,
 			Computed:  true,

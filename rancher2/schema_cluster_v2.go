@@ -217,6 +217,7 @@ func clusterV2Fields() map[string]*schema.Schema {
 			Computed:  true,
 			Sensitive: true,
 		},
+		"validate_kube_config": validateKubeConfigField(),
 		"cluster_v1_id": {
 			Type:     schema.TypeString,
 			Computed: true,

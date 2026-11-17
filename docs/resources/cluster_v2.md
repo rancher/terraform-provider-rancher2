@@ -1043,6 +1043,7 @@ The following arguments are supported:
 - `enable_network_policy` - (Optional, bool, default: false) Enable k8s network policy on the cluster.
 - `annotations` - (Optional/computed, map) Annotations for the Cluster.
 - `labels` - (Optional/computed, map) Labels for the Cluster.
+- `validate_kube_config` - (Optional, bool, default: true) Contact the Kubernetes API during refresh to decide whether a stored kubeconfig is still usable. Set to `false` when Terraform cannot reach the cluster API. A stored kubeconfig is then reused while its Rancher token is enabled and unexpired, and refresh does not create a new kubeconfig token. Certificate updates in the kubeconfig are detected only when this remains `true`.
 
 ## Attributes Reference
 
