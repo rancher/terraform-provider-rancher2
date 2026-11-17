@@ -1,0 +1,32 @@
+name: "Sync Release Please Manifest Caller"
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Target release branch"
+        required: true
+        type: string
+      version:
+        description: "Last published full release version"
+        required: false
+        type: string
+      release_as:
+        description: "Target upcoming release version for release-as"
+        required: false
+        type: string
+
+permissions: {}
+
+jobs:
+  sync:
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    uses: rancher/terraform-provider-rancher2/.github/workflows/sync-release-manifest.yml@main
+    with:
+      branch: ${{ inputs.branch }}
+      version: ${{ inputs.version }}
+      release_as: ${{ inputs.release_as }}
+    secrets: inherit
