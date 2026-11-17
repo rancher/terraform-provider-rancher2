@@ -63,15 +63,61 @@ trap run_cleanup EXIT INT TERM
 while getopts ":rsdt:p:f:g:c:w:a:" opt; do
   case $opt in
     r) rerun_failed=true ;;
-    t) specific_test="$OPTARG" ;;
-    p) specific_package="$OPTARG" ;;
-    f) specific_fixture="$OPTARG" ;;
-    g) fixture_group="$OPTARG" ;;
-    c) cleanup_id="$OPTARG" ;;
-    w) wait_time="$OPTARG" ;;
-    a) max_attempts="$OPTARG" ;;
+    t)
+      if [ -z "$OPTARG" ] || [[ "$OPTARG" =~ ^- ]]; then
+        echo "Error: Option -t requires a valid test name, got: '$OPTARG'" >&2
+        exit 1
+      fi
+      specific_test="$OPTARG"
+      ;;
+    p)
+      if [ -z "$OPTARG" ] || [[ "$OPTARG" =~ ^- ]]; then
+        echo "Error: Option -p requires a valid package name, got: '$OPTARG'" >&2
+        exit 1
+      fi
+      specific_package="$OPTARG"
+      ;;
+    f)
+      if [ -z "$OPTARG" ] || [[ "$OPTARG" =~ ^- ]]; then
+        echo "Error: Option -f requires a valid fixture name, got: '$OPTARG'" >&2
+        exit 1
+      fi
+      specific_fixture="$OPTARG"
+      ;;
+    g)
+      if [ -z "$OPTARG" ] || [[ "$OPTARG" =~ ^- ]]; then
+        echo "Error: Option -g requires a valid group name, got: '$OPTARG'" >&2
+        exit 1
+      fi
+      fixture_group="$OPTARG"
+      ;;
+    c)
+      if [ -z "$OPTARG" ] || [[ "$OPTARG" =~ ^- ]]; then
+        echo "Error: Option -c requires a valid cleanup identifier, got: '$OPTARG'" >&2
+        exit 1
+      fi
+      cleanup_id="$OPTARG"
+      ;;
+    w)
+      if [ -z "$OPTARG" ] || [[ "$OPTARG" =~ ^- ]]; then
+        echo "Error: Option -w requires a valid wait time in seconds, got: '$OPTARG'" >&2
+        exit 1
+      fi
+      wait_time="$OPTARG"
+      ;;
+    a)
+      if [ -z "$OPTARG" ] || [[ "$OPTARG" =~ ^- ]]; then
+        echo "Error: Option -a requires a valid attempt count, got: '$OPTARG'" >&2
+        exit 1
+      fi
+      max_attempts="$OPTARG"
+      ;;
     d) dirty_mode=true ;;
     s) slow_mode=true ;;
+    :)
+      echo "Error: Option -$OPTARG requires a non-empty argument." >&2
+      exit 1
+      ;;
     \?) cat <<EOT >&2 && exit 1 ;;
 Invalid option: -$OPTARG
 

@@ -45,27 +45,26 @@ jobs:
     uses: rancher/terraform-provider-rancher2/.github/workflows/release-please.yml@main
     secrets: inherit
 `,
-  ".github/workflows/e2e-pr-listener.yml": `name: PR Executor Listener
-# This unprivileged workflow acts as a middleman to securely trigger e2e tests.
+  ".github/workflows/e2e.yml": `name: "E2E Tests"
 
 on:
   pull_request:
     branches:
       - 'release/v*'
     types: [opened, synchronize, reopened]
+  workflow_call:
 
 permissions: {}
 
 jobs:
-  emit-event:
-    name: 'Emit E2E Workflow Run Event'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+  e2e:
     permissions:
+      actions: read
       contents: read
-    steps:
-      - name: 'Execute PR Listener'
-        run: echo "PR listener executed. The completion of this workflow will trigger the privileged E2E Tests (Release PRs) workflow safely from the base branch via the workflow_run event."
+      id-token: write
+      pull-requests: read
+    uses: rancher/terraform-provider-rancher2/.github/workflows/e2e.yml@main
+    secrets: inherit
 `,
   ".github/workflows/sync-release-manifest.yml": `name: "Sync Release Please Manifest Caller"
 
@@ -108,7 +107,7 @@ jobs:
 export const ALLOWED_STUB_FILENAMES = new Set([
   "pull_request.yaml",
   "release.yml",
-  "e2e-pr-listener.yml",
+  "e2e.yml",
   "sync-release-manifest.yml",
 ]);
 
@@ -370,7 +369,7 @@ This automated pull request initializes configuration and caller stubs for the n
   - \`.github/workflows/pull_request.yaml\`
   - \`.github/workflows/release.yml\`
   - \`.github/workflows/sync-release-manifest.yml\`
-  - \`.github/workflows/e2e-pr-listener.yml\` (triggers privileged E2E workflows)
+  - \`.github/workflows/e2e.yml\` (delegates E2E test execution to @main)
 
 ---
 *Created automatically by [setup-release-branch.yml](https://github.com/rancher/terraform-provider-rancher2/actions/workflows/setup-release-branch.yml).*`;

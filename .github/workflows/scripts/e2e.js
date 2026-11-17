@@ -171,12 +171,13 @@ function shouldRunE2E(pr, core = { info: () => {}, warning: () => {} }) {
   const normalizedLogin =
     typeof userLogin === "string" ? userLogin.toLowerCase() : "";
   const authorizedBots = [
-    "github-actions[bot]",
-    "rancher-merge-bot[bot]",
     "eio-github-actions-power-enhancer[bot]",
+    "app/eio-github-actions-power-enhancer",
   ];
   const isBot =
-    (userType === "Bot" || normalizedLogin.endsWith("[bot]")) &&
+    (userType === "Bot" ||
+      normalizedLogin.endsWith("[bot]") ||
+      normalizedLogin.startsWith("app/")) &&
     authorizedBots.includes(normalizedLogin);
 
   const isBackport =
@@ -467,7 +468,14 @@ async function runE2EStatus({ github, context, core, process }) {
     core,
   );
 
-  if (sha && github?.rest?.repos?.createCommitStatus) {
+  const skipCommitStatus = String(process.env.SKIP_COMMIT_STATUS || "").trim().toLowerCase() === "true";
+
+  if (skipCommitStatus) {
+    core.info("Skipping commit status creation due to SKIP_COMMIT_STATUS flag.");
+  } else if (
+    sha &&
+    github?.rest?.repos?.createCommitStatus
+  ) {
     core.info(`Posting commit status to SHA: ${sha}`);
     let description;
     if (!passed) {

@@ -8,7 +8,7 @@ import defaultHandler, {
   shouldRunE2E,
 } from "./e2e.js";
 
-test("shouldRunE2E - qualifies automated backport PR from github-actions[bot]", () => {
+test("shouldRunE2E - rejects automated backport PR from github-actions[bot]", () => {
   const pr = {
     number: 101,
     base: {
@@ -26,10 +26,10 @@ test("shouldRunE2E - qualifies automated backport PR from github-actions[bot]", 
   };
 
   const result = shouldRunE2E(pr);
-  assert.strictEqual(result, true);
+  assert.strictEqual(result, false);
 });
 
-test("shouldRunE2E - qualifies automated backport PR from custom bot user", () => {
+test("shouldRunE2E - rejects automated backport PR from custom bot user", () => {
   const pr = {
     number: 102,
     base: {
@@ -47,7 +47,7 @@ test("shouldRunE2E - qualifies automated backport PR from custom bot user", () =
   };
 
   const result = shouldRunE2E(pr);
-  assert.strictEqual(result, true);
+  assert.strictEqual(result, false);
 });
 
 test("shouldRunE2E - qualifies automated backport PR from eio-github-actions-power-enhancer[bot]", () => {
@@ -104,7 +104,28 @@ test("shouldRunE2E - qualifies automated release-please PR from bot", () => {
       repo: { full_name: "rancher/terraform-provider-rancher2", fork: false },
     },
     user: {
-      login: "github-actions[bot]",
+      login: "eio-github-actions-power-enhancer[bot]",
+      type: "Bot",
+    },
+  };
+
+  const result = shouldRunE2E(pr);
+  assert.strictEqual(result, true);
+});
+
+test("shouldRunE2E - qualifies automated release-please PR from app bot", () => {
+  const pr = {
+    number: 202,
+    base: {
+      ref: "release/v3",
+      repo: { full_name: "rancher/terraform-provider-rancher2", fork: false },
+    },
+    head: {
+      ref: "release-please--branches--release--v3",
+      repo: { full_name: "rancher/terraform-provider-rancher2", fork: false },
+    },
+    user: {
+      login: "app/eio-github-actions-power-enhancer",
       type: "Bot",
     },
   };
@@ -280,7 +301,7 @@ test("runFilterPr - sets step output should_run to true for qualifying PR", asyn
           sha: "1234567890abcdef",
         },
         user: {
-          login: "github-actions[bot]",
+          login: "eio-github-actions-power-enhancer[bot]",
           type: "Bot",
         },
       },
@@ -365,7 +386,7 @@ test("runFilterPr - fetches PR dynamically via API when payload is missing", asy
                 sha: "abcdef1234567890",
               },
               user: {
-                login: "github-actions[bot]",
+                login: "eio-github-actions-power-enhancer[bot]",
                 type: "Bot",
               },
             },
@@ -551,7 +572,7 @@ test("defaultHandler - routes filter-pr and e2e-status modes", async () => {
           repo: { full_name: "rancher/repo", fork: false },
           sha: "mockheadsha123",
         },
-        user: { login: "github-actions[bot]", type: "Bot" },
+        user: { login: "eio-github-actions-power-enhancer[bot]", type: "Bot" },
       },
     },
   };
@@ -600,7 +621,7 @@ test("shouldRunE2E - qualifies release-please PR when branch uses slash notation
       repo: { full_name: "rancher/terraform-provider-rancher2", fork: false },
     },
     user: {
-      login: "github-actions[bot]",
+      login: "eio-github-actions-power-enhancer[bot]",
       type: "Bot",
     },
   };
@@ -621,7 +642,7 @@ test("shouldRunE2E - normalizes refs/heads/ prefix on head and base refs", () =>
       repo: { full_name: "rancher/terraform-provider-rancher2", fork: false },
     },
     user: {
-      login: "github-actions[bot]",
+      login: "eio-github-actions-power-enhancer[bot]",
       type: "Bot",
     },
   };
@@ -642,7 +663,7 @@ test("shouldRunE2E - qualifies bot account ending in [bot] even if user.type is 
       repo: { full_name: "rancher/terraform-provider-rancher2", fork: false },
     },
     user: {
-      login: "rancher-merge-bot[bot]",
+      login: "eio-github-actions-power-enhancer[bot]",
       type: "User",
     },
   };
@@ -691,7 +712,7 @@ test("shouldRunE2E - case-insensitively recognizes matching repository names", (
       repo: { full_name: "rancher/terraform-provider-rancher2", fork: false },
     },
     user: {
-      login: "github-actions[bot]",
+      login: "eio-github-actions-power-enhancer[bot]",
       type: "Bot",
     },
   };
@@ -947,7 +968,7 @@ test("shouldRunE2E - qualifies automated backport PR with short branch format (b
       repo: { full_name: "rancher/terraform-provider-rancher2", fork: false },
     },
     user: {
-      login: "github-actions[bot]",
+      login: "eio-github-actions-power-enhancer[bot]",
       type: "Bot",
     },
   };
@@ -968,7 +989,7 @@ test("shouldRunE2E - qualifies bot account with mixed-case login", () => {
       repo: { full_name: "rancher/terraform-provider-rancher2", fork: false },
     },
     user: {
-      login: "GitHub-Actions[bot]",
+      login: "EIO-GitHub-Actions-Power-Enhancer[bot]",
       type: "User",
     },
   };
@@ -1059,6 +1080,51 @@ test("runE2EStatus - posts commit status to API when SHA is provided", async () 
   assert.strictEqual(commitStatusArgs.sha, "1234567890abcdef");
   assert.strictEqual(commitStatusArgs.state, "success");
   assert.strictEqual(commitStatusArgs.context, "E2E Tests / executor");
+});
+
+test("runE2EStatus - skips commit status API call when SKIP_COMMIT_STATUS is true", async () => {
+  let commitStatusCalled = false;
+
+  const mockCore = {
+    info: () => {},
+    setFailed: () => {},
+  };
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        createCommitStatus: async () => {
+          commitStatusCalled = true;
+        },
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    runId: 9999,
+  };
+
+  const mockProcess = {
+    env: {
+      FILTER_RESULT: "success",
+      SHOULD_RUN: "true",
+      TEST_RESULT: "success",
+      CLEANUP_RESULT: "success",
+      SHA: "1234567890abcdef",
+      SKIP_COMMIT_STATUS: "true",
+    },
+  };
+
+  const result = await runE2EStatus({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(result, true);
+  assert.strictEqual(commitStatusCalled, false);
 });
 
 test("defaultHandler - forwards github and context to runE2EStatus and creates status check", async () => {
@@ -1247,7 +1313,7 @@ test("runFilterPr - does not mark run as superseded when PR_HEAD_SHA matches pr.
           sha: "matchingheadsha888",
         },
         user: {
-          login: "github-actions[bot]",
+          login: "eio-github-actions-power-enhancer[bot]",
           type: "Bot",
         },
       },
