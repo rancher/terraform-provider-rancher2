@@ -104,14 +104,14 @@ func TestProviderConfigureTokenCommand(t *testing.T) {
 		wantToken string
 		wantErr   string
 	}{
-		{"token_command used when no static credentials", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "token_command": printToken}, testCmdToken, ""},
-		{"partial access_key is an error, not a token_command fallback", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "access_key": "token-static", "token_command": printToken}, "", "No token_key"},
-		{"partial secret_key is an error, not a token_command fallback", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "secret_key": "key", "token_command": printToken}, "", "No token_key"},
-		{"token_key wins over token_command", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "token_key": "token-static:key", "token_command": failing}, "token-static:key", ""},
-		{"access/secret key win over token_command", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "access_key": "token-static", "secret_key": "key", "token_command": failing}, "token-static:key", ""},
-		{"token_command error is returned", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "token_command": failing}, "", "token_command"},
-		{"no credentials at all", map[string]interface{}{"api_url": "https://rancher.example.home.arpa"}, "", "No token_key"},
-		{"bootstrap ignores token_command", map[string]interface{}{"api_url": "https://rancher.example.home.arpa", "bootstrap": true, "token_command": failing}, providerDefaultEmptyString, ""},
+		{"token_command used when no static credentials", map[string]interface{}{"api_url": "https://rancher.example.com", "token_command": printToken}, testCmdToken, ""},
+		{"partial access_key is an error, not a token_command fallback", map[string]interface{}{"api_url": "https://rancher.example.com", "access_key": "token-static", "token_command": printToken}, "", "No token_key"},
+		{"partial secret_key is an error, not a token_command fallback", map[string]interface{}{"api_url": "https://rancher.example.com", "secret_key": "key", "token_command": printToken}, "", "No token_key"},
+		{"token_key wins over token_command", map[string]interface{}{"api_url": "https://rancher.example.com", "token_key": "token-static:key", "token_command": failing}, "token-static:key", ""},
+		{"access/secret key win over token_command", map[string]interface{}{"api_url": "https://rancher.example.com", "access_key": "token-static", "secret_key": "key", "token_command": failing}, "token-static:key", ""},
+		{"token_command error is returned", map[string]interface{}{"api_url": "https://rancher.example.com", "token_command": failing}, "", "token_command"},
+		{"no credentials at all", map[string]interface{}{"api_url": "https://rancher.example.com"}, "", "No token_key"},
+		{"bootstrap ignores token_command", map[string]interface{}{"api_url": "https://rancher.example.com", "bootstrap": true, "token_command": failing}, providerDefaultEmptyString, ""},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

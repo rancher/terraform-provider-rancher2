@@ -27,8 +27,8 @@ provider "rancher2" {
 # Configure the Rancher2 provider to get its token from a command,
 # e.g. the Rancher CLI with a cached browser (SAML) login
 provider "rancher2" {
-  api_url       = "https://rancher.example.home.arpa"
-  token_command = ["rancher", "token", "--server", "https://rancher.example.home.arpa", "--user", "me", "--auth-provider", "keyCloakProvider"]
+  api_url       = "https://rancher.example.com"
+  token_command = ["rancher", "token", "--server", "https://rancher.example.com", "--user", "me", "--auth-provider", "keyCloakProvider"]
 }
 ```
 
@@ -97,7 +97,7 @@ The following arguments are supported:
 
 ```bash
 # Log in once in a terminal; this opens a browser login and caches the token
-rancher token --server https://rancher.example.home.arpa --user me --auth-provider keyCloakProvider
+rancher token --server https://rancher.example.com --user me --auth-provider keyCloakProvider
 ```
 
 Afterwards every `terraform plan`/`apply` runs the same command, gets the cached token and needs no browser until it expires.
