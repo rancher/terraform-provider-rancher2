@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.7.0](https://github.com/rancher/terraform-provider-rancher2/compare/v14.7.0...v14.7.0) (2026-11-17)
+
+
+### Bug Fixes
+
+* clarify CLIConfig documentation comment in provider ([#2694](https://github.com/rancher/terraform-provider-rancher2/issues/2694)) ([#2699](https://github.com/rancher/terraform-provider-rancher2/issues/2699)) ([fe6254c](https://github.com/rancher/terraform-provider-rancher2/commit/fe6254c759dcf45fcbc5bd37a89a5ce0e356024d))
+
 ## [14.7.0](https://github.com/rancher/terraform-provider-rancher2/compare/v14.2.2...v14.7.0) (2026-11-06)
 
 
