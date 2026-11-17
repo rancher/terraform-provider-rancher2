@@ -1,0 +1,20 @@
+name: "E2E Tests"
+
+on:
+  pull_request:
+    branches:
+      - 'release/v*'
+    types: [opened, synchronize, reopened]
+  workflow_call:
+
+permissions: {}
+
+jobs:
+  e2e:
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      pull-requests: read
+    uses: rancher/terraform-provider-rancher2/.github/workflows/e2e.yml@main
+    secrets: inherit
