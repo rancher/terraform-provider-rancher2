@@ -388,6 +388,7 @@ describe("setup-release-branch.js", () => {
       assert.match(e2eStub, /name: "E2E Tests"/);
       assert.match(e2eStub, /branches:\s+- 'release\/v\*'/);
       assert.match(e2eStub, /types: \[opened, synchronize, reopened\]/);
+      assert.match(e2eStub, /merge_group:/);
       assert.match(e2eStub, /id-token: write/);
       assert.match(e2eStub, /pull-requests: read/);
       assert.match(

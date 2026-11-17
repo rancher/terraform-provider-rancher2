@@ -1,0 +1,42 @@
+name: Dependabot Automation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  approve-and-merge:
+    name: "Auto-Approve Dependabot PR"
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      id-token: write # Required for Vault OIDC authentication
+      pull-requests: write
+      contents: write
+      actions: write
+    steps:
+      - name: "Read Vault Secrets"
+        id: read-vault-secrets
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
+      - name: "Approve and Enable Auto-Merge"
+        id: approve-and-merge
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
+        run: |
+          gh pr review "$PR_URL" --approve -b "Automated approval for Dependabot PR."
+          if output=$(gh pr merge "$PR_URL" --auto --squash 2>&1); then
+            echo "$output"
+          elif echo "$output" | grep -qi "already"; then
+            echo "Auto-merge is already enabled for $PR_URL."
+          else
+            echo "$output" >&2
+            exit 1
+          fi
