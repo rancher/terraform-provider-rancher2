@@ -94,6 +94,7 @@ jobs:
 
   terraform:
     name: "Terraform"
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -128,6 +129,7 @@ jobs:
 
   actionlint:
     name: "Lint Workflows"
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -162,6 +164,7 @@ jobs:
 
   node-check:
     name: "Node Check"
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -209,6 +212,7 @@ jobs:
 
   node-test:
     name: "Node Tests"
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -243,6 +247,7 @@ jobs:
 
   eslint:
     name: "ESLint"
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -277,6 +282,7 @@ jobs:
 
   shellcheck:
     name: "Shellcheck"
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -349,6 +355,7 @@ jobs:
 
   gitleaks:
     name: "Scan for Secrets"
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
@@ -384,6 +391,7 @@ jobs:
 
   sensitive-checks:
     name: "Sensitive Checks"
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/rancher/ci-image/nix:20260603-18
