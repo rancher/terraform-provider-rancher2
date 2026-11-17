@@ -53,6 +53,10 @@ on:
     branches:
       - 'release/v*'
     types: [opened, synchronize, reopened]
+  merge_group:
+    branches:
+      - 'release/v*'
+  workflow_call:
 
 permissions: {}
 

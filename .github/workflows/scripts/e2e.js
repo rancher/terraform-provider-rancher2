@@ -327,6 +327,19 @@ async function resolveTargetPr({ github, context, core, process }) {
  * filter-pr: Evaluates PR qualification and sets the 'should_run' step output.
  */
 async function runFilterPr({ github, context, core, process }) {
+  if (context?.eventName === "merge_group") {
+    core.info(
+      "Triggered by merge_group event. E2E tests are not executed in merge queue (M2). Skipping E2E tests safely.",
+    );
+    core.setOutput("should_run", "false");
+    core.setOutput(
+      "sha",
+      context?.payload?.merge_group?.head_sha || context?.sha || "",
+    );
+    core.setOutput("is_fork", "false");
+    return true;
+  }
+
   const pr = await resolveTargetPr({ github, context, core, process });
   const parentRun = context?.payload?.workflow_run;
 

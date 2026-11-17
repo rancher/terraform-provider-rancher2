@@ -2149,3 +2149,42 @@ test("runE2EStatus - uses process.env.GITHUB_RUN_ID when context.runId is missin
     "https://github.com/rancher/terraform-provider-rancher2/actions/runs/778899",
   );
 });
+
+test("runFilterPr - safely skips E2E tests for merge_group event and sets should_run to false", async () => {
+  const outputs = {};
+  let loggedInfo = "";
+  const mockCore = {
+    info: (msg) => {
+      loggedInfo += msg + "\n";
+    },
+    warning: () => {},
+    setOutput: (key, val) => {
+      outputs[key] = val;
+    },
+    setFailed: () => {},
+  };
+
+  const mockContext = {
+    eventName: "merge_group",
+    sha: "mergegroupsha999",
+    payload: {
+      merge_group: {
+        head_sha: "mergegroupsha999",
+      },
+    },
+    repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+  };
+
+  const result = await runFilterPr({
+    github: {},
+    context: mockContext,
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.strictEqual(result, true);
+  assert.strictEqual(outputs["should_run"], "false");
+  assert.strictEqual(outputs["sha"], "mergegroupsha999");
+  assert.strictEqual(outputs["is_fork"], "false");
+  assert.match(loggedInfo, /Triggered by merge_group event/);
+});
