@@ -18,7 +18,7 @@ var (
 	rancher2ClusterRKEK8SVersions       []string
 )
 
-// CLIConfig used to store data from file.
+// CLIConfig stores configuration data loaded from file.
 type CLIConfig struct {
 	AdminPass string `json:"adminpass"`
 	AccessKey string `json:"accessKey"`
