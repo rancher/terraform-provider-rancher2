@@ -16,6 +16,7 @@ jobs:
       id-token: write # Required for Vault OIDC authentication
       pull-requests: write
       contents: write
+      actions: write
     steps:
       - name: "Read Vault Secrets"
         id: read-vault-secrets
