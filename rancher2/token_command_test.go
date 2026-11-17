@@ -54,10 +54,38 @@ func TestRunTokenCommand(t *testing.T) {
 		assert.Contains(t, err.Error(), "login required")
 	})
 
+	t.Run("failure redacts tokens in stderr", func(t *testing.T) {
+		_, err := runTokenCommand([]string{"sh", "-c", "echo got " + testCmdToken + " and abcdefghijklmnopqrstuvwxyz0123456789ABCD >&2; exit 1"}, 5*time.Second)
+		require.Error(t, err)
+		assert.NotContains(t, err.Error(), testCmdToken)
+		assert.NotContains(t, err.Error(), "abcdefghijklmnopqrstuvwxyz0123456789ABCD")
+		assert.Contains(t, err.Error(), "[REDACTED]")
+	})
+
+	t.Run("failure keeps hostnames in stderr readable", func(t *testing.T) {
+		_, err := runTokenCommand([]string{"sh", "-c", "echo lookup rancher.platform-mgmt.internal.example.org: no such host >&2; exit 1"}, 5*time.Second)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "rancher.platform-mgmt.internal.example.org")
+	})
+
+	t.Run("failure truncates long stderr", func(t *testing.T) {
+		_, err := runTokenCommand([]string{"sh", "-c", "i=0; while [ $i -lt 1000 ]; do printf 'x ' >&2; i=$((i+1)); done; exit 1"}, 5*time.Second)
+		require.Error(t, err)
+		assert.Less(t, len(err.Error()), 2*maxTokenCommandStderr)
+	})
+
 	t.Run("timeout", func(t *testing.T) {
 		_, err := runTokenCommand([]string{"sh", "-c", "sleep 5"}, 200*time.Millisecond)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "timed out")
+	})
+
+	t.Run("timeout with descendant holding the output pipes", func(t *testing.T) {
+		start := time.Now()
+		_, err := runTokenCommand([]string{"sh", "-c", "sleep 30 & wait"}, 200*time.Millisecond)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "timed out")
+		assert.Less(t, time.Since(start), 10*time.Second)
 	})
 
 	t.Run("empty command", func(t *testing.T) {
