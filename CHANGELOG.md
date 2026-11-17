@@ -12,6 +12,13 @@ ENHANCEMENTS:
 BUGFIXES:
 
 
+## [15.3.0](https://github.com/rancher/terraform-provider-rancher2/compare/v15.3.0...v15.3.0) (2026-11-17)
+
+
+### Bug Fixes
+
+* clarify CLIConfig documentation comment in provider ([#2694](https://github.com/rancher/terraform-provider-rancher2/issues/2694)) ([#2698](https://github.com/rancher/terraform-provider-rancher2/issues/2698)) ([e8b3d2b](https://github.com/rancher/terraform-provider-rancher2/commit/e8b3d2bcc6309f04c411359ffca445916a6751b3))
+
 ## [15.3.0](https://github.com/rancher/terraform-provider-rancher2/compare/v15.1.2...v15.3.0) (2026-11-12)
 
 
