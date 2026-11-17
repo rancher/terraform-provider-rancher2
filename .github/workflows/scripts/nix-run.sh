@@ -57,6 +57,7 @@ sudo -E -u suse /home/suse/.nix-profile/bin/nix develop \
   --keep AWS_REGION \
   --keep AWS_DEFAULT_REGION \
   --keep IDENTIFIER \
+  --keep TEST_NAME \
   --keep ZONE \
   --keep ACME_SERVER_URL \
   --keep PR_NUMBER \

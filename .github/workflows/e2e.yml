@@ -175,7 +175,7 @@ jobs:
             export AWS_RETRY_MODE=\"adaptive\"
             export ACME_SERVER_URL=\"https://acme-v02.api.letsencrypt.org/directory\"
             export RANCHER_INSECURE=\"false\"
-            ./run_tests.sh -t \"\$TEST_NAME\" -d -a 3
+            ./run_tests.sh -t \"$TEST_NAME\" -d -a 3
           "
 
   cleanup:
