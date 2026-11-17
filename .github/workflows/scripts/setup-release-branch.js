@@ -58,7 +58,6 @@ permissions: {}
 
 jobs:
   e2e:
-    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.fork == false && contains(fromJSON('["eio-github-actions-power-enhancer[bot]", "app/eio-github-actions-power-enhancer"]'), github.event.pull_request.user.login) && (startsWith(github.event.pull_request.head.ref, 'backport-') || startsWith(github.event.pull_request.head.ref, 'release-please--branches--')))
     permissions:
       actions: read
       contents: read
