@@ -32,4 +32,11 @@ jobs:
           GH_TOKEN: ${{ env.GITHUB_MERGE_TOKEN }}
         run: |
           gh pr review "$PR_URL" --approve -b "Automated approval for Dependabot PR."
-          gh pr merge "$PR_URL" --auto --squash || true
+          if output=$(gh pr merge "$PR_URL" --auto --squash 2>&1); then
+            echo "$output"
+          elif echo "$output" | grep -qi "already"; then
+            echo "Auto-merge is already enabled for $PR_URL."
+          else
+            echo "$output" >&2
+            exit 1
+          fi
