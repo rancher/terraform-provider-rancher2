@@ -1,13 +1,11 @@
-name: E2E Tests (Release PRs)
-run-name: >-
-  E2E Tests: PR #${{ github.event.workflow_run.pull_requests[0].number || 'unknown' }}
-  (${{ github.event.workflow_run.pull_requests[0].base.ref || github.event.workflow_run.head_branch }})
-# This privileged workflow watches the "PR Executor Listener" workflow and safely executes e2e tests.
+name: "E2E Tests"
 
 on:
-  workflow_run:
-    workflows: ["PR Executor Listener"]
-    types: [completed]
+  pull_request:
+    branches:
+      - "release/v*"
+    types: [opened, synchronize, reopened]
+  workflow_call:
 
 env:
   AWS_REGION: us-west-2
@@ -17,10 +15,12 @@ env:
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.pull_requests[0].number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   filter:
+    if: github.event_name != 'pull_request' || (github.event.pull_request.head.repo.fork == false && contains(fromJSON('["eio-github-actions-power-enhancer[bot]", "app/eio-github-actions-power-enhancer"]'), github.event.pull_request.user.login) && (startsWith(github.event.pull_request.head.ref, 'backport-') || startsWith(github.event.pull_request.head.ref, 'release-please--branches--')))
     name: "Filter Qualifying PRs"
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -38,15 +38,15 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: "main"
+          sparse-checkout: .github/workflows/scripts
       - name: "Check PR Qualification"
         id: check-qualification
         # https://github.com/actions/github-script/releases
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           SCRIPT_MODE: filter-pr
-          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
-          PR_HEAD_SHA: ${{ github.event.workflow_run.pull_requests[0].head.sha }}
-          WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
@@ -55,6 +55,12 @@ jobs:
 
   setup:
     name: "Setup Matrix"
+    needs:
+      - filter
+    if: |
+      !cancelled() &&
+      needs.filter.result == 'success' &&
+      needs.filter.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions: {}
@@ -118,6 +124,7 @@ jobs:
         id: sync-test-suite
         run: |
           rm -rf examples test .github/workflows/scripts
+          mkdir -p .github/workflows
           cp -r .main-tools/.github/workflows/scripts .github/workflows/
           cp -r .main-tools/examples .
           cp -r .main-tools/test .
@@ -160,12 +167,16 @@ jobs:
           ZONE: ${{ secrets.ZONE }}
           TEST_NAME: ${{ matrix.test_name }}
         run: |
+          if [ -z "$TEST_NAME" ]; then
+            echo "Error: TEST_NAME environment variable is empty." >&2
+            exit 1
+          fi
           .github/workflows/scripts/nix-run.sh bash -c "
             export AWS_MAX_ATTEMPTS=\"100\"
             export AWS_RETRY_MODE=\"adaptive\"
             export ACME_SERVER_URL=\"https://acme-v02.api.letsencrypt.org/directory\"
             export RANCHER_INSECURE=\"false\"
-            ./run_tests.sh -t \"\$TEST_NAME\" -d
+            ./run_tests.sh -t \"\$TEST_NAME\" -d -a 3
           "
 
   cleanup:
@@ -191,7 +202,7 @@ jobs:
         # https://github.com/actions/checkout/releases
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           ref: "main"
       - name: "Clear out GitHub Runner"
         id: clear-runner
@@ -222,6 +233,10 @@ jobs:
           AWS_SESSION_TOKEN: ${{ steps.aws-creds.outputs.aws-session-token }}
           IDENTIFIER: ${{ github.run_id }}
         run: |
+          if [ -z "$IDENTIFIER" ]; then
+            echo "Error: IDENTIFIER environment variable is empty." >&2
+            exit 1
+          fi
           .github/workflows/scripts/nix-run.sh bash -c "
             export AWS_MAX_ATTEMPTS=\"100\"
             export AWS_RETRY_MODE=\"adaptive\"
@@ -235,12 +250,11 @@ jobs:
       - setup
       - test
       - cleanup
-    if: always()
+    if: always() && needs.filter.result != 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
-      statuses: write
     steps:
       - name: "Checkout Repository"
         id: checkout-repository
@@ -248,6 +262,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: "main"
+          sparse-checkout: .github/workflows/scripts
       - name: "Evaluate E2E Status"
         id: evaluate-status
         # https://github.com/actions/github-script/releases
@@ -261,6 +276,7 @@ jobs:
           CLEANUP_RESULT: ${{ needs.cleanup.result }}
           SHA: ${{ needs.filter.outputs.sha }}
           IS_FORK: ${{ needs.filter.outputs.is_fork }}
+          SKIP_COMMIT_STATUS: "true"
         with:
           script: |
             const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
