@@ -11,6 +11,21 @@ ENHANCEMENTS:
 
 BUGFIXES:
 
+## [16.0.0](https://github.com/rancher/terraform-provider-rancher2/compare/v16.0.0...v16.0.0) (2026-11-18)
+
+
+### Features
+
+* Machine Config for Harvester: CPU Pinning ([#2274](https://github.com/rancher/terraform-provider-rancher2/issues/2274)) ([#2682](https://github.com/rancher/terraform-provider-rancher2/issues/2682)) ([e953c24](https://github.com/rancher/terraform-provider-rancher2/commit/e953c24b4dd82e88f582b03cf81f2cee18ecb51c))
+
+
+### Bug Fixes
+
+* anchor last release sha to branch creation point ([#2680](https://github.com/rancher/terraform-provider-rancher2/issues/2680)) ([#2681](https://github.com/rancher/terraform-provider-rancher2/issues/2681)) ([a113e67](https://github.com/rancher/terraform-provider-rancher2/commit/a113e67ceed4111300e64ea48d5f104789a12789))
+* clarify CLIConfig documentation comment in provider ([#2694](https://github.com/rancher/terraform-provider-rancher2/issues/2694)) ([#2697](https://github.com/rancher/terraform-provider-rancher2/issues/2697)) ([9012a85](https://github.com/rancher/terraform-provider-rancher2/commit/9012a8594a3180238c70e2823a4282c11435cb28))
+* clarify Provider implementation comment in provider.go ([#2708](https://github.com/rancher/terraform-provider-rancher2/issues/2708)) ([#2709](https://github.com/rancher/terraform-provider-rancher2/issues/2709)) ([4533abc](https://github.com/rancher/terraform-provider-rancher2/commit/4533abc5da225f74df0223aaaabb6bb3b8cbf902))
+* Fix OIDCClient import for missing IDs ([#2423](https://github.com/rancher/terraform-provider-rancher2/issues/2423)) ([#2687](https://github.com/rancher/terraform-provider-rancher2/issues/2687)) ([e401112](https://github.com/rancher/terraform-provider-rancher2/commit/e401112d8b77db99a5d28d40f2567a7356ed3f3a))
+
 ## v4.0.0 (February 5, 2024)
 
 FEATURES:
