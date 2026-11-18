@@ -592,7 +592,7 @@ test("runBackportIssues - creates sub-issue and handles quoted PR numbers", asyn
     "release/v15",
     "internal/backport",
   ]);
-  assert.deepStrictEqual(createdIssueParams.assignees, ["testmaintainer"]);
+  assert.strictEqual(createdIssueParams.assignees, undefined);
   assert.match(
     createdIssueParams.body,
     /Backport #47 to release\/v15 for #500/,
@@ -601,7 +601,7 @@ test("runBackportIssues - creates sub-issue and handles quoted PR numbers", asyn
   assert.strictEqual(subIssueLinkedParams.sub_issue_id, 9999);
 });
 
-test("runBackportIssues - excludes matt-trachier from assignees when creating backport issue", async () => {
+test("runBackportIssues - creates backport issue without assignees", async () => {
   const mockCore = createMockCore();
   let createdIssueParams = null;
 
@@ -656,60 +656,13 @@ test("runBackportIssues - excludes matt-trachier from assignees when creating ba
     process: {
       env: {
         PR: "47",
-        TERRAFORM_MAINTAINERS: '["matt-trachier", "othermaintainer"]',
-      },
-    },
-  });
-
-  assert.strictEqual(mockCore.failedMessage, null);
-  assert.deepStrictEqual(createdIssueParams.assignees, ["othermaintainer"]);
-
-  // Test when matt-trachier is the only maintainer
-  createdIssueParams = null;
-  await runBackportIssues({
-    github: mockGithub,
-    context: {
-      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
-      payload: {
-        label: { name: "release/v15" },
-        issue: { number: 500 },
-      },
-    },
-    core: mockCore,
-    process: {
-      env: {
-        PR: "47",
-        TERRAFORM_MAINTAINERS: '["matt-trachier"]',
+        TERRAFORM_MAINTAINERS: '["maintainer1", "maintainer2"]',
       },
     },
   });
 
   assert.strictEqual(mockCore.failedMessage, null);
   assert.strictEqual(createdIssueParams.assignees, undefined);
-
-  // Test when various mixed-case and alternative handles are in maintainers list
-  createdIssueParams = null;
-  await runBackportIssues({
-    github: mockGithub,
-    context: {
-      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
-      payload: {
-        label: { name: "release/v15" },
-        issue: { number: 500 },
-      },
-    },
-    core: mockCore,
-    process: {
-      env: {
-        PR: "47",
-        TERRAFORM_MAINTAINERS:
-          '["Matt-Trachier", "mtrachier", "matt.trachier", "othermaintainer"]',
-      },
-    },
-  });
-
-  assert.strictEqual(mockCore.failedMessage, null);
-  assert.deepStrictEqual(createdIssueParams.assignees, ["othermaintainer"]);
 });
 
 test("runBackportIssues - throws on invalid PR number", async () => {
@@ -828,7 +781,7 @@ test("runBackportIssues - handles workflow_dispatch inputs via env and fetches p
     "release/v15",
     "internal/backport",
   ]);
-  assert.deepStrictEqual(createdIssueParams.assignees, ["testmaintainer"]);
+  assert.strictEqual(createdIssueParams.assignees, undefined);
   assert.match(
     createdIssueParams.body,
     /Backport #48 to release\/v15 for #600/,

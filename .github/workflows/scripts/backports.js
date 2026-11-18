@@ -959,19 +959,6 @@ export async function runBackportIssues({
     }
   }
 
-  const isExcludedMaintainer = (m) => {
-    if (typeof m !== "string") return false;
-    const lower = m.toLowerCase().trim();
-    return (
-      lower === "matt-trachier" ||
-      lower === "matt.trachier" ||
-      lower === "mtrachier"
-    );
-  };
-  const assignees = parseMaintainers(
-    core,
-    process?.env?.TERRAFORM_MAINTAINERS,
-  ).filter((a) => !isExcludedMaintainer(a));
   const rawPr = process?.env?.PR
     ? String(process.env.PR)
       .replace(/^["']|["']$/g, "")
@@ -1011,9 +998,6 @@ export async function runBackportIssues({
       ].join("\n\n"),
       labels: [releaseLabel, "internal/backport"],
     };
-    if (assignees.length > 0) {
-      issueParams.assignees = assignees;
-    }
     response = await github.rest.issues.create(issueParams);
   } catch (error) {
     throw new Error(`Failed to create backport issue: ${error.message}`);
