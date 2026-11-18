@@ -68,6 +68,8 @@ jobs:
       fail-fast: false
       max-parallel: 3
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/rancher/ci-image/nix:20260603-18
     timeout-minutes: 30
     permissions:
       contents: read

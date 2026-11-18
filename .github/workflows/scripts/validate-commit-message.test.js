@@ -221,6 +221,12 @@ describe("validate-commit-message", () => {
       );
       assert.strictEqual(
         validatePrefix(
+          "chore(release/v16): initialize release branch configuration",
+        ),
+        true,
+      );
+      assert.strictEqual(
+        validatePrefix(
           "fix(release/v16): initialize release branch configuration",
         ),
         true,
@@ -278,6 +284,18 @@ describe("validate-commit-message", () => {
       );
       assert.strictEqual(
         isReleaseChore("chore(release/v13): release 13.11.0-rc.1"),
+        true,
+      );
+      assert.strictEqual(
+        isReleaseChore(
+          "chore(release/v16): initialize release branch configuration",
+        ),
+        true,
+      );
+      assert.strictEqual(
+        isReleaseChore(
+          "chore(release/v15): align release-please manifest with tag v15.3.0",
+        ),
         true,
       );
     });
@@ -444,6 +462,13 @@ describe("validate-commit-message", () => {
         validateProductImpact("chore(release/v15): release 15.3.0", [
           "rancher2/provider.go",
         ]),
+        true,
+      );
+      assert.strictEqual(
+        validateProductImpact(
+          "chore(release/v16): initialize release branch configuration",
+          ["rancher2/release.md"],
+        ),
         true,
       );
     });

@@ -2,7 +2,7 @@ name: "Release Complete"
 
 on:
   workflow_run:
-    workflows: ["Release"]
+    workflows: ["Release Please"]
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -57,6 +57,7 @@ jobs:
           WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id || '' }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}
           TAG: ${{ github.event.inputs.tag || '' }}
+          PROJECT_NUMBER: "73"
         with:
           github-token: ${{ env.GITHUB_ISSUES_TOKEN }}
           script: |

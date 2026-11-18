@@ -2279,6 +2279,38 @@ test("runFindCompletedE2eRuns - returns explicit run_id when EXPLICIT_RUN_ID is 
   assert.strictEqual(outputs.count, "1");
 });
 
+test("runFindCompletedE2eRuns - throws when EXPLICIT_RUN_ID is not a positive integer", async () => {
+  await assert.rejects(
+    async () => {
+      await runFindCompletedE2eRuns({
+        github: {},
+        context: {},
+        core: { info: () => {}, setOutput: () => {} },
+        process: { env: { EXPLICIT_RUN_ID: "123abc" } },
+      });
+    },
+    {
+      message:
+        /Invalid explicit E2E run ID "123abc". Must be a positive integer./,
+    },
+  );
+
+  await assert.rejects(
+    async () => {
+      await runFindCompletedE2eRuns({
+        github: {},
+        context: {},
+        core: { info: () => {}, setOutput: () => {} },
+        process: { env: { EXPLICIT_RUN_ID: "0" } },
+      });
+    },
+    {
+      message:
+        /Invalid explicit E2E run ID "0". Must be a positive integer./,
+    },
+  );
+});
+
 test("runFindCompletedE2eRuns - finds completed e2e runs since previous cleanup run", async () => {
   const outputs = {};
   const mockCore = {

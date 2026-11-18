@@ -1044,6 +1044,9 @@ export async function runBackportIssues({
   }
 }
 
+export const DEFAULT_PROJECT_NUMBER = 73;
+export const DEFAULT_PROJECT_OWNER = "rancher";
+
 /**
  * Updates an issue's single-select Status field to targetStatus (e.g. "Ready for QA") in any ProjectV2 it belongs to.
  */
@@ -1053,6 +1056,7 @@ export async function updateIssueProjectStatus({
   repo,
   issueNumber,
   targetStatus = "Ready for QA",
+  projectNumber = DEFAULT_PROJECT_NUMBER,
   core,
 }) {
   if (!github || typeof github.graphql !== "function") {
@@ -1065,25 +1069,37 @@ export async function updateIssueProjectStatus({
   }
 
   try {
-    const query = `
-      query getIssueProjectItems($owner: String!, $repo: String!, $issueNumber: Int!) {
-        repository(owner: $owner, name: $repo) {
-          issue(number: $issueNumber) {
-            id
-            projectItems(first: 20) {
-              nodes {
-                id
-                project {
+    let issueId = null;
+    const projectItems = [];
+    let hasNextPage = true;
+    let cursor = null;
+
+    while (hasNextPage) {
+      const query = `
+        query getIssueProjectItems($owner: String!, $repo: String!, $issueNumber: Int!, $cursor: String) {
+          repository(owner: $owner, name: $repo) {
+            issue(number: $issueNumber) {
+              id
+              projectItems(first: 50, after: $cursor) {
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+                nodes {
                   id
-                  title
-                  fields(first: 50) {
-                    nodes {
-                      ... on ProjectV2SingleSelectField {
-                        id
-                        name
-                        options {
+                  project {
+                    id
+                    number
+                    title
+                    fields(first: 50) {
+                      nodes {
+                        ... on ProjectV2SingleSelectField {
                           id
                           name
+                          options {
+                            id
+                            name
+                          }
                         }
                       }
                     }
@@ -1093,89 +1109,211 @@ export async function updateIssueProjectStatus({
             }
           }
         }
+      `;
+
+      const data = await github.graphql(query, {
+        owner,
+        repo,
+        issueNumber,
+        cursor,
+      });
+
+      if (!issueId) {
+        issueId = data?.repository?.issue?.id;
       }
-    `;
 
-    const data = await github.graphql(query, { owner, repo, issueNumber });
-    const projectItems =
-      data?.repository?.issue?.projectItems?.nodes?.filter(Boolean) || [];
+      const connection = data?.repository?.issue?.projectItems;
+      const nodes = connection?.nodes?.filter(Boolean) || [];
+      projectItems.push(...nodes);
 
-    if (projectItems.length === 0) {
+      hasNextPage = Boolean(connection?.pageInfo?.hasNextPage);
+      cursor = connection?.pageInfo?.endCursor || null;
+    }
+
+    let updatedCount = 0;
+
+    if (projectItems.length > 0) {
+      for (const item of projectItems) {
+        const project = item.project;
+        if (!project) continue;
+
+        const fields = project.fields?.nodes?.filter(Boolean) || [];
+        const statusField = fields.find(
+          (f) =>
+            typeof f?.name === "string" && f.name.toLowerCase() === "status",
+        );
+
+        if (!statusField) {
+          if (core && typeof core.info === "function") {
+            core.info(
+              `Project "${project.title}" has no single-select 'Status' field.`,
+            );
+          }
+          continue;
+        }
+
+        const targetOption = statusField.options?.find(
+          (o) =>
+            typeof o?.name === "string" &&
+            o.name.trim().toLowerCase() === targetStatus.trim().toLowerCase(),
+        );
+
+        if (!targetOption) {
+          if (core && typeof core.info === "function") {
+            core.info(
+              `Project "${project.title}" Status field has no option matching "${targetStatus}".`,
+            );
+          }
+          continue;
+        }
+
+        const mutation = `
+          mutation updateItemStatus($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+            updateProjectV2ItemFieldValue(
+              input: {
+                projectId: $projectId
+                itemId: $itemId
+                fieldId: $fieldId
+                value: {
+                  singleSelectOptionId: $optionId
+                }
+              }
+            ) {
+              projectV2Item {
+                id
+              }
+            }
+          }
+        `;
+
+        await github.graphql(mutation, {
+          projectId: project.id,
+          itemId: item.id,
+          fieldId: statusField.id,
+          optionId: targetOption.id,
+        });
+
+        if (core && typeof core.info === "function") {
+          core.info(
+            `Updated status of issue #${issueNumber} in project "${project.title}" to "${targetOption.name}".`,
+          );
+        }
+        updatedCount++;
+      }
+    } else if (issueId && projectNumber) {
+      // If issue is not yet associated with any project items, attempt to add it directly to Project 73
+      try {
+        const projectOwner = owner || DEFAULT_PROJECT_OWNER;
+        const projectQuery = `
+          query getProjectByNumber($projectOwner: String!, $projectNumber: Int!) {
+            organization(login: $projectOwner) {
+              projectV2(number: $projectNumber) {
+                id
+                number
+                title
+                fields(first: 50) {
+                  nodes {
+                    ... on ProjectV2SingleSelectField {
+                      id
+                      name
+                      options {
+                        id
+                        name
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `;
+
+        const projectData = await github.graphql(projectQuery, {
+          projectOwner,
+          projectNumber,
+        });
+        const project = projectData?.organization?.projectV2;
+
+        if (project) {
+          const fields = project.fields?.nodes?.filter(Boolean) || [];
+          const statusField = fields.find(
+            (f) =>
+              typeof f?.name === "string" && f.name.toLowerCase() === "status",
+          );
+
+          const targetOption = statusField?.options?.find(
+            (o) =>
+              typeof o?.name === "string" &&
+              o.name.trim().toLowerCase() === targetStatus.trim().toLowerCase(),
+          );
+
+          if (statusField && targetOption) {
+            const addMutation = `
+              mutation addItemToProject($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+                  item {
+                    id
+                  }
+                }
+              }
+            `;
+            const addResult = await github.graphql(addMutation, {
+              projectId: project.id,
+              contentId: issueId,
+            });
+            const newItemId = addResult?.addProjectV2ItemById?.item?.id;
+
+            if (newItemId) {
+              const updateMutation = `
+                mutation updateItemStatus($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                  updateProjectV2ItemFieldValue(
+                    input: {
+                      projectId: $projectId
+                      itemId: $itemId
+                      fieldId: $fieldId
+                      value: {
+                        singleSelectOptionId: $optionId
+                      }
+                    }
+                  ) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `;
+              await github.graphql(updateMutation, {
+                projectId: project.id,
+                itemId: newItemId,
+                fieldId: statusField.id,
+                optionId: targetOption.id,
+              });
+
+              if (core && typeof core.info === "function") {
+                core.info(
+                  `Added issue #${issueNumber} to project "${project.title}" (#${project.number}) and set status to "${targetOption.name}".`,
+                );
+              }
+              updatedCount++;
+            }
+          }
+        }
+      } catch (addErr) {
+        if (core && typeof core.info === "function") {
+          core.info(
+            `Could not add issue #${issueNumber} to project #${projectNumber}: ${addErr.message}`,
+          );
+        }
+      }
+    }
+
+    if (updatedCount === 0 && projectItems.length === 0) {
       if (core && typeof core.info === "function") {
         core.info(
           `Issue #${issueNumber} is not associated with any GitHub Project items.`,
         );
       }
       return false;
-    }
-
-    let updatedCount = 0;
-    for (const item of projectItems) {
-      const project = item.project;
-      if (!project) continue;
-
-      const fields = project.fields?.nodes?.filter(Boolean) || [];
-      const statusField = fields.find(
-        (f) =>
-          typeof f?.name === "string" && f.name.toLowerCase() === "status",
-      );
-
-      if (!statusField) {
-        if (core && typeof core.info === "function") {
-          core.info(
-            `Project "${project.title}" has no single-select 'Status' field.`,
-          );
-        }
-        continue;
-      }
-
-      const targetOption = statusField.options?.find(
-        (o) =>
-          typeof o?.name === "string" &&
-          o.name.trim().toLowerCase() === targetStatus.trim().toLowerCase(),
-      );
-
-      if (!targetOption) {
-        if (core && typeof core.info === "function") {
-          core.info(
-            `Project "${project.title}" Status field has no option matching "${targetStatus}".`,
-          );
-        }
-        continue;
-      }
-
-      const mutation = `
-        mutation updateItemStatus($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
-          updateProjectV2ItemFieldValue(
-            input: {
-              projectId: $projectId
-              itemId: $itemId
-              fieldId: $fieldId
-              value: {
-                singleSelectOptionId: $optionId
-              }
-            }
-          ) {
-            projectV2Item {
-              id
-            }
-          }
-        }
-      `;
-
-      await github.graphql(mutation, {
-        projectId: project.id,
-        itemId: item.id,
-        fieldId: statusField.id,
-        optionId: targetOption.id,
-      });
-
-      if (core && typeof core.info === "function") {
-        core.info(
-          `Updated status of issue #${issueNumber} in project "${project.title}" to "${targetOption.name}".`,
-        );
-      }
-      updatedCount++;
     }
 
     return updatedCount > 0;
@@ -1884,6 +2022,7 @@ export async function transitionProjectItemsStatus({
   repo,
   fromStatus = "Ready for Release",
   toStatus = "Done",
+  projectNumber = DEFAULT_PROJECT_NUMBER,
   core,
 }) {
   if (!github || typeof github.graphql !== "function") {
@@ -1897,14 +2036,16 @@ export async function transitionProjectItemsStatus({
 
   let projects = [];
 
-  // Query repository projects
-  try {
-    const repoProjectsQuery = `
-      query getRepoProjects($owner: String!, $repo: String!) {
-        repository(owner: $owner, name: $repo) {
-          projectsV2(first: 10) {
-            nodes {
+  // Directly query the target project (e.g. Project 73)
+  if (projectNumber) {
+    try {
+      const projectOwner = owner || DEFAULT_PROJECT_OWNER;
+      const targetProjectQuery = `
+        query getTargetProject($projectOwner: String!, $projectNumber: Int!) {
+          organization(login: $projectOwner) {
+            projectV2(number: $projectNumber) {
               id
+              number
               title
               fields(first: 50) {
                 nodes {
@@ -1921,35 +2062,113 @@ export async function transitionProjectItemsStatus({
             }
           }
         }
+      `;
+      const targetData = await github.graphql(targetProjectQuery, {
+        projectOwner,
+        projectNumber,
+      });
+      const targetProject = targetData?.organization?.projectV2;
+      if (targetProject) {
+        projects.push(targetProject);
+        if (core && typeof core.info === "function") {
+          core.info(
+            `Found target project "${targetProject.title}" (#${targetProject.number}).`,
+          );
+        }
       }
-    `;
-    const repoData = await github.graphql(repoProjectsQuery, { owner, repo });
-    const repoProjects =
-      repoData?.repository?.projectsV2?.nodes?.filter(Boolean) || [];
-    projects.push(...repoProjects);
+    } catch (err) {
+      if (core && typeof core.info === "function") {
+        core.info(
+          `Could not fetch target project #${projectNumber} directly: ${err.message}`,
+        );
+      }
+    }
+  }
+
+  // Also query repository projects with pagination
+  try {
+    let hasNextPage = true;
+    let cursor = null;
+
+    while (hasNextPage) {
+      const repoProjectsQuery = `
+        query getRepoProjects($owner: String!, $repo: String!, $cursor: String) {
+          repository(owner: $owner, name: $repo) {
+            projectsV2(first: 50, after: $cursor) {
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+              nodes {
+                id
+                number
+                title
+                fields(first: 50) {
+                  nodes {
+                    ... on ProjectV2SingleSelectField {
+                      id
+                      name
+                      options {
+                        id
+                        name
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `;
+      const repoData = await github.graphql(repoProjectsQuery, {
+        owner,
+        repo,
+        cursor,
+      });
+      const connection = repoData?.repository?.projectsV2;
+      const repoProjects = connection?.nodes?.filter(Boolean) || [];
+      for (const rp of repoProjects) {
+        if (!projects.some((p) => p.id === rp.id)) {
+          projects.push(rp);
+        }
+      }
+
+      hasNextPage = Boolean(connection?.pageInfo?.hasNextPage);
+      cursor = connection?.pageInfo?.endCursor || null;
+    }
   } catch (err) {
     if (core && typeof core.warning === "function") {
       core.warning(`Could not fetch repository projects: ${err.message}`);
     }
   }
 
-  // Query organization projects
+  // Query organization projects as additional fallback with pagination
   try {
-    const orgProjectsQuery = `
-      query getOrgProjects($owner: String!) {
-        organization(login: $owner) {
-          projectsV2(first: 20) {
-            nodes {
-              id
-              title
-              fields(first: 50) {
-                nodes {
-                  ... on ProjectV2SingleSelectField {
-                    id
-                    name
-                    options {
+    let hasNextPage = true;
+    let cursor = null;
+
+    while (hasNextPage) {
+      const orgProjectsQuery = `
+        query getOrgProjects($owner: String!, $cursor: String) {
+          organization(login: $owner) {
+            projectsV2(first: 50, after: $cursor) {
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+              nodes {
+                id
+                number
+                title
+                fields(first: 50) {
+                  nodes {
+                    ... on ProjectV2SingleSelectField {
                       id
                       name
+                      options {
+                        id
+                        name
+                      }
                     }
                   }
                 }
@@ -1957,15 +2176,21 @@ export async function transitionProjectItemsStatus({
             }
           }
         }
+      `;
+      const orgData = await github.graphql(orgProjectsQuery, {
+        owner,
+        cursor,
+      });
+      const connection = orgData?.organization?.projectsV2;
+      const orgProjects = connection?.nodes?.filter(Boolean) || [];
+      for (const op of orgProjects) {
+        if (!projects.some((p) => p.id === op.id)) {
+          projects.push(op);
+        }
       }
-    `;
-    const orgData = await github.graphql(orgProjectsQuery, { owner });
-    const orgProjects =
-      orgData?.organization?.projectsV2?.nodes?.filter(Boolean) || [];
-    for (const op of orgProjects) {
-      if (!projects.some((p) => p.id === op.id)) {
-        projects.push(op);
-      }
+
+      hasNextPage = Boolean(connection?.pageInfo?.hasNextPage);
+      cursor = connection?.pageInfo?.endCursor || null;
     }
   } catch (err) {
     if (core && typeof core.info === "function") {
@@ -2170,41 +2395,78 @@ export async function runReleaseDone({
   // Determine release tag
   let tag = (process?.env?.TAG || "").trim();
 
-  if (!tag && issuesGithub?.rest?.repos?.listReleases) {
+  if (tag) {
+    // Verify explicit tag against GitHub releases API to ensure it exists and is not a prerelease
+    if (issuesGithub?.rest?.repos?.getReleaseByTag) {
+      try {
+        const { data: release } = await issuesGithub.rest.repos.getReleaseByTag({
+          owner,
+          repo,
+          tag,
+        });
+        if (release.prerelease || /rc/i.test(release.tag_name || tag)) {
+          if (core && typeof core.info === "function") {
+            core.info(
+              `Release "${tag}" is a pre-release/RC; skipping transition to Done.`,
+            );
+          }
+          return { skipped: true, reason: "prerelease", tag };
+        }
+      } catch (err) {
+        if (core && typeof core.warning === "function") {
+          core.warning(
+            `Specified tag "${tag}" could not be verified as an existing release: ${err.message}`,
+          );
+        }
+        return {
+          skipped: true,
+          reason: "release_not_found",
+          tag,
+          error: err.message,
+        };
+      }
+    } else if (/rc/i.test(tag)) {
+      return { skipped: true, reason: "prerelease", tag };
+    }
+  } else if (headSha && issuesGithub?.rest?.repos?.listReleases) {
     try {
       const { data: releases } = await issuesGithub.rest.repos.listReleases({
         owner,
         repo,
-        per_page: 10,
+        per_page: 20,
       });
 
-      const matchingRelease =
-        (headSha &&
-          releases?.find(
-            (r) =>
-              r.target_commitish === headSha ||
-              r.tag_name === headSha,
-          )) ||
-        releases?.[0];
+      const matchingRelease = releases?.find(
+        (r) =>
+          r.target_commitish === headSha ||
+          r.tag_name === headSha,
+      );
 
-      if (matchingRelease) {
-        if (
-          matchingRelease.prerelease ||
-          /rc/i.test(matchingRelease.tag_name || "")
-        ) {
-          if (core && typeof core.info === "function") {
-            core.info(
-              `Release ${matchingRelease.tag_name} is a pre-release/RC; skipping transition to Done.`,
-            );
-          }
-          return {
-            skipped: true,
-            reason: "prerelease",
-            tag: matchingRelease.tag_name,
-          };
+      if (!matchingRelease) {
+        if (core && typeof core.info === "function") {
+          core.info(
+            `No release found matching HEAD_SHA "${headSha}"; skipping transition to Done.`,
+          );
         }
-        tag = matchingRelease.tag_name;
+        return { skipped: true, reason: "unverified_tag", headSha };
       }
+
+      if (
+        matchingRelease.prerelease ||
+        /rc/i.test(matchingRelease.tag_name || "")
+      ) {
+        if (core && typeof core.info === "function") {
+          core.info(
+            `Release ${matchingRelease.tag_name} is a pre-release/RC; skipping transition to Done.`,
+          );
+        }
+        return {
+          skipped: true,
+          reason: "prerelease",
+          tag: matchingRelease.tag_name,
+        };
+      }
+      tag = matchingRelease.tag_name;
     } catch (err) {
       if (core && typeof core.warning === "function") {
         core.warning(`Could not fetch releases: ${err.message}`);
@@ -2215,6 +2477,13 @@ export async function runReleaseDone({
         error: err.message,
       };
     }
+  } else {
+    if (core && typeof core.info === "function") {
+      core.info(
+        "Neither verified TAG nor HEAD_SHA provided; skipping transition to Done.",
+      );
+    }
+    return { skipped: true, reason: "unverified_tag" };
   }
 
   if (!tag) {
@@ -2239,12 +2508,18 @@ export async function runReleaseDone({
     );
   }
 
+  const projectNumber = parseInt(
+    process?.env?.PROJECT_NUMBER || String(DEFAULT_PROJECT_NUMBER),
+    10,
+  );
+
   return await transitionProjectItemsStatus({
     github: issuesGithub,
     owner,
     repo,
     fromStatus: "Ready for Release",
     toStatus: "Done",
+    projectNumber: !isNaN(projectNumber) ? projectNumber : DEFAULT_PROJECT_NUMBER,
     core,
   });
 }

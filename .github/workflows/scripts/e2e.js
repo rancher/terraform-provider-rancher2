@@ -567,11 +567,16 @@ export async function runFindCompletedE2eRuns({
   ).trim();
 
   if (explicitRunId) {
+    if (!/^[1-9]\d*$/.test(explicitRunId)) {
+      throw new Error(
+        `Invalid explicit E2E run ID "${explicitRunId}". Must be a positive integer.`,
+      );
+    }
     if (core && typeof core.info === "function") {
       core.info(`Explicit E2E run ID provided: ${explicitRunId}`);
     }
-    const parsedId = parseInt(explicitRunId, 10);
-    const runIds = !isNaN(parsedId) ? [parsedId] : [];
+    const parsedId = Number(explicitRunId);
+    const runIds = [parsedId];
     if (core && typeof core.setOutput === "function") {
       core.setOutput("run_ids", JSON.stringify(runIds));
       core.setOutput("count", String(runIds.length));
