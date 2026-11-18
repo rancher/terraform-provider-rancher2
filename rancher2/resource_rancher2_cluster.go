@@ -277,7 +277,7 @@ func resourceRancher2ClusterRead(d *schema.ResourceData, meta interface{}) error
 			return resource.NonRetryableError(err)
 		}
 
-		kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string))
+		kubeConfig, err := getClusterKubeconfig(meta.(*Config), cluster.ID, d.Get("kube_config").(string), d.Get("validate_kube_config").(bool))
 		if err != nil && !IsForbidden(err) {
 			return resource.NonRetryableError(err)
 		}
@@ -563,13 +563,16 @@ func createClusterRegistrationToken(client *managementClient.Client, clusterID s
 	return newRegToken, nil
 }
 
-func isKubeConfigValid(c *Config, config string) (string, bool, error) {
+func isKubeConfigValid(c *Config, config string, validateKubeConfig bool) (string, bool, error) {
 	token, tokenValid, err := isKubeConfigTokenValid(c, config)
 	if err != nil {
 		return "", false, err
 	}
 	if !tokenValid {
 		return "", false, nil
+	}
+	if !validateKubeConfig {
+		return token, true, nil
 	}
 	kubeconfig, err := clientcmd.RESTConfigFromKubeConfig([]byte(config))
 	if err != nil {
@@ -631,13 +634,13 @@ func replaceKubeConfigToken(c *Config, config string) (string, error) {
 	return getKubeConfigFromObj(kubeconfig)
 }
 
-func getClusterKubeconfig(c *Config, id, origconfig string) (*managementClient.GenerateKubeConfigOutput, error) {
+func getClusterKubeconfig(c *Config, id, origconfig string, validateKubeConfig bool) (*managementClient.GenerateKubeConfigOutput, error) {
 	action := "generateKubeconfig"
 	cluster := &Cluster{}
 
 	// kubeconfig already exists in the cache
 	if len(origconfig) > 0 {
-		token, kubeValid, err := isKubeConfigValid(c, origconfig)
+		token, kubeValid, err := isKubeConfigValid(c, origconfig, validateKubeConfig)
 		if err != nil {
 			return nil, fmt.Errorf("getting cluster Kubeconfig: %v", err)
 		}

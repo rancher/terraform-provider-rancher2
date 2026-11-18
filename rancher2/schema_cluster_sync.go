@@ -49,6 +49,7 @@ func clusterSyncFields() map[string]*schema.Schema {
 			Computed:  true,
 			Sensitive: true,
 		},
+		"validate_kube_config": validateKubeConfigField(),
 		"system_project_id": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -62,6 +63,7 @@ func clusterSyncFields() map[string]*schema.Schema {
 // RKE1-only node_pool_ids and node_pool_id, node_template_id and ssh_user fields.
 func clusterSyncFieldsV0() map[string]*schema.Schema {
 	s := clusterSyncFields()
+	delete(s, "validate_kube_config")
 
 	s["node_pool_ids"] = &schema.Schema{
 		Type:        schema.TypeList,

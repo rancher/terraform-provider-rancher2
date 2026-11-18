@@ -428,6 +428,7 @@ The following arguments are supported:
 - `annotations` - (Optional/Computed) Annotations for the Cluster (map)
 - `labels` - (Optional/Computed) Labels for the Cluster (map)
 - `windows_prefered_cluster` - (Optional) Windows preferred cluster. Default: `false` (bool)
+- `validate_kube_config` - (Optional) Contact the Kubernetes API during refresh to decide whether a stored kubeconfig is still usable. Default: `true` (bool). Set to `false` when Terraform cannot reach the cluster API. A stored kubeconfig is then reused while its Rancher token is enabled and unexpired, and refresh does not create a new kubeconfig token. Certificate updates in the kubeconfig are detected only when this remains `true`.
 
 ## Attributes Reference
 
