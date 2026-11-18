@@ -1650,10 +1650,14 @@ export async function runCloseTrackingIssue({
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
 
-  const rawIssueNumber =
+  const rawIssueNumber = (
     process?.env?.ISSUE_NUMBER ||
     context?.payload?.inputs?.issue_number ||
-    context?.payload?.issue?.number;
+    context?.payload?.issue?.number ||
+    ""
+  )
+    .toString()
+    .trim();
 
   if (!rawIssueNumber) {
     if (core && typeof core.info === "function") {
@@ -1664,10 +1668,11 @@ export async function runCloseTrackingIssue({
     return null;
   }
 
-  const issueNumber = parseInt(String(rawIssueNumber).trim(), 10);
-  if (isNaN(issueNumber)) {
+  if (!/^[1-9]\d*$/.test(rawIssueNumber)) {
     throw new Error(`Invalid issue number: ${rawIssueNumber}`);
   }
+
+  const issueNumber = parseInt(rawIssueNumber, 10);
 
   const issuesToken = process?.env?.GITHUB_ISSUES_TOKEN
     ? process.env.GITHUB_ISSUES_TOKEN.trim()
@@ -2399,18 +2404,28 @@ export async function runReleaseDone({
     // Verify explicit tag against GitHub releases API to ensure it exists and is not a prerelease
     if (issuesGithub?.rest?.repos?.getReleaseByTag) {
       try {
-        const { data: release } = await issuesGithub.rest.repos.getReleaseByTag({
-          owner,
-          repo,
-          tag,
-        });
-        if (release.prerelease || /rc/i.test(release.tag_name || tag)) {
+        const { data: release } = await issuesGithub.rest.repos.getReleaseByTag(
+          {
+            owner,
+            repo,
+            tag,
+          },
+        );
+        if (
+          release.draft ||
+          release.prerelease ||
+          /rc/i.test(release.tag_name || tag)
+        ) {
           if (core && typeof core.info === "function") {
             core.info(
-              `Release "${tag}" is a pre-release/RC; skipping transition to Done.`,
+              `Release "${tag}" is a draft or pre-release/RC; skipping transition to Done.`,
             );
           }
-          return { skipped: true, reason: "prerelease", tag };
+          return {
+            skipped: true,
+            reason: release.draft ? "draft" : "prerelease",
+            tag,
+          };
         }
       } catch (err) {
         if (core && typeof core.warning === "function") {
@@ -2437,9 +2452,7 @@ export async function runReleaseDone({
       });
 
       const matchingRelease = releases?.find(
-        (r) =>
-          r.target_commitish === headSha ||
-          r.tag_name === headSha,
+        (r) => r.target_commitish === headSha || r.tag_name === headSha,
       );
 
       if (!matchingRelease) {
@@ -2452,17 +2465,18 @@ export async function runReleaseDone({
       }
 
       if (
+        matchingRelease.draft ||
         matchingRelease.prerelease ||
         /rc/i.test(matchingRelease.tag_name || "")
       ) {
         if (core && typeof core.info === "function") {
           core.info(
-            `Release ${matchingRelease.tag_name} is a pre-release/RC; skipping transition to Done.`,
+            `Release ${matchingRelease.tag_name} is a draft or pre-release/RC; skipping transition to Done.`,
           );
         }
         return {
           skipped: true,
-          reason: "prerelease",
+          reason: matchingRelease.draft ? "draft" : "prerelease",
           tag: matchingRelease.tag_name,
         };
       }
@@ -2519,7 +2533,9 @@ export async function runReleaseDone({
     repo,
     fromStatus: "Ready for Release",
     toStatus: "Done",
-    projectNumber: !isNaN(projectNumber) ? projectNumber : DEFAULT_PROJECT_NUMBER,
+    projectNumber: !isNaN(projectNumber)
+      ? projectNumber
+      : DEFAULT_PROJECT_NUMBER,
     core,
   });
 }

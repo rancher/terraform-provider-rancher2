@@ -453,7 +453,10 @@ test("runPrepareRc - skips RC release and outputs should_release=false when comm
 
   assert.deepStrictEqual(result, { should_release: false, tag: null });
   assert.strictEqual(outputs.should_release, "false");
-  assert.match(loggedInfo, /release branch initialization; skipping RC release/);
+  assert.match(
+    loggedInfo,
+    /release branch initialization or maintenance; skipping RC release/,
+  );
 });
 
 test("runPrepareRc - skips RC release when commit message is branch initialization with PR number", async () => {
@@ -483,6 +486,57 @@ test("runPrepareRc - skips RC release when commit message is branch initializati
   });
 
   assert.deepStrictEqual(result, { should_release: false, tag: null });
+  assert.strictEqual(outputs.should_release, "false");
+});
+
+test("runPrepareRc - skips RC release when commit message is manifest sync or release chore", async () => {
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setOutput: (k, v) => {
+      outputs[k] = v;
+    },
+  };
+
+  const resultManifest = await runPrepareRc({
+    github: {},
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      ref: "refs/heads/release/v16",
+      payload: {
+        head_commit: {
+          message:
+            "chore(release/v16): align release-please manifest with tag v16.0.0",
+        },
+      },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(resultManifest, { should_release: false, tag: null });
+  assert.strictEqual(outputs.should_release, "false");
+
+  const resultReleaseChore = await runPrepareRc({
+    github: {},
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      ref: "refs/heads/release/v15",
+      payload: {
+        head_commit: {
+          message: "chore(release/v15): release 15.2.0 (#2705)",
+        },
+      },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(resultReleaseChore, {
+    should_release: false,
+    tag: null,
+  });
   assert.strictEqual(outputs.should_release, "false");
 });
 
@@ -1627,7 +1681,9 @@ test("runDispatchTag - resolves target SHA from explicit SHA and creates/pushes 
     ),
   );
   assert.ok(
-    gitCalls.some((c) => c[0] === "push" && c[1] === "origin" && c[2] === "v1.2.3"),
+    gitCalls.some(
+      (c) => c[0] === "push" && c[1] === "origin" && c[2] === "v1.2.3",
+    ),
   );
 });
 

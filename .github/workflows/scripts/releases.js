@@ -1250,14 +1250,14 @@ export async function runPrepareRc({
     }
   }
 
-  // Check if triggering commit is an initial release branch setup commit
+  // Check if triggering commit is a release branch setup or maintenance commit
   if (
-    /^fix\(release\/v\d+\):\s*initialize release branch configuration/i.test(
+    /^(?:fix|chore)\(release\/v\d+\):\s*(?:initialize release branch configuration|align release-please manifest|release\s+\d+)/i.test(
       commitMessage.trim(),
     )
   ) {
     core?.info?.(
-      `Commit "${commitMessage.trim().split("\n")[0]}" is release branch initialization; skipping RC release.`,
+      `Commit "${commitMessage.trim().split("\n")[0]}" is release branch initialization or maintenance; skipping RC release.`,
     );
     core?.setOutput?.("should_release", "false");
     return { should_release: false, tag: null };
@@ -1391,7 +1391,11 @@ export async function runDispatchTag({
     process.cwd(),
   ]);
   await gitRunner(["config", "user.name", actor]);
-  await gitRunner(["config", "user.email", `${actor}@users.noreply.github.com`]);
+  await gitRunner([
+    "config",
+    "user.email",
+    `${actor}@users.noreply.github.com`,
+  ]);
 
   const targetBranch = rawBranch
     .replace(/^refs\/heads\//, "")

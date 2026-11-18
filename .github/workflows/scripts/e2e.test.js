@@ -2305,8 +2305,24 @@ test("runFindCompletedE2eRuns - throws when EXPLICIT_RUN_ID is not a positive in
       });
     },
     {
+      message: /Invalid explicit E2E run ID "0". Must be a positive integer./,
+    },
+  );
+});
+
+test("runFindCompletedE2eRuns - throws error when SINCE timestamp format is invalid", async () => {
+  await assert.rejects(
+    async () => {
+      await runFindCompletedE2eRuns({
+        github: {},
+        context: {},
+        core: { info: () => {}, warning: () => {}, setOutput: () => {} },
+        process: { env: { SINCE: "invalid-iso-date" } },
+      });
+    },
+    {
       message:
-        /Invalid explicit E2E run ID "0". Must be a positive integer./,
+        /Invalid 'since' timestamp format: "invalid-iso-date"\. Expected a valid ISO 8601 date string\./,
     },
   );
 });

@@ -7,13 +7,7 @@ export async function defaultRunCommand(file, args, opts = {}) {
   return await execFileAsync(file, args, opts);
 }
 
-export default async ({
-  github,
-  context,
-  core,
-  process,
-  runCommand,
-}) => {
+export default async ({ github, context, core, process, runCommand }) => {
   const mode = process.env.SCRIPT_MODE;
   switch (mode) {
   case "filter-pr":
@@ -498,14 +492,16 @@ async function runE2EStatus({ github, context, core, process }) {
     core,
   );
 
-  const skipCommitStatus = String(process.env.SKIP_COMMIT_STATUS || "").trim().toLowerCase() === "true";
+  const skipCommitStatus =
+    String(process.env.SKIP_COMMIT_STATUS || "")
+      .trim()
+      .toLowerCase() === "true";
 
   if (skipCommitStatus) {
-    core.info("Skipping commit status creation due to SKIP_COMMIT_STATUS flag.");
-  } else if (
-    sha &&
-    github?.rest?.repos?.createCommitStatus
-  ) {
+    core.info(
+      "Skipping commit status creation due to SKIP_COMMIT_STATUS flag.",
+    );
+  } else if (sha && github?.rest?.repos?.createCommitStatus) {
     core.info(`Posting commit status to SHA: ${sha}`);
     let description;
     if (!passed) {
@@ -591,6 +587,15 @@ export async function runFindCompletedE2eRuns({
     ""
   ).trim();
 
+  if (sinceTimestamp) {
+    const parsedSince = new Date(sinceTimestamp);
+    if (isNaN(parsedSince.getTime())) {
+      throw new Error(
+        `Invalid 'since' timestamp format: "${sinceTimestamp}". Expected a valid ISO 8601 date string.`,
+      );
+    }
+  }
+
   if (
     !sinceTimestamp &&
     typeof github?.rest?.actions?.listWorkflowRuns === "function"
@@ -609,8 +614,7 @@ export async function runFindCompletedE2eRuns({
       const prevRun =
         cleanupRuns?.workflow_runs?.find(
           (r) => r.id !== currentRunId && r.conclusion === "success",
-        ) ||
-        cleanupRuns?.workflow_runs?.find((r) => r.id !== currentRunId);
+        ) || cleanupRuns?.workflow_runs?.find((r) => r.id !== currentRunId);
 
       if (prevRun?.created_at) {
         sinceTimestamp = prevRun.created_at;

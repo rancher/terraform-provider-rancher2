@@ -4020,7 +4020,9 @@ test("runCloseTrackingIssue - closes tracking issue and sets status to Ready For
   assert.strictEqual(updatedIssueParams.issue_number, 50);
   assert.strictEqual(updatedIssueParams.state, "closed");
   assert.strictEqual(updatedIssueParams.state_reason, "completed");
-  assert.ok(createdComment.body.includes("Automatically closing tracking issue #50"));
+  assert.ok(
+    createdComment.body.includes("Automatically closing tracking issue #50"),
+  );
   assert.deepStrictEqual(statusMutationVars, {
     projectId: "p-proj-1",
     itemId: "p-item-50",
@@ -4560,8 +4562,16 @@ test("runReleaseDone - matches release by headSha and skips when matching releas
       repos: {
         listReleases: async () => ({
           data: [
-            { tag_name: "v16.0.0", prerelease: false, target_commitish: "old-sha" },
-            { tag_name: "v16.0.1-rc.1", prerelease: true, target_commitish: "rc-sha-999" },
+            {
+              tag_name: "v16.0.0",
+              prerelease: false,
+              target_commitish: "old-sha",
+            },
+            {
+              tag_name: "v16.0.1-rc.1",
+              prerelease: true,
+              target_commitish: "rc-sha-999",
+            },
           ],
         }),
       },
@@ -4590,7 +4600,13 @@ test("runReleaseDone - skips transition when HEAD_SHA does not match any release
     rest: {
       repos: {
         listReleases: async () => ({
-          data: [{ tag_name: "v16.0.0", prerelease: false, target_commitish: "other-sha" }],
+          data: [
+            {
+              tag_name: "v16.0.0",
+              prerelease: false,
+              target_commitish: "other-sha",
+            },
+          ],
         }),
       },
     },
@@ -4649,7 +4665,7 @@ test("runReleaseDone - verifies explicit TAG against getReleaseByTag and skips i
     rest: {
       repos: {
         getReleaseByTag: async ({ tag }) => ({
-          data: { tag_name: tag, prerelease: true },
+          data: { tag_name: tag, prerelease: true, draft: false },
         }),
       },
     },
@@ -4668,6 +4684,69 @@ test("runReleaseDone - verifies explicit TAG against getReleaseByTag and skips i
     skipped: true,
     reason: "prerelease",
     tag: "v16.0.0-alpha.1",
+  });
+});
+
+test("runReleaseDone - verifies explicit TAG against getReleaseByTag and skips if draft", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        getReleaseByTag: async ({ tag }) => ({
+          data: { tag_name: tag, prerelease: false, draft: true },
+        }),
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { TAG: "v16.0.0" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "draft",
+    tag: "v16.0.0",
+  });
+});
+
+test("runReleaseDone - matches release by headSha and skips when matching release is draft", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        listReleases: async () => ({
+          data: [
+            {
+              tag_name: "v16.0.0",
+              prerelease: false,
+              draft: true,
+              target_commitish: "release-sha-draft",
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { HEAD_SHA: "release-sha-draft" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "draft",
+    tag: "v16.0.0",
   });
 });
 
@@ -4698,7 +4777,13 @@ test("runReleaseDone - transitions project items from Ready for Release to Done 
     rest: {
       repos: {
         listReleases: async () => ({
-          data: [{ tag_name: "v16.0.0", prerelease: false, target_commitish: "release-sha-123" }],
+          data: [
+            {
+              tag_name: "v16.0.0",
+              prerelease: false,
+              target_commitish: "release-sha-123",
+            },
+          ],
         }),
       },
     },
@@ -4968,6 +5053,40 @@ test("runCloseTrackingIssue - throws when sub_issues fetch throws an error", asy
   );
 });
 
+test("runCloseTrackingIssue - throws when ISSUE_NUMBER has invalid non-numeric format", async () => {
+  const mockCore = createMockCore();
+
+  await assert.rejects(
+    async () => {
+      await runCloseTrackingIssue({
+        github: {},
+        context: {
+          repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          payload: {},
+        },
+        core: mockCore,
+        process: { env: { ISSUE_NUMBER: "50abc" } },
+      });
+    },
+    { message: /Invalid issue number: 50abc/ },
+  );
+
+  await assert.rejects(
+    async () => {
+      await runCloseTrackingIssue({
+        github: {},
+        context: {
+          repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          payload: { issue: { number: -5 } },
+        },
+        core: mockCore,
+        process: { env: {} },
+      });
+    },
+    { message: /Invalid issue number: -5/ },
+  );
+});
+
 test("transitionProjectItemsStatus - handles multi-page items pagination", async () => {
   const mockCore = createMockCore();
   const transitionedItemIds = [];
@@ -5169,7 +5288,9 @@ test("transitionProjectItemsStatus - handles project query error gracefully and 
   assert.deepStrictEqual(transitionedItemIds, ["item-working-1"]);
   assert.ok(
     mockCore.warningMessages.some((msg) =>
-      msg.includes('Failed to query/transition items for project "Broken Board"'),
+      msg.includes(
+        'Failed to query/transition items for project "Broken Board"',
+      ),
     ),
   );
 });
