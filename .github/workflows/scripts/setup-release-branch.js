@@ -373,6 +373,7 @@ This automated pull request initializes configuration and caller stubs for the n
   - \`.github/workflows/release.yml\`
   - \`.github/workflows/sync-release-manifest.yml\`
   - \`.github/workflows/e2e.yml\` (delegates E2E test execution to @main)
+- **Release Marker**: Configured \`rancher2/release.md\` with \`${branch}\`.
 
 ---
 *Created automatically by [setup-release-branch.yml](https://github.com/rancher/terraform-provider-rancher2/actions/workflows/setup-release-branch.yml).*`;
@@ -505,13 +506,19 @@ export async function runSetupReleaseBranch({
     await fs.writeFile(fullPath, content, "utf8");
   }
 
-  // 4. Git add and commit
+  // 4. Configure rancher2/release.md
+  const releaseMdPath = path.join(rootDir, "rancher2", "release.md");
+  await fs.mkdir(path.dirname(releaseMdPath), { recursive: true });
+  await fs.writeFile(releaseMdPath, `${parsed.branch}\n`, "utf8");
+
+  // 5. Git add and commit
   await git([
     "add",
     "-A",
     ".github/workflows",
     "release-please-config.json",
     ".release-please-manifest.json",
+    "rancher2/release.md",
   ]);
 
   const statusResult = await git(["status", "--porcelain"]);
@@ -526,7 +533,7 @@ export async function runSetupReleaseBranch({
     await git([
       "commit",
       "-m",
-      `chore(${parsed.branch}): initialize release branch configuration`,
+      `fix(${parsed.branch}): initialize release branch configuration`,
     ]);
     await git(["push", "-u", "origin", choreBranch, "--force"]);
     choreBranchPushed = true;
@@ -583,8 +590,8 @@ export async function runSetupReleaseBranch({
     };
   }
 
-  // 5. Open pull request targeting release branch
-  const prTitle = `chore(${parsed.branch}): initialize release branch configuration`;
+  // 6. Open pull request targeting release branch
+  const prTitle = `fix(${parsed.branch}): initialize release branch configuration`;
   const prBody = formatPrBody(parsed);
 
   let prNumber = null;

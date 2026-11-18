@@ -463,6 +463,7 @@ describe("setup-release-branch.js", () => {
       assert.match(body, /16\.0\.0/);
       assert.match(body, /pull_request\.yaml/);
       assert.match(body, /release\.yml/);
+      assert.match(body, /release\.md/);
     });
   });
 
@@ -517,14 +518,18 @@ describe("setup-release-branch.js", () => {
           return { stdout: "", stderr: "" };
         };
 
+        let createdPrArgs = null;
         const mockPulls = {
           list: async () => ({ data: [] }),
-          create: async () => ({
-            data: {
-              number: 42,
-              html_url: "https://github.com/rancher/test/pull/42",
-            },
-          }),
+          create: async (args) => {
+            createdPrArgs = args;
+            return {
+              data: {
+                number: 42,
+                html_url: "https://github.com/rancher/test/pull/42",
+              },
+            };
+          },
         };
 
         const addedLabels = [];
@@ -608,6 +613,27 @@ describe("setup-release-branch.js", () => {
         assert.deepStrictEqual(addedLabels[0].labels, [
           "internal/pr-release-chore",
         ]);
+
+        // Verify PR title and commit message used fix prefix
+        assert.strictEqual(
+          createdPrArgs?.title,
+          "fix(release/v16): initialize release branch configuration",
+        );
+        const commitCall = gitCalls.find(
+          (call) =>
+            call[0] === "commit" &&
+            call[1] === "-m" &&
+            call[2] ===
+              "fix(release/v16): initialize release branch configuration",
+        );
+        assert.ok(commitCall, "Expected fix commit message for release setup");
+
+        // Verify rancher2/release.md was created
+        const releaseMdRaw = await fs.readFile(
+          path.join(tmpDir, "rancher2", "release.md"),
+          "utf8",
+        );
+        assert.strictEqual(releaseMdRaw, "release/v16\n");
       } finally {
         await fs.rm(tmpDir, { recursive: true, force: true });
       }

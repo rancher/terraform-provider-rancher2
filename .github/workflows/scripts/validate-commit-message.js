@@ -39,7 +39,10 @@ export function isReleaseChore(message) {
 }
 
 export function isProductPrefix(message) {
-  return PRODUCT_PREFIXES.some((prefix) => message.startsWith(prefix));
+  return (
+    PRODUCT_PREFIXES.some((prefix) => message.startsWith(prefix)) ||
+    /^fix\(release\/v[0-9]+\):\s+/.test(message)
+  );
 }
 
 export function isProductDirectory(file) {
@@ -73,7 +76,8 @@ export function validateEmpty(message) {
 
 export function validatePrefix(message) {
   const isReleasePrefix =
-    isReleaseChore(message) || /^chore\(release\/v[0-9]+\):\s+/.test(message);
+    isReleaseChore(message) ||
+    /^(chore|fix)\(release\/v[0-9]+\):\s+/.test(message);
   const hasValidPrefix =
     isReleasePrefix ||
     VALID_PREFIXES.some((prefix) => message.startsWith(prefix));

@@ -1,0 +1,59 @@
+name: "Close Tracking Issue"
+
+on:
+  issues:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number (sub-issue or tracking issue) to evaluate"
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: close-tracking-issue-${{ github.event.issue.number || github.event.inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  close-tracking-issue:
+    name: "Evaluate and Close Tracking Issue"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+    steps:
+      - name: "Checkout Code"
+        id: checkout-code
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          ref: "main"
+
+      - name: "Get Issues Token"
+        id: get-issues-token
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          # Token permissions: issues: write, project: write
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--issues--write token | GITHUB_ISSUES_TOKEN
+
+      - name: "Evaluate Tracking Issue Closure"
+        id: eval-close-tracking-issue
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          GITHUB_ISSUES_TOKEN: ${{ env.GITHUB_ISSUES_TOKEN }}
+          SCRIPT_MODE: close-tracking-issue
+          ISSUE_NUMBER: ${{ github.event.inputs.issue_number || github.event.issue.number }}
+        with:
+          github-token: ${{ env.GITHUB_ISSUES_TOKEN }}
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process, getOctokit: typeof getOctokit === 'function' ? getOctokit : undefined });

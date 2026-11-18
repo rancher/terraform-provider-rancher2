@@ -1,0 +1,65 @@
+name: "Release Complete"
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (optional, e.g. v16.0.0)"
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: release-complete-${{ github.event.workflow_run.id || github.event.inputs.tag || 'manual' }}
+  cancel-in-progress: false
+
+jobs:
+  release-complete:
+    name: "Transition Issues to Done"
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+    steps:
+      - name: "Checkout Code"
+        id: checkout-code
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          ref: "main"
+
+      - name: "Get Issues Token"
+        id: get-issues-token
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          # Token permissions: issues: write, project: write
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--issues--write token | GITHUB_ISSUES_TOKEN
+
+      - name: "Transition Ready for Release Issues to Done"
+        id: transition-done
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          GITHUB_ISSUES_TOKEN: ${{ env.GITHUB_ISSUES_TOKEN }}
+          SCRIPT_MODE: release-done
+          WORKFLOW_RUN_ID: ${{ github.event.workflow_run.id || '' }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha || '' }}
+          TAG: ${{ github.event.inputs.tag || '' }}
+        with:
+          github-token: ${{ env.GITHUB_ISSUES_TOKEN }}
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process, getOctokit: typeof getOctokit === 'function' ? getOctokit : undefined });

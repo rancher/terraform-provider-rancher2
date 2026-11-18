@@ -1,6 +1,19 @@
-import { execSync } from "child_process";
+import { execSync, execFile } from "child_process";
+import { promisify } from "util";
 
-export default async ({ github, context, core, process }) => {
+const execFileAsync = promisify(execFile);
+
+export async function defaultRunCommand(file, args, opts = {}) {
+  return await execFileAsync(file, args, opts);
+}
+
+export default async ({
+  github,
+  context,
+  core,
+  process,
+  runCommand,
+}) => {
   const mode = process.env.SCRIPT_MODE;
   switch (mode) {
   case "filter-pr":
@@ -13,6 +26,10 @@ export default async ({ github, context, core, process }) => {
     return await runWaitForE2E({ github, context, core, process });
   case "report-e2e-status":
     return await runReportE2EStatus({ github, context, core, process });
+  case "find-completed-e2e-runs":
+    return await runFindCompletedE2eRuns({ github, context, core, process });
+  case "execute-cleanup":
+    return await runExecuteCleanup({ core, process, runCommand });
   default:
     throw new Error(`Unknown E2E script mode: ${mode}`);
   }
@@ -528,6 +545,230 @@ async function runE2EStatus({ github, context, core, process }) {
   }
 
   return passed;
+}
+
+/**
+ * find-completed-e2e-runs: Discovers E2E workflow runs completed since the last cleanup run.
+ */
+export async function runFindCompletedE2eRuns({
+  github,
+  context,
+  core,
+  process = globalThis.process,
+}) {
+  const owner = context?.repo?.owner || "rancher";
+  const repo = context?.repo?.repo || "terraform-provider-rancher2";
+
+  // Check if explicit run_id input was provided
+  const explicitRunId = (
+    process?.env?.EXPLICIT_RUN_ID ||
+    context?.payload?.inputs?.run_id ||
+    ""
+  ).trim();
+
+  if (explicitRunId) {
+    if (core && typeof core.info === "function") {
+      core.info(`Explicit E2E run ID provided: ${explicitRunId}`);
+    }
+    const parsedId = parseInt(explicitRunId, 10);
+    const runIds = !isNaN(parsedId) ? [parsedId] : [];
+    if (core && typeof core.setOutput === "function") {
+      core.setOutput("run_ids", JSON.stringify(runIds));
+      core.setOutput("count", String(runIds.length));
+    }
+    return { runIds, count: runIds.length };
+  }
+
+  // Determine 'since' timestamp
+  let sinceTimestamp = (
+    process?.env?.SINCE ||
+    context?.payload?.inputs?.since ||
+    ""
+  ).trim();
+
+  if (
+    !sinceTimestamp &&
+    typeof github?.rest?.actions?.listWorkflowRuns === "function"
+  ) {
+    try {
+      const { data: cleanupRuns } = await github.rest.actions.listWorkflowRuns({
+        owner,
+        repo,
+        workflow_id: "cleanup-e2e.yml",
+        status: "completed",
+        per_page: 5,
+      });
+
+      const currentRunId =
+        context?.runId || parseInt(process?.env?.GITHUB_RUN_ID || "0", 10);
+      const prevRun =
+        cleanupRuns?.workflow_runs?.find(
+          (r) => r.id !== currentRunId && r.conclusion === "success",
+        ) ||
+        cleanupRuns?.workflow_runs?.find((r) => r.id !== currentRunId);
+
+      if (prevRun?.created_at) {
+        sinceTimestamp = prevRun.created_at;
+        if (core && typeof core.info === "function") {
+          core.info(
+            `Last cleanup workflow run #${prevRun.id} completed at ${sinceTimestamp}`,
+          );
+        }
+      }
+    } catch (err) {
+      if (core && typeof core.warning === "function") {
+        core.warning(
+          `Could not determine previous cleanup workflow run timestamp: ${err.message}`,
+        );
+      }
+    }
+  }
+
+  // Fallback to 24 hours ago if no previous run timestamp was found
+  if (!sinceTimestamp) {
+    const twentyFourHoursAgo = new Date(
+      Date.now() - 24 * 60 * 60 * 1000,
+    ).toISOString();
+    sinceTimestamp = twentyFourHoursAgo;
+    if (core && typeof core.info === "function") {
+      core.info(
+        `No previous cleanup run found; defaulting to runs completed since 24h ago: ${sinceTimestamp}`,
+      );
+    }
+  }
+
+  const sinceDate = new Date(sinceTimestamp);
+
+  // Fetch completed E2E workflow runs using pagination
+  let allRuns = [];
+  let completedRuns = [];
+  try {
+    allRuns =
+      typeof github?.paginate === "function"
+        ? await github.paginate(github.rest.actions.listWorkflowRuns, {
+          owner,
+          repo,
+          workflow_id: "e2e.yml",
+          status: "completed",
+          per_page: 100,
+        })
+        : (
+          await github.rest.actions.listWorkflowRuns({
+            owner,
+            repo,
+            workflow_id: "e2e.yml",
+            status: "completed",
+            per_page: 100,
+          })
+        )?.data?.workflow_runs || [];
+
+    completedRuns = allRuns.filter((r) => {
+      if ((r.status || "").toLowerCase() !== "completed") return false;
+      const completedAt = r.updated_at || r.created_at;
+      return new Date(completedAt) >= sinceDate;
+    });
+  } catch (err) {
+    throw new Error(`Failed to list E2E workflow runs: ${err.message}`);
+  }
+
+  const runIds = completedRuns.map((r) => r.id);
+  if (core && typeof core.info === "function") {
+    core.info(
+      `Found ${runIds.length} E2E run(s) completed since ${sinceTimestamp}: ${runIds.join(", ") || "(none)"}`,
+    );
+  }
+
+  if (core && typeof core.setOutput === "function") {
+    core.setOutput("run_ids", JSON.stringify(runIds));
+    core.setOutput("count", String(runIds.length));
+  }
+
+  return { runIds, count: runIds.length, since: sinceTimestamp };
+}
+
+export const DEFAULT_E2E_TEST_NAMES = [
+  "TestOneBasic",
+  "TestThreeBasic",
+  "TestProductionBasic",
+];
+
+export function resolveCleanupIdentifiers(identifier, envTests = "") {
+  let testNames = DEFAULT_E2E_TEST_NAMES;
+  if (envTests) {
+    try {
+      const parsed = JSON.parse(envTests);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        testNames = parsed;
+      }
+    } catch {}
+  }
+
+  const clean = (identifier || "").trim();
+  if (!clean) return [];
+
+  // If identifier already has a test suffix, return it directly
+  if (testNames.some((t) => clean.endsWith(`-${t}`))) {
+    return [clean];
+  }
+
+  // Otherwise, return base identifier plus all suffixed test identifiers
+  return [clean, ...testNames.map((t) => `${clean}-${t}`)];
+}
+
+/**
+ * execute-cleanup: Runs cleanup.sh for a specified run ID and all matrix test suffixed identifiers.
+ */
+export async function runExecuteCleanup({
+  core,
+  process = globalThis.process,
+  runCommand = defaultRunCommand,
+}) {
+  const baseIdentifier = (process?.env?.IDENTIFIER || "").trim();
+  if (!baseIdentifier || !/^[a-zA-Z0-9_-]+$/.test(baseIdentifier)) {
+    throw new Error(
+      `Invalid or missing cleanup identifier: "${baseIdentifier}". Identifier must contain only alphanumeric characters, dashes, or underscores.`,
+    );
+  }
+
+  const targetIdentifiers = resolveCleanupIdentifiers(
+    baseIdentifier,
+    process?.env?.ALL_TESTS_JSON,
+  );
+
+  if (core && typeof core.info === "function") {
+    core.info(
+      `Starting scheduled AWS leftovers cleanup for identifier: ${baseIdentifier} (targets: ${targetIdentifiers.join(", ")})`,
+    );
+  }
+
+  const runner =
+    typeof runCommand === "function" ? runCommand : defaultRunCommand;
+
+  for (const id of targetIdentifiers) {
+    if (core && typeof core.info === "function") {
+      core.info(`Executing cleanup for target identifier: ${id}`);
+    }
+    await runner(".github/workflows/scripts/nix-run.sh", ["./cleanup.sh", id], {
+      env: {
+        ...process.env,
+        AWS_MAX_ATTEMPTS: "100",
+        AWS_RETRY_MODE: "adaptive",
+        IDENTIFIER: id,
+      },
+    });
+  }
+
+  if (core && typeof core.info === "function") {
+    core.info(
+      `Successfully executed cleanup for ${targetIdentifiers.length} target identifier(s) related to ${baseIdentifier}.`,
+    );
+  }
+
+  return {
+    identifier: baseIdentifier,
+    targetIdentifiers,
+    success: true,
+  };
 }
 
 export {

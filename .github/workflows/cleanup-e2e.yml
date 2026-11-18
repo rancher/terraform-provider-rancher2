@@ -1,0 +1,119 @@
+name: "Cleanup E2E Resources"
+
+on:
+  schedule:
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Specific E2E workflow run ID to clean up (optional)"
+        required: false
+        type: string
+      since:
+        description: "ISO timestamp to search completed runs since (optional, e.g. 2026-11-17T00:00:00Z)"
+        required: false
+        type: string
+
+env:
+  AWS_REGION: us-west-2
+  AWS_ROLE: arn:aws:iam::270074865685:role/terraform-module-ci-test
+  ALL_TESTS_JSON: '["TestOneBasic","TestThreeBasic","TestProductionBasic"]'
+
+permissions: {}
+
+concurrency:
+  group: cleanup-e2e
+  cancel-in-progress: false
+
+jobs:
+  find-runs:
+    name: "Find Completed E2E Runs"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run_ids: ${{ steps.find.outputs.run_ids }}
+      count: ${{ steps.find.outputs.count }}
+    steps:
+      - name: "Checkout Repository"
+        id: checkout-repository
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: "main"
+          sparse-checkout: .github/workflows/scripts
+      - name: "Find Runs Completed Since Last Execution"
+        id: find
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SCRIPT_MODE: find-completed-e2e-runs
+          EXPLICIT_RUN_ID: ${{ github.event.inputs.run_id }}
+          SINCE: ${{ github.event.inputs.since }}
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+
+  cleanup:
+    name: "Cleanup Run Leftovers"
+    needs: [find-runs]
+    if: needs.find-runs.outputs.count != '0' && needs.find-runs.outputs.count != ''
+    strategy:
+      matrix:
+        run_id: ${{ fromJson(needs.find-runs.outputs.run_ids) }}
+      fail-fast: false
+      max-parallel: 3
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: "Checkout Code"
+        id: checkout-code
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+          ref: "main"
+      - name: "Clear out GitHub Runner"
+        id: clear-runner
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SCRIPT_MODE: clear-runner
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+      - name: "Configure AWS Credentials"
+        id: aws-creds
+        # https://github.com/aws-actions/configure-aws-credentials/releases
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
+        with:
+          role-to-assume: ${{ env.AWS_ROLE }}
+          role-session-name: ${{ matrix.run_id }}-scheduled-cleanup
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+          output-credentials: true
+      - name: "Execute Cleanup"
+        id: execute-cleanup
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.aws-creds.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.aws-creds.outputs.aws-session-token }}
+          IDENTIFIER: ${{ matrix.run_id }}
+          ALL_TESTS_JSON: ${{ env.ALL_TESTS_JSON }}
+          SCRIPT_MODE: execute-cleanup
+        with:
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/e2e.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });

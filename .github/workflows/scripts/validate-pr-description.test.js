@@ -518,3 +518,60 @@ test("run - fails and reports message on unexpected API error", async () => {
   await run({ github: mockGithub, context: mockContext, core: mockCore });
   assert.strictEqual(failedMessage, "Internal Server Error");
 });
+
+test("run - saves pr-signal.json when validation succeeds", async () => {
+  const writtenFiles = {};
+  const mockFs = {
+    promises: {
+      mkdir: async () => {},
+      writeFile: async (filePath, content) => {
+        writtenFiles[filePath] = content;
+      },
+    },
+  };
+
+  const mockCore = {
+    info: () => {},
+    setFailed: () => {},
+  };
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => ({
+          data: { id: 1, number: 1234, state: "open" },
+        }),
+      },
+    },
+  };
+  const mockContext = {
+    repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    payload: {
+      pull_request: {
+        number: 42,
+        body: "- Addresses: #1234",
+        head: {
+          sha: "abc1234",
+          ref: "feat/my-branch",
+          repo: { full_name: "rancher/terraform-provider-rancher2" },
+        },
+      },
+    },
+  };
+
+  await run({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    fsModule: mockFs,
+  });
+
+  const signalKey = Object.keys(writtenFiles).find((k) =>
+    k.endsWith("pr-signal.json"),
+  );
+  assert.ok(signalKey, "Expected pr-signal.json to be written");
+  const parsed = JSON.parse(writtenFiles[signalKey]);
+  assert.strictEqual(parsed.pr_number, 42);
+  assert.strictEqual(parsed.head_sha, "abc1234");
+  assert.strictEqual(parsed.head_repo, "rancher/terraform-provider-rancher2");
+  assert.strictEqual(parsed.head_branch, "feat/my-branch");
+});
