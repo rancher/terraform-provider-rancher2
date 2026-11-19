@@ -2061,7 +2061,7 @@ test("runTrackingIssue - respects existing internal/user label", async () => {
   assert.deepStrictEqual(labelsAdded[1], ["release/v15"]);
 });
 
-test("runTrackingIssue - skips issue already marked internal/tracking", async () => {
+test("runTrackingIssue - adds tracking comments even when issue is already marked internal/tracking", async () => {
   const mockCore = createMockCore();
 
   const labelsAdded = [];
@@ -2089,7 +2089,11 @@ test("runTrackingIssue - skips issue already marked internal/tracking", async ()
         get: async () => ({
           data: {
             number: 102,
-            labels: [{ name: "internal/tracking" }, { name: "internal/user" }],
+            labels: [
+              { name: "internal/tracking" },
+              { name: "internal/user" },
+              { name: "release/v15" },
+            ],
             state: "open",
           },
         }),
@@ -2107,10 +2111,98 @@ test("runTrackingIssue - skips issue already marked internal/tracking", async ()
 
   assert.strictEqual(mockCore.failedMessage, null);
   assert.strictEqual(labelsAdded.length, 0);
-  assert.strictEqual(commentsCreated.length, 0);
+  assert.strictEqual(commentsCreated.length, 2);
+  assert.match(commentsCreated[0], /<!-- tracking-pr: #44 -->/);
+  assert.match(
+    commentsCreated[1],
+    /A label has been added for the latest release branch/,
+  );
   assert.ok(
     mockCore.infoMessages.some((m) =>
       m.includes("already has 'internal/tracking' label"),
+    ),
+  );
+});
+
+test("runTrackingIssue - avoids duplicate tracking comments when already present on issue", async () => {
+  const mockCore = createMockCore();
+
+  const labelsAdded = [];
+  const commentsCreated = [];
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.repos.listBranches) {
+        return [{ name: "release/v15" }];
+      }
+      if (method === mockGithub.rest.search.issuesAndPullRequests) {
+        return [
+          {
+            number: 44,
+            body: "- Addresses: #102",
+          },
+        ];
+      }
+      if (method === mockGithub.rest.issues.listComments) {
+        return [
+          {
+            body: "<!-- tracking-pr: #44 -->\nThis is the tracking issue for PR #44",
+          },
+          {
+            body: "A label has been added for the latest release branch, if you need this change...",
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      repos: { listBranches: async () => {} },
+      search: { issuesAndPullRequests: async () => {} },
+      issues: {
+        get: async () => ({
+          data: {
+            number: 102,
+            labels: [
+              { name: "internal/tracking" },
+              { name: "internal/user" },
+              { name: "release/v15" },
+            ],
+            state: "open",
+          },
+        }),
+        addLabels: async ({ labels }) => {
+          labelsAdded.push(labels);
+        },
+        createComment: async ({ body }) => {
+          commentsCreated.push(body);
+        },
+        listComments: async () => ({
+          data: [
+            {
+              body: "<!-- tracking-pr: #44 -->\nThis is the tracking issue for PR #44",
+            },
+            {
+              body: "A label has been added for the latest release branch, if you need this change...",
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  await runTrackingIssue({ github: mockGithub, core: mockCore });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(labelsAdded.length, 0);
+  assert.strictEqual(commentsCreated.length, 0);
+  assert.ok(
+    mockCore.infoMessages.some((m) =>
+      m.includes("PR linking comment for PR #44 already present"),
+    ),
+  );
+  assert.ok(
+    mockCore.infoMessages.some((m) =>
+      m.includes("Release branch instructions comment already present"),
     ),
   );
 });
@@ -2378,7 +2470,11 @@ test("runTrackingIssue - handles multiple referenced issues where one already ha
             return {
               data: {
                 number: 100,
-                labels: [{ name: "internal/tracking" }],
+                labels: [
+                  { name: "internal/tracking" },
+                  { name: "internal/user" },
+                  { name: "release/v15" },
+                ],
                 state: "open",
               },
             };
@@ -2406,7 +2502,7 @@ test("runTrackingIssue - handles multiple referenced issues where one already ha
   assert.strictEqual(mockCore.failedMessage, null);
   assert.ok(
     mockCore.infoMessages.some((m) =>
-      m.includes("Issue #100 already has 'internal/tracking' label. Skipping."),
+      m.includes("Issue #100 already has 'internal/tracking' label."),
     ),
   );
   assert.strictEqual(labelsAdded.length, 2);
@@ -2418,12 +2514,19 @@ test("runTrackingIssue - handles multiple referenced issues where one already ha
     issue_number: 101,
     labels: ["release/v15"],
   });
-  assert.strictEqual(commentsCreated.length, 2);
-  assert.strictEqual(commentsCreated[0].issue_number, 101);
-  assert.strictEqual(commentsCreated[1].issue_number, 101);
+  assert.strictEqual(commentsCreated.length, 4);
+  assert.strictEqual(commentsCreated[0].issue_number, 100);
   assert.match(commentsCreated[0].body, /<!-- tracking-pr: #53 -->/);
+  assert.strictEqual(commentsCreated[1].issue_number, 100);
   assert.match(
     commentsCreated[1].body,
+    /A label has been added for the latest release branch/,
+  );
+  assert.strictEqual(commentsCreated[2].issue_number, 101);
+  assert.match(commentsCreated[2].body, /<!-- tracking-pr: #53 -->/);
+  assert.strictEqual(commentsCreated[3].issue_number, 101);
+  assert.match(
+    commentsCreated[3].body,
     /A label has been added for the latest release branch/,
   );
 });

@@ -860,13 +860,13 @@ export async function runBackportIssues({
   github,
   context,
   core,
-  process = globalThis.process,
+  process: proc = globalThis.process,
 }) {
   const owner = context?.repo?.owner || "rancher";
   const repo = context?.repo?.repo || "terraform-provider-rancher2";
 
-  const envLabel = process?.env?.RELEASE_LABEL
-    ? process.env.RELEASE_LABEL.trim()
+  const envLabel = proc?.env?.RELEASE_LABEL
+    ? proc.env.RELEASE_LABEL.trim()
     : "";
   const releaseLabel = envLabel || context?.payload?.label?.name;
   if (!releaseLabel) {
@@ -881,35 +881,62 @@ export async function runBackportIssues({
   }
 
   let parentIssue = context?.payload?.issue;
-  const envIssue = process?.env?.ISSUE_NUMBER
-    ? String(process.env.ISSUE_NUMBER)
+  const envIssue = proc?.env?.ISSUE_NUMBER
+    ? String(proc.env.ISSUE_NUMBER)
       .replace(/^["']|["']$/g, "")
       .trim()
       .replace(/^#/, "")
     : "";
-  const rawIssueNumber =
+  const rawIssueInput =
     envIssue ||
-    (parentIssue?.number !== undefined ? String(parentIssue.number) : "");
+    (parentIssue?.number !== undefined && parentIssue?.number !== null
+      ? String(parentIssue.number)
+      : "");
+  const rawIssueNumber = String(rawIssueInput)
+    .replace(/^["']|["']$/g, "")
+    .trim()
+    .replace(/^#/, "");
   if (!rawIssueNumber || !/^[1-9]\d*$/.test(rawIssueNumber)) {
     throw new Error(
-      `Invalid issue number: ${process?.env?.ISSUE_NUMBER ?? parentIssue?.number}`,
+      `Invalid issue number: ${proc?.env?.ISSUE_NUMBER ?? parentIssue?.number}`,
     );
   }
   const parentIssueNumber = parseInt(rawIssueNumber, 10);
 
-  if (!parentIssue || !parentIssue.title) {
-    try {
-      const issueRes = await github.rest.issues.get({
-        owner,
-        repo,
-        issue_number: parentIssueNumber,
-      });
-      parentIssue = issueRes.data;
-    } catch (error) {
+  if (!parentIssueNumber || isNaN(parentIssueNumber)) {
+    throw new Error("Could not determine valid parent issue number");
+  }
+
+  let parentIssueTitle = parentIssue?.title || "";
+
+  if (!parentIssueTitle || typeof parentIssue?.body !== "string") {
+    if (typeof github?.rest?.issues?.get === "function") {
+      try {
+        const issueRes = await github.rest.issues.get({
+          owner,
+          repo,
+          issue_number: parentIssueNumber,
+        });
+        parentIssue = { ...parentIssue, ...issueRes.data };
+        if (issueRes?.data?.title) {
+          parentIssueTitle = issueRes.data.title;
+        }
+      } catch (error) {
+        if (!parentIssueTitle) {
+          throw new Error(
+            `Failed to retrieve parent issue #${parentIssueNumber}: ${error.message}`,
+          );
+        }
+      }
+    } else if (!parentIssueTitle) {
       throw new Error(
-        `Failed to retrieve parent issue #${parentIssueNumber}: ${error.message}`,
+        `Failed to retrieve parent issue #${parentIssueNumber}: github.rest.issues.get is not available`,
       );
     }
+  }
+
+  if (!parentIssueTitle) {
+    throw new Error(`Parent issue #${parentIssueNumber} has no title`);
   }
 
   if (parentIssue?.pull_request) {
@@ -917,8 +944,6 @@ export async function runBackportIssues({
       `Issue #${parentIssueNumber} is a pull request, not an issue.`,
     );
   }
-
-  const parentIssueTitle = parentIssue.title;
 
   // Check if a sub-issue for this release branch already exists on the parent issue to ensure idempotency
   if (typeof github?.request === "function") {
@@ -959,43 +984,58 @@ export async function runBackportIssues({
     }
   }
 
-  const rawPr = process?.env?.PR
-    ? String(process.env.PR)
+  const rawPr = proc?.env?.PR
+    ? String(proc.env.PR)
       .replace(/^["']|["']$/g, "")
       .trim()
       .replace(/^#/, "")
     : "";
-  if (!rawPr || !/^[1-9]\d*$/.test(rawPr)) {
-    throw new Error(`Invalid PR number: ${process?.env?.PR}`);
+
+  let extractedPrNumber = null;
+  if (rawPr) {
+    if (!/^[1-9]\d*$/.test(rawPr)) {
+      throw new Error(`Invalid PR number: ${proc?.env?.PR}`);
+    }
+    extractedPrNumber = parseInt(rawPr, 10);
   }
-  const extractedPrNumber = parseInt(rawPr, 10);
+
+  let issueBody;
+  if (extractedPrNumber !== null) {
+    let prResponse;
+    try {
+      prResponse = await github.rest.issues.get({
+        owner,
+        repo,
+        issue_number: extractedPrNumber,
+      });
+    } catch (error) {
+      throw new Error(
+        `Failed to retrieve PR #${extractedPrNumber}: ${error.message}`,
+      );
+    }
+    const pr = prResponse.data;
+    issueBody = [
+      `Backport #${pr.number} to ${releaseLabel} for #${parentIssueNumber}`,
+      `Please add this issue to the proper milestone.`,
+      `Copied from PR:`,
+      `${pr.body || ""}`,
+    ].join("\n\n");
+  } else {
+    issueBody = [
+      `Backport to ${releaseLabel} for #${parentIssueNumber}`,
+      `Please add this issue to the proper milestone.`,
+      `Copied from #${parentIssueNumber}:`,
+      `${parentIssue?.body?.trim() || "(No description provided)"}`,
+    ].join("\n\n");
+  }
+
   let response;
-
-  try {
-    response = await github.rest.issues.get({
-      owner: owner,
-      repo: repo,
-      issue_number: extractedPrNumber,
-    });
-  } catch (error) {
-    throw new Error(
-      `Failed to retrieve PR #${extractedPrNumber}: ${error.message}`,
-    );
-  }
-  const pr = response.data;
-  const prNumber = pr.number;
-
   try {
     const issueParams = {
-      owner: owner,
-      repo: repo,
+      owner,
+      repo,
       title: `[${releaseLabel}] ${parentIssueTitle}`,
-      body: [
-        `Backport #${prNumber} to ${releaseLabel} for #${parentIssueNumber}`,
-        `Please add this issue to the proper milestone.`,
-        `Copied from PR:`,
-        `${pr.body}`,
-      ].join("\n\n"),
+      body: issueBody,
       labels: [releaseLabel, "internal/backport"],
     };
     response = await github.rest.issues.create(issueParams);

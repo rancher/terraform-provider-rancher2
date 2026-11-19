@@ -9,7 +9,12 @@ cleanup_id=""
 wait_time=""
 slow_mode=false
 dirty_mode=false
+skip_build="${SKIP_BUILD:-false}"
+case "$skip_build" in [Tt][Rr][Uu][Ee] | 1 | [Yy][Ee][Ss]) skip_build=true ;; *) skip_build=false ;; esac
 max_attempts="${MAX_ATTEMPTS:-3}"
+
+# Locate repository root
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
 # Track whether cleanup has run
 cleanup_has_run=false
@@ -36,9 +41,6 @@ run_cleanup() {
     sleep "$WAIT"
   fi
 
-  # Locate repository root
-  REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-
   # Check if cleanup script exists
   if [ -f "$REPO_ROOT/cleanup.sh" ]; then
     echo "Running cleanup script..."
@@ -60,9 +62,10 @@ run_cleanup() {
 trap run_cleanup EXIT INT TERM
 
 # Parse command line options
-while getopts ":rsdt:p:f:g:c:w:a:" opt; do
+while getopts ":rsdbt:p:f:g:c:w:a:" opt; do
   case $opt in
     r) rerun_failed=true ;;
+    b) skip_build=true ;;
     t)
       if [ -z "$OPTARG" ] || [[ "$OPTARG" =~ ^- ]]; then
         echo "Error: Option -t requires a valid test name, got: '$OPTARG'" >&2
@@ -127,6 +130,7 @@ Options:
   -r              Re-run failed tests, requires dirty mode.
   -s              Run tests in slow mode (sequential, one at a time)
   -d              Skip cleanup (dirty mode)
+  -b              Skip building provider binary (skip 'make build')
   -t TEST         Run specific test (eg. TestMatrix)
   -p PACKAGE      Run specific test package (eg. one)
   -f FIXTURE      Run specific fixture combination (eg. "sle-micro-61-canal-stable-one-rpm-ipv4")
@@ -137,6 +141,7 @@ Options:
 
 Notes:
   - Only one of -c, -t, -p, -f, or -g can be used at a time
+  - The -b option corresponds to setting the SKIP_BUILD=true environment variable
   - The -f option sets the COMBO environment variable for fixture selection
   - The -g option sets the GROUP environment variable for fixture group selection
   - The -w option sets the WAIT environment variable for error investigation
@@ -188,6 +193,10 @@ if [ "$dirty_mode" = true ]; then
   echo "Cleanup: Disabled (dirty mode)"
 else
   echo "Cleanup: Enabled"
+fi
+
+if [ "$skip_build" = true ]; then
+  echo "Build: Disabled (skipping 'make build')"
 fi
 
 if [ -n "$specific_test" ]; then
@@ -245,9 +254,6 @@ export WAIT="$wait_time"
 if [ -n "$WAIT" ]; then
   echo "WAIT environment variable set to: $WAIT seconds"
 fi
-
-# Locate repository root
-REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 # Find the tests directory
 find_test_dir() {
@@ -440,12 +446,23 @@ else
   cd "$current_dir" || exit 1
 
   echo "Checking terraform configs..."
-  if ! tflint --recursive; then
+  if ! (cd "$REPO_ROOT" && tflint --recursive); then
     echo "ERROR: tflint failed"
     exit 1
   fi
   echo "Terraform configs valid"
-  make build
+  if [ "$skip_build" = true ]; then
+    echo "Skipping 'make build' (-b option enabled)..."
+    if [ ! -x "$REPO_ROOT/bin/terraform-provider-rancher2" ]; then
+      echo "ERROR: Option -b enabled but $REPO_ROOT/bin/terraform-provider-rancher2 is missing or not executable." >&2
+      exit 1
+    fi
+  else
+    if ! make -C "$REPO_ROOT" build; then
+      echo "ERROR: make build failed"
+      exit 1
+    fi
+  fi
   echo "============================"
   echo ""
 

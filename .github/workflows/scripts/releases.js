@@ -734,69 +734,102 @@ export async function runTrackingIssue({
             typeof l === "string" ? l : l?.name,
           );
 
-          if (currentLabels.includes("internal/tracking")) {
+          const initialLabelsToAdd = [];
+          if (!currentLabels.includes("internal/tracking")) {
+            initialLabelsToAdd.push("internal/tracking");
+          } else {
             core.info(
-              `Issue #${issueNumber} already has 'internal/tracking' label. Skipping.`,
+              `Issue #${issueNumber} already has 'internal/tracking' label.`,
             );
-            try {
-              await runBackportIssues({
-                github,
-                context: { ...context, repo: { owner, repo } },
-                core,
-                process: {
-                  ...process,
-                  env: {
-                    ...process?.env,
-                    RELEASE_LABEL: targetReleaseBranch,
-                    ISSUE_NUMBER: String(issueNumber),
-                    PR: String(pr.number),
-                  },
-                },
-              });
-            } catch (subIssueErr) {
-              core.warning(
-                `Direct sub-issue creation failed for already tracked issue #${issueNumber}: ${subIssueErr.message}`,
-              );
-            }
-            continue;
           }
-
-          const initialLabelsToAdd = ["internal/tracking"];
           if (!currentLabels.includes("internal/user")) {
             initialLabelsToAdd.push("internal/user");
           }
 
-          await github.rest.issues.addLabels({
-            owner,
-            repo,
-            issue_number: issueNumber,
-            labels: initialLabelsToAdd,
-          });
-          core.info(
-            `Added labels [${initialLabelsToAdd.join(", ")}] to issue #${issueNumber}`,
+          if (initialLabelsToAdd.length > 0) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              labels: initialLabelsToAdd,
+            });
+            core.info(
+              `Added labels [${initialLabelsToAdd.join(", ")}] to issue #${issueNumber}`,
+            );
+          }
+
+          let existingComments = [];
+          try {
+            if (
+              typeof github?.paginate === "function" &&
+              github?.rest?.issues?.listComments
+            ) {
+              existingComments = await github.paginate(
+                github.rest.issues.listComments,
+                { owner, repo, issue_number: issueNumber },
+              );
+            } else if (
+              typeof github?.rest?.issues?.listComments === "function"
+            ) {
+              const res = await github.rest.issues.listComments({
+                owner,
+                repo,
+                issue_number: issueNumber,
+              });
+              existingComments = res.data || [];
+            }
+          } catch (commErr) {
+            core.warning(
+              `Could not fetch existing comments for issue #${issueNumber}: ${commErr.message}`,
+            );
+          }
+
+          const hasLinkComment = (existingComments || []).some((c) =>
+            new RegExp(
+              `<!--\\s*tracking-pr:\\s*#?${pr.number}\\s*-->`,
+              "i",
+            ).test(c?.body || ""),
           );
 
-          const linkCommentBody = `<!-- tracking-pr: #${pr.number} -->\nThis is the tracking issue for PR #${pr.number}`;
-          await github.rest.issues.createComment({
-            owner,
-            repo,
-            issue_number: issueNumber,
-            body: linkCommentBody,
-          });
-          core.info(
-            `Added PR linking comment for PR #${pr.number} to issue #${issueNumber}`,
+          if (!hasLinkComment) {
+            const linkCommentBody = `<!-- tracking-pr: #${pr.number} -->\nThis is the tracking issue for PR #${pr.number}`;
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              body: linkCommentBody,
+            });
+            core.info(
+              `Added PR linking comment for PR #${pr.number} to issue #${issueNumber}`,
+            );
+          } else {
+            core.info(
+              `PR linking comment for PR #${pr.number} already present on issue #${issueNumber}`,
+            );
+          }
+
+          const hasInstructionComment = (existingComments || []).some((c) =>
+            (c?.body || "").includes(
+              "A label has been added for the latest release branch",
+            ),
           );
 
-          const instructionCommentBody = `A label has been added for the latest release branch, if you need this change to go to any other release branches, please add labels for the branches you need this to go to. Please don't skip branches, eg. if you need something added to release/v13 and the latest is release/v15, you must also add release/v14. Once a label is added a sub-issue will be generated to facilitate the backport, these sub-issues must be in place before the PR is merged or automatic backports won't happen.`;
-          await github.rest.issues.createComment({
-            owner,
-            repo,
-            issue_number: issueNumber,
-            body: instructionCommentBody,
-          });
-          core.info(
-            `Added release branch instructions comment to issue #${issueNumber}`,
-          );
+          if (!hasInstructionComment) {
+            const instructionCommentBody = `A label has been added for the latest release branch, if you need this change to go to any other release branches, please add labels for the branches you need this to go to. Please don't skip branches, eg. if you need something added to release/v13 and the latest is release/v15, you must also add release/v14. Once a label is added a sub-issue will be generated to facilitate the backport, these sub-issues must be in place before the PR is merged or automatic backports won't happen.`;
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              body: instructionCommentBody,
+            });
+            core.info(
+              `Added release branch instructions comment to issue #${issueNumber}`,
+            );
+          } else {
+            core.info(
+              `Release branch instructions comment already present on issue #${issueNumber}`,
+            );
+          }
 
           // Directly create the backport sub-issue BEFORE adding the release label.
           // Adding the release label triggers backport-issues.yml via the 'issues: labeled' event.

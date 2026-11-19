@@ -9,6 +9,7 @@ aws
 azure
 backport
 client
+codegen
 cognito
 config
 datasource
@@ -25,6 +26,7 @@ github
 gke
 globalroles
 globbing
+gofmt
 golangci
 goreleaser
 gotestsum
@@ -57,8 +59,10 @@ rke2
 sha
 shellcheck
 terraform
+terraformrc
 testacc
 tflint
+tfrc
 ttl
 url
 variablize
