@@ -209,9 +209,11 @@ In your pull request description, you must explicitly link the tracking issue us
 
 or
 
-```markdown
-- Addresses: #1234
+```text
+* Addresses: `#1234`
 ```
+
+_(Note: Bullet points can use `-` or `*`, and issue numbers may optionally be wrapped in backticks or end with a trailing period. Use `Addresses:` rather than GitHub auto-close keywords like `Fixes:` or `Closes:`, ensuring the tracking issue remains open for QA validation and automated release progression.)_
 
 Automated PR validation (`validate-pr.yaml`) validates that:
 
@@ -308,6 +310,9 @@ make et -- t=TestOneBasic
 
 # Run acceptance tests sequentially
 ./run_tests.sh -s
+
+# Run acceptance tests without rebuilding the provider binary
+./run_tests.sh -b
 ```
 
 ### Cleaning Up Acceptance Test Leftovers
@@ -433,4 +438,6 @@ When you open a PR targeting `main`, GitHub Actions runs an 11-job CI matrix ins
 ## Additional References
 
 - **[Development Process](docs/development-process.md)**: Overview of the development workflow.
+- **[GitHub Workflows & Automation Architecture](docs/workflows.md)**: In-depth reference on CI/CD pipelines, automated backports, Project 73 tracking, and release automation.
+- **[Test & QA Process](docs/test-process.md)**: Acceptance testing and QA verification lifecycle.
 - **[Version Compatibility Matrix](docs/compatibility-matrix.md)**: Compatibility between Rancher versions and provider releases.

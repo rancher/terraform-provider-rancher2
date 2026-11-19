@@ -71,20 +71,21 @@ jobs:
                 issue_number: issueNumber,
               });
             } catch (error) {
-              core.setFailed(`Could not retrieve comments for issue #${issueNumber}: ${error.message}`);
-              return;
+              const targetIssue = Number.isInteger(issueNumber) ? issueNumber : (context.payload?.issue?.number ?? 'unknown');
+              core.warning(`Could not retrieve comments for issue #${targetIssue}: ${error.message}`);
             }
 
             const trackingRegex = /<!--\s*tracking-pr:\s*#?(\d+)\s*-->/i;
             for (let i = comments.length - 1; i >= 0; i--) {
               const comment = comments[i];
-              const match = comment?.user?.login === 'github-actions[bot]' ? comment.body?.match(trackingRegex) : null;
+              const match = comment?.body?.match(trackingRegex);
               if (match) {
                 return parseInt(match[1], 10);
               }
             }
 
-            core.setFailed('No tracking PR comment found on issue.');
+            core.info('No tracking PR comment found on issue. Proceeding with issue-only backport creation.');
+            return '';
       - name: Create GitHub Issue
         id: create-github-issue
         # https://github.com/actions/github-script/releases

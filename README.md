@@ -54,7 +54,7 @@ The following example runs a single implementation, the most basic one:
 ./run_tests.sh -t TestOneBasic
 ```
 
-See [contributor's guide](CONTRIBUTING.md) and [development process](docs/development-process.md) for more details.
+See [contributor's guide](CONTRIBUTING.md), [development process](docs/development-process.md), and [workflow architecture](docs/workflows.md) for more details.
 
 Testing the Provider
 ---------------------------
@@ -67,10 +67,16 @@ $ make test
 
 To run acceptance tests, use the `run_tests.sh` script.
 WARNING! These are real implementations, you will need AWS credentials in your environment and there will be a cost associated.
-The following example runs a every acceptance test, one at a time.
+The following example runs every acceptance test sequentially:
 
 ```sh
 ./run_tests.sh -s
+```
+
+Run acceptance tests without rebuilding the provider binary (skip `make build`):
+
+```sh
+./run_tests.sh -b
 ```
 
 See [test process](docs/test-process.md) for details on release testing (_Terraform Maintainers Only_).
@@ -101,6 +107,8 @@ See the [compatibility matrix](docs/compatibility-matrix.md) for details.
 
 Releasing the Provider
 ---------------------------
+
+For complete documentation on the automated release pipeline, release candidate generation, and Project 73 tracking, see **[GitHub Workflows & Automation Architecture](docs/workflows.md)**.
 
 As of v2.0.0 and v3.0.0, the provider is tied to Rancher minor releases but can be released 'out of band' within that minor version.
 As of v13.0.0, the provider's major number aligns with Rancher's minor number.

@@ -214,11 +214,10 @@ jobs:
     name: "Sync Release Please Manifest (PR)"
     needs:
       - release-please-release
-      - release
+      - release-please-pr
     if: |
       !cancelled() &&
-      needs.release-please-release.outputs.release_created == 'true' &&
-      (needs.release.result == 'success' || needs.release.result == 'skipped')
+      needs.release-please-pr.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     concurrency:

@@ -6,10 +6,19 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 
 /**
- * Standard caller stubs pointing strictly to @main.
+ * Generates standard caller stubs pointing strictly to @main for a target repository.
  */
-export const CALLER_STUBS = {
-  ".github/workflows/pull_request.yaml": `name: Pull Request
+export function buildWorkflowStubs(
+  repository,
+  proc = typeof globalThis !== "undefined" ? globalThis.process : undefined,
+) {
+  const repo = (
+    typeof repository === "string"
+      ? repository
+      : proc?.env?.GITHUB_REPOSITORY || "rancher/terraform-provider-rancher2"
+  ).trim();
+  return {
+    ".github/workflows/pull_request.yaml": `name: Pull Request
 
 on:
   pull_request:
@@ -22,10 +31,10 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: rancher/terraform-provider-rancher2/.github/workflows/pull_request.yaml@main
+    uses: ${repo}/.github/workflows/pull_request.yaml@main
     secrets: inherit
 `,
-  ".github/workflows/release.yml": `name: Release Please
+    ".github/workflows/release.yml": `name: Release Please
 
 on:
   push:
@@ -42,10 +51,10 @@ jobs:
       issues: write
       pull-requests: write
       actions: read
-    uses: rancher/terraform-provider-rancher2/.github/workflows/release-please.yml@main
+    uses: ${repo}/.github/workflows/release-please.yml@main
     secrets: inherit
 `,
-  ".github/workflows/e2e.yml": `name: "E2E Tests"
+    ".github/workflows/e2e.yml": `name: "E2E Tests"
 
 on:
   pull_request:
@@ -66,10 +75,10 @@ jobs:
       contents: read
       id-token: write
       pull-requests: read
-    uses: rancher/terraform-provider-rancher2/.github/workflows/e2e.yml@main
+    uses: ${repo}/.github/workflows/e2e.yml@main
     secrets: inherit
 `,
-  ".github/workflows/sync-release-manifest.yml": `name: "Sync Release Please Manifest Caller"
+    ".github/workflows/sync-release-manifest.yml": `name: "Sync Release Please Manifest Caller"
 
 on:
   workflow_dispatch:
@@ -95,14 +104,22 @@ jobs:
       contents: write
       pull-requests: write
       id-token: write
-    uses: rancher/terraform-provider-rancher2/.github/workflows/sync-release-manifest.yml@main
+    uses: ${repo}/.github/workflows/sync-release-manifest.yml@main
     with:
       branch: \${{ inputs.branch }}
       version: \${{ inputs.version }}
       release_as: \${{ inputs.release_as }}
     secrets: inherit
 `,
-};
+  };
+}
+
+/**
+ * Standard default caller stubs pointing strictly to upstream @main.
+ */
+export const CALLER_STUBS = buildWorkflowStubs(
+  "rancher/terraform-provider-rancher2",
+);
 
 /**
  * Allowed stub filenames inside .github/workflows.
@@ -212,59 +229,6 @@ export async function resolveBranchCreationSha(
 }
 
 /**
- * Resolves the commit SHA of the tag with the latest release history.
- * Strictly ignores pre-release / RC tags (e.g. -rc, -rc.1) and selects the highest stable semver tag prior to maxMajor (e.g. v15.3.0 for v16).
- */
-export async function resolveLatestReleaseTagSha(git, maxMajor = null) {
-  try {
-    const tagResult = await git(["tag", "-l", "v*"]);
-    const tags = (tagResult?.stdout || "")
-      .trim()
-      .split("\n")
-      .map((t) => t.trim())
-      .filter(Boolean);
-
-    // Strictly filter out any -rc or pre-release tags, accepting only stable releases (e.g. v15.3.0)
-    const stableTags = tags
-      .filter(
-        (t) =>
-          !t.includes("-rc") && !t.includes("-") && /^v?\d+\.\d+\.\d+$/.test(t),
-      )
-      .map((t) => {
-        const match = t.match(/^v?(\d+)\.(\d+)\.(\d+)$/);
-        return {
-          tag: t,
-          major: parseInt(match[1], 10),
-          minor: parseInt(match[2], 10),
-          patch: parseInt(match[3], 10),
-        };
-      })
-      .filter((item) =>
-        maxMajor !== null && maxMajor !== undefined
-          ? item.major < maxMajor
-          : true,
-      )
-      .sort((a, b) => {
-        if (b.major !== a.major) return b.major - a.major;
-        if (b.minor !== a.minor) return b.minor - a.minor;
-        return b.patch - a.patch;
-      });
-
-    if (stableTags.length > 0) {
-      const latestTag = stableTags[0].tag;
-      const revResult = await git(["rev-list", "-n", "1", latestTag]);
-      const sha = revResult?.stdout?.trim() || "";
-      if (/^[0-9a-f]{40}$/i.test(sha)) {
-        return sha;
-      }
-    }
-  } catch {
-    // Return null if tags cannot be queried or resolved
-  }
-  return null;
-}
-
-/**
  * Builds release-please-config.json content with release-as version and cleans obsolete sha keys.
  */
 export function buildReleasePleaseConfig(
@@ -287,6 +251,10 @@ export function buildReleasePleaseConfig(
     config = JSON.parse(JSON.stringify(existingConfigOrJson));
   }
 
+  if (!config || typeof config !== "object" || Array.isArray(config)) {
+    config = {};
+  }
+
   config["release-as"] = releaseAs;
   if (!("always-update" in config)) config["always-update"] = true;
   if (!("commit-search-depth" in config)) config["commit-search-depth"] = 100;
@@ -297,13 +265,16 @@ export function buildReleasePleaseConfig(
   if (!("include-component-in-tag" in config))
     config["include-component-in-tag"] = false;
 
-  if (!config.packages || typeof config.packages !== "object") {
-    config.packages = {
-      ".": {
-        "release-type": "go",
-      },
-    };
+  if (
+    !config.packages ||
+    typeof config.packages !== "object" ||
+    Array.isArray(config.packages)
+  ) {
+    config.packages = {};
   }
+  config.packages["."] = config.packages["."] || {
+    "release-type": "go",
+  };
 
   if (!("$schema" in config)) {
     config["$schema"] =
@@ -331,25 +302,25 @@ export function buildReleasePleaseManifest(manifestVersion) {
 }
 
 /**
- * Returns standard caller stubs mapping.
- */
-export function buildWorkflowStubs() {
-  return { ...CALLER_STUBS };
-}
-
-/**
  * Removes any non-stub workflows from the workflows directory.
  */
 export async function cleanupNonStubWorkflows(workflowsDir) {
   try {
-    const entries = await fs.readdir(workflowsDir);
+    const entries = await fs.readdir(workflowsDir, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.endsWith(".yml") || entry.endsWith(".yaml")) {
-        if (!ALLOWED_STUB_FILENAMES.has(entry)) {
-          await fs.unlink(path.join(workflowsDir, entry));
+      if (
+        entry.isFile() &&
+        (entry.name.endsWith(".yml") || entry.name.endsWith(".yaml"))
+      ) {
+        if (!ALLOWED_STUB_FILENAMES.has(entry.name)) {
+          await fs.unlink(path.join(workflowsDir, entry.name));
         }
       }
     }
+    await fs.rm(path.join(workflowsDir, "scripts"), {
+      recursive: true,
+      force: true,
+    });
   } catch (err) {
     if (err.code !== "ENOENT") {
       throw err;
@@ -360,15 +331,24 @@ export async function cleanupNonStubWorkflows(workflowsDir) {
 /**
  * Generates pull request description body.
  */
-export function formatPrBody({ branch, releaseAs, manifestVersion }) {
-  return `### Release Branch Initialization: \`${branch}\`
+export function formatPrBody({
+  branch,
+  releaseAs,
+  manifestVersion,
+  isUpdate = false,
+}) {
+  const actionText = isUpdate
+    ? `updates configuration and caller stubs on release branch \`${branch}\``
+    : `initializes configuration and caller stubs for the new release branch \`${branch}\``;
 
-This automated pull request initializes configuration and caller stubs for the new release branch \`${branch}\`.
+  return `### Release Branch ${isUpdate ? "Update" : "Initialization"}: \`${branch}\`
+
+This automated pull request ${actionText}.
 
 #### Summary of Changes:
-- **Release Please Config**: Initialized \`release-please-config.json\` with \`release-as: ${releaseAs}\` and draft release enabled.
-- **Release Please Manifest**: Set \`.release-please-manifest.json\` root version to \`${manifestVersion}\`.
-- **Workflow Caller Stubs**: Replaced standalone workflows with thin caller stubs delegating execution strictly to \`@main\`:
+- **Release Please Config**: Ensured \`release-please-config.json\` is configured with \`release-as: ${releaseAs}\` and both draft and prerelease are enabled.
+- **Release Please Manifest**: Ensured \`.release-please-manifest.json\` root version is properly set to \`${manifestVersion}\`.
+- **Workflow Caller Stubs**: Ensured standalone workflows are replaced with thin caller stubs delegating execution strictly to \`@main\`:
   - \`.github/workflows/pull_request.yaml\`
   - \`.github/workflows/release.yml\`
   - \`.github/workflows/sync-release-manifest.yml\`
@@ -402,6 +382,11 @@ export async function runSetupReleaseBranch({
     context?.repo?.repo ||
     proc?.env?.GITHUB_REPOSITORY?.split("/")[1] ||
     "terraform-provider-rancher2";
+  const repoSlug =
+    proc?.env?.GITHUB_REPOSITORY ||
+    (owner && repo
+      ? `${owner}/${repo}`
+      : "rancher/terraform-provider-rancher2");
 
   const rootDir = workDir || proc?.cwd?.() || process.cwd();
   const git =
@@ -410,15 +395,22 @@ export async function runSetupReleaseBranch({
   core?.info?.(
     `Configuring git identity and preparing release branch '${parsed.branch}'...`,
   );
-  await git(["config", "user.name", "github-actions[bot]"]);
-  await git([
-    "config",
-    "user.email",
-    "41898282+github-actions[bot]@users.noreply.github.com",
-  ]);
+  if (proc?.env?.GITHUB_ACTIONS === "true") {
+    await git(["config", "user.name", "github-actions[bot]"]);
+    await git([
+      "config",
+      "user.email",
+      "41898282+github-actions[bot]@users.noreply.github.com",
+    ]);
+  }
 
   // Ensure origin/main and tags are fetched
-  await git(["fetch", "origin", "main", "--tags"]);
+  await git([
+    "fetch",
+    "origin",
+    "+refs/heads/main:refs/remotes/origin/main",
+    "--tags",
+  ]);
 
   // Check if target release branch already exists on remote origin
   const lsRemoteResult = await git([
@@ -429,48 +421,106 @@ export async function runSetupReleaseBranch({
   ]);
   const branchExistsOnOrigin = Boolean(
     lsRemoteResult?.stdout &&
-    lsRemoteResult.stdout.includes(`refs/heads/${parsed.branch}`),
+    lsRemoteResult.stdout
+      .trim()
+      .split(/\r?\n/)
+      .some((line) => line.trim().endsWith(`refs/heads/${parsed.branch}`)),
   );
 
-  if (branchExistsOnOrigin) {
-    throw new Error(
-      `Release branch '${parsed.branch}' already exists on remote origin. Release branch setup workflow cannot be run on existing branches; configurations must be updated manually.`,
-    );
-  }
-
-  // Pre-calculate lastReleaseSha before pushing the remote branch so failures don't leave an unconfigured branch
-  let lastReleaseSha = null;
+  let defaultLastReleaseSha = null;
   const envSha = proc?.env?.LAST_RELEASE_SHA?.trim();
   if (envSha && /^[0-9a-f]{40}$/i.test(envSha)) {
-    lastReleaseSha = envSha;
-  } else {
-    // Determine the branching point from origin/main. For new branches, this is the current origin/main.
-    lastReleaseSha = await resolveBranchCreationSha(git, "main", "origin/main");
+    defaultLastReleaseSha = envSha;
   }
 
-  if (!lastReleaseSha || !/^[0-9a-f]{40}$/i.test(lastReleaseSha)) {
-    throw new Error(
-      `Failed to resolve required last-release-sha anchor for release branch '${parsed.branch}'.`,
+  if (!branchExistsOnOrigin) {
+    // Pre-calculate lastReleaseSha before pushing the remote branch so failures don't leave an unconfigured branch
+    if (!defaultLastReleaseSha) {
+      defaultLastReleaseSha = await resolveBranchCreationSha(
+        git,
+        "main",
+        "origin/main",
+      );
+    }
+
+    if (
+      !defaultLastReleaseSha ||
+      !/^[0-9a-f]{40}$/i.test(defaultLastReleaseSha)
+    ) {
+      throw new Error(
+        `Failed to resolve required last-release-sha anchor for release branch '${parsed.branch}'.`,
+      );
+    }
+
+    core?.info?.(
+      `Release branch '${parsed.branch}' does not exist on origin. Creating strictly from 'origin/main'...`,
+    );
+    // Invariant: New release branch must be branched strictly and exclusively from origin/main
+    if (proc?.env?.GITHUB_ACTIONS === "true") {
+      await git(["push", "origin", `origin/main:refs/heads/${parsed.branch}`]);
+    }
+  } else {
+    core?.info?.(
+      `Release branch '${parsed.branch}' already exists on origin. Updating existing release branch configuration...`,
     );
   }
 
-  core?.info?.(
-    `Release branch '${parsed.branch}' does not exist on origin. Creating strictly from 'origin/main'...`,
-  );
-  // Invariant: New release branch must be branched strictly and exclusively from origin/main
-  await git(["push", "origin", `origin/main:refs/heads/${parsed.branch}`]);
-
-  // Fetch the release branch from origin
-  await git(["fetch", "origin", parsed.branch]);
+  // Fetch the release branch from origin with explicit refspec to ensure local remote-tracking branch is updated
+  if (branchExistsOnOrigin || proc?.env?.GITHUB_ACTIONS === "true") {
+    await git([
+      "fetch",
+      "origin",
+      `+refs/heads/${parsed.branch}:refs/remotes/origin/${parsed.branch}`,
+    ]);
+  }
 
   // Checkout setup chore branch based on origin/<branch>
   const choreBranch = `chore/setup-release-v${parsed.versionNumber}`;
+  const baseRef =
+    branchExistsOnOrigin || proc?.env?.GITHUB_ACTIONS === "true"
+      ? `origin/${parsed.branch}`
+      : "origin/main";
   core?.info?.(
-    `Checking out setup branch '${choreBranch}' based on 'origin/${parsed.branch}'...`,
+    `Checking out setup branch '${choreBranch}' based on '${baseRef}'...`,
   );
-  await git(["checkout", "-B", choreBranch, `origin/${parsed.branch}`]);
+  await git(["checkout", "-B", choreBranch, baseRef]);
+  await git(["reset", "--hard", baseRef]);
 
-  // 1. Configure release-please-config.json
+  // 1. Configure .release-please-manifest.json
+  const manifestPath = path.join(rootDir, ".release-please-manifest.json");
+  let existingManifest = "";
+  try {
+    existingManifest = await fs.readFile(manifestPath, "utf8");
+  } catch (err) {
+    if (err.code !== "ENOENT") throw err;
+  }
+
+  let updatedManifest;
+  let preservedVersion = null;
+  if (branchExistsOnOrigin && existingManifest) {
+    try {
+      const parsedManifest = JSON.parse(existingManifest);
+      if (
+        typeof parsedManifest["."] === "string" &&
+        parsedManifest["."].trim().length > 0
+      ) {
+        preservedVersion = parsedManifest["."].trim();
+        core?.info?.(
+          `Preserving existing manifest version '${preservedVersion}' on '${parsed.branch}'`,
+        );
+        updatedManifest = existingManifest;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!updatedManifest) {
+    updatedManifest = buildReleasePleaseManifest(parsed.manifestVersion);
+  }
+  await fs.writeFile(manifestPath, updatedManifest, "utf8");
+
+  // 2. Configure release-please-config.json
   const configPath = path.join(rootDir, "release-please-config.json");
   let existingConfig = "";
   try {
@@ -479,27 +529,78 @@ export async function runSetupReleaseBranch({
     if (err.code !== "ENOENT") throw err;
   }
 
-  core?.info?.(
-    `Resolved release anchor SHA '${lastReleaseSha}' for release-please-config.json`,
-  );
+  let targetLastReleaseSha = defaultLastReleaseSha;
+  let targetReleaseAs = parsed.releaseAs;
+  if (existingConfig) {
+    try {
+      const parsedConfig = JSON.parse(existingConfig);
+      if (
+        parsedConfig &&
+        typeof parsedConfig === "object" &&
+        !Array.isArray(parsedConfig)
+      ) {
+        if (
+          !targetLastReleaseSha &&
+          typeof parsedConfig["last-release-sha"] === "string" &&
+          /^[0-9a-f]{40}$/i.test(parsedConfig["last-release-sha"].trim())
+        ) {
+          targetLastReleaseSha = parsedConfig["last-release-sha"].trim();
+        }
+        if (branchExistsOnOrigin) {
+          if (parsedConfig["release-as"]) {
+            targetReleaseAs = parsedConfig["release-as"];
+            core?.info?.(
+              `Preserving existing release-as '${targetReleaseAs}' on '${parsed.branch}'`,
+            );
+          } else if (preservedVersion) {
+            targetReleaseAs = preservedVersion.startsWith("v")
+              ? preservedVersion
+              : `v${preservedVersion}`;
+            core?.info?.(
+              `Deriving release-as '${targetReleaseAs}' from preserved manifest version '${preservedVersion}' on '${parsed.branch}'`,
+            );
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+  } else if (branchExistsOnOrigin && preservedVersion) {
+    targetReleaseAs = preservedVersion.startsWith("v")
+      ? preservedVersion
+      : `v${preservedVersion}`;
+    core?.info?.(
+      `Deriving release-as '${targetReleaseAs}' from preserved manifest version '${preservedVersion}' on '${parsed.branch}'`,
+    );
+  }
+
+  if (!targetLastReleaseSha) {
+    targetLastReleaseSha = await resolveBranchCreationSha(
+      git,
+      parsed.branch,
+      "origin/main",
+    );
+  }
+
+  if (targetLastReleaseSha) {
+    core?.info?.(
+      `Resolved release anchor SHA '${targetLastReleaseSha}' for release-please-config.json`,
+    );
+  }
+
   const updatedConfig = buildReleasePleaseConfig(
     existingConfig,
-    parsed.releaseAs,
-    lastReleaseSha,
+    targetReleaseAs,
+    targetLastReleaseSha,
   );
   await fs.writeFile(configPath, updatedConfig, "utf8");
-
-  // 2. Configure .release-please-manifest.json
-  const manifestPath = path.join(rootDir, ".release-please-manifest.json");
-  const updatedManifest = buildReleasePleaseManifest(parsed.manifestVersion);
-  await fs.writeFile(manifestPath, updatedManifest, "utf8");
 
   // 3. Configure workflows and caller stubs
   const workflowsDir = path.join(rootDir, ".github", "workflows");
   await fs.mkdir(workflowsDir, { recursive: true });
   await cleanupNonStubWorkflows(workflowsDir);
 
-  const stubs = buildWorkflowStubs();
+  const stubs = buildWorkflowStubs(repoSlug);
   for (const [relPath, content] of Object.entries(stubs)) {
     const fullPath = path.join(rootDir, relPath);
     await fs.mkdir(path.dirname(fullPath), { recursive: true });
@@ -521,57 +622,35 @@ export async function runSetupReleaseBranch({
     "rancher2/release.md",
   ]);
 
-  const statusResult = await git(["status", "--porcelain"]);
+  const diffResult = await git(["diff", "--cached", "--name-only"]);
   const hasChanges = Boolean(
-    statusResult?.stdout && statusResult.stdout.trim().length > 0,
+    diffResult?.stdout && diffResult.stdout.trim().length > 0,
   );
 
   let choreBranchPushed = hasChanges;
+  const prAction = branchExistsOnOrigin ? "update" : "initialize";
 
   if (hasChanges) {
     core?.info?.(`Committing and pushing changes to '${choreBranch}'...`);
     await git([
       "commit",
       "-m",
-      `fix(${parsed.branch}): initialize release branch configuration`,
+      `fix(${parsed.branch}): ${prAction} release branch configuration`,
     ]);
-    await git(["push", "-u", "origin", choreBranch, "--force"]);
-    choreBranchPushed = true;
+    if (proc?.env?.GITHUB_ACTIONS === "true") {
+      await git(["push", "-u", "origin", choreBranch, "--force"]);
+      choreBranchPushed = true;
+    } else {
+      core?.info?.(
+        "Local environment detected: skipping push and PR creation.",
+      );
+      choreBranchPushed = false;
+    }
   } else {
     core?.info?.(
       `No file modifications needed; setup files already match target configuration.`,
     );
-    // Check if chore branch exists on remote origin and is ahead of the release branch
-    const remoteChoreResult = await git([
-      "ls-remote",
-      "--heads",
-      "origin",
-      `refs/heads/${choreBranch}`,
-    ]);
-    const choreExists = Boolean(
-      remoteChoreResult?.stdout &&
-      remoteChoreResult.stdout.includes(`refs/heads/${choreBranch}`),
-    );
-
-    if (choreExists) {
-      try {
-        await git(["fetch", "origin", choreBranch]);
-        const revCountResult = await git([
-          "rev-list",
-          "--count",
-          `origin/${parsed.branch}..origin/${choreBranch}`,
-        ]);
-        const aheadCount = parseInt(revCountResult?.stdout?.trim() || "0", 10);
-        choreBranchPushed = aheadCount > 0;
-      } catch (fetchErr) {
-        core?.warning?.(
-          `Failed to inspect remote '${choreBranch}' commits: ${fetchErr.message}`,
-        );
-        choreBranchPushed = false;
-      }
-    } else {
-      choreBranchPushed = false;
-    }
+    choreBranchPushed = false;
   }
 
   // If there are no local changes and the remote chore branch is not ahead of the release branch,
@@ -591,8 +670,13 @@ export async function runSetupReleaseBranch({
   }
 
   // 6. Open pull request targeting release branch
-  const prTitle = `fix(${parsed.branch}): initialize release branch configuration`;
-  const prBody = formatPrBody(parsed);
+  const prTitle = `fix(${parsed.branch}): ${prAction} release branch configuration`;
+  const prBody = formatPrBody({
+    ...parsed,
+    releaseAs: targetReleaseAs,
+    manifestVersion: preservedVersion || parsed.manifestVersion,
+    isUpdate: branchExistsOnOrigin,
+  });
 
   let prNumber = null;
   let prUrl = null;
@@ -627,13 +711,19 @@ export async function runSetupReleaseBranch({
         body: prBody,
       });
 
-      prNumber = createdPr.data.number;
-      prUrl = createdPr.data.html_url;
-      prCreated = true;
-      core?.info?.(`Successfully opened PR #${prNumber}: ${prUrl}`);
+      if (createdPr?.data?.number) {
+        prNumber = createdPr.data.number;
+        prUrl = createdPr.data.html_url;
+        prCreated = true;
+        core?.info?.(`Successfully opened PR #${prNumber}: ${prUrl}`);
+      } else {
+        core?.warning?.(
+          `Pull request creation succeeded but response did not contain a valid PR number.`,
+        );
+      }
     }
 
-    if (prNumber && github?.rest?.issues?.addLabels) {
+    if (prNumber && typeof github?.rest?.issues?.addLabels === "function") {
       try {
         await github.rest.issues.addLabels({
           owner,

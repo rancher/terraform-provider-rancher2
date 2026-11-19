@@ -694,6 +694,361 @@ test("runBackportIssues - throws on invalid PR number", async () => {
   );
 });
 
+test("runBackportIssues - creates backport issue from parent issue text when PR env is empty or omitted", async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: "",
+      TERRAFORM_MAINTAINERS: '["testmaintainer"]',
+    },
+  };
+
+  let createdIssueParams = null;
+  let subIssueLinkedParams = null;
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        create: async (params) => {
+          createdIssueParams = params;
+          return {
+            data: {
+              id: 8888,
+              number: 502,
+            },
+          };
+        },
+      },
+    },
+    request: async (endpoint, params) => {
+      if (
+        endpoint ===
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+      ) {
+        return { data: [] };
+      }
+      if (
+        endpoint ===
+        "POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+      ) {
+        subIssueLinkedParams = params;
+        return { data: { success: true } };
+      }
+      return { data: {} };
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    payload: {
+      label: { name: "release/v15" },
+      issue: {
+        number: 500,
+        title: "Cluster creation fails with timeout",
+        body: "Detailed reproduction steps for timeout bug",
+      },
+    },
+  };
+
+  await runBackportIssues({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.ok(createdIssueParams);
+  assert.strictEqual(
+    createdIssueParams.title,
+    "[release/v15] Cluster creation fails with timeout",
+  );
+  assert.ok(
+    createdIssueParams.body.includes("Backport to release/v15 for #500"),
+  );
+  assert.ok(
+    createdIssueParams.body.includes(
+      "Copied from #500:\n\nDetailed reproduction steps for timeout bug",
+    ),
+  );
+  assert.deepStrictEqual(createdIssueParams.labels, [
+    "release/v15",
+    "internal/backport",
+  ]);
+  assert.strictEqual(subIssueLinkedParams.issue_number, 500);
+  assert.strictEqual(subIssueLinkedParams.sub_issue_id, 8888);
+});
+
+test("runBackportIssues - fetches parent issue body via API when parent body is undefined and PR is omitted", async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      RELEASE_LABEL: "release/v16",
+      ISSUE_NUMBER: "700",
+      TERRAFORM_MAINTAINERS: '["testmaintainer"]',
+    },
+  };
+
+  let createdIssueParams = null;
+  let subIssueLinkedParams = null;
+  let issueGetCallCount = 0;
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          issueGetCallCount++;
+          assert.strictEqual(issue_number, 700);
+          return {
+            data: {
+              number: 700,
+              title: "OIDC import fails",
+              body: "API-fetched body describing OIDC failure",
+            },
+          };
+        },
+        create: async (params) => {
+          createdIssueParams = params;
+          return {
+            data: {
+              id: 9991,
+              number: 701,
+            },
+          };
+        },
+      },
+    },
+    request: async (endpoint, params) => {
+      if (
+        endpoint ===
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+      ) {
+        return { data: [] };
+      }
+      if (
+        endpoint ===
+        "POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+      ) {
+        subIssueLinkedParams = params;
+        return { data: { success: true } };
+      }
+      return { data: {} };
+    },
+  };
+
+  await runBackportIssues({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: {},
+    },
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(issueGetCallCount, 1);
+  assert.ok(createdIssueParams);
+  assert.strictEqual(
+    createdIssueParams.title,
+    "[release/v16] OIDC import fails",
+  );
+  assert.ok(
+    createdIssueParams.body.includes("Backport to release/v16 for #700"),
+  );
+  assert.ok(
+    createdIssueParams.body.includes(
+      "Copied from #700:\n\nAPI-fetched body describing OIDC failure",
+    ),
+  );
+  assert.deepStrictEqual(createdIssueParams.labels, [
+    "release/v16",
+    "internal/backport",
+  ]);
+  assert.strictEqual(subIssueLinkedParams.issue_number, 700);
+  assert.strictEqual(subIssueLinkedParams.sub_issue_id, 9991);
+});
+
+test("runBackportIssues - consolidates parent issue fetch to single call when payload issue lacks body", async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      TERRAFORM_MAINTAINERS: '["testmaintainer"]',
+    },
+  };
+
+  let createdIssueParams = null;
+  let subIssueLinkedParams = null;
+  let issueGetCallCount = 0;
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          issueGetCallCount++;
+          assert.strictEqual(issue_number, 705);
+          return {
+            data: {
+              number: 705,
+              title: "Payload issue with title but no body",
+              body: "Fetched body from single API call",
+            },
+          };
+        },
+        create: async (params) => {
+          createdIssueParams = params;
+          return {
+            data: {
+              id: 9992,
+              number: 706,
+            },
+          };
+        },
+      },
+    },
+    request: async (endpoint, params) => {
+      if (
+        endpoint ===
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+      ) {
+        return { data: [] };
+      }
+      if (
+        endpoint ===
+        "POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+      ) {
+        subIssueLinkedParams = params;
+        return { data: { success: true } };
+      }
+      return { data: {} };
+    },
+  };
+
+  await runBackportIssues({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: {
+        label: { name: "release/v15" },
+        issue: {
+          number: 705,
+          title: "Payload issue with title but no body",
+          // body is undefined
+        },
+      },
+    },
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(issueGetCallCount, 1);
+  assert.ok(createdIssueParams);
+  assert.strictEqual(
+    createdIssueParams.title,
+    "[release/v15] Payload issue with title but no body",
+  );
+  assert.ok(
+    createdIssueParams.body.includes(
+      "Copied from #705:\n\nFetched body from single API call",
+    ),
+  );
+  assert.strictEqual(subIssueLinkedParams.issue_number, 705);
+  assert.strictEqual(subIssueLinkedParams.sub_issue_id, 9992);
+});
+
+test("runBackportIssues - uses placeholder description when parent issue body is empty or whitespace-only", async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: "",
+      TERRAFORM_MAINTAINERS: '["testmaintainer"]',
+    },
+  };
+
+  let createdIssueParams = null;
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async () => ({
+          data: {
+            number: 708,
+            title: "Issue with empty body",
+            body: "   ",
+          },
+        }),
+        create: async (params) => {
+          createdIssueParams = params;
+          return {
+            data: {
+              id: 9995,
+              number: 709,
+            },
+          };
+        },
+      },
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes("/sub_issues")) {
+        return { data: [] };
+      }
+      return { data: {} };
+    },
+  };
+
+  await runBackportIssues({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: {
+        label: { name: "release/v15" },
+        issue: {
+          number: 708,
+          title: "Issue with empty body",
+          body: "",
+        },
+      },
+    },
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.ok(createdIssueParams);
+  assert.ok(
+    createdIssueParams.body.includes(
+      "Copied from #708:\n\n(No description provided)",
+    ),
+  );
+});
+
+test("runBackportIssues - rejects when parent issue number is null or undefined", async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      TERRAFORM_MAINTAINERS: '["testmaintainer"]',
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runBackportIssues({
+        github: {},
+        context: {
+          repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          payload: {
+            label: { name: "release/v15" },
+            issue: {
+              number: null,
+              title: "Null issue number",
+            },
+          },
+        },
+        core: mockCore,
+        process: mockProcess,
+      });
+    },
+    { message: /Invalid issue number: null/ },
+  );
+});
+
 test("runBackportIssues - handles workflow_dispatch inputs via env and fetches parent issue", async () => {
   const mockCore = createMockCore();
   const mockProcess = {
@@ -1008,6 +1363,80 @@ test('runBackportIssues - sanitizes leading "#" from ISSUE_NUMBER and PR env inp
     createdIssueParams.title,
     "[release/v15] Parent Issue With Hash",
   );
+});
+
+test('runBackportIssues - sanitizes leading "#" from context.payload.issue.number', async () => {
+  const mockCore = createMockCore();
+  const mockProcess = {
+    env: {
+      PR: "52",
+      RELEASE_LABEL: "release/v16",
+    },
+  };
+
+  let createdIssueParams = null;
+  let linkedParentIssueNumber = null;
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 52) {
+            return {
+              data: { number: 52, title: "PR Title", body: "PR Body" },
+            };
+          }
+          throw new Error(`Unexpected issue number: ${issue_number}`);
+        },
+        create: async (params) => {
+          createdIssueParams = params;
+          return { data: { id: 9999, number: 606 } };
+        },
+      },
+    },
+    request: async (endpoint, params) => {
+      if (
+        endpoint ===
+        "GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+      ) {
+        return { data: [] };
+      }
+      if (
+        endpoint ===
+        "POST /repos/{owner}/{repo}/issues/{issue_number}/sub_issues"
+      ) {
+        linkedParentIssueNumber = params.issue_number;
+        return { status: 201 };
+      }
+      throw new Error(`Unexpected endpoint: ${endpoint}`);
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    payload: {
+      issue: {
+        number: "#500",
+        title: "Parent Issue With Hash Prefix",
+        body: "Reproduction steps",
+      },
+    },
+  };
+
+  await runBackportIssues({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: mockProcess,
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(linkedParentIssueNumber, 500);
+  assert.strictEqual(
+    createdIssueParams.title,
+    "[release/v16] Parent Issue With Hash Prefix",
+  );
+  assert.ok(createdIssueParams.body.includes("for #500"));
 });
 
 test("trackingRegex in backport-issues - accurately extracts PR number from hidden comment header", () => {
