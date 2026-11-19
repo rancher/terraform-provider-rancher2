@@ -68,6 +68,12 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("RANCHER_TOKEN_KEY", providerDefaultEmptyString),
 				Description: descriptions["token_key"],
 			},
+			"token_command": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: descriptions["token_command"],
+			},
 			"ca_certs": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -186,15 +192,16 @@ func Provider() terraform.ResourceProvider {
 
 func init() {
 	descriptions = map[string]string{
-		"access_key": "API Key used to authenticate with the rancher server",
-		"secret_key": "API secret used to authenticate with the rancher server",
-		"token_key":  "API token used to authenticate with the rancher server",
-		"ca_certs":   "CA certificates used to sign rancher server tls certificates. Mandatory if self signed tls and insecure option false",
-		"insecure":   "Allow insecure connections to Rancher. Mandatory if self signed tls and not ca_certs provided",
-		"api_url":    "The URL to the rancher API",
-		"bootstrap":  "Bootstrap rancher server",
-		"retries":    "Rancher connection retries",
-		"timeout":    "Rancher connection timeout (retry every 5s). Golang duration format, ex: \"60s\"",
+		"access_key":    "API Key used to authenticate with the rancher server",
+		"secret_key":    "API secret used to authenticate with the rancher server",
+		"token_key":     "API token used to authenticate with the rancher server",
+		"token_command": "Command (program and arguments) that prints a Rancher API token, either raw or as a Kubernetes ExecCredential JSON, ex: [\"rancher\", \"token\", ...]. Used when token_key nor access_key and secret_key are provided",
+		"ca_certs":      "CA certificates used to sign rancher server tls certificates. Mandatory if self signed tls and insecure option false",
+		"insecure":      "Allow insecure connections to Rancher. Mandatory if self signed tls and not ca_certs provided",
+		"api_url":       "The URL to the rancher API",
+		"bootstrap":     "Bootstrap rancher server",
+		"retries":       "Rancher connection retries",
+		"timeout":       "Rancher connection timeout (retry every 5s). Golang duration format, ex: \"60s\"",
 	}
 }
 
@@ -215,6 +222,22 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	// Set tokenKey based on accessKey and secretKey if needed
 	if tokenKey == providerDefaultEmptyString && accessKey != providerDefaultEmptyString && secretKey != providerDefaultEmptyString {
 		tokenKey = accessKey + ":" + secretKey
+	}
+
+	// Get the token from an external command (e.g. a cached SSO login) when no
+	// static credentials are given. A partial access_key/secret_key pair is
+	// left to fail validation instead of silently falling back.
+	if tokenKey == providerDefaultEmptyString && accessKey == providerDefaultEmptyString && secretKey == providerDefaultEmptyString && !bootstrap {
+		if raw, ok := d.GetOk("token_command"); ok {
+			command := make([]string, 0, len(raw.([]interface{})))
+			for _, arg := range raw.([]interface{}) {
+				command = append(command, arg.(string))
+			}
+			tokenKey, err = runTokenCommand(command, tokenCommandTimeout)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	config := &Config{

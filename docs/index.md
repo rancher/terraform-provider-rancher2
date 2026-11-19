@@ -24,6 +24,15 @@ provider "rancher2" {
 ```
 
 ```hcl
+# Configure the Rancher2 provider to get its token from a command,
+# e.g. the Rancher CLI with a cached browser (SAML) login
+provider "rancher2" {
+  api_url       = "https://rancher.example.com"
+  token_command = ["rancher", "token", "--server", "https://rancher.example.com", "--user", "me", "--auth-provider", "keyCloakProvider"]
+}
+```
+
+```hcl
 # Configure the Rancher2 provider to bootstrap
 provider "rancher2" {
   api_url   = "https://rancher.my-domain.com"
@@ -75,11 +84,27 @@ The following arguments are supported:
 - `access_key` - (Optional/Sensitive) Rancher API access key to connect to rancher. It can also be sourced from the `RANCHER_ACCESS_KEY` environment variable.
 - `secret_key` - (Optional/Sensitive) Rancher API secret key to connect to rancher. It can also be sourced from the `RANCHER_SECRET_KEY` environment variable.
 - `token_key` - (Optional/Sensitive) Rancher API token key to connect to rancher. It can also be sourced from the `RANCHER_TOKEN_KEY` environment variable. Could be used instead `access_key` and `secret_key`.
+- `token_command` - (Optional) Command, as a list of the program and its arguments, that prints a Rancher API token on stdout. The output can be a raw token or a Kubernetes `ExecCredential` JSON, as printed by `rancher token`, in which case `status.token` is used. Only used when neither `token_key` nor `access_key` and `secret_key` are provided, and ignored in bootstrap mode. See [Token from a command](#token-from-a-command).
 - `ca_certs` - CA certificates used to sign Rancher server tls certificates. Mandatory if self signed tls and insecure option false. It can also be sourced from the `RANCHER_CA_CERTS` environment variable.
 - `insecure` - (Optional) Allow insecure connection to Rancher. Mandatory if self signed tls and not ca_certs provided. It can also be sourced from the `RANCHER_INSECURE` environment variable.
 - `bootstrap` - (Optional) Enable bootstrap mode to manage `rancher2_bootstrap` resource. It can also be sourced from the `RANCHER_BOOTSTRAP` environment variable. Default: `false`
 - `retries` - (Deprecated) Use timeout instead
 - `timeout` - (Optional) Timeout duration to retry for Rancher connectivity and resource operations. Default: `"120s"`
+
+## Token from a command
+
+`token_command` lets the provider get a token from an external tool instead of a static `token_key`, similar to AWS `credential_process`. A typical use is the Rancher CLI, which can log in through the browser for SAML auth providers and caches the resulting token:
+
+```bash
+# Log in once in a terminal; this opens a browser login and caches the token
+rancher token --server https://rancher.example.com --user me --auth-provider keyCloakProvider
+```
+
+Afterwards every `terraform plan`/`apply` runs the same command, gets the cached token and needs no browser until it expires.
+
+- The command is run without a terminal and is stopped after 60 seconds, so it can't complete an interactive login itself. Log in once in a terminal first, as shown above.
+- The token's lifetime is controlled by the tool and by Rancher (for the Rancher CLI, the `kubeconfig-default-token-ttl-minutes` setting).
+- Tools that cache tokens store them on disk (the Rancher CLI uses `~/.rancher`). Protect that directory accordingly.
 
 ## Security and Sensitive State
 
