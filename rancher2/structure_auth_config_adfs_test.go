@@ -18,6 +18,7 @@ func init() {
 	testAuthConfigADFSConf = &managementClient.ADFSConfig{
 		Name:                AuthConfigADFSName,
 		Type:                managementClient.ADFSConfigType,
+		LogoutAllSupported:  true,
 		AccessMode:          "access",
 		AllowedPrincipalIDs: []string{"allowed1", "allowed2"},
 		Enabled:             true,

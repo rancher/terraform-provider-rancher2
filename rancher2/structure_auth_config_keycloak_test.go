@@ -17,6 +17,7 @@ func init() {
 	testAuthConfigKeyCloakConf = &managementClient.KeyCloakConfig{
 		Name:                AuthConfigKeyCloakName,
 		Type:                managementClient.KeyCloakConfigType,
+		LogoutAllSupported:  true,
 		AccessMode:          "access",
 		AllowedPrincipalIDs: []string{"allowed1", "allowed2"},
 		Enabled:             true,

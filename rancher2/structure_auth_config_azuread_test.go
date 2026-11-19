@@ -18,6 +18,7 @@ func init() {
 	testAuthConfigAzureADConf = &managementClient.AzureADConfig{
 		Name:                  AuthConfigAzureADName,
 		Type:                  managementClient.AzureADConfigType,
+		LogoutAllSupported:    true,
 		AccessMode:            "access",
 		AllowedPrincipalIDs:   []string{"allowed1", "allowed2"},
 		Enabled:               true,

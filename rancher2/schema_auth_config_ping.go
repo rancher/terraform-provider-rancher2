@@ -1,6 +1,8 @@
 package rancher2
 
 import (
+	"maps"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -53,10 +55,7 @@ func authConfigPingFields() map[string]*schema.Schema {
 			Optional: true,
 		},
 	}
-
-	for k, v := range authConfigFields() {
-		s[k] = v
-	}
+	maps.Copy(s, authConfigFields(AuthConfigPingName))
 
 	return s
 }

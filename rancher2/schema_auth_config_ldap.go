@@ -1,13 +1,15 @@
 package rancher2
 
 import (
+	"maps"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 //Schemas
 
-func authConfigLdapFields() map[string]*schema.Schema {
+func authConfigLdapFields(defaultName string) map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"servers": {
 			Type:     schema.TypeList,
@@ -154,9 +156,7 @@ func authConfigLdapFields() map[string]*schema.Schema {
 		},
 	}
 
-	for k, v := range authConfigFields() {
-		s[k] = v
-	}
+	maps.Copy(s, authConfigFields(defaultName))
 
 	return s
 }

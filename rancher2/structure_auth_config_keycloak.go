@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigKeyCloak(d *schema.ResourceData, in *managementClient.KeyCloakConfig) error {
-	d.SetId(AuthConfigKeyCloakName)
-	d.Set("name", AuthConfigKeyCloakName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.KeyCloakConfigType)
 	d.Set("access_mode", in.AccessMode)
 
@@ -21,6 +21,7 @@ func flattenAuthConfigKeyCloak(d *schema.ResourceData, in *managementClient.KeyC
 	}
 
 	d.Set("enabled", in.Enabled)
+	d.Set("display_name", in.DisplayName)
 
 	err = d.Set("annotations", toMapInterface(in.Annotations))
 	if err != nil {
@@ -51,8 +52,10 @@ func expandAuthConfigKeyCloak(in *schema.ResourceData) (*managementClient.KeyClo
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigKeyCloakName)
 	}
 
-	obj.Name = AuthConfigKeyCloakName
+	obj.Name = expandAuthConfigName(in, AuthConfigKeyCloakName)
 	obj.Type = managementClient.KeyCloakConfigType
+	// Logout All is a capability of the provider, not a user setting, so it is always set.
+	obj.LogoutAllSupported = true
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
 		obj.AccessMode = v
@@ -76,6 +79,10 @@ func expandAuthConfigKeyCloak(in *schema.ResourceData) (*managementClient.KeyClo
 
 	if v, ok := in.Get("labels").(map[string]interface{}); ok && len(v) > 0 {
 		obj.Labels = toMapString(v)
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		obj.DisplayName = v
 	}
 
 	if v, ok := in.Get("display_name_field").(string); ok && len(v) > 0 {

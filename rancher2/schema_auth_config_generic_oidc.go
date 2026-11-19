@@ -13,11 +13,11 @@ const AuthConfigGenericOIDCName = "genericoidc"
 //Schemas
 
 func authConfigGenericOIDCFields() map[string]*schema.Schema {
-	return oidcSchemaFields()
+	return oidcSchemaFields(AuthConfigGenericOIDCName)
 }
 
 // This is used by the Cognito and Generic OIDC providers.
-func oidcSchemaFields() map[string]*schema.Schema {
+func oidcSchemaFields(defaultName string) map[string]*schema.Schema {
 	s := map[string]*schema.Schema{
 		"client_id": {
 			Type:        schema.TypeString,
@@ -134,7 +134,7 @@ func oidcSchemaFields() map[string]*schema.Schema {
 		},
 	}
 
-	maps.Copy(s, authConfigFields())
+	maps.Copy(s, authConfigFields(defaultName))
 
 	return s
 }

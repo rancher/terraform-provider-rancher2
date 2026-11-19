@@ -9,7 +9,7 @@ const AuthConfigCognitoName = "cognito"
 //Schemas
 
 func authConfigCognitoFields() map[string]*schema.Schema {
-	fields := oidcSchemaFields()
+	fields := oidcSchemaFields(AuthConfigCognitoName)
 
 	fields["name_claim"].Default = "cognito:username"
 

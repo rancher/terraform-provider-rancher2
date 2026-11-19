@@ -10,8 +10,8 @@ import (
 // Flatteners
 
 func flattenAuthConfigGithubApp(d *schema.ResourceData, in *managementClient.GithubAppConfig) error {
-	d.SetId(AuthConfigGithubAppName)
-	d.Set("name", AuthConfigGithubAppName)
+	d.SetId(in.Name)
+	d.Set("name", in.Name)
 	d.Set("type", managementClient.GithubAppConfigType)
 	d.Set("access_mode", in.AccessMode)
 
@@ -37,6 +37,7 @@ func flattenAuthConfigGithubApp(d *schema.ResourceData, in *managementClient.Git
 	d.Set("app_id", in.AppID)
 	d.Set("installation_id", in.InstallationID)
 	d.Set("private_key", in.PrivateKey)
+	d.Set("display_name", in.DisplayName)
 
 	return nil
 }
@@ -49,7 +50,8 @@ func expandAuthConfigGithubApp(in *schema.ResourceData) (*managementClient.Githu
 		return nil, fmt.Errorf("expanding %s Auth Config: Input ResourceData is nil", AuthConfigGithubAppName)
 	}
 
-	obj.Name = AuthConfigGithubAppName
+	obj.Name = expandAuthConfigName(in, AuthConfigGithubAppName)
+
 	obj.Type = managementClient.GithubAppConfigType
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
@@ -61,7 +63,7 @@ func expandAuthConfigGithubApp(in *schema.ResourceData) (*managementClient.Githu
 	}
 
 	if (obj.AccessMode == "required" || obj.AccessMode == "restricted") && len(obj.AllowedPrincipalIDs) == 0 {
-		return nil, fmt.Errorf("expanding %s Auth Config: allowed_principal_ids is required on access_mode %s", AuthConfigGithubAppName, obj.AccessMode)
+		return nil, fmt.Errorf("expanding %s Auth Config: allowed_principal_ids is required on access_mode %s", obj.Name, obj.AccessMode)
 	}
 
 	if v, ok := in.Get("enabled").(bool); ok {
@@ -102,6 +104,10 @@ func expandAuthConfigGithubApp(in *schema.ResourceData) (*managementClient.Githu
 
 	if v, ok := in.Get("private_key").(string); ok && v != "" {
 		obj.PrivateKey = v
+	}
+
+	if v, ok := in.Get("display_name").(string); ok {
+		obj.DisplayName = v
 	}
 
 	return obj, nil

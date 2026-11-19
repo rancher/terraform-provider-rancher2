@@ -18,6 +18,7 @@ func init() {
 	testAuthConfigPingConf = &managementClient.PingConfig{
 		Name:                AuthConfigPingName,
 		Type:                managementClient.PingConfigType,
+		LogoutAllSupported:  true,
 		AccessMode:          "access",
 		AllowedPrincipalIDs: []string{"allowed1", "allowed2"},
 		Enabled:             true,

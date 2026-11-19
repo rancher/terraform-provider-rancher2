@@ -54,3 +54,102 @@ func TestFindUserByPrincipalID(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthConfigUpdateBody(t *testing.T) {
+	t.Run("without keepEmpty returns the object unchanged", func(t *testing.T) {
+		obj := &managementClient.GithubConfig{Name: "github"}
+
+		body, err := authConfigUpdateBody(obj)
+
+		assert.NoError(t, err)
+		assert.Same(t, obj, body)
+	})
+
+	t.Run("sends empty keepEmpty fields", func(t *testing.T) {
+		obj := &managementClient.GithubConfig{Name: "github", ClientID: "client-id"}
+
+		body, err := authConfigUpdateBody(obj, managementClient.AuthConfigFieldDisplayName)
+
+		assert.NoError(t, err)
+		assert.Equal(t, map[string]interface{}{
+			"name":        "github",
+			"clientId":    "client-id",
+			"displayName": "",
+		}, body)
+	})
+
+	t.Run("keeps set keepEmpty fields", func(t *testing.T) {
+		obj := &managementClient.GithubConfig{Name: "github", DisplayName: "Login via GitHub"}
+
+		body, err := authConfigUpdateBody(obj, managementClient.AuthConfigFieldDisplayName)
+
+		assert.NoError(t, err)
+		assert.Equal(t, "Login via GitHub", body.(map[string]interface{})["displayName"])
+	})
+}
+
+func TestCheckAuthConfigType(t *testing.T) {
+	existing := &managementClient.AuthConfig{Name: "github", Type: managementClient.GithubConfigType}
+
+	t.Run("same type", func(t *testing.T) {
+		obj := &managementClient.GithubConfig{Name: "github", Type: managementClient.GithubConfigType}
+
+		assert.NoError(t, checkAuthConfigType("github", existing, obj))
+	})
+
+	t.Run("different type", func(t *testing.T) {
+		obj := &managementClient.GithubAppConfig{Name: "github", Type: managementClient.GithubAppConfigType}
+
+		err := checkAuthConfigType("github", existing, obj)
+
+		assert.EqualError(t, err, "Auth Config github already exists with type githubConfig, not githubAppConfig")
+	})
+
+	t.Run("missing type", func(t *testing.T) {
+		obj := &managementClient.GithubConfig{Name: "github"}
+
+		err := checkAuthConfigType("github", existing, obj)
+
+		assert.EqualError(t, err, "Auth Config github has no type")
+	})
+}
+
+func TestCheckAuthConfigCanBeEnabledSkipsDisabled(t *testing.T) {
+	// A disabled AuthConfig never needs the management client.
+	obj := &managementClient.OKTAConfig{Name: "okta", Type: managementClient.OKTAConfigType}
+
+	assert.NoError(t, (&Config{}).CheckAuthConfigCanBeEnabled("okta", obj))
+}
+
+func TestAuthConfigCreateBody(t *testing.T) {
+	t.Run("adds the cleanup annotation", func(t *testing.T) {
+		obj := &managementClient.OKTAConfig{Name: "okta", Type: managementClient.OKTAConfigType}
+
+		body, err := authConfigCreateBody(obj)
+
+		assert.NoError(t, err)
+		assert.Equal(t, map[string]interface{}{
+			"name": "okta",
+			"type": managementClient.OKTAConfigType,
+			"annotations": map[string]interface{}{
+				"management.cattle.io/auth-provider-cleanup": "rancher-locked",
+			},
+		}, body)
+	})
+
+	t.Run("keeps existing annotations", func(t *testing.T) {
+		obj := &managementClient.OKTAConfig{
+			Name:        "okta",
+			Type:        managementClient.OKTAConfigType,
+			Annotations: map[string]string{"example.com/owner": "team-a"},
+		}
+
+		body, err := authConfigCreateBody(obj)
+
+		assert.NoError(t, err)
+		assert.Equal(t, map[string]interface{}{
+			"example.com/owner":                          "team-a",
+			"management.cattle.io/auth-provider-cleanup": "rancher-locked",
+		}, body["annotations"])
+	})
+}
