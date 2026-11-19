@@ -53,6 +53,8 @@ func expandAuthConfigADFS(in *schema.ResourceData) (*managementClient.ADFSConfig
 
 	obj.Name = expandAuthConfigName(in, AuthConfigADFSName)
 	obj.Type = managementClient.ADFSConfigType
+	// Logout All is a capability of the provider, not a user setting, so it is always set.
+	obj.LogoutAllSupported = true
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
 		obj.AccessMode = v

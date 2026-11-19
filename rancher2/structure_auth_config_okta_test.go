@@ -17,6 +17,7 @@ func init() {
 	testAuthConfigOKTAConf = &managementClient.OKTAConfig{
 		Name:                AuthConfigOKTAName,
 		Type:                managementClient.OKTAConfigType,
+		LogoutAllSupported:  true,
 		AccessMode:          "access",
 		AllowedPrincipalIDs: []string{"allowed1", "allowed2"},
 		Enabled:             true,

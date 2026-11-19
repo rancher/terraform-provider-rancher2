@@ -54,6 +54,8 @@ func expandAuthConfigKeyCloak(in *schema.ResourceData) (*managementClient.KeyClo
 
 	obj.Name = expandAuthConfigName(in, AuthConfigKeyCloakName)
 	obj.Type = managementClient.KeyCloakConfigType
+	// Logout All is a capability of the provider, not a user setting, so it is always set.
+	obj.LogoutAllSupported = true
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
 		obj.AccessMode = v

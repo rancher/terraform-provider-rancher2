@@ -207,6 +207,9 @@ func expandOIDCConfig[T *Q, Q any](in *schema.ResourceData, obj T) (T, error) {
 		objData["EndSessionEndpoint"] = v
 	}
 
+	// Logout All is a capability of OIDC providers, not a user setting, so it is always set.
+	objData["LogoutAllSupported"] = true
+
 	if v, ok := in.GetOkExists("pkce_method"); ok {
 		if pkceMethod, ok := v.(string); ok {
 			objData["PKCEMethod"] = pkceMethod

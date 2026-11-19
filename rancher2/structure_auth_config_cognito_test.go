@@ -37,6 +37,7 @@ func init() {
 		NameClaim:           "preferred_username",
 		EmailClaim:          "alt_email",
 		LogoutAllEnabled:    true,
+		LogoutAllSupported:  true,
 		LogoutAllForced:     true,
 		EndSessionEndpoint:  "https://example.com/end-session",
 		PKCEMethod:          "S256",

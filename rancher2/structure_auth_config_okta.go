@@ -53,6 +53,8 @@ func expandAuthConfigOKTA(in *schema.ResourceData) (*managementClient.OKTAConfig
 
 	obj.Name = expandAuthConfigName(in, AuthConfigOKTAName)
 	obj.Type = managementClient.OKTAConfigType
+	// Logout All is a capability of the provider, not a user setting, so it is always set.
+	obj.LogoutAllSupported = true
 
 	if v, ok := in.Get("access_mode").(string); ok && len(v) > 0 {
 		obj.AccessMode = v
