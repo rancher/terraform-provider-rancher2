@@ -101,15 +101,15 @@ test("extractChangesPath", async (t) => {
 test("isAuthorExcluded", async (t) => {
   await t.test("matches author case-insensitively", () => {
     assert.strictEqual(
-      isAuthorExcluded("matt-trachier", ["Matt-Trachier"]),
+      isAuthorExcluded("excluded-user", ["Excluded-User"]),
       true,
     );
     assert.strictEqual(
-      isAuthorExcluded("Matt-Trachier", ["matt-trachier", "other"]),
+      isAuthorExcluded("Excluded-User", ["excluded-user", "other"]),
       true,
     );
     assert.strictEqual(
-      isAuthorExcluded("contributor", ["matt-trachier"]),
+      isAuthorExcluded("contributor", ["excluded-user"]),
       false,
     );
   });

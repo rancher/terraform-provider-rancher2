@@ -6,6 +6,9 @@ import defaultHandler, {
   runE2EStatus,
   runFilterPr,
   shouldRunE2E,
+  runFindCompletedE2eRuns,
+  runExecuteCleanup,
+  resolveCleanupIdentifiers,
 } from "./e2e.js";
 
 test("shouldRunE2E - rejects automated backport PR from github-actions[bot]", () => {
@@ -2253,4 +2256,383 @@ test("runFilterPr - safely skips E2E tests for merge_group event and sets should
   assert.strictEqual(outputs["sha"], "mergegroupsha999");
   assert.strictEqual(outputs["is_fork"], "false");
   assert.match(loggedInfo, /Triggered by merge_group event/);
+});
+
+test("runFindCompletedE2eRuns - returns explicit run_id when EXPLICIT_RUN_ID is provided", async () => {
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    setOutput: (k, v) => {
+      outputs[k] = v;
+    },
+  };
+
+  const result = await runFindCompletedE2eRuns({
+    github: {},
+    context: {},
+    core: mockCore,
+    process: { env: { EXPLICIT_RUN_ID: "12345" } },
+  });
+
+  assert.deepStrictEqual(result, { runIds: [12345], count: 1 });
+  assert.strictEqual(outputs.run_ids, JSON.stringify([12345]));
+  assert.strictEqual(outputs.count, "1");
+});
+
+test("runFindCompletedE2eRuns - throws when EXPLICIT_RUN_ID is not a positive integer", async () => {
+  await assert.rejects(
+    async () => {
+      await runFindCompletedE2eRuns({
+        github: {},
+        context: {},
+        core: { info: () => {}, setOutput: () => {} },
+        process: { env: { EXPLICIT_RUN_ID: "123abc" } },
+      });
+    },
+    {
+      message:
+        /Invalid explicit E2E run ID "123abc". Must be a positive integer./,
+    },
+  );
+
+  await assert.rejects(
+    async () => {
+      await runFindCompletedE2eRuns({
+        github: {},
+        context: {},
+        core: { info: () => {}, setOutput: () => {} },
+        process: { env: { EXPLICIT_RUN_ID: "0" } },
+      });
+    },
+    {
+      message: /Invalid explicit E2E run ID "0". Must be a positive integer./,
+    },
+  );
+});
+
+test("runFindCompletedE2eRuns - throws error when SINCE timestamp format is invalid", async () => {
+  await assert.rejects(
+    async () => {
+      await runFindCompletedE2eRuns({
+        github: {},
+        context: {},
+        core: { info: () => {}, warning: () => {}, setOutput: () => {} },
+        process: { env: { SINCE: "invalid-iso-date" } },
+      });
+    },
+    {
+      message:
+        /Invalid 'since' timestamp format: "invalid-iso-date"\. Expected a valid ISO 8601 date string\./,
+    },
+  );
+});
+
+test("runFindCompletedE2eRuns - finds completed e2e runs since previous cleanup run", async () => {
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setOutput: (k, v) => {
+      outputs[k] = v;
+    },
+  };
+
+  const mockGithub = {
+    rest: {
+      actions: {
+        listWorkflowRuns: async ({ workflow_id }) => {
+          if (workflow_id === "cleanup-e2e.yml") {
+            return {
+              data: {
+                workflow_runs: [
+                  {
+                    id: 900,
+                    conclusion: "success",
+                    created_at: "2026-11-17T12:00:00Z",
+                  },
+                ],
+              },
+            };
+          }
+          if (workflow_id === "e2e.yml") {
+            return {
+              data: {
+                workflow_runs: [
+                  {
+                    id: 101,
+                    status: "completed",
+                    conclusion: "failure",
+                    updated_at: "2026-11-17T14:00:00Z",
+                  },
+                  {
+                    id: 102,
+                    status: "completed",
+                    conclusion: "cancelled",
+                    updated_at: "2026-11-17T13:00:00Z",
+                  },
+                  {
+                    id: 103,
+                    status: "completed",
+                    conclusion: "success",
+                    updated_at: "2026-11-17T10:00:00Z",
+                  },
+                  {
+                    id: 104,
+                    status: "in_progress",
+                    conclusion: null,
+                    updated_at: "2026-11-17T15:00:00Z",
+                  },
+                ],
+              },
+            };
+          }
+          return { data: { workflow_runs: [] } };
+        },
+      },
+    },
+  };
+
+  const result = await runFindCompletedE2eRuns({
+    github: mockGithub,
+    context: { runId: 999 },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result.runIds, [101, 102]);
+  assert.strictEqual(result.count, 2);
+  assert.strictEqual(outputs.run_ids, JSON.stringify([101, 102]));
+  assert.strictEqual(outputs.count, "2");
+});
+
+test("runFindCompletedE2eRuns - defaults to 24h window when no previous cleanup run exists", async () => {
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setOutput: (k, v) => {
+      outputs[k] = v;
+    },
+  };
+
+  const now = new Date();
+  const twoHoursAgo = new Date(
+    now.getTime() - 2 * 60 * 60 * 1000,
+  ).toISOString();
+  const twoDaysAgo = new Date(
+    now.getTime() - 48 * 60 * 60 * 1000,
+  ).toISOString();
+
+  const mockGithub = {
+    rest: {
+      actions: {
+        listWorkflowRuns: async ({ workflow_id }) => {
+          if (workflow_id === "cleanup-e2e.yml") {
+            return { data: { workflow_runs: [] } };
+          }
+          if (workflow_id === "e2e.yml") {
+            return {
+              data: {
+                workflow_runs: [
+                  { id: 201, status: "completed", updated_at: twoHoursAgo },
+                  { id: 202, status: "completed", updated_at: twoDaysAgo },
+                ],
+              },
+            };
+          }
+          return { data: { workflow_runs: [] } };
+        },
+      },
+    },
+  };
+
+  const result = await runFindCompletedE2eRuns({
+    github: mockGithub,
+    context: {},
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result.runIds, [201]);
+  assert.strictEqual(result.count, 1);
+});
+
+test("resolveCleanupIdentifiers - expands bare run ID to include all matrix test suffixes", () => {
+  const ids = resolveCleanupIdentifiers("12345");
+  assert.deepStrictEqual(ids, [
+    "12345",
+    "12345-TestOneBasic",
+    "12345-TestThreeBasic",
+    "12345-TestProductionBasic",
+  ]);
+});
+
+test("resolveCleanupIdentifiers - preserves identifier that already has test suffix", () => {
+  const ids = resolveCleanupIdentifiers("12345-TestOneBasic");
+  assert.deepStrictEqual(ids, ["12345-TestOneBasic"]);
+});
+
+test("resolveCleanupIdentifiers - respects custom tests passed via JSON string", () => {
+  const ids = resolveCleanupIdentifiers(
+    "12345",
+    '["TestCustomA", "TestCustomB"]',
+  );
+  assert.deepStrictEqual(ids, [
+    "12345",
+    "12345-TestCustomA",
+    "12345-TestCustomB",
+  ]);
+});
+
+test("runFindCompletedE2eRuns - paginates through all e2e runs using paginate", async () => {
+  const outputs = {};
+  const mockCore = {
+    info: () => {},
+    warning: () => {},
+    setOutput: (k, v) => {
+      outputs[k] = v;
+    },
+  };
+
+  const mockGithub = {
+    paginate: async (method) => {
+      if (method === mockGithub.rest.actions.listWorkflowRuns) {
+        return [
+          {
+            id: 301,
+            status: "completed",
+            updated_at: "2026-11-17T15:00:00Z",
+          },
+          {
+            id: 302,
+            status: "completed",
+            updated_at: "2026-11-17T14:30:00Z",
+          },
+        ];
+      }
+      return [];
+    },
+    rest: {
+      actions: {
+        listWorkflowRuns: async () => ({
+          data: {
+            workflow_runs: [
+              {
+                id: 888,
+                conclusion: "success",
+                created_at: "2026-11-17T14:00:00Z",
+              },
+            ],
+          },
+        }),
+      },
+    },
+  };
+
+  const result = await runFindCompletedE2eRuns({
+    github: mockGithub,
+    context: { runId: 999 },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result.runIds, [301, 302]);
+  assert.strictEqual(outputs.count, "2");
+});
+
+test("runExecuteCleanup - throws when IDENTIFIER is missing or malformed", async () => {
+  await assert.rejects(
+    async () => {
+      await runExecuteCleanup({
+        core: {},
+        process: { env: {} },
+      });
+    },
+    { message: /Invalid or missing cleanup identifier/ },
+  );
+
+  await assert.rejects(
+    async () => {
+      await runExecuteCleanup({
+        core: {},
+        process: { env: { IDENTIFIER: 'run-123; rm -rf /; echo "evil"' } },
+      });
+    },
+    { message: /Invalid or missing cleanup identifier/ },
+  );
+});
+
+test("runExecuteCleanup - executes nix-run.sh with cleanup.sh for all target identifiers", async () => {
+  const commandsRun = [];
+  const mockRunCommand = async (file, args, opts) => {
+    commandsRun.push({ file, args, opts });
+    return { stdout: "Cleanup completed.\n", stderr: "" };
+  };
+
+  const mockCore = {
+    info: () => {},
+  };
+
+  const result = await runExecuteCleanup({
+    core: mockCore,
+    process: { env: { IDENTIFIER: "run-98765" } },
+    runCommand: mockRunCommand,
+  });
+
+  assert.deepStrictEqual(result, {
+    identifier: "run-98765",
+    targetIdentifiers: [
+      "run-98765",
+      "run-98765-TestOneBasic",
+      "run-98765-TestThreeBasic",
+      "run-98765-TestProductionBasic",
+    ],
+    success: true,
+  });
+  assert.strictEqual(commandsRun.length, 4);
+  assert.deepStrictEqual(commandsRun[0].args, ["./cleanup.sh", "run-98765"]);
+  assert.deepStrictEqual(commandsRun[1].args, [
+    "./cleanup.sh",
+    "run-98765-TestOneBasic",
+  ]);
+  assert.deepStrictEqual(commandsRun[2].args, [
+    "./cleanup.sh",
+    "run-98765-TestThreeBasic",
+  ]);
+  assert.deepStrictEqual(commandsRun[3].args, [
+    "./cleanup.sh",
+    "run-98765-TestProductionBasic",
+  ]);
+  assert.strictEqual(commandsRun[0].opts.env.AWS_MAX_ATTEMPTS, "100");
+  assert.strictEqual(commandsRun[0].opts.env.AWS_RETRY_MODE, "adaptive");
+});
+
+test("defaultHandler - routes find-completed-e2e-runs and execute-cleanup modes", async () => {
+  const mockCore = {
+    info: () => {},
+    setOutput: () => {},
+  };
+
+  const resultFind = await defaultHandler({
+    github: {},
+    context: {},
+    core: mockCore,
+    process: {
+      env: {
+        SCRIPT_MODE: "find-completed-e2e-runs",
+        EXPLICIT_RUN_ID: "555",
+      },
+    },
+  });
+  assert.deepStrictEqual(resultFind.runIds, [555]);
+
+  const mockRunCommand = async () => ({ stdout: "", stderr: "" });
+  const resultCleanup = await defaultHandler({
+    core: mockCore,
+    process: {
+      env: { SCRIPT_MODE: "execute-cleanup", IDENTIFIER: "555" },
+    },
+    runCommand: mockRunCommand,
+  });
+  assert.strictEqual(resultCleanup.success, true);
 });

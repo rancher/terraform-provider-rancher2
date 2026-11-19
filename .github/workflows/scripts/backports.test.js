@@ -4,6 +4,10 @@ import {
   runBackportIssues,
   runBackportPr,
   runMergeLabel,
+  runCloseTrackingIssue,
+  runReleaseDone,
+  transitionProjectItemsStatus,
+  updateIssueProjectStatus,
 } from "./backports.js";
 
 function createMockCore() {
@@ -588,13 +592,77 @@ test("runBackportIssues - creates sub-issue and handles quoted PR numbers", asyn
     "release/v15",
     "internal/backport",
   ]);
-  assert.deepStrictEqual(createdIssueParams.assignees, ["testmaintainer"]);
+  assert.strictEqual(createdIssueParams.assignees, undefined);
   assert.match(
     createdIssueParams.body,
     /Backport #47 to release\/v15 for #500/,
   );
   assert.strictEqual(subIssueLinkedParams.issue_number, 500);
   assert.strictEqual(subIssueLinkedParams.sub_issue_id, 9999);
+});
+
+test("runBackportIssues - creates backport issue without assignees", async () => {
+  const mockCore = createMockCore();
+  let createdIssueParams = null;
+
+  const mockGithub = {
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => {
+          if (issue_number === 500) {
+            return {
+              data: {
+                id: 100,
+                number: 500,
+                title: "Parent Tracking Issue",
+                pull_request: null,
+              },
+            };
+          }
+          if (issue_number === 47) {
+            return {
+              data: {
+                number: 47,
+                body: "PR body content",
+              },
+            };
+          }
+          throw new Error("Not found");
+        },
+        create: async (params) => {
+          createdIssueParams = params;
+          return { data: { id: 9999, number: 601 } };
+        },
+      },
+    },
+    request: async () => ({
+      data: {
+        id: 9999,
+        sub_issues_summary: { total: 0 },
+      },
+    }),
+  };
+
+  await runBackportIssues({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: {
+        label: { name: "release/v15" },
+        issue: { number: 500 },
+      },
+    },
+    core: mockCore,
+    process: {
+      env: {
+        PR: "47",
+        TERRAFORM_MAINTAINERS: '["maintainer1", "maintainer2"]',
+      },
+    },
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.strictEqual(createdIssueParams.assignees, undefined);
 });
 
 test("runBackportIssues - throws on invalid PR number", async () => {
@@ -713,7 +781,7 @@ test("runBackportIssues - handles workflow_dispatch inputs via env and fetches p
     "release/v15",
     "internal/backport",
   ]);
-  assert.deepStrictEqual(createdIssueParams.assignees, ["testmaintainer"]);
+  assert.strictEqual(createdIssueParams.assignees, undefined);
   assert.match(
     createdIssueParams.body,
     /Backport #48 to release\/v15 for #600/,
@@ -3398,4 +3466,1980 @@ test("runMergeLabel - posts progression comment to tracking issue linking releas
   assert.ok(createdComment.body.includes("#2626"));
   assert.ok(createdComment.body.includes("#3000"));
   assert.ok(createdComment.body.includes("/pull/3000/checks"));
+});
+
+test("updateIssueProjectStatus - updates Status field to Ready for QA", async () => {
+  const mockCore = createMockCore();
+  let mutationVariables = null;
+
+  const mockGithub = {
+    graphql: async (query, vars) => {
+      if (query.includes("getIssueProjectItems")) {
+        return {
+          repository: {
+            issue: {
+              id: "issue-node-id",
+              projectItems: {
+                nodes: [
+                  {
+                    id: "item-123",
+                    project: {
+                      id: "project-456",
+                      title: "Rancher Project Board",
+                      fields: {
+                        nodes: [
+                          {
+                            id: "field-status",
+                            name: "Status",
+                            options: [
+                              { id: "opt-backlog", name: "Backlog" },
+                              { id: "opt-qa", name: "Ready for QA" },
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        mutationVariables = vars;
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      throw new Error(`Unexpected query: ${query}`);
+    },
+  };
+
+  const updated = await updateIssueProjectStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    issueNumber: 1234,
+    targetStatus: "Ready for QA",
+    core: mockCore,
+  });
+
+  assert.strictEqual(updated, true);
+  assert.deepStrictEqual(mutationVariables, {
+    projectId: "project-456",
+    itemId: "item-123",
+    fieldId: "field-status",
+    optionId: "opt-qa",
+  });
+});
+
+test("updateIssueProjectStatus - adds issue directly to Project 73 when not already present in project items", async () => {
+  const mockCore = createMockCore();
+  let addVars = null;
+  let updateVars = null;
+
+  const mockGithub = {
+    graphql: async (query, vars) => {
+      if (query.includes("getIssueProjectItems")) {
+        return {
+          repository: {
+            issue: {
+              id: "issue-node-777",
+              projectItems: { nodes: [] },
+            },
+          },
+        };
+      }
+      if (query.includes("getProjectByNumber")) {
+        assert.strictEqual(vars.projectNumber, 73);
+        return {
+          organization: {
+            projectV2: {
+              id: "p73-id",
+              number: 73,
+              title: "Rancher Board #73",
+              fields: {
+                nodes: [
+                  {
+                    id: "f-status-73",
+                    name: "Status",
+                    options: [{ id: "opt-qa-73", name: "Ready for QA" }],
+                  },
+                ],
+              },
+            },
+          },
+        };
+      }
+      if (query.includes("addItemToProject")) {
+        addVars = vars;
+        return {
+          addProjectV2ItemById: {
+            item: { id: "item-node-888" },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        updateVars = vars;
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      return {};
+    },
+  };
+
+  const updated = await updateIssueProjectStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    issueNumber: 1234,
+    targetStatus: "Ready for QA",
+    projectNumber: 73,
+    core: mockCore,
+  });
+
+  assert.strictEqual(updated, true);
+  assert.deepStrictEqual(addVars, {
+    projectId: "p73-id",
+    contentId: "issue-node-777",
+  });
+  assert.deepStrictEqual(updateVars, {
+    projectId: "p73-id",
+    itemId: "item-node-888",
+    fieldId: "f-status-73",
+    optionId: "opt-qa-73",
+  });
+});
+
+test("updateIssueProjectStatus - safely handles issue not associated with project items", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    graphql: async () => ({
+      repository: {
+        issue: {
+          id: "issue-node-id",
+          projectItems: { nodes: [] },
+        },
+      },
+    }),
+  };
+
+  const updated = await updateIssueProjectStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    issueNumber: 1234,
+    core: mockCore,
+  });
+
+  assert.strictEqual(updated, false);
+});
+
+test("updateIssueProjectStatus - paginates projectItems across multiple pages", async () => {
+  const mockCore = createMockCore();
+  const updatedItemIds = [];
+
+  const mockGithub = {
+    graphql: async (query, vars) => {
+      if (query.includes("getIssueProjectItems")) {
+        if (!vars.cursor) {
+          return {
+            repository: {
+              issue: {
+                id: "issue-node-page-1",
+                projectItems: {
+                  pageInfo: { hasNextPage: true, endCursor: "cursor-item-1" },
+                  nodes: [
+                    {
+                      id: "item-p1",
+                      project: {
+                        id: "proj-1",
+                        title: "Project 1",
+                        fields: {
+                          nodes: [
+                            {
+                              id: "f1",
+                              name: "Status",
+                              options: [{ id: "opt-qa", name: "Ready for QA" }],
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          };
+        }
+        return {
+          repository: {
+            issue: {
+              id: "issue-node-page-1",
+              projectItems: {
+                pageInfo: { hasNextPage: false, endCursor: null },
+                nodes: [
+                  {
+                    id: "item-p2",
+                    project: {
+                      id: "proj-2",
+                      title: "Project 2",
+                      fields: {
+                        nodes: [
+                          {
+                            id: "f2",
+                            name: "Status",
+                            options: [{ id: "opt-qa", name: "Ready for QA" }],
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        updatedItemIds.push(vars.itemId);
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      return {};
+    },
+  };
+
+  const updated = await updateIssueProjectStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    issueNumber: 1234,
+    targetStatus: "Ready for QA",
+    core: mockCore,
+  });
+
+  assert.strictEqual(updated, true);
+  assert.deepStrictEqual(updatedItemIds, ["item-p1", "item-p2"]);
+});
+
+test("updateIssueProjectStatus - safely handles project missing Status field or matching option", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    graphql: async () => ({
+      repository: {
+        issue: {
+          id: "issue-node-id",
+          projectItems: {
+            nodes: [
+              {
+                id: "item-123",
+                project: {
+                  id: "project-456",
+                  title: "Other Board",
+                  fields: {
+                    nodes: [
+                      {
+                        id: "field-status",
+                        name: "Status",
+                        options: [{ id: "opt-backlog", name: "Backlog" }],
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    }),
+  };
+
+  const updated = await updateIssueProjectStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    issueNumber: 1234,
+    targetStatus: "Ready for QA",
+    core: mockCore,
+  });
+
+  assert.strictEqual(updated, false);
+});
+
+test("updateIssueProjectStatus - handles GraphQL failure gracefully without throwing", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    graphql: async () => {
+      throw new Error("GraphQL permission denied");
+    },
+  };
+
+  const updated = await updateIssueProjectStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    issueNumber: 1234,
+    core: mockCore,
+  });
+
+  assert.strictEqual(updated, false);
+  assert.ok(
+    mockCore.warningMessages.some((msg) =>
+      msg.includes("Failed to update project status for issue #1234"),
+    ),
+  );
+});
+
+test("runMergeLabel - updates project status to Ready for QA when labeling issue", async () => {
+  const mockCore = createMockCore();
+  let mutationVars = null;
+
+  const mockGithub = {
+    graphql: async (query, vars) => {
+      if (query.includes("getIssueProjectItems")) {
+        return {
+          repository: {
+            issue: {
+              id: "node-101",
+              projectItems: {
+                nodes: [
+                  {
+                    id: "item-101",
+                    project: {
+                      id: "proj-101",
+                      title: "Rancher QA",
+                      fields: {
+                        nodes: [
+                          {
+                            id: "f-status",
+                            name: "Status",
+                            options: [{ id: "opt-qa", name: "Ready for QA" }],
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        mutationVars = vars;
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      return {};
+    },
+    rest: {
+      issues: {
+        get: async ({ issue_number }) => ({
+          data: {
+            number: issue_number,
+            pull_request: null,
+            labels: [{ name: "internal/backport" }],
+          },
+        }),
+        addLabels: async () => ({}),
+      },
+    },
+  };
+
+  const mockContext = {
+    repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    payload: {
+      pull_request: {
+        number: 2626,
+        base: { ref: "release/v15" },
+        body: "Addresses #2623",
+      },
+    },
+  };
+
+  await runMergeLabel({
+    github: mockGithub,
+    context: mockContext,
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.strictEqual(mockCore.failedMessage, null);
+  assert.deepStrictEqual(mutationVars, {
+    projectId: "proj-101",
+    itemId: "item-101",
+    fieldId: "f-status",
+    optionId: "opt-qa",
+  });
+});
+
+test("runCloseTrackingIssue - closes tracking issue and sets status to Ready For Release when all sub-issues are closed and milestone is set", async () => {
+  const mockCore = createMockCore();
+  let updatedIssueParams = null;
+  let createdComment = null;
+  let statusMutationVars = null;
+
+  const mockGithub = {
+    graphql: async (query, vars) => {
+      if (query.includes("getIssueParent")) {
+        return {
+          repository: {
+            issue: {
+              id: "sub-100",
+              number: 100,
+              parent: {
+                id: "parent-50",
+                number: 50,
+                title: "Tracking Issue #50",
+                state: "OPEN",
+                milestone: { number: 3, title: "v16.0.0" },
+                labels: { nodes: [{ name: "internal/tracking" }] },
+              },
+            },
+          },
+        };
+      }
+      if (query.includes("getIssueProjectItems")) {
+        return {
+          repository: {
+            issue: {
+              id: "parent-50",
+              projectItems: {
+                nodes: [
+                  {
+                    id: "p-item-50",
+                    project: {
+                      id: "p-proj-1",
+                      title: "Project Board",
+                      fields: {
+                        nodes: [
+                          {
+                            id: "p-field-status",
+                            name: "Status",
+                            options: [
+                              { id: "opt-release", name: "Ready For Release" },
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        statusMutationVars = vars;
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      return {};
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes("/sub_issues")) {
+        return {
+          data: [
+            { number: 100, state: "closed" },
+            { number: 101, state: "closed" },
+          ],
+        };
+      }
+      return { data: [] };
+    },
+    rest: {
+      issues: {
+        update: async (params) => {
+          updatedIssueParams = params;
+          return { data: {} };
+        },
+        createComment: async (params) => {
+          createdComment = params;
+          return { data: {} };
+        },
+        listComments: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: { issue: { number: 100 } },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result, { closed: true, trackingIssueNumber: 50 });
+  assert.strictEqual(updatedIssueParams.issue_number, 50);
+  assert.strictEqual(updatedIssueParams.state, "closed");
+  assert.strictEqual(updatedIssueParams.state_reason, "completed");
+  assert.ok(
+    createdComment.body.includes("Automatically closing tracking issue #50"),
+  );
+  assert.deepStrictEqual(statusMutationVars, {
+    projectId: "p-proj-1",
+    itemId: "p-item-50",
+    fieldId: "p-field-status",
+    optionId: "opt-release",
+  });
+});
+
+test("runCloseTrackingIssue - adopts milestone from sub-issue if tracking issue lacks milestone", async () => {
+  const mockCore = createMockCore();
+  let assignedMilestone = null;
+  let closedIssue = false;
+
+  const mockGithub = {
+    graphql: async (query) => {
+      if (query.includes("getIssueParent")) {
+        return {
+          repository: {
+            issue: {
+              id: "sub-100",
+              number: 100,
+              parent: {
+                id: "parent-50",
+                number: 50,
+                title: "Tracking Issue #50",
+                state: "OPEN",
+                milestone: null,
+                labels: { nodes: [{ name: "internal/tracking" }] },
+              },
+            },
+          },
+        };
+      }
+      return { repository: { issue: { projectItems: { nodes: [] } } } };
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes("/sub_issues")) {
+        return {
+          data: [
+            {
+              number: 100,
+              state: "closed",
+              milestone: { number: 8, title: "v15.2.0" },
+            },
+          ],
+        };
+      }
+      return { data: [] };
+    },
+    rest: {
+      issues: {
+        update: async (params) => {
+          if (params.milestone) {
+            assignedMilestone = params.milestone;
+          }
+          if (params.state === "closed") {
+            closedIssue = true;
+          }
+          return { data: {} };
+        },
+        createComment: async () => ({ data: {} }),
+        listComments: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: { issue: { number: 100 } },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result, { closed: true, trackingIssueNumber: 50 });
+  assert.strictEqual(assignedMilestone, 8);
+  assert.strictEqual(closedIssue, true);
+});
+
+test("runCloseTrackingIssue - halts closure and posts warning comment if milestone assignment fails", async () => {
+  const mockCore = createMockCore();
+  let warningComment = null;
+  let closeAttempted = false;
+
+  const mockGithub = {
+    graphql: async (query) => {
+      if (query.includes("getIssueParent")) {
+        return {
+          repository: {
+            issue: {
+              id: "sub-100",
+              number: 100,
+              parent: {
+                id: "parent-50",
+                number: 50,
+                title: "Tracking Issue #50",
+                state: "OPEN",
+                milestone: null,
+                labels: { nodes: [{ name: "internal/tracking" }] },
+              },
+            },
+          },
+        };
+      }
+      return {};
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes("/sub_issues")) {
+        return {
+          data: [
+            {
+              number: 100,
+              state: "closed",
+              milestone: { number: 8, title: "v15.2.0" },
+            },
+          ],
+        };
+      }
+      return { data: [] };
+    },
+    rest: {
+      issues: {
+        update: async (params) => {
+          if (params.milestone) {
+            throw new Error("Milestone assignment permission denied");
+          }
+          if (params.state === "closed") {
+            closeAttempted = true;
+          }
+          return { data: {} };
+        },
+        createComment: async (params) => {
+          warningComment = params;
+          return { data: {} };
+        },
+        listComments: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: { issue: { number: 100 } },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result, {
+    closed: false,
+    trackingIssueNumber: 50,
+    reason: "missing_milestone",
+  });
+  assert.strictEqual(closeAttempted, false);
+  assert.ok(warningComment);
+  assert.ok(
+    warningComment.body.includes(
+      "cannot be automatically closed because it has not been assigned to a milestone",
+    ),
+  );
+  assert.ok(
+    mockCore.warningMessages.some((m) =>
+      m.includes("Failed to assign milestone #8 to tracking issue #50"),
+    ),
+  );
+});
+
+test("runCloseTrackingIssue - paginates sub_issues and detects open sub-issue on later page", async () => {
+  const mockCore = createMockCore();
+  let closeAttempted = false;
+
+  const mockGithub = {
+    paginate: async (endpoint) => {
+      if (endpoint.includes("/sub_issues")) {
+        return [
+          { number: 101, state: "closed" },
+          { number: 102, state: "closed" },
+          { number: 103, state: "open" },
+        ];
+      }
+      return [];
+    },
+    graphql: async (query) => {
+      if (query.includes("getIssueParent")) {
+        return {
+          repository: {
+            issue: {
+              id: "sub-101",
+              number: 101,
+              parent: {
+                id: "parent-50",
+                number: 50,
+                title: "Tracking Issue #50",
+                state: "OPEN",
+                milestone: { number: 1, title: "v16.0.0" },
+                labels: { nodes: [{ name: "internal/tracking" }] },
+              },
+            },
+          },
+        };
+      }
+      return {};
+    },
+    rest: {
+      issues: {
+        update: async () => {
+          closeAttempted = true;
+          return { data: {} };
+        },
+      },
+    },
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: { issue: { number: 101 } },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result, {
+    closed: false,
+    trackingIssueNumber: 50,
+    reason: "open_sub_issues",
+  });
+  assert.strictEqual(closeAttempted, false);
+});
+
+test("runCloseTrackingIssue - skips closure and posts warning comment when milestone is completely missing", async () => {
+  const mockCore = createMockCore();
+  let warningComment = null;
+  let closeAttempted = false;
+
+  const mockGithub = {
+    graphql: async (query) => {
+      if (query.includes("getIssueParent")) {
+        return {
+          repository: {
+            issue: {
+              id: "sub-100",
+              number: 100,
+              parent: {
+                id: "parent-50",
+                number: 50,
+                title: "Tracking Issue #50",
+                state: "OPEN",
+                milestone: null,
+                labels: { nodes: [{ name: "internal/tracking" }] },
+              },
+            },
+          },
+        };
+      }
+      return {};
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes("/sub_issues")) {
+        return {
+          data: [{ number: 100, state: "closed", milestone: null }],
+        };
+      }
+      return { data: [] };
+    },
+    rest: {
+      issues: {
+        update: async (params) => {
+          if (params.state === "closed") {
+            closeAttempted = true;
+          }
+          return { data: {} };
+        },
+        createComment: async (params) => {
+          warningComment = params;
+          return { data: {} };
+        },
+        listComments: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: { issue: { number: 100 } },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result, {
+    closed: false,
+    trackingIssueNumber: 50,
+    reason: "missing_milestone",
+  });
+  assert.strictEqual(closeAttempted, false);
+  assert.ok(warningComment);
+  assert.ok(
+    warningComment.body.includes(
+      "cannot be automatically closed because it has not been assigned to a milestone",
+    ),
+  );
+});
+
+test("runCloseTrackingIssue - skips closure when any sub-issue remains open", async () => {
+  const mockCore = createMockCore();
+  let closeAttempted = false;
+
+  const mockGithub = {
+    graphql: async (query) => {
+      if (query.includes("getIssueParent")) {
+        return {
+          repository: {
+            issue: {
+              id: "sub-100",
+              number: 100,
+              parent: {
+                id: "parent-50",
+                number: 50,
+                title: "Tracking Issue #50",
+                state: "OPEN",
+                milestone: { number: 1, title: "v16.0.0" },
+                labels: { nodes: [{ name: "internal/tracking" }] },
+              },
+            },
+          },
+        };
+      }
+      return {};
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes("/sub_issues")) {
+        return {
+          data: [
+            { number: 100, state: "closed" },
+            { number: 101, state: "open" },
+          ],
+        };
+      }
+      return { data: [] };
+    },
+    rest: {
+      issues: {
+        update: async () => {
+          closeAttempted = true;
+          return { data: {} };
+        },
+      },
+    },
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: { issue: { number: 100 } },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result, {
+    closed: false,
+    trackingIssueNumber: 50,
+    reason: "open_sub_issues",
+  });
+  assert.strictEqual(closeAttempted, false);
+});
+
+test("runCloseTrackingIssue - skips when parent is already closed", async () => {
+  const mockCore = createMockCore();
+
+  const mockGithub = {
+    graphql: async () => ({
+      repository: {
+        issue: {
+          id: "sub-100",
+          number: 100,
+          parent: {
+            id: "parent-50",
+            number: 50,
+            state: "CLOSED",
+            labels: { nodes: [{ name: "internal/tracking" }] },
+          },
+        },
+      },
+    }),
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: { issue: { number: 100 } },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.strictEqual(result, null);
+});
+
+test("runCloseTrackingIssue - skips when issue is not tracking and has no tracking parent", async () => {
+  const mockCore = createMockCore();
+
+  const mockGithub = {
+    graphql: async () => ({
+      repository: {
+        issue: {
+          id: "sub-100",
+          number: 100,
+          parent: null,
+          labels: { nodes: [{ name: "bug" }] },
+        },
+      },
+    }),
+    rest: {
+      issues: {
+        get: async () => ({
+          data: { number: 100, labels: [{ name: "bug" }] },
+        }),
+      },
+    },
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: { issue: { number: 100 } },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.strictEqual(result, null);
+});
+
+test("default export - routes close-tracking-issue mode", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    graphql: async () => ({
+      repository: {
+        issue: {
+          number: 200,
+          state: "CLOSED",
+          labels: { nodes: [{ name: "internal/tracking" }] },
+        },
+      },
+    }),
+  };
+
+  const result = await import("./backports.js").then((m) =>
+    m.default({
+      github: mockGithub,
+      context: {
+        repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+        payload: { issue: { number: 200 } },
+      },
+      core: mockCore,
+      process: { env: { SCRIPT_MODE: "close-tracking-issue" } },
+    }),
+  );
+
+  assert.strictEqual(result, null);
+});
+
+test("runReleaseDone - skips transition when release lookup throws error", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        listReleases: async () => {
+          throw new Error("GitHub API 500 Internal Error");
+        },
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { HEAD_SHA: "lookup-fail-sha" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "release_lookup_failed",
+    error: "GitHub API 500 Internal Error",
+  });
+  assert.ok(
+    mockCore.warningMessages.some((m) =>
+      m.includes("Could not fetch releases: GitHub API 500 Internal Error"),
+    ),
+  );
+});
+
+test("runReleaseDone - skips transition when tag cannot be verified", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        listReleases: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "unverified_tag",
+  });
+});
+
+test("runReleaseDone - matches release by headSha and skips when matching release is an RC", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        listReleases: async () => ({
+          data: [
+            {
+              tag_name: "v16.0.0",
+              prerelease: false,
+              target_commitish: "old-sha",
+            },
+            {
+              tag_name: "v16.0.1-rc.1",
+              prerelease: true,
+              target_commitish: "rc-sha-999",
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { HEAD_SHA: "rc-sha-999" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "prerelease",
+    tag: "v16.0.1-rc.1",
+  });
+});
+
+test("runReleaseDone - skips transition when HEAD_SHA does not match any release", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        listReleases: async () => ({
+          data: [
+            {
+              tag_name: "v16.0.0",
+              prerelease: false,
+              target_commitish: "other-sha",
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { HEAD_SHA: "unmatched-sha-123" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "unverified_tag",
+    headSha: "unmatched-sha-123",
+  });
+});
+
+test("runReleaseDone - verifies explicit TAG against getReleaseByTag and skips if not found", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        getReleaseByTag: async () => {
+          const err = new Error("Not Found");
+          err.status = 404;
+          throw err;
+        },
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { TAG: "v16.0.0-typo" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "release_not_found",
+    tag: "v16.0.0-typo",
+    error: "Not Found",
+  });
+});
+
+test("runReleaseDone - verifies explicit TAG against getReleaseByTag and skips if prerelease", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        getReleaseByTag: async ({ tag }) => ({
+          data: { tag_name: tag, prerelease: true, draft: false },
+        }),
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { TAG: "v16.0.0-alpha.1" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "prerelease",
+    tag: "v16.0.0-alpha.1",
+  });
+});
+
+test("runReleaseDone - verifies explicit TAG against getReleaseByTag and skips if draft", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        getReleaseByTag: async ({ tag }) => ({
+          data: { tag_name: tag, prerelease: false, draft: true },
+        }),
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { TAG: "v16.0.0" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "draft",
+    tag: "v16.0.0",
+  });
+});
+
+test("runReleaseDone - matches release by headSha and skips when matching release is draft", async () => {
+  const mockCore = createMockCore();
+  const mockGithub = {
+    rest: {
+      repos: {
+        listReleases: async () => ({
+          data: [
+            {
+              tag_name: "v16.0.0",
+              prerelease: false,
+              draft: true,
+              target_commitish: "release-sha-draft",
+            },
+          ],
+        }),
+      },
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { HEAD_SHA: "release-sha-draft" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "draft",
+    tag: "v16.0.0",
+  });
+});
+
+test("runReleaseDone - skips transition when TAG env contains rc", async () => {
+  const mockCore = createMockCore();
+
+  const result = await runReleaseDone({
+    github: {},
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { TAG: "v15.2.0-rc.2" } },
+  });
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "prerelease",
+    tag: "v15.2.0-rc.2",
+  });
+});
+
+test("runReleaseDone - transitions project items from Ready for Release to Done for full release", async () => {
+  const mockCore = createMockCore();
+  let mutationVars = null;
+
+  const mockGithub = {
+    rest: {
+      repos: {
+        listReleases: async () => ({
+          data: [
+            {
+              tag_name: "v16.0.0",
+              prerelease: false,
+              target_commitish: "release-sha-123",
+            },
+          ],
+        }),
+      },
+    },
+    graphql: async (query, vars) => {
+      if (query.includes("getRepoProjects")) {
+        return {
+          repository: {
+            projectsV2: {
+              nodes: [
+                {
+                  id: "proj-1",
+                  title: "Release Board",
+                  fields: {
+                    nodes: [
+                      {
+                        id: "field-status",
+                        name: "Status",
+                        options: [
+                          { id: "opt-ready", name: "Ready for Release" },
+                          { id: "opt-done", name: "Done" },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (query.includes("getOrgProjects")) {
+        return { organization: { projectsV2: { nodes: [] } } };
+      }
+      if (query.includes("getProjectItems")) {
+        return {
+          node: {
+            items: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: "item-55",
+                  fieldValues: {
+                    nodes: [
+                      {
+                        field: { name: "Status" },
+                        name: "Ready for Release",
+                        optionId: "opt-ready",
+                      },
+                    ],
+                  },
+                  content: { number: 450, title: "Tracking Issue #450" },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        mutationVars = vars;
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      return {};
+    },
+  };
+
+  const result = await runReleaseDone({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+    },
+    core: mockCore,
+    process: { env: { HEAD_SHA: "release-sha-123" } },
+  });
+
+  assert.deepStrictEqual(result, { transitionedCount: 1 });
+  assert.deepStrictEqual(mutationVars, {
+    projectId: "proj-1",
+    itemId: "item-55",
+    fieldId: "field-status",
+    optionId: "opt-done",
+  });
+});
+
+test("transitionProjectItemsStatus - handles missing GraphQL client gracefully", async () => {
+  const mockCore = createMockCore();
+  const result = await transitionProjectItemsStatus({
+    github: {},
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    core: mockCore,
+  });
+
+  assert.deepStrictEqual(result, { transitionedCount: 0 });
+});
+
+test("default export - routes release-done mode", async () => {
+  const mockCore = createMockCore();
+  const result = await import("./backports.js").then((m) =>
+    m.default({
+      github: {},
+      context: {
+        repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      },
+      core: mockCore,
+      process: { env: { SCRIPT_MODE: "release-done", TAG: "v1.2.3-rc.1" } },
+    }),
+  );
+
+  assert.deepStrictEqual(result, {
+    skipped: true,
+    reason: "prerelease",
+    tag: "v1.2.3-rc.1",
+  });
+});
+
+test("runCloseTrackingIssue - handles direct tracking issue number in ISSUE_NUMBER", async () => {
+  const mockCore = createMockCore();
+  let updatedIssue = null;
+
+  const mockGithub = {
+    graphql: async (query) => {
+      if (query.includes("getIssueParent")) {
+        return {
+          repository: {
+            issue: {
+              id: "direct-50",
+              number: 50,
+              state: "OPEN",
+              milestone: { number: 4, title: "v16.0.0" },
+              labels: { nodes: [{ name: "internal/tracking" }] },
+              parent: null,
+            },
+          },
+        };
+      }
+      return { repository: { issue: { projectItems: { nodes: [] } } } };
+    },
+    request: async (endpoint) => {
+      if (endpoint.includes("/sub_issues")) {
+        return {
+          data: [{ number: 101, state: "closed" }],
+        };
+      }
+      return { data: [] };
+    },
+    rest: {
+      issues: {
+        update: async (params) => {
+          updatedIssue = params;
+          return { data: {} };
+        },
+        createComment: async () => ({ data: {} }),
+        listComments: async () => ({ data: [] }),
+      },
+    },
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: {},
+    },
+    core: mockCore,
+    process: { env: { ISSUE_NUMBER: "50" } },
+  });
+
+  assert.deepStrictEqual(result, { closed: true, trackingIssueNumber: 50 });
+  assert.strictEqual(updatedIssue.issue_number, 50);
+  assert.strictEqual(updatedIssue.state, "closed");
+});
+
+test("runCloseTrackingIssue - deduplicates warning comment if already posted", async () => {
+  const mockCore = createMockCore();
+  let commentCreated = false;
+
+  const mockGithub = {
+    graphql: async () => ({
+      repository: {
+        issue: {
+          id: "sub-100",
+          number: 100,
+          parent: {
+            id: "parent-50",
+            number: 50,
+            state: "OPEN",
+            milestone: null,
+            labels: { nodes: [{ name: "internal/tracking" }] },
+          },
+        },
+      },
+    }),
+    request: async () => ({
+      data: [{ number: 100, state: "closed", milestone: null }],
+    }),
+    rest: {
+      issues: {
+        listComments: async () => ({
+          data: [
+            {
+              body: "All sub-issues for this tracking issue have been resolved and closed. However, this tracking issue cannot be automatically closed because it has not been assigned to a milestone.",
+            },
+          ],
+        }),
+        createComment: async () => {
+          commentCreated = true;
+          return { data: {} };
+        },
+      },
+    },
+  };
+
+  const result = await runCloseTrackingIssue({
+    github: mockGithub,
+    context: {
+      repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+      payload: { issue: { number: 100 } },
+    },
+    core: mockCore,
+    process: { env: {} },
+  });
+
+  assert.deepStrictEqual(result, {
+    closed: false,
+    trackingIssueNumber: 50,
+    reason: "missing_milestone",
+  });
+  assert.strictEqual(commentCreated, false);
+});
+
+test("runCloseTrackingIssue - throws when sub_issues fetch throws an error", async () => {
+  const mockCore = createMockCore();
+
+  const mockGithub = {
+    graphql: async () => ({
+      repository: {
+        issue: {
+          id: "sub-100",
+          number: 100,
+          parent: {
+            id: "parent-50",
+            number: 50,
+            state: "OPEN",
+            labels: { nodes: [{ name: "internal/tracking" }] },
+          },
+        },
+      },
+    }),
+    request: async () => {
+      throw new Error("GitHub API rate limit exceeded");
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await runCloseTrackingIssue({
+        github: mockGithub,
+        context: {
+          repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          payload: { issue: { number: 100 } },
+        },
+        core: mockCore,
+        process: { env: {} },
+      });
+    },
+    { message: /Failed to fetch sub-issues for tracking issue #50/ },
+  );
+});
+
+test("runCloseTrackingIssue - throws when ISSUE_NUMBER has invalid non-numeric format", async () => {
+  const mockCore = createMockCore();
+
+  await assert.rejects(
+    async () => {
+      await runCloseTrackingIssue({
+        github: {},
+        context: {
+          repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          payload: {},
+        },
+        core: mockCore,
+        process: { env: { ISSUE_NUMBER: "50abc" } },
+      });
+    },
+    { message: /Invalid issue number: 50abc/ },
+  );
+
+  await assert.rejects(
+    async () => {
+      await runCloseTrackingIssue({
+        github: {},
+        context: {
+          repo: { owner: "rancher", repo: "terraform-provider-rancher2" },
+          payload: { issue: { number: -5 } },
+        },
+        core: mockCore,
+        process: { env: {} },
+      });
+    },
+    { message: /Invalid issue number: -5/ },
+  );
+});
+
+test("transitionProjectItemsStatus - handles multi-page items pagination", async () => {
+  const mockCore = createMockCore();
+  const transitionedItemIds = [];
+
+  const mockGithub = {
+    graphql: async (query, vars) => {
+      if (query.includes("getRepoProjects")) {
+        return {
+          repository: {
+            projectsV2: {
+              nodes: [
+                {
+                  id: "proj-paged",
+                  title: "Paged Board",
+                  fields: {
+                    nodes: [
+                      {
+                        id: "f-status",
+                        name: "Status",
+                        options: [
+                          { id: "opt-ready", name: "Ready for Release" },
+                          { id: "opt-done", name: "Done" },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (query.includes("getOrgProjects")) {
+        return { organization: { projectsV2: { nodes: [] } } };
+      }
+      if (query.includes("getProjectItems")) {
+        if (!vars.after) {
+          // Page 1
+          return {
+            node: {
+              items: {
+                pageInfo: { hasNextPage: true, endCursor: "cursor-page-2" },
+                nodes: [
+                  {
+                    id: "item-p1",
+                    fieldValues: {
+                      nodes: [
+                        {
+                          field: { name: "Status" },
+                          optionId: "opt-ready",
+                          name: "Ready for Release",
+                        },
+                      ],
+                    },
+                    content: { number: 111 },
+                  },
+                ],
+              },
+            },
+          };
+        }
+        // Page 2
+        return {
+          node: {
+            items: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: "item-p2",
+                  fieldValues: {
+                    nodes: [
+                      {
+                        field: { name: "Status" },
+                        optionId: "opt-ready",
+                        name: "Ready for Release",
+                      },
+                    ],
+                  },
+                  content: { number: 222 },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        transitionedItemIds.push(vars.itemId);
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      return {};
+    },
+  };
+
+  const result = await transitionProjectItemsStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    core: mockCore,
+  });
+
+  assert.deepStrictEqual(result, { transitionedCount: 2 });
+  assert.deepStrictEqual(transitionedItemIds, ["item-p1", "item-p2"]);
+});
+
+test("transitionProjectItemsStatus - handles project query error gracefully and continues with other projects", async () => {
+  const mockCore = createMockCore();
+  const transitionedItemIds = [];
+
+  const mockGithub = {
+    graphql: async (query, vars) => {
+      if (query.includes("getRepoProjects")) {
+        return {
+          repository: {
+            projectsV2: {
+              nodes: [
+                {
+                  id: "proj-error",
+                  title: "Broken Board",
+                  fields: {
+                    nodes: [
+                      {
+                        id: "f-status",
+                        name: "Status",
+                        options: [
+                          { id: "opt-ready", name: "Ready for Release" },
+                          { id: "opt-done", name: "Done" },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  id: "proj-working",
+                  title: "Working Board",
+                  fields: {
+                    nodes: [
+                      {
+                        id: "f-status",
+                        name: "Status",
+                        options: [
+                          { id: "opt-ready", name: "Ready for Release" },
+                          { id: "opt-done", name: "Done" },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (query.includes("getOrgProjects")) {
+        return { organization: { projectsV2: { nodes: [] } } };
+      }
+      if (query.includes("getProjectItems")) {
+        if (vars.projectId === "proj-error") {
+          throw new Error("Project access token expired");
+        }
+        return {
+          node: {
+            items: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: "item-working-1",
+                  fieldValues: {
+                    nodes: [
+                      {
+                        field: { name: "Status" },
+                        optionId: "opt-ready",
+                        name: "Ready for Release",
+                      },
+                    ],
+                  },
+                  content: { number: 333 },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        transitionedItemIds.push(vars.itemId);
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      return {};
+    },
+  };
+
+  const result = await transitionProjectItemsStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    core: mockCore,
+  });
+
+  assert.deepStrictEqual(result, { transitionedCount: 1 });
+  assert.deepStrictEqual(transitionedItemIds, ["item-working-1"]);
+  assert.ok(
+    mockCore.warningMessages.some((msg) =>
+      msg.includes(
+        'Failed to query/transition items for project "Broken Board"',
+      ),
+    ),
+  );
+});
+
+test("transitionProjectItemsStatus - queries Project 73 directly by number and transitions items", async () => {
+  const mockCore = createMockCore();
+  let mutationVars = null;
+
+  const mockGithub = {
+    graphql: async (query, vars) => {
+      if (query.includes("getTargetProject")) {
+        assert.strictEqual(vars.projectNumber, 73);
+        assert.strictEqual(vars.projectOwner, "rancher");
+        return {
+          organization: {
+            projectV2: {
+              id: "p73-id",
+              number: 73,
+              title: "Rancher Project #73",
+              fields: {
+                nodes: [
+                  {
+                    id: "f-status",
+                    name: "Status",
+                    options: [
+                      { id: "opt-ready-73", name: "Ready for Release" },
+                      { id: "opt-done-73", name: "Done" },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        };
+      }
+      if (query.includes("getRepoProjects")) {
+        return { repository: { projectsV2: { nodes: [] } } };
+      }
+      if (query.includes("getProjectItems")) {
+        return {
+          node: {
+            items: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: "item-73",
+                  fieldValues: {
+                    nodes: [
+                      {
+                        field: { name: "Status" },
+                        optionId: "opt-ready-73",
+                        name: "Ready for Release",
+                      },
+                    ],
+                  },
+                  content: { number: 888 },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        mutationVars = vars;
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      return {};
+    },
+  };
+
+  const result = await transitionProjectItemsStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    projectNumber: 73,
+    core: mockCore,
+  });
+
+  assert.deepStrictEqual(result, { transitionedCount: 1 });
+  assert.deepStrictEqual(mutationVars, {
+    projectId: "p73-id",
+    itemId: "item-73",
+    fieldId: "f-status",
+    optionId: "opt-done-73",
+  });
+});
+
+test("transitionProjectItemsStatus - paginates repository projects across multiple pages", async () => {
+  const mockCore = createMockCore();
+  const transitionedItemIds = [];
+
+  const mockGithub = {
+    graphql: async (query, vars) => {
+      if (query.includes("getTargetProject")) {
+        return { organization: { projectV2: null } };
+      }
+      if (query.includes("getRepoProjects")) {
+        if (!vars.cursor) {
+          return {
+            repository: {
+              projectsV2: {
+                pageInfo: { hasNextPage: true, endCursor: "cursor-repo-1" },
+                nodes: [
+                  {
+                    id: "repo-proj-1",
+                    title: "Repo Board 1",
+                    fields: {
+                      nodes: [
+                        {
+                          id: "f1",
+                          name: "Status",
+                          options: [
+                            { id: "opt-ready-1", name: "Ready for Release" },
+                            { id: "opt-done-1", name: "Done" },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          };
+        }
+        return {
+          repository: {
+            projectsV2: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: "repo-proj-2",
+                  title: "Repo Board 2",
+                  fields: {
+                    nodes: [
+                      {
+                        id: "f2",
+                        name: "Status",
+                        options: [
+                          { id: "opt-ready-2", name: "Ready for Release" },
+                          { id: "opt-done-2", name: "Done" },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (query.includes("getOrgProjects")) {
+        return { organization: { projectsV2: { nodes: [] } } };
+      }
+      if (query.includes("getProjectItems")) {
+        const optionId =
+          vars.projectId === "repo-proj-1" ? "opt-ready-1" : "opt-ready-2";
+        const itemId =
+          vars.projectId === "repo-proj-1" ? "item-repo-1" : "item-repo-2";
+        return {
+          node: {
+            items: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  id: itemId,
+                  fieldValues: {
+                    nodes: [
+                      {
+                        field: { name: "Status" },
+                        optionId,
+                        name: "Ready for Release",
+                      },
+                    ],
+                  },
+                  content: { number: 99 },
+                },
+              ],
+            },
+          },
+        };
+      }
+      if (query.includes("updateItemStatus")) {
+        transitionedItemIds.push(vars.itemId);
+        return { projectV2Item: { id: vars.itemId } };
+      }
+      return {};
+    },
+  };
+
+  const result = await transitionProjectItemsStatus({
+    github: mockGithub,
+    owner: "rancher",
+    repo: "terraform-provider-rancher2",
+    core: mockCore,
+  });
+
+  assert.deepStrictEqual(result, { transitionedCount: 2 });
+  assert.deepStrictEqual(transitionedItemIds, ["item-repo-1", "item-repo-2"]);
 });

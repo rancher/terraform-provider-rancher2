@@ -168,7 +168,13 @@ describe("validate-commit-message", () => {
       assert.strictEqual(isProductPrefix("feat: new capability"), true);
       assert.strictEqual(isProductPrefix("feature: new capability"), true);
       assert.strictEqual(isProductPrefix("refactor: simplify code"), true);
-      assert.strictEqual(isProductPrefix("refactor!: breaking rewrite"), true);
+      assert.strictEqual(isProductPrefix("feat!: breaking change"), true);
+      assert.strictEqual(
+        isProductPrefix(
+          "fix(release/v16): initialize release branch configuration",
+        ),
+        true,
+      );
     });
 
     it("returns false for non-product prefixes", () => {
@@ -211,6 +217,18 @@ describe("validate-commit-message", () => {
       );
       assert.strictEqual(
         validatePrefix("chore(release/v13): release 13.11.0"),
+        true,
+      );
+      assert.strictEqual(
+        validatePrefix(
+          "chore(release/v16): initialize release branch configuration",
+        ),
+        true,
+      );
+      assert.strictEqual(
+        validatePrefix(
+          "fix(release/v16): initialize release branch configuration",
+        ),
         true,
       );
       assert.strictEqual(validatePrefix("Merge branch main into dev"), true);
@@ -266,6 +284,18 @@ describe("validate-commit-message", () => {
       );
       assert.strictEqual(
         isReleaseChore("chore(release/v13): release 13.11.0-rc.1"),
+        true,
+      );
+      assert.strictEqual(
+        isReleaseChore(
+          "chore(release/v16): initialize release branch configuration",
+        ),
+        true,
+      );
+      assert.strictEqual(
+        isReleaseChore(
+          "chore(release/v15): align release-please manifest with tag v15.3.0",
+        ),
         true,
       );
     });
@@ -390,6 +420,13 @@ describe("validate-commit-message", () => {
         validateProductImpact("fix: update provider entrypoint", ["main.go"]),
         true,
       );
+      assert.strictEqual(
+        validateProductImpact(
+          "fix(release/v16): initialize release branch configuration",
+          ["rancher2/release.md"],
+        ),
+        true,
+      );
     });
 
     it("rejects non-product commit prefix when product files are changed", () => {
@@ -425,6 +462,13 @@ describe("validate-commit-message", () => {
         validateProductImpact("chore(release/v15): release 15.3.0", [
           "rancher2/provider.go",
         ]),
+        true,
+      );
+      assert.strictEqual(
+        validateProductImpact(
+          "chore(release/v16): initialize release branch configuration",
+          ["rancher2/release.md"],
+        ),
         true,
       );
     });

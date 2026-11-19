@@ -51,6 +51,55 @@ jobs:
       tag: ${{ needs.release-please-release.outputs.tag_name || needs.release-please-release.outputs.version }}
     secrets: inherit
 
+  release-complete:
+    name: "Transition Issues to Done"
+    needs:
+      - release-please-release
+      - release
+    if: |
+      !cancelled() &&
+      needs.release-please-release.outputs.release_created == 'true' &&
+      needs.release.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+    steps:
+      - name: "Checkout Code"
+        id: checkout-code
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: "Get Issues Token"
+        id: get-issues-token
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          # Token permissions: issues: write, project: write
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--issues--write token | GITHUB_ISSUES_TOKEN
+
+      - name: "Transition Ready for Release Issues to Done"
+        id: transition-done
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          GITHUB_ISSUES_TOKEN: ${{ env.GITHUB_ISSUES_TOKEN }}
+          SCRIPT_MODE: release-done
+          TAG: ${{ needs.release-please-release.outputs.tag_name || needs.release-please-release.outputs.version }}
+          HEAD_SHA: ${{ github.sha }}
+        with:
+          github-token: ${{ env.GITHUB_ISSUES_TOKEN }}
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/backports.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process, getOctokit: typeof getOctokit === 'function' ? getOctokit : undefined });
+
   release-please-pr:
     name: "Release Please (PR Only)"
     needs:
@@ -88,6 +137,78 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           skip-github-release: true
+
+  release-please-rc:
+    name: "Tag Release Candidate"
+    needs:
+      - release-please-release
+      - release-please-pr
+    if: |
+      !cancelled() &&
+      needs.release-please-release.outputs.release_created != 'true' &&
+      needs.release-please-pr.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+    outputs:
+      tag: ${{ steps.prepare-rc.outputs.tag }}
+      should_release: ${{ steps.prepare-rc.outputs.should_release }}
+    steps:
+      - name: "Get Merge Token"
+        id: get-merge-token
+        # https://github.com/rancher-eio/read-vault-secrets/commits
+        uses: rancher-eio/read-vault-secrets@dfae8acd43a9e170fca5f90168da22f814fe4e9a # main
+        with:
+          # Token permissions: contents: write, metadata: read, pull_requests: write, workflows: write
+          secrets: |
+            github/token/rancher--terraform-provider-rancher2--pull_requests--write token | GITHUB_MERGE_TOKEN
+      - name: "Checkout Repository"
+        # https://github.com/actions/checkout/releases
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ env.GITHUB_MERGE_TOKEN }}
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: "Prepare and Tag Release Candidate"
+        id: prepare-rc
+        # https://github.com/actions/github-script/releases
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          BRANCH: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+          SCRIPT_MODE: prepare-rc
+        with:
+          github-token: ${{ env.GITHUB_MERGE_TOKEN }}
+          script: |
+            const scriptPath = `${process.env.GITHUB_WORKSPACE}/.github/workflows/scripts/releases.js`;
+            const { default: script } = await import(scriptPath);
+            await script({ github, context, core, process });
+
+  release-rc:
+    name: "Generate RC Release"
+    needs:
+      - release-please-release
+      - release-please-pr
+      - release-please-rc
+    if: |
+      !cancelled() &&
+      needs.release-please-release.outputs.release_created != 'true' &&
+      needs.release-please-pr.result == 'success' &&
+      needs.release-please-rc.outputs.should_release == 'true'
+    permissions:
+      contents: write
+      id-token: write
+      issues: write
+      pull-requests: write
+      actions: read
+    # https://github.com/rancher/terraform-provider-rancher2/blob/main/.github/workflows/release.yml
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.release-please-rc.outputs.tag }}
+      branch: ${{ github.ref_name }}
+    secrets: inherit
 
   sync-manifest-pr:
     name: "Sync Release Please Manifest (PR)"

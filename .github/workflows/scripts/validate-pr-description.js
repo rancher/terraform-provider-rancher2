@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 /**
  * Validates that the pull request description contains the required format:
  * "- Addresses: #<issue number>" or "* Addresses: #<issue number>"
@@ -83,9 +86,16 @@ export async function validateIssueExists(github, context, issueNumber) {
  * @param {object} params.context The GitHub context from github-script.
  * @param {object} params.core The GitHub Actions core toolkit.
  */
-export default async function run({ github, context, core }) {
+export default async function run({
+  github,
+  context,
+  core,
+  fsModule = fs,
+  process = globalThis.process,
+}) {
   try {
-    const prBody = context.payload?.pull_request?.body ?? "";
+    const pr = context?.payload?.pull_request;
+    const prBody = pr?.body ?? "";
     const issueNumbers = validatePrDescription(prBody);
     const uniqueIssues = [...new Set(issueNumbers)];
     const results = await Promise.allSettled(
@@ -102,6 +112,25 @@ export default async function run({ github, context, core }) {
     core?.info?.(
       `Successfully validated issue reference(s): ${uniqueIssues.map((n) => `#${n}`).join(", ")}`,
     );
+
+    if (pr && pr.number) {
+      const signalDir = path.join(process?.cwd?.() || ".", "signal");
+      await fsModule.promises.mkdir(signalDir, { recursive: true });
+      const signalPath = path.join(signalDir, "pr-signal.json");
+      const signalData =
+        JSON.stringify(
+          {
+            pr_number: pr.number,
+            head_sha: pr.head?.sha || "",
+            head_repo: pr.head?.repo?.full_name || "",
+            head_branch: pr.head?.ref || "",
+          },
+          null,
+          2,
+        ) + "\n";
+      await fsModule.promises.writeFile(signalPath, signalData, "utf8");
+      core?.info?.(`Saved PR signal artifact data to ${signalPath}`);
+    }
   } catch (error) {
     core.setFailed(error?.message ?? String(error));
   }

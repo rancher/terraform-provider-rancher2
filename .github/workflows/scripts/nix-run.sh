@@ -56,6 +56,8 @@ sudo -E -u suse /home/suse/.nix-profile/bin/nix develop \
   --keep AWS_ROLE \
   --keep AWS_REGION \
   --keep AWS_DEFAULT_REGION \
+  --keep AWS_MAX_ATTEMPTS \
+  --keep AWS_RETRY_MODE \
   --keep IDENTIFIER \
   --keep TEST_NAME \
   --keep ZONE \

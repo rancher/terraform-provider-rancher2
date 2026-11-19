@@ -33,13 +33,24 @@ export const VALID_PREFIXES = [
 
 export function isReleaseChore(message) {
   if (typeof message !== "string") return false;
-  return /^chore\((main|release\/v[0-9]+)\):\s+release\s+[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$/.test(
-    message,
+  return (
+    /^chore\((main|release\/v[0-9]+)\):\s+release\s+[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$/.test(
+      message,
+    ) ||
+    /^chore\(release\/v[0-9]+\):\s+initialize\s+release\s+branch\s+configuration$/.test(
+      message,
+    ) ||
+    /^chore\(release\/v[0-9]+\):\s+align\s+release-please\s+manifest\s+with\s+tag\s+v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$/.test(
+      message,
+    )
   );
 }
 
 export function isProductPrefix(message) {
-  return PRODUCT_PREFIXES.some((prefix) => message.startsWith(prefix));
+  return (
+    PRODUCT_PREFIXES.some((prefix) => message.startsWith(prefix)) ||
+    /^fix\(release\/v[0-9]+\):\s+/.test(message)
+  );
 }
 
 export function isProductDirectory(file) {
@@ -73,7 +84,8 @@ export function validateEmpty(message) {
 
 export function validatePrefix(message) {
   const isReleasePrefix =
-    isReleaseChore(message) || /^chore\(release\/v[0-9]+\):\s+/.test(message);
+    isReleaseChore(message) ||
+    /^(chore|fix)\(release\/v[0-9]+\):\s+/.test(message);
   const hasValidPrefix =
     isReleasePrefix ||
     VALID_PREFIXES.some((prefix) => message.startsWith(prefix));

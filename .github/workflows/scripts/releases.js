@@ -1,7 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { validatePrDescription } from "./validate-pr-description.js";
 import { runBackportIssues } from "./backports.js";
+
+const execFileAsync = promisify(execFile);
+
+export async function defaultRunGit(args, opts = {}) {
+  return await execFileAsync("git", args, opts);
+}
 
 export default async ({
   github,
@@ -9,11 +17,24 @@ export default async ({
   core,
   process = globalThis.process,
   getOctokit,
+  runGit,
+  fsModule,
 }) => {
   const mode = process?.env?.SCRIPT_MODE;
   switch (mode) {
   case "check-maintainer":
     return await runCheckMaintainer({ github, context, core, process });
+  case "verify-tag":
+    return await runVerifyTag({ core, process });
+  case "dispatch-tag":
+    return await runDispatchTag({ github, context, core, process, runGit });
+  case "prepare-manifest":
+    return await runPrepareRegistryManifest({
+      core,
+      process,
+      runGit,
+      fsModule,
+    });
   case "rc-notify":
     return await runRcNotify({ github, context, core, process });
   case "publish-release":
@@ -26,14 +47,8 @@ export default async ({
       process,
       getOctokit,
     });
-  case "trigger-rc-release":
-    return await runTriggerRcRelease({
-      github,
-      context,
-      core,
-      process,
-      getOctokit,
-    });
+  case "prepare-rc":
+    return await runPrepareRc({ github, context, core, process, runGit });
   default:
     throw new Error(`Unknown release script mode: ${mode}`);
   }
@@ -1126,366 +1141,470 @@ export async function computeNextRcTag({ github, owner, repo, branch, core }) {
 }
 
 /**
- * trigger-rc-release: Computes the next RC tag and dispatches release.yml on main.
+ * verify-tag: Validates release tag format and ensures RC tags target canonical release branches.
  */
-export async function runTriggerRcRelease({
+export function validateReleaseTag({ tag, branch }) {
+  if (!tag || typeof tag !== "string" || !tag.trim().startsWith("v")) {
+    throw new Error(
+      `Tag must start with 'v' (e.g. v1.2.3 or v1.2.3-rc.1), got: '${tag}'`,
+    );
+  }
+
+  const cleanTag = tag.trim();
+  const isRc = /rc/i.test(cleanTag);
+
+  if (isRc) {
+    if (!branch || typeof branch !== "string" || !branch.trim()) {
+      throw new Error("Error: 'branch' input is required for RC releases.");
+    }
+    const cleanBranch = branch
+      .trim()
+      .replace(/^refs\/heads\//, "")
+      .replace(/^origin\//, "")
+      .replace(/\/+$/, "");
+
+    if (!/^release\/v\d+$/.test(cleanBranch)) {
+      throw new Error(
+        `Error: RC releases must target a 'release/v<major>' branch (got '${branch}').`,
+      );
+    }
+  }
+
+  return { valid: true, tag: cleanTag, isRc };
+}
+
+export async function runVerifyTag({ core, process = globalThis.process }) {
+  const tag = (process?.env?.TAG || "").trim();
+  const branch = (process?.env?.BRANCH || "").trim();
+
+  try {
+    validateReleaseTag({ tag, branch });
+    if (core && typeof core.info === "function") {
+      core.info(`Tag '${tag}' is valid for release.`);
+    }
+    return true;
+  } catch (err) {
+    if (core && typeof core.setFailed === "function") {
+      core.setFailed(err.message);
+    }
+    throw err;
+  }
+}
+
+/**
+ * prepare-rc: Checks if triggering commit is a release branch setup commit;
+ * if not, computes the next RC tag for the branch and sets outputs.
+ */
+export async function runPrepareRc({
   github,
   context,
   core,
   process = globalThis.process,
-  getOctokit,
+  runGit,
 }) {
-  try {
-    const owner = context?.repo?.owner || "rancher";
-    const repo = context?.repo?.repo || "terraform-provider-rancher2";
-    const pr = context?.payload?.pull_request;
+  const owner = context?.repo?.owner || "rancher";
+  const repo = context?.repo?.repo || "terraform-provider-rancher2";
 
-    const normalizeBranch = (b) =>
-      (b || "")
-        .toString()
-        .trim()
-        .replace(/^refs\/heads\//, "")
-        .replace(/^origin\//, "")
-        .replace(/\/+$/, "");
-    const rawBranch = (
-      process?.env?.BRANCH ||
-      context?.payload?.workflow_run?.head_branch ||
-      pr?.base?.ref ||
-      ""
-    ).trim();
-    const branch = normalizeBranch(rawBranch);
-    const sha = (
-      process?.env?.SHA ||
-      context?.payload?.workflow_run?.head_sha ||
-      pr?.merge_commit_sha ||
-      ""
-    ).trim();
+  const gitRunner =
+    typeof runGit === "function"
+      ? runGit
+      : process?.env?.GITHUB_ACTIONS === "true"
+        ? defaultRunGit
+        : undefined;
 
-    if (!branch) {
-      if (core && typeof core.setFailed === "function") {
-        core.setFailed(
-          "Target branch must be provided via env (BRANCH) or PR payload.",
-        );
-      }
-      return;
-    }
+  const rawBranch = (
+    process?.env?.BRANCH ||
+    context?.ref?.replace(/^refs\/heads\//, "") ||
+    ""
+  ).trim();
+  const branch = rawBranch
+    .replace(/^refs\/heads\//, "")
+    .replace(/^origin\//, "")
+    .replace(/\/+$/, "");
 
-    if (branch.startsWith("release-please")) {
-      if (core && typeof core.info === "function") {
-        core.info(
-          `Branch ${branch} is a release-please branch; skipping RC release.`,
-        );
-      }
-      return null;
-    }
+  if (!branch) {
+    throw new Error(
+      "Target branch must be provided via env (BRANCH) or context.ref.",
+    );
+  }
 
-    if (!sha && core && typeof core.info === "function") {
-      core.info(
-        `No commit SHA provided; release.yml will default to HEAD of branch ${branch}.`,
+  // Resolve commit message to check if it's an initial branch setup commit
+  let commitMessage =
+    process?.env?.COMMIT_MESSAGE ||
+    context?.payload?.head_commit?.message ||
+    "";
+  const sha = (process?.env?.SHA || context?.sha || "").trim();
+
+  if (!commitMessage && sha && github?.rest?.repos?.getCommit) {
+    try {
+      const { data: commitData } = await github.rest.repos.getCommit({
+        owner,
+        repo,
+        ref: sha,
+      });
+      commitMessage = commitData?.commit?.message || "";
+    } catch (err) {
+      core?.warning?.(
+        `Could not fetch commit details for SHA ${sha}: ${err.message}`,
       );
     }
+  }
 
-    const isReleasePleasePr = (p) => {
-      if (!p) return false;
-      const headRef = normalizeBranch(p?.head?.ref || "");
-      if (headRef.startsWith("release-please")) return true;
-      if (
-        Array.isArray(p?.labels) &&
-        p.labels.some((l) =>
-          (typeof l === "string" ? l : l?.name)?.startsWith("autorelease"),
-        )
-      )
-        return true;
-      if (
-        typeof p?.title === "string" &&
-        /^chore(?:\([^)]*\))?:\s*release/i.test(p.title)
-      )
-        return true;
-      return false;
-    };
-
-    const workflowRunId = (
-      process?.env?.WORKFLOW_RUN_ID ||
-      context?.payload?.workflow_run?.id ||
-      ""
+  // Check if triggering commit is a release branch setup or maintenance commit
+  if (
+    /^(?:fix|chore)\(release\/v\d+\):\s*(?:initialize release branch configuration|align release-please manifest|release\s+\d+)/i.test(
+      commitMessage.trim(),
     )
-      .toString()
-      .trim();
-    if (
-      workflowRunId &&
-      (typeof github?.paginate === "function" ||
-        typeof github?.rest?.actions?.listJobsForWorkflowRun === "function")
-    ) {
-      const runId = parseInt(workflowRunId, 10);
-      if (!isNaN(runId)) {
-        try {
-          const jobs =
-            typeof github?.paginate === "function"
-              ? await github.paginate(
-                github.rest?.actions?.listJobsForWorkflowRun,
-                {
-                  owner,
-                  repo,
-                  run_id: runId,
-                },
-              )
-              : (
-                await github.rest?.actions?.listJobsForWorkflowRun({
-                  owner,
-                  repo,
-                  run_id: runId,
-                })
-              )?.data?.jobs || [];
-          const jobList = Array.isArray(jobs)
-            ? jobs
-            : Array.isArray(jobs?.jobs)
-              ? jobs.jobs
-              : [];
-          const isFullReleaseJob = (j) => {
-            const name = (j?.name || "").toLowerCase();
-            return (
-              name === "generate release" ||
-              name === "generate full release" ||
-              name.includes("full release") ||
-              name === "publish" ||
-              name === "release"
-            );
-          };
-          const fullReleaseJob = jobList.find(isFullReleaseJob);
-          if (fullReleaseJob && fullReleaseJob.conclusion !== "skipped") {
-            if (core && typeof core.info === "function") {
-              core.info(
-                `Workflow run #${workflowRunId} attempted a full release (conclusion: ${fullReleaseJob.conclusion}); skipping RC release.`,
-              );
-            }
-            return null;
-          }
-        } catch (err) {
-          if (core && typeof core.warning === "function") {
-            core.warning(
-              `Could not check workflow run jobs for #${workflowRunId}: ${err.message}`,
-            );
-          }
-        }
-      }
-    }
+  ) {
+    core?.info?.(
+      `Commit "${commitMessage.trim().split("\n")[0]}" is release branch initialization or maintenance; skipping RC release.`,
+    );
+    core?.setOutput?.("should_release", "false");
+    return { should_release: false, tag: null };
+  }
 
-    const workflowRunEvent =
-      context?.payload?.workflow_run?.event ||
-      process?.env?.WORKFLOW_RUN_EVENT ||
-      "";
-    if (workflowRunEvent === "workflow_dispatch") {
-      if (core && typeof core.info === "function") {
-        core.info(
-          `Parent workflow run #${workflowRunId} was triggered by workflow_dispatch; skipping automated RC release.`,
-        );
-      }
-      return null;
-    }
+  core?.info?.(`Computing next RC tag for branch: ${branch}...`);
+  const tag = await computeNextRcTag({
+    github,
+    owner,
+    repo,
+    branch,
+    core,
+  });
 
-    let releasePleasePr = isReleasePleasePr(pr) ? pr : null;
-    if (
-      !releasePleasePr &&
-      Array.isArray(context?.payload?.workflow_run?.pull_requests)
-    ) {
-      releasePleasePr =
-        context.payload.workflow_run.pull_requests.find(
-          (p) =>
-            isReleasePleasePr(p) &&
-            (!p?.base?.ref ||
-              !branch ||
-              normalizeBranch(p?.base?.ref) === branch),
-        ) || context.payload.workflow_run.pull_requests.find(isReleasePleasePr);
-    }
-    if (
-      !releasePleasePr &&
-      sha &&
-      (typeof github?.paginate === "function" ||
-        typeof github?.rest?.repos?.listPullRequestsAssociatedWithCommit ===
-          "function")
-    ) {
+  core?.info?.(`Computed next RC tag: ${tag}`);
+
+  // Create and push git tag
+  if (typeof gitRunner === "function") {
+    core?.info?.(`Configuring git identity and creating tag '${tag}'...`);
+    await gitRunner(["config", "user.name", "github-actions[bot]"]);
+    await gitRunner([
+      "config",
+      "user.email",
+      "github-actions[bot]@users.noreply.github.com",
+    ]);
+
+    let targetSha = sha;
+    if (!targetSha) {
       try {
-        const pulls =
-          typeof github?.paginate === "function"
-            ? await github.paginate(
-              github.rest?.repos?.listPullRequestsAssociatedWithCommit,
-              {
-                owner,
-                repo,
-                commit_sha: sha,
-              },
-            )
-            : (
-              await github.rest?.repos?.listPullRequestsAssociatedWithCommit({
-                owner,
-                repo,
-                commit_sha: sha,
-              })
-            )?.data || [];
-        releasePleasePr =
-          pulls.find(
-            (p) =>
-              isReleasePleasePr(p) &&
-              (!p?.base?.ref ||
-                !branch ||
-                normalizeBranch(p?.base?.ref) === branch),
-          ) || pulls.find(isReleasePleasePr);
-      } catch (err) {
-        if (core && typeof core.warning === "function") {
-          core.warning(
-            `Could not check associated pull requests for SHA ${sha}: ${err.message}`,
-          );
-        }
-      }
+        const rev = await gitRunner(["rev-parse", "HEAD"]);
+        targetSha = (rev?.stdout || "").trim();
+      } catch {}
     }
 
-    if (
-      !releasePleasePr &&
-      Array.isArray(context?.payload?.workflow_run?.pull_requests) &&
-      github?.rest?.pulls?.get
-    ) {
-      const candidates = context.payload.workflow_run.pull_requests.filter(
-        (p) =>
-          p &&
-          (!branch || !p.base?.ref || normalizeBranch(p.base?.ref) === branch),
-      );
-      const pool =
-        candidates.length > 0
-          ? candidates
-          : context.payload.workflow_run.pull_requests;
-      for (const candidate of pool) {
-        if (candidate?.number) {
-          try {
-            const { data: fullPr } = await github.rest.pulls.get({
-              owner,
-              repo,
-              pull_number: candidate.number,
-            });
-            if (isReleasePleasePr(fullPr)) {
-              releasePleasePr = fullPr;
-              break;
-            }
-          } catch (err) {
-            if (core && typeof core.warning === "function") {
-              core.warning(
-                `Could not fetch PR #${candidate.number} details: ${err.message}`,
-              );
-            }
-          }
-        }
+    let existingRemoteTagRef = "";
+    try {
+      const lsPeeling = await gitRunner([
+        "ls-remote",
+        "--tags",
+        "origin",
+        `refs/tags/${tag}^{}`,
+      ]);
+      const firstLine = (lsPeeling?.stdout || "").trim().split("\n")[0];
+      if (firstLine) {
+        existingRemoteTagRef = firstLine.split(/\s+/)[0];
       }
+    } catch {}
+
+    if (!existingRemoteTagRef) {
+      try {
+        const lsDirect = await gitRunner([
+          "ls-remote",
+          "--tags",
+          "origin",
+          `refs/tags/${tag}`,
+        ]);
+        const firstLine = (lsDirect?.stdout || "").trim().split("\n")[0];
+        if (firstLine) {
+          existingRemoteTagRef = firstLine.split(/\s+/)[0];
+        }
+      } catch {}
     }
 
-    if (releasePleasePr) {
-      const headRef = releasePleasePr.head?.ref || "";
-      const prIdentifier = releasePleasePr.number
-        ? `PR #${releasePleasePr.number}`
-        : "Triggering PR";
-      if (core && typeof core.info === "function") {
-        core.info(
-          `${prIdentifier} is a release-please PR (${headRef || "autorelease"}); skipping RC release.`,
+    if (existingRemoteTagRef) {
+      if (targetSha && existingRemoteTagRef !== targetSha) {
+        throw new Error(
+          `Tag '${tag}' already exists on remote pointing to ${existingRemoteTagRef}, which does not match requested target SHA ${targetSha}.`,
         );
       }
-      return null;
-    }
-
-    const mergeToken = process?.env?.GITHUB_MERGE_TOKEN
-      ? process.env.GITHUB_MERGE_TOKEN.trim()
-      : undefined;
-    if (!mergeToken && core && typeof core.warning === "function") {
-      core.warning(
-        "GITHUB_MERGE_TOKEN not provided. Workflow dispatch triggered by the default GITHUB_TOKEN may not trigger downstream workflow runs.",
+      core?.info?.(
+        `Tag '${tag}' already exists on remote origin pointing to matching target SHA ${targetSha}. Proceeding with idempotent release.`,
+      );
+    } else {
+      const tagArgs = ["tag", "-a", tag, "-m", `Release Candidate ${tag}`];
+      if (targetSha) {
+        tagArgs.push(targetSha);
+      }
+      await gitRunner(tagArgs);
+      await gitRunner(["push", "origin", tag]);
+      core?.info?.(
+        `Successfully created and pushed tag '${tag}' pointing to ${targetSha || "HEAD"} to remote origin.`,
       );
     }
+  }
 
-    const octokitFactory =
-      typeof getOctokit === "function"
-        ? getOctokit
-        : typeof github?.getOctokit === "function"
-          ? github.getOctokit.bind(github)
-          : undefined;
-    const dispatchGithub =
-      mergeToken && typeof octokitFactory === "function"
-        ? octokitFactory(mergeToken)
-        : github;
+  core?.setOutput?.("tag", tag);
+  core?.setOutput?.("should_release", "true");
+  return { should_release: true, tag };
+}
 
-    if (core && typeof core.info === "function") {
-      core.info(`Computing next RC tag for branch: ${branch}...`);
-    }
-    const tag = await computeNextRcTag({
-      github: dispatchGithub || github,
-      owner,
-      repo,
-      branch,
-      core,
-    });
-    if (core && typeof core.info === "function") {
-      core.info(`Computed next RC tag: ${tag}`);
-    }
+/**
+ * dispatch-tag: Resolves the target commit SHA on workflow_dispatch and creates/pushes the git tag idempotently.
+ */
+export async function runDispatchTag({
+  context,
+  core,
+  process = globalThis.process,
+  runGit,
+}) {
+  const actor =
+    process?.env?.GITHUB_ACTOR || context?.actor || "github-actions[bot]";
+  const tag = (process?.env?.TAG || "").trim();
+  const rawBranch = (process?.env?.BRANCH || "").trim();
+  const rawSha = (process?.env?.SHA || "").trim();
+  const defaultSha = (process?.env?.DEFAULT_SHA || context?.sha || "").trim();
+  const refName = (process?.env?.REF_NAME || context?.ref || "").trim();
 
-    if (core && typeof core.setOutput === "function") {
-      core.setOutput("tag", tag);
-    }
+  if (!tag) {
+    throw new Error("Tag input is required for dispatch-tag.");
+  }
 
-    if (core && typeof core.info === "function") {
-      core.info(
-        `Dispatching 'release.yml' on 'main' with branch=${branch}, sha=${sha || "(HEAD)"}, tag=${tag}...`,
+  const gitRunner =
+    typeof runGit === "function"
+      ? runGit
+      : process?.env?.GITHUB_ACTIONS === "true"
+        ? defaultRunGit
+        : undefined;
+
+  if (typeof gitRunner !== "function") {
+    core?.info?.(
+      "Git runner not available or not running in GITHUB_ACTIONS; skipping dispatch tag git execution.",
+    );
+    return { tag, targetSha: rawSha || defaultSha || "head-sha" };
+  }
+
+  await gitRunner([
+    "config",
+    "--global",
+    "--add",
+    "safe.directory",
+    process.cwd(),
+  ]);
+  await gitRunner(["config", "user.name", actor]);
+  await gitRunner([
+    "config",
+    "user.email",
+    `${actor}@users.noreply.github.com`,
+  ]);
+
+  const targetBranch = rawBranch
+    .replace(/^refs\/heads\//, "")
+    .replace(/^origin\//, "")
+    .replace(/\/+$/, "")
+    .replace(/\s+/g, "");
+
+  if (targetBranch) {
+    try {
+      await gitRunner(["fetch", "origin", targetBranch]);
+    } catch (fetchErr) {
+      throw new Error(
+        `Failed to fetch origin/${targetBranch}. Branch does not exist or fetch failed: ${fetchErr.message}`,
       );
     }
-    const inputs = {
-      branch,
-      tag,
-    };
-    if (sha) {
-      inputs.sha = sha;
+  }
+
+  let targetSha = "";
+  const cleanSha = rawSha.replace(/\s+/g, "");
+
+  if (cleanSha) {
+    try {
+      await gitRunner(["cat-file", "-e", `${cleanSha}^{commit}`]);
+    } catch {
+      try {
+        await gitRunner(["fetch", "origin", cleanSha]);
+      } catch {}
     }
 
     try {
-      await dispatchGithub.rest.actions.createWorkflowDispatch({
-        owner,
-        repo,
-        workflow_id: "release.yml",
-        ref: "main",
-        inputs,
-      });
-      if (core && typeof core.info === "function") {
-        core.info(`Successfully dispatched 'release.yml' for ${tag}!`);
-      }
-    } catch (dispatchErr) {
-      const is403 =
-        dispatchErr?.status === 403 || dispatchErr?.response?.status === 403;
-      if (
-        is403 &&
-        dispatchGithub !== github &&
-        typeof github?.rest?.actions?.createWorkflowDispatch === "function"
-      ) {
-        if (core && typeof core.info === "function") {
-          core.info(
-            `Dispatch with merge token failed with 403 (${dispatchErr.message}). Falling back to runner GITHUB_TOKEN...`,
-          );
+      const rev = await gitRunner([
+        "rev-parse",
+        "--verify",
+        `${cleanSha}^{commit}`,
+      ]);
+      targetSha = (rev.stdout || "").trim();
+    } catch {
+      try {
+        const rev = await gitRunner([
+          "rev-parse",
+          "--verify",
+          `origin/${cleanSha}^{commit}`,
+        ]);
+        targetSha = (rev.stdout || "").trim();
+      } catch {}
+    }
+  } else if (targetBranch) {
+    try {
+      const rev = await gitRunner([
+        "rev-parse",
+        "--verify",
+        `origin/${targetBranch}^{commit}`,
+      ]);
+      targetSha = (rev.stdout || "").trim();
+    } catch {}
+  } else {
+    const cleanDefault = defaultSha.replace(/\s+/g, "");
+    try {
+      await gitRunner(["cat-file", "-e", `${cleanDefault}^{commit}`]);
+    } catch {
+      try {
+        await gitRunner(["fetch", "origin", cleanDefault]);
+      } catch {
+        if (refName) {
+          try {
+            await gitRunner(["fetch", "origin", refName]);
+          } catch {}
         }
-        await github.rest.actions.createWorkflowDispatch({
-          owner,
-          repo,
-          workflow_id: "release.yml",
-          ref: "main",
-          inputs,
-        });
-        if (core && typeof core.info === "function") {
-          core.info(
-            `Successfully dispatched 'release.yml' for ${tag} via fallback client!`,
-          );
-        }
-      } else {
-        throw dispatchErr;
       }
     }
-    return tag;
-  } catch (error) {
-    if (core && typeof core.setFailed === "function") {
-      core.setFailed(`Failed to trigger RC release workflow: ${error.message}`);
-    } else {
-      throw error;
+    try {
+      const rev = await gitRunner([
+        "rev-parse",
+        "--verify",
+        `${cleanDefault}^{commit}`,
+      ]);
+      targetSha = (rev.stdout || "").trim();
+    } catch {
+      try {
+        const rev = await gitRunner([
+          "rev-parse",
+          "--verify",
+          `origin/${cleanDefault}^{commit}`,
+        ]);
+        targetSha = (rev.stdout || "").trim();
+      } catch {}
     }
   }
+
+  if (!targetSha) {
+    throw new Error(`Could not resolve target commit for tag ${tag}.`);
+  }
+
+  // Check if tag already exists on remote origin
+  let existingRemoteTagRef = "";
+  try {
+    const lsPeeling = await gitRunner([
+      "ls-remote",
+      "--tags",
+      "origin",
+      `refs/tags/${tag}^{}`,
+    ]);
+    const firstLine = (lsPeeling.stdout || "").trim().split("\n")[0];
+    if (firstLine) {
+      existingRemoteTagRef = firstLine.split(/\s+/)[0];
+    }
+  } catch {}
+
+  if (!existingRemoteTagRef) {
+    try {
+      const lsDirect = await gitRunner([
+        "ls-remote",
+        "--tags",
+        "origin",
+        `refs/tags/${tag}`,
+      ]);
+      const firstLine = (lsDirect.stdout || "").trim().split("\n")[0];
+      if (firstLine) {
+        existingRemoteTagRef = firstLine.split(/\s+/)[0];
+      }
+    } catch {}
+  }
+
+  if (existingRemoteTagRef) {
+    if (existingRemoteTagRef !== targetSha) {
+      throw new Error(
+        `Tag '${tag}' already exists on remote pointing to ${existingRemoteTagRef}, which does not match requested target SHA ${targetSha}.`,
+      );
+    }
+    core?.info?.(
+      `Tag ${tag} already exists on remote origin pointing to matching target SHA ${targetSha}. Proceeding with idempotent release.`,
+    );
+  } else {
+    await gitRunner(["tag", tag, "-m", `Release ${tag}`, targetSha]);
+    await gitRunner(["push", "origin", tag]);
+    core?.info?.(
+      `Successfully created and pushed tag ${tag} (${targetSha}) to remote origin.`,
+    );
+  }
+
+  core?.setOutput?.("target_sha", targetSha);
+  return { tag, targetSha };
+}
+
+/**
+ * prepare-manifest: Prepares tag directory by isolating tag and creating terraform-registry-manifest.json if missing.
+ */
+export async function runPrepareRegistryManifest({
+  core,
+  process = globalThis.process,
+  runGit = defaultRunGit,
+  fsModule = fs,
+}) {
+  const tag = (process?.env?.TAG || "").trim();
+  const workspace = process?.env?.GITHUB_WORKSPACE || process.cwd();
+
+  if (!tag) {
+    throw new Error(
+      "TAG environment variable is required for prepare-manifest.",
+    );
+  }
+
+  const tagDir = path.join(workspace, "tags", tag);
+
+  // Remove any local tags that are not the target release tag
+  if (typeof runGit === "function") {
+    try {
+      const tagListResult = await runGit(["tag"], { cwd: tagDir });
+      const allTags = (tagListResult?.stdout || "")
+        .split("\n")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const tagsToDelete = allTags.filter((t) => t !== tag);
+      if (tagsToDelete.length > 0) {
+        await runGit(["tag", "-d", ...tagsToDelete], { cwd: tagDir });
+        core?.info?.(
+          `Deleted non-target local tags in tag checkout: ${tagsToDelete.join(", ")}`,
+        );
+      }
+    } catch (err) {
+      core?.warning?.(`Failed to clean extraneous tags: ${err.message}`);
+    }
+  }
+
+  // Check for terraform-registry-manifest.json
+  const manifestPath = path.join(tagDir, "terraform-registry-manifest.json");
+  let manifestExists = false;
+  try {
+    manifestExists = fsModule.existsSync(manifestPath);
+  } catch {}
+
+  if (!manifestExists) {
+    core?.info?.(
+      "terraform-registry-manifest.json not found, creating a default one.",
+    );
+    const defaultManifest =
+      JSON.stringify(
+        {
+          version: 1,
+          metadata: {
+            protocol_versions: ["4.0", "5.0", "6.0"],
+          },
+        },
+        null,
+        4,
+      ) + "\n";
+    await fsModule.promises.writeFile(manifestPath, defaultManifest, "utf8");
+  }
+
+  core?.info?.(`Prepared registry manifest for tag ${tag}.`);
+  return { tag, tagDir, manifestPath };
 }
